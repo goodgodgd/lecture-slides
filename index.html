@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>강의자료 — 순천향대 전자정보공학과</title>
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1a1a1a; --muted: #666; --line: #e3e3e3;
+    --card: #fafafa; --accent: #1f5fa8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#16181c; --fg:#e8e8e8; --muted:#9aa0a6; --line:#2c3038; --card:#1e2126; --accent:#7fb3ec; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 3rem 1.25rem 5rem;
+    background: var(--bg); color: var(--fg);
+    font-family: "Pretendard", "Malgun Gothic", system-ui, sans-serif;
+    line-height: 1.7;
+  }
+  main { max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 1.6rem; margin: 0 0 .3rem; letter-spacing: -.02em; }
+  .sub { color: var(--muted); margin: 0 0 2.5rem; font-size: .95rem; }
+  h2 { font-size: 1.05rem; margin: 2.5rem 0 .8rem; padding-bottom: .5rem;
+       border-bottom: 1px solid var(--line); font-weight: 600; }
+  ul { list-style: none; padding: 0; margin: 0; display: grid; gap: .5rem; }
+  a.item {
+    display: block; padding: .85rem 1rem; background: var(--card);
+    border: 1px solid var(--line); border-radius: 8px;
+    color: var(--fg); text-decoration: none;
+  }
+  a.item:hover { border-color: var(--accent); color: var(--accent); }
+  a.item .wk { color: var(--muted); font-size: .85rem; margin-right: .6rem; }
+  footer { margin-top: 4rem; color: var(--muted); font-size: .85rem;
+           border-top: 1px solid var(--line); padding-top: 1rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>강의자료</h1>
+  <p class="sub">순천향대학교 전자정보공학과</p>
+
+  <h2>마이크로프로세서</h2>
+  <ul>
+    <li><a class="item" href="micro/w01.html"><span class="wk">1주차</span>강의 소개와 ATmega128 개요</a></li>
+  </ul>
+
+  <footer>자료는 수업 진행에 따라 계속 추가됩니다.</footer>
+</main>
+</body>
+</html>
