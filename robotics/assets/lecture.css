@@ -1,5 +1,5 @@
 /* 로봇공학 강의자료 공용 스타일
-   블록 형식은 _notes/강의자료_제작지침.md 3절을 따른다. */
+   블록 형식은 _notes/강의자료_제작지침.md 4절을, 그림은 6절을 따른다. */
 
 :root {
   --bg: #ffffff;
@@ -17,6 +17,8 @@
   --warn-soft: #fff5e0;
   --story: #6b4ea8;
   --story-soft: #f2edfb;
+  --new: #0f766e;
+  --new-soft: #e4f3f0;
   --code-bg: #f4f5f7;
   --mono: "D2Coding", "Consolas", "SFMono-Regular", ui-monospace, monospace;
 }
@@ -29,6 +31,7 @@
     --good: #74d3a4; --good-soft: #16281f;
     --warn: #e0b25e; --warn-soft: #2b2314;
     --story: #b39ae8; --story-soft: #221c33;
+    --new: #5ecfc0; --new-soft: #10262a;
     --code-bg: #1f2228;
   }
 }
@@ -122,6 +125,16 @@ pre.after { border-left-color: var(--good); background: var(--good-soft); }
 .stop { background: var(--bad-soft); border: 1px solid var(--bad); }
 .stop .boxtitle { color: var(--bad); }
 
+/* ── 🆕 첫 등장 블록 — 이 회차에서 처음 나오는 이름을 그 자리에서 푼다 ── */
+.firstseen { background: var(--new-soft); border: 1px solid var(--new); }
+.firstseen .boxtitle { color: var(--new); }
+.firstseen dl { margin: 0; }
+.firstseen dt { font-family: var(--mono); font-size: .9rem; font-weight: 700; margin: .7rem 0 .15rem; }
+.firstseen dt:first-of-type { margin-top: .2rem; }
+.firstseen dd { margin: 0 0 .1rem; font-size: .95rem; }
+.firstseen .later { font-size: .82rem; color: var(--muted); margin: .8rem 0 0; }
+.firstseen .later::before { content: "↪ "; }
+
 /* ── 이야기 블록 (접기) ── */
 details.story { background: var(--story-soft); border: 1px solid var(--story); border-radius: 8px; padding: .3rem 1.15rem; margin: 1.6rem 0; }
 details.story > summary { cursor: pointer; font-weight: 700; color: var(--story); padding: .7rem 0; list-style: none; }
@@ -134,6 +147,13 @@ details.story h4 { color: var(--story); margin-top: 1.2rem; }
 details.story blockquote { border-left: 3px solid var(--story); margin: .8rem 0; padding: .2rem 0 .2rem 1rem; color: var(--fg); font-style: normal; }
 .src { font-size: .82rem; color: var(--muted); }
 .src li { margin: .15rem 0; }
+
+/* ── 화면 캡쳐 그림 ── */
+figure { margin: 1.4rem 0; }
+figure img { display: block; max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--card); }
+figure figcaption { font-size: .85rem; color: var(--muted); margin-top: .45rem; }
+figure.narrow img { max-width: 420px; }
+figure.wide img { max-width: 100%; }
 
 /* ── 실습 ── */
 .lab-block { border: 1px solid var(--accent); border-radius: 8px; padding: 1rem 1.15rem; margin: 1.4rem 0; }
