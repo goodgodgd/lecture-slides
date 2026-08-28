@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>18회 · 확인 명령어 열 개 | 로봇공학</title>
+<link rel="stylesheet" href="assets/lecture.css">
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="toc-title">이 회차 목차</div>
+  <a href="#summary">한 장 요약 — 질문 열 개</a>
+  <a href="#why">왜 명령어를 안 외우나</a>
+  <a href="#q1" class="sub">1. 노드가 살아 있나</a>
+  <a href="#q2" class="sub">2. 어떤 토픽이 있나</a>
+  <a href="#q3" class="sub">3. 값이 정말 흐르나</a>
+  <a href="#q4" class="sub">4. 초당 몇 번 오나</a>
+  <a href="#q5" class="sub">5. 누가 보내고 누가 받나</a>
+  <a href="#q6" class="sub">6. 메시지에 뭐가 들었나</a>
+  <a href="#q7" class="sub">7. 지금 설정값이 뭔가</a>
+  <a href="#q8" class="sub">8. 다시 보고 싶다</a>
+  <a href="#q9" class="sub">9. 그림으로 보고 싶다</a>
+  <a href="#q10" class="sub">10. 환경이 이상하다</a>
+  <a href="#order">막혔을 때 보는 순서</a>
+  <a href="#lab">🧪 실습 — 고장 진단</a>
+  <a href="#check">✅ 점검</a>
+</nav>
+
+<main>
+  <a class="backlink" href="../index.html">← 강의자료 목록</a>
+
+  <div class="lec-no">로봇공학 · 18회 · 3부 ROS 2</div>
+  <h1>확인 명령어 열 개 — 에이전트가 한 일을 내가 보는 법</h1>
+
+  <div class="questions">
+    <span class="lab">오늘 답할 질문</span>
+    <ol>
+      <li>에이전트가 "잘 연결되었습니다"라고 했다. 그 말을 어떻게 확인하나?</li>
+      <li>데이터가 안 오는데 어디부터 봐야 하나?</li>
+      <li>ROS 명령어가 수십 개인데 뭘 외워야 하나?</li>
+    </ol>
+  </div>
+
+  <p>
+    셋째 질문의 답을 먼저 말한다. <strong>아무것도 외우지 않는다.</strong>
+    명령어는 에이전트가 대신 쳐 준다. 외울 것은 <strong>질문 목록</strong>이다.
+    질문을 떠올리지 못하면 에이전트에게 물어볼 수조차 없기 때문이다.
+  </p>
+
+  <div class="box stop">
+    <div class="boxtitle">⛔ 확인은 절대 넘기지 않는다</div>
+    <p>
+      에이전트에게 <em>"잘 됐는지 확인해 줘"</em>라고 하면 <strong>"완료했습니다"</strong>라는 답이 돌아온다.
+      그 문장은 정보가 아니다.
+      <strong>화면에 숫자가 올라가는 것을 눈으로 본 사람만</strong> 다음 단계에서 무엇이 깨졌는지 안다.
+    </p>
+  </div>
+
+  <!-- ── 한 장 요약 ── -->
+  <h2 id="summary">한 장 요약 — 이 열 줄이 학기 내내 쓰인다</h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>왼쪽 「내가 알고 싶은 것」 열</strong>만 읽는다. 오른쪽은 그때 찾아보면 된다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>내가 알고 싶은 것</th><th>그때 이걸 친다</th></tr>
+    <tr><td>1. 내 노드가 살아 있나</td><td><code>ros2 node list</code></td></tr>
+    <tr><td>2. 어떤 토픽이 있고 타입이 뭔가</td><td><code>ros2 topic list -t</code></td></tr>
+    <tr><td>3. 값이 <strong>정말</strong> 흐르나</td><td><code>ros2 topic echo /scan</code></td></tr>
+    <tr><td>4. <strong>초당 몇 번</strong> 오나</td><td><code>ros2 topic hz /scan</code></td></tr>
+    <tr><td>5. 누가 보내고 누가 받나 (+QoS)</td><td><code>ros2 topic info /scan -v</code></td></tr>
+    <tr><td>6. 메시지 안에 뭐가 들었나</td><td><code>ros2 interface show ...</code></td></tr>
+    <tr><td>7. 지금 설정값이 뭔가</td><td><code>ros2 param list</code> / <code>get</code></td></tr>
+    <tr><td>8. 방금 그 장면을 다시 보고 싶다</td><td><code>ros2 bag record</code> / <code>play</code></td></tr>
+    <tr><td>9. 연결을 그림으로 보고 싶다</td><td><code>rqt_graph</code></td></tr>
+    <tr><td>10. 환경 자체가 이상하다</td><td><code>ros2 doctor</code></td></tr>
+  </table>
+  </div>
+
+  <h2 id="why">명령어를 외우지 않는 대신 무엇을 하나 <span class="badge b-red">🔴 사람이 한다</span></h2>
+  <p>
+    ROS 1에서는 <code>rosrun</code>, <code>rosnode</code>, <code>rostopic</code>처럼 명령어가 따로 있었다.
+    ROS 2는 전부 <code>ros2 {무엇을} {어떻게} {옵션}</code> 한 형태로 통일했다.
+    구조가 규칙적이라 <strong>에이전트가 특히 잘 만들어 준다.</strong>
+  </p>
+  <div class="interp">
+    <strong>해석:</strong> 그래서 이 회차의 목표가 바뀐다.
+    <strong>명령어를 치는 능력이 아니라 출력을 읽는 능력</strong>을 기른다.
+    아래 각 절에서 <strong>「출력을 이렇게 읽는다」</strong> 칸이 진짜 내용이다.
+  </div>
+
+  <p>
+    실습하려면 화면이 여럿 필요하다. 터미널을 칸으로 나눠 쓰는 도구를 하나 깔아 둔다.
+    <strong>이것부터 에이전트에게 시켜 본다.</strong>
+  </p>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    터미널을 상하좌우로 나눠 쓸 수 있는 프로그램을 설치해 줘. sudo가 붙는 명령은 실행하기 전에 나에게 보여 줘. 설치 후 단축키도 알려 줘.
+  </div>
+
+  <!-- ── 명령어 블록 1 ── -->
+  <h2 id="q1">1. 내 노드가 살아 있나 <span class="badge b-green">🟢 맡겨도 됨</span></h2>
+  <h4>그때 이걸 친다</h4>
+  <pre><code>$ ros2 node list</code></pre>
+  <h4>출력을 이렇게 읽는다</h4>
+  <pre><code>/teleop_turtle
+/turtlesim</code></pre>
+  <p>
+    <strong>여기서 놀라는 대목이 하나 있다.</strong> 실행할 때 친 이름은 <code>turtlesim_node</code>였는데
+    목록에는 <code>/turtlesim</code>으로 나온다.
+    <strong>실행 파일 이름과 노드 이름은 다른 것</strong>이기 때문이다.
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>실행 파일 이름</th><th>노드 이름</th></tr>
+    <tr><td><code>turtlesim_node</code></td><td><code>/turtlesim</code></td></tr>
+    <tr><td><code>turtle_teleop_key</code></td><td><code>/teleop_turtle</code></td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 이 구별이 나중에 파라미터를 다룰 때 그대로 온다.
+    <code>ros2 run</code>에는 <strong>실행 파일</strong> 이름을, <code>ros2 param</code>에는 <strong>노드</strong> 이름을 쓴다.
+    같은 걸 넣으면 "그런 노드 없다"는 답이 나온다.
+  </div>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    지금 떠 있는 ROS 2 노드 목록을 보여 주고, 각각이 어느 패키지의 어떤 실행 파일인지도 같이 정리해 줘.
+  </div>
+
+  <!-- ── 2 ── -->
+  <h2 id="q2">2. 어떤 토픽이 있고 타입이 뭔가 <span class="badge b-green">🟢 맡겨도 됨</span></h2>
+  <h4>그때 이걸 친다</h4>
+  <pre><code>$ ros2 topic list -t</code></pre>
+  <h4>출력을 이렇게 읽는다</h4>
+  <pre><code>/parameter_events [rcl_interfaces/msg/ParameterEvent]
+/rosout [rcl_interfaces/msg/Log]
+/scan [sensor_msgs/msg/LaserScan]        ← 라이다
+/cmd_vel [geometry_msgs/msg/Twist]       ← 바퀴 명령</code></pre>
+  <p>
+    <code>-t</code>를 붙이면 <strong>대괄호 안에 메시지 타입</strong>이 함께 나온다. 이게 중요하다.
+    코드에서 구독할 때 <strong>타입 이름이 한 글자라도 다르면 안 붙기</strong> 때문이다.
+  </p>
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 여기서 제일 많이 나오는 실수</div>
+    <p>
+      토픽 이름 앞의 <strong>빗금(<code>/</code>)</strong>이 있고 없고가 다르다.
+      코드에 <code>"scan"</code>이라고 쓰면 노드 이름공간 안의 토픽이 되어
+      <code>/robot1/scan</code>이 될 수도 있다.
+      <strong>목록에 보이는 이름과 코드에 쓴 이름을 눈으로 대조한다.</strong>
+    </p>
+  </div>
+
+  <!-- ── 3 ── -->
+  <h2 id="q3">3. 값이 정말 흐르나 <span class="badge b-red">🔴 내가 본다</span></h2>
+  <h4>그때 이걸 친다</h4>
+  <pre><code>$ ros2 topic echo /scan --once</code></pre>
+  <h4>출력을 이렇게 읽는다</h4>
+  <pre><code>header:
+  stamp: {sec: 1740000000, nanosec: 123456789}
+  frame_id: base_scan          ← 어느 좌표계에서 잰 값인가
+angle_min: 0.0                 ← 첫 값의 각도
+angle_increment: 0.01749       ← 약 1도 (라디안)
+range_min: 0.16
+range_max: 8.0
+ranges: [0.83, 0.84, .inf, 0.86, ... ]   ← 여기를 본다
+---</code></pre>
+  <div class="tablewrap">
+  <table>
+    <tr><th>어디를 보나</th><th>무엇을 확인하나</th></tr>
+    <tr><td><code>ranges</code>의 앞부분</td><td><strong><code>.inf</code>가 섞여 있는지.</strong> 실제 라이다에는 반드시 섞여 있다</td></tr>
+    <tr><td><code>range_min</code>·<code>range_max</code></td><td>이 값이 <strong>거르는 기준</strong>이다. 코드에 숫자를 박지 말고 이걸 쓴다</td></tr>
+    <tr><td><code>frame_id</code></td><td>이 값이 <strong>무엇을 기준으로 한 좌표</strong>인지. 26회에서 다시 만난다</td></tr>
+    <tr><td><code>angle_increment</code></td><td>인덱스를 각도로 바꾸는 값. 24회에서 쓴다</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> <code>--once</code>를 안 붙이면 화면이 끝없이 흘러가서 아무것도 못 읽는다.
+    <strong>값을 읽으려면 <code>--once</code>, 흐르는지만 보려면 그냥</strong> — 목적에 따라 다르다.
+  </div>
+
+  <!-- ── 4 ── -->
+  <h2 id="q4">4. 초당 몇 번 오나 <span class="badge b-red">🔴 밀림 진단</span></h2>
+  <h4>그때 이걸 친다</h4>
+  <pre><code>$ ros2 topic hz /scan</code></pre>
+  <h4>출력을 이렇게 읽는다</h4>
+  <pre><code>average rate: 5.012
+  min: 0.196s max: 0.203s std dev: 0.00214s window: 6</code></pre>
+  <div class="tablewrap">
+  <table>
+    <tr><th>본 것</th><th>무슨 뜻인가</th></tr>
+    <tr><td><code>average rate</code>가 사양과 비슷</td><td>정상. 우리 라이다는 5Hz 이상이 정상값이다</td></tr>
+    <tr><td><code>average rate</code>가 <strong>사양보다 훨씬 낮음</strong></td><td>어딘가에서 <strong>밀리고 있다.</strong> 콜백이 오래 걸리거나 통신이 막혔다</td></tr>
+    <tr><td><code>max</code>가 <code>min</code>보다 훨씬 큼</td><td>가끔 <strong>한 번씩 크게 늦는다.</strong> 로봇이 그 순간 반응을 놓친다</td></tr>
+    <tr><td>아무것도 안 나옴</td><td>토픽 이름이 틀렸거나 <strong>QoS가 안 맞다</strong> (22회)</td></tr>
+  </table>
+  </div>
+  <p>
+    <strong>이 명령어가 왜 중요한가:</strong> 11회에서 배운 "쓸데없이 복사하지 마라"가
+    <strong>여기서 숫자로 나타난다.</strong> 콜백에서 큰 배열을 통째로 복사하면 이 숫자가 떨어진다.
+    라즈베리파이는 서버가 아니다 — 여유 자원이 애초에 적다.
+  </p>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    <code>/scan</code> 토픽의 주기를 30초 동안 측정해서 평균과 최대 지연을 알려 줘. 사양(5Hz 이상)과 비교해서 정상인지도 판단해 줘.
+  </div>
+
+  <!-- ── 5 ── -->
+  <h2 id="q5">5. 누가 보내고 누가 받나 <span class="badge b-red">🔴 가장 자주 쓰게 된다</span></h2>
+  <h4>그때 이걸 친다</h4>
+  <pre><code>$ ros2 topic info /scan -v</code></pre>
+  <h4>출력을 이렇게 읽는다</h4>
+  <pre><code>Type: sensor_msgs/msg/LaserScan
+Publisher count: 1
+Subscription count: 0          ← 아무도 안 받고 있다
+
+Node name: turtlebot3_lds
+  QoS profile:
+    Reliability: BEST_EFFORT   ← 여기를 본다
+    Durability: VOLATILE
+    History (Depth): KEEP_LAST (5)</code></pre>
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 이 회차에서 가장 중요한 한 줄</div>
+    <p>
+      <strong><code>Reliability</code>가 보내는 쪽과 받는 쪽이 다르면 둘은 안 붙는다.</strong>
+      라이다처럼 빠르고 유실돼도 되는 센서는 보통 <code>BEST_EFFORT</code>로 보낸다.
+      그런데 코드에서 구독을 기본값으로 만들면 <code>RELIABLE</code>이 된다.
+    </p>
+    <p>
+      증상은 이렇게 나타난다 —
+      <strong>빌드도 되고, 노드도 뜨고, <code>echo</code>로 보면 데이터도 오는데, 내 콜백은 한 번도 안 불린다.</strong>
+      원인이 코드에 안 보이기 때문에 학생이 가장 오래 헤매는 자리다.
+    </p>
+    <p>고치는 법은 22회에서 다룬다. 지금은 <strong>이 화면에서 확인할 수 있다</strong>는 것만 기억한다.</p>
+  </div>
+
+  <!-- ── 6 ── -->
+  <h2 id="q6">6. 메시지 안에 뭐가 들었나 <span class="badge b-green">🟢 맡겨도 됨</span></h2>
+  <h4>그때 이걸 친다</h4>
+  <pre><code>$ ros2 interface show sensor_msgs/msg/LaserScan
+$ ros2 interface show geometry_msgs/msg/Twist</code></pre>
+  <h4>출력을 이렇게 읽는다</h4>
+  <pre><code># Twist
+Vector3 linear      ← x, y, z
+Vector3 angular     ← x, y, z</code></pre>
+  <div class="interp">
+    <strong>해석:</strong> <code>Twist</code>에는 숫자가 여섯 개 들어 있다.
+    그런데 <strong>바퀴 두 개로 굴러가는 우리 로봇은 그중 둘만 쓴다</strong> —
+    <code>linear.x</code>(앞으로 얼마나)와 <code>angular.z</code>(얼마나 돌지)다.
+    나머지 넷에 값을 넣어도 <strong>조용히 무시된다.</strong>
+    이런 것은 메시지 정의만 봐서는 모르고 <strong>로봇 문서를 봐야 안다.</strong>
+  </div>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    <code>sensor_msgs/msg/LaserScan</code>의 필드를 하나씩 한국어로 설명해 줘. 각 필드를 실제로 어디에 쓰는지도 한 줄씩 붙여 줘.
+  </div>
+
+  <!-- ── 7 ── -->
+  <h2 id="q7">7. 지금 설정값이 뭔가 <span class="badge b-yellow">🟡 맡기되 확인</span></h2>
+  <pre><code>$ ros2 param list
+$ ros2 param get /turtlesim background_b
+$ ros2 param set /turtlesim background_b 0</code></pre>
+  <p>
+    <strong><code>set</code>이 이 절의 핵심이다.</strong> 노드를 끄지 않고, 다시 빌드하지 않고 값을 바꿀 수 있다.
+    프로젝트에서 조향 이득 같은 값을 파라미터로 빼 두면
+    <strong>로봇을 세우지 않고 튜닝할 수 있다.</strong> 평가 당일에 이 차이가 크다.
+  </p>
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 바꾼 값은 노드를 끄면 사라진다</div>
+    <p>
+      <code>set</code>으로 바꾼 값은 <strong>메모리에만 있다.</strong>
+      좋은 값을 찾았으면 <strong>YAML 파일에 적어 둔다</strong>(21회).
+      적어 두지 않으면 다음 날 처음부터 다시 맞춰야 한다.
+    </p>
+  </div>
+
+  <!-- ── 8 ── -->
+  <h2 id="q8">8. 방금 그 장면을 다시 보고 싶다 <span class="badge b-yellow">🟡 맡기되 확인</span></h2>
+  <pre><code>$ ros2 bag record /scan /cmd_vel -o cone_run1
+$ ros2 bag play cone_run1</code></pre>
+  <div class="interp">
+    <strong>해석:</strong> 이게 이 열 개 중 <strong>가장 과소평가되는 명령어</strong>다.
+    한 번 기록해 두면 <strong>로봇 없이도 코드를 고치고 시험할 수 있다.</strong>
+    로봇은 대수가 한정돼 있고 배터리는 닳는다. 기록 파일은 그렇지 않다.
+    25회 과제(HW7)가 이 파일 위에서 진행된다.
+  </div>
+  <p><strong>기록할 때 주의:</strong> 아무거나 다 기록하면 파일이 금방 커진다. <strong>토픽을 지정해서 기록한다.</strong></p>
+
+  <!-- ── 9 ── -->
+  <h2 id="q9">9. 연결을 그림으로 보고 싶다 <span class="badge b-red">🔴 그림은 사람이 읽는다</span></h2>
+  <pre><code>$ rqt_graph</code></pre>
+  <p>
+    노드가 동그라미, 토픽이 화살표로 나온다. <strong>이건 에이전트에게 시키지 않는다.</strong>
+    그림을 보는 것 자체가 목적이기 때문이다.
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>그림에서 본 것</th><th>무슨 뜻인가</th></tr>
+    <tr><td>내 노드가 아예 없다</td><td>안 떠 있다. 또는 <code>source</code>를 안 했다</td></tr>
+    <tr><td>노드는 있는데 <strong>화살표가 안 닿아 있다</strong></td><td><strong>토픽 이름이 다르다.</strong> 오타일 확률이 높다</td></tr>
+    <tr><td>화살표는 닿았는데 데이터가 안 온다</td><td><strong>QoS 문제일 가능성이 크다</strong> → 5번으로 간다</td></tr>
+  </table>
+  </div>
+
+  <!-- ── 10 ── -->
+  <h2 id="q10">10. 환경 자체가 이상하다 <span class="badge b-green">🟢 맡겨도 됨</span></h2>
+  <pre><code>$ ros2 doctor</code></pre>
+  <p>설치·네트워크·버전을 한꺼번에 점검한다. 출력이 길어서 <strong>읽는 것을 에이전트에게 맡기기 좋다.</strong></p>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    <code>ros2 doctor</code>를 실행하고, 경고와 오류만 골라서 각각 무슨 뜻이고 고쳐야 하는 것인지 알려 줘.
+  </div>
+
+  <!-- ── 순서 ── -->
+  <h2 id="order">막혔을 때 보는 순서 — 이 순서를 외운다</h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>위에서 아래로</strong> 내려간다. 위에서 걸리면 아래는 볼 필요가 없다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>순서</th><th>확인</th><th>여기서 걸리면</th></tr>
+    <tr><td>1</td><td><code>ros2 node list</code> — 노드가 떠 있나</td><td>안 떴다. <code>source</code>했나, 빌드했나</td></tr>
+    <tr><td>2</td><td><code>ros2 topic list</code> — 토픽 이름이 내 코드와 같나</td><td><strong>오타</strong>다. 빗금 확인</td></tr>
+    <tr><td>3</td><td><code>ros2 topic echo</code> — 값이 오나</td><td>보내는 쪽 문제다</td></tr>
+    <tr><td>4</td><td><code>ros2 topic info -v</code> — QoS가 같나</td><td><strong>QoS 불일치</strong> (22회)</td></tr>
+    <tr><td>5</td><td><code>ros2 topic hz</code> — 주기가 정상인가</td><td>내 콜백이 <strong>밀리고 있다</strong></td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 대부분의 질문이 <strong>2번이나 4번</strong>에서 끝난다.
+    이 다섯 줄을 순서대로 훑는 습관이 조교 질문의 절반을 없앤다.
+    <strong>에이전트에게 물어볼 때도 이 순서로 물으면 훨씬 정확한 답이 온다.</strong>
+  </div>
+
+  <!-- ── 🧪 실습 ── -->
+  <div class="lab-block" id="lab">
+    <div class="boxtitle">🧪 실습 — 고장난 시스템 진단하기 (HW5로 이어집니다)</div>
+    <p><strong>알게 되는 것:</strong> 원인을 짚는 순서. 명령어가 아니라 순서가 이 실습의 목표다.</p>
+    <p><strong>준비물:</strong> 배포된 고장난 패키지, 터미널 3칸</p>
+    <p><strong>절차</strong></p>
+    <ol>
+      <li>배포된 패키지를 빌드하고 실행한다. <strong>데이터가 안 온다.</strong> (5분)</li>
+      <li>위 「막혔을 때 보는 순서」를 1번부터 훑는다. (15분)</li>
+      <li>어느 줄에서 걸렸는지, 화면의 <strong>무엇을 보고</strong> 그렇게 판단했는지 적는다. (10분)</li>
+      <li>고친 뒤 같은 명령어로 <strong>고쳐졌음을 확인</strong>한다. (10분)</li>
+    </ol>
+    <p>
+      <strong>이렇게 되면 성공:</strong> <code>ros2 topic hz</code>에 정상 주기가 찍힌다.
+      그리고 <strong>3번에 적은 근거가 실제 원인과 맞는다.</strong>
+    </p>
+    <div class="box trap" style="margin-top:1rem">
+      <div class="boxtitle">채점은 고친 결과가 아니라 근거를 본다</div>
+      <p>
+        에이전트에게 물어봐서 고쳐도 된다. <strong>다만 무엇을 보고 알았는지 못 쓰면 점수가 없다.</strong>
+        고친 사람과 원인을 아는 사람은 다르다.
+      </p>
+    </div>
+  </div>
+
+  <!-- ── ✅ 점검 ── -->
+  <h2 id="check">✅ 오늘의 점검</h2>
+  <ul class="check">
+    <li><input type="checkbox" id="k1"><label for="k1">실행 파일 이름과 노드 이름이 다르다는 것을 확인했나?</label></li>
+    <li><input type="checkbox" id="k2"><label for="k2">내 코드의 토픽 이름을 <code>topic list</code> 출력과 눈으로 대조했나?</label></li>
+    <li><input type="checkbox" id="k3"><label for="k3"><code>echo</code> 출력에서 <code>.inf</code>를 직접 봤나?</label></li>
+    <li><input type="checkbox" id="k4"><label for="k4"><code>topic info -v</code>에서 Reliability를 어디서 읽는지 아나?</label></li>
+    <li><input type="checkbox" id="k5"><label for="k5">막혔을 때 보는 순서 다섯 줄을 순서대로 말할 수 있나?</label></li>
+    <li><input type="checkbox" id="k6"><label for="k6"><code>ros2 bag</code>으로 한 번 기록하고 재생해 봤나?</label></li>
+  </ul>
+
+  <h2>더 궁금하면 <span class="badge b-lv">시험 범위 아님</span></h2>
+  <ul>
+    <li><code>ros2 topic pub</code> — 노드를 만들지 않고 토픽을 직접 쏴 볼 수 있다. 로봇 없이 코드를 시험할 때 쓴다.</li>
+    <li><code>ros2 run rqt_plot rqt_plot</code> — 값이 시간에 따라 어떻게 변하는지 그래프로 본다. 조향값이 흔들리는지 볼 때 유용하다.</li>
+  </ul>
+
+  <footer>
+    로봇공학 · 순천향대학교 전자정보공학과 ·
+    다음 회차: <a href="l19.html">19회 패키지와 첫 노드</a>
+  </footer>
+</main>
+</div>
+
+<script>
+function copyPrompt(btn) {
+  const box = btn.parentElement.cloneNode(true);
+  box.querySelector('button').remove();
+  navigator.clipboard.writeText(box.textContent.trim()).then(function () {
+    const old = btn.textContent;
+    btn.textContent = '복사됨';
+    setTimeout(function () { btn.textContent = old; }, 1200);
+  });
+}
+</script>
+</body>
+</html>
