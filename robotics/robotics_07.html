@@ -1,0 +1,904 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>7회 · 코드를 읽기 위한 최소 장비 | 로봇공학</title>
+<link rel="stylesheet" href="assets/lecture.css">
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="toc-title">이 회차 목차</div>
+  <a href="#summary">한 장 요약 — 기호 여덟 개</a>
+  <a href="#screen">① 화면 한 장에 다 있다</a>
+  <a href="#file">② 오늘 읽을 파일</a>
+  <a href="#auto">③ <code>auto</code></a>
+  <a href="#ref">④ <code>&amp;</code></a>
+  <a href="#const">⑤ <code>const</code></a>
+  <a href="#name">⑥ <code>::</code> 와 <code>&lt;&gt;</code></a>
+  <a href="#arrow">⑦ <code>.</code> · <code>-&gt;</code> · <code>nullptr</code></a>
+  <a href="#include">⑧ <code>#include</code> 와 헤더</a>
+  <a href="#aimistake">⑨ AI가 헤더에서 하는 실수</a>
+  <a href="#lab">🧪 실습</a>
+  <a href="#prompts">🤖 프롬프트 모음</a>
+  <a href="#check">✅ 점검</a>
+  <a href="#more">조금 더 알아두면</a>
+</nav>
+
+<main>
+  <a class="backlink" href="../index.html">← 강의자료 목록</a>
+
+  <div class="lec-no">로봇공학 · 7회 · 2부 C++</div>
+  <h1>코드를 읽기 위한 최소 장비</h1>
+
+  <div class="questions">
+    <span class="lab">오늘 답할 질문</span>
+    <ol>
+      <li>ROS 2 예제를 열면 보이는 <code>::</code>, <code>-&gt;</code>, <code>&amp;</code>, <code>&lt;&gt;</code>는 각각 무엇인가?</li>
+      <li>타입을 안 적고 <code>auto</code>라고만 써도 되는 이유는 무엇인가?</li>
+      <li>왜 파일이 <code>.hpp</code>와 <code>.cpp</code> 두 개로 나뉘어 있나?</li>
+      <li>AI가 준 C++ 코드를 보고 "여기가 이상하다"고 말하려면 최소한 무엇을 알아야 하나?</li>
+    </ol>
+  </div>
+
+  <p>
+    오늘은 <strong>문법 수업이 아니라 읽기 연습</strong>이다.
+    이 강의는 학생이 C++ 코드를 처음부터 짜기를 요구하지 않는다.
+    코드는 에이전트가 짠다. <strong>학생이 하는 일은 받은 코드를 읽고 판단하는 것이다.</strong>
+  </p>
+  <p>
+    그런데 읽으려면 최소한의 장비가 필요하다.
+    <code>const std::vector&lt;float&gt; &amp; ranges</code>라는 한 조각에 기호가 넷 들어 있는데,
+    그중 하나라도 모르면 <strong>학생은 그 줄에서 읽기를 멈춘다.</strong>
+    멈추면 그 아래 스무 줄이 통째로 안 읽힌다.
+  </p>
+  <p>
+    그래서 오늘은 <strong>기호 여덟 개</strong>만 다룬다.
+    각각을 완전히 이해하는 것이 목표가 아니다.
+    <strong>"이건 무슨 기호구나"라고 알아보는 것</strong>까지가 오늘의 목표다.
+    깊은 이야기는 그 기호가 실제로 문제를 일으키는 회차에서 다시 한다.
+  </p>
+
+  <!-- ── 한 장 요약표 ── -->
+  <h2 id="summary">한 장 요약 — 학기가 끝나도 이 표만 남으면 된다</h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 「이것만 알면 된다」 열</strong>만 읽어도 오늘 수업은 끝난다. 가운데 열은 그것을 코드에서 알아보는 법이다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>기호</th><th>코드에서 이렇게 보인다</th><th>이것만 알면 된다</th><th>수준</th></tr>
+    <tr>
+      <td><code>auto</code></td>
+      <td><code>auto n = scan.ranges.size();</code></td>
+      <td>타입을 <strong>컴파일러가 대신 채운다.</strong> 오른쪽을 보면 무엇인지 안다</td>
+      <td><span class="badge b-lv">[알아보기]</span></td>
+    </tr>
+    <tr>
+      <td><code>&amp;</code> (참조)</td>
+      <td><code>void f(const Scan &amp; s)</code></td>
+      <td><strong>원본을 가리킨다. 복사가 아니다.</strong> 이 한 글자가 있고 없고가 속도를 가른다</td>
+      <td><span class="badge b-lv">[알아보기]</span></td>
+    </tr>
+    <tr>
+      <td><code>const</code></td>
+      <td><code>const float f = ...;</code></td>
+      <td><strong>못 바꾼다는 약속.</strong> 어기면 컴파일이 안 된다</td>
+      <td><span class="badge b-lv">[알아보기]</span></td>
+    </tr>
+    <tr>
+      <td><code>::</code></td>
+      <td><code>std::vector</code>, <code>lidar::Scan</code></td>
+      <td>앞에 붙은 것이 <strong>소속</strong>이다. <code>std</code>는 표준, 나머지는 누가 만든 것</td>
+      <td><span class="badge b-lv">[알아보기]</span></td>
+    </tr>
+    <tr>
+      <td><code>&lt;&gt;</code></td>
+      <td><code>std::vector&lt;float&gt;</code></td>
+      <td>꺾쇠 안은 <strong>"무슨 타입으로"</strong>다. 그릇은 같고 담는 것이 다르다</td>
+      <td><span class="badge b-lv">[알아보기]</span></td>
+    </tr>
+    <tr>
+      <td><code>.</code> 와 <code>-&gt;</code></td>
+      <td><code>scan.frame</code> / <code>p-&gt;frame</code></td>
+      <td><strong>점은 물건, 화살표는 물건이 있는 자리.</strong> 하는 일은 같다</td>
+      <td><span class="badge b-lv">[알아보기]</span></td>
+    </tr>
+    <tr>
+      <td><code>nullptr</code></td>
+      <td><code>Scan * p = nullptr;</code></td>
+      <td><strong>아무것도 안 가리킴.</strong> 이 상태에서 <code>-&gt;</code>를 쓰면 프로그램이 죽는다</td>
+      <td><span class="badge b-lv">[알아보기]</span></td>
+    </tr>
+    <tr>
+      <td><code>#include</code></td>
+      <td><code>#include &lt;vector&gt;</code></td>
+      <td>남이 쓴 <strong>선언을 그 자리에 붙인다.</strong> 없으면 이름을 못 알아본다</td>
+      <td><span class="badge b-lv">[알아보기]</span></td>
+    </tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 여덟 개 중 <strong>둘째 줄(<code>&amp;</code>)만 색이 다르다고 생각하면 된다.</strong>
+    나머지 일곱은 "알아보면 끝"이지만, <code>&amp;</code>는 있고 없고에 따라 <strong>프로그램이 실제로 하는 일이 달라진다.</strong>
+    이 강의에서 AI 코드를 고치는 일의 절반이 이 한 글자를 넣는 일이다.
+    깊은 이야기는 11회에서 실제 시간을 재면서 한다.
+  </div>
+
+  <!-- ── ① 화면 ── -->
+  <h2 id="screen">① 이 화면 한 장에 오늘 배울 기호가 전부 들어 있다 <span class="badge b-green">🟢 맡긴다</span></h2>
+
+  <p>
+    아래는 VS Code에 C++ 파일 하나를 열어 둔 화면이다.
+    <strong>따로 고른 화면이 아니라 이 과목에서 흔히 만나게 될 모양</strong>이다.
+    오늘 배울 여덟 개 중 일곱 개가 이 한 화면 안에 있다.
+  </p>
+
+  <figure>
+    <img src="assets/img/07_vscode_cpp.png"
+         alt="VS Code에 scan_filter.cpp 파일을 연 화면. 왼쪽에 robot_ws 폴더 탐색기, 오른쪽에 32줄까지 보이는 C++ 소스">
+    <figcaption>
+      줄 번호를 따라가며 짚는다 —
+      <strong>1~4줄</strong> <code>#include</code> 네 개.
+      <strong>6줄</strong> <code>namespace cone_track</code> (여기 만드는 이름들의 소속).
+      <strong>9줄</strong> <code>class ScanFilter</code>.
+      <strong>12줄</strong> <code>const std::string &amp; frame</code> — 한 조각에 <code>const</code>·<code>::</code>·<code>&amp;</code> 세 개가 같이 있다.
+      <strong>13줄</strong> 콜론으로 시작하는 줄(<code>: frame_(frame), lo_(lo), hi_(hi)</code>) — 8회에서 다루는 「멤버 초기화 리스트」다.
+      <strong>15줄</strong> <code>std::vector&lt;float&gt;</code> — 꺾쇠.
+      <strong>19줄</strong> <code>const auto &amp; r</code> — <code>const</code>와 <code>auto</code>와 <code>&amp;</code>가 한 줄에.
+      <strong>29줄</strong> <code>private:</code>.
+    </figcaption>
+  </figure>
+
+  <p>
+    <strong>이 화면이 안 읽히는 이유는 문법이 어려워서가 아니다.</strong>
+    기호가 셋씩 붙어 나오기 때문이다.
+    <code>const std::string &amp; frame</code>은 사실 <strong>세 조각을 이어 붙인 것</strong>이다 —
+    "안 바꾼다"(<code>const</code>) + "표준 문자열"(<code>std::string</code>) + "원본을 가리킨다"(<code>&amp;</code>).
+    <strong>조각으로 끊어 읽는 법을 익히면 그 줄이 읽힌다.</strong> 오늘 하는 일이 그것이다.
+  </p>
+
+  <!-- ── ② 오늘 읽을 파일 ── -->
+  <h2 id="file">② 오늘은 파일 하나를 여덟 조각으로 끊어 읽는다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <p>
+    기호를 설명만 하면 남지 않는다. 그래서 <strong>여덟 개가 전부 들어 있고 실제로 돌아가는 파일 하나</strong>를 준비했다.
+    <code>read_kit.cpp</code>다. 이 파일을 절마다 잘라 읽고, 각 절 끝에 <strong>그 부분이 실제로 찍은 출력</strong>을 붙인다.
+  </p>
+  <p>먼저 파일 맨 위, 데이터를 담는 그릇을 만드는 부분이다.</p>
+
+  <pre><code>// 7회 — 코드를 읽기 위한 최소 장비
+#include &lt;iostream&gt;      // std::cout  — 화면에 찍는 도구
+#include &lt;string&gt;        // std::string
+#include &lt;vector&gt;        // std::vector
+
+namespace lidar {                       // ::  이름을 담는 상자를 만든다
+  struct Scan {                         // 거리 값 묶음 하나
+    std::string frame;                  // 이 값이 어느 좌표계에서 잰 것인가
+    std::vector&lt;float&gt; ranges;          // &lt;&gt;  "무슨 타입을 담는 vector인지"
+    float front() const { return ranges.at(0); }   // const  이 함수는 상태를 안 바꾼다
+  };
+}</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>struct Scan { ... };</dt>
+      <dd>값 여러 개를 <strong>하나로 묶은 덩어리</strong>를 만든다.
+          여기서는 좌표계 이름과 거리 배열을 묶어 "스캔 한 번"으로 만들었다.
+          <strong>맨 뒤 세미콜론을 빠뜨리면 컴파일이 안 된다.</strong></dd>
+
+      <dt>std::string</dt>
+      <dd>글자를 담는 표준 그릇이다. 여기서는 좌표계 이름 <code>"base_scan"</code>을 담았다.</dd>
+
+      <dt>std::vector&lt;float&gt; ranges</dt>
+      <dd>실수를 <strong>여러 개 담고 개수가 늘었다 줄었다 하는 그릇</strong>이다.
+          여기서는 라이다가 잰 거리 값들을 담았다.</dd>
+
+      <dt>ranges.at(0)</dt>
+      <dd>그릇의 <strong>0번째 값</strong>을 꺼낸다. C++은 첫 칸이 0번이다.
+          <code>ranges[0]</code>으로도 꺼낼 수 있는데, <code>.at()</code>은 <strong>없는 칸을 꺼내려 하면 그 자리에서 오류를 낸다.</strong>
+          <code>[]</code>는 아무 말 없이 엉뚱한 값을 준다.</dd>
+    </dl>
+    <p class="later">제대로 다루는 곳: 8회(클래스) · 12회(<code>std::vector</code>와 컨테이너)</p>
+  </div>
+
+  <!-- ── ③ auto ── -->
+  <h2 id="auto">③ <code>auto</code>는 타입을 안 적어도 되는 자리다 <span class="badge b-green">🟢 맡긴다</span></h2>
+
+  <h3>언제 이게 필요해지나</h3>
+  <p>
+    C++은 변수를 만들 때 타입을 적어야 하는 언어다. <code>int n = 3;</code>처럼.
+    그런데 <strong>적어야 할 타입 이름이 감당이 안 되게 길어지는 일이 자주 생긴다.</strong>
+    그릇의 크기를 물었을 때 돌아오는 값의 타입 이름이 <code>std::vector&lt;float&gt;::size_type</code>이다.
+  </p>
+
+  <pre><code>  std::cout &lt;&lt; "① auto — 타입을 컴파일러가 채운다\n";
+  auto n = scan.ranges.size();          // auto 가 없으면 std::vector&lt;float&gt;::size_type
+  std::cout &lt;&lt; "  ranges 개수 = " &lt;&lt; n &lt;&lt; "\n";</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>std::cout &lt;&lt; 값 &lt;&lt; 값;</dt>
+      <dd>화면에 찍는다. 화살표 두 개(<code>&lt;&lt;</code>)를 계속 이어 붙이면
+          <strong>왼쪽부터 순서대로</strong> 찍힌다.
+          여기서는 설명 문장과 숫자를 한 줄에 이어 찍는 데 썼다.</dd>
+
+      <dt>"\n"</dt>
+      <dd>줄바꿈이다. 역슬래시와 <code>n</code> 두 글자가 합쳐서 <strong>엔터 한 번</strong>을 뜻한다.</dd>
+
+      <dt>scan.ranges.size()</dt>
+      <dd>그릇에 값이 <strong>몇 개 들어 있는지</strong> 묻는다.
+          여기서는 스캔 하나에 거리 값이 몇 개인지 세는 데 썼다.</dd>
+    </dl>
+  </div>
+
+  <h3>실제로 나온 출력</h3>
+  <pre><code>① auto — 타입을 컴파일러가 채운다
+  ranges 개수 = 3</code></pre>
+
+  <h3>이것만 알면 된다</h3>
+  <p>
+    <strong><code>auto</code>는 "타입을 여기에 안 적겠다"는 뜻이고, 컴파일러가 오른쪽을 보고 채운다.</strong>
+    파이썬처럼 실행 중에 타입이 바뀌는 것이 <strong>아니다.</strong>
+    타입은 컴파일할 때 정해지고, 그 뒤로는 절대 안 바뀐다.
+    <strong>적는 사람이 컴파일러로 바뀐 것뿐이다.</strong>
+  </p>
+
+  <p class="readme-first">무엇을 먼저 볼지: <strong>가운데 열</strong>이 판단 기준이다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>이럴 때</th><th><code>auto</code>를 쓰나</th><th>왜</th></tr>
+    <tr><td>타입 이름이 길거나 외우기 어려울 때</td><td><strong>쓴다</strong></td><td>사람이 적으면 틀린다. 컴파일러는 안 틀린다</td></tr>
+    <tr><td>오른쪽만 봐도 무엇인지 뻔할 때</td><td><strong>쓴다</strong></td><td><code>auto it = ranges.begin();</code> — 두 번 쓸 이유가 없다</td></tr>
+    <tr><td>읽는 사람이 타입을 꼭 알아야 할 때</td><td>안 쓴다</td><td><code>auto x = f();</code>만 있으면 <code>x</code>가 무엇인지 알 길이 없다</td></tr>
+    <tr><td><code>float</code>인지 <code>double</code>인지가 중요할 때</td><td>안 쓴다</td><td>라이다 거리처럼 정밀도가 걸린 값은 명시하는 편이 안전하다</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> <code>auto</code>는 <strong>타이핑을 줄이려고 쓰는 것이 아니다.</strong>
+    사람이 타입을 손으로 적다가 <strong>조금 다른 타입을 적으면 그 자리에서 조용히 복사가 한 번 일어난다.</strong>
+    <code>auto</code>는 그 실수를 원천적으로 없앤다. 11회에서 그 복사가 얼마짜리인지 재 본다.
+  </div>
+
+  <!-- ── ④ & ── -->
+  <h2 id="ref">④ <code>&amp;</code> 한 글자가 복사 한 번을 없앤다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <h3>언제 이게 필요해지나</h3>
+  <p>
+    함수에 값을 넘길 때 C++은 <strong>기본적으로 통째로 복사해서 넘긴다.</strong>
+    <code>int</code> 하나면 아무 문제가 없다. 그런데 넘기는 것이 <strong>거리 값 360개가 든 스캔</strong>이면 이야기가 달라진다.
+    함수를 부를 때마다 360개가 새로 만들어진다.
+  </p>
+
+  <p>아래 두 함수는 하는 일이 똑같다. <strong>다른 것은 인자 앞의 <code>const</code>와 <code>&amp;</code>뿐이다.</strong></p>
+
+  <div class="codelabel bad">복사가 일어나는 쪽</div>
+  <pre class="before"><code>// &amp; 없이 받는다 → 통째로 복사된다
+void print_copy(lidar::Scan s) { std::cout &lt;&lt; "  값으로 받음  : " &lt;&lt; s.frame &lt;&lt; "\n"; }</code></pre>
+
+  <div class="codelabel good">복사가 없는 쪽</div>
+  <pre class="after"><code>// const &amp; 로 받는다 → 원본을 보기만 한다. 복사가 없다
+void print_ref(const lidar::Scan &amp; s) { std::cout &lt;&lt; "  참조로 받음  : " &lt;&lt; s.frame &lt;&lt; "\n"; }</code></pre>
+
+  <pre><code>  std::cout &lt;&lt; "② &amp; — 원본을 가리킨다. 복사가 아니다\n";
+  print_copy(scan);
+  print_ref(scan);</code></pre>
+
+  <h3>실제로 나온 출력</h3>
+  <pre><code>② &amp; — 원본을 가리킨다. 복사가 아니다
+  값으로 받음  : base_scan
+  참조로 받음  : base_scan</code></pre>
+
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 출력이 같다는 것이 이 절에서 가장 중요한 대목이다</div>
+    <p>
+      두 함수의 출력이 <strong>글자 하나 다르지 않다.</strong>
+      <code>&amp;</code>를 빼도 프로그램은 잘 돌고, 답도 맞고, 컴파일러도 아무 말을 안 한다.
+    </p>
+    <p>
+      <strong>다른 것은 눈에 안 보이는 곳에서 일어난다.</strong>
+      위쪽 함수는 부를 때마다 스캔을 통째로 하나 더 만들고, 함수가 끝나면 버린다.
+      아래쪽은 아무것도 안 만든다.
+    </p>
+    <p>
+      <strong>그래서 이 실수는 테스트로 안 잡힌다.</strong>
+      사람이 코드를 읽어야만 잡힌다. 6회에서 본 「AI 코드의 복사 오버헤드 1.39배」가 바로 이 자리다.
+      실습에서 <strong><code>&amp;</code>를 직접 지워 보고 출력이 같은 것을 눈으로 확인</strong>한다.
+    </p>
+  </div>
+
+  <p class="readme-first">무엇을 먼저 볼지: <strong>첫 줄이 기본값</strong>이다. 고민되면 첫 줄을 고른다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>이렇게 받는다</th><th>무슨 뜻인가</th><th>언제</th></tr>
+    <tr><td><code>const T &amp; x</code></td><td>원본을 보되 <strong>안 바꾼다</strong></td><td><strong>기본값.</strong> 읽기만 할 때</td></tr>
+    <tr><td><code>T &amp; x</code></td><td>원본을 보고 <strong>바꾼다</strong></td><td>함수가 원본을 고쳐야 할 때</td></tr>
+    <tr><td><code>T x</code></td><td>사본을 받는다</td><td><code>int</code>·<code>float</code>처럼 작은 값일 때. 또는 어차피 사본이 필요할 때</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 대략 <strong>8바이트(포인터 하나 크기)보다 크면</strong> 첫 줄을 생각한다.
+    <code>std::string</code>·<code>std::vector</code>·메시지 타입은 전부 여기 해당한다.
+    반대로 <strong><code>int</code>를 <code>const int &amp;</code>로 받는 것은 오히려 손해다.</strong>
+    자세한 것은 11회에서 시간을 재면서 다룬다. 지금은 <strong>모양을 알아보는 것</strong>까지면 된다.
+  </div>
+
+  <!-- ── ⑤ const ── -->
+  <h2 id="const">⑤ <code>const</code>는 컴파일러에게 하는 약속이다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <h3>언제 이게 필요해지나</h3>
+  <p>
+    큰 프로그램에서 가장 찾기 어려운 버그는 <strong>"어디선가 이 값이 바뀌었다"</strong>는 종류다.
+    값이 바뀐 자리를 찾으려면 코드 전체를 뒤져야 한다.
+    <strong><code>const</code>는 그 뒤짐을 컴파일러에게 넘기는 장치다.</strong>
+  </p>
+
+  <pre><code>  std::cout &lt;&lt; "③ const — 못 바꾼다는 약속\n";
+  const float f = scan.front();
+  std::cout &lt;&lt; "  정면 거리 = " &lt;&lt; f &lt;&lt; " m  (f 에는 이제 대입할 수 없다)\n";</code></pre>
+
+  <h3>실제로 나온 출력</h3>
+  <pre><code>③ const — 못 바꾼다는 약속
+  정면 거리 = 0.83 m  (f 에는 이제 대입할 수 없다)</code></pre>
+
+  <h3>이것만 알면 된다</h3>
+  <p>
+    <strong><code>const</code>가 붙은 것은 바꿀 수 없다.</strong> 바꾸려고 하면 <strong>실행 전에</strong> 컴파일러가 막는다.
+    실행해 봐야 아는 버그가 <strong>컴파일 단계의 오류로 앞당겨지는 것</strong>이 이 키워드의 값어치다.
+  </p>
+  <p>
+    <code>const</code>는 <strong>붙는 자리가 세 군데</strong>다. 오늘은 세 군데 모두 "알아보는 것"까지만 한다.
+  </p>
+
+  <p class="readme-first">무엇을 먼저 볼지: <strong>가운데 열의 위치</strong>가 뜻을 정한다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>어디에 붙었나</th><th>모양</th><th>무슨 뜻인가</th></tr>
+    <tr><td>변수 앞</td><td><code>const float f = ...;</code></td><td>이 변수는 <strong>다시 대입할 수 없다</strong></td></tr>
+    <tr><td>함수 인자 앞</td><td><code>void g(const Scan &amp; s)</code></td><td>이 함수는 <strong>넘겨받은 것을 안 바꾼다</strong></td></tr>
+    <tr><td>함수 이름 <strong>뒤</strong></td><td><code>float front() const</code></td><td>이 함수는 <strong>자기가 속한 덩어리의 값을 안 바꾼다</strong></td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 세 번째 줄이 헷갈리는 자리다. <strong>같은 <code>const</code>인데 뒤에 붙었다.</strong>
+    <code>read_kit.cpp</code>의 <code>float front() const</code>가 그것이고,
+    "이 함수를 불러도 스캔의 내용은 안 변한다"는 약속이다.
+    이 약속 덕분에 <strong>바꾸면 안 되는 스캔에서도 이 함수는 부를 수 있다.</strong>
+    <strong>깊은 이야기는 14회에서 한다.</strong> 오늘은 <strong>"함수 뒤에 붙은 <code>const</code>도 있다"</strong>는 것만 알면 된다.
+  </div>
+
+  <!-- ── ⑥ :: 와 <> ── -->
+  <h2 id="name">⑥ <code>std::vector&lt;float&gt;</code> 한 조각에 기호가 둘 들어 있다 <span class="badge b-green">🟢 맡긴다</span></h2>
+
+  <h3>언제 이게 필요해지나</h3>
+  <p>
+    프로그램이 커지면 이름이 겹친다. 표준 라이브러리에도 <code>Node</code>가 있고 ROS 2에도 <code>Node</code>가 있고 내 코드에도 <code>Node</code>가 있을 수 있다.
+    <strong>어느 <code>Node</code>인지를 밝히는 장치가 <code>::</code>다.</strong>
+  </p>
+
+  <pre><code>  std::cout &lt;&lt; "④ :: — 이름이 어느 소속인가\n";
+  std::cout &lt;&lt; "  lidar::Scan 은 우리가 만든 것, std::vector 는 표준 것\n";</code></pre>
+
+  <pre><code>④ :: — 이름이 어느 소속인가
+  lidar::Scan 은 우리가 만든 것, std::vector 는 표준 것</code></pre>
+
+  <p>
+    앞에서 본 <code>namespace lidar { ... }</code>가 <strong>이름을 담는 상자를 만드는 문장</strong>이다.
+    그 상자 안에 만든 것은 밖에서 <code>lidar::Scan</code>이라고 불러야 한다.
+  </p>
+
+  <p class="readme-first">무엇을 먼저 볼지: <strong>왼쪽 열의 앞부분</strong>만 보면 그것이 누구 것인지 안다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>이렇게 보이면</th><th>소속</th><th>알아두면 좋은 것</th></tr>
+    <tr><td><code>std::vector</code>, <code>std::string</code>, <code>std::cout</code></td><td>C++ 표준</td><td>가장 많이 보게 된다. 믿고 써도 되는 것들이다</td></tr>
+    <tr><td><code>rclcpp::Node</code>, <code>sensor_msgs::msg::LaserScan</code></td><td>ROS 2</td><td>3부에서 계속 만난다. <code>::</code>가 두 번 나오기도 한다</td></tr>
+    <tr><td><code>lidar::Scan</code>, <code>cone_track::ScanFilter</code></td><td><strong>우리가 만든 것</strong></td><td>이름이 낯설면 대개 이쪽이다. 프로젝트 안에서 찾으면 나온다</td></tr>
+    <tr><td>앞에 아무것도 없음 — <code>main</code>, <code>print_ref</code></td><td>어디에도 안 넣은 것</td><td>작은 프로그램은 이래도 된다. 커지면 이름이 부딪친다</td></tr>
+  </table>
+  </div>
+
+  <h3>꺾쇠 안은 "무슨 타입으로"다</h3>
+  <p>
+    <code>std::vector</code>는 <strong>"여러 개 담는 그릇"이라는 설계도</strong>이지 그릇 자체가 아니다.
+    무엇을 담을지를 정해 줘야 실제 그릇이 된다. <strong>그 자리가 꺾쇠 안이다.</strong>
+  </p>
+
+  <pre><code>  std::cout &lt;&lt; "⑥ &lt;&gt; — 꺾쇠 안은 \"무슨 타입으로\"\n";
+  std::vector&lt;std::string&gt; names{"base_link", "base_scan"};
+  std::cout &lt;&lt; "  vector&lt;string&gt; 첫 칸 = " &lt;&lt; names.at(0) &lt;&lt; "\n";</code></pre>
+
+  <pre><code>⑥ &lt;&gt; — 꺾쇠 안은 "무슨 타입으로"
+  vector&lt;string&gt; 첫 칸 = base_link</code></pre>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>이렇게 쓰면</th><th>무엇이 되나</th></tr>
+    <tr><td><code>std::vector&lt;float&gt;</code></td><td>실수를 담는 그릇 — 라이다 거리 값</td></tr>
+    <tr><td><code>std::vector&lt;std::string&gt;</code></td><td>글자를 담는 그릇 — 좌표계 이름 목록</td></tr>
+    <tr><td><code>std::vector&lt;std::vector&lt;float&gt;&gt;</code></td><td>그릇을 담는 그릇 — 여러 스캔을 모아 둔 것</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 꺾쇠를 보면 <strong>"이 그릇은 무엇을 담는가"</strong>만 읽으면 된다.
+    이런 문법을 <strong>템플릿</strong>이라고 부르는데, <strong>이 강의에서 템플릿을 직접 만들 일은 거의 없다.</strong>
+    쓰는 일은 매일 있다. 그래서 오늘은 <strong>읽는 법만</strong> 한다.
+    만드는 법은 14회에 읽을거리로 둔다.
+  </div>
+
+  <!-- ── ⑦ . -> nullptr ── -->
+  <h2 id="arrow">⑦ 점과 화살표는 같은 것을 다르게 쓴 것이다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <h3>언제 이게 필요해지나</h3>
+  <p>
+    ROS 2 코드를 열면 <code>msg-&gt;ranges</code>처럼 <strong>화살표</strong>가 계속 나온다.
+    그런데 어떤 자리에서는 <code>scan.ranges</code>처럼 <strong>점</strong>이다.
+    둘의 차이를 모르면 코드를 고칠 때마다 컴파일 오류를 만난다.
+  </p>
+
+  <pre><code>  std::cout &lt;&lt; "⑤ . 과 -&gt; — 점은 객체, 화살표는 포인터\n";
+  lidar::Scan * p = &amp;scan;              // p 는 scan 이 있는 자리를 가리킨다
+  std::cout &lt;&lt; "  scan.frame  = " &lt;&lt; scan.frame &lt;&lt; "\n";
+  std::cout &lt;&lt; "  p-&gt;frame    = " &lt;&lt; p-&gt;frame &lt;&lt; "   (같은 것을 다르게 쓴 것)\n";</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>lidar::Scan * p</dt>
+      <dd>타입 뒤의 <code>*</code>는 <strong>"그 물건이 있는 자리를 담는 변수"</strong>라는 뜻이다(포인터).
+          물건 자체가 아니라 <strong>주소</strong>를 담는다.
+          여기서는 <code>scan</code>이 어디 있는지를 <code>p</code>에 담았다.</dd>
+
+      <dt>&amp;scan</dt>
+      <dd><strong>여기서의 <code>&amp;</code>는 앞 절의 <code>&amp;</code>와 다른 뜻이다.</strong>
+          변수 앞에 붙으면 <strong>"그 변수가 있는 자리(주소)를 달라"</strong>는 뜻이다.
+          타입 옆에 붙었을 때만 「참조」다. <strong>붙은 자리를 봐야 뜻이 갈린다.</strong></dd>
+
+      <dt>p-&gt;frame</dt>
+      <dd><strong>"그 자리에 가서 <code>frame</code>을 꺼내라"</strong>는 뜻이다.
+          <code>(*p).frame</code>이라고 써도 같은데, 너무 자주 쓰다 보니 짧은 표기가 생겼다.</dd>
+    </dl>
+    <p class="later">제대로 다루는 곳: 12회(스마트 포인터 — ROS 2 콜백 인자가 전부 이것이다)</p>
+  </div>
+
+  <h3>실제로 나온 출력</h3>
+  <pre><code>⑤ . 과 -&gt; — 점은 객체, 화살표는 포인터
+  scan.frame  = base_scan
+  p-&gt;frame    = base_scan   (같은 것을 다르게 쓴 것)</code></pre>
+
+  <p>
+    <strong>두 줄의 값이 같다.</strong> 같은 스캔을 두 가지 방법으로 읽은 것이기 때문이다.
+    <strong>점이냐 화살표냐는 "무엇을 손에 들고 있느냐"에 따라 정해진다</strong> —
+    물건을 들고 있으면 점, 물건이 있는 자리를 들고 있으면 화살표다.
+  </p>
+
+  <h3>아무것도 안 가리키는 상태 — <code>nullptr</code></h3>
+  <p>
+    자리를 담는 변수는 <strong>"아직 아무 자리도 안 정했다"</strong>는 상태가 될 수 있다.
+    그 상태를 나타내는 값이 <code>nullptr</code>이다.
+  </p>
+
+  <pre><code>  std::cout &lt;&lt; "⑦ nullptr — 아무것도 안 가리킴\n";
+  lidar::Scan * empty = nullptr;
+  std::cout &lt;&lt; "  empty 가 비었나? " &lt;&lt; (empty == nullptr ? "그렇다" : "아니다") &lt;&lt; "\n";</code></pre>
+
+  <pre><code>⑦ nullptr — 아무것도 안 가리킴
+  empty 가 비었나? 그렇다</code></pre>
+
+  <div class="box trap">
+    <div class="boxtitle">⚠️ <code>nullptr</code>에 화살표를 쓰면 프로그램이 그 자리에서 죽는다</div>
+    <p>
+      <code>empty-&gt;frame</code>이라고 쓰면 <strong>"아무 데도 아닌 자리에 가서 값을 꺼내라"</strong>는 말이 된다.
+      컴파일은 된다. <strong>실행 중에 죽는다.</strong>
+    </p>
+    <p>
+      그래서 자리를 담는 변수를 쓰기 전에는 <strong>비었는지 먼저 확인하는 것이 습관</strong>이다.
+      ROS 2 코드에서 <code>if (!msg) { return; }</code> 같은 줄이 콜백 맨 위에 있는 것이 그 이유다.
+    </p>
+    <p>
+      <strong>옛날 코드에서는 <code>0</code>이나 <code>NULL</code>을 썼다.</strong> 지금도 컴파일된다.
+      그런데 <code>0</code>은 숫자인지 빈 자리인지 코드만 봐서는 알 수 없다.
+      <strong>AI가 준 코드에 <code>NULL</code>이 보이면 오래된 코드를 흉내낸 것이다.</strong>
+      <code>nullptr</code>로 바꿔 달라고 하면 된다.
+    </p>
+  </div>
+
+  <!-- ── ⑧ include ── -->
+  <h2 id="include">⑧ <code>#include</code>는 남이 쓴 선언을 그 자리에 붙인다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <h3>언제 이게 필요해지나</h3>
+  <p>
+    <code>std::vector</code>라는 이름을 쓰려면 컴파일러가 그 이름을 알아야 한다.
+    <strong>C++은 파일 하나를 위에서 아래로 읽으면서 컴파일한다.</strong>
+    읽는 도중에 모르는 이름이 나오면 그 자리에서 오류를 낸다.
+  </p>
+
+  <pre><code>#include &lt;iostream&gt;      // std::cout  — 화면에 찍는 도구
+#include &lt;string&gt;        // std::string
+#include &lt;vector&gt;        // std::vector</code></pre>
+
+  <pre><code>⑧ #include — 선언을 가져다 붙인다
+  이 파일 맨 위 세 줄이 없으면 위 코드는 한 줄도 컴파일되지 않는다</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>#include &lt;이름&gt;</dt>
+      <dd>꺾쇠로 감싸면 <strong>시스템에 깔린 것</strong>을 찾는다.
+          표준 라이브러리와 남의 라이브러리가 여기 해당한다.</dd>
+
+      <dt>#include "이름.hpp"</dt>
+      <dd>따옴표로 감싸면 <strong>내 프로젝트 안에서 먼저</strong> 찾는다.
+          내가 만든 헤더를 가져올 때 이 모양을 쓴다. 8회의 예제가 이것이다.</dd>
+
+      <dt>맨 앞의 <code>#</code></dt>
+      <dd><strong>컴파일 전에 처리되는 줄</strong>이라는 표시다.
+          <code>#include</code>는 실행되는 명령이 아니라 <strong>그 자리에 파일 내용을 통째로 복사해 넣으라</strong>는 지시다.</dd>
+
+      <dt>#ifndef / #define / #endif</dt>
+      <dd>헤더 파일 맨 위아래를 감싸는 세 줄이다. 아래 ⑨절의 코드에도 나온다.
+          <strong>"같은 헤더가 두 번 들어와도 한 번만 읽히게"</strong> 만드는 장치다.
+          지금은 <strong>헤더 파일에 늘 붙어 다니는 세 줄</strong>이라는 것만 알아 두면 된다.</dd>
+    </dl>
+    <p class="later">제대로 다루는 곳: 8회(헤더와 소스 나누기 — 포함 보호)</p>
+  </div>
+
+  <h3>그래서 파일이 두 개로 나뉜다</h3>
+  <p>
+    여기서 <strong>C++이 파이썬과 크게 다른 점</strong>이 하나 나온다.
+    <strong>"무엇이 있는지"(선언)와 "어떻게 하는지"(정의)를 다른 파일에 나눠 적는다.</strong>
+  </p>
+
+  <figure>
+    <img src="assets/img/07_header_source.png"
+         alt="세 상자 그림. 위 왼쪽 scan_filter.hpp(헤더)는 '무엇이 있는지'만 적는다, 위 오른쪽 scan_filter.cpp(소스)는 '어떻게 하는지'를 적는다, 아래 main.cpp가 헤더를 include로 읽는다">
+    <figcaption>
+      <strong>아래로 향하는 화살표 두 개의 글씨가 다르다</strong>는 것을 본다.
+      왼쪽 화살표는 <strong>「<code>#include</code>로 읽는다」</strong>(코드를 쓸 때),
+      오른쪽 화살표는 <strong>「빌드할 때 붙인다」</strong>(컴파일이 끝난 뒤)다.
+      <strong>서로 다른 단계에서 일어나는 일이다.</strong> 9회에서 이 두 단계를 나눠 본다.
+    </figcaption>
+  </figure>
+
+  <p class="readme-first">무엇을 먼저 볼지: <strong>왼쪽 열이 헤더</strong>, 오른쪽이 소스다. 헤더 쪽이 짧아야 정상이다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>헤더 (<code>.hpp</code>) — 무엇이 있는지</th><th>소스 (<code>.cpp</code>) — 어떻게 하는지</th></tr>
+    <tr><td>클래스에 무슨 함수가 있는지</td><td>그 함수가 실제로 무엇을 하는지</td></tr>
+    <tr><td>함수 이름과 인자 모양, 그리고 세미콜론</td><td>중괄호 안의 코드 전부</td></tr>
+    <tr><td>쓰는 쪽이 읽는다</td><td>빌드할 때만 쓰인다</td></tr>
+    <tr><td><strong>고치면 이걸 쓰는 파일이 전부 다시 컴파일된다</strong></td><td>고쳐도 이 파일만 다시 컴파일된다</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 마지막 줄이 나누는 진짜 이유다.
+    파이썬은 파일을 고치면 그 파일만 다시 읽으면 되지만,
+    C++은 <strong>헤더 하나를 고치면 그것을 읽는 파일 전부를 다시 컴파일해야 한다.</strong>
+    그래서 <strong>헤더는 가볍게 유지한다.</strong> 다음 절의 AI 실수가 정확히 이 지점을 어긴다.
+  </div>
+
+  <!-- ── ⑨ AI 실수 ── -->
+  <h2 id="aimistake">⑨ AI가 헤더에서 하는 실수 두 가지 <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <h3>실수 1 — 헤더에 함수의 내용까지 적는다</h3>
+  <p>
+    AI에게 "헤더 파일을 만들어 줘"라고 하면 <strong>중괄호 안의 코드까지 헤더에 넣는 일</strong>이 흔하다.
+    파일 하나짜리 프로그램에서는 잘 돌기 때문에 알아채기 어렵다.
+  </p>
+
+  <div class="codelabel bad">AI가 보통 주는 코드 🔴</div>
+  <pre class="before"><code>// bad.hpp — 헤더에 함수의 「내용」까지 들어갔다
+#ifndef BAD_HPP_
+#define BAD_HPP_
+float front(const float * r) { return r[0]; }   // 선언이 아니라 정의다
+#endif</code></pre>
+
+  <h3>무엇이 문제인가</h3>
+  <p>
+    이 헤더를 <strong>소스 파일 두 개가 각각 <code>#include</code></strong>하면
+    같은 함수가 <strong>두 벌</strong> 만들어진다. 그리고 빌드 마지막 단계에서 터진다.
+    아래는 실제로 그렇게 해서 나온 오류다.
+  </p>
+
+  <pre><code>$ g++ -std=c++17 a.cpp b.cpp -o x
+/usr/bin/ld: /tmp/ccxhcUM5.o: in function `front(float const*)':
+b.cpp:(.text+0x0): multiple definition of `front(float const*)';
+    /tmp/ccQgzmvJ.o:a.cpp:(.text+0x0): first defined here
+collect2: error: ld returned 1 exit status</code></pre>
+
+  <div class="interp">
+    <strong>해석:</strong> <code>multiple definition</code>은 <strong>"같은 것이 두 번 정의됐다"</strong>는 말이다.
+    <strong>오류가 난 곳은 소스 파일인데 고칠 곳은 헤더다.</strong> 그래서 처음 만나면 한참 헤맨다.
+    <code>ld</code>라는 이름이 보이면 <strong>「빌드 마지막 단계(링크)에서 났다」</strong>는 신호다.
+    이 오류 읽는 법은 9회에서 세 단계로 나눠 정리한다.
+  </div>
+
+  <h3>이렇게 말하면 된다</h3>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    헤더에는 선언만 남기고 함수 본문은 <code>.cpp</code>로 옮겨 줘. 헤더에 남는 줄은 세미콜론으로 끝나야 해.
+  </div>
+
+  <div class="codelabel good">받은 코드</div>
+  <pre class="after"><code>// good.hpp — 선언만. 세미콜론으로 끝난다
+#ifndef GOOD_HPP_
+#define GOOD_HPP_
+float front(const float * r);
+#endif
+
+// good.cpp — 내용은 여기에
+#include "good.hpp"
+float front(const float * r) { return r[0]; }</code></pre>
+
+  <h3>실수 2 — 안 쓰는 <code>#include</code>를 남긴다</h3>
+  <p>
+    코드를 여러 번 고치다 보면 <strong>더 이상 안 쓰는 헤더가 맨 위에 그대로 남는다.</strong>
+    AI는 이것을 잘 지우지 않는다. 지워도 되는지 확신이 없기 때문이다.
+  </p>
+
+  <div class="codelabel bad">AI가 보통 주는 코드 🔴</div>
+  <pre class="before"><code>#include &lt;algorithm&gt;    // 안 쓴다
+#include &lt;iostream&gt;     // 쓴다
+#include &lt;map&gt;          // 안 쓴다
+#include &lt;memory&gt;       // 안 쓴다
+#include &lt;string&gt;       // 쓴다
+#include &lt;vector&gt;       // 쓴다</code></pre>
+
+  <p class="readme-first">무엇을 먼저 볼지: <strong>오른쪽 열</strong>이 왜 이게 문제인지다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>무엇이 문제인가</th><th>왜 그런가</th></tr>
+    <tr><td>빌드가 느려진다</td><td><code>#include</code>는 <strong>파일 내용을 통째로 붙여 넣는 것</strong>이다. 안 쓰는 것도 매번 붙는다</td></tr>
+    <tr><td>이 코드가 무엇을 쓰는지 안 보인다</td><td>맨 위 목록은 <strong>"이 파일이 무엇에 기대고 있나"</strong>를 알려 주는 자리다. 거짓 정보가 섞이면 못 믿는다</td></tr>
+    <tr><td>지웠을 때 안 되는 경우가 있다</td><td>어떤 헤더는 <strong>다른 헤더를 대신 끌어와 준다.</strong> 그래서 그냥 지우면 갑자기 컴파일이 안 되기도 한다</td></tr>
+  </table>
+  </div>
+
+  <h3>이렇게 말하면 된다</h3>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    이 파일에서 실제로 쓰는 <code>#include</code>만 남기고 나머지는 지워 줘. 지운 뒤에 컴파일이 되는지 확인하고, 안 되면 무엇 때문에 필요했는지 알려 줘.
+  </div>
+  <p>
+    <strong>마지막 문장이 중요하다.</strong> "지워 줘"만 말하면 지우고 끝난다.
+    <strong>"확인하고"를 붙이면 컴파일까지 돌려 보고 답한다.</strong>
+  </p>
+
+  <!-- ── 실습 ── -->
+  <h2 id="lab">🧪 실습 — <code>&amp;</code>를 지우면 출력이 달라질까 <span class="badge b-green">🟢 맡긴다</span></h2>
+
+  <div class="lab-block">
+    <p class="boxtitle">① 이걸 해 보면 무엇을 알게 되나</p>
+    <p>
+      <strong>기호 여덟 개가 실제로 찍는 출력을 눈으로 본다.</strong>
+      그리고 <code>&amp;</code> 한 글자를 지웠을 때 <strong>출력이 어떻게 달라지는지</strong> 확인한다.
+      이 실습의 결론은 <strong>"안 달라진다"</strong>이고, <strong>그게 핵심이다.</strong>
+    </p>
+
+    <p class="boxtitle">② 준비물</p>
+    <ul>
+      <li>WSL 우분투 터미널 하나</li>
+      <li>VS Code (WSL에 연결된 상태)</li>
+      <li><code>g++</code> — 6회에서 이미 깔았다면 그대로 쓴다</li>
+    </ul>
+
+    <p class="boxtitle">③ 절차</p>
+    <ol>
+      <li>
+        <strong>(2분) 작업 폴더를 만들고 파일을 만든다.</strong>
+        <pre><code>mkdir -p ~/robot_ws/l07
+cd ~/robot_ws/l07
+code .</code></pre>
+        VS Code에서 <code>read_kit.cpp</code>를 새로 만든다.
+      </li>
+      <li>
+        <strong>(3분) 이 자료의 코드 조각을 순서대로 붙여 넣는다.</strong>
+        ②절부터 ⑧절까지의 코드 블록을 위에서부터 이어 붙이면 한 파일이 된다.
+        <strong>타이핑하지 않는다.</strong> 전체 파일이 필요하면 아래 프롬프트를 쓴다.
+        <div class="prompt">
+          <button onclick="copyPrompt(this)">복사</button>
+          C++ 파일을 하나 만들어 줘. <code>namespace lidar</code> 안에 <code>Scan</code> 구조체(<code>std::string frame</code>, <code>std::vector&lt;float&gt; ranges</code>, <code>float front() const</code>)를 두고, <code>main</code>에서 <code>auto</code>·참조·<code>const</code>·<code>::</code>·<code>-&gt;</code>·<code>&lt;&gt;</code>·<code>nullptr</code>을 하나씩 쓰면서 각각이 무엇인지 화면에 찍게 해 줘. C++17로 써 줘.
+        </div>
+      </li>
+      <li>
+        <strong>(1분) 컴파일해서 돌린다.</strong>
+        <pre><code>g++ -std=c++17 -O2 -o read_kit read_kit.cpp
+./read_kit</code></pre>
+      </li>
+      <li>
+        <strong>(2분) 출력이 아래 「④ 성공 화면」과 같은지 확인한다.</strong>
+        여덟 줄의 번호(①~⑧)가 다 나오면 된 것이다.
+      </li>
+      <li>
+        <strong>(3분) <code>print_ref</code>에서 <code>&amp;</code> 한 글자를 지운다.</strong>
+        <pre><code>// 고치기 전
+void print_ref(const lidar::Scan &amp; s) { ... }
+// 고친 뒤 — &amp; 만 지웠다
+void print_ref(const lidar::Scan s) { ... }</code></pre>
+        저장하고 3단계를 다시 한다.
+      </li>
+      <li>
+        <strong>(3분) 무엇이 달라졌는지 적는다.</strong> 아래 표의 빈칸을 채운다.
+      </li>
+      <li>
+        <strong>(2분) 다시 <code>&amp;</code>를 넣어 원래대로 되돌린다.</strong>
+        되돌린 뒤 한 번 더 컴파일해서 되는지 확인한다.
+      </li>
+    </ol>
+
+    <p class="boxtitle">④ 이렇게 되면 성공이다</p>
+    <p><code>&amp;</code>가 있는 원래 파일을 돌리면 아래가 그대로 나온다.</p>
+    <pre><code>① auto — 타입을 컴파일러가 채운다
+  ranges 개수 = 3
+② &amp; — 원본을 가리킨다. 복사가 아니다
+  값으로 받음  : base_scan
+  참조로 받음  : base_scan
+③ const — 못 바꾼다는 약속
+  정면 거리 = 0.83 m  (f 에는 이제 대입할 수 없다)
+④ :: — 이름이 어느 소속인가
+  lidar::Scan 은 우리가 만든 것, std::vector 는 표준 것
+⑤ . 과 -&gt; — 점은 객체, 화살표는 포인터
+  scan.frame  = base_scan
+  p-&gt;frame    = base_scan   (같은 것을 다르게 쓴 것)
+⑥ &lt;&gt; — 꺾쇠 안은 "무슨 타입으로"
+  vector&lt;string&gt; 첫 칸 = base_link
+⑦ nullptr — 아무것도 안 가리킴
+  empty 가 비었나? 그렇다
+⑧ #include — 선언을 가져다 붙인다
+  이 파일 맨 위 세 줄이 없으면 위 코드는 한 줄도 컴파일되지 않는다</code></pre>
+
+    <p class="boxtitle">⑤ 5단계에서 무엇이 달라졌나</p>
+    <div class="tablewrap">
+    <table>
+      <tr><th>확인할 것</th><th>내가 본 것</th></tr>
+      <tr><td>컴파일이 됐나</td><td>됐다 / 안 됐다</td></tr>
+      <tr><td>「참조로 받음」 줄의 글자가 달라졌나</td><td>________</td></tr>
+      <tr><td>다른 줄이 달라졌나</td><td>________</td></tr>
+      <tr><td>컴파일러가 경고를 냈나</td><td>________</td></tr>
+    </table>
+    </div>
+    <div class="interp">
+      <strong>해석:</strong> 우리가 확인해 보니 <strong>출력은 한 글자도 안 달라졌다.</strong>
+      컴파일도 되고 경고도 없다. <strong>달라진 것은 「참조로 받음」이 이제 참조가 아니라는 사실뿐이다.</strong>
+      함수는 스캔을 통째로 하나 더 만들어 받고, 다 쓰면 버린다.
+      <strong>눈으로도 안 보이고 컴파일러도 안 잡아 준다.</strong> 사람이 코드를 읽어야만 잡힌다.
+      <span style="color:var(--muted)">확인한 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0 <code>-O2</code>)</span>
+    </div>
+  </div>
+
+  <!-- ── 프롬프트 모음 ── -->
+  <h2 id="prompts">🤖 오늘 나온 프롬프트 모음 <span class="badge b-green">🟢 맡긴다</span></h2>
+  <div class="tablewrap">
+  <table>
+    <tr><th>이럴 때</th><th>이렇게 말한다</th></tr>
+    <tr><td>모르는 기호를 만났을 때</td><td>"이 줄을 조각으로 끊어서, 각 조각이 무슨 뜻인지 한 줄씩 설명해 줘. 문법 이름 말고 하는 일로 설명해 줘."</td></tr>
+    <tr><td>헤더가 이상할 때</td><td>"헤더에는 선언만 남기고 함수 본문은 <code>.cpp</code>로 옮겨 줘. 헤더에 남는 줄은 세미콜론으로 끝나야 해."</td></tr>
+    <tr><td><code>#include</code>가 많을 때</td><td>"이 파일에서 실제로 쓰는 <code>#include</code>만 남기고 나머지는 지워 줘. 지운 뒤 컴파일이 되는지 확인해 줘."</td></tr>
+    <tr><td>복사가 의심될 때</td><td>"함수 인자 중에 값으로 받는 것이 있으면 <code>const</code> 참조로 바꿔 줘. 다만 <code>int</code>·<code>float</code> 같은 작은 값은 그대로 둬."</td></tr>
+    <tr><td>옛날 문법이 보일 때</td><td>"이 코드에 <code>NULL</code>이나 <code>0</code>으로 포인터를 비운 자리가 있으면 <code>nullptr</code>로 바꿔 줘."</td></tr>
+    <tr><td>타입이 안 보일 때</td><td>"<code>auto</code>로 쓴 변수들이 실제로 무슨 타입인지 주석으로 적어 줘. 코드는 그대로 둬."</td></tr>
+  </table>
+  </div>
+
+  <!-- ── 점검 ── -->
+  <h2 id="check">✅ 오늘의 점검</h2>
+  <ul class="check">
+    <li><input type="checkbox" id="c1"><label for="c1"><code>const std::vector&lt;float&gt; &amp; ranges</code>를 <strong>네 조각으로 끊어</strong> 각각을 설명할 수 있나?</label></li>
+    <li><input type="checkbox" id="c2"><label for="c2"><code>&amp;</code>가 <strong>두 가지 뜻</strong>으로 쓰인다는 것과, 무엇으로 구별하는지 말할 수 있나?</label></li>
+    <li><input type="checkbox" id="c3"><label for="c3">받은 코드에서 <code>.</code>과 <code>-&gt;</code> 중 무엇을 써야 하는지 판단할 수 있나?</label></li>
+    <li><input type="checkbox" id="c4"><label for="c4">헤더(<code>.hpp</code>)에 들어가야 할 것과 소스(<code>.cpp</code>)에 들어가야 할 것을 구분했나?</label></li>
+    <li><input type="checkbox" id="c5"><label for="c5"><code>multiple definition</code> 오류를 봤을 때 <strong>어느 파일을 열어야 하는지</strong> 아나?</label></li>
+    <li><input type="checkbox" id="c6"><label for="c6">실습에서 <code>&amp;</code>를 지운 뒤 출력이 <strong>같았다는 것</strong>을 직접 확인했나?</label></li>
+    <li><input type="checkbox" id="c7"><label for="c7"><code>auto</code>가 파이썬의 동적 타입과 <strong>어떻게 다른지</strong> 한 문장으로 말할 수 있나?</label></li>
+  </ul>
+
+  <!-- ── 조금 더 ── -->
+  <h2 id="more">조금 더 알아두면 <span class="badge b-lv">시험 범위 아님</span></h2>
+
+  <details>
+    <summary><code>using</code>과 <code>using namespace std;</code> — 자주 보이지만 조심할 것</summary>
+    <p>
+      <code>std::</code>를 매번 적기 귀찮아서 생략하게 해 주는 문법이 있다. 두 가지 모양이다.
+    </p>
+    <pre><code>using std::cout;          // ① 이 이름 하나만 std:: 없이 쓰겠다
+using namespace std;      // ② std 안의 이름을 전부 std:: 없이 쓰겠다</code></pre>
+    <p>
+      <strong>①은 괜찮고 ②는 조심해야 한다.</strong>
+      ②를 쓰면 표준 라이브러리의 모든 이름이 그냥 굴러다니게 되고,
+      내가 만든 이름과 부딪치면 <strong>어느 것이 불렸는지 알 수 없는 상황</strong>이 생긴다.
+      <code>count</code>·<code>distance</code>·<code>data</code>처럼 흔한 이름이 표준에도 있다.
+    </p>
+    <p>
+      <strong>특히 헤더 파일에서는 둘 다 쓰지 않는다.</strong>
+      헤더를 읽는 모든 파일에 그 생략이 딸려 들어가기 때문이다.
+      <strong>AI가 준 헤더 맨 위에 <code>using namespace std;</code>가 보이면 지워 달라고 하면 된다.</strong>
+    </p>
+    <p>
+      <code>using</code>에는 <strong>긴 타입에 짧은 별명을 붙이는</strong> 용법도 있다.
+      ROS 2 코드에서 자주 보게 된다.
+    </p>
+    <pre><code>using LaserScan = sensor_msgs::msg::LaserScan;   // 별명을 붙였다</code></pre>
+  </details>
+
+  <details>
+    <summary>중괄호로 초기화하는 모양 — <code>Scan scan{"base_scan", {0.83f, 0.85f, 1.20f}}</code></summary>
+    <p>
+      <code>read_kit.cpp</code>의 <code>main</code> 첫 줄이 이 모양이다.
+      <strong>중괄호 안에 값을 순서대로 나열</strong>하면 그대로 채워진다.
+      바깥 중괄호가 <code>Scan</code>을 채우고, 안쪽 중괄호가 <code>ranges</code>를 채운다.
+    </p>
+    <pre><code>lidar::Scan scan{"base_scan", {0.83f, 0.85f, 1.20f}};</code></pre>
+    <p>
+      옛날에는 소괄호 <code>()</code>만 있었는데 C++11부터 중괄호도 쓸 수 있게 됐다.
+      <strong>중괄호 쪽에 이득이 하나 있다 — 값이 잘려 나가는 변환을 막아 준다.</strong>
+      <code>int x{3.14};</code>는 소수점이 잘리므로 컴파일러가 거부한다.
+      <code>int x(3.14);</code>는 아무 말 없이 <code>3</code>이 된다.
+    </p>
+    <p>
+      <strong>그래서 값을 채울 때는 중괄호가 조금 더 안전하다.</strong>
+      다만 <code>std::vector</code>에서는 <code>v(5)</code>(칸 5개)와 <code>v{5}</code>(값 5 하나)가 다른 뜻이 되니
+      그릇을 만들 때는 소괄호와 중괄호를 헷갈리지 않게 쓴다.
+    </p>
+  </details>
+
+  <details>
+    <summary><code>auto</code>가 참조와 <code>const</code>를 안 물려받는다는 것</summary>
+    <p>
+      <code>auto</code>는 오른쪽의 타입을 그대로 가져오지 않는다.
+      <strong><code>const</code>와 <code>&amp;</code>는 떼어 버리고 알맹이만 가져온다.</strong>
+    </p>
+    <pre><code>const std::vector&lt;float&gt; &amp; r = scan.ranges;
+
+auto        a = r;   // 복사본이 생긴다   (const 와 &amp; 가 떨어졌다)
+const auto &amp; b = r;   // 복사가 없다      (직접 적어 줘야 한다)</code></pre>
+    <p>
+      <strong>그래서 ROS 2 코드에는 <code>const auto &amp;</code>가 세트로 붙어 다닌다.</strong>
+      <code>auto</code>만 쓰면 <strong>복사가 조용히 한 번 일어난다.</strong>
+      6회에서 본 「AI 코드의 복사 오버헤드 1.39배」 중 상당수가 이 모양이다.
+    </p>
+    <p>
+      규칙은 더 있지만 <strong>이 강의에서 외울 필요는 없다.</strong>
+      <strong>기억할 것은 하나다 — 읽기만 할 거면 <code>const auto &amp;</code>라고 통째로 적는다.</strong>
+      11회에서 이 차이를 시간으로 재 본다.
+    </p>
+  </details>
+
+  <details>
+    <summary>이 회차에서 일부러 안 다룬 것</summary>
+    <div class="tablewrap">
+    <table>
+      <tr><th>안 다룬 것</th><th>왜</th><th>언제 다루나</th></tr>
+      <tr><td><code>const</code>가 <code>*</code> 앞뒤 어디에 붙느냐에 따른 네 가지</td><td>포인터를 직접 다룰 일이 거의 없다</td><td>다루지 않는다</td></tr>
+      <tr><td><code>auto</code>의 형식 연역 규칙 표</td><td>규칙을 외워도 판단이 안 는다</td><td>다루지 않는다 (위 접이 상자로 충분)</td></tr>
+      <tr><td>템플릿 <strong>만드는</strong> 법</td><td>읽을 일은 매일 있고 만들 일은 거의 없다</td><td>14회에 읽을거리로</td></tr>
+      <tr><td>포인터 연산, <code>new</code>/<code>delete</code></td><td>직접 쓰면 안 되는 것이다</td><td>10회 (왜 안 쓰는지)</td></tr>
+      <tr><td><code>&amp;&amp;</code>(이동 참조)</td><td><code>&amp;</code>부터 익힌 뒤가 맞다</td><td>11회</td></tr>
+    </table>
+    </div>
+    <p>
+      <strong>이 표는 "안 배웠으니 모르는 게 정상"이라는 뜻이다.</strong>
+      코드에서 만나면 그때 물어보면 된다. 지금 외워 둘 것은 <strong>맨 위 요약표 여덟 줄뿐</strong>이다.
+    </p>
+  </details>
+
+  <footer>
+    로봇공학 · 순천향대학교 전자정보공학과 ·
+    다음 회차: <a href="robotics_08.html">8회 클래스 — 노드가 상태를 갖는 방식</a>
+  </footer>
+</main>
+</div>
+
+<script>
+function copyPrompt(btn) {
+  const box = btn.parentElement.cloneNode(true);
+  box.querySelector('button').remove();
+  navigator.clipboard.writeText(box.textContent.trim()).then(function () {
+    const old = btn.textContent;
+    btn.textContent = '복사됨';
+    setTimeout(function () { btn.textContent = old; }, 1200);
+  });
+}
+</script>
+</body>
+</html>

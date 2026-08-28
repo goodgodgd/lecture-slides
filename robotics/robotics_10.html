@@ -1,0 +1,910 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>10회 · 상속·다형성과 RAII | 로봇공학</title>
+<link rel="stylesheet" href="assets/lecture.css">
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="toc-title">이 회차 목차</div>
+  <a href="#summary">한 장 요약</a>
+  <a href="#inherit">① 상속 — 콜론 하나</a>
+  <a href="#virtual">② virtual 은 갈아 끼울 자리</a>
+  <a href="#override">③ override 가 오타를 잡는다</a>
+  <a href="#dtor">④ 🔴 가상 소멸자</a>
+  <a href="#raii">⑤ RAII — 중괄호가 곧 수명</a>
+  <a href="#three">⑥ 파일도 잠금도 같은 원리</a>
+  <a href="#newdelete">⑦ new / delete 를 안 쓰는 이유</a>
+  <a href="#lab">🧪 실습</a>
+  <a href="#prompts">🤖 프롬프트 모음</a>
+  <a href="#check">✅ 점검</a>
+  <a href="#more">조금 더 알아두면</a>
+</nav>
+
+<main>
+  <a class="backlink" href="../index.html">← 강의자료 목록</a>
+
+  <div class="lec-no">로봇공학 · 10회 · 2부 C++</div>
+  <h1>상속·다형성과 RAII — 뒷정리를 사람이 하지 않는다</h1>
+
+  <div class="questions">
+    <span class="lab">오늘 답할 질문</span>
+    <ol>
+      <li>ROS 2 예제 첫 줄의 <code>class MyNode : public rclcpp::Node</code> — 이 콜론은 무슨 뜻인가?</li>
+      <li><code>override</code>는 안 써도 컴파일이 되는데 왜 붙이라고 하나?</li>
+      <li>소멸자에 <code>virtual</code>을 안 붙였을 뿐인데 왜 메모리가 새나? <strong>그런데 왜 아무 오류도 안 나나?</strong></li>
+      <li>C++ 코드에는 왜 <code>delete</code>가 거의 안 보이나?</li>
+    </ol>
+  </div>
+
+  <p>
+    오늘 배울 것은 둘이다. 앞의 셋은 <strong>상속과 다형성</strong>이고, 뒤의 하나는 <strong>RAII</strong>다.
+    성격이 달라 보이지만 한 줄로 이어진다. <strong>둘 다 「객체가 사라질 때 무슨 일이 일어나는가」의 이야기다.</strong>
+  </p>
+  <p>
+    그중 세 번째 질문이 이 회차의 핵심이다.
+    <strong>가상 소멸자를 빠뜨린 코드는 크래시도 안 나고 경고 한 줄도 안 뜬다.</strong>
+    그냥 조용히 메모리가 샌다. 그래서 이 버그는 몇 달씩 살아남는다.
+    그리고 <strong>AI가 기반 클래스를 만들어 줄 때 가장 자주 빠뜨리는 자리</strong>가 정확히 여기다.
+  </p>
+  <p>
+    마지막 질문의 답이 RAII다. 한 문장으로 하면
+    <strong>"객체가 사라질 때 뒷정리가 자동으로 된다"</strong>이다.
+    <strong>이 순서에는 이유가 있다 — RAII를 먼저 이해해야 12회의 스마트 포인터가 「왜 있는지」가 설명된다.</strong>
+    스마트 포인터는 새로운 발명이 아니라 오늘 배우는 이 원리를 메모리에 적용한 것뿐이다.
+  </p>
+
+  <!-- ── 한 장 요약표 ── -->
+  <h2 id="summary">한 장 요약 — 학기가 끝나도 이 표만 남으면 된다</h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>가운데 「빠뜨리면」 열</strong>만 읽어도 검사 목록이 된다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>이게 보이면</th><th>빠뜨리면 어떻게 되나</th><th>수준</th></tr>
+    <tr><td><code>class B : public A</code></td><td>—. A가 하던 것을 B가 물려받는다는 뜻이다</td><td><span class="badge b-lv">[알아보기]</span></td></tr>
+    <tr><td><code>virtual float read()</code></td><td><strong>하위 클래스 것이 안 불린다.</strong> 위쪽 것이 그대로 불린다</td><td><span class="badge b-lv">[판단]</span></td></tr>
+    <tr><td><code>float read() override</code></td><td>이름을 오타 내도 <strong>컴파일이 통과한다.</strong> 실행하면 답이 틀린다</td><td><span class="badge b-lv">[요구]</span></td></tr>
+    <tr><td>🔴 <code>virtual ~Sensor()</code></td><td><strong>하위 클래스 소멸자가 아예 안 불린다.</strong> 오류도 크래시도 없다</td><td><span class="badge b-lv">[요구]</span></td></tr>
+    <tr><td><code>{ }</code> 중괄호</td><td>—. 벗어나는 순간 안에서 만든 것의 소멸자가 불린다</td><td><span class="badge b-lv">[판단]</span></td></tr>
+    <tr><td><code>std::ofstream</code> · <code>std::lock_guard</code></td><td><code>close()</code>·<code>unlock()</code>을 안 불러도 된다. <strong>부르면 오히려 실수한다</strong></td><td><span class="badge b-lv">[판단]</span></td></tr>
+    <tr><td><code>new</code> / <code>delete</code>가 보인다</td><td>나가는 길이 늘어날 때마다 <strong>짝 맞추기를 사람이 해야 한다</strong></td><td><span class="badge b-lv">[요구]</span></td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 굵게 표시한 네 번째 줄이 오늘의 중심이다.
+    나머지는 빠뜨리면 <strong>컴파일러가 알려 주거나 결과가 눈에 띄게 이상해진다.</strong>
+    가상 소멸자만 다르다. <strong>아무 일도 안 일어난 것처럼 보인다.</strong>
+    그래서 검사 목록에 올려 두지 않으면 영원히 못 찾는다.
+  </div>
+
+  <!-- ── ① 상속 ── -->
+  <h2 id="inherit">① 종류가 늘어날 때마다 if 문을 고치고 싶지 않다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <h3>언제 이게 필요해지나</h3>
+  <p>
+    센서가 여럿이다. 라이다도 있고 초음파도 있다.
+    밖에서 하고 싶은 일은 하나다 — <strong>"값을 읽어라."</strong>
+    센서 종류가 무엇인지는 <strong>알고 싶지 않다.</strong>
+  </p>
+
+  <h3>기존 방법으로는 왜 안 되나</h3>
+  <p>배운 것만 가지고 짜면 이렇게 된다.</p>
+  <div class="codelabel bad">종류를 밖에서 따지는 코드 🔴</div>
+  <pre class="before"><code>float read_any(int kind, const Lidar &amp; l, const Sonar &amp; s)
+{
+  if (kind == 0) { return l.read(); }
+  else if (kind == 1) { return s.read(); }
+  return -1.0f;
+}</code></pre>
+  <p>
+    돌아가긴 한다. 문제는 <strong>센서를 하나 더 붙이는 순간</strong>이다.
+    이런 <code>if</code>가 프로젝트 여기저기에 열 군데쯤 흩어져 있고,
+    <strong>열 군데를 다 찾아 고쳐야 한다.</strong> 하나를 놓치면 그 자리만 조용히 옛 동작을 한다.
+    <code>kind</code>라는 숫자를 사람이 관리해야 하는 것도 실수의 자리다.
+  </p>
+
+  <h3>그래서 이렇게 한다</h3>
+  <p>
+    <strong>"모든 센서는 <code>read()</code>를 갖는다"</strong>를 클래스 하나로 못 박아 놓고,
+    각 센서가 그것을 <strong>물려받게</strong> 한다. 이것이 상속이다.
+  </p>
+  <div class="codelabel good">물려받는 코드</div>
+  <pre class="after"><code>class SensorBad {
+public:
+  virtual float read() = 0;      // "읽는 함수는 반드시 있다. 내용은 자식이 채운다"
+};
+
+class LidarBad : public SensorBad {
+public:
+  float read() override { return buf_.at(0); }
+private:
+  std::vector&lt;float&gt; buf_;
+};</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>class LidarBad : public SensorBad</dt>
+      <dd>콜론 뒤가 <strong>물려받을 클래스</strong>다.
+          <code>LidarBad</code>는 <code>SensorBad</code>가 약속한 것을 전부 갖고 시작한다.
+          여기서는 <em>"라이다도 센서다"</em>를 코드로 적은 것이다.</dd>
+
+      <dt>virtual float read()</dt>
+      <dd><strong>"이 함수는 자식이 갈아 끼울 수 있다"</strong>는 표시다.
+          여기서는 밖에서 <code>SensorBad</code>로 불러도 실제로는 <code>LidarBad</code>의 것이 불리게 만드는 데 썼다.</dd>
+
+      <dt>= 0 (순수 가상)</dt>
+      <dd>뒤에 <code>= 0</code>이 붙으면 <strong>내용이 아예 없다</strong>는 뜻이다.
+          여기서는 <em>"읽는 함수는 반드시 있어야 한다. 다만 어떻게 읽는지는 센서마다 다르다"</em>를
+          강제하는 데 썼다. 하나라도 안 채우면 <strong>그 클래스는 객체를 만들 수 없다.</strong></dd>
+
+      <dt>float read() override</dt>
+      <dd><strong>"위에 있는 <code>read()</code>를 갈아 끼우는 중이다"</strong>라고 컴파일러에게 알린다.
+          안 써도 동작은 같다. <strong>왜 굳이 쓰는지는 ③절에서 실험으로 확인한다.</strong></dd>
+    </dl>
+  </div>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>바뀐 것</th><th>if 문 방식</th><th>상속 방식</th></tr>
+    <tr><td>센서를 하나 더 붙이면</td><td><code>if</code>가 있는 <strong>모든 자리</strong>를 고친다</td><td><strong>새 클래스 하나만</strong> 만든다</td></tr>
+    <tr><td>빠뜨리면</td><td>조용히 옛 동작을 한다</td><td><code>= 0</code>을 안 채우면 <strong>컴파일이 안 된다</strong></td></tr>
+    <tr><td>종류를 나타내는 숫자</td><td>사람이 관리한다 (<code>kind == 0</code>)</td><td><strong>없다</strong></td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 이득은 코드가 짧아진 것이 아니다. <strong>실수할 자리가 컴파일 오류로 바뀐 것</strong>이다.
+    if 문 방식은 빠뜨려도 프로그램이 돈다. 상속 방식은 빠뜨리면 빌드가 멈춘다.
+    <strong>이 강의에서 "좋은 코드"는 대체로 이런 뜻이다 — 틀렸을 때 조용하지 않은 코드.</strong>
+  </div>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    센서 종류를 if / else if 로 나눠 처리하는 코드가 있어. 기반 클래스 하나를 만들고 종류마다 상속하는 구조로 바꿔 줘. 기반 클래스의 소멸자는 virtual 로, 자식 쪽 함수에는 override 를 붙여 줘. 바뀌는 부분만 보여 줘.
+  </div>
+
+  <div class="box trap">
+    <div class="boxtitle">📌 ROS 2 에서 이 문법을 만나는 자리</div>
+    <pre><code>class MyNode : public rclcpp::Node
+{
+  // ...
+};</code></pre>
+    <p>
+      ROS 2에서 노드를 만드는 코드는 <strong>거의 예외 없이 이 한 줄로 시작한다.</strong>
+      <code>rclcpp::Node</code>가 이미 만들어 놓은 것(이름 짓기, 발행, 구독, 파라미터)을 통째로 물려받고,
+      우리는 우리 것만 얹는다.
+      <strong>지금은 이 콜론이 무슨 뜻인지만 알면 된다. 19회에서 제대로 다룬다.</strong>
+    </p>
+  </div>
+
+  <!-- ── ② virtual ── -->
+  <h2 id="virtual">② <code>virtual</code>은 「여기는 갈아 끼울 수 있다」는 표시다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <p>
+    <code>virtual</code>이 붙은 함수와 안 붙은 함수는 <strong>불리는 방식이 다르다.</strong>
+    밖에서 <code>SensorBad *</code>로 잡아 놓고 <code>read()</code>를 부를 때,
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>기반 클래스의 함수가</th><th>실제로 불리는 것</th><th>언제 정해지나</th></tr>
+    <tr><td><code>virtual</code>이 붙어 있다</td><td><strong>진짜 들어 있는 물건</strong>의 함수 (<code>LidarBad::read</code>)</td><td>실행할 때</td></tr>
+    <tr><td><code>virtual</code>이 없다</td><td><strong>잡고 있는 손잡이</strong>의 함수 (<code>SensorBad::read</code>)</td><td>컴파일할 때</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> <strong>"손잡이"와 "물건"이 다를 수 있다</strong>는 것이 요점이다.
+    <code>SensorBad *</code>는 손잡이고 실제로 매달린 것은 <code>LidarBad</code>다.
+    <code>virtual</code>은 <em>"손잡이 말고 물건을 보고 정하라"</em>는 뜻이다.
+    <strong>이 한 줄이 ④절의 가상 소멸자 이야기 전체를 미리 설명한다</strong> —
+    소멸자도 함수이기 때문이다.
+  </div>
+
+  <p>
+    그런데 위 코드처럼 <code>= 0</code>을 붙여 <strong>내용을 아예 비워 두면</strong> 한 가지가 더 따라온다.
+    그 클래스로는 객체를 만들 수 없다. 만들려고 하면 이런 오류가 난다.
+  </p>
+  <pre><code>error: invalid new-expression of abstract class type ‘LidarBad’</code></pre>
+  <p>
+    <code>abstract class</code>는 <strong>"채워야 할 칸이 남아 있는 클래스"</strong>라는 뜻이다.
+    <code>= 0</code>인 함수를 하나라도 안 채웠다는 신호이므로,
+    <strong>이 메시지가 뜨면 자식 클래스에서 함수 이름을 잘못 적지 않았는지부터 본다.</strong>
+    바로 다음 절이 그 이야기다.
+  </p>
+
+  <!-- ── ③ override ── -->
+  <h2 id="override">③ <code>override</code> 한 단어가 오타를 컴파일 오류로 바꾼다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <h3>실험 1 — <code>override</code>가 붙어 있을 때 오타를 내면</h3>
+  <p>
+    <code>read()</code>를 <code>raed()</code>로 잘못 쳤다고 하자. 한 글자다.
+    <strong>실제로 그렇게 고쳐서 컴파일해 본 화면이다.</strong>
+  </p>
+  <pre><code>$ g++ -std=c++17 -o t t.cpp
+t.cpp:18:9: error: ‘float LidarBad::raed()’ marked ‘override’, but does not override
+   18 |   float raed() override { return buf_.at(0); }
+      |         ^~~~
+t.cpp:34:9: error: ‘float LidarGood::raed()’ marked ‘override’, but does not override
+   34 |   float raed() override { return buf_.at(0); }
+      |         ^~~~</code></pre>
+  <p>
+    <strong>어느 줄을 보나:</strong> <code>marked ‘override’, but does not override</code>가 전부다.
+    <em>"네가 <code>override</code>라고 적었는데, 위에 그런 이름의 함수가 없다"</em>는 뜻이다.
+    <strong>실행하기 전에, 그것도 정확한 줄 번호와 함께 잡혔다.</strong>
+  </p>
+
+  <h3>실험 2 — <code>override</code>가 없을 때 같은 오타를 내면</h3>
+  <p>같은 오타인데 <code>override</code>만 뗀 코드다. 이번엔 기반 클래스에 기본 동작을 넣어 뒀다.</p>
+  <pre><code>#include &lt;iostream&gt;
+#include &lt;memory&gt;
+
+class Sensor {
+public:
+  virtual ~Sensor() {}
+  virtual float read() { return -1.0f; }   // 기반 클래스의 기본 동작
+};
+
+class LidarTypo : public Sensor {
+public:
+  float raed() { return 0.83f; }           // 오타. override 를 안 붙였다
+};
+
+class LidarOverride : public Sensor {
+public:
+  float read() override { return 0.83f; }  // 여기서 오타를 내면 컴파일이 멈춘다
+};
+
+int main()
+{
+  std::unique_ptr&lt;Sensor&gt; a = std::make_unique&lt;LidarTypo&gt;();
+  std::unique_ptr&lt;Sensor&gt; b = std::make_unique&lt;LidarOverride&gt;();
+  std::cout &lt;&lt; "override 를 안 붙인 쪽 read() = " &lt;&lt; a-&gt;read() &lt;&lt; "\n";
+  std::cout &lt;&lt; "override 를 붙인 쪽   read() = " &lt;&lt; b-&gt;read() &lt;&lt; "\n";
+  return 0;
+}</code></pre>
+  <pre><code>$ g++ -std=c++17 -Wall -o override_typo override_typo.cpp
+$ ./override_typo
+override 를 안 붙인 쪽 read() = -1
+override 를 붙인 쪽   read() = 0.83</code></pre>
+
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 경고 한 줄 없이 통과했다</div>
+    <p>
+      <code>-Wall</code>(모든 경고 켜기)을 붙였는데도 <strong>아무 말이 없다.</strong>
+      컴파일러 입장에서는 틀린 것이 없다 — <code>raed()</code>라는 <strong>새 함수를 하나 만든 것</strong>일 뿐이니까.
+    </p>
+    <p>
+      결과만 다르다. 실제 거리는 <strong>0.83 m</strong>인데 <code>-1</code>이 나왔다.
+      <strong>기반 클래스의 기본값이 그대로 나온 것이다.</strong>
+      로봇에서 이런 일이 나면 <em>"센서가 고장 났나"</em>부터 의심하게 된다.
+      <strong>원인은 한 글자짜리 오타이고, 그것을 찾는 데 반나절이 든다.</strong>
+    </p>
+  </div>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th></th><th><code>override</code>가 있을 때</th><th><code>override</code>가 없을 때</th></tr>
+    <tr><td>이름을 잘못 쳤다</td><td><strong>컴파일이 멈춘다</strong> — 줄 번호까지 나온다</td><td>통과한다. 경고도 없다</td></tr>
+    <tr><td>인자 타입을 잘못 썼다</td><td><strong>컴파일이 멈춘다</strong></td><td>통과한다</td></tr>
+    <tr><td>실행하면</td><td>—</td><td><strong>기반 클래스의 값이 나온다.</strong> 그게 답인 줄 안다</td></tr>
+    <tr><td>드는 비용</td><td>한 단어</td><td>없음</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> <code>override</code>는 <strong>동작을 바꾸지 않는다.</strong> 하는 일은 하나뿐이다 —
+    <em>"내 의도는 갈아 끼우는 것이었다"</em>를 코드에 적어 두는 것.
+    그 한 줄 덕분에 <strong>의도와 실제가 어긋나는 순간 컴파일러가 멈춰 준다.</strong>
+    <strong>한 단어를 적어서 반나절을 사는 거래다.</strong>
+  </div>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    이 코드에서 기반 클래스의 함수를 갈아 끼우는 함수 전부에 override 를 붙여 줘. 붙였더니 컴파일이 안 되는 곳이 있으면 고치지 말고 먼저 알려 줘 — 거기가 진짜 버그일 수 있어.
+  </div>
+
+  <!-- ── ④ 가상 소멸자 ── -->
+  <h2 id="dtor">④ 가상 소멸자가 없으면 소멸자가 <strong>아예 안 불린다</strong> <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <p>
+    여기가 이 회차의 핵심이다.
+    <strong>같은 코드를 두 벌 만들어 놓고 <code>virtual</code> 한 단어만 다르게 해서 실제로 돌려 봤다.</strong>
+    아래가 그 프로그램 전체다.
+  </p>
+
+  <div class="codelabel good">examples/l10_raii/virtual_dtor.cpp — 전체</div>
+  <pre class="after"><code>// 10회 — 가상 소멸자가 없으면 무슨 일이 생기나
+// 두 경우를 한 프로그램에서 나란히 돌려 출력을 비교한다.
+#include &lt;iostream&gt;
+#include &lt;memory&gt;
+#include &lt;vector&gt;
+
+// ── ① 기반 클래스에 virtual 소멸자가 없다 ──────────────────
+class SensorBad {
+public:
+  virtual float read() = 0;
+  ~SensorBad() { std::cout &lt;&lt; "  [SensorBad 소멸자]\n"; }   // virtual 이 없다
+};
+
+class LidarBad : public SensorBad {
+public:
+  LidarBad() : buf_(360, 0.0f) { std::cout &lt;&lt; "  [LidarBad 생성] 360칸 확보\n"; }
+  ~LidarBad() { std::cout &lt;&lt; "  [LidarBad 소멸자] 360칸 반납\n"; }
+  float read() override { return buf_.at(0); }
+private:
+  std::vector&lt;float&gt; buf_;
+};
+
+// ── ② 같은 코드에 virtual 만 붙였다 ────────────────────────
+class SensorGood {
+public:
+  virtual float read() = 0;
+  virtual ~SensorGood() { std::cout &lt;&lt; "  [SensorGood 소멸자]\n"; }
+};
+
+class LidarGood : public SensorGood {
+public:
+  LidarGood() : buf_(360, 0.0f) { std::cout &lt;&lt; "  [LidarGood 생성] 360칸 확보\n"; }
+  ~LidarGood() override { std::cout &lt;&lt; "  [LidarGood 소멸자] 360칸 반납\n"; }
+  float read() override { return buf_.at(0); }
+private:
+  std::vector&lt;float&gt; buf_;
+};
+
+int main()
+{
+  std::cout &lt;&lt; "① virtual 소멸자가 없는 경우\n";
+  {
+    std::unique_ptr&lt;SensorBad&gt; s = std::make_unique&lt;LidarBad&gt;();
+    s-&gt;read();
+  }
+  std::cout &lt;&lt; "② virtual 소멸자를 붙인 경우\n";
+  {
+    std::unique_ptr&lt;SensorGood&gt; s = std::make_unique&lt;LidarGood&gt;();
+    s-&gt;read();
+  }
+  return 0;
+}</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>std::unique_ptr&lt;SensorBad&gt; s = std::make_unique&lt;LidarBad&gt;();</dt>
+      <dd><strong>손잡이는 <code>SensorBad</code>인데 실제로 매달린 물건은 <code>LidarBad</code></strong>인 상황을 만드는 줄이다.
+          <code>make_unique</code>가 물건을 만들고, <code>unique_ptr</code>가 그것을 붙잡는다.
+          <strong>중괄호를 벗어나면 붙잡고 있던 것을 알아서 지운다</strong> — 그래서 이 예제에 쓴 것이다.
+          지금은 <strong>모양만 봐 두면 된다.</strong></dd>
+
+      <dt>buf_(360, 0.0f)</dt>
+      <dd>생성자 옆의 초기화 자리에서 <strong>값 <code>0.0f</code>짜리 칸 360개</strong>를 만든다.
+          여기서는 <em>"소멸자가 안 불리면 이만큼이 안 돌아온다"</em>를 눈에 보이게 하려고 360으로 뒀다 —
+          터틀봇3 라이다가 한 바퀴에 주는 값의 개수와 같은 숫자다.</dd>
+
+      <dt>buf_.at(0)</dt>
+      <dd>배열의 <strong>0번째 값</strong>을 꺼낸다. <code>buf_[0]</code>과 하는 일이 같은데,
+          <strong>범위를 벗어나면 그 자리에서 알려 준다</strong>는 점이 다르다.
+          여기서는 라이다 값을 하나 읽는 시늉만 하는 데 썼다.</dd>
+
+      <dt>std::cout &lt;&lt; "…"</dt>
+      <dd>화면에 찍는다. <code>&lt;&lt;</code>를 이어 붙이면 여러 개를 차례로 내보낸다.
+          여기서는 <strong>생성자와 소멸자가 언제 불리는지</strong>를 눈으로 보려고 썼다.</dd>
+    </dl>
+    <p class="later">제대로 다루는 곳: 12회(스마트 포인터 — <code>unique_ptr</code>·<code>shared_ptr</code>·소유권)</p>
+  </div>
+
+  <h3>실행 결과 — 왼쪽에 한 줄이 없다</h3>
+  <pre><code>$ ./virtual_dtor
+① virtual 소멸자가 없는 경우
+  [LidarBad 생성] 360칸 확보
+  [SensorBad 소멸자]
+② virtual 소멸자를 붙인 경우
+  [LidarGood 생성] 360칸 확보
+  [LidarGood 소멸자] 360칸 반납
+  [SensorGood 소멸자]</code></pre>
+  <p class="src">잰 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0)</p>
+
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 「LidarBad 소멸자」 줄이 아예 안 찍혔다</div>
+    <p>
+      ①에서 찍힌 줄은 <strong>둘</strong>이고 ②에서 찍힌 줄은 <strong>셋</strong>이다.
+      없는 줄은 <code>[LidarBad 소멸자] 360칸 반납</code>이다.
+      <strong>그 소멸자가 불리지 않았다.</strong>
+      <code>float</code> 360칸이 그대로 남았고 프로그램이 끝날 때까지 돌아오지 않았다.
+    </p>
+    <p>
+      그런데 화면 어디에도 <strong>오류 메시지가 없다.</strong> 크래시도 없다.
+      종료 코드도 정상이다. <strong>"동작한다"는 기준으로 보면 ①은 통과한 프로그램이다.</strong>
+    </p>
+    <p>
+      <strong>그래서 이 버그는 오래 산다.</strong> 콘솔 프로그램에서는 몇 초 뒤 프로그램이 끝나면서
+      운영체제가 어차피 다 회수하므로 아무도 눈치채지 못한다.
+      <strong>문제는 몇 시간씩 돌아야 하는 로봇 노드에서 터진다.</strong>
+      센서 객체를 만들고 지우기를 반복할수록 안 돌아온 360칸이 쌓인다.
+    </p>
+  </div>
+
+  <figure>
+    <img src="assets/img/10_virtual_dtor.png"
+         alt="두 경우를 비교한 흐름도. 왼쪽 virtual 이 없을 때는 Sensor 소멸자만 불리고 Lidar 소멸자는 안 불린다. 오른쪽 virtual 을 붙였을 때는 Lidar 소멸자가 먼저 불리고 이어서 Sensor 소멸자가 불린다">
+    <figcaption>왼쪽 아래 상자를 본다. <strong>「Lidar 소멸자는 안 불린다」</strong>가 이 회차의 한 줄이다.
+      오른쪽에서는 <strong>자식 → 부모 순서</strong>로 둘 다 불린다.</figcaption>
+  </figure>
+
+  <h3>왜 그런가 — ②절의 한 줄이 그대로 적용된다</h3>
+  <p>
+    손잡이는 <code>SensorBad</code>이고 물건은 <code>LidarBad</code>다.
+    <code>virtual</code>이 없으면 <strong>손잡이를 보고 정한다.</strong>
+    그래서 <code>SensorBad</code>의 소멸자만 불렸다.
+    <strong>소멸자도 함수이기 때문에 규칙이 똑같다.</strong>
+  </p>
+
+  <div class="codelabel bad">AI가 보통 주는 기반 클래스 🔴</div>
+  <pre class="before"><code>class SensorBad {
+public:
+  virtual float read() = 0;
+  ~SensorBad() { }              // ← virtual 이 없다
+};</code></pre>
+  <div class="codelabel good">한 단어만 붙이면 된다</div>
+  <pre class="after"><code>class SensorGood {
+public:
+  virtual float read() = 0;
+  virtual ~SensorGood() { }     // ← 이것 하나
+};</code></pre>
+
+  <div class="box trap">
+    <div class="boxtitle">🔴 AI가 하는 실수 — 기반 클래스에 가상 소멸자를 안 붙인다</div>
+    <p>
+      <code>read()</code>에는 <code>virtual</code>을 잘 붙인다. <strong>소멸자에서만 빠뜨린다.</strong>
+      이유는 짐작할 만하다. 인터넷의 짧은 예제들은 대부분 상속을 <strong>동작</strong>을 설명하려고 쓰지
+      <strong>수명</strong>을 설명하려고 쓰지 않는다. 그런 예제에는 소멸자 자체가 없다.
+      <strong>AI는 그 흔한 모양을 재현한다.</strong>
+    </p>
+    <p>
+      <strong>그리고 이 실수는 검사로 안 걸린다.</strong> 빌드가 되고, 테스트가 통과하고, 로봇도 돈다.
+      <strong>그래서 사람이 눈으로 볼 항목 목록에 넣어 두는 수밖에 없다.</strong>
+    </p>
+    <div class="prompt">
+      <button onclick="copyPrompt(this)">복사</button>
+      이 코드에 다른 클래스가 상속하는 기반 클래스가 있으면 소멸자에 virtual 이 붙어 있는지 확인해 줘. 안 붙은 곳이 있으면 어느 클래스인지 알려 주고 붙여 줘. 상속을 안 당하는 클래스에는 붙이지 마.
+    </div>
+  </div>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 소멸자 옆에서 보게 되는 것 하나 더</p>
+    <dl>
+      <dt>~ScanBuffer() noexcept { … }</dt>
+      <dd><strong>"이 함수는 오류를 위로 던지지 않는다"</strong>는 약속이다.
+          소멸자에는 <strong>적어 주지 않아도 이미 붙어 있다</strong> — 그래서 아래 두 소멸자는 하는 일이 같다.
+          여기서는 <strong>ROS 2 코드에서 이 단어를 봤을 때 놀라지 않게</strong> 모양만 보여 주는 것이다.</dd>
+    </dl>
+  </div>
+  <pre><code>class ScanBuffer {
+public:
+  ~ScanBuffer() noexcept { std::printf("  [닫힘] 360칸 반납\n"); }
+};
+
+class PlainBuffer {
+public:
+  ~PlainBuffer() { std::printf("  [닫힘] noexcept 를 안 적었지만 결과는 같다\n"); }
+};</code></pre>
+  <pre><code>$ ./noexcept_dtor
+① noexcept 를 적은 소멸자
+  [열림] float 360칸 확보
+  [닫힘] 360칸 반납
+② noexcept 를 안 적은 소멸자
+  [닫힘] noexcept 를 안 적었지만 결과는 같다</code></pre>
+
+  <!-- ── ⑤ RAII ── -->
+  <h2 id="raii">⑤ RAII — 객체가 사라질 때 뒷정리가 자동으로 된다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <p>
+    앞 절에서 계속 본 것이 있다. <strong>중괄호를 벗어나는 순간 소멸자가 불렸다.</strong>
+    아무도 부르라고 시키지 않았는데 불렸다.
+    <strong>이 성질 하나에 이름을 붙인 것이 RAII다.</strong>
+  </p>
+  <div class="interp">
+    <strong>한 문장:</strong> <strong>객체가 사라질 때 뒷정리가 자동으로 된다.</strong><br>
+    원래 이름은 Resource Acquisition Is Initialization인데 <strong>이 이름은 잊어도 된다.</strong>
+    기억할 것은 <strong>「중괄호가 곧 수명이다」</strong> 한 줄이다.
+  </div>
+
+  <div class="codelabel good">examples/l10_raii/raii_scope.cpp — 전체</div>
+  <pre class="after"><code>// 10회 — RAII: 중괄호를 벗어나면 뒷정리가 자동으로 된다
+#include &lt;fstream&gt;
+#include &lt;iostream&gt;
+#include &lt;mutex&gt;
+#include &lt;string&gt;
+
+class Talker {
+public:
+  explicit Talker(std::string n) : n_(std::move(n)) { std::cout &lt;&lt; "  " &lt;&lt; n_ &lt;&lt; " 열림\n"; }
+  ~Talker() { std::cout &lt;&lt; "  " &lt;&lt; n_ &lt;&lt; " 닫힘\n"; }
+private:
+  std::string n_;
+};
+
+std::mutex m;
+
+int main()
+{
+  std::cout &lt;&lt; "① 중괄호 하나가 곧 수명이다\n";
+  {
+    Talker a("바깥");
+    {
+      Talker b("안쪽");
+      std::cout &lt;&lt; "  안쪽 중괄호 안이다\n";
+    }
+    std::cout &lt;&lt; "  안쪽을 빠져나왔다\n";
+  }
+
+  std::cout &lt;&lt; "② 파일도 같은 원리다 — close() 를 부르지 않았다\n";
+  {
+    std::ofstream f("raii_out.txt");
+    f &lt;&lt; "라이다 값 0.83\n";
+    std::cout &lt;&lt; "  파일에 한 줄 썼다\n";
+  }
+  std::ifstream in("raii_out.txt");
+  std::string line; std::getline(in, line);
+  std::cout &lt;&lt; "  다시 읽어 보니: \"" &lt;&lt; line &lt;&lt; "\"  → 이미 닫혀서 내용이 저장됐다\n";
+
+  std::cout &lt;&lt; "③ 잠금(lock)도 같은 원리다 — unlock() 을 부르지 않았다\n";
+  {
+    std::lock_guard&lt;std::mutex&gt; g(m);
+    std::cout &lt;&lt; "  잠근 채로 일하는 중\n";
+  }
+  std::cout &lt;&lt; "  중괄호를 나오면서 자동으로 풀렸다\n";
+  return 0;
+}</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것 (1) — 자원을 잡는 세 가지</p>
+    <dl>
+      <dt>std::ofstream f("raii_out.txt")</dt>
+      <dd>파일을 <strong>쓰기용으로 연다</strong>. 이 줄에서 열리고, 중괄호를 나갈 때 닫힌다.
+          여기서는 <strong><code>close()</code>를 한 번도 부르지 않았는데도 내용이 저장됐다</strong>는 것을 보이려고 썼다.
+          읽기용은 <code>std::ifstream</code>이고 아래 줄에 나온다.</dd>
+
+      <dt>std::mutex m</dt>
+      <dd><strong>한 번에 한 사람만 들어가게 하는 자물쇠</strong>다.
+          여러 갈래가 동시에 같은 값을 건드리면 깨지므로, 그 자리를 잠그는 데 쓴다.
+          여기서는 잠금이 자동으로 풀리는 것을 보여 주기 위한 재료로만 썼다.</dd>
+
+      <dt>std::lock_guard&lt;std::mutex&gt; g(m)</dt>
+      <dd><strong>이 줄에서 잠그고 중괄호를 나갈 때 자동으로 푼다.</strong>
+          여기서는 <code>unlock()</code>을 부르지 않았는데도 풀리는 것을 보이려고 썼다.
+          <strong>자물쇠는 안 푸는 실수가 특히 무섭다</strong> — 프로그램이 그 자리에서 영원히 멈춘다.</dd>
+
+      <dt>std::getline(in, line)</dt>
+      <dd>파일에서 <strong>한 줄</strong>을 읽어 <code>line</code>에 담는다.
+          여기서는 방금 쓴 내용이 실제로 저장됐는지 확인하는 데 썼다.</dd>
+    </dl>
+  </div>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것 (2) — 클래스 쪽 두 단어</p>
+    <dl>
+      <dt>explicit Talker(std::string n)</dt>
+      <dd><strong>"이 생성자는 몰래 불리면 안 된다"</strong>는 표시다.
+          안 붙이면 <code>Talker t = "바깥";</code> 같은 줄이 <strong>말없이 통과한다.</strong>
+          인자 하나짜리 생성자에는 붙이는 것이 기본이라고 알아 두면 된다.</dd>
+
+      <dt>std::move(n)</dt>
+      <dd><strong>"이 값은 이제 안 쓸 테니 가져가라"</strong>는 표시다.
+          복사하지 않고 <strong>알맹이를 옮긴다.</strong>
+          여기서는 생성자가 받은 문자열을 멤버 <code>n_</code>에 넘기면서 복사를 한 번 줄이는 데 썼다.
+          <strong>지금은 이 자리에 이런 것이 오는구나 정도만 보면 된다.</strong></dd>
+    </dl>
+    <p class="later">제대로 다루는 곳: 11회(복사와 이동 — <code>std::move</code>와 이동 후의 객체)</p>
+  </div>
+
+  <h3>실행 결과 ① — 중괄호가 곧 수명이다</h3>
+  <pre><code>$ ./raii_scope
+① 중괄호 하나가 곧 수명이다
+  바깥 열림
+  안쪽 열림
+  안쪽 중괄호 안이다
+  안쪽 닫힘
+  안쪽을 빠져나왔다
+  바깥 닫힘</code></pre>
+  <p>
+    <strong>어디를 보나:</strong> <code>안쪽 닫힘</code>이 <code>안쪽을 빠져나왔다</code>보다 <strong>먼저</strong> 찍혔다.
+    닫는 중괄호를 지나는 순간에 이미 소멸자가 끝났다는 뜻이다.
+    그리고 <code>바깥 닫힘</code>은 맨 마지막이다 — <strong>나중에 만든 것이 먼저 사라진다.</strong>
+  </p>
+
+  <figure>
+    <img src="assets/img/10_raii_scope.png"
+         alt="중괄호 블록 그림. 여는 중괄호에서 std::ofstream 이 열리고, 한 줄 쓴 뒤, 닫는 중괄호에서 자동으로 닫힌다는 화살표 설명이 붙어 있다">
+    <figcaption>오른쪽 화살표의 마지막 줄을 본다 — <strong>「닫는 중괄호 — 여기서 자동으로 닫힌다」.</strong>
+      이 그림에 <code>close()</code>라는 줄이 한 군데도 없다는 것이 요점이다.</figcaption>
+  </figure>
+
+  <!-- ── ⑥ 세 가지가 같은 원리 ── -->
+  <h2 id="three">⑥ 파일도 잠금도 메모리도 전부 같은 원리다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <p>
+    같은 프로그램의 나머지 두 부분이다. <strong>하는 일은 전혀 다른데 정리되는 방식이 똑같다.</strong>
+  </p>
+  <pre><code>② 파일도 같은 원리다 — close() 를 부르지 않았다
+  파일에 한 줄 썼다
+  다시 읽어 보니: "라이다 값 0.83"  → 이미 닫혀서 내용이 저장됐다
+③ 잠금(lock)도 같은 원리다 — unlock() 을 부르지 않았다
+  잠근 채로 일하는 중
+  중괄호를 나오면서 자동으로 풀렸다</code></pre>
+  <p class="src">잰 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0)</p>
+
+  <p>
+    ②를 눈여겨본다. <strong><code>f.close()</code>를 부른 줄이 코드에 없다.</strong>
+    그런데 중괄호를 나온 뒤 파일을 다시 열어 읽었더니 <code>라이다 값 0.83</code>이 그대로 들어 있었다.
+    <strong>중괄호를 나가면서 <code>ofstream</code>의 소멸자가 파일을 닫고 내용을 밀어 넣은 것이다.</strong>
+  </p>
+  <p>
+    ③도 마찬가지다. <strong><code>unlock()</code>을 부른 줄이 없는데</strong> 잠금이 풀렸다.
+    <code>lock_guard</code>의 소멸자가 대신 풀어 줬다.
+  </p>
+
+  <p class="readme-first">무엇을 먼저 볼지: <strong>가운데 「사람이 부르면」 열</strong>을 본다. 셋 다 부를 필요가 없다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>무엇을 잡나</th><th>사람이 부르면</th><th>안 부르면</th></tr>
+    <tr><td>메모리 (<code>std::vector</code>·<code>unique_ptr</code>)</td><td><code>delete</code> — <strong>빠뜨리면 샌다</strong></td><td>중괄호를 나갈 때 반납된다</td></tr>
+    <tr><td>파일 (<code>std::ofstream</code>)</td><td><code>close()</code> — 빠뜨리면 <strong>내용이 저장 안 될 수 있다</strong></td><td>중괄호를 나갈 때 닫힌다</td></tr>
+    <tr><td>잠금 (<code>std::lock_guard</code>)</td><td><code>unlock()</code> — 빠뜨리면 <strong>프로그램이 멈춘다</strong></td><td>중괄호를 나갈 때 풀린다</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 세 줄이 전부 <strong>"안 부르는 쪽이 안전하다"</strong>로 끝난다.
+    이것이 다른 언어를 쓰다 온 사람에게 가장 낯선 대목이다.
+    <strong>C++에서는 뒷정리 코드를 안 쓰는 것이 잘 쓴 것이다.</strong>
+    반대로 <code>close()</code>나 <code>unlock()</code>이 코드에 보이면
+    <strong>"왜 직접 부르지?"부터 묻는다.</strong> 대개는 필요 없는 줄이다.
+  </div>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    이 코드에 close() 나 unlock() 을 직접 부르는 줄이 있으면 알려 줘. 소멸자가 어차피 해 주는 것이면 그 줄을 지우고, 꼭 그 자리에서 불러야 하는 이유가 있으면 지우지 말고 이유를 한 줄로 적어 줘.
+  </div>
+
+  <!-- ── ⑦ new / delete ── -->
+  <h2 id="newdelete">⑦ <code>new</code>와 <code>delete</code>의 짝을 사람이 맞추면 반드시 틀린다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <h3>언제 이게 문제가 되나</h3>
+  <p>
+    <code>new</code>로 잡은 것은 <code>delete</code>로 지워야 한다. 규칙은 한 줄이라 쉬워 보인다.
+    <strong>문제는 함수를 빠져나가는 길이 하나가 아니라는 것이다.</strong>
+  </p>
+
+  <div class="codelabel bad">AI가 보통 주는 코드 🔴</div>
+  <pre class="before"><code>void tune()
+{
+  Lidar * p = new Lidar();      // 여기서 잡는다
+  if (!p-&gt;ok())  { return; }    // ① 여기로 나가면 안 지워진다
+  if (busy())    { return; }    // ② 여기로 나가도 안 지워진다
+  delete p;                     // ③ 여기까지 와야만 지워진다
+}</code></pre>
+
+  <h3>무엇이 문제인가</h3>
+  <p>
+    <strong>나가는 길이 셋인데 <code>delete</code>는 한 줄이다.</strong>
+    ①과 ②로 나가면 그대로 샌다. 그리고 이 코드에 나중에 조건을 하나 더 붙이면
+    <strong>새는 길이 또 하나 늘어난다.</strong>
+    사람이 그때마다 <code>delete</code>를 챙겨 넣어야 하는데, <strong>언젠가는 빠뜨린다.</strong>
+  </p>
+
+  <figure>
+    <img src="assets/img/10_new_delete.png"
+         alt="두 방식을 비교한 흐름도. 왼쪽 new/delete 방식은 세 갈래 중 둘에서 메모리가 새고 하나에서만 반납된다. 오른쪽 RAII 방식은 세 갈래 전부에서 반납된다">
+    <figcaption>왼쪽 상자 옆의 <strong>「샌다」 두 줄</strong>을 본다.
+      오른쪽에는 <code>delete</code>가 <strong>한 줄도 없는데</strong> 세 갈래 전부에서 반납된다.</figcaption>
+  </figure>
+
+  <h3>이렇게 말하면 된다</h3>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    이 코드에서 new 와 delete 를 직접 쓰지 말고 스코프가 정리해 주는 방식으로 바꿔 줘. 함수 중간에 return 이 여러 개 있어도 새지 않아야 해. 바뀌는 부분만 보여 줘.
+  </div>
+
+  <div class="codelabel good">받은 코드</div>
+  <pre class="after"><code>void tune()
+{
+  auto p = std::make_unique&lt;Lidar&gt;();   // 여기서 잡는다
+  if (!p-&gt;ok())  { return; }             // ① 나가면서 반납된다
+  if (busy())    { return; }             // ② 나가면서 반납된다
+}                                        // ③ 여기서도 반납된다</code></pre>
+
+  <div class="interp">
+    <strong>해석:</strong> <code>delete</code>가 사라졌다. <strong>줄이 하나 줄어든 것이 이득이 아니다.</strong>
+    이득은 <strong>「나가는 길을 하나 더 만들어도 아무것도 안 고쳐도 된다」</strong>는 쪽이다.
+    코드를 고칠 때마다 사람이 챙겨야 하는 항목이 하나 사라진 것이다.
+  </div>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>이렇게 잡는다</th><th>언제</th><th>수준</th></tr>
+    <tr><td>그냥 변수로 (<code>Lidar lidar;</code>)</td><td><strong>기본값.</strong> 이 중괄호 안에서만 쓸 것이면 이것</td><td><span class="badge b-lv">[요구]</span></td></tr>
+    <tr><td><code>std::make_unique&lt;T&gt;()</code></td><td>주인이 하나인데 <strong>수명을 중괄호보다 길게</strong> 가져가야 할 때</td><td><span class="badge b-lv">[알아보기]</span></td></tr>
+    <tr><td><code>new</code> / <code>delete</code></td><td><strong>안 쓴다.</strong> 남의 옛 코드에서 알아보기만 하면 된다</td><td><span class="badge b-lv">[판단]</span></td></tr>
+  </table>
+  </div>
+
+  <div class="box trap">
+    <div class="boxtitle">📌 12회로 이어지는 한 줄</div>
+    <p>
+      오른쪽 코드에 나온 <code>std::make_unique</code>가 <strong>메모리에 RAII를 적용한 도구</strong>다.
+      새로운 발명이 아니라 <strong>오늘 본 「중괄호가 곧 수명」을 메모리에 그대로 옮긴 것</strong>일 뿐이다.
+      <strong>그래서 RAII가 먼저다.</strong> 이것을 모르고 스마트 포인터를 배우면
+      <em>"포인터인데 이름이 왜 이렇게 기나"</em>에서 멈춘다.
+      <strong>12회에서 제대로 다룬다.</strong>
+    </p>
+  </div>
+
+  <h3>한 줄 점검</h3>
+  <p>받은 코드에 <code>new</code>가 보이는데 그 함수에 <code>return</code>이 둘 이상 있지 않나?</p>
+
+  <!-- ── 🧪 실습 ── -->
+  <h2 id="lab">🧪 실습 — <code>virtual</code>을 붙였다 뗐다 해 본다</h2>
+  <div class="lab-block">
+    <div class="boxtitle">🧪 실습 (약 30분)</div>
+    <p><strong>알게 되는 것:</strong> 단어 하나로 <strong>화면의 줄 하나가 사라지는 것</strong>을 눈으로 본다.
+      "메모리가 샌다"는 말을 글로 읽는 것과 줄이 없어지는 것을 보는 것은 다르다.</p>
+    <p><strong>준비물:</strong> WSL 터미널 한 칸, 배포된 <code>l10_raii</code> 폴더, <code>g++</code>.
+      로봇도 ROS도 필요 없다.</p>
+    <p><strong>절차</strong></p>
+    <ol>
+      <li><code>g++ -std=c++17 -o virtual_dtor virtual_dtor.cpp</code> 로 빌드하고 실행한다.
+        <strong>①에서 두 줄, ②에서 세 줄</strong>이 찍히는 것을 확인한다. (5분)</li>
+      <li><code>SensorGood</code>의 소멸자에서 <strong><code>virtual</code>만 지운다.</strong> 다시 빌드해 실행한다.
+        <strong>②에서도 <code>[LidarGood 소멸자]</code> 줄이 사라진다.</strong> (7분)</li>
+      <li>지운 <code>virtual</code>을 되돌린다. 이번에는 <code>SensorBad</code>의 소멸자에 <strong><code>virtual</code>을 붙인다.</strong>
+        <strong>①에서 없던 줄이 생긴다.</strong> 여기까지가 오늘의 핵심이다. (7분)</li>
+      <li><code>LidarGood</code>의 <code>read()</code>에서 이름을 <code>raed()</code>로 한 글자 바꾼다. 빌드한다.
+        <strong>어떤 메시지가 나오는지</strong> 적는다. (5분)</li>
+      <li><code>raii_scope.cpp</code>를 실행하고, <code>②</code>의 중괄호를 지워 본다
+        (<code>ofstream</code> 줄을 <code>main</code> 바닥까지 남게 만든다).
+        <strong>"다시 읽어 보니" 줄의 내용이 어떻게 달라지는지</strong> 본다. (6분)</li>
+    </ol>
+    <p>
+      <strong>이렇게 되면 성공:</strong> 2번과 3번에서 <strong>화면의 줄 개수가 실제로 바뀌는 것</strong>을 봤고,
+      4번에서 나온 메시지를 자기 말로 한 줄로 설명할 수 있다.
+    </p>
+    <pre><code>$ ./virtual_dtor
+① virtual 소멸자가 없는 경우
+  [LidarBad 생성] 360칸 확보
+  [SensorBad 소멸자]
+② virtual 소멸자를 붙인 경우
+  [LidarGood 생성] 360칸 확보
+  [LidarGood 소멸자] 360칸 반납
+  [SensorGood 소멸자]</code></pre>
+    <div class="box trap" style="margin-top:1rem">
+      <div class="boxtitle">2번에서 아무 오류도 안 난다</div>
+      <p>
+        빌드도 되고 실행도 되고 종료 코드도 정상이다. <strong>줄 하나가 없어진 것이 전부다.</strong>
+        <strong>바로 그것이 이 실습에서 확인할 내용이다.</strong>
+        컴파일러가 안 잡아 주는 종류의 실수가 있다는 것을 손으로 겪어 둔다.
+      </p>
+    </div>
+  </div>
+
+  <!-- ── 프롬프트 모음 ── -->
+  <h2 id="prompts">🤖 오늘 나온 프롬프트 모음</h2>
+  <div class="tablewrap">
+  <table>
+    <tr><th>이럴 때</th><th>이렇게 말한다</th></tr>
+    <tr><td>기반 클래스를 받았을 때</td><td>"상속당하는 클래스의 소멸자에 <code>virtual</code>이 붙어 있는지 확인해 줘. 상속을 안 당하는 클래스에는 붙이지 마."</td></tr>
+    <tr><td>갈아 끼우는 함수가 있을 때</td><td>"기반 클래스 함수를 갈아 끼우는 함수 전부에 <code>override</code>를 붙여 줘. 붙였더니 컴파일이 안 되는 곳은 <strong>고치지 말고 먼저 알려 줘.</strong>"</td></tr>
+    <tr><td><code>new</code>가 보일 때</td><td>"<code>new</code>·<code>delete</code>를 직접 쓰지 말고 스코프가 정리해 주는 방식으로 바꿔 줘. 중간에 <code>return</code>이 여러 개여도 안 새야 해."</td></tr>
+    <tr><td><code>close()</code>·<code>unlock()</code>이 보일 때</td><td>"이 <code>close()</code>가 정말 필요한 줄인지 알려 줘. 소멸자가 대신 해 주는 것이면 지워 줘."</td></tr>
+    <tr><td>클래스 뼈대를 시킬 때</td><td>"이 클래스를 나중에 상속할 거야. 소멸자는 <code>virtual</code>로, 갈아 끼울 함수는 <code>virtual</code> + 자식 쪽에 <code>override</code>로 만들어 줘."</td></tr>
+  </table>
+  </div>
+
+  <!-- ── ✅ 점검 ── -->
+  <h2 id="check">✅ 오늘의 점검</h2>
+  <ul class="check">
+    <li><input type="checkbox" id="c1"><label for="c1">상속당하는 클래스의 소멸자에 <code>virtual</code>이 붙어 있나?</label></li>
+    <li><input type="checkbox" id="c2"><label for="c2">갈아 끼우는 함수마다 <code>override</code>가 붙어 있나?</label></li>
+    <li><input type="checkbox" id="c3"><label for="c3"><code>override</code>를 붙였는데 컴파일이 안 되는 곳을 <strong>버그로 의심</strong>해 봤나?</label></li>
+    <li><input type="checkbox" id="c4"><label for="c4">코드에 <code>new</code>나 <code>delete</code>가 남아 있지 않나?</label></li>
+    <li><input type="checkbox" id="c5"><label for="c5"><code>close()</code>·<code>unlock()</code>을 손으로 부르고 있지 않나?</label></li>
+    <li><input type="checkbox" id="c6"><label for="c6">소멸자가 <strong>실제로 불리는지</strong> 출력으로 확인해 봤나?</label></li>
+    <li><input type="checkbox" id="c7"><label for="c7">중괄호를 나갈 때 무엇이 정리되는지 한 문장으로 말할 수 있나?</label></li>
+  </ul>
+
+  <!-- ── 조금 더 알아두면 ── -->
+  <h2 id="more">조금 더 알아두면 <span class="badge b-lv">시험 범위 아님</span></h2>
+
+  <details>
+    <summary>왜 소멸자는 자식 → 부모 순서로 불리나</summary>
+    <p>
+      만들 때와 지울 때의 순서가 <strong>반대</strong>다. 실행 결과가 그것을 그대로 보여 준다.
+    </p>
+    <pre><code>[LidarGood 생성] 360칸 확보     ← 부모가 먼저 만들어지고 자식이 채워진다
+[LidarGood 소멸자] 360칸 반납    ← 자식이 먼저 정리되고
+[SensorGood 소멸자]              ← 부모가 나중에 정리된다</code></pre>
+    <p>
+      이유는 단순하다. <strong>자식은 부모의 것을 쓸 수 있지만 부모는 자식의 것을 모른다.</strong>
+      부모를 먼저 지우면 자식이 정리하는 도중에 이미 없어진 것을 건드리게 된다.
+      <strong>「나중에 만든 것이 먼저 사라진다」</strong>는 규칙은 중괄호 안의 변수들에도 똑같이 적용된다 —
+      <code>바깥 닫힘</code>이 맨 마지막에 찍힌 이유가 그것이다.
+    </p>
+  </details>
+
+  <details>
+    <summary>모든 클래스에 <code>virtual</code> 소멸자를 붙이면 안 되나</summary>
+    <p>
+      안 붙이는 것이 맞다. <strong>공짜가 아니기 때문이다.</strong>
+    </p>
+    <p>
+      <code>virtual</code>이 하나라도 붙으면 그 클래스의 객체마다 <strong>표를 가리키는 자리가 하나 더 붙는다</strong>
+      (보통 8바이트). <code>float</code> 두 개짜리 작은 객체를 수만 개 만드는 코드라면 이것이 그냥 낭비다.
+    </p>
+    <div class="tablewrap">
+    <table>
+      <tr><th>이런 클래스는</th><th>가상 소멸자를</th></tr>
+      <tr><td>다른 클래스가 상속한다</td><td><strong>붙인다</strong></td></tr>
+      <tr><td>기반 클래스 손잡이로 잡아서 지울 일이 있다</td><td><strong>붙인다</strong></td></tr>
+      <tr><td>혼자 쓰는 작은 자료 묶음이다 (점 좌표 같은 것)</td><td>안 붙인다</td></tr>
+    </table>
+    </div>
+    <p><strong>판단 기준 한 줄:</strong> <em>"이 클래스를 누가 상속하나?"</em> 답이 "그렇다"면 붙인다.</p>
+  </details>
+
+  <details>
+    <summary><code>= default</code>와 <code>= delete</code> — 소멸자 옆에서 자주 보이는 두 표기</summary>
+    <p>
+      가상 소멸자를 붙일 때 몸통이 빌 때가 많다. 그때 이렇게 쓴 코드를 자주 본다.
+    </p>
+    <pre><code>class Sensor {
+public:
+  virtual ~Sensor() = default;   // "기본으로 해 줘" — { } 와 같은 뜻
+  virtual float read() = 0;
+};</code></pre>
+    <p>
+      <code>= default</code>는 <strong>"컴파일러가 알아서 만들어 주는 기본 동작을 쓰겠다"</strong>는 뜻이다.
+      <code>{ }</code>라고 쓰는 것과 결과가 같은데, <strong>의도가 코드에 드러난다</strong>는 점이 낫다.
+      반대로 <code>= delete</code>는 <strong>"이건 아예 못 쓰게 하라"</strong>는 뜻이다.
+      <strong>알아보기만 하면 된다.</strong> ROS 2 코드에서 자주 보인다.
+    </p>
+  </details>
+
+  <details>
+    <summary>다른 언어에서는 이걸 어떻게 하나 — 가비지 컬렉션과의 차이</summary>
+    <p>
+      파이썬이나 자바에는 <strong>쓰레기 수집기(garbage collector)</strong>가 있다.
+      안 쓰는 메모리를 <strong>나중에 알아서</strong> 회수해 준다. 편하지만 두 가지가 다르다.
+    </p>
+    <div class="tablewrap">
+    <table>
+      <tr><th></th><th>RAII (C++)</th><th>쓰레기 수집 (파이썬·자바)</th></tr>
+      <tr><td>언제 정리되나</td><td><strong>중괄호를 나가는 그 순간</strong></td><td>수집기가 도는 때. <strong>언제인지 모른다</strong></td></tr>
+      <tr><td>파일·잠금도 되나</td><td>된다. 메모리와 똑같이 처리된다</td><td>메모리만. 파일은 따로 닫아야 한다</td></tr>
+      <tr><td>로봇에서</td><td>정리 시점이 정해져 있다</td><td><strong>수집기가 도는 동안 잠깐 멈출 수 있다</strong></td></tr>
+    </table>
+    </div>
+    <p>
+      마지막 줄이 로봇에서 C++을 쓰는 이유 중 하나다.
+      <strong>"언제 멈출지 모른다"는 것이 제어 주기를 지켜야 하는 프로그램에서는 문제가 된다.</strong>
+    </p>
+  </details>
+
+  <footer>
+    로봇공학 · 순천향대학교 전자정보공학과 ·
+    다음 회차: <a href="robotics_11.html">11회 복사와 이동</a>
+  </footer>
+</main>
+</div>
+
+<script>
+function copyPrompt(btn) {
+  const box = btn.parentElement.cloneNode(true);
+  box.querySelector('button').remove();
+  navigator.clipboard.writeText(box.textContent.trim()).then(function () {
+    const old = btn.textContent;
+    btn.textContent = '복사됨';
+    setTimeout(function () { btn.textContent = old; }, 1200);
+  });
+}
+</script>
+</body>
+</html>

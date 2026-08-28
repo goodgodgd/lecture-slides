@@ -283,6 +283,36 @@ def fig_08_init_list():
     save(fig, "08_init_list.png")
 
 
+def fig_08_lifetime():
+    """8회 — 중괄호가 곧 수명이다. 실제 실행 출력을 그대로 옆에 붙였다."""
+    fig, ax = canvas(8.6, 3.6)
+    ax.text(0.03, 0.95, "중괄호를 닫는 순간 소멸자가 불린다", fontsize=12.5,
+            fontweight="bold", color=FG, va="bottom")
+    rows = [
+        ("{", 0.80, "", None),
+        ("  RangeFilter f(\"LDS-02\", 0.16f, 8.0f);", 0.665,
+         "[\uc0dd\uc131] LDS-02 \ud544\ud130 (0.16~8 m)", GOOD),
+        ("  auto good = f.keep_valid(raw);", 0.53,
+         "\uc6d0\ubcf8 7\uac1c \u2192 \ub0a8\uc740 \uac12 3\uac1c: 0.83 1.24 2.05", FG),
+        ("}", 0.395, "[\uc18c\uba78] LDS-02 \ud544\ud130, \ubc84\ub9b0 \uac12 0\uac1c", BAD),
+        ("std::cout << ...;", 0.26,
+         "\uc911\uad04\ud638\ub97c \ubc97\uc5b4\ub09c \ub4a4. \ud544\ud130\ub294 \uc774\ubbf8 \uc0ac\ub77c\uc84c\ub2e4.", MUTED),
+    ]
+    for txt, y, out, c in rows:
+        ax.text(0.04, y, txt, fontsize=9.6, family="Noto Sans Mono", color=FG, va="center")
+        if out:
+            ax.text(0.53, y, "\u2192  " + out, fontsize=9.6, color=c, va="center")
+    ax.add_patch(FancyBboxPatch((0.03, 0.355), 0.44, 0.50,
+                                boxstyle="round,pad=0.008,rounding_size=0.02",
+                                facecolor="none", edgecolor=ACCENT, linewidth=1.3, linestyle="--"))
+    ax.text(0.03, 0.155, "\uc67c\ucabd\uc740 \ucf54\ub4dc, \uc624\ub978\ucabd\uc740 \uadf8 \uc904\uc5d0\uc11c \uc2e4\uc81c\ub85c \ucc0d\ud78c \uc904\uc774\ub2e4.",
+            fontsize=10, color=FG)
+    ax.text(0.03, 0.07, "delete \ub97c \ubd80\ub978 \uacf3\uc774 \ud55c \uad70\ub370\ub3c4 \uc5c6\ub2e4 \u2014 \ub2eb\ub294 \uc911\uad04\ud638\uac00 \uc54c\uc544\uc11c \ud55c\ub2e4.",
+            fontsize=10, color=MUTED)
+    ax.set_ylim(0.0, 1.02)
+    save(fig, "08_lifetime.png")
+
+
 # ══════════════════════════════════════════════════════════════════
 # 9회 — 빌드 3단계와 오류가 나는 자리
 # ══════════════════════════════════════════════════════════════════
@@ -606,12 +636,54 @@ def fig_04_env_scope():
     save(fig, "04_env_scope.png")
 
 
+
+# ══════════════════════════════════════════════════════════════════
+# 10회 — new/delete 를 직접 쓰지 않는 이유 (함수를 빠져나가는 길이 여럿이다)
+# ══════════════════════════════════════════════════════════════════
+def fig_10_new_delete():
+    def col(ax, x0, title, tcolor, head, hfc, exits, notes):
+        ax.text(x0, 0.855, title, fontsize=11, color=tcolor, fontweight="bold")
+        box(ax, x0, 0.665, 0.40, 0.125, head, hfc, tcolor, fs=9.8)
+        spine = x0 + 0.04
+        ax.plot([spine, spine], [0.665, 0.245], color=tcolor, linewidth=1.3, zorder=0)
+        for (y, label, fc, ec), note in zip(exits, notes):
+            box(ax, x0 + 0.075, y, 0.275, 0.11, label, fc, ec, fs=9.4)
+            arrow(ax, (spine, y + 0.055), (x0 + 0.075, y + 0.055), color=ec)
+            ax.text(x0 + 0.365, y + 0.055, note, fontsize=9.3, color=ec, va="center")
+
+    fig, ax = plt.subplots(figsize=(8.6, 4.0))
+    ax.set_xlim(0, 1.06); ax.set_ylim(0, 1.02); ax.axis("off")
+    ax.text(0.02, 0.945, "함수를 빠져나가는 길은 하나가 아니다",
+            fontsize=12.5, fontweight="bold", color=FG, va="bottom")
+
+    col(ax, 0.02, "직접 new / delete 를 쓰면", BAD,
+        "new Lidar()   ← 여기서 잡는다", "#fdecea",
+        [(0.50, "① 조건이 안 맞아 return", "#fdecea", BAD),
+         (0.36, "② 값이 이상해 return", "#fdecea", BAD),
+         (0.22, "③ 끝까지 가서 delete", "#e7f5ee", GOOD)],
+        ["샌다", "샌다", "반납된다"])
+
+    col(ax, 0.56, "RAII 로 잡으면", GOOD,
+        "make_unique<Lidar>()   ← 여기서 잡는다", "#e7f5ee",
+        [(0.50, "① 조건이 안 맞아 return", "#e7f5ee", GOOD),
+         (0.36, "② 값이 이상해 return", "#e7f5ee", GOOD),
+         (0.22, "③ 끝까지 가서 return", "#e7f5ee", GOOD)],
+        ["반납", "반납", "반납"])
+
+    ax.text(0.02, 0.085, "왼쪽은 나가는 길이 셋인데 delete 는 한 줄뿐이다. "
+                         "길을 하나 더 늘리면 새는 길이 또 하나 생긴다.",
+            fontsize=9.8, color=MUTED)
+    ax.text(0.02, 0.025, "오른쪽에는 delete 가 한 줄도 없다. 짝을 맞추는 일을 사람이 하지 않기 때문이다.",
+            fontsize=9.8, color=MUTED)
+    save(fig, "10_new_delete.png")
+
+
 if __name__ == "__main__":
     for fn in [fig_01_pipeline, fig_01_grading, fig_03_chatbot_agent,
                fig_04_path_tree, fig_04_streams, fig_04_env_scope,
                fig_06_cpp_vs_python, fig_06_ai_vs_human, fig_07_header_source,
-               fig_08_init_list, fig_09_build_stages,
-               fig_10_virtual_dtor, fig_10_raii,
+               fig_08_init_list, fig_08_lifetime, fig_09_build_stages,
+               fig_10_virtual_dtor, fig_10_raii, fig_10_new_delete,
                fig_11_copy_cost, fig_11_value_vs_ref, fig_11_move,
                fig_12_reserve, fig_12_ownership,
                fig_13_sort_speed, fig_13_nan, fig_14_capture, fig_14_optional]:

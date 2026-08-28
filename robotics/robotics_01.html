@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1회 · 이 강의가 요구하는 것 | 로봇공학</title>
+<link rel="stylesheet" href="assets/lecture.css">
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="toc-title">이 회차 목차</div>
+  <a href="#summary">한 장 요약</a>
+  <a href="#rule">① AI 사용 규칙 한 문장</a>
+  <a href="#cando">② AI가 못 하는 일</a>
+  <a href="#grading">③ 100점을 어디서 받나</a>
+  <a href="#project">④ 학기 끝에 하는 일</a>
+  <a href="#stage">⑤ 어느 회차에서 무엇을 배우나</a>
+  <a href="#roadmap">⑥ 30회의 순서</a>
+  <a href="#homework">⑦ 과제 일곱 개</a>
+  <a href="#lab">🧪 첫 주에 해 둘 것</a>
+  <a href="#prompts">🤖 프롬프트 모음</a>
+  <a href="#check">✅ 점검</a>
+  <a href="#more">조금 더 알아두면</a>
+</nav>
+
+<main>
+  <a class="backlink" href="../index.html">← 강의자료 목록</a>
+
+  <div class="lec-no">로봇공학 · 1회 · 1부 환경과 도구</div>
+  <h1>이 강의가 요구하는 것</h1>
+
+  <div class="questions">
+    <span class="lab">오늘 답할 질문</span>
+    <ol>
+      <li>이 과목에서 AI를 써도 되나? 어디까지 되나?</li>
+      <li>무엇으로 점수를 받나?</li>
+      <li>AI가 코드를 다 짜 주는 시대에 이 과목이 왜 남아 있나?</li>
+      <li>30회 동안 무엇을 어떤 순서로 하나?</li>
+    </ol>
+  </div>
+
+  <p>
+    이 강의의 마지막 날, 여러분은 바닥에 세워 둔 <strong>고깔(콘) 사이를 로봇이 스스로 지나가게</strong> 만들어야 한다.
+    사람이 조종하지 않는다. 로봇이 라이다로 콘을 보고, 길 가운데를 스스로 찾아 바퀴를 돌린다.
+    그 로봇이 콘을 쓰러뜨리면 그 시도는 그 자리에서 끝난다.
+  </p>
+
+  <p>
+    코드는 AI가 짜 줄 수 있다. 실제로 짜 준다. 그것을 막을 방법도 없고, 막을 생각도 없다.
+    <strong>그런데 로봇은 코드를 보고 움직이는 것이 아니라 바닥 위에서 움직인다.</strong>
+    바퀴가 미끄러지고, 배터리가 닳고, 검은색 콘은 라이다에 안 잡힌다.
+    이 강의의 절반은 그 자리에서 무엇을 봐야 하는지를 다룬다.
+  </p>
+
+  <p>
+    오늘은 실습이 없다. 대신 <strong>이 과목이 여러분에게 요구하는 것 네 가지</strong>를 못 박는다 —
+    AI를 어디까지 쓸 수 있나, 점수는 어디서 나오나, 학기 끝에 무엇을 해야 하나,
+    그리고 그때까지 무엇을 어떤 순서로 배우나.
+  </p>
+
+  <!-- ── 한 장 요약표 ── -->
+  <h2 id="summary">한 장 요약 — 학기가 끝나도 이 표만 남으면 된다</h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 윗줄 하나</strong>만 기억해도 이 과목의 규칙은 다 지킨 것이다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>이 과목의 약속</th><th>구체적으로는</th><th>어디서 확인되나</th></tr>
+    <tr>
+      <td><strong>AI를 써도 된다. 설명하지 못하는 것을 내면 안 된다</strong></td>
+      <td>얼마나 썼는지는 묻지 않는다. 낸 것을 <strong>내 말로 다시 설명할 수 있는지</strong>를 본다</td>
+      <td>주행 평가일의 구두 확인, 보고서의 AI 활용 기록</td>
+    </tr>
+    <tr>
+      <td>점수의 절반은 로봇이 준다</td>
+      <td>프로젝트 50점 중 <strong>26점이 실제 주행</strong>이다</td>
+      <td>학기 말 주행 평가</td>
+    </tr>
+    <tr>
+      <td>과제는 「만들기」가 아니라 「설명하기」다</td>
+      <td>7개 모두 <strong>무엇을 어떻게 확인했는지</strong>를 제출한다</td>
+      <td>HW1~HW7</td>
+    </tr>
+    <tr>
+      <td>설치·설정은 에이전트에게 맡긴다</td>
+      <td>다만 <strong>됐는지 확인하는 것은 넘기지 않는다</strong></td>
+      <td>2·3회에서 환경을 만들고, 그다음부터 설치 이야기를 하지 않는다</td>
+    </tr>
+    <tr>
+      <td>확인할 수 없는 것은 배운 것이 아니다</td>
+      <td>모든 회차에 <strong>눈으로 볼 수 있는 성공 기준</strong>이 있다</td>
+      <td>회차마다 ✅ 점검 목록</td>
+    </tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 다섯 줄이 하나를 가리킨다. <strong>이 과목은 「만들었나」가 아니라 「확인했나」를 본다.</strong>
+    만드는 일은 점점 싸지고 있고, 확인하는 일은 그대로 비싸다.
+    비싼 쪽에 시간을 쓰는 것이 이 강의의 설계다.
+  </div>
+
+  <!-- ── ① AI 규칙 ── -->
+  <h2 id="rule">① 금지되는 것은 AI를 쓰는 것이 아니다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <p>
+    먼저 이 한 문장을 못 박고 시작한다. 학기 내내 이 문장 하나로 판단한다.
+  </p>
+
+  <div class="box stop">
+    <div class="boxtitle">이 과목의 AI 사용 규칙</div>
+    <p style="font-size:1.05rem">
+      <strong>금지되는 것은 AI를 쓰는 것이 아니라,
+      자기가 설명하지 못하는 코드를 제출하는 것이다.</strong>
+    </p>
+  </div>
+
+  <h3>왜 「금지」도 「무제한」도 아닌가</h3>
+  <p>
+    생각할 수 있는 규칙은 셋뿐이다. 앞의 둘을 먼저 기각한다.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>가능한 규칙</th><th>왜 안 되나</th></tr>
+    <tr>
+      <td><strong>AI 금지</strong></td>
+      <td>집행이 안 된다. 확인할 방법이 없는 규칙은 규칙이 아니라 <strong>정직한 학생에게만 걸리는 벌칙</strong>이다.
+          그리고 현장에서 안 쓰는 곳이 없다</td>
+    </tr>
+    <tr>
+      <td><strong>무제한 허용</strong></td>
+      <td>이해 없이도 통과된다. 통과한 학생이 <strong>다음 학기에 아무것도 못 한다</strong></td>
+    </tr>
+    <tr>
+      <td><strong>설명 책임 (이 과목의 선택)</strong></td>
+      <td>도구는 자유롭게 쓰되 <strong>결과에 대한 책임은 사람이 진다.</strong>
+          쓴 만큼 이해했는지만 본다</td>
+    </tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 셋째 줄은 회사가 코드 리뷰를 하는 방식과 같다.
+    누가 어떤 도구로 썼는지는 아무도 묻지 않는다. <strong>「이거 왜 이렇게 했어요?」에 답하지 못하면 병합되지 않는다.</strong>
+    같은 기준을 학기 내내 쓴다.
+  </div>
+
+  <h3>「설명할 수 있다」는 무슨 뜻인가 — 구두 확인 질문의 모양</h3>
+  <p>
+    막연한 기준처럼 들리므로 실제로 받게 될 질문을 미리 공개한다.
+    주행 평가일에 로봇 앞에서 <strong>한두 개</strong>를 묻는다. 아래는 그 예시다.
+  </p>
+
+<pre><code>Q1. 이 숫자 0.35 는 무엇을 뜻하나? 왜 0.5 가 아니라 0.35 인가?
+Q2. 콘이 하나만 보일 때 로봇은 어디로 가나? 그 판단이 코드의 어디에 있나?
+Q3. 어제는 됐는데 오늘 안 되면, 무엇부터 확인할 것인가?</code></pre>
+
+  <div class="interp">
+    <strong>해석:</strong> 셋 다 <strong>코드를 외웠는지 묻는 질문이 아니다.</strong>
+    Q1은 내가 고른 값의 근거를, Q2는 내 프로그램의 구조를, Q3는 원인을 좁히는 순서를 묻는다.
+    <strong>세 가지 모두 AI에게 대신 시킬 수 없는 것</strong>이다 — AI는 여러분의 로봇이 어제 어땠는지 모른다.
+  </div>
+
+  <h3>그래서 제출물이 하나 늘어난다</h3>
+  <p>
+    학기 말 보고서에는 <strong>「AI에게 시킨 것과, 받은 것 중 고친 것」</strong> 항목이 들어간다.
+    받은 코드를 그대로 썼다고 적어도 감점이 아니다.
+    <strong>받은 것 중 틀린 것을 찾아냈다고 적으면 가점이다.</strong>
+  </p>
+
+<pre><code>[AI 활용 기록 — 보고서에 들어갈 형식]
+1) 시킨 말        : "라이다 값에서 가장 가까운 콘을 찾아 줘"
+2) 받은 것         : 최솟값을 찾는 코드
+3) 내가 확인한 것  : 값에 inf 가 섞여 있었다. 그대로 쓰면 엉뚱한 방향이 나온다
+4) 고친 것         : 유효한 값만 걸러낸 뒤에 최솟값을 찾도록 다시 요구했다</code></pre>
+
+  <p>
+    3번 줄이 이 과목이 보는 자리다. <strong>1번과 2번만 채워진 보고서는 점수가 낮다.</strong>
+  </p>
+
+  <!-- ── ② AI가 못 하는 일 ── -->
+  <h2 id="cando">② 이 과목의 내용은 「AI가 못 하는 일」 쪽에 있다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <p>
+    AI가 코드를 짜 준다면 프로그래밍 과목이 왜 남아 있나. 이 질문에 먼저 답한다.
+    답은 <strong>로봇이 코드만으로 움직이지 않기 때문</strong>이다.
+  </p>
+
+  <p class="readme-first">무엇을 먼저 볼지: <strong>오른쪽 열만</strong> 세로로 읽는다. 그것이 이 과목의 목차에 가깝다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>AI가 잘 하는 것 🟢</th><th>AI가 못 하는 것 🔴</th></tr>
+    <tr><td>로봇 프로그램의 뼈대 작성</td><td>로봇이 왜 자꾸 오른쪽으로 치우치는지 판단</td></tr>
+    <tr><td>빌드 설정 파일 작성</td><td>라이다 잡음과 진짜 콘을 구분</td></tr>
+    <tr><td>문법 오류 수정</td><td>배터리가 닳으면 주행이 달라지는 현상에 대응</td></tr>
+    <tr><td>표준 라이브러리 사용법 알려주기</td><td>실시간 제약 아래에서 값을 튜닝</td></tr>
+    <tr><td>설치·설정 명령어 나열</td><td>설치가 <strong>정말 됐는지</strong> 확인</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 오른쪽 열은 전부 <strong>로봇 앞에 서 있어야만 아는 것</strong>이다.
+    다섯 줄 모두 「지금 이 로봇, 지금 이 바닥, 지금 이 배터리」에 관한 이야기다.
+    <strong>프로젝트 50점 중 26점이 실제 주행이다. AI에게 코드를 다 짜게 해도 로봇이 콘을 쓰러뜨리면 그 시도는 0점이다.</strong>
+  </div>
+
+  <h3>라이다가 주는 것은 「장면」이 아니라 숫자 줄이다</h3>
+  <p>
+    왜 오른쪽 열이 어려운지 한 번에 보여 주는 것이 라이다 데이터다.
+    라이다는 한 바퀴를 돌면서 방향마다 거리를 하나씩 재서 <strong>숫자를 줄로 세워</strong> 준다.
+    사람이 보는 「콘 두 개」가 아니라 이런 모양이다.
+  </p>
+
+<pre><code>거리 값 (m) — 앞에서부터 차례로
+0.83  1.24  2.05  0.42  3.30  0.55  ...</code></pre>
+
+  <p>
+    여기서 「어느 것이 콘이고 어느 것이 벽인가」는 <strong>숫자만 봐서는 안 나온다.</strong>
+    게다가 실제 라이다는 잰 값만 주는 것이 아니다. <strong>재기에 실패한 방향</strong>도 같이 준다.
+  </p>
+
+<pre><code>NaN &lt; 5.0 : 거짓
+NaN &gt; 5.0 : 거짓
+NaN == NaN: 거짓</code></pre>
+  <p class="readme-first">잰 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0 <code>-O2</code>)</p>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 여기서 처음 나오는 것</p>
+    <dl>
+      <dt>inf</dt>
+      <dd>「무한대」라는 뜻의 특별한 값이다. 라이다가 <strong>너무 멀어서 아무것도 못 봤을 때</strong> 이 값을 채워 보낸다.</dd>
+      <dt>NaN</dt>
+      <dd>「숫자가 아님(Not a Number)」이라는 뜻의 특별한 값이다.
+          라이다가 <strong>측정 자체에 실패한 방향</strong>에 이 값을 채운다.
+          위 출력이 보여 주듯 <strong>어떤 비교를 해도 거짓이 나온다</strong> —
+          자기 자신과 비교해도 거짓이다. 그래서 걸러내지 않고 계산에 넣으면 결과가 조용히 틀어진다.</dd>
+    </dl>
+    <p class="later">제대로 다루는 곳: 23회(라이다는 무엇을 재는가) · 24회(LaserScan 데이터 다루기)</p>
+  </div>
+
+  <figure>
+    <img src="assets/img/01_rviz_scan.png"
+         alt="RViz 화면. 가운데 로봇 좌표축이 있고 주변에 초록·빨강 점들이 끊어진 줄무늬로 흩어져 있다. 왼쪽 패널에는 LaserScan, Topic /scan, Reliability Best Effort 항목이 보인다">
+    <figcaption>같은 숫자 줄을 화면에 찍은 것이다. <strong>가운데 축이 로봇</strong>이고 주변의 점이 라이다 값이다.
+      사람 눈에는 「벽 두 줄」로 보이지만, <strong>프로그램에는 여전히 숫자 몇백 개일 뿐</strong>이다.
+      이 점들을 무리로 묶어 콘 하나로 만드는 것이 이 학기의 목표다.</figcaption>
+  </figure>
+
+  <h3>숫자로 확인한다 — 무엇이 잘못됐는지 아는 사람이 더 나은 코드를 받는다</h3>
+  <p>
+    실제 회사의 C++ 코드 <strong>1,046만 줄</strong>을 1년간 추적한 연구가 있다.
+    그 연구의 마지막 실험이 이 과목의 존재 이유를 그대로 보여 준다.
+    같은 함수 50개를 <strong>요구하는 방식만 바꿔서</strong> 다시 짜게 했다.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>어떻게 요청했나</th><th>효율 점수</th><th>정적 분석 경고</th></tr>
+    <tr><td>1단계 — 그냥 짜 달라고 함</td><td>0.294</td><td>1.26개</td></tr>
+    <tr><td>2단계 — "효율적으로 짜 줘" 정도의 막연한 요구</td><td>0.342</td><td>1.22개</td></tr>
+    <tr><td><strong>3단계 — 무엇이 문제인지 짚어서 요구</strong></td><td><strong>0.385</strong></td><td><strong>1.12개</strong></td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 1단계와 3단계 사이에서 <strong>효율이 31% 올랐고 경고는 11% 줄었다.</strong>
+    그런데 2단계("효율적으로 해 줘")로는 그 절반밖에 못 올랐다.
+    <strong>차이를 만든 것은 도구가 아니라 「무엇이 잘못됐는지 아는 것」이었다.</strong>
+    이 강의가 30회 동안 하려는 일이 그것이다.
+  </div>
+
+  <!-- ── ③ 평가 ── -->
+  <h2 id="grading">③ 100점 중 50점은 로봇이 준다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <figure>
+    <img src="assets/img/01_grading.png"
+         alt="가로 막대 그래프. 프로젝트 50퍼센트, 과제 30퍼센트, 출석·참여 20퍼센트로 100을 나눈 띠">
+    <figcaption>가장 왼쪽 칸이 절반이다. 그 칸 안에서 <strong>26점이 「로봇이 실제로 지나갔는가」</strong>로 결정된다 —
+      코드가 아니라 로봇이 받는 점수다.</figcaption>
+  </figure>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>무엇</th><th>비중</th><th>어떻게 받나</th></tr>
+    <tr><td><strong>프로젝트</strong></td><td>50%</td><td>학기 말 콘 트랙 주행 + 코드 정리 + 보고서</td></tr>
+    <tr><td>과제 7개</td><td>30%</td><td>HW1~HW7. 아래 ⑦절에 목록이 있다</td></tr>
+    <tr><td>출석·참여</td><td>20%</td><td>수업에 나오고, 실습을 자기 노트북에서 돌린다</td></tr>
+  </table>
+  </div>
+
+  <h3>프로젝트 50점의 내역</h3>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>B항목 26점</strong>이 절반을 넘는다는 것 하나만 보면 된다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>항목</th><th>점수</th><th>무엇을 보나</th></tr>
+    <tr><td>A. 사전 평가</td><td>10</td><td>로봇을 켜서 <strong>화면에 라이다 점이 찍히면</strong> 7점, 주행 프로그램까지 실행되면 10점</td></tr>
+    <tr><td><strong>B. 주행 평가</strong></td><td><strong>26</strong></td><td>출발 6점 / 정·역방향 각 9점(3구간 × 3점) / 완주 시간 상대평가 +1~2점</td></tr>
+    <tr><td>C. 저장소 활용</td><td>5</td><td>변경을 나눠 올린 기록 2회 이상, <strong>PR 설명 5줄 이상</strong></td></tr>
+    <tr><td>D. 소스 코드 정리</td><td>3</td><td>함수 하나가 20줄 이하, 선언과 구현을 파일로 나눔</td></tr>
+    <tr><td>E. 보고서</td><td>6</td><td>양식 + <strong>AI 활용 기록 + 튜닝 기록</strong></td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 감점 규칙이 하나 있다. <strong>콘을 살짝 건드리고 지나가면 −1점, 쓰러뜨리면 그 시도는 거기서 끝난다.</strong>
+    그래서 이 프로젝트는 「빠르게」보다 <strong>「안 건드리고」</strong>가 먼저다.
+    속도 점수는 완주한 다음에야 붙는 1~2점이다.
+  </div>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 평가표에 나온 이름 둘</p>
+    <dl>
+      <dt>PR (Pull Request, 「이 변경을 합쳐 주세요」 요청)</dt>
+      <dd>내가 고친 것을 <strong>합치기 전에 남에게 보여 주는 자리</strong>다.
+          위 C항목 5점이 보는 것은 코드가 아니라 <strong>그 자리에 쓴 설명 5줄</strong>이다.
+          무엇을 왜 이렇게 했는지는 코드가 말해 주지 않기 때문이다.</dd>
+      <dt>튜닝 (tuning)</dt>
+      <dd>프로그램 안의 숫자를 <strong>실제 로봇을 보면서 조금씩 바꿔 맞추는 일</strong>이다.
+          E항목의 「튜닝 기록」은 <strong>어떤 값을 왜 얼마로 바꿨는지</strong>를 적는 칸이다.
+          이 칸은 로봇 앞에 실제로 서 있던 사람만 채울 수 있다.</dd>
+    </dl>
+    <p class="later">제대로 다루는 곳: 5회(저장소·브랜치·PR) · 27회(주행 값 튜닝) · 30회(협업과 보고서)</p>
+  </div>
+
+  <!-- ── ④ 프로젝트 ── -->
+  <h2 id="project">④ 학기 끝에 하는 일은 이것 하나다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <p>
+    바닥에 콘을 두 줄로 세운다. 로봇은 그 사이를 <strong>혼자서</strong> 지나가야 한다.
+    사람이 조종하지 않고, 미리 외운 길을 따라가지도 않는다. 라이다로 콘을 보면서 그 자리에서 판단한다.
+  </p>
+
+<pre><code>        ▲ 로봇 진행 방향
+
+   ●        ●        ●        ●      ← 왼쪽 콘
+   :        :        :        :
+   :   [로봇]  ....... 목표점 :         트랙 폭 70cm
+   :        :        :        :
+   ●        ●        ●        ●      ← 오른쪽 콘
+
+   |← 60~80cm →|</code></pre>
+
+  <div class="interp">
+    <strong>해석:</strong> <strong>이 숫자들은 내가 둔 가정이다.</strong> 트랙 폭 70cm는
+    터틀봇3의 폭이 약 18cm이므로 네 배쯤 잡아야 조향 여유가 생긴다고 보고 정한 값이다.
+    실제 트랙은 학기 중에 실측해서 확정한다.
+  </div>
+
+  <h3>숫자를 넣어 본다 — 콘 하나가 라이다에 점 몇 개로 보이나</h3>
+  <p>
+    「콘이 보인다」는 말이 프로그램에서는 <strong>「점 몇 개가 모여 있다」</strong>는 뜻이다. 몇 개인지 세어 보자.
+    우리 라이다는 <strong>1도마다 한 번씩</strong> 재고, 한 바퀴에 값 <strong>360개</strong>를 준다.
+  </p>
+
+<pre><code>지름 20cm 콘이 1m 앞에 있을 때
+  콘이 차지하는 각도 ≈ 11.4도  →  1도마다 한 점이므로  점 11개
+
+같은 콘이 3m 앞에 있을 때
+  콘이 차지하는 각도 ≈  3.8도  →                        점 4개</code></pre>
+
+  <div class="interp">
+    <strong>해석:</strong> 멀어질수록 점이 급하게 줄어든다. 1m에서 11개이던 것이 3m에서는 4개다.
+    그래서 <strong>「점 3개 미만이면 콘으로 세지 않는다」</strong> 정도가 무난한 기준이 된다 —
+    잡음 한두 개를 콘으로 오인하지 않기 위해서다. <strong>이 기준값도 내가 둔 가정이고, 트랙에서 실측해 고친다.</strong>
+    이런 값을 실제 로봇을 보며 고쳐 맞추는 일이 앞에서 말한 <strong>튜닝</strong>이다.
+  </div>
+
+  <h3>벽 미로가 아니라 콘인 이유</h3>
+  <p>
+    작년까지 이 프로젝트는 <strong>벽 사이를 지나가는 미로</strong>였다. 올해 콘으로 바꿨다. 이유가 있다.
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th></th><th>벽 미로</th><th>콘 트랙 (올해)</th></tr>
+    <tr><td>라이다에 어떻게 보이나</td><td>끊김 없는 점 덩어리</td><td><strong>드문드문 끊어진 점 무리</strong></td></tr>
+    <tr><td>필요한 계산</td><td>왼쪽·오른쪽 거리 하나씩만 봐도 된다</td><td>점을 <strong>무리로 묶고 위치를 계산</strong>해야 한다</td></tr>
+    <tr><td>좌표 변환</td><td>안 배워도 통과할 수 있었다</td><td><strong>안 하면 못 푼다</strong></td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 벽에서는 「왼쪽 벽까지 몇 미터」 한 값만 봐도 어느 정도 굴러갔다.
+    그래서 수업에서 배운 이론이 프로젝트에 안 쓰였다.
+    <strong>콘은 점이 끊어져 있어서, 점을 묶고 위치를 계산하지 않으면 콘이 어디 있는지조차 알 수 없다.</strong>
+    올해 처음으로 수업 내용과 프로젝트가 한 줄로 이어진다.
+  </div>
+
+  <figure>
+    <img src="assets/img/01_turtlebot_family.png"
+         alt="터틀봇 계보 사진. 위쪽에 단종된 초대 터틀봇, 아래 왼쪽에 터틀봇2 계열 네 종, 오른쪽에 터틀봇3 계열 버거·와플·와플파이">
+    <figcaption>우리가 쓰는 것은 오른쪽 아래 <strong>터틀봇3 버거</strong>다.
+      위에 얹힌 검은 원통이 라이다다 — 이 학기의 모든 판단이 저 원통 하나에서 나온다.</figcaption>
+  </figure>
+
+  <!-- ── ⑤ 파이프라인 ── -->
+  <h2 id="stage">⑤ 라이다 숫자가 바퀴 명령이 되기까지 <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <p>
+    프로젝트를 한 덩어리로 보면 손댈 곳이 없다. <strong>일곱 단계로 쪼개면 각 단계가 한 회차의 수업 내용</strong>이 된다.
+  </p>
+
+  <figure>
+    <img src="assets/img/01_project_pipeline.png"
+         alt="세로 흐름도. 위에서부터 스캔 입력, 못 쓰는 값 버리기, 극좌표를 펴기, 가까운 점끼리 묶기, 좌우 콘 짝짓고 목표점 잡기, 속도 명령 출력 순으로 상자가 이어지고 오른쪽에 각각 배우는 회차가 적혀 있다">
+    <figcaption>오른쪽 끝의 <strong>회차 번호</strong>를 본다. 이 흐름도는 그림이 아니라
+      <strong>23~27회의 목차</strong>다. 위에서 아래로 내려오는 것이 이 학기의 후반부다.</figcaption>
+  </figure>
+
+<pre><code>/scan  (거리 r, 각도 θ 로 들어온다)
+   ↓  ① 못 쓰는 값 버리기 — inf · NaN · 범위 밖          [24회]
+   ↓  ② 극좌표를 직교좌표로 펴기  x = r·cosθ, y = r·sinθ   [25회]
+   ↓  ③ 로봇 기준 좌표로 옮기기 (라이다는 로봇 중심에 없다) [26회]
+   ↓  ④ 가까운 점끼리 무리 짓기 → 무리 하나 = 콘 하나       [27회]
+   ↓  ⑤ 무리의 중심 = 콘의 위치                            [27회]
+   ↓  ⑥ 좌·우 콘을 짝지어 가운데를 목표점으로               [27회]
+   ↓  ⑦ 목표점 방향으로 조향 + 안전 제한                    [27회]
+/cmd_vel  (직진 속도, 회전 속도로 나간다)</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 흐름도에서 처음 나오는 이름</p>
+    <dl>
+      <dt>ros2</dt>
+      <dd>로봇 프로그램들을 <strong>서로 이야기하게 붙여 주는 소프트웨어</strong>의 이름이자,
+          터미널에서 치는 명령어의 이름이다. 이 강의의 3부 전체가 이것을 다룬다.</dd>
+      <dt>/scan</dt>
+      <dd>라이다가 잰 값이 흘러 나오는 <strong>통로의 이름</strong>이다.
+          이름 앞의 빗금(<code>/</code>)이 통로 이름이라는 표시다. 위 흐름도의 입구가 여기다.</dd>
+      <dt>/cmd_vel</dt>
+      <dd>바퀴에게 <strong>「얼마나 빨리, 얼마나 틀어라」를 보내는 통로</strong>다.
+          <em>cmd</em>는 명령(command), <em>vel</em>은 속도(velocity)를 줄인 것이다. 위 흐름도의 출구가 여기다.</dd>
+      <dt>LaserScan</dt>
+      <dd><code>/scan</code>으로 흐르는 <strong>데이터 한 덩어리의 형식 이름</strong>이다.
+          거리 값 묶음뿐 아니라 <strong>첫 값이 어느 각도인지, 한 칸이 몇 도인지</strong>도 같이 들어 있다.
+          그래서 「몇 번째 값」을 「몇 도 방향」으로 바꿀 수 있다.</dd>
+    </dl>
+    <p class="later">제대로 다루는 곳: 15~17회(ROS 2의 구조) · 24회(LaserScan 뜯어보기)</p>
+  </div>
+
+  <h3>이 파이프라인의 각 단계는 몇 회차에서 배우나</h3>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>「배우는 회차」 열</strong>. 오늘 이 표를 이해할 필요는 없다. 학기 중에 다시 본다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>단계</th><th>무엇을 하나</th><th>배우는 회차</th><th>없으면 무슨 일이 나나</th></tr>
+    <tr><td>①</td><td>못 쓰는 값 버리기</td><td>24회</td><td>측정 실패한 방향을 콘으로 착각한다</td></tr>
+    <tr><td>②</td><td>극좌표를 직교좌표로 펴기</td><td>25회</td><td>「몇 도 방향에 몇 미터」로는 두 점 사이 거리를 못 잰다</td></tr>
+    <tr><td>③</td><td>로봇 기준 좌표로 옮기기</td><td>26회</td><td>라이다 위치만큼 콘 위치가 어긋난 채로 주행한다</td></tr>
+    <tr><td>④⑤</td><td>점 묶고 중심 구하기</td><td>27회</td><td>점 하나하나를 콘으로 세어 콘이 수십 개로 보인다</td></tr>
+    <tr><td>⑥⑦</td><td>목표점 잡고 조향</td><td>27회</td><td>콘 위치는 아는데 어디로 갈지를 정하지 못한다</td></tr>
+    <tr><td>—</td><td>이 전부를 돌아가는 프로그램으로 만들기</td><td>19~22회</td><td>계산은 맞는데 로봇이 못 받는다</td></tr>
+    <tr><td>—</td><td>그 프로그램을 C++로 읽고 고치기</td><td>6~14회</td><td>AI가 준 코드가 맞는지 판단할 수 없다</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 아래 두 줄이 위 다섯 줄보다 <strong>먼저</strong> 온다.
+    로봇 이야기를 하기 전에 언어와 도구를 먼저 하는 이유가 이것이다 —
+    <strong>읽지 못하는 코드는 고칠 수도 없다.</strong>
+  </div>
+
+  <!-- ── ⑥ 30회 흐름 ── -->
+  <h2 id="roadmap">⑥ 30회는 네 부로 나뉜다 <span class="badge b-green">🟢 맡긴다</span></h2>
+
+  <p>주 2회, 회당 1시간 10분, 15주. 총 30회다. 순서에는 이유가 있다.</p>
+
+  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 「왜 이 순서인가」 열</strong>. 왼쪽 두 열은 나중에 찾아볼 때 쓴다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>부</th><th>회차</th><th>무엇을 하나</th><th>왜 이 순서인가</th></tr>
+    <tr>
+      <td><strong>1부 환경과 도구</strong></td><td>1~5</td>
+      <td>리눅스·WSL 설치, 에이전트 붙이기, 리눅스 명령어, Git</td>
+      <td><strong>6회부터는 설치 이야기를 하지 않기 위해서다.</strong> 도구가 없으면 그 뒤 25회가 전부 막힌다</td>
+    </tr>
+    <tr>
+      <td><strong>2부 C++</strong></td><td>6~14</td>
+      <td>코드를 읽는 최소 장비, 클래스, 빌드, 복사와 이동, 표준 라이브러리</td>
+      <td><strong>짜기 위해서가 아니라 판단하기 위해서다.</strong> AI가 준 코드가 맞는지 보려면 읽을 줄 알아야 한다</td>
+    </tr>
+    <tr>
+      <td><strong>3부 ROS 2</strong></td><td>15~22</td>
+      <td>프로그램을 쪼개는 방식, 설치, 확인 명령어, 통신 프로그래밍, 밀림과 시각화</td>
+      <td>로봇 프로그램은 <strong>여러 조각이 동시에 도는 형태</strong>다. 그 구조를 먼저 익힌다</td>
+    </tr>
+    <tr>
+      <td><strong>4부 로봇과 프로젝트</strong></td><td>23~30</td>
+      <td>라이다, 좌표 변환, 콘 인식과 주행, 실물 로봇, 프로젝트</td>
+      <td>여기가 <strong>이 과목의 목적지</strong>다. 앞의 22회는 전부 이 여덟 회차를 위한 준비다</td>
+    </tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 1·2부(14회)가 준비이고 3·4부(16회)가 본론이다.
+    준비가 절반인 것이 답답해 보이지만, <strong>준비 없이 4부로 가면 코드를 복사해 붙이는 것 말고 할 수 있는 일이 없다.</strong>
+  </div>
+
+  <h3>혼자 해야 하는 구간은 초반 두 번뿐이다</h3>
+  <p>
+    이 강의는 설치와 설정을 에이전트에게 넘긴다. 그러려면 에이전트가 먼저 있어야 한다.
+    <strong>그 처음 두 걸음만 사람이 직접 한다.</strong>
+  </p>
+
+<pre><code>[2회] WSL 설치        ⛔ 사람이 직접 — 붙일 리눅스가 아직 없다
+   ↓
+[3회] 에이전트 설치    ⛔ 사람이 직접 — 아직 시킬 대상이 없다
+   ↓
+[4회~] 그다음부터      🟢 설치·설정은 시킨다 / 🔴 확인은 내가 한다</code></pre>
+
+  <div class="interp">
+    <strong>해석:</strong> 세 번째 줄의 <strong>빗금 오른쪽</strong>이 이 강의가 계속 되풀이할 문장이다.
+    시키는 것과 확인하는 것은 다른 일이고, <strong>확인은 넘길 수 없다.</strong>
+    「잘 됐는지 봐 줘」라고 하면 「완료했습니다」라는 답이 온다. 그 답은 확인이 아니다.
+  </div>
+
+  <!-- ── ⑦ 과제 ── -->
+  <h2 id="homework">⑦ 과제 일곱 개는 전부 「설명하기」다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <p>
+    과제 총 30%가 일곱 개로 나뉜다. <strong>일곱 개 모두 「만들어 오라」가 아니라 「무엇을 어떻게 확인했는지 적어 오라」</strong>다.
+    동사가 바뀐 것이 이번 학기의 가장 큰 변화다.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>과제</th><th>회차</th><th>배점</th><th>무엇을 하나</th></tr>
+    <tr><td>HW1</td><td>4회</td><td>6%</td><td>에이전트에게 환경을 만들게 하고 <strong>내가 무엇을 어떻게 검증했는지</strong> 적기</td></tr>
+    <tr><td>HW2</td><td>9회</td><td>3%</td><td>고장난 빌드 설정을 고치고 <strong>어느 단계에서 난 오류인지</strong> 설명</td></tr>
+    <tr><td>HW3</td><td>12회</td><td>3%</td><td>AI가 준 코드 두 개 중 나은 것을 고르고 <strong>이유 대기</strong></td></tr>
+    <tr><td>HW4</td><td>14회</td><td>3%</td><td><strong>프롬프트를 고쳐 더 나은 코드 받아내기</strong> — 세 번의 대화 기록 제출</td></tr>
+    <tr><td>HW5</td><td>18회</td><td>3%</td><td>고장난 로봇 시스템 진단 — <strong>어떤 명령어를 어떤 순서로 썼나</strong></td></tr>
+    <tr><td>HW6</td><td>21회</td><td>6%</td><td>화면 속 거북이를 움직이는 프로그램 + <strong>검사 목록 결과</strong> 제출</td></tr>
+    <tr><td>HW7</td><td>25회</td><td>6%</td><td>기록해 둔 라이다 데이터에서 <strong>콘 위치를 좌표로 뽑아내기</strong></td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> HW7이 프로젝트로 가는 다리다. <strong>로봇이 없어도 할 수 있다</strong> —
+    미리 기록해 둔 라이다 데이터만 있으면 되기 때문이다.
+    로봇 대수가 모자라 순서를 기다리는 시간을 여기서 줄인다.
+    HW4는 특이하게 <strong>대화 기록 자체가 제출물</strong>이다. 한 번에 좋은 답을 받는 것은 채점 대상이 아니다.
+  </div>
+
+  <!-- ── 🧪 실습 자리 = 첫 주 체크리스트 ── -->
+  <div class="lab-block" id="lab">
+    <div class="boxtitle">🧪 첫 주에 해 둘 것 — 오늘은 실습 대신 준비다</div>
+    <p><strong>알게 되는 것:</strong> 내 노트북이 다음 시간의 설치를 감당할 수 있는지. <strong>못 하면 다음 시간에 아무것도 못 한다.</strong></p>
+    <p><strong>준비물:</strong> 윈도우 노트북, 인터넷. 총 <strong>40분쯤</strong> 걸린다.</p>
+    <p><strong>절차</strong></p>
+    <ol>
+      <li><strong>윈도우 버전을 확인한다.</strong> (3분)
+        <br>키보드에서 <strong>윈도우 키 + R</strong>을 누르고 아래를 친다.
+<pre><code>winver</code></pre>
+        창에 뜬 번호가 <strong>윈도우 10이면 빌드 19045 이상, 윈도우 11이면 무엇이든</strong> 괜찮다.
+        윈도우 10인데 번호가 그보다 낮으면 <strong>먼저 윈도우 업데이트를 돌린다.</strong> 이게 30분 넘게 걸릴 수 있다.
+        <!-- TODO: 미검증 — 윈도우 화면 -->
+      </li>
+      <li><strong>디스크 여유를 확인한다.</strong> (3분)
+        <br>탐색기에서 C 드라이브를 보거나, 시작 버튼을 우클릭해 <strong>터미널</strong>을 열고 아래를 친다.
+<pre><code>Get-Volume C</code></pre>
+        <code>SizeRemaining</code> 칸이 <strong>20GB 이상</strong>이면 넉넉하다. 10GB 아래면 지금 비운다.
+        리눅스 한 벌과 개발 도구가 그만큼 들어간다.
+        <!-- TODO: 미검증 — 윈도우 화면 -->
+      </li>
+      <li><strong>가상화가 켜져 있는지 확인한다.</strong> (5분)
+        <br><strong>Ctrl + Shift + Esc</strong>로 작업 관리자를 열고 <strong>성능 → CPU</strong>를 본다.
+        오른쪽 아래 <strong>「가상화: 사용」</strong>이면 통과다.
+        「사용 안 함」이면 다음 시간의 설치가 도중에 멈춘다. <strong>이 경우 3회차 전에 따로 알린다.</strong>
+        <!-- TODO: 미검증 — 윈도우 화면 -->
+      </li>
+      <li><strong>계정을 하나 만든다.</strong> (15분)
+        <br><a href="https://github.com/">github.com</a>에서 계정을 만든다.
+        학기 말 프로젝트 평가의 <strong>C항목 5점</strong>이 이 계정에 남은 기록을 본다.
+        이름은 나중에 남에게 보여 줄 것이므로 <strong>알아볼 수 있게</strong> 짓는다.
+      </li>
+      <li><strong>공지 채널에 들어온다.</strong> (5분)
+        <br>공지·질문은 전부 강의 소통 채널에서 한다. <strong>알림을 켜 둔다.</strong>
+        로봇 배정, 평가일 변경 같은 것이 여기로 나간다.
+      </li>
+      <li><strong>다음 시간 준비물을 확인한다.</strong> (5분)
+        <br>2회에는 <strong>노트북을 반드시 가져온다.</strong> 설치를 그 자리에서 한다.
+        충전기도 같이 가져온다 — 설치 중에 배터리가 나가면 처음부터 다시다.
+      </li>
+    </ol>
+    <p>
+      <strong>이렇게 되면 성공:</strong> ①②③의 화면을 각각 한 번씩 눈으로 봤고,
+      ④의 계정으로 로그인이 되며, ⑤의 채널에 내 이름이 보인다.
+      <strong>세 가지 확인 중 하나라도 못 봤으면 아직 준비가 안 된 것이다.</strong>
+    </p>
+    <div class="box trap" style="margin-top:1rem">
+      <div class="boxtitle">⚠️ 여기서 막히는 사람이 매년 나온다</div>
+      <p>
+        가장 흔한 것이 ③번이다. <strong>노트북 제조사가 가상화를 꺼서 출고하는 경우</strong>가 있다.
+        이건 윈도우에서 켤 수 없고 <strong>부팅할 때 들어가는 설정 화면(BIOS/UEFI)</strong>에서 켜야 한다.
+        기종마다 들어가는 키가 달라서 혼자 헤매기 쉽다. <strong>혼자 붙들고 있지 말고 알린다.</strong>
+      </p>
+    </div>
+  </div>
+
+  <!-- ── 프롬프트 모음 ── -->
+  <h2 id="prompts">🤖 이 과목에서 에이전트에게 말하는 법 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <p>
+    아직 에이전트를 설치하지 않았다. 3회에 붙인다.
+    <strong>다만 붙이기 전에 「어떻게 말할 것인가」를 먼저 정해 둔다.</strong>
+    도구를 손에 쥔 다음에 말버릇을 고치기는 어렵기 때문이다.
+    아래 네 개가 이 강의가 계속 쓰게 될 말버릇이다.
+  </p>
+
+  <h3>① 확인할 방법을 같이 달라고 한다</h3>
+  <div class="prompt"><button onclick="copyPrompt(this)">복사</button> 이 작업을 해 줘. 그리고 <strong>내가 직접 눈으로 확인할 수 있는 방법</strong>을 명령어와 함께 알려 줘. "잘 됐습니다"는 확인이 아니니까 화면에 무엇이 보이면 성공인지 적어 줘.</div>
+
+  <h3>② 실행 전에 보여 달라고 한다</h3>
+  <div class="prompt"><button onclick="copyPrompt(this)">복사</button> 앞으로 <code>sudo</code>가 붙는 명령이나 파일을 지우는 명령은 <strong>실행하기 전에 나에게 먼저 보여 줘.</strong> 내가 확인하면 그때 실행해.</div>
+
+  <h3>③ 내가 다시 설명할 수 있게 해 달라고 한다</h3>
+  <div class="prompt"><button onclick="copyPrompt(this)">복사</button> 방금 준 것을 <strong>내가 남에게 설명할 수 있게</strong> 한국어로 세 줄만 정리해 줘. 전문 용어를 쓰면 그 용어가 무슨 뜻인지도 한 줄씩 붙여 줘.</div>
+
+  <h3>④ 모르는 이름을 그 자리에서 묻는다</h3>
+  <div class="prompt"><button onclick="copyPrompt(this)">복사</button> 방금 답에 나온 이름 중에서 <strong>내가 처음 볼 만한 것</strong>을 골라서, 각각 한 줄 뜻과 <strong>여기서 그게 무슨 일을 하고 있는지</strong>를 알려 줘.</div>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>이럴 때</th><th>이렇게 말한다</th><th>왜</th></tr>
+    <tr><td>무언가를 시킬 때</td><td>"확인 방법을 명령어와 함께 알려 줘"</td><td>확인을 남에게 넘기지 않기 위해</td></tr>
+    <tr><td>시스템을 건드릴 때</td><td>"실행 전에 먼저 보여 줘"</td><td>되돌릴 수 없는 명령이 섞이기 때문</td></tr>
+    <tr><td>결과를 받았을 때</td><td>"내가 설명할 수 있게 세 줄로"</td><td>제출물의 기준이 「설명할 수 있는가」이므로</td></tr>
+    <tr><td>모르는 말이 나왔을 때</td><td>"처음 볼 만한 이름을 골라서 풀어 줘"</td><td>모르는 이름 하나에서 읽기가 멈추기 때문</td></tr>
+    <tr><td>코드를 받았을 때</td><td>"이 코드에서 <strong>틀릴 수 있는 자리</strong>가 어디인지 짚어 줘"</td><td>맞는 코드와 안전한 코드는 다르므로</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 다섯 줄에 공통점이 있다. <strong>전부 「대신 해 줘」가 아니라 「내가 볼 수 있게 해 줘」다.</strong>
+    앞의 연구가 보여 준 31% 차이가 여기서 나온다 — 무엇을 봐야 하는지 아는 사람이 더 나은 답을 받는다.
+  </div>
+
+  <!-- ── ✅ 점검 ── -->
+  <h2 id="check">✅ 오늘의 점검</h2>
+  <ul class="check">
+    <li><input type="checkbox" id="c1"><label for="c1">이 과목에서 <strong>금지되는 것 한 가지</strong>를 내 말로 말할 수 있나?</label></li>
+    <li><input type="checkbox" id="c2"><label for="c2">프로젝트 50점 중 <strong>실제 주행이 몇 점</strong>인지 아나?</label></li>
+    <li><input type="checkbox" id="c3"><label for="c3">콘을 쓰러뜨리면 어떻게 되는지 아나?</label></li>
+    <li><input type="checkbox" id="c4"><label for="c4">라이다가 주는 값에 <code>inf</code>·<code>NaN</code>이 섞인다는 것을 알았나?</label></li>
+    <li><input type="checkbox" id="c5"><label for="c5">첫 주 체크리스트 ①②③의 화면을 <strong>직접 봤나</strong>?</label></li>
+    <li><input type="checkbox" id="c6"><label for="c6">GitHub 계정을 만들고 로그인까지 해 봤나?</label></li>
+    <li><input type="checkbox" id="c7"><label for="c7">다음 시간에 <strong>노트북과 충전기</strong>를 가져와야 한다는 것을 적어 뒀나?</label></li>
+  </ul>
+
+  <!-- ── 조금 더 알아두면 ── -->
+  <h2 id="more">조금 더 알아두면 <span class="badge b-lv">시험 범위 아님</span></h2>
+
+  <details>
+    <summary>이 규칙을 쓰는 곳이 또 있나</summary>
+    <p>
+      카네기멜런 대학이 2025년에 만든 프로그래밍 입문 과목(15-113)이 같은 기준을 쓴다.
+      AI 사용을 막지 않고, <strong>제출물을 설명할 수 있는지</strong>를 평가한다.
+      이유도 같다 — 금지는 집행되지 않고, 무제한 허용은 이해 없이 통과되기 때문이다.
+    </p>
+    <p>
+      회사에서도 마찬가지다. 앞에서 본 1,046만 줄 연구를 보면
+      그 기간에 C++ 코드 중 AI가 쓴 비중이 <strong>27.65%에서 59.69%로</strong> 늘었다.
+      절반을 넘긴 것이다. <strong>「쓰지 말라」가 현실적이지 않다는 뜻이기도 하다.</strong>
+    </p>
+  </details>
+
+  <details>
+    <summary>AI 코드가 정말 위험한가 — 연구가 말하는 것은 조금 다르다</summary>
+    <p>같은 연구에서 실제로 무슨 일이 있었는지를 보면 예상과 다른 줄이 있다.</p>
+    <div class="tablewrap">
+    <table>
+      <tr><th>무엇</th><th>AI ÷ 사람</th></tr>
+      <tr><td>서버 CPU 비용</td><td>5~8% 증가</td></tr>
+      <tr><td>코드 검토에서 "고쳐야 통과" 지적</td><td>1.92배</td></tr>
+      <tr><td>빌드 실패율</td><td>1.3배</td></tr>
+      <tr><td><strong>배포 후 되돌린 비율</strong></td><td><strong>0.9배 (AI가 더 낮다)</strong></td></tr>
+    </table>
+    </div>
+    <p>
+      마지막 줄이 반전이다. <strong>AI 코드는 검토를 통과하고 나면 사람 코드보다 오히려 안정적이었다.</strong>
+      위험은 「터지는 것」이 아니라 <strong>「조용히 비싸지는 것」</strong>이다.
+      서버는 5% 느려도 굴러간다. <strong>그런데 로봇의 제어 루프는 그렇지 않다.</strong>
+      값을 늦게 읽으면 로봇은 늦게 선다. 이 차이가 로봇에서 C++을 계속 쓰는 이유이기도 하다.
+    </p>
+  </details>
+
+  <details>
+    <summary>왜 「주차」가 아니라 「회차」로 세나</summary>
+    <p>
+      이 과목은 주 2회다. 그래서 3주차에 5·6회차 수업을 한다.
+      「3주차 자료」라고 하면 두 편 중 어느 것인지 알 수 없다.
+      그래서 <strong>자료 번호는 주차가 아니라 회차</strong>다. 1회부터 30회까지 이어진다.
+    </p>
+  </details>
+
+  <details>
+    <summary>강의 운영 정보</summary>
+    <div class="tablewrap">
+    <table>
+      <tr><th>무엇</th><th>내용</th></tr>
+      <tr><td>수업 목표</td><td>리눅스에서 C++로 로봇 제어 프로그램 작성</td></tr>
+      <tr><td>선수 과목</td><td>기초 프로그래밍</td></tr>
+      <tr><td>평가</td><td>프로젝트 50% · 과제 30% · 출석과 참여 20%</td></tr>
+      <tr><td>소통</td><td>공지·질문 모두 강의 소통 채널에서. <strong>알림을 켜 둔다</strong></td></tr>
+      <tr><td>자료</td><td>이 웹 자료가 교재다. 회차마다 한 편씩 올라간다</td></tr>
+    </table>
+    </div>
+    <p>
+      질문은 늦게 할수록 비싸진다. <strong>막힌 그날 묻는 것이 가장 싸다.</strong>
+      특히 설치 문제는 다음 회차 전체를 못 따라오게 만든다.
+    </p>
+  </details>
+
+  <footer>
+    로봇공학 · 순천향대학교 전자정보공학과 ·
+    다음 회차: <a href="robotics_02.html">2회 리눅스와 WSL — 우주여행 게임에서 시작된 운영체제</a>
+  </footer>
+</main>
+</div>
+
+<script>
+function copyPrompt(btn) {
+  const box = btn.parentElement.cloneNode(true);
+  box.querySelector('button').remove();
+  navigator.clipboard.writeText(box.textContent.trim()).then(function () {
+    const old = btn.textContent;
+    btn.textContent = '복사됨';
+    setTimeout(function () { btn.textContent = old; }, 1200);
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,848 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>11회 · 복사와 이동 | 로봇공학</title>
+<link rel="stylesheet" href="assets/lecture.css">
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="toc-title">이 회차 목차</div>
+  <a href="#summary">한 장 요약</a>
+  <a href="#block1">① 콜백 한 번에 720개</a>
+  <a href="#count">② 복사를 세어 본다</a>
+  <a href="#cost">③ 22배가 났다</a>
+  <a href="#move">④ std::move</a>
+  <a href="#trap">⚠️ 가져간 뒤의 원본</a>
+  <a href="#rvo">⑤ 반환에는 붙이지 마라</a>
+  <a href="#robot">⑥ 로봇에서 왜 더 중요한가</a>
+  <a href="#lab">🧪 실습</a>
+  <a href="#prompts">🤖 프롬프트 모음</a>
+  <a href="#check">✅ 점검</a>
+  <a href="#more">조금 더 알아두면</a>
+</nav>
+
+<main>
+  <a class="backlink" href="../index.html">← 강의자료 목록</a>
+
+  <div class="lec-no">로봇공학 · 11회 · 2부 C++</div>
+  <h1>복사와 이동 — 값을 넘길 때 무슨 일이 일어나나</h1>
+
+  <div class="questions">
+    <span class="lab">오늘 답할 질문</span>
+    <ol>
+      <li>함수에 값을 넘길 때 정확히 무슨 일이 일어나나?</li>
+      <li>"복사가 비싸다"는 말은 <strong>얼마나</strong> 비싸다는 뜻인가?</li>
+      <li><code>std::move</code>는 무엇을 옮기나? 옮기고 난 원본은 어떻게 되나?</li>
+      <li>반환할 때도 <code>move</code>를 붙이면 더 빨라지나?</li>
+    </ol>
+  </div>
+
+  <p>
+    실제 회사의 C++ 코드 1천만 줄을 1년간 추적한 연구가 있다.
+    거기서 나온 항목 중 <strong>1위가 오늘 다루는 것</strong>이다.
+    AI가 짠 코드는 사람이 짠 코드보다 <strong>복사·할당 오버헤드가 1.39배</strong> 많았다.
+    같은 연구에서 정확성·안전성 문제는 오히려 사람의 <strong>0.94배</strong>였다.
+  </p>
+
+  <p>
+    두 숫자를 나란히 놓으면 이 회차의 논지가 나온다.
+    <strong>AI는 틀린 코드를 더 많이 만들지 않는다. 둔한 코드를 만든다.</strong>
+    둔한 코드는 컴파일되고, 실행되고, 맞는 답을 낸다. 그래서 아무도 지적하지 않는다.
+    학생이 검사 목록으로 훑지 않으면 그대로 로봇에 올라간다.
+  </p>
+
+  <p>
+    오늘은 그 「둔함」이 어디서 생기는지 딱 하나만 판다.
+    <strong>값을 넘길 때 사본이 만들어진다는 것</strong>, 그리고 그 사본이 <strong>대부분 아무 이득이 없다</strong>는 것이다.
+    말로 하면 뻔해 보이므로 <strong>두 가지 방법으로 실제로 잰다</strong> — 복사 <strong>횟수</strong>와 <strong>시간</strong>이다.
+  </p>
+
+  <!-- ── 한 장 요약표 ── -->
+  <h2 id="summary">한 장 요약 — 학기가 끝나도 이 표만 남으면 된다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 윗줄 하나</strong>가 오늘의 결론이다. 나머지 네 줄은 전부 첫 줄의 예외다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>이렇게 쓴다</th><th>언제</th><th>수준</th></tr>
+    <tr>
+      <td><code>void f(const T &amp; x)</code></td>
+      <td><strong>기본값.</strong> 읽기만 할 때. 고민되면 이것부터 놓는다</td>
+      <td><span class="badge b-lv">[요구]</span></td>
+    </tr>
+    <tr>
+      <td><code>void f(T x)</code></td>
+      <td>어차피 <strong>사본이 필요할</strong> 때. 또는 <code>int</code>·<code>float</code>처럼 <strong>8바이트 이하의 작은 값</strong></td>
+      <td><span class="badge b-lv">[판단]</span></td>
+    </tr>
+    <tr>
+      <td><code>void f(T &amp; x)</code></td>
+      <td><strong>원본을 고쳐야</strong> 할 때. 함수가 결과를 인자에 써 넣을 때</td>
+      <td><span class="badge b-lv">[판단]</span></td>
+    </tr>
+    <tr>
+      <td><code>std::move(x)</code></td>
+      <td>사본이 필요하지만 <strong>원본을 다시 안 쓸</strong> 때. 알맹이만 넘긴다</td>
+      <td><span class="badge b-lv">[요구]</span></td>
+    </tr>
+    <tr>
+      <td><code>return std::move(x)</code></td>
+      <td><strong>쓰지 않는다.</strong> 붙이면 오히려 컴파일러의 최적화를 막는다</td>
+      <td><span class="badge b-lv">[요구]</span></td>
+    </tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 오늘 외울 것은 <strong>첫 줄 하나</strong>다.
+    받은 코드에서 함수 인자를 보고 <strong>"이거 왜 <code>const &amp;</code>가 아니지?"</strong>를 물을 수 있으면 이 회차는 성공이다.
+    마지막 줄은 AI가 자주 하는 실수여서 따로 넣었다. <strong>좋은 뜻으로 붙인 <code>move</code>가 손해가 되는 유일한 자리</strong>다.
+  </div>
+
+  <!-- ══════════ 💻 코딩 블록 ① ══════════ -->
+  <h2 id="block1">① 라이다 콜백 한 번이 값 720개를 새로 만들고 있다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <h3>언제 이게 필요해지나</h3>
+  <p>
+    라이다가 준 거리 값을 받아서 <strong>앞이 막혔는지</strong>를 판단하려고 한다.
+    터틀봇3의 라이다는 한 바퀴를 돌면서 <strong>360개</strong>의 거리 값을 한 묶음으로 보낸다.
+    이 묶음이 <strong>초당 5번 이상</strong> 들어온다.
+  </p>
+  <p>
+    여기서 중요한 사실이 하나 있다. <strong>우리는 그 값을 읽기만 한다.</strong>
+    고치지도 않고, 따로 보관하지도 않는다. 읽고 판단하고 버린다.
+  </p>
+
+  <p>오늘 쓸 그릇의 이름부터 정해 둔다. 라이다 메시지를 흉내 낸 것이다.</p>
+  <pre><code>struct ScanMsg {
+  std::vector&lt;float&gt; ranges;   // 거리 값 360개가 들어 있다
+};</code></pre>
+  <p>
+    실제 ROS 2 코드에서는 이 자리에 <code>sensor_msgs::msg::LaserScan</code>이라는 긴 이름이 온다.
+    <strong>모양과 성질은 같다.</strong> 오늘은 이름이 짧은 <code>ScanMsg</code>로 쓴다.
+  </p>
+
+  <div class="codelabel bad">AI가 보통 주는 코드 🔴</div>
+  <pre class="before"><code>void scan_callback(ScanMsg msg)                   // ① 값으로 받음
+{
+  std::vector&lt;float&gt; ranges = msg.ranges;         // ② 또 복사
+  float front = ranges.at(0);                     // 정면 거리
+  // ... 앞이 막혔는지 판단한다
+}</code></pre>
+
+  <h3>무엇이 문제인가</h3>
+  <p>
+    이 코드는 <strong>컴파일되고, 실행되고, 맞는 값을 낸다.</strong>
+    그래서 코드 리뷰에서 그냥 넘어간다. 문제는 <strong>눈에 안 보이는 곳</strong>에 있다.
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>표시한 자리</th><th>여기서 실제로 일어나는 일</th></tr>
+    <tr>
+      <td>① <code>ScanMsg msg</code></td>
+      <td>함수가 시작될 때 <strong>float 360개짜리 사본이 하나 만들어진다.</strong>
+          부른 쪽의 원본은 그대로 있고, 함수 안에는 똑같은 것이 하나 더 생긴다</td>
+    </tr>
+    <tr>
+      <td>② <code>std::vector&lt;float&gt; ranges = msg.ranges;</code></td>
+      <td>그 사본에서 <strong>또 360개를 복사</strong>한다. 이름을 짧게 쓰려고 한 줄인데 값이 통째로 복제됐다</td>
+    </tr>
+    <tr>
+      <td>둘을 합치면</td>
+      <td><strong>메시지 하나가 들어올 때마다 값 720개를 새로 만든다.</strong>
+          초당 5번이면 <strong>초당 3,600개</strong>다</td>
+    </tr>
+  </table>
+  </div>
+  <p>
+    그리고 결정적인 것은 <strong>이 일이 아무 이득 없이 일어난다</strong>는 점이다.
+    사본을 만드는 이유는 보통 <strong>원본을 건드리지 않고 고치기 위해서</strong>인데,
+    이 함수는 아무것도 고치지 않는다. 읽고 버린다.
+    <strong>비용만 있고 목적이 없다.</strong>
+  </p>
+
+  <h3>이렇게 말하면 된다</h3>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    콜백에서 메시지를 값으로 받지 말고 <code>const</code> 참조로 받아 줘. 안에서 <code>ranges</code>도 새 변수에 복사하지 말고 <code>const</code> 참조로 별칭만 잡아 줘.
+  </div>
+
+  <div class="codelabel good">받은 코드</div>
+  <pre class="after"><code>void scan_callback(const ScanMsg &amp; msg)           // ① 참조로 받음 — 사본이 없다
+{
+  const std::vector&lt;float&gt; &amp; ranges = msg.ranges; // ② 이름표만 하나 더 붙였다
+  float front = ranges.at(0);                     // 정면 거리
+  // ... 앞이 막혔는지 판단한다
+}</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>std::vector&lt;float&gt;</dt>
+      <dd>같은 종류의 값을 <strong>여러 개 담는 표준 그릇</strong>이다.
+          여기서는 <strong>거리 값 360개</strong>가 이 안에 들어 있다.
+          오늘은 "값이 잔뜩 든 상자"로만 보면 된다. 그릇 자체를 다루는 법은 따로 있다.</dd>
+
+      <dt>ranges.at(0)</dt>
+      <dd>몇 번째 값인지를 주고 꺼낸다. 여기서는 <strong>정면 방향의 거리</strong>를 꺼냈다.
+          범위를 벗어난 번호를 주면 <strong>그 자리에서 오류를 낸다</strong> — 조용히 이상한 값을 주지 않는다.
+          검사 없이 빠르게 꺼내는 <code>ranges[0]</code>도 있다.</dd>
+
+      <dt>ranges.size()</dt>
+      <dd>지금 그 안에 값이 <strong>몇 개 들어 있는지</strong> 알려 준다.
+          오늘은 이 숫자가 <strong>360에서 0으로 바뀌는 장면</strong>을 보게 된다 — 그것이 이 회차의 함정이다.</dd>
+    </dl>
+    <p class="later">제대로 다루는 곳: 12회(컨테이너 — <code>vector</code>·<code>array</code>·<code>reserve</code>)</p>
+  </div>
+
+  <figure>
+    <img src="assets/img/11_value_vs_ref.png"
+         alt="위쪽은 원본에서 사본 ①과 사본 ②가 만들어지는 그림, 아래쪽은 const 참조로 받아 사본이 0개인 그림">
+    <figcaption>
+      위아래 두 코드가 <strong>하는 일은 똑같다.</strong> 달라진 것은 인자 앞의 <code>const &amp;</code> 두 글자뿐이다.
+      위쪽 줄에서 <strong>붉은 상자 두 개</strong>가 매번 새로 만들어지는 사본이다.
+    </figcaption>
+  </figure>
+
+  <h3>쓸 때 / 안 쓸 때 — 이 표가 오늘의 결론이다</h3>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>첫 줄이 기본값</strong>이고 나머지 두 줄은 예외다. 예외를 고를 이유가 없으면 첫 줄이다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>이렇게 받는다</th><th>언제</th><th>왜</th></tr>
+    <tr>
+      <td><code>const T &amp;</code></td>
+      <td><strong>기본값.</strong> 함수가 값을 읽기만 할 때</td>
+      <td>사본이 안 만들어진다. <code>const</code>가 붙어 있어 <strong>원본을 못 고친다</strong>는 것이 함수 이름 옆에 적혀 있는 셈이다</td>
+    </tr>
+    <tr>
+      <td><code>T</code> (값)</td>
+      <td>어차피 <strong>사본이 필요할</strong> 때 (보관하거나, 받아서 고쳐 쓸 때).<br>또는 <code>int</code>·<code>float</code>·<code>bool</code>처럼 작은 값</td>
+      <td>작은 값은 참조로 받는 것이 <strong>오히려 손해</strong>다. 참조도 결국 8바이트짜리 주소를 넘기는 일이기 때문이다</td>
+    </tr>
+    <tr>
+      <td><code>T &amp;</code></td>
+      <td><strong>원본을 고쳐야</strong> 할 때</td>
+      <td>결과를 인자에 써 넣는 함수다. 부르는 쪽에서 <strong>값이 바뀔 수 있다는 것을 알아야</strong> 하므로 함부로 쓰지 않는다</td>
+    </tr>
+  </table>
+  </div>
+
+  <p>
+    <strong>기준선은 대략 포인터 하나의 크기, 즉 8바이트다.</strong>
+    이보다 크면 참조를 생각하고, 이보다 작으면 그냥 값으로 받는다.
+    말로만 하면 감이 안 오므로 실제로 재 봤다.
+  </p>
+
+  <pre><code>$ g++ -std=c++17 -O2 -o type_size type_size.cpp &amp;&amp; ./type_size
+포인터 하나            :  8 바이트
+int                    :  4 바이트
+float                  :  4 바이트
+double                 :  8 바이트
+std::string            : 32 바이트 (+ 글자는 따로)
+std::vector&lt;float&gt;     : 24 바이트 (+ 값 360개는 따로 1440 바이트)
+ScanMsg                : 24 바이트 (+ 값 360개는 따로)</code></pre>
+  <div class="interp">
+    <strong>해석:</strong> <code>std::vector&lt;float&gt;</code>가 24바이트라는 것에 속으면 안 된다.
+    <strong>이 24바이트는 「값이 어디 있는지 적어 둔 쪽지」의 크기</strong>이고,
+    <strong>실제 값 360개는 따로 1,440바이트</strong>를 차지한다.
+    그리고 복사할 때는 <strong>쪽지가 아니라 1,440바이트를 통째로</strong> 새로 만든다.
+    <code>int</code>는 4바이트라 8바이트보다 작다 — <strong><code>const int &amp;</code>로 받는 것은 오히려 손해</strong>다.
+    잰 곳: 컨테이너(우분투 24.04.4, g++ 13.3.0 <code>-O2</code>).
+  </div>
+
+  <h3>한 줄 점검</h3>
+  <p>받은 코드에서 <strong>메시지·문자열·배열을 값으로 받는 함수</strong>가 있나? 있다면 그 함수가 원본을 고치는가?</p>
+
+  <!-- ══════════ ② 복사 횟수 ══════════ -->
+  <h2 id="count">② 복사를 세어 보면 1회와 0회다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <p>
+    "복사가 일어난다"는 말은 <strong>화면에 아무것도 안 뜬다.</strong> 그래서 믿기 어렵다.
+    복사를 눈으로 보는 방법이 하나 있다. <strong>복사가 일어날 때 숫자를 하나 올리게 만드는 것</strong>이다.
+  </p>
+  <p>
+    C++에는 <strong>"이 객체가 복사될 때 실행되는 함수"</strong>가 있다. 거기에 세는 코드를 한 줄 넣으면 된다.
+    아래가 그 코드다. 오늘 나오는 두 프로그램 중 첫 번째다.
+  </p>
+
+  <div class="codelabel good">count_copies.cpp — 복사가 몇 번 일어나는지 센다</div>
+  <pre><code>#include &lt;iostream&gt;
+#include &lt;vector&gt;
+
+int g_copy = 0;
+int g_move = 0;
+
+struct ScanMsg {
+  std::vector&lt;float&gt; ranges;
+
+  ScanMsg() : ranges(360, 1.0f) {}
+  ScanMsg(const ScanMsg &amp; o) : ranges(o.ranges) { ++g_copy; }                 // 복사
+  ScanMsg(ScanMsg &amp;&amp; o) noexcept : ranges(std::move(o.ranges)) { ++g_move; }  // 이동
+  ScanMsg &amp; operator=(const ScanMsg &amp;) = delete;
+};
+
+// AI가 흔히 주는 모양 — 값으로 받고, 안에서 또 복사한다
+float callback_by_value(ScanMsg msg)
+{
+  std::vector&lt;float&gt; ranges = msg.ranges;      // 여기서 float 360개가 또 복사된다
+  return ranges.at(0);
+}
+
+// 고친 모양 — 참조로 받고, 별명만 잡는다
+float callback_by_ref(const ScanMsg &amp; msg)
+{
+  const std::vector&lt;float&gt; &amp; ranges = msg.ranges;
+  return ranges.at(0);
+}
+
+int main()
+{
+  ScanMsg msg;
+
+  g_copy = g_move = 0;
+  callback_by_value(msg);
+  std::cout &lt;&lt; "값으로 받기      : ScanMsg 복사 " &lt;&lt; g_copy &lt;&lt; "회\n";
+  std::cout &lt;&lt; "                   (안쪽 vector 복사는 세지 않았는데도 이만큼이다)\n";
+
+  g_copy = g_move = 0;
+  callback_by_ref(msg);
+  std::cout &lt;&lt; "const 참조로 받기: ScanMsg 복사 " &lt;&lt; g_copy &lt;&lt; "회\n";
+
+  std::cout &lt;&lt; "\nstd::move 로 넘기면\n";
+  g_copy = g_move = 0;
+  ScanMsg tmp;
+  ScanMsg taken(std::move(tmp));
+  std::cout &lt;&lt; "  복사 " &lt;&lt; g_copy &lt;&lt; "회, 이동 " &lt;&lt; g_move &lt;&lt; "회\n";
+  std::cout &lt;&lt; "  넘겨준 쪽 tmp.ranges.size() = " &lt;&lt; tmp.ranges.size()
+            &lt;&lt; "  ← 껍데기만 남았다. 이제 tmp 를 읽으면 안 된다\n";
+  std::cout &lt;&lt; "  받은 쪽 taken.ranges.size() = " &lt;&lt; taken.ranges.size() &lt;&lt; "\n";
+  return 0;
+}</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>ScanMsg(const ScanMsg &amp; o)</dt>
+      <dd><strong>복사 생성자</strong>다. 이 객체가 복사될 때 <strong>자동으로 불린다.</strong>
+          평소에는 안 써도 컴파일러가 만들어 준다. 여기서는 <strong>몇 번 불리는지 세려고</strong> 손으로 썼다.</dd>
+
+      <dt>ScanMsg(ScanMsg &amp;&amp; o)</dt>
+      <dd><strong>이동 생성자</strong>다. 꺾쇠 두 개(<code>&amp;&amp;</code>)가 <strong>"이건 곧 버려질 임시 값이다"</strong>라는 표시다.
+          복사 생성자와 달리 <strong>알맹이를 새로 만들지 않고 가져온다.</strong></dd>
+
+      <dt>noexcept</dt>
+      <dd>"이 함수는 예외를 던지지 않는다"는 약속이다.
+          <strong>이동 생성자에는 거의 항상 붙인다</strong> — 이 약속이 없으면 표준 라이브러리가
+          안전을 위해 <strong>이동 대신 복사를 골라 버린다.</strong></dd>
+
+      <dt>operator=(const ScanMsg &amp;) = delete;</dt>
+      <dd><code>= delete</code>는 <strong>"이 동작은 아예 못 쓰게 막는다"</strong>는 뜻이다.
+          여기서는 <code>a = b</code> 같은 <strong>대입까지 세면 이야기가 복잡해지므로</strong> 막아 두었다.
+          실수로 쓰면 <strong>실행이 아니라 컴파일에서 걸린다.</strong></dd>
+    </dl>
+  </div>
+
+  <p>컨테이너에서 빌드해 돌린 결과다.</p>
+  <pre><code>$ g++ -std=c++17 -O2 -o count_copies count_copies.cpp &amp;&amp; ./count_copies
+값으로 받기      : ScanMsg 복사 1회
+                   (안쪽 vector 복사는 세지 않았는데도 이만큼이다)
+const 참조로 받기: ScanMsg 복사 0회
+
+std::move 로 넘기면
+  복사 0회, 이동 1회
+  넘겨준 쪽 tmp.ranges.size() = 0  ← 껍데기만 남았다. 이제 tmp 를 읽으면 안 된다
+  받은 쪽 taken.ranges.size() = 360</code></pre>
+
+  <div class="interp">
+    <strong>해석:</strong> 첫 줄과 셋째 줄을 나란히 본다. <strong>1회와 0회</strong>다.
+    그리고 이 <strong>1회</strong>는 <code>ScanMsg</code> 껍데기를 센 것이고,
+    그 안에서 일어난 <strong>float 360개 복사는 세지도 않았다.</strong>
+    <code>const &amp;</code> 두 글자가 그 전부를 없앤다.
+    잰 곳: 컨테이너(우분투 24.04.4, g++ 13.3.0 <code>-O2</code>).
+  </div>
+
+  <!-- ══════════ ③ 복사 시간 ══════════ -->
+  <h2 id="cost">③ 하는 일이 같은데 22배가 났다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <p>
+    횟수를 셌으니 이번에는 <strong>시간</strong>이다. 횟수만으로는 "그래서 얼마나 손해인가"에 답할 수 없다.
+    <strong>두 코드가 하는 일을 완전히 똑같이 맞추고</strong>, 인자를 받는 방식만 다르게 해서 잰다.
+    비교 대상이 없으면 숫자 하나는 아무 뜻이 없기 때문이다.
+  </p>
+
+  <div class="codelabel good">copy_cost.cpp — 같은 일을 10만 번 시키고 시간을 잰다</div>
+  <pre><code>#include &lt;chrono&gt;
+#include &lt;cstdio&gt;
+#include &lt;vector&gt;
+
+struct ScanMsg { std::vector&lt;float&gt; ranges = std::vector&lt;float&gt;(360, 1.0f); };
+
+float by_value(ScanMsg msg)             { return msg.ranges.at(0); }
+float by_ref(const ScanMsg &amp; msg)       { return msg.ranges.at(0); }
+
+int main()
+{
+  const int LOOPS = 100000;
+  ScanMsg msg;
+  double sink = 0.0;
+
+  auto t0 = std::chrono::steady_clock::now();
+  for (int i = 0; i &lt; LOOPS; ++i) { sink += by_value(msg); }
+  auto t1 = std::chrono::steady_clock::now();
+  const double v = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+
+  t0 = std::chrono::steady_clock::now();
+  for (int i = 0; i &lt; LOOPS; ++i) { sink += by_ref(msg); }
+  t1 = std::chrono::steady_clock::now();
+  const double r = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+
+  std::printf("값으로 받기      : %8.2f ms\n", v);
+  std::printf("const 참조로 받기: %8.2f ms\n", r);
+  std::printf("차이             : %.0f배  (%d회 기준, sink=%.0f)\n", v / r, LOOPS, sink);
+  return 0;
+}</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>std::chrono::steady_clock::now()</dt>
+      <dd>지금 시각을 찍는다. <strong>중간에 뒤로 가지 않는 시계</strong>라서 시간을 재는 데 쓴다.
+          여기서는 <strong>반복문 앞뒤로 한 번씩</strong> 찍어 두 시각의 차이를 구했다.</dd>
+
+      <dt>std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count()</dt>
+      <dd>두 시각의 차이를 <strong>밀리초 단위 숫자</strong>로 바꾼다.
+          <code>std::milli</code>가 "밀리초로 세라"는 뜻이고, <code>count()</code>가 숫자를 꺼낸다.
+          <strong>단위가 코드에 적혀 있어</strong> 나중에 초인지 밀리초인지 헷갈릴 일이 없다.</dd>
+
+      <dt>double sink</dt>
+      <dd>측정에만 쓰는 장치다. <strong>결과를 아무 데도 안 쓰면 컴파일러가 계산 자체를 지워 버린다.</strong>
+          그러면 0초가 나온다. 그래서 결과를 <code>sink</code>에 더해 두고 <strong>마지막에 출력</strong>한다.</dd>
+
+      <dt>std::printf("%8.2f", v)</dt>
+      <dd>자릿수를 맞춰 출력한다. <code>%8.2f</code>는 <strong>전체 8칸, 소수점 아래 2자리</strong>라는 뜻이다.
+          여기서는 두 줄의 숫자를 <strong>세로로 맞춰 보이게</strong> 하려고 썼다.</dd>
+    </dl>
+  </div>
+
+  <pre><code>$ g++ -std=c++17 -O2 -o copy_cost copy_cost.cpp &amp;&amp; ./copy_cost
+값으로 받기      :     3.66 ms
+const 참조로 받기:     0.17 ms
+차이             : 22배  (100000회 기준, sink=200000)</code></pre>
+
+  <figure>
+    <img src="assets/img/11_copy_cost.png"
+         alt="가로 막대 그래프. 값으로 받기 3.66밀리초, const 참조로 받기 0.17밀리초">
+    <figcaption>
+      두 코드가 하는 일은 <strong>둘 다 <code>ranges[0]</code> 하나를 읽는 것</strong>뿐이다.
+      다른 것은 함수 인자 앞의 <strong><code>const &amp;</code> 두 글자</strong>뿐인데 <strong>22배</strong>가 났다.
+    </figcaption>
+  </figure>
+
+  <div class="interp">
+    <strong>해석:</strong> 22배라는 배수에만 눈이 가지만, <strong>한 번당으로 나눠 보는 것</strong>이 더 정직하다.
+    3.66밀리초를 10만 번으로 나누면 <strong>한 번에 0.037마이크로초</strong>다.
+    <strong>콜백 한 번만 보면 아무도 못 느낀다.</strong>
+    문제는 이런 자리가 <strong>코드 곳곳에 흩어져 있다</strong>는 것이고,
+    앞에서 본 연구의 <strong>1.39배</strong>가 바로 그 흩어진 것들을 합친 숫자다.
+    잰 곳: 컨테이너(우분투 24.04.4, g++ 13.3.0 <code>-O2</code>).
+  </div>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    이 파일에서 불필요한 복사가 일어나는 자리를 전부 찾아서 표로 정리해 줘. 고치기 전에 <strong>어디가 왜 복사인지</strong>부터 알려 줘.
+  </div>
+
+  <!-- ══════════ ④ std::move ══════════ -->
+  <h2 id="move">④ <code>std::move</code>는 "이제 안 쓸 거니 가져가라"는 말이다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <p>
+    <code>const &amp;</code>로 해결되지 않는 경우가 있다. <strong>사본이 정말로 필요한 경우</strong>다.
+    콜백에서 받은 스캔을 <strong>클래스 안에 보관해 두고 다음 콜백에서 비교</strong>하려면,
+    함수가 끝나도 값이 살아 있어야 한다. 참조는 원본이 사라지면 같이 못 쓰게 된다.
+  </p>
+  <p>
+    그런데 여기에 조건이 하나 더 붙으면 이야기가 달라진다.
+    <strong>넘겨주는 쪽이 그 값을 다시 안 쓸 거라면</strong>, 알맹이를 새로 만들 이유가 없다.
+    <strong>있는 알맹이의 주인만 바꾸면 된다.</strong> 그 요청이 <code>std::move</code>다.
+  </p>
+
+  <pre><code>ScanMsg tmp;                        // ranges 에 360개가 들어 있다
+ScanMsg taken(std::move(tmp));      // "가져가라" — 알맹이의 주인이 taken 으로 바뀐다</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>std::move(x)</dt>
+      <dd>이름과 달리 <strong>아무것도 옮기지 않는다.</strong>
+          <strong>"이 값은 이제 안 쓸 거니 가져가도 된다"고 표시만</strong> 해 준다.
+          실제로 알맹이를 가져가는 일은 <strong>이동 생성자</strong>가 한다.
+          여기서는 <code>taken</code>이 <code>tmp</code>의 360개를 <strong>새로 만들지 않고 넘겨받게</strong> 하는 데 썼다.</dd>
+    </dl>
+  </div>
+
+  <p>앞에서 돌린 <code>count_copies</code>의 마지막 부분이 이것을 그대로 보여 준다.</p>
+  <pre><code>std::move 로 넘기면
+  복사 0회, 이동 1회
+  넘겨준 쪽 tmp.ranges.size() = 0  ← 껍데기만 남았다. 이제 tmp 를 읽으면 안 된다
+  받은 쪽 taken.ranges.size() = 360</code></pre>
+
+  <figure>
+    <img src="assets/img/11_move.png"
+         alt="위쪽은 복사로 taken 이 360개를 새로 만드는 그림, 아래쪽은 이동으로 tmp 의 size 가 0이 되고 taken 이 그 알맹이를 받는 그림">
+    <figcaption>
+      두 줄의 차이는 <strong>왼쪽 상자</strong>다. 복사한 뒤에는 <code>tmp</code>에 값이 그대로 있고,
+      이동한 뒤에는 <strong><code>tmp</code>가 비었다.</strong> 이것이 다음 함정의 원인이다.
+    </figcaption>
+  </figure>
+
+  <p class="readme-first">무엇을 먼저 볼지: <strong>오른쪽 열의 "원본을 다시 쓰나"</strong>가 판단 기준이다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>상황</th><th>이렇게 한다</th><th>원본을 다시 쓰나</th></tr>
+    <tr><td>읽기만 한다</td><td><code>const T &amp;</code>로 받는다. <code>move</code>가 필요 없다</td><td>쓴다</td></tr>
+    <tr><td>보관해야 하는데 원본도 계속 쓴다</td><td>그냥 복사한다. <strong>복사가 정답인 자리다</strong></td><td>쓴다</td></tr>
+    <tr><td>보관해야 하고 원본은 버린다</td><td><code>std::move</code>로 넘긴다</td><td><strong>안 쓴다</strong></td></tr>
+    <tr><td>함수에서 만들어 돌려준다</td><td><strong>아무것도 안 붙인다</strong> (⑤절에서 본다)</td><td>해당 없음</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> <code>std::move</code>는 <strong>빠르게 만드는 주문이 아니다.</strong>
+    <strong>"원본을 포기하겠다"는 선언</strong>이다. 포기할 생각이 없으면 붙이면 안 된다.
+    AI에게 시킬 때도 "빠르게 해 줘"가 아니라 <strong>"이 변수는 이 줄 이후로 안 쓴다"</strong>고 말해야 맞는 코드가 온다.
+  </div>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    이 함수에서 <code>msg</code>는 <strong>보관한 뒤로는 다시 쓰지 않아.</strong> 복사하지 말고 알맹이를 넘기도록 고쳐 줘. 넘긴 뒤에 <code>msg</code>를 읽는 코드가 남아 있으면 알려 줘.
+  </div>
+
+  <!-- ⚠️ 함정 상자 -->
+  <div class="box trap" id="trap">
+    <div class="boxtitle">⚠️ 가져간 다음 원본을 읽으면 — 크래시가 나면 차라리 낫다</div>
+    <p>
+      <code>std::move</code>로 넘긴 뒤의 원본은 <strong>「비어 있지만 멀쩡한 물건」</strong>이 된다.
+      부서진 것이 아니다. 그래서 <strong>컴파일러도 막지 않고 실행도 멈추지 않는다.</strong>
+      다음 코드는 <strong>문법도 맞고 실행도 끝까지 된다.</strong>
+    </p>
+    <pre><code>ScanMsg taken(std::move(tmp));       // 알맹이를 가져갔다
+
+float sum = 0.0f;
+for (size_t i = 0; i &lt; tmp.ranges.size(); ++i) {     // 0바퀴 돈다
+  sum += tmp.ranges[i];
+}
+float avg = sum / tmp.ranges.size();                  // 0으로 나눈다</code></pre>
+    <p>실제로 돌려 본 결과다.</p>
+    <pre><code>$ g++ -std=c++17 -O2 -Wall -o moved_from moved_from.cpp &amp;&amp; ./moved_from
+넘기기 전 tmp.ranges.size() = 360
+넘긴 뒤   tmp.ranges.size() = 0
+① 빈 것을 그대로 계산: 합 0.0, 평균 -nan  ← 크래시가 아니라 틀린 답이다
+② tmp.ranges.at(0) 은 예외를 냈다: vector::_M_range_check: __n (which is 0) &gt;= this-&gt;size() (which is 0)
+가져간 쪽 taken.ranges.size() = 360  ← 값은 여기 있다</code></pre>
+    <p>
+      ①이 무서운 쪽이다. <strong>프로그램은 아무 일 없다는 듯 끝났고, 결과만 틀렸다.</strong>
+      평균이 <code>-nan</code>으로 나왔는데 이 값을 그대로 조향 각도로 쓰면
+      <strong>로봇은 이유를 알 수 없게 이상하게 움직인다.</strong>
+    </p>
+    <p>
+      ②는 <strong>운이 좋은 쪽</strong>이다. <code>at()</code>은 범위를 검사하므로 그 자리에서 오류를 낸다.
+      <strong>틀린 답이 조용히 흘러가는 것보다, 그 줄에서 멈추는 편이 낫다.</strong>
+    </p>
+    <p>
+      <strong>규칙은 한 줄이다. <code>std::move</code>로 넘긴 변수는 그 줄 이후로 읽지 않는다.</strong>
+      다시 쓸 생각이면 애초에 <code>move</code>를 붙이지 않는다.
+    </p>
+  </div>
+
+  <!-- ══════════ ⑤ 반환값 ══════════ -->
+  <h2 id="rvo">⑤ 반환할 때는 <code>move</code>를 붙이지 마라 <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <p>
+    여기가 <strong>AI가 자주 틀리는 자리</strong>다. 그리고 틀리는 방향이 특이하다.
+    <strong>좋은 뜻으로 붙인 <code>move</code>가 손해를 낸다.</strong>
+  </p>
+  <p>
+    함수 안에서 만든 것을 돌려주는 코드를 보자.
+    "복사를 피해야 하니까 <code>move</code>를 붙이자"는 판단은 <strong>얼핏 오늘 배운 것과 같아 보인다.</strong>
+    그런데 이 자리에서는 반대다.
+  </p>
+
+  <div class="codelabel bad">AI가 보통 주는 코드 🔴</div>
+  <pre class="before"><code>ScanMsg make_moved()
+{
+  ScanMsg s;
+  // ... s 를 채운다
+  return std::move(s);      // "복사를 피하려고" 붙였다
+}</code></pre>
+
+  <div class="codelabel good">이게 맞다</div>
+  <pre class="after"><code>ScanMsg make_plain()
+{
+  ScanMsg s;
+  // ... s 를 채운다
+  return s;                 // 그냥 돌려준다
+}</code></pre>
+
+  <h3>무엇이 문제인가</h3>
+  <p>
+    컴파일러는 <strong>함수 안에서 만든 것을 돌려줄 때</strong>, 그것을 <strong>부른 쪽의 자리에 직접 만든다.</strong>
+    옮기지도 복사하지도 않는다. <strong>애초에 사본이 생기지 않는다.</strong>
+    <code>std::move</code>를 붙이면 이 최적화가 <strong>막힌다.</strong>
+    복사가 이동으로 바뀌는 것이 아니라, <strong>없어도 될 이동이 하나 생긴다.</strong>
+  </p>
+
+  <p>말로 하면 믿기 어려우므로 세어 봤다.</p>
+  <pre><code>$ g++ -std=c++17 -O2 -Wall -o return_move return_move.cpp &amp;&amp; ./return_move
+return s;            : 복사 0회, 이동 0회  (ranges 360개)
+return std::move(s); : 복사 0회, 이동 1회  (ranges 360개)</code></pre>
+
+  <div class="interp">
+    <strong>해석:</strong> 위쪽은 <strong>복사도 이동도 0회</strong>다. 아무 일도 안 일어났다.
+    아래쪽은 <strong>이동이 1회</strong> 생겼다. <strong><code>move</code>를 붙여서 일이 하나 늘었다.</strong>
+    잰 곳: 컨테이너(우분투 24.04.4, g++ 13.3.0 <code>-O2</code>).
+  </div>
+
+  <p>
+    다행히 이 실수는 <strong>컴파일러가 직접 잡아 준다.</strong>
+    경고를 켜고 빌드하면 아래 메시지가 뜬다.
+  </p>
+  <pre><code>$ g++ -std=c++17 -O2 -Wall -c return_move.cpp
+return_move.cpp: In function ‘ScanMsg make_moved()’:
+return_move.cpp:28:19: warning: moving a local object in a return statement prevents copy elision [-Wpessimizing-move]
+   28 |   return std::move(s);
+      |          ~~~~~~~~~^~~
+return_move.cpp:28:19: note: remove ‘std::move’ call</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 출력에서 처음 나오는 것</p>
+    <dl>
+      <dt>-Wall</dt>
+      <dd>컴파일할 때 <strong>경고를 켜는 옵션</strong>이다. 안 켜면 위 메시지는 <strong>아예 안 뜬다.</strong>
+          여기서는 <strong>실행해 보지 않고도</strong> 문제를 알아내는 데 썼다.</dd>
+
+      <dt>[-Wpessimizing-move]</dt>
+      <dd>경고 줄 끝의 대괄호는 <strong>그 경고의 이름</strong>이다. 이 이름은
+          <strong>"오히려 나쁘게 만드는 move"</strong>라는 뜻이다.
+          마지막 줄에서 컴파일러가 <strong>고치는 법까지 알려 준다</strong> — <code>std::move</code>를 지우라는 것이다.</dd>
+    </dl>
+  </div>
+
+  <h3>쓸 때 / 안 쓸 때</h3>
+  <div class="tablewrap">
+  <table>
+    <tr><th>자리</th><th><code>std::move</code></th><th>왜</th></tr>
+    <tr><td>함수 <strong>안</strong>에서 만든 것을 <code>return</code></td><td><strong>붙이지 않는다</strong></td><td>붙이면 없어도 될 이동이 생기고 컴파일러 최적화가 막힌다</td></tr>
+    <tr><td>이미 있는 값을 <strong>다른 곳에 넘길</strong> 때</td><td><strong>붙인다</strong></td><td>원본을 다시 안 쓸 거라면 알맹이만 넘기는 것이 맞다</td></tr>
+    <tr><td>멤버 변수에 <strong>보관</strong>할 때</td><td>넘겨받은 인자를 다시 안 쓰면 붙인다</td><td>보관은 사본이 필요한 자리다. 사본을 만드는 방법이 복사와 이동 둘이다</td></tr>
+  </table>
+  </div>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    반환문에 <code>std::move</code>를 붙이지 말아 줘. 지역 변수를 그대로 <code>return</code>하고, <code>-Wall</code>을 켠 빌드 명령도 같이 알려 줘.
+  </div>
+
+  <h3>한 줄 점검</h3>
+  <p>받은 코드에 <code>return std::move(...)</code>가 있나? 있으면 <code>std::move</code>를 지운다.</p>
+
+  <!-- ══════════ ⑥ 로봇 ══════════ -->
+  <h2 id="robot">⑥ 서버에서 8%인 것이 라즈베리파이에서는 「밀림」이 된다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <p>
+    지금까지 잰 숫자는 전부 <strong>노트북급 컴퓨터</strong>에서 나온 것이다.
+    거기서는 22배가 나도 실제로는 3.66밀리초와 0.17밀리초의 차이다. 사람은 못 느낀다.
+    <strong>그래서 서버 프로그램에서는 이 이야기가 비용 문제로 끝난다.</strong>
+    전기를 조금 더 쓰고, 서버를 한 대 더 사면 되는 문제다.
+  </p>
+  <p>
+    <strong>로봇에서는 다른 종류의 문제가 된다.</strong>
+    터틀봇3의 계산은 로봇 위에 올라간 <strong>라즈베리파이</strong>가 한다.
+    노트북보다 한참 느리고, 그 느린 컴퓨터가 <strong>라이다·바퀴·통신을 동시에</strong> 감당한다.
+  </p>
+  <p>
+    여기서 콜백 하나가 늦어지면 그냥 늦어지고 끝나지 않는다.
+    <strong>라이다는 기다려 주지 않는다.</strong> 초당 5번, 계속 새 메시지를 보낸다.
+    처리가 밀리면 <strong>메시지가 줄을 서서 쌓이고</strong>, 로봇은 <strong>몇 초 전의 세상을 보고</strong> 판단하게 된다.
+  </p>
+  <p>
+    <strong>그때 로봇의 증상은 "느리다"가 아니라 "늦게 선다"이다.</strong>
+    콘을 지나치고 나서 조향을 시작하고, 벽에 닿고 나서 멈춘다.
+    코드에는 아무 오류가 없다. <strong>22회에서 이 「밀림」을 숫자로 다시 만나고, 밀린 메시지를 어떻게 버릴지 정하는 법을 배운다.</strong>
+  </p>
+
+  <!-- ══════════ 🧪 실습 ══════════ -->
+  <h2 id="lab">🧪 실습 — 두 가지 방법으로 직접 재 본다</h2>
+  <div class="lab-block">
+    <div class="boxtitle">🧪 실습 — 복사 횟수와 시간을 내 노트북에서 재기 (30분)</div>
+    <p><strong>이걸 해 보면 무엇을 알게 되나:</strong>
+      숫자가 <strong>내 컴퓨터에서도 나온다</strong>는 것, 그리고 <strong>두 글자를 고치면 그 차이가 사라진다</strong>는 것.</p>
+    <p><strong>준비물:</strong> WSL 터미널 한 칸, <code>g++</code>.
+      코드 두 개는 이 자료의 ②·③절에 전문이 있다. <strong>복사해서 파일로 저장하면 된다.</strong>
+      (타이핑하지 않는다)</p>
+    <p><strong>절차</strong></p>
+    <ol>
+      <li><code>count_copies.cpp</code>와 <code>copy_cost.cpp</code>를 같은 폴더에 저장한다. (3분)</li>
+      <li>복사 횟수를 센다. <strong>「1회」와 「0회」가 보이면 성공이다.</strong> (5분)
+        <pre><code>g++ -std=c++17 -O2 -o count_copies count_copies.cpp
+./count_copies</code></pre>
+      </li>
+      <li>시간을 잰다. 마지막 줄의 <strong>「차이」 배수</strong>를 적어 둔다. (5분)
+        <pre><code>g++ -std=c++17 -O2 -o copy_cost copy_cost.cpp
+./copy_cost</code></pre>
+      </li>
+      <li><code>copy_cost.cpp</code>에서 <strong>딱 한 줄만</strong> 고친다.
+        <code>by_value</code>의 인자를 <code>ScanMsg msg</code>에서 <code>const ScanMsg &amp; msg</code>로 바꾼다.
+        <strong>함수 이름은 그대로 둔다.</strong> 다시 빌드해서 배수를 적는다. (10분)</li>
+      <li>3번과 4번의 배수를 나란히 적고, <strong>왜 그렇게 됐는지 한 줄</strong>로 쓴다. (7분)</li>
+    </ol>
+    <p>
+      <strong>이렇게 되면 성공:</strong> 4번에서 두 줄의 시간이 <strong>거의 같아지고</strong>
+      마지막 줄이 <strong>「차이 : 1배」</strong>로 찍힌다.
+      3번의 22배가 <strong>1배로 사라지는 것</strong>이 이 실습에서 볼 것이다.
+    </p>
+    <div class="box trap" style="margin-top:1rem">
+      <div class="boxtitle">숫자가 다르게 나와도 정상이다</div>
+      <p>
+        <strong>밀리초 값은 컴퓨터마다 다르다.</strong> 자료의 3.66과 0.17이 그대로 나오지 않는다.
+        같은 컴퓨터에서도 다시 돌리면 조금씩 바뀐다.
+        <strong>보는 것은 두 줄의 비, 즉 배수다.</strong> 그리고 4번을 하고 나면 그 배수가 1 근처로 내려온다.
+      </p>
+    </div>
+  </div>
+
+  <!-- ══════════ 🤖 프롬프트 모음 ══════════ -->
+  <h2 id="prompts">🤖 오늘 나온 프롬프트 모음</h2>
+  <p class="readme-first">무엇을 먼저 볼지: 왼쪽 「이럴 때」를 먼저 읽는다. <strong>상황을 알아보는 것이 문장을 외우는 것보다 먼저다.</strong></p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>이럴 때</th><th>이렇게 말한다</th></tr>
+    <tr><td>콜백이 메시지를 값으로 받을 때</td><td>"메시지를 값 말고 <code>const</code> 참조로 받아 줘. 안에서도 새 변수에 복사하지 말고 별칭만 잡아 줘."</td></tr>
+    <tr><td>코드를 받자마자</td><td>"이 파일에서 불필요한 복사가 일어나는 자리를 전부 찾아서 표로 정리해 줘. 고치기 전에 어디가 왜 복사인지부터 알려 줘."</td></tr>
+    <tr><td>보관해야 하는 값이 있을 때</td><td>"이 변수는 보관한 뒤로 다시 쓰지 않아. 복사하지 말고 알맹이를 넘기도록 고쳐 줘."</td></tr>
+    <tr><td>반환문에 <code>move</code>가 보일 때</td><td>"반환문에 <code>std::move</code>를 붙이지 말아 줘. 지역 변수를 그대로 <code>return</code>해 줘."</td></tr>
+    <tr><td>빌드 명령을 받을 때</td><td>"<code>-Wall</code>을 켜서 빌드하는 명령으로 알려 줘. 경고가 나오면 그대로 보여 줘."</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 셋째 줄이 오늘 가장 중요한 프롬프트다.
+    <strong>"빠르게 해 줘"라고 말하지 않았다는 것</strong>에 주목한다.
+    빠르게 해 달라고 하면 AI는 아무 데나 <code>move</code>를 붙인다.
+    <strong>"다시 쓰지 않는다"는 사실을 알려 주면</strong> 맞는 자리에만 붙는다.
+    <strong>이 사실은 코드를 짠 사람만 안다.</strong>
+  </div>
+
+  <!-- ══════════ ✅ 점검 ══════════ -->
+  <h2 id="check">✅ 오늘의 점검</h2>
+  <ul class="check">
+    <li><input type="checkbox" id="c1"><label for="c1">콜백이나 함수가 <strong>메시지·문자열·배열을 값으로</strong> 받고 있지 않나?</label></li>
+    <li><input type="checkbox" id="c2"><label for="c2">값으로 받는 자리가 있다면, 그 함수가 <strong>정말 원본을 고치거나 보관</strong>하나?</label></li>
+    <li><input type="checkbox" id="c3"><label for="c3"><code>int</code>·<code>float</code> 같은 작은 값을 <strong>굳이 참조로</strong> 받고 있지 않나?</label></li>
+    <li><input type="checkbox" id="c4"><label for="c4"><code>std::move</code>로 넘긴 변수를 <strong>그 뒤에 또 읽는</strong> 줄이 없나?</label></li>
+    <li><input type="checkbox" id="c5"><label for="c5"><code>return std::move(...)</code>가 남아 있지 않나?</label></li>
+    <li><input type="checkbox" id="c6"><label for="c6">빌드할 때 <code>-Wall</code>을 켰고, <strong>경고를 실제로 읽었나?</strong></label></li>
+  </ul>
+
+  <!-- ══════════ 조금 더 ══════════ -->
+  <h2 id="more">조금 더 알아두면 <span class="badge b-lv">시험 범위 아님</span></h2>
+
+  <details>
+    <summary>왜 <code>return s;</code>에는 복사가 아예 안 생기나 (복사 생략)</summary>
+    <p>
+      C++에는 <strong>복사 생략(copy elision)</strong>이라는 규칙이 있다.
+      함수가 돌려주는 값은 <strong>부른 쪽이 받을 자리에 처음부터 만들어진다.</strong>
+      만들어 놓고 옮기는 것이 아니라, <strong>애초에 그 자리에서 만든다.</strong>
+      그래서 복사도 이동도 0회다.
+    </p>
+    <p>
+      C++17부터는 <strong>임시 값을 돌려주는 경우에 이 생략이 의무</strong>가 됐다.
+      컴파일러가 마음대로 하는 최적화가 아니라 <strong>표준이 그렇게 하라고 정한 것</strong>이다.
+      우리가 쓰는 <code>-std=c++17</code>이 그 표준이다.
+    </p>
+    <p>
+      <code>std::move</code>를 붙이면 돌려주는 것이 <strong>"곧 버려질 임시 값"</strong>으로 바뀌면서
+      이 규칙의 조건에서 벗어난다. 그래서 이동이 하나 생긴다.
+    </p>
+  </details>
+
+  <details>
+    <summary>이동 생성자에 <code>noexcept</code>를 안 붙이면 생기는 일</summary>
+    <p>
+      값을 담는 그릇은 자리가 모자라면 <strong>더 큰 자리를 새로 잡아 있던 것들을 옮긴다.</strong>
+      옮기는 도중에 오류가 나면 <strong>원래 것도 새 것도 성치 않은 상태</strong>가 된다.
+    </p>
+    <p>
+      그래서 표준 라이브러리는 이렇게 정해 두었다.
+      <strong>이동 생성자에 <code>noexcept</code>가 붙어 있으면 이동을 쓰고, 없으면 복사를 쓴다.</strong>
+      복사는 실패해도 원본이 멀쩡하기 때문이다.
+    </p>
+    <p>
+      결과는 이렇다. <strong><code>noexcept</code> 한 단어를 빠뜨리면 이동이 조용히 복사로 바뀐다.</strong>
+      코드는 그대로 돌아가고 결과도 맞다. 느려질 뿐이다.
+      오늘 계속 본 <strong>"맞지만 둔한 코드"</strong>의 전형적인 예다.
+    </p>
+  </details>
+
+  <details>
+    <summary>복사 생성자를 손으로 쓰면 딸려 오는 것들 (다섯 개 규칙)</summary>
+    <p>
+      한 객체에는 <strong>복사·이동과 관련된 함수가 다섯 개</strong> 있다.
+    </p>
+    <ul>
+      <li>복사 생성자 — <code>ScanMsg(const ScanMsg &amp;)</code></li>
+      <li>복사 대입 — <code>operator=(const ScanMsg &amp;)</code></li>
+      <li>이동 생성자 — <code>ScanMsg(ScanMsg &amp;&amp;)</code></li>
+      <li>이동 대입 — <code>operator=(ScanMsg &amp;&amp;)</code></li>
+      <li>소멸자 — <code>~ScanMsg()</code></li>
+    </ul>
+    <p>
+      <strong>이 중 하나라도 손으로 쓰면 나머지도 같이 생각해야 한다.</strong>
+      하나만 쓰고 나머지를 컴파일러에 맡기면 짝이 안 맞는 일이 생긴다.
+      오늘 예제에서 <code>= delete</code>로 대입을 막아 둔 것도 그 때문이다.
+    </p>
+    <p>
+      <strong>더 좋은 방법은 다섯 개 전부 안 쓰는 것</strong>이다.
+      값을 <code>std::vector</code>·<code>std::string</code> 같은 표준 그릇에 담아 두면
+      복사·이동·정리를 <strong>그릇이 알아서 한다.</strong>
+      <strong>우리 예제가 다섯 개를 손으로 쓴 것은 횟수를 세기 위해서일 뿐</strong>이고,
+      평소 코드에서는 하나도 쓸 일이 없다.
+    </p>
+  </details>
+
+  <details>
+    <summary>참조로 받으면 항상 이득인가 — 아닌 자리</summary>
+    <p>
+      아니다. <strong>세 가지 자리에서는 값으로 받는 것이 맞다.</strong>
+    </p>
+    <ul>
+      <li><strong>작은 값</strong> — <code>int</code>(4바이트)·<code>float</code>(4바이트)·<code>bool</code>.
+        주소를 넘기는 데도 8바이트가 든다. <strong>값보다 주소가 더 크다.</strong></li>
+      <li><strong>어차피 사본을 만들 함수</strong> — 받아서 고쳐 쓰거나 보관할 거라면
+        값으로 받은 뒤 <code>std::move</code>로 넘기는 편이 낫다. 참조로 받고 안에서 복사하면 결과가 같고 줄만 는다.</li>
+      <li><strong>원본이 언제 사라질지 모르는 값</strong> — 참조는 원본이 사라지면 같이 못 쓴다.
+        다른 스레드나 다음 콜백까지 살아 있어야 하면 <strong>사본이 필요하다.</strong></li>
+    </ul>
+    <p>
+      <strong>기준선은 오늘 잰 8바이트</strong>다. 그보다 크면 참조부터 생각하고, 위 세 가지에 걸리면 값으로 되돌린다.
+    </p>
+  </details>
+
+  <footer>
+    로봇공학 · 순천향대학교 전자정보공학과 ·
+    다음 회차: <a href="robotics_12.html">12회 스마트 포인터와 컨테이너</a>
+  </footer>
+</main>
+</div>
+
+<script>
+function copyPrompt(btn) {
+  const box = btn.parentElement.cloneNode(true);
+  box.querySelector('button').remove();
+  navigator.clipboard.writeText(box.textContent.trim()).then(function () {
+    const old = btn.textContent;
+    btn.textContent = '복사됨';
+    setTimeout(function () { btn.textContent = old; }, 1200);
+  });
+}
+</script>
+</body>
+</html>
