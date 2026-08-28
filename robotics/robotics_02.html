@@ -1,0 +1,885 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2회 · 리눅스와 WSL — 우주여행 게임에서 시작된 운영체제 | 로봇공학</title>
+<link rel="stylesheet" href="assets/lecture.css">
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="toc-title">이 회차 목차</div>
+  <a href="#summary">한 장 요약</a>
+  <a href="#why">① 왜 리눅스인가</a>
+  <a href="#storysec">② 게임 하나에서 시작했다 📖</a>
+  <a href="#layers">③ 커널·쉘·배포판</a>
+  <a href="#distro">④ 왜 우분투 하나만 쓰나</a>
+  <a href="#wsl">⑤ WSL 2는 진짜 커널이다</a>
+  <a href="#setup">🔧 설치 — 여기는 사람이 한다</a>
+  <a href="#verify">⑥ 됐다는 것은 네 줄로 확인한다</a>
+  <a href="#apt">⌨ apt 첫 사용</a>
+  <a href="#lab">🧪 실습</a>
+  <a href="#prompts">🤖 프롬프트 모음</a>
+  <a href="#check">✅ 점검</a>
+  <a href="#more">조금 더 알아두면</a>
+</nav>
+
+<main>
+  <a class="backlink" href="../index.html">← 강의자료 목록</a>
+
+  <div class="lec-no">로봇공학 · 2회 · 1부 환경과 도구</div>
+  <h1>리눅스와 WSL — 우주여행 게임에서 시작된 운영체제</h1>
+
+  <div class="questions">
+    <span class="lab">오늘 답할 질문</span>
+    <ol>
+      <li>왜 로봇은 리눅스에서 개발하나? 윈도우로는 정말 안 되나?</li>
+      <li>윈도우 안에서 리눅스를 쓰는 WSL이란 무엇인가?</li>
+      <li>커널·쉘·배포판은 각각 무엇인가?</li>
+      <li>설치가 끝났다는 것을 무엇으로 확인하나?</li>
+    </ol>
+  </div>
+
+  <p>
+    오늘 여러분의 노트북에 <strong>운영체제가 하나 더 생긴다.</strong>
+    윈도우를 지우지도, 디스크를 나누지도 않는다. 윈도우 안에서 리눅스가 같이 돈다.
+    끝나고 나면 터미널에 무언가를 쳤을 때 <strong>윈도우가 아니라 리눅스가 답하는 상태</strong>가 된다.
+  </p>
+
+  <p>
+    설치 자체는 명령어 한 줄이다. 그런데 그 한 줄을 치기 전에 알아 둘 것이 있다.
+    <strong>지금 무엇을 설치하는 것인지</strong>, 그리고 <strong>설치가 됐다는 것을 무엇으로 확인하는지</strong>다.
+    앞의 것을 모르면 나중에 문제가 났을 때 어디를 봐야 할지 모르고,
+    뒤의 것을 모르면 <strong>안 됐는데 됐다고 믿고 다음 시간에 온다.</strong>
+  </p>
+
+  <p>
+    그리고 오늘은 이야기가 하나 들어간다. 지금 우리가 설치할 이 운영체제는
+    <strong>어떤 사람이 자기가 만든 게임을 돌려 보려고 3주 동안 만든 것</strong>에서 시작했다.
+    그 3주가 50년을 갔다.
+  </p>
+
+  <!-- ── 한 장 요약표 ── -->
+  <h2 id="summary">한 장 요약 — 학기가 끝나도 이 표만 남으면 된다</h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 「확인하는 법」 열</strong>. 이 강의는 이름을 외우게 하지 않고 확인하게 한다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>이름</th><th>한 줄로 말하면</th><th>우리 경우</th><th>확인하는 법</th></tr>
+    <tr>
+      <td><strong>커널</strong> (kernel)</td>
+      <td>하드웨어를 직접 다루는 <strong>알맹이</strong>. 이것이 곧 운영체제다</td>
+      <td>리눅스 커널</td>
+      <td><code>uname -r</code></td>
+    </tr>
+    <tr>
+      <td><strong>쉘</strong> (shell)</td>
+      <td>내가 친 글자를 커널에게 전하는 <strong>통역</strong></td>
+      <td>bash</td>
+      <td>커서 왼쪽에 <code>$</code>가 보이나</td>
+    </tr>
+    <tr>
+      <td><strong>배포판</strong> (distribution)</td>
+      <td>커널에 도구와 화면을 <strong>한 벌로 묶어</strong> 나눠 주는 것</td>
+      <td>우분투 24.04 LTS</td>
+      <td><code>cat /etc/os-release</code></td>
+    </tr>
+    <tr>
+      <td><strong>WSL 2</strong></td>
+      <td>윈도우 안에서 <strong>진짜 리눅스 커널을</strong> 돌리는 장치</td>
+      <td>우리가 오늘 켜는 것</td>
+      <td><code>wsl --install</code> 뒤 터미널이 바뀌나</td>
+    </tr>
+    <tr>
+      <td><strong>apt</strong></td>
+      <td>배포판이 관리하는 창고에서 <strong>프로그램을 받아 까는</strong> 명령</td>
+      <td>모든 설치가 이걸로 된다</td>
+      <td><code>apt policy 이름</code></td>
+    </tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 다섯 줄 중 위 세 줄은 <strong>리눅스가 층으로 쌓여 있다</strong>는 이야기이고,
+    아래 두 줄은 <strong>그 층을 내 노트북에 올리고 채우는 방법</strong>이다.
+    오늘 수업은 위 세 줄을 설명하고 아래 두 줄을 실행한다.
+  </div>
+
+  <!-- ── ① 왜 리눅스인가 ── -->
+  <h2 id="why">① 로봇 개발이 리눅스인 것은 취향 문제가 아니다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <p>
+    "리눅스가 개발자에게 좋다"는 말은 여기서 하지 않는다. 그건 취향으로 반박된다.
+    이 과목에서 리눅스를 쓰는 이유는 셋이고, <strong>셋 다 선택의 여지가 없는 쪽</strong>이다.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>이유</th><th>무슨 뜻인가</th><th>윈도우로 우회하면</th></tr>
+    <tr>
+      <td><strong>로봇 소프트웨어가 우분투에서만 공식 지원된다</strong></td>
+      <td>우리가 쓸 로봇 소프트웨어(ROS 2)는 배포판마다 <strong>지원하는 우분투 판이 정해져</strong> 있다.
+          우리가 쓰는 판은 <strong>우분투 24.04</strong>가 짝이다</td>
+      <td>설치는 될 수 있다. 그런데 문서·예제·막혔을 때 나오는 해결 글이 <strong>전부 리눅스 기준</strong>이라 혼자 남는다</td>
+    </tr>
+    <tr>
+      <td><strong>로봇 위에 올라가는 컴퓨터가 리눅스다</strong></td>
+      <td>터틀봇3 안에는 손바닥만 한 컴퓨터(라즈베리파이)가 들어 있고 거기에 우분투가 깔린다</td>
+      <td>내 노트북과 로봇의 환경이 다르면 <strong>옮기는 순간 깨진다.</strong> "내 컴퓨터에선 됐는데"가 여기서 나온다</td>
+    </tr>
+    <tr>
+      <td><strong>로봇 쪽 컴퓨터는 가볍게 굴려야 한다</strong></td>
+      <td>라즈베리파이의 성능은 노트북보다 한참 낮다. 화면 장식에 쓸 여유가 없다</td>
+      <td>윈도우는 화면(GUI)이 중심이라 무겁다. 화면 없는 리눅스와는 체급이 다르다</td>
+    </tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 두 번째 줄이 이 과목에서 가장 자주 사고를 내는 자리다.
+    <strong>개발하는 컴퓨터와 로봇의 컴퓨터가 같은 우분투여야</strong> 코드가 그대로 옮겨진다.
+    그래서 여러분 노트북에 우분투를 올리는 것은 편의가 아니라 <strong>로봇과 같은 바닥을 깔아 두는 일</strong>이다.
+  </div>
+
+<pre><code>내 노트북                          로봇 (터틀봇3)
+┌─────────────────────┐            ┌─────────────────────┐
+│ 윈도우              │            │ 라즈베리파이        │
+│  └ WSL 2            │  같은 바닥 │                     │
+│     └ 우분투 24.04  │ ←────────→ │  └ 우분투           │
+│        └ 로봇 SW    │            │     └ 로봇 SW       │
+└─────────────────────┘            └─────────────────────┘
+        여기서 만든다                      여기서 돈다</code></pre>
+
+  <div class="interp">
+    <strong>해석:</strong> 화살표 양쪽의 <strong>아래 두 층이 같다.</strong>
+    위층(윈도우 / 라즈베리파이)은 달라도 되지만 아래 두 층이 다르면 옮겨 붙지 않는다.
+    <strong>오늘 하는 일은 왼쪽 상자의 안쪽 두 층을 만드는 것</strong>이다.
+  </div>
+
+  <!-- ── ② 이야기 ── -->
+  <h2 id="storysec">② 지금 쓰는 운영체제는 게임 하나에서 시작했다 <span class="badge b-green">🟢 맡긴다</span></h2>
+
+  <p>
+    아래 상자는 <strong>접었다 펼 수 있다.</strong> 시간이 없으면 통째로 건너뛰어도 오늘 실습에는 지장이 없다.
+    다만 이걸 읽고 나면 <strong>지금 우리가 치는 명령어가 왜 이렇게 생겼는지</strong>가 조금 이해된다.
+  </p>
+
+  <details class="story" id="story">
+    <summary>우주여행 게임을 돌리려고 3주 만에 만든 운영체제 (10분 · 건너뛰어도 됩니다)</summary>
+
+    <h4>① 1960년대 중반 — 아무도 못 만들던 운영체제</h4>
+    <p>
+      MIT와 벨 연구소(Bell Labs), 제너럴 일렉트릭(GE)이 함께 <strong>멀틱스(Multics)</strong>라는 운영체제를 만들고 있었다.
+      목표는 여러 사람이 동시에 써도 끊기지 않는 시스템이었다.
+      그런데 목표를 다 담으려다 <strong>너무 복잡해졌다.</strong>
+      벨 연구소는 1969년에 손을 뗀다. <strong>실패한 프로젝트였다.</strong>
+    </p>
+
+    <h4>② 아내가 3주 집을 비웠다</h4>
+    <p>
+      멀틱스에 참여했던 <strong>켄 톰슨(Ken Thompson)</strong>에게는 자작 게임이 하나 있었다.
+      <strong>「스페이스 트래블(Space Travel)」</strong> — 태양계를 돌아다니며 행성에 착륙하는 게임이다.
+      문제는 그 게임을 큰 컴퓨터에서 돌릴 때마다 <strong>컴퓨터 사용료가 나갔다</strong>는 것이다.
+    </p>
+    <p>
+      1969년 여름, 톰슨의 아내 보니(Bonnie)가 갓난아기를 데리고 <strong>3주간</strong> 친정에 갔다.
+      톰슨은 3주 동안 혼자였고, 사무실에는 아무도 안 쓰는 <strong>PDP-7</strong>이라는 낡은 컴퓨터가 있었다.
+      그는 그 3주를 <strong>게임을 그 낡은 컴퓨터로 옮기는 데</strong> 썼다.
+      그러려면 파일 시스템, 프로세스 관리, 에디터, 어셈블러가 필요했다.
+      <strong>그렇게 만들어진 것이 유닉스(Unix)다.</strong>
+    </p>
+    <p>
+      같은 여름에 아폴로 11호가 달에 내렸다.
+      같은 시기에, 지금 우리가 쓰는 운영체제의 조상이 <strong>게임을 돌리려는 김에</strong> 생겼다.
+    </p>
+
+    <h4>③ 여기가 재미있다 — 이름이 원래 놀림감이었다</h4>
+    <p>
+      이름은 브라이언 커니핸(Brian Kernighan)이 지었다. <strong>UNICS</strong>.
+      멀틱스가 <strong>MULT</strong>iplexed Information and Computing Service였으니
+      이건 <strong>UNI</strong>plexed — <strong>"여럿이 쓰는 거 만들다 실패했으니 우리는 하나만 쓰는 거"</strong>라는 뜻이다.
+    </p>
+    <p>
+      같이 일하던 데니스 리치(Dennis Ritchie)는 나중에 이 이름을
+      <strong>"다소 위험한 말장난(a somewhat treacherous pun)"</strong>이라고 표현했다.
+      <strong>놀리려고 붙인 이름이 50년을 갔다.</strong>
+    </p>
+
+    <h4>④ 1973년 — 언어를 만들어서 운영체제를 다시 썼다</h4>
+    <p>
+      리치가 <strong>C 언어</strong>를 만들고, 유닉스를 통째로 C로 다시 썼다.
+      그전까지 운영체제는 컴퓨터가 바뀌면 처음부터 다시 짜야 했다. 기계마다 말이 달랐기 때문이다.
+      <strong>운영체제를 옮길 수 있게 된 첫 사건</strong>이다.
+    </p>
+    <p>
+      우리가 이 학기에 노트북에서 짠 코드를 <strong>로봇 안의 라즈베리파이에서 그대로 돌릴 수 있는 것</strong>도
+      뿌리를 따라가면 여기서 시작한다.
+    </p>
+
+    <h4>⑤ 1991년, 헬싱키의 21살 대학생</h4>
+    <p>
+      리처드 스톨만(Richard Stallman)은 1983년부터 <strong>GNU</strong> 프로젝트로 자유롭게 쓸 수 있는 유닉스를 만들고 있었다.
+      컴파일러도 만들고 편집기도 만들었는데 <strong>정작 알맹이인 커널이 없었다.</strong>
+    </p>
+    <p>
+      반대편에서는 헬싱키 대학의 <strong>리누스 토르발스(Linus Torvalds)</strong>가 커널만 만들고 있었다.
+      <strong>1991년 8월 25일</strong>, 그는 미닉스 게시판에 이렇게 썼다.
+    </p>
+    <blockquote>
+      "Hello everybody out there using minix — I'm doing a (free) operating system
+      (just a hobby, <strong>won't be big and professional like gnu</strong>) for 386(486) AT clones."<br>
+      <span style="font-size:.92em">
+      "미닉스 쓰는 여러분 안녕하세요 — 취미로 (공짜) 운영체제를 만들고 있습니다.
+      <strong>gnu처럼 크고 전문적이지는 않을 거예요.</strong>"</span><br>
+      — 리누스 토르발스, 1991년 8월 25일
+    </blockquote>
+    <p>
+      <strong>"크고 전문적이지는 않을 것"</strong>이라고 쓴 그 커널이 지금 전 세계 서버와 스마트폰과
+      우리 로봇 안에서 돌고 있다.
+    </p>
+
+    <h4>⑥ 여기가 재미있다 — 이름을 뺏겼다</h4>
+    <p>
+      토르발스가 붙인 이름은 <strong>Freax</strong>였다(free + freak + x).
+      그런데 파일을 올려 둔 서버의 관리자 아리 렘케(Ari Lemmke)가 그 이름을 마음에 안 들어 해서
+      <strong>자기 멋대로 <code>linux</code>라는 폴더에 올려 버렸다.</strong>
+      그게 굳었다. <strong>만든 사람이 지은 이름은 살아남지 못했다.</strong>
+    </p>
+
+    <h4>⑦ 그래서 지금 우리 손에 남은 것</h4>
+    <p>
+      커널이 필요했던 GNU와 도구가 필요했던 리눅스가 합쳐졌다. 그래서 정확히는 <strong>GNU/Linux</strong>다.
+      <strong>오늘 우리가 WSL에 설치할 우분투가 그 후손이다.</strong>
+    </p>
+
+    <h4>⑧ 숫자로 확인한다</h4>
+    <div class="tablewrap">
+    <table>
+      <tr><th>무엇</th><th>확인된 사실</th></tr>
+      <tr><td>유닉스가 만들어지는 데 걸린 시간</td><td><strong>1969년 여름, 3주</strong>. 낡은 PDP-7 한 대에서 시작했다</td></tr>
+      <tr><td>리누스가 첫 글을 올린 날</td><td><strong>1991년 8월 25일</strong>. 위 인용문이 그 글이다</td></tr>
+      <tr><td>그때 리누스의 나이</td><td><strong>21살</strong>, 헬싱키 대학 학생이었다</td></tr>
+      <tr><td>데비안이라는 이름의 뜻</td><td>만든 사람 <strong>이안(Ian)</strong> + 당시 여자친구 <strong>데브라(Debra)</strong></td></tr>
+      <tr><td>오늘 우리가 쓸 커널의 판번호</td><td><strong><code>6.8.0-124-generic</code></strong> (우분투 24.04.4 LTS에서 <code>uname -r</code>로 확인)</td></tr>
+    </table>
+    </div>
+    <p>
+      마지막 줄이 이 이야기의 착지점이다. <strong>3주짜리 취미 프로젝트에서 시작한 것의 판번호를
+      오늘 여러분이 자기 노트북에서 직접 찍어 보게 된다.</strong>
+    </p>
+
+    <h4>⑨ 출처</h4>
+    <ul class="src">
+      <li>Eric Raymond, <em>The Art of Unix Programming</em>, 2장 (catb.org/esr/writings/taoup)</li>
+      <li>Ritchie &amp; Thompson, "The UNIX Time-Sharing System" (1974)</li>
+      <li>Wikipedia — Space Travel (video game), History of Unix, History of Linux</li>
+      <li>리누스 토르발스의 1991년 8월 25일 comp.os.minix 게시글 원문</li>
+    </ul>
+  </details>
+
+  <!-- ── ③ 커널·쉘·배포판 ── -->
+  <h2 id="layers">③ 리눅스는 한 덩어리가 아니라 층으로 쌓여 있다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <p>
+    "리눅스를 설치한다"는 말은 사실 부정확하다. <strong>리눅스는 알맹이(커널) 하나의 이름</strong>이고,
+    우리가 설치하는 것은 그 알맹이에 도구를 한 벌 묶어 놓은 <strong>우분투</strong>다.
+    이 구분을 지금 해 두면 나중에 오류 메시지를 읽을 때 <strong>어느 층의 문제인지</strong> 짐작할 수 있다.
+  </p>
+
+  <figure class="narrow">
+    <img src="assets/img/02_unix_layers.png"
+         alt="동심원 그림. 가장 안쪽이 커널, 그 바깥이 시스템 호출, 그다음이 쉘과 라이브러리, 가장 바깥이 응용 프로그램">
+    <figcaption><strong>가장 안쪽 원</strong>이 커널이다. 우리가 치는 명령어는 바깥에서 안쪽으로 들어간다 —
+      쉘을 거쳐, 시스템 호출을 거쳐, 커널에 닿는다. <strong>바깥층은 바꿔 낄 수 있고 안쪽은 못 바꾼다.</strong></figcaption>
+  </figure>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>층</th><th>하는 일</th><th>바꿔 낄 수 있나</th></tr>
+    <tr><td><strong>커널</strong></td><td>CPU 나눠 쓰기, 파일 저장하기, 메모리 관리, 네트워크, 키보드·화면 다루기</td><td>못 바꾼다. 이게 곧 「리눅스」다</td></tr>
+    <tr><td><strong>시스템 호출</strong></td><td>바깥에서 커널의 기능을 부르는 <strong>정해진 창구</strong></td><td>못 바꾼다</td></tr>
+    <tr><td><strong>쉘</strong></td><td>내가 친 글자를 해석해서 프로그램을 띄운다</td><td>바꿀 수 있다 (우분투 기본은 <strong>bash</strong>)</td></tr>
+    <tr><td><strong>응용 프로그램</strong></td><td>편집기, 브라우저, 우리가 짤 로봇 프로그램</td><td>얼마든지</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 화면(GUI)은 이 그림에서 <strong>가장 바깥층에 있는 응용 프로그램 하나</strong>일 뿐이다.
+    윈도우에서는 화면이 운영체제와 붙어 있어 떼어낼 수 없지만, 리눅스에서는 떼어낼 수 있다.
+    <strong>로봇 안의 컴퓨터에 화면이 없어도 되는 이유</strong>가 이것이다.
+  </div>
+
+  <h3>지금 도는 커널의 판번호를 찍어 본다</h3>
+
+<pre><code>$ uname -r
+6.8.0-124-generic</code></pre>
+  <p class="readme-first">잰 곳: 컨테이너(우분투 24.04.4 LTS)</p>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 줄에서 처음 나오는 것</p>
+    <dl>
+      <dt>$</dt>
+      <dd>내가 치는 곳이라는 <strong>표시</strong>다. 이 글자는 치는 것이 아니라 <strong>이미 화면에 있는 것</strong>이다.
+          자료에서 <code>$</code> 뒤에 적힌 부분만 복사해 붙이면 된다.</dd>
+      <dt>uname -r</dt>
+      <dd>지금 돌고 있는 <strong>커널의 판번호</strong>를 찍는다.
+          <code>-r</code>은 release(판)의 첫 글자다. 여기서는 <strong>「리눅스가 정말 돌고 있나」를 확인하는 데</strong> 썼다.</dd>
+    </dl>
+  </div>
+
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 여러분 화면에는 다른 번호가 나온다</div>
+    <p>
+      위 <code>6.8.0-124-generic</code>은 <strong>이 자료를 만들며 확인한 시스템의 번호</strong>다.
+      WSL은 자기 전용 커널을 쓰기 때문에 <strong>뒤에 다른 글자가 붙은 다른 번호</strong>가 나온다.
+      <strong>번호가 같아야 하는 것이 아니다.</strong> 확인해야 할 것은 딱 하나 —
+      <strong>이 명령이 오류 없이 무언가를 찍어 주는가</strong>다. 찍히면 리눅스가 돌고 있는 것이다.
+    </p>
+  </div>
+
+  <!-- ── ④ 배포판 ── -->
+  <h2 id="distro">④ 배포판은 수백 개인데 우리는 우분투 하나만 쓴다 <span class="badge b-green">🟢 맡긴다</span></h2>
+
+  <p>
+    커널은 하나인데 그 위에 무엇을 얹느냐는 사람마다 달랐다.
+    그래서 <strong>배포판(distribution)</strong>이 수백 개로 갈라졌다. 크게 세 갈래다.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>계열</th><th>대표</th><th>프로그램 설치 명령</th><th>우리가 쓰나</th></tr>
+    <tr><td><strong>데비안 계열</strong></td><td>데비안, <strong>우분투</strong>, 민트</td><td><strong><code>apt</code></strong></td><td><strong>우분투를 쓴다</strong></td></tr>
+    <tr><td>레드햇 계열</td><td>RHEL, 페도라, 로키</td><td><code>dnf</code> / <code>yum</code></td><td>안 쓴다 (서버 쪽에서 많이 쓴다)</td></tr>
+    <tr><td>그 외</td><td>아치, 슬랙웨어, 만자로</td><td><code>pacman</code> 등</td><td>안 쓴다</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 계열이 다르면 <strong>설치 명령어부터 다르다.</strong>
+    인터넷에서 찾은 설치 안내가 안 먹는 가장 흔한 이유가 이것이다 —
+    <strong>레드햇 계열용 안내를 우분투에서 따라 친 것</strong>이다.
+    검색으로 찾은 명령에 <code>yum</code>이나 <code>pacman</code>이 보이면 그건 우리 것이 아니다.
+  </div>
+
+  <figure>
+    <img src="assets/img/02_debian_family.png"
+         alt="로고 세 개가 나란히. 왼쪽 데비안 GNU/Linux 나선 로고, 가운데 우분투 주황색 원 로고, 오른쪽 리눅스 민트 초록 로고">
+    <figcaption>왼쪽이 뿌리고 오른쪽 둘이 후손이다. <strong>가운데 우분투가 우리가 쓸 것</strong>이고,
+      셋 다 <code>apt</code>로 프로그램을 깐다.</figcaption>
+  </figure>
+
+  <p>
+    <strong>데비안이라는 이름은 사람 이름 둘을 붙인 것이다.</strong>
+    만든 사람 <strong>이안(Ian)</strong> 머독과 그의 당시 여자친구 <strong>데브라(Debra)</strong>를 합쳐 <strong>Deb</strong>+<strong>ian</strong>.
+    그 이름은 지금도 남아 있다 — 리눅스에서 프로그램 하나가 담긴 파일의 확장자가 <code>.deb</code>다.
+  </p>
+
+  <h3>왜 하필 우분투인가</h3>
+
+  <figure>
+    <img src="assets/img/02_distro_trend.png"
+         alt="구글 트렌드 화면. ubuntu·Linux Mint·Debian·Redhat·Mx Linux 다섯 검색어의 12개월 관심도 그래프. 파란 ubuntu 선이 75~100 사이에서 홀로 높고 나머지는 25 아래에 모여 있다">
+    <figcaption>다섯 개 중 <strong>파란 선 하나만 위에 있다.</strong> 나머지 넷은 아래쪽에 겹쳐 있어 구분도 안 된다.
+      순위 다툼이 아니라 <strong>자릿수가 다른 차이</strong>다.</figcaption>
+  </figure>
+
+  <div class="interp">
+    <strong>해석:</strong> 이 차이가 실용적으로 무엇을 뜻하냐면 —
+    <strong>막혔을 때 검색해서 나오는 글이 거의 다 우분투 기준</strong>이라는 것이다.
+    로봇 소프트웨어의 공식 설치 안내도 우분투로 쓰여 있다.
+    <strong>「좋은 배포판」을 고른 것이 아니라 「막혔을 때 답이 있는 배포판」을 고른 것이다.</strong>
+    이 강의에서 배포판을 고민하는 시간은 여기까지다. 이후 30회 내내 우분투만 쓴다.
+  </div>
+
+  <!-- ── ⑤ WSL ── -->
+  <h2 id="wsl">⑤ WSL 2는 흉내가 아니라 진짜 커널이 도는 것이다 <span class="badge b-green">🟢 맡긴다</span></h2>
+
+  <p>
+    윈도우 노트북에서 리눅스를 쓰는 방법은 예전부터 있었다. <strong>새 방법을 꺼내기 전에 기존 방법을 먼저 본다.</strong>
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>방법</th><th>어떻게 되나</th><th>불편한 점</th></tr>
+    <tr><td>가상 머신</td><td>윈도우 위에 컴퓨터 한 대를 통째로 흉내 낸다</td><td>메모리와 디스크를 <strong>미리 잘라서</strong> 떼어 준다. 남아도 윈도우가 못 쓴다</td></tr>
+    <tr><td>듀얼 부팅</td><td>디스크를 나눠 리눅스를 따로 깔고 <strong>껐다 켜서</strong> 갈아탄다</td><td>성능은 가장 좋다. 대신 <strong>둘을 동시에 못 쓴다</strong></td></tr>
+    <tr><td>예전 방식의 도커</td><td>윈도우 위에서 리눅스 프로그램만 돌린다</td><td>메모리·디스크는 같이 쓰지만 <strong>성능이 안 나왔다</strong></td></tr>
+    <tr><td><strong>WSL 2</strong></td><td>윈도우 옆에 <strong>진짜 리눅스 커널</strong>을 같이 띄운다</td><td>자원을 <strong>미리 자르지 않고 필요한 만큼</strong> 나눠 쓴다</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 앞의 세 줄이 전부 <strong>"둘 중 하나를 포기해야 한다"</strong>는 구조였다.
+    동시에 쓰려면 자원을 미리 갈라야 하고, 성능을 얻으려면 껐다 켜야 했다.
+    WSL 2는 <strong>리눅스 커널을 진짜로 하나 더 띄우되 자원은 공유</strong>하는 방식으로 그 둘 사이를 지난다.
+    <strong>다만 진지하게 리눅스로만 개발한다면 여전히 듀얼 부팅이나 리눅스 전용 컴퓨터가 낫다.</strong>
+    이 과목의 분량에는 WSL로 충분하다.
+  </div>
+
+  <figure>
+    <img src="assets/img/02_wsl2_arch.png"
+         alt="WSL 2 구조도. 맨 아래 하이퍼바이저 위에 윈도우 NT 커널과 리눅스 커널이 나란히 있고, 각각 위에 윈도우 사용자 영역과 GNU/리눅스 사용자 영역이 올라가 있으며 두 사용자 영역이 화살표로 이어져 있다">
+    <figcaption><strong>가운데 줄의 상자 두 개</strong>를 본다. 왼쪽이 윈도우 커널, 오른쪽이 리눅스 커널이다.
+      리눅스 커널이 <strong>흉내가 아니라 실제로 하나 더 떠 있고</strong>, 둘 다 맨 아래 하이퍼바이저 위에 나란히 얹혀 있다.</figcaption>
+  </figure>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 그림에서 처음 나오는 이름</p>
+    <dl>
+      <dt>하이퍼바이저 (hypervisor)</dt>
+      <dd>운영체제 <strong>여러 개를 한 컴퓨터 위에 나란히 얹어 주는 밑판</strong>이다.
+          위 그림의 맨 아랫줄이 그것이고, 윈도우 커널과 리눅스 커널이 <strong>둘 다 그 위에 올라타 있다.</strong>
+          첫 주에 확인한 「가상화: 사용」이 바로 이 밑판을 쓸 수 있느냐는 표시였다.</dd>
+      <dt>wsl</dt>
+      <dd>윈도우 쪽 터미널에서 치는 <strong>명령어 이름</strong>이다.
+          리눅스를 깔고(<code>--install</code>), 목록을 보고, 껐다 켜는 일을 전부 이 하나로 한다.
+          <strong>리눅스 안에서 치는 명령이 아니라 윈도우에서 치는 명령</strong>이라는 점이 헷갈리는 자리다.</dd>
+    </dl>
+  </div>
+
+  <!-- ── 🔧 세팅 ── -->
+  <h2 id="setup">🔧 설치 — 이 회차의 처음 두 걸음은 사람이 한다 <span class="badge b-stop">⛔ 맡기면 안 된다</span></h2>
+
+  <div class="box stop">
+    <div class="boxtitle">⛔ WSL 설치는 에이전트에게 못 맡긴다</div>
+    <p>
+      이 강의는 설치와 설정을 에이전트에게 넘기는 것을 원칙으로 한다. <strong>오늘만 예외다.</strong>
+      이유는 단순하다 — <strong>붙일 리눅스가 아직 없기 때문</strong>이다.
+      에이전트는 리눅스 안에서 돌면서 리눅스를 고치는 도구다. 그 리눅스를 만드는 일은 그 도구가 할 수 없다.
+    </p>
+<pre><code>[2회] WSL 설치       ⛔ 사람이 직접 — 붙일 리눅스가 아직 없다
+   ↓
+[3회] 에이전트 설치   ⛔ 사람이 직접 — 아직 시킬 대상이 없다
+   ↓
+[4회~] 그다음부터     🟢 설치·설정은 시킨다 / 🔴 확인은 내가 한다</code></pre>
+    <p>
+      <strong>오늘과 다음 시간만 손이 많이 간다.</strong> 그 두 걸음을 지나면 설치 이야기는 거의 끝난다.
+    </p>
+  </div>
+
+  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 「내가 확인하는 것」 열</strong>. 그 칸을 못 채우면 그 줄은 안 끝난 것이다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>무엇을 하나</th><th>직접 치면</th><th>에이전트에게 시키는 문장 🤖</th><th>내가 확인하는 것 ✅</th></tr>
+    <tr>
+      <td>WSL을 켜고 우분투를 받는다<br>(윈도우 터미널에서)</td>
+      <td><code>wsl --install -d Ubuntu-24.04</code></td>
+      <td><strong>⛔ 맡기지 않는다.</strong> 아직 리눅스가 없다</td>
+      <td>다시 시작한 뒤 <strong>계정 이름을 물어보는 화면</strong>이 뜨나</td>
+    </tr>
+    <tr>
+      <td>리눅스로 들어간다</td>
+      <td><code>wsl</code></td>
+      <td><strong>⛔ 맡기지 않는다</strong></td>
+      <td>커서 왼쪽 글자가 <code>PS C:\...&gt;</code>에서 <code>이름@컴퓨터:~$</code>로 <strong>바뀌나</strong></td>
+    </tr>
+    <tr>
+      <td>패키지 목록을 갱신하고 최신으로 올린다</td>
+      <td><code>sudo apt update &amp;&amp; sudo apt upgrade -y</code></td>
+      <td>"우분투 패키지 목록을 갱신하고 전부 최신으로 올려 줘. <strong><code>sudo</code>가 붙는 명령은 실행 전에 보여 줘.</strong>"</td>
+      <td>마지막 줄에 <code>0 upgraded, 0 newly installed</code>가 나올 때까지 <strong>한 번 더 돌려 본다</strong></td>
+    </tr>
+    <tr>
+      <td>글자 처리 방식(로캘)을 UTF-8로 맞춘다</td>
+      <td><code>sudo apt install -y locales</code><br><code>sudo locale-gen en_US en_US.UTF-8</code><br><code>sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8</code></td>
+      <td>"로캘을 <code>en_US.UTF-8</code>로 맞춰 줘. 끝나고 <code>locale</code> 출력을 보여 줘. <strong><code>sudo</code>는 실행 전에 보여 줘.</strong>"</td>
+      <td><code>locale</code>을 쳤을 때 <strong>줄마다 <code>UTF-8</code></strong>이 보이나</td>
+    </tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 네 번째 줄은 지금 당장은 아무 차이가 없어 보인다.
+    그런데 이걸 안 맞추면 <strong>나중에 로봇 소프트웨어를 설치할 때 그 자리에서 멈춘다.</strong>
+    한글이나 특수문자를 만나면 프로그램이 글자를 어떻게 다뤄야 할지 몰라서다.
+    <strong>지금 3분이 나중에 반나절을 아낀다.</strong>
+  </div>
+
+  <h4>이 블록의 검증 목록 — 순서대로 확인한다</h4>
+  <ol>
+    <li><code>uname -r</code>이 <strong>무언가 판번호를 찍는가</strong> (리눅스가 돌고 있다)</li>
+    <li><code>cat /etc/os-release</code>에 <strong>Ubuntu 24.04</strong>가 보이는가 (원하는 배포판이 맞다)</li>
+    <li><code>locale</code>의 줄마다 <strong><code>UTF-8</code></strong>이 보이는가 (글자 처리가 맞다)</li>
+    <li><code>sudo apt update</code>가 <strong>오류(Err) 줄 없이</strong> 끝나는가 (창고에 연결된다)</li>
+    <li><strong>터미널을 완전히 닫았다가 새로 열어도</strong> 위 네 가지가 그대로인가</li>
+  </ol>
+  <p>
+    마지막 줄이 가장 자주 걸린다. <strong>지금 창에서만 되는 것은 된 것이 아니다.</strong>
+  </p>
+
+  <!-- ── ⑥ 확인 ── -->
+  <h2 id="verify">⑥ 「설치가 됐다」는 것은 이 네 줄로 확인한다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <p>
+    설치가 끝나면 화면에 무언가 잔뜩 지나가고 다시 커서가 깜빡인다.
+    <strong>그 상태만으로는 아무것도 확인된 것이 없다.</strong> 아래 네 줄을 직접 쳐서 눈으로 본다.
+    아래 출력은 전부 <strong>실제로 실행해서 받은 것</strong>이다.
+  </p>
+
+  <h3>① 어떤 배포판의 몇 판인가</h3>
+<pre><code>$ cat /etc/os-release | head -4
+PRETTY_NAME="Ubuntu 24.04.4 LTS"
+NAME="Ubuntu"
+VERSION_ID="24.04"
+VERSION="24.04.4 LTS (Noble Numbat)"</code></pre>
+  <p>
+    첫 줄만 보면 된다. <strong><code>24.04</code></strong>가 보여야 한다.
+    22.04나 20.04가 보이면 <strong>다른 판이 깔린 것</strong>이고, 나중에 로봇 소프트웨어를 설치할 때 안 맞는다.
+  </p>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 줄에서 처음 나오는 것</p>
+    <dl>
+      <dt>cat 파일이름</dt>
+      <dd>파일 내용을 <strong>그냥 화면에 쏟아 준다.</strong> 여기서는 우분투가 자기 이름표를 적어 둔 파일을 읽는 데 썼다.</dd>
+      <dt>| head -4</dt>
+      <dd>앞의 출력에서 <strong>맨 위 네 줄만</strong> 남긴다. 가운데 세로줄(<code>|</code>)은
+          <strong>앞 명령의 결과를 뒤 명령에 넘기라</strong>는 표시다.
+          여기서는 파일이 길어서 앞부분만 보려고 썼다.</dd>
+      <dt>LTS</dt>
+      <dd>Long Term Support, <strong>오래 고쳐 주는 판</strong>이라는 뜻이다.
+          우분투는 2년마다 LTS를 내고 <strong>5년간</strong> 보안 수정을 준다.
+          로봇 소프트웨어가 LTS 판만 짝으로 삼는 이유가 이것이다.</dd>
+    </dl>
+    <p class="later">제대로 다루는 곳: 4회(파이프 <code>|</code>와 표준 출력)</p>
+  </div>
+
+  <h3>② 커널이 정말 돌고 있나</h3>
+<pre><code>$ uname -r
+6.8.0-124-generic</code></pre>
+  <p>
+    <strong>번호가 같을 필요는 없다.</strong> 오류 없이 한 줄이 찍히면 통과다.
+  </p>
+
+  <h3>③ 글자 처리가 UTF-8인가</h3>
+<pre><code>$ locale
+LANG=en_US.UTF-8
+LANGUAGE=
+LC_CTYPE="en_US.UTF-8"
+LC_NUMERIC="en_US.UTF-8"
+LC_TIME="en_US.UTF-8"
+LC_COLLATE="en_US.UTF-8"
+LC_MONETARY="en_US.UTF-8"
+LC_MESSAGES="en_US.UTF-8"
+LC_PAPER="en_US.UTF-8"
+LC_NAME="en_US.UTF-8"
+LC_ADDRESS="en_US.UTF-8"
+LC_TELEPHONE="en_US.UTF-8"
+LC_MEASUREMENT="en_US.UTF-8"
+LC_IDENTIFICATION="en_US.UTF-8"
+LC_ALL=en_US.UTF-8</code></pre>
+  <p>
+    줄이 많지만 볼 것은 하나다. <strong>줄 끝마다 <code>UTF-8</code>이 붙어 있는가.</strong>
+    <code>LANGUAGE=</code>처럼 비어 있는 줄은 괜찮다.
+    <strong><code>POSIX</code>나 <code>C</code>라고 적힌 줄이 보이면</strong> 로캘이 안 맞은 것이다.
+  </p>
+
+  <h3>④ 로캘이 안 맞았을 때 고치는 세 줄</h3>
+<pre><code>$ sudo locale-gen en_US en_US.UTF-8
+Generating locales (this might take a while)...
+  en_US.ISO-8859-1... done
+  en_US.UTF-8... done
+Generation complete.</code></pre>
+  <p>
+    <code>done</code>이 두 번, 마지막에 <code>Generation complete.</code>가 보이면 만들어진 것이다.
+    그다음 <code>sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8</code>로 기본값을 바꾸고,
+    <strong>터미널을 닫았다 새로 연 뒤</strong> ③을 다시 친다. 닫았다 열지 않으면 예전 값이 그대로다.
+  </p>
+  <p class="readme-first">잰 곳: 컨테이너(우분투 24.04.4 LTS)</p>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 여기서 처음 나오는 것</p>
+    <dl>
+      <dt>sudo</dt>
+      <dd><strong>「이번 한 줄만 관리자 권한으로」</strong>라는 뜻이다.
+          시스템 전체를 건드리는 명령 앞에 붙는다. 처음 쓸 때 비밀번호를 묻는다.
+          <strong>이 강의에서 <code>sudo</code>가 붙은 명령은 에이전트에게 그냥 맡기지 않는다</strong> —
+          되돌릴 수 없는 일이 여기서 일어나기 때문이다.</dd>
+      <dt>locale-gen / update-locale</dt>
+      <dd>앞의 것은 <strong>글자 처리 규칙 한 벌을 만드는</strong> 명령이고,
+          뒤의 것은 <strong>그중 무엇을 기본값으로 쓸지 정하는</strong> 명령이다.
+          만들기만 하고 기본값을 안 바꾸면 아무것도 달라지지 않는다.</dd>
+    </dl>
+  </div>
+
+  <!-- ── ⌨ apt ── -->
+  <h2 id="apt">⌨ apt — 리눅스에서 프로그램을 까는 유일한 방식 <span class="badge b-green">🟢 맡긴다</span></h2>
+
+  <p>
+    윈도우에서는 프로그램마다 홈페이지에 가서 설치 파일을 받는다.
+    리눅스에서는 그러지 않는다. <strong>배포판이 관리하는 창고에서 명령어 한 줄로 받아 깐다.</strong>
+    그 명령이 <code>apt</code>다. <strong>네 개만 외우면 이 학기 내내 쓸 일이 없다.</strong>
+  </p>
+
+  <h3>① 창고 목록이 오래되지 않았나 → <code>sudo apt update</code></h3>
+<pre><code>$ sudo apt update
+Get:1 http://packages.ros.org/ros2/ubuntu noble InRelease [4,676 B]
+Get:2 http://security.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+   ... (여러 줄 지나감)
+Fetched 34.3 MB in 9s (3,725 kB/s)
+Reading package lists...
+Building dependency tree...
+Reading state information...
+7 packages can be upgraded. Run 'apt list --upgradable' to see them.</code></pre>
+  <p>
+    <strong>맨 마지막 줄을 본다.</strong> <code>7 packages can be upgraded</code> —
+    "올릴 수 있는 것이 7개 있다"는 뜻이다.
+    <strong>이 명령은 목록만 새로 받아 온다. 아무것도 설치하거나 바꾸지 않는다.</strong>
+    중간에 <strong><code>Err</code>로 시작하는 줄</strong>이 보이면 인터넷이나 창고 주소에 문제가 있는 것이다.
+  </p>
+  <div class="prompt"><button onclick="copyPrompt(this)">복사</button> <code>sudo apt update</code>를 실행하고, 출력에 <code>Err</code>로 시작하는 줄이 있는지 확인해서 <strong>있으면 그 줄만 그대로 보여 줘.</strong> <code>sudo</code>가 붙으니 실행 전에 명령을 먼저 보여 줘.</div>
+
+  <h3>② 무엇이 바뀌는지 미리 보고 올린다 → <code>sudo apt upgrade</code></h3>
+<pre><code>$ sudo apt upgrade -s          # -s 는 "실제로 하지 말고 흉내만"
+Calculating upgrade...
+The following packages will be upgraded:
+  libp11-kit0 libpam-modules libpam-modules-bin libpam-runtime libpam0g
+  libproc2-0 procps
+7 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.</code></pre>
+  <p>
+    <strong>마지막 줄의 숫자 네 개</strong>가 이 명령의 요약이다 —
+    <strong>올릴 것 7개, 새로 깔 것 0개, 지울 것 0개.</strong>
+    <strong>「지울 것」이 0이 아니면 잠깐 멈춘다.</strong> 무엇이 지워지는지 보고 나서 진행한다.
+    확인이 끝났으면 <code>-s</code>를 빼고 <code>sudo apt upgrade -y</code>로 실제로 올린다.
+  </p>
+
+  <h3>③ 프로그램 하나를 깐다 → <code>sudo apt install</code></h3>
+<pre><code>$ sudo apt install -y tree
+Selecting previously unselected package tree.
+Preparing to unpack .../tree_2.1.1-2ubuntu3.24.04.2_amd64.deb ...
+Unpacking tree (2.1.1-2ubuntu3.24.04.2) ...
+Setting up tree (2.1.1-2ubuntu3.24.04.2) ...</code></pre>
+  <p>
+    <code>Setting up</code>까지 나왔으면 끝난 것이다. <strong>그런데 여기서 멈추지 않는다.</strong>
+    설치됐다는 말을 믿지 말고 <strong>깔린 물건을 직접 불러 본다.</strong>
+  </p>
+<pre><code>$ which tree
+/usr/bin/tree
+$ tree --version
+tree v2.1.1 © 1996 - 2023 by Steve Baker, Thomas Moore, ...</code></pre>
+  <p>
+    <code>which</code>는 <strong>그 명령이 어느 파일에 있는지</strong> 알려 준다.
+    경로가 찍히면 시스템이 그 명령을 찾을 수 있다는 뜻이다.
+    <strong>이 두 줄이 「설치 완료」라는 문구보다 믿을 만한 근거다.</strong>
+  </p>
+  <p class="readme-first">잰 곳: 컨테이너(우분투 24.04.4 LTS)</p>
+
+  <h3>④ 지금 깔린 것이 어느 판인가 → <code>apt policy</code></h3>
+<pre><code>$ apt policy tree
+tree:
+  Installed: 2.1.1-2ubuntu3.24.04.2
+  Candidate: 2.1.1-2ubuntu3.24.04.2</code></pre>
+  <p>
+    <strong>두 줄만 보면 된다.</strong>
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>줄</th><th>뜻</th><th>이럴 때 의심한다</th></tr>
+    <tr><td><code>Installed:</code></td><td><strong>지금 내 컴퓨터에 깔린 판</strong></td><td><code>(none)</code>이면 <strong>안 깔린 것</strong>이다</td></tr>
+    <tr><td><code>Candidate:</code></td><td>창고에서 지금 받을 수 있는 판</td><td>두 줄이 <strong>다르면</strong> 갱신이 안 된 것이다</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 이 명령은 <strong>이 강의 내내 쓰게 될 확인 도구</strong>다.
+    앞으로 "설치했는데 안 된다"는 상황이 오면 <strong>가장 먼저 이걸 친다.</strong>
+    <code>Installed: (none)</code>이 보이면 설치가 아예 안 된 것이고, 그러면 뒤의 모든 추측이 무의미해진다.
+  </div>
+
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 순서를 바꾸면 안 되는 자리</div>
+    <p>
+      <code>update</code> 없이 <code>install</code>을 치면 <strong>낡은 목록을 보고 창고에서 물건을 찾는다.</strong>
+      그래서 <code>E: Unable to locate package</code>(그런 이름의 물건이 없다)라는 말이 나온다.
+      <strong>이름을 잘못 친 것이 아니라 목록이 낡은 것</strong>인데, 학생은 대개 이름을 의심하며 시간을 쓴다.
+    </p>
+    <p>
+      기억할 것은 한 줄이다 — <strong>새 창고 주소를 추가했거나 오랜만에 켰으면 <code>update</code>부터.</strong>
+    </p>
+  </div>
+
+  <!-- ── 🧪 실습 ── -->
+  <div class="lab-block" id="lab">
+    <div class="boxtitle">🧪 실습 — 내 노트북에 우분투를 올리고, 올라갔다는 것을 증명하기</div>
+    <p><strong>알게 되는 것:</strong> 설치 자체가 아니라 <strong>「됐다」를 무엇으로 판정하는가.</strong> 이 학기 내내 쓰는 판정 방식이다.</p>
+    <p><strong>준비물:</strong> 윈도우 노트북, 충전기, 인터넷. <strong>총 50분쯤</strong> 걸린다. 받는 속도에 따라 달라진다.</p>
+    <p><strong>절차</strong></p>
+    <ol>
+      <li><strong>윈도우 터미널을 연다.</strong> (2분)
+        <br>시작 버튼을 <strong>우클릭</strong> → <strong>터미널</strong>. 커서 왼쪽에 <code>PS C:\Users\...&gt;</code>가 보이면 맞다.
+        <!-- TODO: 미검증 — 윈도우 화면 -->
+      </li>
+      <li><strong>우분투를 받는다.</strong> (20~30분)
+<pre><code>wsl --install -d Ubuntu-24.04</code></pre>
+        받는 데 오래 걸린다. <strong>중간에 창을 닫지 않는다.</strong>
+        끝나면 컴퓨터를 <strong>다시 시작</strong>하라고 할 수 있다. 시키는 대로 한다.
+        <!-- TODO: 미검증 — 윈도우 화면 -->
+      </li>
+      <li><strong>계정을 만든다.</strong> (3분)
+        <br>다시 켜지면 <strong>계정 이름과 비밀번호</strong>를 묻는다.
+        <strong>둘 다 <code>ros</code>로 하기를 권한다.</strong> 짧고, 잊어버리지 않고, 자료의 예시와 화면이 같아진다.
+        <strong>비밀번호는 치는 동안 화면에 아무것도 안 보인다.</strong> 고장이 아니다. 그냥 치고 엔터.
+        <!-- TODO: 미검증 — 윈도우 화면 -->
+      </li>
+      <li><strong>여기가 리눅스인지 확인한다.</strong> (3분)
+        <br>커서 왼쪽 글자가 <code>ros@컴퓨터이름:~$</code>처럼 <strong>바뀌었는지</strong> 본다. 그리고 두 줄을 친다.
+<pre><code>uname -r
+cat /etc/os-release | head -2</code></pre>
+        두 번째 줄에 <strong><code>Ubuntu 24.04</code></strong>가 보이면 통과다.
+      </li>
+      <li><strong>최신으로 올리고 로캘을 맞춘다.</strong> (10분)
+<pre><code>sudo apt update &amp;&amp; sudo apt upgrade -y
+sudo apt install -y locales
+sudo locale-gen en_US en_US.UTF-8
+sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8</code></pre>
+        첫 줄에서 비밀번호를 묻는다. 3번에서 정한 것을 친다.
+      </li>
+      <li><strong>새 터미널에서 다시 확인한다.</strong> (5분)
+        <br>터미널을 <strong>완전히 닫고</strong> 새로 연 다음 <code>wsl</code>을 치고 들어가서 <code>locale</code>을 친다.
+        줄마다 <code>UTF-8</code>이 보이면 끝이다.
+      </li>
+      <li><strong>프로그램 하나를 직접 깔아 본다.</strong> (5분)
+<pre><code>sudo apt install -y tree
+which tree
+apt policy tree</code></pre>
+        마지막 줄의 <code>Installed:</code>에 판번호가 찍히면 성공이다.
+      </li>
+    </ol>
+    <p>
+      <strong>이렇게 되면 성공:</strong> ⑥의 <code>locale</code> 출력에 <code>UTF-8</code>이 줄마다 보이고,
+      ⑦의 <code>apt policy tree</code>에서 <code>Installed:</code>가 <code>(none)</code>이 <strong>아니다.</strong>
+      <strong>둘 다 새로 연 터미널에서 확인한 것이어야 한다.</strong>
+    </p>
+    <div class="box trap" style="margin-top:1rem">
+      <div class="boxtitle">⚠️ 여기서 막히면 이렇게 좁힌다</div>
+      <div class="tablewrap">
+      <table>
+        <tr><th>증상</th><th>먼저 볼 것</th></tr>
+        <tr><td>2번에서 설치가 도중에 멈춘다</td><td>첫 주에 확인한 <strong>「가상화: 사용」</strong>. 꺼져 있으면 여기서 멈춘다</td></tr>
+        <tr><td><code>E: Unable to locate package</code></td><td><strong><code>sudo apt update</code>를 먼저 했나.</strong> 이름 문제가 아닌 경우가 대부분이다</td></tr>
+        <tr><td>비밀번호가 안 먹는다</td><td>치는 동안 <strong>화면에 안 보이는 것이 정상</strong>이다. 한/영 상태를 본다</td></tr>
+        <tr><td>디스크가 모자라다는 말이 나온다</td><td>C 드라이브 여유. 우분투 한 벌에 몇 GB가 든다</td></tr>
+      </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 프롬프트 모음 ── -->
+  <h2 id="prompts">🤖 오늘 나온 프롬프트 모음 <span class="badge b-green">🟢 맡긴다</span></h2>
+
+  <p>
+    아래 문장들은 <strong>다음 시간에 에이전트를 붙인 뒤부터</strong> 쓴다.
+    오늘은 손으로 치지만, 이 학기에 같은 일을 다시 할 때는 이렇게 말하게 된다.
+  </p>
+
+  <div class="prompt"><button onclick="copyPrompt(this)">복사</button> 우분투 패키지 목록을 갱신하고 전부 최신으로 올려 줘. 올리기 전에 <strong>무엇이 지워지는지</strong> 먼저 보여 주고, <code>sudo</code>가 붙는 명령은 실행 전에 나에게 확인받아.</div>
+
+  <div class="prompt"><button onclick="copyPrompt(this)">복사</button> 로캘을 <code>en_US.UTF-8</code>로 맞춰 줘. 끝나고 <code>locale</code> 출력을 그대로 보여 주고, <strong>어느 줄을 보고 성공을 판단하면 되는지</strong> 알려 줘.</div>
+
+  <div class="prompt"><button onclick="copyPrompt(this)">복사</button> 지금 이 시스템의 <strong>배포판 이름·판번호·커널 판번호·로캘</strong>을 각각 한 줄씩 확인해서 보여 줘. 확인에 쓴 명령어도 같이 적어 줘.</div>
+
+  <div class="prompt"><button onclick="copyPrompt(this)">복사</button> <code>tree</code> 패키지가 깔려 있는지 확인해 줘. 안 깔려 있으면 깔고, <strong>깔린 뒤에 실제로 실행되는지까지</strong> 확인해서 결과를 보여 줘.</div>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>이럴 때</th><th>이렇게 말한다</th><th>그리고 내가 볼 것</th></tr>
+    <tr><td>무언가를 설치할 때</td><td>"깔고 나서 <strong>실행되는지까지</strong> 확인해 줘"</td><td><code>which</code> 결과와 <code>--version</code> 출력</td></tr>
+    <tr><td>시스템을 갱신할 때</td><td>"<strong>지워지는 것</strong>이 있으면 먼저 보여 줘"</td><td><code>0 to remove</code>인가</td></tr>
+    <tr><td><code>sudo</code>가 필요할 때</td><td>"실행 전에 명령을 보여 줘"</td><td>내가 읽고 이해되는 명령인가</td></tr>
+    <tr><td>안 된다고 할 때</td><td>"<code>apt policy</code>로 깔렸는지부터 확인해 줘"</td><td><code>Installed:</code>가 <code>(none)</code>인가</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 네 줄 모두 <strong>「해 줘」 뒤에 「확인할 것」이 붙어 있다.</strong>
+    에이전트에게 「잘 됐는지 봐 줘」라고 하면 「완료했습니다」라는 답이 온다.
+    <strong>그 답은 확인이 아니다.</strong> 확인은 오른쪽 열을 내가 직접 보는 것이다.
+  </div>
+
+  <!-- ── ✅ 점검 ── -->
+  <h2 id="check">✅ 오늘의 점검</h2>
+  <ul class="check">
+    <li><input type="checkbox" id="c1"><label for="c1">커널·쉘·배포판이 각각 무엇인지 <strong>한 줄씩</strong> 말할 수 있나?</label></li>
+    <li><input type="checkbox" id="c2"><label for="c2"><code>uname -r</code>이 <strong>내 노트북에서</strong> 판번호를 찍었나?</label></li>
+    <li><input type="checkbox" id="c3"><label for="c3"><code>cat /etc/os-release</code>에 <strong>24.04</strong>가 보이나?</label></li>
+    <li><input type="checkbox" id="c4"><label for="c4"><code>locale</code>의 줄마다 <code>UTF-8</code>이 보이나?</label></li>
+    <li><input type="checkbox" id="c5"><label for="c5"><code>sudo apt update</code>가 <code>Err</code> 없이 끝났나?</label></li>
+    <li><input type="checkbox" id="c6"><label for="c6"><code>apt policy tree</code>의 <code>Installed:</code>가 <code>(none)</code>이 <strong>아닌</strong> 것을 봤나?</label></li>
+    <li><input type="checkbox" id="c7"><label for="c7"><strong>터미널을 새로 열어도</strong> 위 다섯 가지가 그대로인가?</label></li>
+    <li><input type="checkbox" id="c8"><label for="c8"><code>sudo</code>가 무슨 뜻이고 <strong>왜 조심해야 하는지</strong> 말할 수 있나?</label></li>
+  </ul>
+
+  <!-- ── 조금 더 알아두면 ── -->
+  <h2 id="more">조금 더 알아두면 <span class="badge b-lv">시험 범위 아님</span></h2>
+
+  <details>
+    <summary>우분투 말고 다른 계열은 어떻게 생겼나</summary>
+    <p>우리는 안 쓰지만, 검색 결과에서 만나면 알아볼 수 있어야 한다.</p>
+    <div class="tablewrap">
+    <table>
+      <tr><th>계열</th><th>대표</th><th>성격</th></tr>
+      <tr><td>레드햇</td><td>RHEL(유료·기업용), 페도라(새 기술 먼저), 로키</td><td>서버 시장에서 강하다. 설치 명령이 <code>dnf</code>·<code>yum</code></td></tr>
+      <tr><td>아치</td><td>아치 리눅스, 만자로</td><td>갱신이 가장 빠르다. 사용자가 직접 조립해 쓴다</td></tr>
+      <tr><td>슬랙웨어</td><td>슬랙웨어</td><td>가장 오래된 배포판. 의존성을 자동으로 안 챙겨 준다</td></tr>
+    </table>
+    </div>
+    <p>
+      <strong>구분하는 실용적인 기준은 하나다 — 설치 명령이 무엇인가.</strong>
+      <code>apt</code>면 우리 것이고, <code>dnf</code>·<code>yum</code>·<code>pacman</code>이면 남의 것이다.
+    </p>
+  </details>
+
+  <details>
+    <summary>쉘도 종류가 있다 — bash 말고 무엇이 있나</summary>
+    <p>
+      우분투에는 <strong>bash</strong>와 <strong>dash</strong>가 같이 들어 있다.
+      우리가 터미널에서 만나는 것은 bash다. 이름은 <strong>Bourne Again Shell</strong>의 줄임말인데,
+      스티븐 본(Bourne)이 만든 예전 쉘을 <strong>다시 만들었다(born again)</strong>는 말장난이다.
+      이 바닥의 이름은 대체로 이렇게 지어진다.
+    </p>
+    <p>
+      쉘을 바꿔도 리눅스는 그대로다. 커널은 하나이고 쉘은 그 위에 얹힌 통역일 뿐이기 때문이다.
+      <strong>이 강의에서는 bash만 쓴다.</strong>
+    </p>
+  </details>
+
+  <details>
+    <summary>WSL 안의 파일은 윈도우에서 어떻게 보나</summary>
+    <p>
+      윈도우 탐색기 주소창에 <code>\\wsl$</code>를 치면 리눅스 쪽 폴더가 보인다.
+      <strong>다만 이 방법으로 파일을 복사해 넣는 습관은 권하지 않는다.</strong>
+      권한 정보가 어긋나서 <strong>실행이 안 되는 파일</strong>이 생기기 쉽기 때문이다.
+    </p>
+    <p>
+      반대 방향은 안전하다. 리눅스에서 <code>/mnt/c/</code>로 들어가면 윈도우의 C 드라이브가 그대로 보인다.
+      <strong>다만 이 강의의 작업 폴더는 리눅스 쪽(<code>~</code> 아래)에 둔다.</strong> 그쪽이 훨씬 빠르다.
+    </p>
+  </details>
+
+  <details>
+    <summary>왜 <code>-y</code>를 붙이나</summary>
+    <p>
+      <code>sudo apt upgrade -y</code>의 <code>-y</code>는 <strong>"묻지 말고 예로 진행"</strong>이라는 뜻이다.
+      설치 중에 <code>Do you want to continue? [Y/n]</code>이 나올 때 자동으로 넘어간다.
+    </p>
+    <p>
+      편하지만 <strong>공짜는 아니다.</strong> 무엇이 지워지는지 보여 주는 화면도 같이 지나간다.
+      그래서 이 자료는 <strong>먼저 <code>-s</code>로 미리 보고, 확인한 뒤에 <code>-y</code>로 실행</strong>하는 순서를 쓴다.
+      에이전트에게 맡길 때도 같은 순서를 요구한다.
+    </p>
+  </details>
+
+  <footer>
+    로봇공학 · 순천향대학교 전자정보공학과 ·
+    다음 회차: <a href="robotics_03.html">3회 에이전트를 개발환경에 붙이기</a>
+  </footer>
+</main>
+</div>
+
+<script>
+function copyPrompt(btn) {
+  const box = btn.parentElement.cloneNode(true);
+  box.querySelector('button').remove();
+  navigator.clipboard.writeText(box.textContent.trim()).then(function () {
+    const old = btn.textContent;
+    btn.textContent = '복사됨';
+    setTimeout(function () { btn.textContent = old; }, 1200);
+  });
+}
+</script>
+</body>
+</html>

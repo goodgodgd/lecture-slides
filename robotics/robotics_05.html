@@ -1,0 +1,1037 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>5회 · Git — 열흘 만에 만든 도구 | 로봇공학</title>
+<link rel="stylesheet" href="assets/lecture.css">
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="toc-title">이 회차 목차</div>
+  <a href="#summary">한 장 요약 — 여섯 개</a>
+  <a href="#story">📖 열흘 만에 만든 도구</a>
+  <a href="#why">① _최종_진짜최종이 안 되는 이유</a>
+  <a href="#three">② git은 세 자리를 오간다</a>
+  <a href="#cmd1">③ 지금 무슨 일이 벌어졌나</a>
+  <a href="#cmd2">④ 담고, 굳힌다</a>
+  <a href="#cmd3">⑤ 갈라놓고 일한다</a>
+  <a href="#cmd4">⑥ 올리고, 받는다</a>
+  <a href="#ignore">⑦ 올리면 안 되는 것</a>
+  <a href="#size">⑧ 커밋 하나의 크기</a>
+  <a href="#pr">⑨ PR 설명 5줄</a>
+  <a href="#lab">🧪 실습 — PR 하나 만들기</a>
+  <a href="#prompts">🤖 프롬프트 모음</a>
+  <a href="#check">✅ 점검</a>
+  <a href="#more">조금 더 알아두면</a>
+</nav>
+
+<main>
+  <a class="backlink" href="../index.html">← 강의자료 목록</a>
+
+  <div class="lec-no">로봇공학 · 5회 · 1부 환경과 도구</div>
+  <h1>Git — 열흘 만에 만든 도구</h1>
+
+  <div class="questions">
+    <span class="lab">오늘 답할 질문</span>
+    <ol>
+      <li>왜 파일 이름 뒤에 <code>_최종_진짜최종</code>을 붙이면 안 되나?</li>
+      <li>브랜치와 PR(Pull Request)은 각각 무엇을 위한 자리인가?</li>
+      <li>커밋 하나에 무엇까지 담아야 하나? 크기는 어떻게 정하나?</li>
+      <li>에이전트가 커밋도 대신 해 줄 수 있다. 그러면 내가 할 일은 무엇이 남나?</li>
+    </ol>
+  </div>
+
+  <p>
+    git 명령어를 정리한 자료가 하나 있다. <strong>815줄이고 되돌리기·이동·비교 명령어의 계보까지 다룬다.</strong>
+    그 자료를 다 읽어도 <strong>정작 팀 프로젝트에서 사고가 나는 자리는 안 나온다.</strong>
+    사고는 언제나 같은 두 곳에서 난다 — <strong>커밋 하나에 관계없는 것이 섞여 들어가는 것</strong>,
+    그리고 <strong>왜 그렇게 고쳤는지가 아무 데도 안 적혀 있는 것</strong>이다.
+  </p>
+  <p>
+    명령어는 오늘도 에이전트가 대신 친다. <em>"지금 변경사항 커밋해 줘"</em>라고 하면 해 준다.
+    <strong>그런데 「무엇을 한 덩어리로 볼 것인가」와 「왜 이렇게 했는가」는 에이전트가 정해 줄 수 없다.</strong>
+    그것을 아는 사람은 그 코드를 왜 고쳤는지 아는 사람 하나뿐이다.
+  </p>
+  <p>
+    그래서 오늘은 <strong>명령어 여섯 개</strong>만 보고, 나머지 시간을 <strong>두 가지 판단</strong>에 쓴다.
+    <strong>커밋 하나의 크기</strong>와 <strong>PR 설명 5줄</strong>이다.
+    뒤의 것은 기말 프로젝트 평가 C항목(5점)이 직접 보는 자리다.
+  </p>
+
+  <!-- ── 한 장 요약표 ── -->
+  <h2 id="summary">한 장 요약 — 명령어는 여섯 개, 판단은 두 개</h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>왼쪽 「내가 알고 싶은 것」 열</strong>만 읽는다. 아래 두 줄이 오늘의 중심이다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>내가 알고 싶은 것 / 하고 싶은 것</th><th>그때 이걸 친다</th><th>수준</th></tr>
+    <tr><td>지금 무엇이 바뀌어 있나</td><td><code>git status</code></td><td><span class="badge b-lv">[요구]</span></td></tr>
+    <tr><td>이번 커밋에 <strong>이것만</strong> 담겠다</td><td><code>git add 파일</code></td><td><span class="badge b-lv">[판단]</span></td></tr>
+    <tr><td>여기까지를 <strong>한 덩어리로 굳힌다</strong></td><td><code>git commit -m "..."</code></td><td><span class="badge b-lv">[판단]</span></td></tr>
+    <tr><td>남 것과 안 섞이게 <strong>따로 떼어 일한다</strong></td><td><code>git switch -c 브랜치</code></td><td><span class="badge b-lv">[요구]</span></td></tr>
+    <tr><td>내 것을 <strong>서버로 올린다</strong></td><td><code>git push</code></td><td><span class="badge b-lv">[알아보기]</span></td></tr>
+    <tr><td>남이 올린 것을 <strong>받아 온다</strong></td><td><code>git pull</code></td><td><span class="badge b-lv">[알아보기]</span></td></tr>
+    <tr><td><strong>커밋 하나에 무엇까지 담나</strong> 🔴</td><td><strong>사람이 정한다.</strong> 명령어가 아니다</td><td><span class="badge b-lv">[판단]</span></td></tr>
+    <tr><td><strong>왜 이렇게 고쳤는지 남긴다</strong> 🔴</td><td><strong>PR 설명 5줄.</strong> 사람이 쓴다</td><td><span class="badge b-lv">[요구]</span></td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 위 여섯 줄은 전부 <strong>에이전트가 대신 쳐 줄 수 있다.</strong>
+    아래 두 줄은 <strong>대신 해 줄 수 없다.</strong> 코드를 보면 <em>무엇이</em> 바뀌었는지는 알 수 있지만
+    <strong><em>왜</em> 그렇게 했는지는 코드 어디에도 안 적혀 있기</strong> 때문이다.
+    그래서 이 회차의 배점도 아래 두 줄에 몰려 있다.
+  </div>
+
+  <p class="readme-first">
+    아래 출력은 전부 실제로 실행해서 얻은 것이다.
+    돌린 곳: 컨테이너(우분투 24.04.4 LTS, git 2.43.0).
+    경로가 <code>/home/ubuntu/...</code>로 찍히는 것은 그 컴퓨터의 계정 이름이 <code>ubuntu</code>이기 때문이다.
+  </p>
+
+  <!-- ── 📖 이야기 ── -->
+  <details class="story" id="story">
+    <summary>화가 나서 만든 도구가 열흘 만에 세계 표준이 됐다 (15분 · 건너뛰어도 됩니다)</summary>
+
+    <h4>① 2002년 — 수천 명이 고치는 프로젝트에 쓸 도구가 없었다</h4>
+    <p>
+      리눅스 커널은 전 세계 수천 명이 동시에 고치는 프로젝트다.
+      당시 무료로 쓸 수 있던 버전 관리 도구들은 <strong>그 규모를 감당하지 못했다.</strong>
+      리누스 토르발스(Linus Torvalds)는 <strong>비트키퍼(BitKeeper)</strong>라는 상용 도구를 쓰기로 한다.
+      만든 회사가 커널 개발자에게는 <strong>공짜로</strong> 쓰게 해 줬다.
+      조건이 하나 붙었다 — <strong>경쟁 도구를 만들지 말 것.</strong>
+    </p>
+
+    <h4>② 2005년 — 조건이 깨지고, 하루아침에 도구가 사라졌다</h4>
+    <p>
+      커널 개발자 앤드루 트리젤(Andrew Tridgell)이 비트키퍼와 통신하는 도구를 직접 만들었다.
+      회사는 곧바로 <strong>무료 라이선스를 거둬들였다.</strong>
+      <strong>수천 명이 매일 쓰던 프로젝트가 버전 관리 도구를 통째로 잃었다.</strong>
+      대안을 찾을 시간이 없었고, 마음에 드는 대안도 없었다.
+    </p>
+
+    <h4>③ 여기가 재미있다 — 나흘 만에 자기 자신을 관리하기 시작했다</h4>
+    <p>
+      토르발스는 <strong>2005년 4월 3일</strong> 새 도구를 짜기 시작했다.
+      <strong>4월 7일</strong>, 그 도구는 <strong>자기 자신의 소스 코드를 그 도구로 관리하기 시작했다.</strong>
+      나흘째다. 그리고 <strong>열흘 만에</strong> 리눅스 커널 전체를 이 도구로 관리하기 시작한다.
+    </p>
+    <p>
+      이름은 <strong>git</strong>이라고 붙였다. 영국 속어로 <strong>"멍청이"</strong>라는 뜻이다.
+      본인이 붙인 설명은 이랬다.
+    </p>
+    <blockquote>
+      "나는 자기중심적인 인간이라 내 프로젝트에 내 이름을 붙인다. 처음엔 <strong>리눅스</strong>, 이번엔 <strong>git</strong>."
+      <br>— 리누스 토르발스
+    </blockquote>
+    <p>
+      <strong>세계에서 가장 많이 쓰이는 개발 도구의 이름이 자기 비하 농담이다.</strong>
+      그리고 그 농담을 20년째 아무도 못 바꾸고 있다.
+    </p>
+
+    <h4>④ 그래서 지금 우리 손에 남은 것</h4>
+    <p>
+      그 열흘의 목표는 딱 두 가지였다 — <strong>빠를 것, 그리고 망가진 데이터를 즉시 알아챌 것.</strong>
+      <strong>git의 명령어가 이상하고 예쁘지 않은 이유가 이것이다. 속도와 무결성 말고 나머지를 포기하고 만든 도구다.</strong>
+    </p>
+
+    <h4>⑤ 숫자로 확인한다</h4>
+    <div class="tablewrap">
+    <table>
+      <tr><th>무엇</th><th>숫자</th><th>어디서 확인했나</th></tr>
+      <tr><td>첫 줄부터 <strong>자기 자신을 관리</strong>하기까지</td><td><strong>4일</strong> (4월 3일 → 4월 7일)</td><td>기록으로 남은 날짜</td></tr>
+      <tr><td>리눅스 커널 관리를 넘겨받기까지</td><td><strong>열흘</strong></td><td>기록으로 남은 날짜</td></tr>
+      <tr><td>1.0.0 판이 나오기까지</td><td>같은 해 <strong>12월 21일</strong> (약 8개월)</td><td>배포 기록</td></tr>
+      <tr><td><strong>저장소를 만들어 첫 커밋까지 필요한 명령</strong></td><td><strong>세 줄</strong></td><td><strong>우리가 직접 돌려 봤다</strong> (아래)</td></tr>
+    </table>
+    </div>
+    <p>마지막 줄은 오늘 쓸 컨테이너에서 실제로 재 본 것이다. 정말 세 줄이면 끝난다.</p>
+    <pre><code>$ git init -b main
+$ git add .gitignore src/main.cpp
+$ git commit -m "콘 트랙 주행 노드 뼈대 추가"
+[main (root-commit) 17e94e4] 콘 트랙 주행 노드 뼈대 추가
+ 2 files changed, 5 insertions(+)</code></pre>
+    <p>
+      <strong><code>2 files changed, 5 insertions(+)</code></strong> —
+      이 한 줄이 그 커밋에 들어간 전부다.
+      <strong>이런 한 줄이 남는다는 것이 git이 20년간 안 밀려난 이유다.</strong>
+      나중에 누가 무엇을 왜 넣었는지 되짚을 수 있다.
+    </p>
+
+    <h4>⑥ 출처</h4>
+    <ul class="src">
+      <li>Linux Journal, "A Git Origin Story" — 비트키퍼 라이선스 회수 경위</li>
+      <li>Wikipedia — Git (2005년 4월 3일 개발 시작, 4월 7일 self-hosting, 12월 21일 1.0.0)</li>
+      <li>위 <code>git init</code>~<code>commit</code> 출력: 컨테이너(우분투 24.04.4 LTS, git 2.43.0)에서 직접 실행</li>
+    </ul>
+  </details>
+
+  <!-- ══════════ ① 왜 ══════════ -->
+  <h2 id="why">① <code>_최종_진짜최종</code>은 게을러서 생긴 게 아니다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+  <p>
+    파일 이름 뒤에 판 번호를 붙이는 습관은 <strong>필요해서 생긴 것</strong>이다.
+    되돌릴 수 있어야 하니까 지우지 못하고, 어느 것이 최신인지는 이름에 적을 수밖에 없다.
+    <strong>문제는 이 방식이 안 되는 게 아니라, 세 가지를 못 한다는 것이다.</strong>
+  </p>
+
+  <figure class="narrow">
+    <img src="assets/img/05_filename_hell.png"
+         alt="윈도우 탐색기 화면. vo-bench-2019-v0.1.docx 부터 v0.6_add_sensors_ref.docx 까지 같은 문서의 판이 여섯 개 나란히 있다">
+    <figcaption>실제로 이렇게 쌓인 폴더다. <strong>파일 이름만 보고 v0.4와 v0.5의 차이를 말할 수 있는 사람은 없다.</strong>
+      바로 이 자리를 메우려고 만들어진 것이 버전 관리 도구다.</figcaption>
+  </figure>
+
+  <p class="readme-first">무엇을 먼저 볼지: <strong>오른쪽 열</strong>이다. 왼쪽은 이미 겪어 본 것이다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>이름으로 판 관리를 할 때</th><th>못 하는 것</th><th>git이 그 자리에 놓는 것</th></tr>
+    <tr>
+      <td><code>v0.4</code>와 <code>v0.5</code>가 있다</td>
+      <td><strong>무엇이 달라졌는지</strong> 파일을 열어 비교하지 않으면 모른다</td>
+      <td>커밋마다 <strong>바뀐 줄만</strong> 따로 남는다</td>
+    </tr>
+    <tr>
+      <td>왜 <code>v0.5</code>를 만들었는지</td>
+      <td><strong>아무 데도 안 적혀 있다.</strong> 만든 사람 머릿속에만 있다</td>
+      <td>커밋 메시지 · <strong>PR 설명</strong></td>
+    </tr>
+    <tr>
+      <td>둘이 동시에 같은 파일을 고쳤다</td>
+      <td><strong>한 사람 것이 통째로 덮인다.</strong> 덮인 줄도 모른다</td>
+      <td>브랜치 · 병합 · <strong>충돌 표시</strong></td>
+    </tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 셋째 줄이 팀 프로젝트에서 가장 크게 터진다.
+    <strong>덮어쓴 사람도 덮인 사람도 그 순간에는 모른다.</strong> 며칠 뒤 "내가 고친 게 없어졌다"로 발견된다.
+    git은 이 상황에서 <strong>덮지 않고 멈춘 다음 사람에게 물어본다.</strong>
+    이 강의에서 git을 쓰는 첫 번째 이유가 이것이다.
+  </div>
+
+  <!-- ══════════ ② 세 자리 ══════════ -->
+  <h2 id="three">② git은 파일을 세 자리에 두고 옮긴다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+  <p>
+    git 명령어가 낯선 이유는 <strong>「어디에서 어디로 옮기는 명령인지」를 모르고 외우기 때문</strong>이다.
+    자리가 셋이라는 것만 알면 여섯 개 명령이 전부 제자리를 찾는다.
+  </p>
+
+  <figure>
+    <img src="assets/img/05_git_three_places.png"
+         alt="세 자리 그림. 오른쪽 작업트리에서 등록(add)으로 가운데 인덱스로, 인덱스에서 커밋으로 왼쪽 저장소로 파일이 옮겨 간다. 인덱스에 등록되지 않은 파일은 커밋이 안 된다고 적혀 있다">
+    <figcaption>오른쪽에서 왼쪽으로 <strong>두 번</strong> 옮겨 간다는 것을 본다.
+      가운데 <strong>인덱스</strong>가 있는 이유가 이 회차 후반의 「커밋 하나의 크기」다.
+      <strong>고친 것 중 무엇을 이번에 담을지 고르는 자리</strong>다.</figcaption>
+  </figure>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>자리</th><th>무엇이 있나</th><th>여기로 보내는 명령</th></tr>
+    <tr><td><strong>작업트리</strong> (내 폴더)</td><td>지금 내가 편집기로 보고 있는 파일 그대로</td><td>—</td></tr>
+    <tr><td><strong>인덱스</strong> (담는 바구니)</td><td><strong>이번 커밋에 담기로 고른 것</strong>만</td><td><code>git add</code></td></tr>
+    <tr><td><strong>저장소</strong> (기록)</td><td>굳어서 이름이 붙은 덩어리들</td><td><code>git commit</code></td></tr>
+    <tr><td><strong>원격 저장소</strong> (GitHub)</td><td>남과 같이 보는 사본</td><td><code>git push</code> / 받을 때 <code>git pull</code></td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> <strong>인덱스가 이 그림의 핵심</strong>이다.
+    이 자리가 없으면 "고친 것 전부"가 곧 "커밋 하나"가 되어 버린다.
+    <strong>고치는 단위와 기록하는 단위를 따로 정할 수 있게 하려고</strong> 가운데에 바구니를 하나 둔 것이다.
+    <code>git add</code>는 저장하는 명령이 아니라 <strong>고르는 명령</strong>이다.
+  </div>
+
+  <figure>
+    <img src="assets/img/05_git_states.png"
+         alt="파일 상태 전이도. Untracked, Modified, Staged, Unmodified, Remote 다섯 상자를 add·commit·push·pull·clone·edit 화살표가 잇는다">
+    <figcaption>같은 이야기를 <strong>파일의 상태</strong>로 그린 것이다.
+      <strong>세로줄 다섯 개가 상태</strong>이고 <strong>가로 화살표가 명령</strong>이다.
+      왼쪽 끝 <code>Untracked</code>에서 오른쪽 <code>Remote</code>까지 한 번 흘러가 보면 오늘 배울 여섯 개가 전부 지나간다.</figcaption>
+  </figure>
+
+  <!-- ══════════ ③ status ══════════ -->
+  <h2 id="cmd1">③ 무슨 일이 벌어져 있는지부터 묻는다 — <code>status</code> <span class="badge b-green">🟢 맡긴다</span></h2>
+
+  <h4>무엇이 궁금한가</h4>
+  <p>
+    한참 고쳤다. 에이전트도 파일 몇 개를 만졌다.
+    <strong>지금 이 폴더에서 무엇이 어떻게 바뀌어 있는가?</strong>
+    커밋을 하기 전에 언제나 이것부터 본다.
+  </p>
+
+  <h4>그때 이걸 친다</h4>
+  <pre><code>$ git status</code></pre>
+
+  <h4>출력을 이렇게 읽는다</h4>
+  <pre><code>$ git init -b main
+Initialized empty Git repository in /home/ubuntu/cone_track/.git/
+$ git status
+On branch main
+
+No commits yet
+
+Untracked files:
+  (use "git add &lt;file&gt;..." to include in what will be committed)
+	build/
+	src/
+
+nothing added to commit but untracked files present (use "git add" to track)</code></pre>
+  <p>
+    <strong>세 군데만 본다.</strong>
+    맨 윗줄 <code>On branch main</code>은 <strong>지금 어느 브랜치에 서 있는가</strong>이고,
+    <code>Untracked files</code> 아래 목록은 <strong>git이 아직 손대지 않고 있는 것</strong>이다.
+    <code>build/</code>가 거기 있는 것이 눈에 걸려야 한다 — <strong>빌드 부산물이다.</strong> 뒤에서 처리한다.
+  </p>
+  <p>
+    <code>git status</code>는 친절한 대신 길다. 짧은 판이 따로 있고, 실제로는 이쪽을 훨씬 많이 쓴다.
+  </p>
+  <pre><code>$ git status --short
+?? .gitignore
+?? src/</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 출력에서 처음 나오는 것</p>
+    <dl>
+      <dt>git init -b main</dt>
+      <dd>지금 폴더를 <strong>git이 관리하는 저장소로 만든다.</strong>
+          <code>-b main</code>은 <strong>첫 브랜치 이름을 <code>main</code>으로 하라</strong>는 뜻이다.
+          이 명령은 <strong>프로젝트당 딱 한 번</strong> 친다.</dd>
+
+      <dt>?? · A · M (상태 글자)</dt>
+      <dd><code>--short</code>가 붙으면 파일 앞에 글자 두 칸이 붙는다.
+          <strong><code>??</code>는 git이 아직 모르는 파일</strong>,
+          <strong><code>A</code>는 이번 커밋에 담기로 고른 새 파일</strong>,
+          <strong><code>M</code>은 이미 관리 중인데 고쳐진 파일</strong>이다.</dd>
+
+      <dt>글자가 붙는 <strong>칸</strong>도 뜻이 있다</dt>
+      <dd>왼쪽 칸은 <strong>인덱스(바구니) 쪽</strong>, 오른쪽 칸은 <strong>작업트리(내 폴더) 쪽</strong>이다.
+          그래서 <code>A&nbsp;</code>(왼쪽에 A)와 <code>&nbsp;M</code>(오른쪽에 M)이 서로 다른 상태다.</dd>
+    </dl>
+  </div>
+
+  <h4>에이전트에게 시키면 🤖</h4>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    지금 <code>git status</code>를 실행하고, 바뀐 파일들을 <strong>무엇 때문에 바뀐 것인지 주제별로 묶어서</strong> 정리해 줘. 아직 커밋은 하지 마.
+  </div>
+  <p>
+    <strong>"주제별로 묶어서"</strong>가 이 프롬프트의 값어치다.
+    파일 목록만 받으면 나도 <code>status</code>를 친 것과 다를 게 없다.
+    <strong>묶음을 받아야 다음 절의 「커밋 몇 개로 나눌까」를 판단할 수 있다.</strong>
+  </p>
+
+  <!-- ══════════ ④ add / commit ══════════ -->
+  <h2 id="cmd2">④ 담고, 굳힌다 — <code>add</code>와 <code>commit</code> <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <h4>무엇이 궁금한가</h4>
+  <p>
+    <strong>고친 것 중 이번에 기록으로 남길 것을 고르고, 거기에 이름을 붙여 굳히려고 한다.</strong>
+    두 단계인 이유는 바로 앞 절에서 봤다 — 고르는 자리와 굳히는 자리가 따로 있기 때문이다.
+  </p>
+
+  <h4>그때 이걸 친다</h4>
+  <pre><code>$ git add .gitignore src/main.cpp
+$ git commit -m "콘 트랙 주행 노드 뼈대 추가"</code></pre>
+
+  <h4>출력을 이렇게 읽는다</h4>
+  <pre><code>$ git add .gitignore src/main.cpp
+$ git status --short
+A  .gitignore
+A  src/main.cpp</code></pre>
+  <p>
+    조금 전 <code>??</code>였던 두 줄이 <strong><code>A</code>로 바뀌었다.</strong>
+    <strong>바구니에 담겼다</strong>는 뜻이다. 아직 기록은 아니다.
+  </p>
+  <pre><code>$ git commit -m "콘 트랙 주행 노드 뼈대 추가"
+[main (root-commit) 17e94e4] 콘 트랙 주행 노드 뼈대 추가
+ 2 files changed, 5 insertions(+)
+ create mode 100644 .gitignore
+ create mode 100644 src/main.cpp</code></pre>
+  <p>
+    <strong>둘째 줄의 <code>2 files changed, 5 insertions(+)</code>가 이 커밋에 들어간 전부다.</strong>
+    <strong>커밋할 때마다 이 줄을 읽는 습관을 들인다.</strong>
+    숫자가 예상보다 크면 <strong>담을 생각이 없던 것이 같이 들어갔다는 신호</strong>다.
+    <code>17e94e4</code>는 이 커밋에 붙은 이름표(해시)다. 나중에 이 일곱 글자로 그 시점을 다시 부를 수 있다.
+  </p>
+
+  <p>이미 관리 중인 파일을 고치면 <code>A</code>가 아니라 <code>M</code>으로 나온다.</p>
+  <pre><code>$ git status --short
+ M src/main.cpp
+$ git diff
+diff --git a/src/main.cpp b/src/main.cpp
+index f89aebb..0cd7c27 100644
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -1,2 +1,2 @@
+ #include &lt;cstdio&gt;
+-int main() { std::printf("cone track\n"); return 0; }
++int main() { std::printf("cone track v2\n"); return 0; }</code></pre>
+  <div class="interp">
+    <strong>해석:</strong> <strong>이 파일이 무슨 코드인지는 지금 하나도 몰라도 된다.</strong>
+    볼 것은 아래 두 줄뿐이다 — <strong><code>-</code>로 시작하는 줄이 없어진 것</strong>,
+    <strong><code>+</code>로 시작하는 줄이 새로 들어간 것</strong>이다.
+    <code>git diff</code>는 언제나 이 모양으로 보여 준다.
+    <strong>커밋 메시지를 쓰기 전에 이 화면을 한 번 보면 「내가 무엇을 했는지」가 그대로 문장이 된다.</strong>
+  </div>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 출력에서 처음 나오는 것</p>
+    <dl>
+      <dt>-m "메시지"</dt>
+      <dd>커밋 메시지를 <strong>그 자리에서 한 줄로</strong> 붙인다.
+          이걸 빼면 편집기가 열리는데, <strong>익숙하지 않으면 나오지 못해 당황한다.</strong> 항상 <code>-m</code>을 쓴다.</dd>
+
+      <dt>커밋 해시 (<code>17e94e4</code>)</dt>
+      <dd>커밋마다 붙는 <strong>고유한 이름표</strong>다. 원래는 40글자이고 앞 일곱 자만 보여 준다.
+          여기서는 <strong>"그 시점"을 가리키는 이름</strong>으로 쓴다.</dd>
+
+      <dt>git diff</dt>
+      <dd><strong>아직 바구니에 안 담은 변경</strong>이 무엇인지 줄 단위로 보여 준다.
+          여기서는 <code>M</code>이 붙은 파일에서 <strong>정확히 어느 줄이 바뀌었는지</strong> 보는 데 썼다.</dd>
+    </dl>
+  </div>
+
+  <!-- ══════════ ⑤ switch ══════════ -->
+  <h2 id="cmd3">⑤ 남 것과 안 섞이게 갈라놓고 일한다 — <code>switch</code> <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <h4>무엇이 궁금한가</h4>
+  <p>
+    <strong>지금 되고 있는 것을 망가뜨리지 않으면서 새 기능을 붙여 보고 싶다.</strong>
+    팀이면 더 급하다. 네 사람이 같은 파일을 동시에 고치면 마지막에 저장한 사람 것만 남는다.
+    <strong>브랜치는 「지금 되는 상태」를 지켜 두는 장치</strong>다.
+  </p>
+
+  <figure>
+    <img src="assets/img/05_branch_concept.png"
+         alt="브랜치 그림. 가운데 굵은 줄기에서 위아래로 세 갈래가 갈라져 나가 각각 새로운 기능 추가, 비디오 표시 버그 수정, 사이드바 추가 작업을 하고 다시 줄기로 합쳐진다">
+    <figcaption>가운데 굵은 줄이 <code>main</code>이다.
+      <strong>갈라진 세 갈래가 서로를 전혀 건드리지 않는다</strong>는 것을 본다.
+      각자 다 되면 오른쪽 끝에서 <strong>줄기로 다시 합친다.</strong> 그 합치는 자리가 뒤에 나올 PR이다.</figcaption>
+  </figure>
+
+  <h4>그때 이걸 친다</h4>
+  <pre><code>$ git switch -c feature/steering</code></pre>
+
+  <h4>출력을 이렇게 읽는다</h4>
+  <pre><code>$ git switch -c feature/steering
+Switched to a new branch 'feature/steering'
+$ git log --oneline --graph --all
+* 7de776d 조향 계산 함수 추가
+* 17e94e4 콘 트랙 주행 노드 뼈대 추가</code></pre>
+  <p>브랜치를 갈아타면 <strong>폴더 안의 파일 목록 자체가 바뀐다.</strong> 이것이 처음 보면 가장 놀라는 대목이다.</p>
+  <pre><code>$ git switch main
+Switched to branch 'main'
+$ ls src/    # main 에는 steer.cpp 가 없다
+main.cpp</code></pre>
+  <div class="interp">
+    <strong>해석:</strong> <code>steer.cpp</code>가 <strong>사라진 것이 아니다.</strong>
+    <code>main</code> 브랜치에는 <strong>아직 그 파일이 들어온 적이 없을 뿐</strong>이다.
+    <code>git switch feature/steering</code>으로 돌아가면 그대로 다시 나타난다.
+    <strong>"파일이 없어졌다"고 놀라 다시 만들면 나중에 같은 파일이 두 벌이 된다.</strong>
+    없어졌다 싶으면 먼저 <code>git status</code>로 <strong>내가 어느 브랜치에 서 있는지</strong>부터 본다.
+  </div>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 출력에서 처음 나오는 것</p>
+    <dl>
+      <dt>git switch -c 이름</dt>
+      <dd><strong>새 브랜치를 만들면서 동시에 그리로 갈아탄다</strong>(<code>-c</code>는 create).
+          <code>-c</code> 없이 쓰면 <strong>이미 있는 브랜치로 갈아타기만</strong> 한다.</dd>
+
+      <dt>--oneline</dt>
+      <dd>커밋 하나를 <strong>한 줄로</strong> 줄여 보여 준다. 해시 일곱 자와 메시지만 남는다.
+          안 붙이면 커밋마다 여러 줄이 나와 화면이 금방 넘어간다.</dd>
+
+      <dt>--graph · --all</dt>
+      <dd><code>--graph</code>는 <strong>갈라지고 합쳐진 모양을 왼쪽에 선으로</strong> 그려 준다.
+          <code>--all</code>은 <strong>지금 브랜치만이 아니라 전부</strong> 보여 준다. 둘은 거의 항상 같이 쓴다.</dd>
+
+      <dt>HEAD</dt>
+      <dd><strong>"지금 내가 서 있는 자리"</strong>를 가리키는 이름이다.
+          브랜치를 갈아타면 <code>HEAD</code>도 따라 움직인다.
+          뒤에서 <code>git show HEAD</code>로 <strong>가장 최근 커밋</strong>을 볼 때 쓴다.</dd>
+    </dl>
+  </div>
+
+  <p><strong>브랜치 이름은 「무엇을 하는 갈래인가」로 짓는다.</strong> 이름만 보고 남이 알아야 한다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>이렇게 짓지 않는다</th><th>이렇게 짓는다</th><th>왜</th></tr>
+    <tr><td><code>test</code>, <code>new</code>, <code>내브랜치</code></td><td><code>feature/steering</code></td><td>무엇을 하는 갈래인지 <strong>이름만 보고</strong> 알 수 있다</td></tr>
+    <tr><td><code>fix2</code>, <code>fix3</code></td><td><code>fix/lidar-nan</code></td><td>번호는 <strong><code>_최종_진짜최종</code>과 같은 실수</strong>다</td></tr>
+    <tr><td>한글·띄어쓰기가 든 이름</td><td>영문 소문자와 <code>-</code> <code>/</code></td><td>터미널과 웹 주소에서 <strong>깨지거나 따옴표가 필요해진다</strong></td></tr>
+  </table>
+  </div>
+
+  <!-- ══════════ ⑥ push / pull ══════════ -->
+  <h2 id="cmd4">⑥ 올리고, 받는다 — <code>push</code>와 <code>pull</code> <span class="badge b-green">🟢 맡긴다</span></h2>
+
+  <h4>무엇이 궁금한가</h4>
+  <p>
+    <strong>지금까지 굳힌 것은 전부 내 노트북 안에만 있다.</strong>
+    팀원에게 보이지 않고, 노트북이 고장 나면 같이 사라진다.
+    <strong>같이 보는 사본을 서버에 하나 두고, 거기로 올리고 거기서 받아 온다.</strong>
+  </p>
+
+  <h4>그때 이걸 친다</h4>
+  <pre><code>$ git push -u origin main</code></pre>
+
+  <h4>출력을 이렇게 읽는다</h4>
+  <pre><code>$ git remote add origin ~/origin.git
+$ git remote -v
+origin	/home/ubuntu/origin.git (fetch)
+origin	/home/ubuntu/origin.git (push)
+$ git push -u origin main
+To /home/ubuntu/origin.git
+ * [new branch]      main -&gt; main
+branch 'main' set up to track 'origin/main'.</code></pre>
+  <p>
+    <code>* [new branch]  main -&gt; main</code>이 <strong>"내 <code>main</code>을 서버의 <code>main</code>으로 올렸다"</strong>는 뜻이다.
+    마지막 줄은 <strong>"앞으로 이 브랜치는 서버의 그것과 짝지어 둔다"</strong>는 뜻이고,
+    그 덕에 다음부터는 <code>git push</code>만 쳐도 된다.
+  </p>
+  <p class="readme-first">
+    위 출력에서 주소가 <code>/home/ubuntu/origin.git</code>인 것은
+    검증용으로 <strong>같은 컴퓨터 안의 폴더</strong>를 서버 대신 세워 뒀기 때문이다.
+    GitHub을 쓰면 그 자리에 <code>https://github.com/...</code> 주소가 들어갈 뿐 <strong>나머지 줄은 똑같다.</strong>
+  </p>
+
+  <p>다른 컴퓨터에서는 <strong>받아서(<code>clone</code>) 이어서 하고, 다시 올린다.</strong></p>
+  <pre><code>$ git clone ~/origin.git cone_track_home
+Cloning into 'cone_track_home'...
+done.
+$ git push
+To /home/ubuntu/origin.git
+   feab5b7..841ec05  main -&gt; main</code></pre>
+  <p>그리고 원래 쓰던 컴퓨터로 돌아와서 받아 온다. <strong>여기가 <code>pull</code>이다.</strong></p>
+  <pre><code>$ git pull
+From /home/ubuntu/origin
+   feab5b7..841ec05  main       -&gt; origin/main
+Updating feab5b7..841ec05
+Fast-forward
+ src/util.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+ create mode 100644 src/util.cpp</code></pre>
+  <div class="interp">
+    <strong>해석:</strong> 아래 세 줄(<code>src/util.cpp | 1 +</code> …)이 <strong>내 폴더에 방금 들어온 것</strong>이다.
+    <code>pull</code>은 <strong>받아 오는 것으로 끝나지 않고 내 파일까지 바꾼다.</strong>
+    그래서 <strong>일을 시작하기 전에 <code>git pull</code>을 먼저 하는 습관</strong>이 중요하다.
+    한참 고친 뒤에 받으면 같은 줄을 둘이 고쳐 놓은 상태(충돌)를 만나기 쉽다.
+  </div>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 출력에서 처음 나오는 것</p>
+    <dl>
+      <dt>origin</dt>
+      <dd><strong>원격 저장소에 붙인 별명</strong>이다. 규칙이 아니라 관례라서 다른 이름도 되지만
+          거의 모두가 <code>origin</code>을 쓴다. 여기서는 <strong>서버 주소를 매번 안 쓰려고</strong> 붙였다.</dd>
+
+      <dt>-u (첫 push에만)</dt>
+      <dd><strong>지금 브랜치를 서버의 같은 이름과 짝지어 둔다.</strong>
+          한 번 해 두면 다음부터 <code>git push</code>·<code>git pull</code>만 쳐도 어디로 갈지 안다.</dd>
+
+      <dt>git clone 주소</dt>
+      <dd>서버에 있는 저장소를 <strong>통째로 내려받아 폴더로 만든다.</strong>
+          <code>git init</code>과 달리 <strong>기록까지 전부</strong> 따라온다. <code>origin</code>도 자동으로 붙는다.</dd>
+
+      <dt>Fast-forward</dt>
+      <dd><strong>"갈라진 적이 없어서 그냥 앞으로 감기만 하면 된다"</strong>는 뜻이다.
+          내가 그 사이 아무것도 안 고쳤을 때 나온다. <strong>가장 편한 경우</strong>다.</dd>
+    </dl>
+  </div>
+
+  <h4>에이전트에게 시키면 🤖</h4>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    지금 브랜치를 원격 저장소에 올려 줘. 올리기 전에 <strong>어떤 커밋들이 올라가는지 <code>git log --oneline</code>으로 먼저 보여 주고</strong> 내 확인을 받아 줘. <code>--force</code>는 절대 쓰지 마.
+  </div>
+  <div class="box stop">
+    <div class="boxtitle">⛔ <code>git push --force</code>는 시키지 않는다</div>
+    <p>
+      <code>--force</code>는 <strong>서버에 있던 기록을 내 것으로 덮어 버린다.</strong>
+      팀원이 그 사이에 올려 둔 커밋이 있으면 <strong>그대로 사라진다.</strong>
+      되돌릴 수는 있지만 되돌리는 법을 아는 사람이 그 자리에 있어야 한다.
+    </p>
+    <p>
+      에이전트는 <strong>push가 거부되면 <code>--force</code>를 붙여 다시 시도하는 흐름을 자연스럽게 제안한다.</strong>
+      거부된 이유(대개 <code>pull</code>을 안 한 것)를 먼저 확인하는 것이 사람이 할 일이다.
+      <strong>되돌릴 수 없는 명령은 승인 없이 실행되지 않게 에이전트를 설정해 둔다.</strong>
+    </p>
+  </div>
+
+  <!-- ══════════ ⑦ .gitignore ══════════ -->
+  <h2 id="ignore">⑦ 빌드 부산물은 올리지 않는다 — <code>.gitignore</code> <span class="badge b-green">🟢 맡긴다</span></h2>
+  <p>
+    앞의 <code>git status</code> 출력에 <code>build/</code>가 끼어 있었다.
+    <strong>빌드하면 자동으로 다시 만들어지는 폴더</strong>다. 이런 것을 저장소에 올리면 세 가지가 나빠진다.
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>올리면</th><th>무슨 일이 나나</th></tr>
+    <tr><td>용량</td><td>소스는 몇 KB인데 빌드 결과는 <strong>수십~수백 MB</strong>다. 받는 사람마다 그걸 다 받는다</td></tr>
+    <tr><td>충돌</td><td>빌드할 때마다 내용이 바뀌므로 <strong>둘이 빌드만 해도 충돌이 난다</strong></td></tr>
+    <tr><td>가려짐</td><td><code>git status</code>가 부산물로 가득 차서 <strong>진짜 내가 고친 파일이 안 보인다</strong></td></tr>
+  </table>
+  </div>
+
+  <h4>그때 이걸 친다 — 파일 하나를 만든다</h4>
+  <pre><code>$ cat .gitignore
+build/
+install/
+log/
+$ git status --short
+?? .gitignore
+?? src/</code></pre>
+  <div class="interp">
+    <strong>해석:</strong> <strong>바로 위 절에서 <code>build/</code>가 있던 자리가 비었다.</strong>
+    파일 세 줄을 만들었을 뿐인데 <code>git status</code>에서 <code>build/</code>가 사라졌다.
+    <strong>이것이 <code>.gitignore</code>가 하는 일의 전부다</strong> — 지우는 것이 아니라 <strong>git이 못 본 척하게</strong> 한다.
+    폴더는 내 컴퓨터에 그대로 있고, 빌드도 그대로 된다.
+  </div>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 <code>.gitignore</code>에 쓰는 패턴</p>
+    <dl>
+      <dt>build/</dt>
+      <dd>끝에 <strong>빗금이 있으면 폴더</strong>다. 그 폴더 안의 것을 통째로 무시한다.</dd>
+
+      <dt>*.o</dt>
+      <dd><strong>별표는 아무 글자나</strong>를 뜻한다. 확장자가 <code>.o</code>인 파일을 전부 무시한다.</dd>
+
+      <dt>!important.log</dt>
+      <dd><strong>느낌표는 예외</strong>다. 앞에서 무시하기로 한 것 중 <strong>이것만은 올린다.</strong></dd>
+
+      <dt>맨 앞에 <code>#</code></dt>
+      <dd>그 줄은 <strong>설명(주석)</strong>이고 규칙이 아니다. 왜 무시하는지 적어 두면 나중에 도움이 된다.</dd>
+    </dl>
+  </div>
+
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 이미 올라간 뒤에 <code>.gitignore</code>에 적으면 안 사라진다</div>
+    <p>
+      <code>.gitignore</code>는 <strong>아직 git이 모르는 파일에만 효력이 있다.</strong>
+      한 번 커밋에 들어간 파일은 그 뒤에 규칙을 적어도 계속 따라다닌다.
+      <strong>그래서 저장소를 만들자마자 <code>.gitignore</code>부터 만든다.</strong> 순서가 중요하다.
+    </p>
+    <p>이미 올려 버렸다면 이렇게 시킨다.</p>
+    <div class="prompt">
+      <button onclick="copyPrompt(this)">복사</button>
+      실수로 커밋된 <code>build/</code> 폴더를 저장소에서만 빼 줘. <strong>내 컴퓨터의 파일은 지우지 말고</strong>, <code>.gitignore</code>에도 추가해 줘. 실행할 명령을 먼저 보여 줘.
+    </div>
+    <p>
+      <strong>"내 컴퓨터의 파일은 지우지 말고"</strong>를 빼면 진짜로 지워질 수 있다.
+      되돌릴 수 없는 일 앞에는 언제나 조건을 붙인다.
+    </p>
+  </div>
+
+  <!-- ══════════ ⑧ 커밋 크기 ══════════ -->
+  <h2 id="size">⑧ 커밋 하나의 크기는 명령어가 아니라 사람이 정한다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+  <p>
+    여기부터가 오늘의 본론이다. <strong>이 절과 다음 절만 남아도 이 회차는 성공이다.</strong>
+    아래는 <strong>실제로 우리가 돌려 보다가 그대로 나온 사고</strong>다.
+  </p>
+
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 함정 — <code>조향 계산 함수 추가</code> 커밋에 관계없는 파일이 딸려 들어갔다</div>
+    <p>
+      브랜치를 하나 파고, 조향 계산을 담은 파일을 새로 만들었다.
+      그런데 그 사이에 <code>main.cpp</code>의 출력 문구도 한 줄 고쳐 놓은 상태였다.
+      <strong>커밋 메시지는 조향 이야기만 하고 있다.</strong> 담긴 것을 보자.
+    </p>
+    <pre><code>$ git show --stat --oneline HEAD
+7de776d 조향 계산 함수 추가
+ src/main.cpp  | 2 +-
+ src/steer.cpp | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)</code></pre>
+    <p>
+      <strong><code>src/main.cpp</code>가 왜 여기 있나.</strong>
+      조향과 아무 상관이 없다. <code>git add -A</code>로 <strong>고친 것을 전부 한꺼번에 담았기 때문</strong>이다.
+    </p>
+    <p><strong>이것이 왜 감점인가.</strong></p>
+    <ul>
+      <li>몇 달 뒤 조향이 이상해져서 이 커밋을 통째로 되돌리면 <strong>관계없는 출력 문구까지 같이 되돌아간다.</strong></li>
+      <li>리뷰하는 사람이 <strong>"이 <code>main.cpp</code> 변경은 왜 들어왔지?"</strong>에서 멈춘다. 리뷰가 느려진다.</li>
+      <li>기록을 훑을 때 <strong>커밋 메시지를 믿을 수 없게 된다.</strong> 이것이 가장 크다.</li>
+    </ul>
+    <p><strong>기말 프로젝트 평가에서 커밋 기록을 볼 때 이 모양이 감점 자리다.</strong></p>
+  </div>
+
+  <p>
+    <strong>고치는 방법은 <code>add</code>를 골라서 하는 것 하나뿐이다.</strong>
+    같은 상황을 다시 만들어서 이번에는 하나씩 담아 봤다.
+  </p>
+  <pre><code>$ git status --short
+ M src/main.cpp
+?? src/steer.cpp
+$ git add src/steer.cpp
+$ git status --short
+ M src/main.cpp
+A  src/steer.cpp</code></pre>
+  <p>
+    <strong><code>M</code>은 왼쪽 칸이 비어 있고 <code>A</code>는 왼쪽 칸에 있다.</strong>
+    바구니에 담긴 것은 <code>steer.cpp</code> 하나뿐이라는 뜻이다. 이 상태로 커밋한다.
+  </p>
+  <pre><code>$ git commit -m "조향 계산 함수 추가"
+[main 06d0c59] 조향 계산 함수 추가
+ 1 file changed, 1 insertion(+)
+ create mode 100644 src/steer.cpp
+$ git show --stat --oneline HEAD
+06d0c59 조향 계산 함수 추가
+ src/steer.cpp | 1 +
+ 1 file changed, 1 insertion(+)</code></pre>
+  <p>남은 변경은 <strong>따로 이름을 붙여 다음 커밋으로 보낸다.</strong></p>
+  <pre><code>$ git add src/main.cpp &amp;&amp; git commit -m "출력 문구를 v2 로 바꿈"
+[main 7c24e74] 출력 문구를 v2 로 바꿈
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+$ git log --oneline
+7c24e74 출력 문구를 v2 로 바꿈
+06d0c59 조향 계산 함수 추가
+ae38c1a 콘 트랙 주행 노드 뼈대 추가</code></pre>
+  <div class="interp">
+    <strong>해석:</strong> <code>2 files changed</code>였던 것이 <strong><code>1 file changed</code> 두 개로 갈라졌다.</strong>
+    작업량은 똑같고 명령을 두 번 나눠 쳤을 뿐인데, <strong>기록의 값어치가 달라졌다.</strong>
+    이제 조향만 되돌릴 수도 있고, 문구 변경만 되돌릴 수도 있다.
+  </div>
+
+  <p class="readme-first">무엇을 먼저 볼지: <strong>가운데 열</strong>이다. 판단이 애매할 때 이 질문 하나로 정한다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>이럴 때</th><th>스스로에게 묻는 것</th><th>답</th></tr>
+    <tr><td>고친 게 많다</td><td><strong>커밋 메시지를 한 문장으로 쓸 수 있나?</strong></td><td>"~하고 ~함"이 되면 <strong>둘로 나눈다</strong></td></tr>
+    <tr><td>파일 하나만 고쳤다</td><td>그 안에서 <strong>서로 다른 목적</strong>이 섞였나?</td><td>섞였으면 나눈다. 파일 수와 커밋 수는 별개다</td></tr>
+    <tr><td>아주 조금 고쳤다</td><td>이것만으로 <strong>말이 되나?</strong></td><td>된다면 그대로 커밋한다. <strong>작은 커밋은 문제가 아니다</strong></td></tr>
+    <tr><td>중간이라 애매하다</td><td><strong>이 커밋만 되돌려도 프로그램이 도나?</strong></td><td>돌면 좋은 크기다. 안 돌면 너무 잘게 쪼갠 것이다</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 첫째 줄이 실전에서 가장 잘 듣는다.
+    <strong>"조향 계산을 추가하고 출력 문구도 바꿈"</strong>처럼 <strong>「~하고」가 들어가면 그건 커밋 두 개다.</strong>
+    메시지를 먼저 써 보고 커밋을 나누는 순서가 더 쉽다.
+  </div>
+
+  <h4>에이전트에게 시키면 🤖</h4>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    지금 변경사항을 논리적으로 두 개 커밋으로 나눠 줘. 메시지는 무엇을 왜 바꿨는지 한국어로 써 줘. <strong>커밋하기 전에 나눌 안을 먼저 보여 줘.</strong>
+  </div>
+  <p>
+    <strong>마지막 문장이 이 회차에서 가장 중요한 한 줄이다.</strong>
+    나누는 <em>작업</em>은 에이전트가 잘한다. <strong>나눈 <em>기준</em>이 맞는지는 사람만 안다.</strong>
+    안을 먼저 받아 보고, <strong>"이 두 개는 사실 한 덩어리다"</strong>라고 고쳐 말하는 것까지가 내 일이다.
+  </p>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    방금 만든 커밋들을 <code>git show --stat</code>으로 하나씩 보여 줘. 각 커밋에 <strong>메시지와 상관없는 파일이 섞이지 않았는지</strong> 같이 확인해 줘.
+  </div>
+
+  <!-- ══════════ ⑨ PR ══════════ -->
+  <h2 id="pr">⑨ 코드가 말해 주지 않는 것을 적는 자리 — PR 설명 5줄 <span class="badge b-red">🔴 사람이 한다</span></h2>
+  <p>
+    <strong>PR(Pull Request)은 「내 브랜치를 <code>main</code>에 합쳐 달라」고 요청하는 자리</strong>다.
+    합치는 것 자체는 명령 한 줄로도 된다. <strong>그런데도 굳이 웹에서 이 절차를 밟는 이유는 설명을 쓰기 위해서다.</strong>
+  </p>
+  <p>
+    코드를 보면 <strong>무엇이</strong> 바뀌었는지는 안다. 기계가 알려 준다.
+    <strong>왜 그렇게 했는지, 무엇을 확인했는지, 무엇을 일부러 안 했는지는 어디에도 안 남는다.</strong>
+    <strong>기말 프로젝트 평가 C항목(5점)이 이 자리를 본다.</strong>
+  </p>
+
+  <figure>
+    <img src="assets/img/05_pr_write.png"
+         alt="GitHub의 Open a pull request 화면. 위에 base 와 compare 브랜치가 있고, 가운데 제목 칸과 설명 칸에 여러 줄이 적혀 있으며, 아래에 이 PR에 들어 있는 커밋 두 개가 나열돼 있다">
+    <figcaption>가운데 <strong>큰 글상자</strong>가 오늘 배울 자리다.
+      위쪽 <code>base</code>와 <code>compare</code>는 <strong>어느 브랜치를 어디에 합칠지</strong>이고,
+      아래쪽에 <strong>이 PR에 담긴 커밋이 그대로 나열</strong>된다 —
+      앞 절에서 커밋을 잘 나눠 뒀으면 <strong>여기가 목차처럼 읽힌다.</strong></figcaption>
+  </figure>
+
+  <p class="readme-first">무엇을 먼저 볼지: <strong>오른쪽 열</strong>이다. 그 줄이 없으면 실제로 그 질문이 돌아온다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>줄</th><th>무엇을 쓰나</th><th>안 쓰면 돌아오는 질문</th></tr>
+    <tr><td><strong>1. 무엇을</strong></td><td>이 PR이 한 일을 <strong>한 문장</strong>으로</td><td>"이거 뭐 하는 거야?"</td></tr>
+    <tr><td><strong>2. 왜</strong></td><td>그 일이 <strong>왜 필요했는지.</strong> 어떤 문제가 있었나</td><td>"이거 꼭 지금 해야 해?"</td></tr>
+    <tr><td><strong>3. 어떻게 확인했나</strong></td><td><strong>내가 직접 돌려 보고 눈으로 본 것.</strong> "잘 됨"은 답이 아니다</td><td>"이거 돌려는 봤어?"</td></tr>
+    <tr><td><strong>4. 안 한 것</strong></td><td><strong>일부러 남겨 둔 것.</strong> 다음에 할 것</td><td>"이건 왜 빠졌어?"</td></tr>
+    <tr><td><strong>5. 봐 줬으면 하는 곳</strong></td><td><strong>내가 자신 없는 자리</strong>를 콕 집어서</td><td>(질문이 안 오고 <strong>그냥 통과된다</strong>)</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> <strong>3번과 5번이 이 표의 값어치다.</strong>
+    3번은 <em>"확인은 절대 넘기지 않는다"</em>는 이 강의의 규칙을 글로 남기는 자리이고,
+    5번은 <strong>리뷰를 실제로 받아 내는 유일한 방법</strong>이다.
+    "봐 주세요"라고만 쓴 PR은 <strong>대충 읽히고 통과된다.</strong>
+    <strong>어디를 봐 달라고 적어야 그 자리를 본다.</strong>
+  </div>
+
+  <p>
+    <strong>아래는 예시다.</strong> 프로젝트에서 쓸 문장의 모양을 보이려고 <strong>지어낸 상황</strong>이고,
+    숫자와 값은 <strong>그 상황에서 내가 골랐다고 가정한 것</strong>이다.
+  </p>
+  <div class="codelabel good">PR 설명 — 이렇게 쓴다</div>
+  <pre class="after"><code>1. 무엇을: 왼쪽·오른쪽 콘을 짝지어 그 가운데를 목표점으로 잡는 부분을 넣었습니다.
+
+2. 왜: 지금은 가장 가까운 콘 하나만 보고 조향해서, 콘 사이로 들어가지 않고
+   한쪽 콘에 붙어서 지나갑니다.
+
+3. 어떻게 확인했나: 기록 파일 세 개로 돌려 봤고, 목표점이 두 콘의 가운데쯤에
+   찍히는 것을 화면에서 눈으로 확인했습니다. 콘이 양쪽에 다 보이는 구간에서만
+   확인했습니다.
+
+4. 안 한 것: 한쪽에만 콘이 보일 때의 처리는 넣지 않았습니다. 다음 PR에서 합니다.
+
+5. 봐 줬으면 하는 곳: 짝을 지을 때 "두 콘 사이 거리" 기준값을 제가 임의로
+   정했습니다. 이 값이 트랙 폭에 비해 적절한지 봐 주세요.</code></pre>
+  <p>
+    <strong>4번과 5번이 이 예시의 핵심이다.</strong>
+    4번은 <strong>덜 한 것을 숨기지 않았다.</strong> 숨기면 리뷰어가 버그로 오해하고 시간을 쓴다.
+    5번은 <strong>"제가 임의로 정했습니다"라고 밝혔다.</strong>
+    <strong>내가 고른 값을 「내가 둔 가정」이라고 밝히는 것</strong>이 이 강의가 요구하는 방식이다.
+  </p>
+
+  <figure>
+    <img src="assets/img/05_pr_merged.png"
+         alt="병합이 끝난 GitHub PR 화면. 제목 아래 보라색 Merged 배지가 있고, 커밋 2개와 리뷰 코멘트, 맨 아래에 Pull request successfully merged and closed 라는 문구와 Delete branch 버튼이 보인다">
+    <figcaption>합쳐진 뒤의 모습이다. 왼쪽 위 <strong>보라색 <code>Merged</code> 배지</strong>가 성공 표시다.
+      가운데 <strong>커밋 두 개가 그대로 남아 있다</strong>는 것을 본다 —
+      나눠 담은 커밋은 합친 뒤에도 기록으로 남는다.
+      맨 아래 <code>Delete branch</code>는 <strong>다 쓴 갈래를 치우는 버튼</strong>이다.</figcaption>
+  </figure>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    이 브랜치의 커밋들을 보고 PR 설명 초안을 5줄로 써 줘. 줄은 「무엇을 / 왜 / 어떻게 확인했나 / 안 한 것 / 봐 줬으면 하는 곳」이야. <strong>「어떻게 확인했나」는 비워 두고 내가 채울게.</strong>
+  </div>
+  <p>
+    <strong>마지막 문장을 반드시 붙인다.</strong>
+    <strong>「어떻게 확인했나」를 에이전트가 채우면 그건 확인이 아니라 소설이다.</strong>
+    에이전트는 내가 화면에서 무엇을 봤는지 모른다.
+    나머지 네 줄은 커밋 기록만 봐도 초안이 나오지만, 3번만은 사람이 채운다.
+  </p>
+
+  <!-- ══════════ 🧪 실습 ══════════ -->
+  <div class="lab-block" id="lab">
+    <div class="boxtitle">🧪 실습 — 저장소 하나를 만들어 PR 병합까지 한 바퀴 돈다 (35분)</div>
+    <p>
+      <strong>알게 되는 것:</strong> 브랜치 → 커밋 → PR → 병합이 <strong>한 바퀴 돌아가는 감각.</strong>
+      명령어를 외우는 것이 목적이 아니라 <strong>어느 자리에서 무엇을 판단해야 하는지</strong>를 몸에 넣는 것이다.
+    </p>
+    <p><strong>준비물:</strong> WSL 터미널 하나, 웹 브라우저, <strong>GitHub 계정</strong>. 로봇도 ROS도 필요 없다.</p>
+    <p><strong>절차</strong></p>
+    <ol>
+      <li>
+        <strong>GitHub에서 빈 저장소를 하나 만든다.</strong> (5분)<br>
+        이름은 <code>git-practice</code>. <strong>Public으로 두고 README 만들기를 켠다.</strong>
+        만들고 나면 화면에 <code>https://github.com/...</code> 주소가 보인다. 그 주소를 복사한다.
+      </li>
+      <li>
+        <strong>내 컴퓨터로 받아 온다.</strong> (5분)<br>
+        <code>git clone 복사한주소</code>를 치고, 생긴 폴더로 <code>cd</code>한 뒤 <code>git status</code>를 친다.
+        <strong><code>On branch main</code>과 <code>nothing to commit</code>이 보이면 제대로 받아진 것이다.</strong>
+      </li>
+      <li>
+        <strong>브랜치를 하나 판다.</strong> (3분)<br>
+        <code>git switch -c feature/intro</code>를 치고 <code>Switched to a new branch</code>를 확인한다.
+        <strong>여기부터 하는 일은 <code>main</code>을 건드리지 않는다.</strong>
+      </li>
+      <li>
+        <strong>두 가지를 고치고, 커밋을 두 개로 나눈다.</strong> (10분)<br>
+        <code>README.md</code>에 자기소개 한 줄을 넣고, <strong>따로</strong> <code>.gitignore</code> 파일을 새로 만들어
+        <code>build/</code>를 적는다. 두 가지는 목적이 다르므로 <strong>커밋 두 개</strong>다.
+        <code>git add</code>를 <strong>한 파일씩</strong> 하고 각각 커밋한다.
+        끝나면 <code>git show --stat --oneline HEAD</code>로
+        <strong>마지막 커밋에 파일이 하나만 들어갔는지 확인</strong>한다.
+      </li>
+      <li>
+        <strong>올리고 PR을 연다.</strong> (7분)<br>
+        <code>git push -u origin feature/intro</code>를 친다.
+        <strong>출력 맨 아래에 PR을 열 수 있는 주소가 같이 나온다.</strong> 그 주소로 들어가
+        <strong>설명 5줄</strong>(무엇을 / 왜 / 어떻게 확인했나 / 안 한 것 / 봐 줬으면 하는 곳)을 써서 PR을 만든다.
+        <strong>3번은 직접 확인한 것을 쓴다.</strong>
+      </li>
+      <li>
+        <strong>병합하고 내 폴더를 최신으로 맞춘다.</strong> (5분)<br>
+        웹에서 <code>Merge pull request</code>를 누른다. 그다음 터미널로 돌아와
+        <code>git switch main</code>과 <code>git pull</code>을 친다.
+        마지막으로 <code>git log --oneline</code>을 쳐서 <strong>내가 만든 커밋 두 개가 <code>main</code>에 있는지</strong> 본다.
+      </li>
+    </ol>
+    <p>
+      <strong>이렇게 되면 성공이다.</strong><br>
+      ① 웹 PR 화면에 <strong>보라색 <code>Merged</code> 배지</strong>가 뜬다 (위 그림과 같은 모양).<br>
+      ② 터미널의 <code>git log --oneline</code>에 <strong>내 커밋 두 개가 각각 한 줄씩</strong> 보인다.<br>
+      ③ <strong>커밋 두 개의 메시지가 서로 다른 일을 말하고 있다.</strong> ③이 안 되면 4단계를 다시 한다.
+    </p>
+    <div class="box trap" style="margin-top:1rem">
+      <div class="boxtitle">5단계에서 <code>push</code>가 거부되면</div>
+      <p>
+        <code>Authentication failed</code>가 나오면 <strong>비밀번호 문제가 아니다.</strong>
+        GitHub은 <strong>계정 비밀번호로는 push를 받지 않는다.</strong>
+        토큰을 만들어 쓰거나 <code>gh</code> 도구로 로그인해야 한다.
+        <strong>이 대목은 에이전트에게 통째로 맡겨도 되는 자리</strong>다 — 아래 문장을 그대로 쓴다.
+      </p>
+      <div class="prompt">
+        <button onclick="copyPrompt(this)">복사</button>
+        GitHub에 push하려는데 인증에서 막혔어. 지금 내 환경에서 가장 간단한 방법으로 인증을 설정해 줘. <strong>비밀번호나 토큰을 화면에 그대로 찍지는 마.</strong> 설정이 끝나면 내가 확인할 명령 한 줄을 알려 줘.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 프롬프트 모음 ══════════ -->
+  <h2 id="prompts">🤖 오늘 나온 프롬프트 모음</h2>
+  <p class="readme-first">무엇을 먼저 볼지: 오른쪽 문장에서 <strong>「먼저 보여 줘」와 「내가 채울게」</strong>가 어디 붙었는지 본다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>이럴 때</th><th>이렇게 말한다</th></tr>
+    <tr><td>커밋 전에</td><td>"바뀐 파일들을 <strong>주제별로 묶어서</strong> 정리해 줘. 아직 커밋은 하지 마."</td></tr>
+    <tr><td>변경이 여러 가지일 때</td><td>"논리적으로 두 개 커밋으로 나눠 줘. <strong>나눌 안을 먼저 보여 줘.</strong>"</td></tr>
+    <tr><td>커밋한 뒤</td><td>"각 커밋을 <code>git show --stat</code>으로 보여 주고, <strong>메시지와 상관없는 파일이 섞였는지</strong> 확인해 줘."</td></tr>
+    <tr><td>올리기 전에</td><td>"<strong>어떤 커밋이 올라가는지 먼저 보여 주고</strong> 확인받아 줘. <code>--force</code>는 쓰지 마."</td></tr>
+    <tr><td>PR을 쓸 때</td><td>"설명 초안을 5줄로 써 줘. <strong>「어떻게 확인했나」는 비워 둬. 내가 채울게.</strong>"</td></tr>
+    <tr><td>부산물이 올라갔을 때</td><td>"저장소에서만 빼 줘. <strong>내 컴퓨터 파일은 지우지 말고.</strong>"</td></tr>
+    <tr><td>막혔을 때</td><td>"지금 <code>git status</code>와 마지막 오류 메시지를 그대로 줄 테니 <strong>무슨 상태인지 먼저 설명해 줘.</strong>"</td></tr>
+  </table>
+  </div>
+
+  <!-- ══════════ 점검 ══════════ -->
+  <h2 id="check">✅ 오늘의 점검</h2>
+  <ul class="check">
+    <li><input type="checkbox" id="g1"><label for="g1"><code>git add</code>가 <strong>저장하는 명령이 아니라 고르는 명령</strong>이라는 것을 말할 수 있나?</label></li>
+    <li><input type="checkbox" id="g2"><label for="g2"><code>git status --short</code>에서 <code>??</code>·<code>A</code>·<code>M</code>을 구별할 수 있나?</label></li>
+    <li><input type="checkbox" id="g3"><label for="g3">커밋한 뒤 <code>n files changed</code> 줄을 <strong>읽고 넘어갔나?</strong></label></li>
+    <li><input type="checkbox" id="g4"><label for="g4">내 커밋 메시지에 <strong>「~하고 ~함」</strong>이 들어가 있지 않나?</label></li>
+    <li><input type="checkbox" id="g5"><label for="g5"><code>build/</code>·<code>install/</code>·<code>log/</code>가 저장소에 올라가지 않았나?</label></li>
+    <li><input type="checkbox" id="g6"><label for="g6">브랜치 이름만 보고 <strong>무엇을 하는 갈래인지</strong> 알 수 있나?</label></li>
+    <li><input type="checkbox" id="g7"><label for="g7">PR 설명에 <strong>「어떻게 확인했나」와 「봐 줬으면 하는 곳」</strong>이 들어 있나?</label></li>
+    <li><input type="checkbox" id="g8"><label for="g8">파일이 없어졌을 때 <strong>브랜치부터 확인</strong>하는 습관이 들었나?</label></li>
+  </ul>
+
+  <!-- ══════════ 조금 더 ══════════ -->
+  <h2 id="more">조금 더 알아두면 <span class="badge b-lv">시험 범위 아님</span></h2>
+  <p>
+    아래는 <strong>오늘 일부러 덜어낸 것들</strong>이다. 학기 중에 한 번쯤 필요해지는데,
+    그때 <strong>여기 적힌 만큼만 알면 나머지는 에이전트에게 물어보면 된다.</strong>
+    <strong>시험에는 나오지 않는다.</strong>
+  </p>
+
+  <details>
+    <summary><strong>되돌리기 — 세 가지가 있고 쓰는 자리가 다르다</strong></summary>
+    <p>
+      되돌리기 명령이 여럿인 이유는 <strong>「어디까지 되돌릴 것인가」가 다르기 때문</strong>이다.
+      이름 대신 <strong>「무엇을 되돌리고 싶은가」로 고른다.</strong>
+    </p>
+    <div class="tablewrap">
+    <table>
+      <tr><th>무엇을 되돌리고 싶나</th><th>이걸 쓴다</th><th>위험한가</th></tr>
+      <tr><td>아직 커밋 안 한 <strong>파일 수정</strong>을 버리고 싶다</td><td><code>git restore 파일</code></td><td><strong>고친 내용이 사라진다.</strong> 되찾을 수 없다</td></tr>
+      <tr><td>바구니에 담은 것을 <strong>도로 꺼내고</strong> 싶다</td><td><code>git restore --staged 파일</code></td><td>안전하다. 파일 내용은 그대로다</td></tr>
+      <tr><td><strong>이미 올린 커밋</strong>을 취소하고 싶다</td><td><code>git revert 해시</code></td><td>안전하다. <strong>취소했다는 새 커밋</strong>이 생긴다</td></tr>
+    </table>
+    </div>
+    <p>
+      <strong>이미 올린 것은 <code>revert</code>로 되돌린다.</strong> 기록을 지우는 방식(<code>reset</code>)은
+      혼자 쓰는 브랜치가 아니면 쓰지 않는다. 남의 기록까지 흔들리기 때문이다.
+    </p>
+    <div class="prompt">
+      <button onclick="copyPrompt(this)">복사</button>
+      방금 한 커밋을 되돌리고 싶어. <strong>이미 push했는지 아닌지 먼저 확인하고</strong>, 그에 맞는 방법을 하나만 골라서 명령을 보여 줘. 실행은 내가 확인한 뒤에 해 줘.
+    </div>
+  </details>
+
+  <details>
+    <summary><strong>충돌(conflict) — 무섭게 생겼지만 하는 일은 하나다</strong></summary>
+    <p>
+      같은 파일의 <strong>같은 줄</strong>을 둘이 다르게 고쳤을 때 git은 <strong>덮지 않고 멈춘다.</strong>
+      그리고 파일 안에 이런 표시를 넣어 둔다.
+    </p>
+    <pre><code>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+(내가 쓴 줄)
+=======
+(상대가 쓴 줄)
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature/steering</code></pre>
+    <p>
+      <strong>할 일은 하나다</strong> — 셋 중 무엇을 남길지 정하고(내 것 / 상대 것 / 둘을 합친 새 줄),
+      <strong>표시 줄 세 개를 지운 다음</strong> <code>git add</code>하고 커밋한다.
+      <strong>어렵지 않지만 처음에는 손이 떨린다.</strong> 그때는 아래 문장을 그대로 쓴다.
+    </p>
+    <div class="prompt">
+      <button onclick="copyPrompt(this)">복사</button>
+      충돌이 났어. 어느 파일의 어느 줄이 왜 충돌했는지 <strong>먼저 설명해 줘.</strong> 양쪽이 각각 무엇을 하려던 건지 알려 주고, 어느 쪽을 남길지는 <strong>내가 고를게.</strong>
+    </div>
+    <p>
+      <strong>"내가 고를게"를 빼지 마라.</strong> 어느 쪽이 맞는지는
+      <strong>그 코드를 왜 고쳤는지 아는 사람만 안다.</strong> 에이전트가 고르면 조용히 한쪽 일이 날아간다.
+    </p>
+  </details>
+
+  <details>
+    <summary><strong>파일을 옮기고 지울 때 — <code>git mv</code>와 <code>git rm</code></strong></summary>
+    <div class="tablewrap">
+    <table>
+      <tr><th>이렇게 하면</th><th>git이 보는 것</th></tr>
+      <tr><td>탐색기에서 이름만 바꿨다</td><td><strong>"하나가 사라지고 하나가 생겼다"</strong>로 본다. 기록이 끊긴다</td></tr>
+      <tr><td><code>git mv 옛이름 새이름</code></td><td><strong>"이름이 바뀌었다"</strong>로 본다. 그 파일의 기록이 이어진다</td></tr>
+      <tr><td><code>git rm 파일</code></td><td>파일을 지우면서 <strong>그 사실까지 바구니에 담는다</strong></td></tr>
+      <tr><td><code>git rm --cached 파일</code></td><td><strong>내 컴퓨터에는 두고</strong> 저장소에서만 뺀다. 실수로 올린 <code>build/</code>를 뺄 때 쓴다</td></tr>
+    </table>
+    </div>
+    <p>
+      사실 <strong>탐색기에서 그냥 옮겨도 git이 대개 알아서 알아본다.</strong>
+      내용이 많이 안 바뀌었으면 "이름만 바뀐 것"으로 인식한다. 그래서 이 명령들은 몰라도 크게 곤란하지 않다.
+    </p>
+  </details>
+
+  <details>
+    <summary><strong>원격 저장소를 손으로 설정할 때 쓰는 것 넷</strong></summary>
+    <div class="tablewrap">
+    <table>
+      <tr><th>명령</th><th>무엇을 하나</th></tr>
+      <tr><td><code>git remote -v</code></td><td><strong>지금 붙어 있는 서버 주소</strong>를 보여 준다. 막혔을 때 여기부터 본다</td></tr>
+      <tr><td><code>git remote add origin 주소</code></td><td>서버 주소에 <code>origin</code>이라는 별명을 붙인다</td></tr>
+      <tr><td><code>git remote set-url origin 새주소</code></td><td>주소만 갈아 끼운다. 저장소를 옮겼을 때 쓴다</td></tr>
+      <tr><td><code>git branch -vv</code></td><td>내 브랜치가 <strong>서버의 어느 브랜치와 짝지어져 있는지</strong> 보여 준다</td></tr>
+    </table>
+    </div>
+    <p>
+      <code>git clone</code>으로 받아 온 저장소는 <strong>이 설정이 전부 이미 되어 있다.</strong>
+      그래서 실습처럼 <strong>GitHub에서 먼저 만들고 clone하는 순서</strong>가 훨씬 편하다.
+      내 컴퓨터에서 <code>git init</code>으로 먼저 시작하면 위 설정을 손으로 붙여야 한다.
+    </p>
+  </details>
+
+  <details>
+    <summary><strong>커밋 메시지를 잘 쓰는 규칙 세 줄</strong></summary>
+    <div class="tablewrap">
+    <table>
+      <tr><th>이렇게 쓰지 않는다</th><th>이렇게 쓴다</th><th>왜</th></tr>
+      <tr><td><code>수정</code>, <code>ㅇㅇ</code>, <code>asdf</code></td><td><code>조향 계산 함수 추가</code></td><td>목록을 훑을 때 <strong>이 줄만 읽는다</strong></td></tr>
+      <tr><td><code>main.cpp 수정</code></td><td><code>출력 문구를 v2 로 바꿈</code></td><td>파일 이름은 <strong>이미 기록에 있다.</strong> 메시지에는 <strong>무엇을 했는지</strong>를 쓴다</td></tr>
+      <tr><td><code>조향 추가하고 문구도 바꿈</code></td><td>커밋을 <strong>둘로 나눈다</strong></td><td>「~하고」가 들어가면 <strong>한 덩어리가 아니다</strong></td></tr>
+    </table>
+    </div>
+    <p>
+      <strong>영어로 쓸 필요는 없다.</strong> 팀이 한국어를 쓰면 한국어가 낫다.
+      중요한 것은 언어가 아니라 <strong>목록을 훑었을 때 무엇을 한 커밋인지 읽히는가</strong>이다.
+    </p>
+  </details>
+
+  <footer>
+    로봇공학 · 순천향대학교 전자정보공학과 ·
+    다음 회차: <a href="robotics_06.html">6회 왜 아직도 C++인가</a>
+  </footer>
+</main>
+</div>
+
+<script>
+function copyPrompt(btn) {
+  const box = btn.parentElement.cloneNode(true);
+  box.querySelector('button').remove();
+  navigator.clipboard.writeText(box.textContent.trim()).then(function () {
+    const old = btn.textContent;
+    btn.textContent = '복사됨';
+    setTimeout(function () { btn.textContent = old; }, 1200);
+  });
+}
+</script>
+</body>
+</html>

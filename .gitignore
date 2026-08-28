@@ -4,3 +4,6 @@ _notes/
 
 # 강의자료용 코드 실습 폴더 (직접 돌려 보는 곳, 공개하지 않음)
 robotics/examples/
+
+# 파이썬 캐시
+__pycache__/

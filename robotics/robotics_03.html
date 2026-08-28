@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3회 · 에이전트를 개발환경에 붙이기 | 로봇공학</title>
+<link rel="stylesheet" href="assets/lecture.css">
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="toc-title">이 회차 목차</div>
+  <a href="#summary">한 장 요약</a>
+  <a href="#diff">① 챗봇과 에이전트의 차이</a>
+  <a href="#limits">② 반드시 알아야 할 세 줄</a>
+  <a href="#signal">③ 신호등 네 가지</a>
+  <a href="#vscode">🔧 편집기를 리눅스에 붙인다</a>
+  <a href="#install">🔧 에이전트를 붙인다</a>
+  <a href="#approve">🔧 승인 모드</a>
+  <a href="#agentsmd">④ 규칙 파일 AGENTS.md</a>
+  <a href="#lab">🧪 실습</a>
+  <a href="#prompts">🤖 프롬프트 모음</a>
+  <a href="#check">✅ 점검</a>
+  <a href="#more">조금 더 알아두면</a>
+</nav>
+
+<main>
+  <a class="backlink" href="../index.html">← 강의자료 목록</a>
+
+  <div class="lec-no">로봇공학 · 3회 · 1부 환경과 도구</div>
+  <h1>에이전트를 개발환경에 붙이기</h1>
+
+  <div class="questions">
+    <span class="lab">오늘 답할 질문</span>
+    <ol>
+      <li>터미널에서 도는 에이전트란 무엇이고, 챗봇과 무엇이 다른가?</li>
+      <li>무엇을 물어보게 하고 무엇을 그냥 하게 할 것인가?</li>
+      <li>매번 같은 말을 반복하지 않으려면 어떻게 하나?</li>
+      <li>에이전트가 엉뚱한 답을 하는 가장 흔한 이유는 무엇인가?</li>
+    </ol>
+  </div>
+
+  <p>
+    <strong>이 회차가 안 되면 나머지 27회가 전부 안 된다.</strong>
+    이 강의는 설치와 설정과 코드 뼈대를 에이전트에게 넘기는 것을 전제로 짜여 있다.
+    넘길 상대가 없으면 남는 것은 명령어를 손으로 치는 시간뿐이고, 그러면 실습 시간이 사라진다.
+  </p>
+
+  <p>
+    그런데 오늘 배울 것의 절반은 <strong>「어떻게 붙이나」가 아니라 「무엇을 넘기지 않을 것인가」</strong>다.
+    에이전트는 파일을 고치고 명령을 실행한다. <strong>되돌릴 수 없는 일을 한다는 뜻이다.</strong>
+    그래서 붙이기 전에 <strong>무엇을 물어보게 할지</strong>를 먼저 정한다.
+  </p>
+
+  <p>
+    쓰는 도구는 사람마다 다를 수 있다. <strong>이 자료는 특정 도구 이름을 못 박지 않는다.</strong>
+    터미널이나 편집기 안에서 돌면서 <strong>파일을 고치고 명령을 실행할 수 있는 것</strong>이면 무엇이든 된다.
+    아래 절차는 그런 도구라면 공통으로 해당한다.
+  </p>
+
+  <!-- ── 한 장 요약표 ── -->
+  <h2 id="summary">한 장 요약 — 학기가 끝나도 이 표만 남으면 된다</h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>가운데 「누가 하나」 열</strong>. 이 강의 30회 내내 이 열로 판단한다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>무엇</th><th>누가 하나</th><th>내가 확인하는 것</th></tr>
+    <tr><td>설치·설정·파일 만들기</td><td><span class="badge b-green">🟢 맡긴다</span></td><td>결과물이 실제로 있나</td></tr>
+    <tr><td>코드·빌드 설정 쓰기</td><td><span class="badge b-yellow">🟡 맡기되 검사</span></td><td>검사 목록으로 훑는다</td></tr>
+    <tr><td><strong>됐는지 확인하기</strong></td><td><span class="badge b-red">🔴 사람이 한다</span></td><td><strong>내 눈으로 본 화면</strong></td></tr>
+    <tr><td><code>sudo</code>·파일 삭제·강제 덮어쓰기</td><td><span class="badge b-stop">⛔ 확인 후에만</span></td><td>실행 전에 명령을 읽었나</td></tr>
+    <tr><td>매번 반복하는 요구사항</td><td>파일에 적어 둔다 (<code>AGENTS.md</code>)</td><td>새 대화에서도 규칙이 지켜지나</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 세 번째 줄이 이 강의의 중심이다. <strong>확인만은 넘기지 않는다.</strong>
+    나머지 네 줄은 이 한 줄을 지키기 위한 장치다 —
+    맡길 것을 정하고(1·2행), 위험한 것을 막고(4행), 반복을 줄인다(5행).
+  </div>
+
+  <!-- ── ① 챗봇 vs 에이전트 ── -->
+  <h2 id="diff">① 챗봇은 답을 주고, 에이전트는 일을 한다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <p>
+    둘 다 같은 종류의 인공지능을 쓴다. <strong>다른 것은 「손이 있느냐」다.</strong>
+    챗봇은 글을 돌려주고 거기서 끝난다. 옮겨 붙이고 실행하는 것은 사람 몫이다.
+    에이전트는 <strong>내 컴퓨터의 파일을 직접 고치고 명령을 직접 실행한다.</strong>
+  </p>
+
+  <figure>
+    <img src="assets/img/03_chatbot_vs_agent.png"
+         alt="상하 두 줄 비교 그림. 위 줄 챗봇: 내가 묻는다 → 글로 답이 온다 → 내가 복사해서 붙인다 → 내가 실행한다. 아래 줄 에이전트: 내가 시킨다 → 파일을 직접 고친다 → 명령을 직접 실행한다 → 내가 결과를 확인한다. 아래 줄의 마지막 칸만 다른 색이다">
+    <figcaption><strong>아래 줄의 마지막 칸 색이 다르다.</strong> 앞 세 칸은 넘어갔는데 마지막 칸만 안 넘어갔다 —
+      <strong>확인은 넘길 수 없기 때문</strong>이다.</figcaption>
+  </figure>
+
+  <h3>마지막 칸만 색이 다른 이유</h3>
+  <p>
+    그림에서 에이전트 줄의 앞 세 칸은 사람 손을 떠났다. 시키면 알아서 한다.
+    <strong>그런데 네 번째 칸은 여전히 사람 자리다.</strong> 왜 그런가.
+  </p>
+  <p>
+    에이전트에게 <strong>"잘 됐는지 봐 줘"</strong>라고 하면 이런 답이 온다.
+  </p>
+
+<pre><code>"작업을 완료했습니다. 정상적으로 설정되었습니다."</code></pre>
+
+  <p>
+    이 문장에는 <strong>내가 확인할 수 있는 것이 하나도 없다.</strong>
+    무엇이 어떻게 됐다는 것인지, 어디를 보면 그걸 알 수 있는지가 없다.
+    그래서 이 강의는 요구를 이렇게 바꾼다.
+  </p>
+
+  <div class="prompt"><button onclick="copyPrompt(this)">복사</button> 작업을 마쳤으면 <strong>내가 직접 쳐서 확인할 수 있는 명령어</strong>와 <strong>그 출력에서 무엇이 보이면 성공인지</strong>를 같이 알려 줘. "완료했습니다"는 답으로 치지 않을게.</div>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th></th><th>챗봇</th><th>에이전트</th></tr>
+    <tr><td>내가 하는 말</td><td>"이거 어떻게 해?"</td><td>"이거 해 줘"</td></tr>
+    <tr><td>돌아오는 것</td><td>설명과 코드 <strong>글</strong></td><td><strong>바뀐 파일과 실행 결과</strong></td></tr>
+    <tr><td>내 컴퓨터를 보나</td><td>못 본다</td><td><strong>열린 폴더 안은 본다</strong></td></tr>
+    <tr><td>실수했을 때</td><td>내가 안 붙이면 그만이다</td><td><strong>이미 파일이 바뀌어 있다</strong></td></tr>
+    <tr><td>그래서 필요한 것</td><td>읽고 판단하기</td><td><strong>미리 정한 규칙과 사후 확인</strong></td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 네 번째 줄이 오늘 승인 모드를 다루는 이유다.
+    챗봇은 틀린 말을 해도 내가 안 쓰면 아무 일도 안 난다.
+    <strong>에이전트는 틀린 판단을 하면 그 판단이 이미 실행된 뒤다.</strong>
+    그래서 「무엇을 물어보게 할 것인가」를 먼저 정해야 한다.
+  </div>
+
+  <!-- ── ② 세 줄 ── -->
+  <h2 id="limits">② 이 세 줄을 모르면 하루를 날린다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <p>
+    에이전트를 붙인 첫 주에 학생들이 겪는 문제는 대체로 셋 중 하나다.
+    셋 다 도구가 고장 난 것이 아니라 <strong>도구가 원래 그렇다는 것을 몰라서</strong> 생긴다.
+  </p>
+
+  <h3>첫째 — 에이전트는 자기가 열린 폴더만 본다</h3>
+  <p>
+    에이전트는 <strong>시작할 때 열려 있던 폴더</strong>를 자기 세상으로 삼는다.
+    그 바깥의 파일은 있는 줄도 모른다.
+    그래서 엉뚱한 폴더에서 시작하면 <strong>"그런 파일 없는데요"</strong>라는 답을 자신 있게 한다.
+  </p>
+
+<pre><code>$ pwd
+/home/ubuntu/robot_ws</code></pre>
+
+  <p>
+    <strong>일을 시키기 전에 이 한 줄부터 친다.</strong>
+    찍힌 경로가 내가 일하려는 곳이 아니면, 지금 무엇을 시켜도 엉뚱한 답이 온다.
+  </p>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 줄에서 처음 나오는 것</p>
+    <dl>
+      <dt>pwd</dt>
+      <dd>지금 <strong>어느 폴더에 서 있는지</strong> 찍어 준다.
+          <em>print working directory</em>(일하는 폴더를 찍어라)의 줄임말이다.
+          여기서는 <strong>에이전트가 보고 있는 세상이 어디까지인지 확인하는 데</strong> 썼다.</dd>
+      <dt>작업공간 (workspace)</dt>
+      <dd>편집기와 에이전트가 <strong>한 덩어리로 취급하는 폴더</strong>다.
+          이 강의에서는 <code>~/robot_ws</code> 하나를 학기 내내 쓴다.
+          폴더를 여는 것이 곧 <strong>"이 안에서만 일해"</strong>라고 범위를 정해 주는 일이다.</dd>
+    </dl>
+    <p class="later">제대로 다루는 곳: 4회(절대경로와 상대경로)</p>
+  </div>
+
+  <h3>둘째 — 에이전트는 내 컴퓨터의 상태를 모른다</h3>
+  <p>
+    에이전트는 <strong>파일은 읽을 수 있지만 「지금 무엇이 깔려 있는지」는 모른다.</strong>
+    그래서 안 깔린 프로그램을 이미 있는 것처럼 전제하고 답을 만든다.
+    이것이 <strong>"내 컴퓨터에선 되는데"</strong>라는 말의 근원이다 — 다만 여기서는 반대로,
+    <strong>에이전트가 상상한 컴퓨터에서만 되는 것</strong>이다.
+  </p>
+  <p>
+    막는 방법은 하나다. <strong>추측하지 말고 확인해서 답하라고 시킨다.</strong>
+  </p>
+
+  <div class="prompt"><button onclick="copyPrompt(this)">복사</button> 답하기 전에 <strong>실제로 명령을 실행해서 현재 상태를 확인</strong>하고, 확인한 출력을 근거로 답해 줘. 추측으로 답하지 말고, 확인할 수 없으면 <strong>확인할 수 없다고</strong> 말해 줘.</div>
+
+  <h3>셋째 — 확인은 넘기지 않는다</h3>
+  <p>
+    앞의 두 가지는 요령으로 줄일 수 있다. <strong>이 세 번째는 요령이 없다.</strong>
+    에이전트에게 "확인해 줘"라고 하면 확인한 척한 문장이 돌아온다.
+    <strong>확인은 사람이 눈으로 하는 일</strong>이고, 이 강의의 평가가 보는 것도 그 자리다.
+  </p>
+
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 이렇게 물으면 배운 것이 없다</div>
+    <p>
+      아래 두 대화는 결과가 같아 보인다. <strong>남는 것이 전혀 다르다.</strong>
+    </p>
+<pre><code>[ 나쁜 쪽 ]
+나   : 설치 다 됐어?
+AI   : 네, 정상적으로 설치되었습니다.
+→ 남은 것: 없다. 다음 시간에 안 되면 어디부터 봐야 할지 모른다.
+
+[ 좋은 쪽 ]
+나   : 설치됐는지 내가 확인할 명령어와, 무엇이 보이면 성공인지 알려 줘.
+AI   : (명령어 두 줄과 볼 자리를 알려 준다)
+나   : (직접 쳐서 눈으로 본다)
+→ 남은 것: 다음에 막혔을 때 혼자 확인할 수 있는 방법.</code></pre>
+    <p>
+      <strong>과제 HW1이 채점하는 것이 아래쪽 대화의 마지막 두 줄이다.</strong>
+      무엇을 시켰는지가 아니라 <strong>무엇을 어떻게 확인했는지</strong>를 적어 낸다.
+    </p>
+  </div>
+
+  <!-- ── ③ 신호등 ── -->
+  <h2 id="signal">③ 자료 제목 옆의 신호등이 곧 위임 기준이다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <p>
+    이 강의의 모든 자료에는 <strong>절 제목 오른쪽에 작은 배지</strong>가 붙어 있다.
+    지금 이 문단 위에도 붙어 있다. 그것이 <strong>「이 절의 내용을 에이전트에게 맡겨도 되는가」</strong>를 나타낸다.
+    오늘 이 표를 이해하고 나면 남은 27회 동안 매번 판단할 필요가 없다.
+  </p>
+
+  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 「평가에 반영되나」 열</strong>. 여기가 「그렇다」인 줄이 시험과 프로젝트가 보는 자리다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>배지</th><th>뜻</th><th>이런 것</th><th>평가에 반영되나</th></tr>
+    <tr>
+      <td><span class="badge b-green">🟢 맡긴다</span></td>
+      <td>에이전트가 하고 나는 <strong>결과만 본다</strong></td>
+      <td>설치, 설정 파일, 폴더 만들기, 코드 뼈대</td>
+      <td>아니다</td>
+    </tr>
+    <tr>
+      <td><span class="badge b-yellow">🟡 맡기되 검사</span></td>
+      <td>에이전트가 하고 나는 <strong>검사 목록으로 훑는다</strong></td>
+      <td>코드, 빌드 설정, 실행 설정</td>
+      <td>그렇다</td>
+    </tr>
+    <tr>
+      <td><span class="badge b-red">🔴 사람이 한다</span></td>
+      <td>에이전트가 <strong>대신 못 한다</strong></td>
+      <td>개념 이해, 값 고르기, 원인 추정, 확인</td>
+      <td><strong>그렇다</strong></td>
+    </tr>
+    <tr>
+      <td><span class="badge b-stop">⛔ 맡기면 안 된다</span></td>
+      <td>시켰다가 <strong>사고가 난다</strong></td>
+      <td>확인 없는 <code>sudo</code>, 파일 삭제, 주행 중 수정</td>
+      <td>위반 시 감점</td>
+    </tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 위에서 아래로 내려갈수록 <strong>사람의 몫이 커지고, 동시에 점수가 붙는다.</strong>
+    이건 우연이 아니라 설계다 — <strong>넘길 수 있는 일에는 점수를 주지 않는다.</strong>
+    학기 말에 억울해지지 않으려면 🔴가 붙은 절을 눈여겨보면 된다.
+  </div>
+
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 🟢이 붙었다고 안 봐도 되는 것은 아니다</div>
+    <p>
+      🟢는 <strong>「과정을 안 봐도 된다」</strong>는 뜻이지 <strong>「결과를 안 봐도 된다」</strong>는 뜻이 아니다.
+      설치 명령을 한 줄씩 이해할 필요는 없지만, <strong>깔렸는지는 반드시 내가 확인한다.</strong>
+    </p>
+    <p>
+      이 구분이 흐려지는 순간 이런 일이 난다 — <strong>설치가 안 됐는데 됐다고 믿고 다음 주에 온다.</strong>
+      그러면 그 주 수업을 통째로 못 따라간다. 매년 가장 많이 생기는 사고가 이것이다.
+    </p>
+  </div>
+
+  <!-- ── 🔧 VS Code ── -->
+  <h2 id="vscode">🔧 편집기를 리눅스 쪽에 붙인다 <span class="badge b-green">🟢 맡긴다</span></h2>
+
+  <p>
+    편집기는 <strong>윈도우에 설치하고 리눅스 쪽 파일을 연다.</strong>
+    리눅스 안에 따로 깔지 않는다. 이게 가능한 것이 WSL을 쓰는 큰 이점 중 하나다.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>무엇을 하나</th><th>어떻게</th><th>내가 확인하는 것 ✅</th></tr>
+    <tr>
+      <td>편집기를 받는다</td>
+      <td>윈도우에서 Visual Studio Code를 받아 설치한다</td>
+      <td>윈도우 시작 메뉴에 아이콘이 생겼나</td>
+    </tr>
+    <tr>
+      <td>리눅스와 이어 준다</td>
+      <td>편집기의 확장 목록에서 <strong>WSL</strong> 확장을 깐다</td>
+      <td>편집기 <strong>왼쪽 아래 구석</strong>에 연결 표시가 뜨나</td>
+    </tr>
+    <tr>
+      <td>작업 폴더를 만들고 연다</td>
+      <td>리눅스 터미널에서 아래 세 줄</td>
+      <td>편집기 창이 <strong>새로 뜨나</strong></td>
+    </tr>
+  </table>
+  </div>
+
+<pre><code>mkdir -p ~/robot_ws
+cd ~/robot_ws
+code .</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 세 줄에서 처음 나오는 것</p>
+    <dl>
+      <dt>mkdir -p ~/robot_ws</dt>
+      <dd>폴더를 만든다(<em>make directory</em>). <code>-p</code>는 <strong>"중간 폴더가 없으면 같이 만들고, 이미 있으면 조용히 넘어가라"</strong>는 뜻이다.
+          두 번 쳐도 오류가 안 난다.</dd>
+      <dt>~</dt>
+      <dd>내 집 폴더를 가리키는 <strong>줄임 기호</strong>다. 계정 이름이 <code>ros</code>면 <code>/home/ros</code>다.
+          여기서는 <strong>작업공간을 집 아래에 두려고</strong> 썼다.</dd>
+      <dt>code .</dt>
+      <dd>편집기를 띄우는 명령이다. 뒤의 점(<code>.</code>)은 <strong>「지금 이 폴더」</strong>라는 뜻이다.
+          <strong>이 점 하나가 에이전트가 볼 수 있는 범위를 정한다.</strong></dd>
+    </dl>
+    <p class="later">제대로 다루는 곳: 4회(<code>~</code>·<code>.</code>·<code>..</code>와 경로)</p>
+  </div>
+
+  <div class="box trap">
+    <div class="boxtitle">⚠️ <code>code</code>가 없다고 나오면</div>
+    <p>
+      <code>code: command not found</code>가 나오면 대부분 <strong>편집기를 깔기 전에 열려 있던 터미널</strong>이라서다.
+      리눅스 터미널을 <strong>완전히 닫았다가 새로 연다.</strong>
+      그래도 안 되면 WSL 확장이 안 깔린 것이다.
+    </p>
+  </div>
+
+  <h3>확장은 세 개만 깐다</h3>
+
+  <figure>
+    <img src="assets/img/03_vscode_extensions.png"
+         alt="편집기의 확장 목록 화면. INSTALLED 아래에 C/C++, CMake, CMake Tools 세 개가 설치되어 있다">
+    <figcaption><strong>설치됨(INSTALLED) 아래 세 줄</strong>만 보면 된다. 이 세 개가 있으면 이 학기의 코드 작업은 다 된다.
+      나머지는 필요할 때 그때 깐다.</figcaption>
+  </figure>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>확장</th><th>필수</th><th>무엇을 해 주나</th></tr>
+    <tr><td><strong>WSL</strong></td><td>필수</td><td>편집기가 리눅스 쪽 파일을 직접 열게 해 준다</td></tr>
+    <tr><td><strong>C/C++</strong></td><td>필수</td><td>코드 색칠, 이름 자동완성, 정의로 이동</td></tr>
+    <tr><td><strong>CMake · CMake Tools</strong></td><td>필수</td><td>빌드 설정 파일을 알아보고 버튼으로 빌드하게 해 준다</td></tr>
+  </table>
+  </div>
+
+  <figure class="narrow">
+    <img src="assets/img/03_vscode_sidebar.png"
+         alt="편집기 왼쪽 세로 활동 표시줄. 위에서부터 탐색기, 검색, 소스 제어, 실행과 디버그, 확장 아이콘이 세로로 늘어서 있다">
+    <figcaption>왼쪽 끝의 세로줄이다. <strong>맨 위가 탐색기</strong>(파일 목록),
+      <strong>맨 아래쪽이 확장</strong>이다. 확장을 깔면 이 줄에 아이콘이 하나씩 늘어난다 —
+      <strong>줄이 늘어난 것이 곧 설치됐다는 증거</strong>다.</figcaption>
+  </figure>
+
+  <!-- ── 🔧 에이전트 설치 ── -->
+  <h2 id="install">🔧 에이전트를 붙인다 — 오늘이 마지막 수동 설치다 <span class="badge b-stop">⛔ 맡기면 안 된다</span></h2>
+
+  <div class="box stop">
+    <div class="boxtitle">⛔ 이것도 사람이 직접 한다</div>
+    <p>
+      이유는 하나다. <strong>아직 시킬 대상이 없기 때문</strong>이다.
+      에이전트를 설치하는 일은 에이전트에게 맡길 수 없다.
+    </p>
+<pre><code>[2회] 리눅스 설치      ⛔ 사람이 직접
+   ↓
+[3회] 에이전트 설치     ⛔ 사람이 직접  ← 오늘 여기
+   ↓
+[4회~] 그다음부터       🟢 설치·설정은 시킨다 / 🔴 확인은 내가 한다</code></pre>
+    <p>
+      <strong>오늘을 넘기면 설치를 손으로 하는 일은 거의 없다.</strong> 그래서 오늘만 참는다.
+    </p>
+  </div>
+
+  <h3>도구는 정해 주지 않는다 — 공통 절차만 맞추면 된다</h3>
+  <p>
+    터미널이나 편집기 안에서 도는 에이전트 도구는 여러 가지가 있고 계속 바뀐다.
+    <strong>이 강의는 특정 도구를 요구하지 않는다.</strong>
+    아래 네 가지만 되면 무엇을 쓰든 상관없다.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>이것이 되어야 한다</th><th>왜 필요한가</th><th>확인하는 법 ✅</th></tr>
+    <tr><td><strong>리눅스(WSL) 안에서 돈다</strong></td><td>우리 작업 폴더가 리눅스 쪽에 있다</td><td>물어봤을 때 리눅스 쪽 파일 이름을 말하나</td></tr>
+    <tr><td><strong>내가 연 폴더의 파일을 읽고 고친다</strong></td><td>글만 주는 것은 챗봇이다</td><td>파일 하나를 고쳐 달라고 해서 실제로 바뀌나</td></tr>
+    <tr><td><strong>터미널 명령을 실행한다</strong></td><td>설치·빌드·확인을 넘기려면 필요하다</td><td><code>pwd</code>를 실행해 달라고 해 본다</td></tr>
+    <tr><td><strong>실행 전에 물어보게 만들 수 있다</strong></td><td>되돌릴 수 없는 명령이 섞이기 때문</td><td>아래 승인 모드 절을 본다</td></tr>
+  </table>
+  </div>
+
+  <h4>공통 절차 네 단계</h4>
+  <ol>
+    <li><strong>깐다.</strong> 도구가 안내하는 방법대로 리눅스(WSL) 안에 설치한다.</li>
+    <li><strong>로그인한다.</strong> 대부분 브라우저 창이 한 번 뜬다.</li>
+    <li><strong>작업 폴더에서 연다.</strong> <code>cd ~/robot_ws</code> 뒤에 실행한다. <strong>이 순서가 중요하다.</strong></li>
+    <li><strong>확인한다.</strong> 아래 한 줄을 시켜 본다. 이것이 오늘의 연결 확인이다.</li>
+  </ol>
+
+  <div class="prompt"><button onclick="copyPrompt(this)">복사</button> 지금 열려 있는 폴더의 <strong>경로와 파일 목록</strong>을 실제로 명령을 실행해서 보여 줘. 그리고 <strong>어떤 명령으로 확인했는지</strong>도 같이 적어 줘.</div>
+
+  <p>
+    돌아온 경로가 <code>/home/…/robot_ws</code>이면 제대로 붙은 것이다.
+    윈도우 쪽 경로(<code>C:\…</code>)가 나오면 <strong>리눅스 밖에서 돌고 있는 것</strong>이므로 3번 단계를 다시 한다.
+  </p>
+  <p class="readme-first">
+    설치·로그인 화면은 도구마다 다르므로 이 자료에 넣지 않았다. 화면 대신 <strong>위 네 가지 확인</strong>으로 판정한다.
+  </p>
+  <!-- TODO: 미검증 — 에이전트 도구 설치·로그인 화면 (학생마다 도구가 다르다) -->
+
+  <!-- ── 🔧 승인 모드 ── -->
+  <h2 id="approve">🔧 승인 모드 — 무엇을 물어보게 할 것인가 <span class="badge b-stop">⛔ 맡기면 안 된다</span></h2>
+
+  <p>
+    에이전트 도구에는 대개 <strong>「어디까지 알아서 하게 할지」를 정하는 설정</strong>이 있다.
+    이름은 도구마다 다르지만 하는 일은 같다 — <strong>어떤 명령을 실행하기 전에 사람에게 물을 것인가.</strong>
+  </p>
+
+  <div class="box stop">
+    <div class="boxtitle">⛔ 이 세 가지는 반드시 확인 후 실행으로 둔다</div>
+<pre><code>1) sudo 가 붙는 모든 명령
+     → 시스템 전체를 바꾼다. 되돌리기 어렵다
+
+2) 파일·폴더를 지우는 명령 (rm)
+     → 리눅스에는 휴지통이 없다. 지우면 끝이다
+
+3) git push --force
+     → 서버에 있던 남의 작업 기록을 덮어쓴다. 팀 프로젝트에서 사고가 난다</code></pre>
+    <p>
+      <strong>세 줄의 공통점은 「되돌릴 수 없다」이다.</strong>
+      틀린 코드는 다시 짜면 되지만, 지워진 파일과 덮어쓴 기록은 돌아오지 않는다.
+      <strong>프로젝트 평가에서 이 항목을 어긴 사고는 감점 사유다.</strong>
+    </p>
+  </div>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 위 상자에서 처음 나오는 이름</p>
+    <dl>
+      <dt>rm</dt>
+      <dd>파일이나 폴더를 <strong>지우는</strong> 명령이다(<em>remove</em>).
+          그래픽 화면에서 지우는 것과 달리 <strong>휴지통을 거치지 않는다.</strong>
+          여기서는 <strong>「확인 없이 맡기면 안 되는 것」의 대표로</strong> 들었다.</dd>
+      <dt>git push --force</dt>
+      <dd>내 작업 기록을 <strong>서버에 강제로 덮어쓰는</strong> 명령이다.
+          <code>--force</code>는 "충돌이 나도 밀어붙여라"는 뜻이다.
+          팀에서 쓰면 <strong>남이 올린 것이 사라진다.</strong></dd>
+    </dl>
+    <p class="later">제대로 다루는 곳: 5회(저장소와 브랜치) · 30회(협업)</p>
+  </div>
+
+  <h3>설정 화면이 없는 도구라면 말로 못 박는다</h3>
+  <p>
+    도구에 승인 설정이 없거나 찾기 어려우면, <strong>그 요구를 규칙 파일에 적어 둔다.</strong>
+    바로 아래에서 만들 <code>AGENTS.md</code>가 그 자리다.
+  </p>
+
+  <div class="prompt"><button onclick="copyPrompt(this)">복사</button> 앞으로 <code>sudo</code>가 붙는 명령, 파일을 지우는 명령, <code>git push --force</code>는 <strong>실행하기 전에 나에게 명령 전문을 보여 주고 기다려.</strong> 내가 확인했다고 하면 그때 실행해.</div>
+
+  <!-- ── ③ AGENTS.md ── -->
+  <h2 id="agentsmd">④ 같은 말을 매번 반복하지 않는 법 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <p>
+    위의 요구를 <strong>대화를 새로 열 때마다 다시 말해야 한다면</strong> 아무도 지키지 않는다.
+    그래서 작업공간 맨 위에 <strong>규칙을 적은 파일 하나</strong>를 둔다.
+    이름은 <code>AGENTS.md</code>다. 대부분의 에이전트 도구가 <strong>일을 시작할 때 이 파일을 먼저 읽는다.</strong>
+  </p>
+
+  <figure>
+    <img src="assets/img/03_vscode_agents.png"
+         alt="편집기 화면. 왼쪽 탐색기에 ROBOT_WS 폴더와 include·src 폴더, AGENTS.md, CMakeLists.txt가 보이고 가운데에 AGENTS.md 내용이 규칙 목록으로 열려 있으며 오른쪽에 에이전트 채팅 패널이 있다">
+    <figcaption>가운데가 <code>AGENTS.md</code>이고 오른쪽이 에이전트다.
+      <strong>이 파일은 열어 두지 않아도 읽힌다</strong> — 폴더 맨 위에 있기만 하면 된다.
+      왼쪽 탐색기에서 <strong>파일이 폴더 최상단에 있는 것</strong>을 확인한다.</figcaption>
+  </figure>
+
+  <h3>그림 안의 규칙을 그대로 옮기면 이렇다</h3>
+
+<pre><code># 이 작업공간의 규칙
+
+- ROS 2 Jazzy, C++17을 쓴다.
+- 콜백 인자는 `const` 참조나 `ConstSharedPtr`로 받는다. 값으로 받지 않는다.
+- CMake는 타겟 중심으로 쓴다. `include_directories`를 쓰지 않는다.
+- `sudo`가 붙는 명령은 실행하기 전에 나에게 보여 준다.
+- 함수는 20줄을 넘기지 않는다.</code></pre>
+
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 오늘 이 다섯 줄을 그대로 베끼지 않는다</div>
+    <p>
+      위 파일은 <strong>학기가 끝날 무렵의 모습</strong>이다.
+      가운데 세 줄에 나오는 말들은 아직 배우지 않은 것이고, <strong>지금 베껴 넣으면 규칙이 아니라 주문이 된다.</strong>
+      뜻을 모르는 규칙은 지켜졌는지 확인할 수도 없다.
+    </p>
+    <p>
+      <strong>오늘은 뜻을 아는 것만 두세 줄 쓴다.</strong>
+      그리고 회차가 지날 때마다 한 줄씩 늘린다.
+      <strong>학기 말에 여러분의 이 파일을 보면 무엇을 이해했는지 그대로 드러난다.</strong>
+      실제로 이 파일은 학기 말 제출물의 일부다.
+    </p>
+  </div>
+
+  <h3>오늘 쓸 것은 이 세 줄이면 충분하다</h3>
+
+<pre><code># 이 작업공간의 규칙
+
+- `sudo`가 붙는 명령은 실행하기 전에 나에게 보여 준다.
+- 파일을 지우는 명령은 실행하기 전에 나에게 보여 준다.
+- 작업이 끝나면 내가 직접 확인할 명령어와, 무엇이 보이면 성공인지 알려 준다.</code></pre>
+
+  <div class="interp">
+    <strong>해석:</strong> 세 줄 모두 <strong>내용에 대한 규칙이 아니라 「일하는 방식」에 대한 규칙</strong>이다.
+    C++도 ROS도 아직 모르지만 이 세 줄은 지금 당장 뜻을 알고 확인할 수 있다.
+    <strong>확인할 수 없는 규칙은 쓰지 않는다</strong> — 이것이 이 파일을 늘려 가는 원칙이다.
+  </div>
+
+  <h3>파일을 만들고 나면 폴더는 이렇게 보인다</h3>
+
+<pre><code>$ pwd
+/home/ubuntu/robot_ws
+$ ls -a
+.
+..
+AGENTS.md
+CMakeLists.txt
+include
+src
+$ tree
+.
+├── AGENTS.md
+├── CMakeLists.txt
+├── include
+└── src
+
+3 directories, 2 files</code></pre>
+  <p class="readme-first">잰 곳: 컨테이너(우분투 24.04.4 LTS)</p>
+
+  <p>
+    <code>AGENTS.md</code>가 <strong>맨 위 줄, 다른 폴더들과 같은 높이</strong>에 있는 것을 본다.
+    한 칸 아래(<code>src/</code> 안 같은 곳)에 있으면 읽히지 않는다.
+  </p>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 출력에서 처음 나오는 것</p>
+    <dl>
+      <dt>ls -a</dt>
+      <dd>폴더 안의 목록을 찍는다(<em>list</em>). <code>-a</code>는 <strong>숨겨진 것까지 전부</strong>라는 뜻이다.
+          맨 위의 <code>.</code>과 <code>..</code>은 각각 <strong>「지금 폴더」와 「한 칸 위 폴더」</strong>다.</dd>
+      <dt>tree</dt>
+      <dd>폴더 구조를 <strong>나무 모양으로</strong> 그려 준다.
+          기본으로는 안 깔려 있어서 <code>sudo apt install -y tree</code>로 따로 깐다.
+          여기서는 <strong>규칙 파일이 맨 위에 있는지 한눈에 보려고</strong> 썼다.</dd>
+      <dt>.md</dt>
+      <dd>마크다운(Markdown)이라는 <strong>글쓰기 형식</strong>의 파일이다.
+          앞의 <code>#</code>은 제목, <code>-</code>는 목록 항목을 뜻한다.
+          <strong>그냥 글자 파일이므로 편집기에서 바로 쓰면 된다.</strong></dd>
+    </dl>
+  </div>
+
+  <!-- ── 🧪 실습 ── -->
+  <div class="lab-block" id="lab">
+    <div class="boxtitle">🧪 실습 — 작업공간을 열고 규칙 파일을 직접 쓰기</div>
+    <p><strong>알게 되는 것:</strong> 규칙 파일이 <strong>정말로 읽히는지</strong>를 스스로 판정하는 방법. 이 판정 방식이 이 학기의 기본기다.</p>
+    <p><strong>준비물:</strong> 리눅스가 올라간 노트북, 편집기, 붙여 둔 에이전트. <strong>총 35분쯤</strong> 걸린다.</p>
+    <p><strong>절차</strong></p>
+    <ol>
+      <li><strong>작업공간을 만들고 연다.</strong> (5분)
+<pre><code>mkdir -p ~/robot_ws
+cd ~/robot_ws
+pwd
+code .</code></pre>
+        <code>pwd</code>가 <code>/home/…/robot_ws</code>를 찍는 것을 <strong>눈으로 보고</strong> 다음으로 간다.
+      </li>
+      <li><strong>규칙 파일을 만든다.</strong> (10분)
+        <br>편집기 탐색기에서 새 파일을 만들고 이름을 <strong><code>AGENTS.md</code></strong>로 한다.
+        <strong>대문자와 점 위치를 정확히</strong> 맞춘다. 내용은 앞의 세 줄을 붙여 넣는다.
+        <strong>거기에 자기 규칙을 한 줄 더 붙인다.</strong> 예를 들어
+        "설명은 한국어로 해 준다" 또는 "모르는 것은 모른다고 말한다" 같은 것이다.
+      </li>
+      <li><strong>파일이 제자리에 있는지 확인한다.</strong> (3분)
+<pre><code>ls -a ~/robot_ws</code></pre>
+        목록에 <code>AGENTS.md</code>가 보이면 된다. 안 보이면 <strong>다른 폴더에 만든 것</strong>이다.
+      </li>
+      <li><strong>에이전트를 그 폴더에서 새로 연다.</strong> (2분)
+        <br><strong>이미 열려 있었다면 한 번 닫았다 연다.</strong> 규칙 파일은 시작할 때 읽히기 때문이다.
+      </li>
+      <li><strong>규칙과 상관없어 보이는 질문을 하나 던진다.</strong> (5분)
+        <br>예를 들어 이렇게 묻는다.
+        <div class="prompt"><button onclick="copyPrompt(this)">복사</button> 이 폴더에 <code>hello.txt</code>라는 파일을 만들고 안에 아무 문장이나 한 줄 써 줘.</div>
+        <strong>여기서 볼 것은 파일이 아니라 답의 모양이다.</strong>
+        규칙 세 번째 줄대로 <strong>확인할 명령어와 성공 기준을 같이 말했는가?</strong>
+      </li>
+      <li><strong>금지 항목을 건드려 본다.</strong> (5분)
+        <div class="prompt"><button onclick="copyPrompt(this)">복사</button> 시스템 시간대를 서울로 바꿔 줘.</div>
+        이 작업에는 <code>sudo</code>가 필요하다. <strong>에이전트가 바로 실행했는가, 먼저 보여 줬는가?</strong>
+        바로 실행했다면 규칙이 안 읽힌 것이다 — 4번으로 돌아간다.
+      </li>
+      <li><strong>규칙을 한 줄 고치고 다시 확인한다.</strong> (5분)
+        <br>안 지켜진 규칙이 있으면 <strong>더 구체적인 문장으로 고쳐 쓴다.</strong>
+        "조심해서 해 줘"는 규칙이 아니다. <strong>"실행 전에 명령 전문을 보여 주고 기다려"</strong>가 규칙이다.
+      </li>
+    </ol>
+    <p>
+      <strong>이렇게 되면 성공:</strong> 아무 질문이나 던졌을 때
+      <strong>내가 시키지 않았는데도 규칙을 지킨 답</strong>이 온다.
+      특히 ⑥에서 <code>sudo</code>가 필요한 일을 <strong>실행 전에 보여 주고 멈추면</strong> 오늘 목표는 달성이다.
+    </p>
+    <div class="box trap" style="margin-top:1rem">
+      <div class="boxtitle">⚠️ 규칙이 안 먹을 때 이 순서로 좁힌다</div>
+      <div class="tablewrap">
+      <table>
+        <tr><th>확인할 것</th><th>어떻게</th></tr>
+        <tr><td>① 파일 이름이 정확한가</td><td><code>ls -a</code>로 <code>AGENTS.md</code> 철자를 눈으로 대조한다</td></tr>
+        <tr><td>② 폴더 맨 위에 있나</td><td><code>tree</code>로 <code>src/</code> 안에 들어가 있지 않은지 본다</td></tr>
+        <tr><td>③ 에이전트가 그 폴더에서 시작했나</td><td>"지금 열린 폴더 경로를 실행해서 보여 줘"라고 시킨다</td></tr>
+        <tr><td>④ 대화를 새로 열었나</td><td>규칙 파일은 <strong>시작할 때</strong> 읽힌다. 열어 둔 채 고치면 안 읽힐 수 있다</td></tr>
+        <tr><td>⑤ 문장이 확인 가능한가</td><td>"잘 해 줘" 같은 줄은 지켜졌는지 판정할 수 없다. 지운다</td></tr>
+      </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 프롬프트 모음 ── -->
+  <h2 id="prompts">🤖 오늘 나온 프롬프트 모음 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>이럴 때</th><th>이렇게 말한다</th><th>그리고 내가 볼 것</th></tr>
+    <tr><td>일을 시작하기 전</td><td>"지금 열린 폴더 경로를 실행해서 보여 줘"</td><td>경로가 <code>robot_ws</code>인가</td></tr>
+    <tr><td>무언가를 시킬 때</td><td>"확인할 명령어와 성공 기준을 같이 알려 줘"</td><td>내가 그 명령을 직접 쳐 봤나</td></tr>
+    <tr><td>답이 미덥지 않을 때</td><td>"추측하지 말고 실행해서 확인한 뒤 답해 줘"</td><td>근거로 붙인 출력이 있나</td></tr>
+    <tr><td>시스템을 건드릴 때</td><td>"실행 전에 명령 전문을 보여 주고 기다려"</td><td>실제로 멈춰 서나</td></tr>
+    <tr><td>답이 길어서 안 읽힐 때</td><td>"내가 남에게 설명할 수 있게 한국어 세 줄로"</td><td>세 줄로 내가 다시 말할 수 있나</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 다섯 줄 모두 오른쪽 열이 <strong>내가 하는 일</strong>이다.
+    왼쪽 두 열은 넘길 수 있고 오른쪽 열은 못 넘긴다.
+    <strong>이 표의 오른쪽 열이 이 과목의 과제와 프로젝트가 채점하는 자리다.</strong>
+  </div>
+
+  <!-- ── ✅ 점검 ── -->
+  <h2 id="check">✅ 오늘의 점검</h2>
+  <ul class="check">
+    <li><input type="checkbox" id="c1"><label for="c1">챗봇과 에이전트의 차이를 <strong>한 문장으로</strong> 말할 수 있나?</label></li>
+    <li><input type="checkbox" id="c2"><label for="c2">에이전트가 <strong>내 컴퓨터의 무엇을 보고 무엇을 못 보는지</strong> 아나?</label></li>
+    <li><input type="checkbox" id="c3"><label for="c3">일을 시키기 전에 <code>pwd</code>로 <strong>폴더를 확인</strong>했나?</label></li>
+    <li><input type="checkbox" id="c4"><label for="c4">확인 후 실행으로 둬야 하는 <strong>세 가지</strong>를 말할 수 있나?</label></li>
+    <li><input type="checkbox" id="c5"><label for="c5"><code>AGENTS.md</code>가 작업공간 <strong>맨 위</strong>에 있나?</label></li>
+    <li><input type="checkbox" id="c6"><label for="c6">아무 질문에나 <strong>규칙을 지킨 답</strong>이 오는 것을 확인했나?</label></li>
+    <li><input type="checkbox" id="c7"><label for="c7"><code>sudo</code>가 필요한 일을 시켰을 때 <strong>멈춰 서는 것</strong>을 봤나?</label></li>
+    <li><input type="checkbox" id="c8"><label for="c8">내 규칙 파일의 모든 줄이 <strong>지켜졌는지 확인 가능한</strong> 문장인가?</label></li>
+  </ul>
+
+  <!-- ── 조금 더 알아두면 ── -->
+  <h2 id="more">조금 더 알아두면 <span class="badge b-lv">시험 범위 아님</span></h2>
+
+  <details>
+    <summary>규칙 파일에 무엇을 쓰면 좋은가 — 좋은 줄과 나쁜 줄</summary>
+    <div class="tablewrap">
+    <table>
+      <tr><th>이렇게 쓰지 않는다</th><th>이렇게 쓴다</th><th>왜</th></tr>
+      <tr><td>"코드를 잘 짜 줘"</td><td>"함수는 20줄을 넘기지 않는다"</td><td>세어 보면 지켜졌는지 알 수 있다</td></tr>
+      <tr><td>"조심해서 해 줘"</td><td>"<code>sudo</code>는 실행 전에 보여 준다"</td><td>멈추는지 안 멈추는지 눈에 보인다</td></tr>
+      <tr><td>"친절하게 설명해 줘"</td><td>"설명은 한국어로, 세 줄 이내로"</td><td>줄 수는 셀 수 있다</td></tr>
+      <tr><td>"최신 방식으로 해 줘"</td><td>"바꾼 파일 목록을 마지막에 적어 준다"</td><td>「최신」은 사람마다 다르다</td></tr>
+    </table>
+    </div>
+    <p>
+      기준은 하나다 — <strong>지켜졌는지 내가 판정할 수 있는가.</strong>
+      판정할 수 없는 줄은 규칙이 아니라 바람이다.
+    </p>
+  </details>
+
+  <details>
+    <summary>파일 이름이 꼭 <code>AGENTS.md</code>여야 하나</summary>
+    <p>
+      도구마다 읽는 파일 이름이 조금씩 다르다. <code>AGENTS.md</code>를 읽는 도구가 많고,
+      자기만의 이름을 쓰는 도구도 있다.
+    </p>
+    <p>
+      <strong>이 강의는 <code>AGENTS.md</code>로 통일한다.</strong>
+      쓰는 도구가 다른 이름을 읽는다면 같은 내용을 그 이름으로도 하나 더 두면 된다.
+      중요한 것은 이름이 아니라 <strong>「매번 말하지 않아도 지켜지는 규칙이 파일로 남아 있다」</strong>는 상태다.
+    </p>
+  </details>
+
+  <details>
+    <summary>에이전트가 자꾸 엉뚱한 파일을 고칠 때</summary>
+    <p>대개 원인은 셋 중 하나다. <strong>순서대로 좁힌다.</strong></p>
+    <ol>
+      <li><strong>폴더가 너무 넓다.</strong> 집 폴더(<code>~</code>) 전체를 열어 두면 비슷한 이름의 파일이 여럿이라 헷갈린다.
+        <strong>작업공간 폴더만 연다.</strong></li>
+      <li><strong>파일 이름을 정확히 말하지 않았다.</strong> "그 파일"이 아니라 경로를 그대로 적어 준다.</li>
+      <li><strong>바뀐 것을 확인하지 않았다.</strong> 무엇을 고쳤는지 목록을 달라고 하면 엉뚱한 파일이 바로 드러난다.</li>
+    </ol>
+    <p>
+      세 번째가 가장 값싸다. 규칙 파일에 <strong>"바꾼 파일 목록을 마지막에 적어 준다"</strong> 한 줄을 넣어 두면
+      매번 말하지 않아도 된다.
+    </p>
+  </details>
+
+  <details>
+    <summary>편집기 단축키 하나만 외운다면</summary>
+    <p>
+      <strong>Ctrl + Shift + P</strong>다. 편집기의 모든 기능을 <strong>이름으로 검색해서</strong> 실행하는 창이 뜬다.
+      메뉴 어디에 있는지 몰라도 이름 일부만 치면 나온다.
+    </p>
+    <p>
+      예를 들어 파일을 다른 이름으로 저장하거나, 설정을 열거나, 빌드를 실행하는 것을 전부 여기서 할 수 있다.
+      <strong>메뉴를 뒤지는 시간이 이 단축키 하나로 사라진다.</strong>
+    </p>
+  </details>
+
+  <footer>
+    로봇공학 · 순천향대학교 전자정보공학과 ·
+    다음 회차: <a href="robotics_04.html">4회 리눅스 명령어 — 알아야 할 것과 맡길 것</a>
+  </footer>
+</main>
+</div>
+
+<script>
+function copyPrompt(btn) {
+  const box = btn.parentElement.cloneNode(true);
+  box.querySelector('button').remove();
+  navigator.clipboard.writeText(box.textContent.trim()).then(function () {
+    const old = btn.textContent;
+    btn.textContent = '복사됨';
+    setTimeout(function () { btn.textContent = old; }, 1200);
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,947 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>9회 · 빌드 시스템 — 탭 문자 하나가 40년을 갔다 | 로봇공학</title>
+<link rel="stylesheet" href="assets/lecture.css">
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="toc-title">이 회차 목차</div>
+  <a href="#summary">한 장 요약</a>
+  <a href="#stages">① 한 줄로는 왜 안 되나</a>
+  <a href="#story">📖 탭 문자 하나</a>
+  <a href="#project">② CMakeLists.txt 열세 줄</a>
+  <a href="#run">③ 두 명령으로 끝난다</a>
+  <a href="#modern">④ 낡은 방식과 지금 방식</a>
+  <a href="#scope">⑤ PRIVATE 와 PUBLIC</a>
+  <a href="#errors">⑥ 오류는 세 단계 중 하나</a>
+  <a href="#err3">⑦ 오류 3종 실제 메시지</a>
+  <a href="#ai">⑧ AI에게 오류를 붙여넣기</a>
+  <a href="#lab">🧪 실습</a>
+  <a href="#hw2">📄 HW2</a>
+  <a href="#prompts">🤖 프롬프트 모음</a>
+  <a href="#check">✅ 점검</a>
+  <a href="#more">조금 더 알아두면</a>
+</nav>
+
+<main>
+  <a class="backlink" href="../index.html">← 강의자료 목록</a>
+
+  <div class="lec-no">로봇공학 · 9회 · 2부 C++</div>
+  <h1>빌드 시스템 — 탭 문자 하나가 40년을 갔다</h1>
+
+  <div class="questions">
+    <span class="lab">오늘 답할 질문</span>
+    <ol>
+      <li>파일이 둘이 되었을 뿐인데 <code>g++ main.cpp</code>가 왜 안 되나?</li>
+      <li>AI가 준 <code>CMakeLists.txt</code>가 낡은 것인지 <strong>한 줄로</strong> 어떻게 아나?</li>
+      <li>빌드가 터졌다. 쏟아진 화면에서 <strong>어디를 봐야 하나</strong>?</li>
+      <li>코드는 멀쩡한데 왜 링크에서 터지나?</li>
+    </ol>
+  </div>
+
+  <p>
+    클래스를 만들면서 선언은 헤더(<code>.hpp</code>)에, 정의는 소스(<code>.cpp</code>)에 나눠 두었다.
+    <strong>그 순간 파일이 둘이 됐다.</strong>
+    그리고 그때까지 잘 쓰던 <code>g++ main.cpp</code> 한 줄이 안 먹기 시작한다.
+  </p>
+  <p>
+    오늘은 그 불편을 그대로 겪는 것에서 시작한다.
+    <strong>도구를 먼저 소개하지 않는다.</strong> 손으로 하다가 안 되는 지점을 확인한 다음,
+    그 자리를 메우려고 만들어진 도구를 꺼낸다.
+    그 도구가 <strong>CMake</strong>이고, ROS 2의 빌드도 결국 CMake다.
+  </p>
+  <p>
+    이 회차가 중요한 이유는 다른 회차와 종류가 다르다.
+    보통 AI가 주는 코드의 문제는 <strong>맞지만 둔한 코드</strong>다.
+    그런데 <code>CMakeLists.txt</code>에서는 <strong>아예 낡은 방식</strong>이 온다.
+    CMake는 2014년 무렵 사고방식이 통째로 바뀌었는데, 인터넷에 남아 있는 문서는 그 전 것이 훨씬 많기 때문이다.
+    그래서 오늘은 <strong>「낡았는지 아닌지」를 한 줄로 가르는 법</strong>을 손에 쥐고 나간다.
+  </p>
+
+  <!-- ── 한 장 요약표 ── -->
+  <h2 id="summary">한 장 요약 — 학기가 끝나도 이 표만 남으면 된다</h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>오른쪽 「그러면 어디를 고치나」 열</strong>만 읽어도 학기 내내 쓴다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>화면에 이게 보이면</th><th>어느 단계에서 난 것</th><th>그러면 어디를 고치나</th></tr>
+    <tr><td><code>CMake Error at CMakeLists.txt:7</code></td><td>① cmake 설정</td><td><strong><code>CMakeLists.txt</code>의 7번째 줄</strong> — 줄 번호를 알려 준다</td></tr>
+    <tr><td><code>error: expected ‘;’ before …</code></td><td>② 컴파일</td><td><strong>소스 파일</strong> — 경로와 줄:칸 번호를 알려 준다</td></tr>
+    <tr><td><code>undefined reference to …</code></td><td>③ 링크</td><td><strong><code>CMakeLists.txt</code>의 <code>target_link_libraries</code></strong> — 소스가 아니다</td></tr>
+    <tr><td><code>gmake[2]: *** … Error 1</code></td><td>—</td><td><strong>읽지 않는다.</strong> 위쪽 첫 <code>error:</code> 줄로 올라간다</td></tr>
+    <tr><td><code>include_directories(...)</code></td><td>—</td><td><strong>낡은 CMake다.</strong> <code>target_include_directories</code>로 바꿔 달라고 한다</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 세 번째 줄이 학생을 가장 많이 괴롭힌다.
+    코드는 멀쩡한데 링크에서 터지니 <strong>소스만 몇 시간씩 들여다본다.</strong>
+    고칠 곳은 소스가 아니라 <code>CMakeLists.txt</code>다.
+    이 표에서 외울 것은 명령어 이름이 아니라 <strong>「메시지 모양 → 고칠 파일」 대응</strong> 하나다.
+  </div>
+
+  <!-- ── 📐 이론 블록 ── -->
+  <h2 id="stages">① 파일이 둘이 되면 한 줄로는 안 된다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <h3>지금 있는 파일 세 개</h3>
+  <p>
+    라이다가 준 거리 값 중 <strong>쓸 만한 것만 골라 평균을 내는 함수</strong> 하나를 만들었다고 하자.
+    선언은 헤더에, 정의는 소스에, 그것을 쓰는 쪽은 <code>main.cpp</code>에 있다.
+  </p>
+  <pre><code>scan_tools/
+├── CMakeLists.txt
+├── include/
+│   └── scan_math.hpp     ← 선언: "이런 함수가 있다"
+└── src/
+    ├── scan_math.cpp     ← 정의: "그 함수는 이렇게 동작한다"
+    └── main.cpp          ← 쓰는 쪽</code></pre>
+
+  <h3>기존 방법으로 해 보면 — 두 번 막힌다</h3>
+  <p>여태 쓰던 대로 <code>main.cpp</code> 하나만 넘겨 본다. <strong>첫 번째 벽</strong>은 헤더를 못 찾는 것이다.</p>
+  <pre><code>$ g++ -std=c++17 src/main.cpp src/scan_math.cpp -o scan_app
+src/main.cpp:1:10: fatal error: scan_math.hpp: No such file or directory
+    1 | #include "scan_math.hpp"
+      |          ^~~~~~~~~~~~~~~
+compilation terminated.</code></pre>
+  <p>
+    <code>include/</code> 폴더를 어디서 찾을지 아무도 알려 주지 않았다.
+    <code>-Iinclude</code>를 붙여 그 자리를 알려 주고, 이번엔 <code>main.cpp</code> 하나만 넘겨 본다.
+    <strong>두 번째 벽</strong>이 나온다.
+  </p>
+  <pre><code>$ g++ -std=c++17 -Iinclude src/main.cpp -o scan_app
+/usr/bin/ld: /tmp/ccEpSK90.o: in function `main':
+main.cpp:(.text+0xca): undefined reference to `mean_range(std::vector&lt;float, std::allocator&lt;float&gt; &gt; const&amp;, float, float)'
+collect2: error: ld returned 1 exit status</code></pre>
+  <p>
+    <strong>문법 오류가 아니다.</strong> <code>main.cpp</code>는 문제없이 컴파일됐다.
+    헤더가 <em>"<code>mean_range</code>라는 함수가 있다"</em>고 약속해 줬으니까.
+    그런데 그 약속을 실제로 지키는 코드(<code>scan_math.cpp</code>)를 아무도 넘겨 주지 않았다.
+    <strong>선언은 있는데 정의가 없다</strong>는 것이 이 메시지의 뜻이다.
+  </p>
+  <p>둘 다 넘기면 그제야 된다.</p>
+  <pre><code>$ g++ -std=c++17 -Iinclude src/main.cpp src/scan_math.cpp -o scan_app
+$ ./scan_app
+유효값 평균 = 1.373 m</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 화면에서 처음 나오는 것</p>
+    <dl>
+      <dt>-I&lt;폴더&gt; (대문자 아이)</dt>
+      <dd><code>#include "..."</code>로 찾는 헤더가 어느 폴더에 있는지 컴파일러에게 알려 주는 옵션이다.
+          여기서는 <code>scan_math.hpp</code>가 <code>include/</code> 안에 있어서 <code>-Iinclude</code>를 붙였다.</dd>
+
+      <dt>.o (목적 파일, object file)</dt>
+      <dd>소스 파일 하나를 기계어로 바꿔 놓은 <strong>중간 결과물</strong>이다.
+          아직 실행 파일이 아니다. 위 메시지의 <code>/tmp/ccEpSK90.o</code>가 그것이고,
+          컴파일러가 임시로 만들었다가 지운다.</dd>
+
+      <dt>undefined reference to `…'</dt>
+      <dd><strong>링크(연결) 단계에서 나오는 메시지다.</strong>
+          "이 이름을 쓰겠다는 약속은 봤는데 <strong>실제 내용을 어디서도 못 찾았다</strong>"는 뜻이다.
+          여기서는 <code>scan_math.cpp</code>를 안 넘겨서 났다.</dd>
+    </dl>
+  </div>
+
+  <h3>그래서 빌드는 세 단계다</h3>
+  <p>
+    위에서 두 번 막힌 자리가 사실은 서로 다른 단계다.
+    <strong>어느 단계에서 났는지가 곧 고칠 파일을 정한다.</strong> 오늘 이 그림 하나만 가져가도 된다.
+  </p>
+  <figure>
+    <img src="assets/img/09_build_stages.png"
+         alt="세 단계 흐름도. ① cmake 설정 → ② 컴파일(소스 → .o) → ③ 링크(.o → 실행 파일). 각 단계 아래에 그때 나오는 오류 메시지와 고칠 파일이 적혀 있다">
+    <figcaption>세 칸 아래의 <strong>「고칠 곳」 줄</strong>을 본다.
+      ①과 ③은 고칠 파일이 <code>CMakeLists.txt</code>로 같은데, 화면에 나오는 메시지는 전혀 다르게 생겼다.</figcaption>
+  </figure>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>단계</th><th>무슨 일을 하나</th><th>여기서 나는 대표 메시지</th></tr>
+    <tr><td>① 설정 (cmake)</td><td>무엇을 무엇으로 만들지 계획표를 짠다</td><td><code>CMake Error at CMakeLists.txt:7</code></td></tr>
+    <tr><td>② 컴파일</td><td>소스 <strong>한 개씩</strong> <code>.o</code>로 바꾼다. 문법을 여기서 본다</td><td><code>error: expected ‘;’ …</code></td></tr>
+    <tr><td>③ 링크</td><td><code>.o</code>들을 <strong>이어 붙여</strong> 실행 파일 하나로 만든다</td><td><code>undefined reference to …</code></td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> ②는 파일을 <strong>하나씩 따로</strong> 본다. 그래서 <code>main.cpp</code>만 컴파일할 때는
+    <code>mean_range</code>가 없다는 사실을 눈치채지 못한다. 헤더가 "있다"고 약속했으니 그대로 믿는다.
+    <strong>약속이 지켜졌는지 확인하는 것은 ③의 일이다.</strong>
+    이것이 "코드는 멀쩡한데 링크에서 터진다"의 정체다.
+  </div>
+
+  <h3>파일이 많아지면 이 일이 감당이 안 된다</h3>
+  <p>
+    지금은 소스가 둘이라 손으로 적을 만하다. 그런데 실제 프로젝트는 이렇게 생겼다.
+  </p>
+  <figure>
+    <img src="assets/img/09_link_graph.png"
+         alt="의존 관계 그래프. 위쪽에 외부 라이브러리 3개, 가운데에 내부 라이브러리 A와 B, 아래에 실행 파일 하나가 화살표로 이어져 있다">
+    <figcaption>화살표를 <strong>아래에서 위로</strong> 읽는다. 실행 파일 하나를 만들려면
+      내부 라이브러리 둘이 먼저 있어야 하고, 그 둘은 다시 외부 라이브러리 셋에 기대고 있다.
+      <strong>이 순서를 사람이 손으로 적는 것이 빌드 시스템이 생긴 이유다.</strong></figcaption>
+  </figure>
+
+  <!-- ── 📖 이야기 블록 ── -->
+  <details class="story" id="story">
+    <summary>탭 문자 하나가 40년을 갔다 — 만든 사람도 실수인 줄 알고 있었다 (10분 · 건너뛰어도 됩니다)</summary>
+
+    <h4>① 1976년, 벨 연구소</h4>
+    <p>
+      스튜어트 펠드먼(Stuart Feldman)은 동료 하나가 프로그램을 고쳐 놓고 <strong>다시 빌드하는 것을 잊어서
+      하루를 통째로 날린 것</strong>을 봤다. 고친 코드가 실행 파일에 반영되지 않았는데,
+      그 사실을 모른 채 하루 종일 엉뚱한 곳에서 원인을 찾은 것이다.
+    </p>
+
+    <h4>② 그래서 무엇을 했나</h4>
+    <p>
+      그는 도구를 하나 만들었다. <strong>make</strong>다.
+      생각은 단순하다. <em>"뭐가 뭐에 의존하는지 미리 적어 두면, 바뀐 것만 다시 만들어 준다."</em>
+      의존 관계와 만드는 방법을 <code>Makefile</code>이라는 파일에 적어 두는 방식이다.
+    </p>
+
+    <h4>③ 여기가 재미있다 — 열두 명 때문에</h4>
+    <p>
+      <code>Makefile</code>의 규칙 줄은 <strong>맨 앞이 반드시 탭 문자</strong>여야 한다.
+      스페이스 여덟 칸은 안 된다. <strong>눈으로는 구별이 안 되는데 오류가 난다.</strong>
+      만든 사람 본인도 그게 나쁜 설계라는 것을 알고 있었다. 나중에 이렇게 설명했다.
+    </p>
+    <blockquote>
+      "make를 만들고 몇 주 만에 <strong>이미 열두 명의 친구가 쓰고 있었다.</strong>
+      '1열의 탭'이 나쁜 생각이라는 걸 알고 있었지만,
+      <strong>내 사용자들을 방해하고 싶지 않았다.</strong>"
+    </blockquote>
+    <p>
+      <strong>열두 명을 배려하느라 그 뒤 수천만 명이 그 대가를 치렀다.</strong>
+      소프트웨어에서 초기 결정이 굳어 버리는 방식의 교과서적인 사례다.
+    </p>
+
+    <h4>④ 그래서 지금 우리 손에 남은 것</h4>
+    <p>
+      운영체제마다 <code>Makefile</code>이 달라지는 문제가 다음에 왔고,
+      2000년 미국 국립의학도서관이 의료 영상 라이브러리(ITK)를 만들면서
+      <strong>"윈도우·리눅스·맥에서 다 되는 빌드 방법"</strong>을 요구했다.
+      키트웨어(Kitware)라는 작은 회사가 그것을 만들었고, 그것이 <strong>CMake</strong>다 —
+      <strong>우리가 make 문법을 안 배워도 되는 이유가 여기 있다.</strong>
+    </p>
+
+    <h4>⑤ 숫자로 확인한다</h4>
+    <ul>
+      <li><strong>열두 명</strong> — 설계를 못 바꾼 이유의 전부다. 그때 사용자가 열두 명이었다.</li>
+      <li><strong>40년 넘게</strong> — 1976년에 정해진 탭 규칙은 지금도 그대로다. 바꾸면 옛날 <code>Makefile</code>이 전부 깨진다.</li>
+      <li><strong>1976 → 2003, 27년</strong> — 펠드먼은 make를 만든 지 27년 뒤인 2003년에
+        이 공로로 ACM 소프트웨어 시스템 상을 받았다.</li>
+      <li><strong>13줄 → 명령 8줄</strong> — 우리가 오늘 쓸 <code>CMakeLists.txt</code>는 전체 13줄인데
+        빈 줄 3개와 주석 2줄을 빼면 <strong>실제 명령은 여덟 줄</strong>뿐이다.
+        그 여덟 줄이 라이브러리 하나와 실행 파일 하나를 만든다.</li>
+      <li><strong>네 단계</strong> — 그 여덟 줄로 <code>cmake --build</code>를 돌리면
+        <code>[ 25%]</code> → <code>[ 50%]</code> → <code>[ 75%]</code> → <code>[100%]</code>로
+        네 단계가 지나간다. 손으로 치면 명령 네 줄에 해당한다.</li>
+    </ul>
+    <p class="src">잰 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0, CMake 3.28.3). 줄 수는 <code>examples/l09_cmake/good/CMakeLists.txt</code>를 센 것이다.</p>
+
+    <ul class="src">
+      <li>출처: Wikipedia — Make (software), Stuart Feldman</li>
+      <li>출처: cmake.org/history · Kitware, "Celebrating 20 Years of CMake"</li>
+    </ul>
+  </details>
+
+  <!-- ── 💻 코딩 블록: 정상 프로젝트 ── -->
+  <h2 id="project">② 여덟 줄이 그 일을 대신한다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <p>
+    위에서 손으로 하던 일 — <em>"헤더는 여기 있고, 이 소스와 저 소스를 이어 붙여라"</em> —
+    을 그대로 적어 놓은 파일이 <code>CMakeLists.txt</code>다.
+    <strong>아래가 이 회차에서 계속 쓸 프로젝트 전체다.</strong>
+  </p>
+
+  <div class="codelabel good">CMakeLists.txt — 전체 13줄</div>
+  <pre class="after"><code>cmake_minimum_required(VERSION 3.16)
+project(scan_tools CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# ① 라이브러리를 하나 만든다
+add_library(scan_math src/scan_math.cpp)
+target_include_directories(scan_math PUBLIC include)
+
+# ② 실행 파일을 만들고 ①을 붙인다
+add_executable(scan_app src/main.cpp)
+target_link_libraries(scan_app PRIVATE scan_math)</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 파일에서 처음 나오는 것 (1) — 무엇을 만들지 정하는 줄</p>
+    <dl>
+      <dt>cmake_minimum_required(VERSION 3.16)</dt>
+      <dd>이 파일을 어느 버전의 CMake 기준으로 썼는지 밝힌다.
+          여기서는 3.16으로 뒀다 — <strong>내가 둔 가정이다.</strong> 우분투 24.04에 깔린 CMake는 3.28이라 넉넉히 넘는다.</dd>
+
+      <dt>project(scan_tools CXX)</dt>
+      <dd>프로젝트 이름과 쓰는 언어를 정한다. <code>CXX</code>가 C++을 뜻한다.
+          여기서는 C는 안 쓰므로 <code>CXX</code>만 적어 컴파일러 검사 시간을 줄였다.</dd>
+
+      <dt>add_library(scan_math src/scan_math.cpp)</dt>
+      <dd><strong>라이브러리 하나를 만들라</strong>는 뜻이다. 이름은 <code>scan_math</code>, 재료는 소스 한 개다.
+          여기서는 거리 계산 함수를 실행 파일과 떼어 놓는 데 썼다.</dd>
+
+      <dt>add_executable(scan_app src/main.cpp)</dt>
+      <dd><strong>실행 파일 하나를 만들라</strong>는 뜻이다. 이름은 <code>scan_app</code>이다.
+          여기서 만들어진 이름 <code>scan_app</code>·<code>scan_math</code>를 CMake에서는 <strong>타깃(target)</strong>이라 부른다.
+          아래 <code>target_</code>으로 시작하는 명령은 전부 <strong>이 이름 하나를 골라 설정을 거는 것</strong>이다.</dd>
+    </dl>
+  </div>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 파일에서 처음 나오는 것 (2) — 타깃에 설정을 거는 줄</p>
+    <dl>
+      <dt>target_include_directories(scan_math PUBLIC include)</dt>
+      <dd>아까 손으로 붙이던 <code>-Iinclude</code>가 이 줄이다.
+          <strong>차이는 「누구에게」가 붙었다는 것이다</strong> — <code>scan_math</code>라는 타깃 하나에만 건다.
+          여기서 <code>PUBLIC</code>으로 둔 이유는 아래 ⑤절에서 설명한다.</dd>
+
+      <dt>target_link_libraries(scan_app PRIVATE scan_math)</dt>
+      <dd>아까 손으로 <code>scan_math.cpp</code>를 같이 넘기던 일이 이 줄이다.
+          <strong>이 줄이 없으면 <code>undefined reference</code>가 난다</strong> — 아래 ⑦절 ③번이 정확히 그 경우다.</dd>
+
+      <dt>libscan_math.a</dt>
+      <dd><code>add_library</code>가 만들어 내는 파일 이름이다.
+          <code>.o</code>들을 한 봉지에 묶어 놓은 것이고, 앞의 <code>lib</code>과 뒤의 <code>.a</code>는 리눅스의 관례라
+          <strong>CMake가 알아서 붙인다.</strong> 우리가 적은 이름은 <code>scan_math</code>뿐이다.</dd>
+    </dl>
+  </div>
+
+  <h3>소스 세 개 — 이 코드가 실제로 도는 것이다</h3>
+
+  <div class="codelabel good">include/scan_math.hpp — 선언만 있다</div>
+  <pre class="after"><code>#ifndef SCAN_MATH_HPP_
+#define SCAN_MATH_HPP_
+#include &lt;vector&gt;
+// 유효한 거리 값들의 평균을 낸다. 하나도 없으면 -1 을 돌려준다.
+float mean_range(const std::vector&lt;float&gt; &amp; ranges, float lo, float hi);
+#endif</code></pre>
+
+  <div class="codelabel good">src/scan_math.cpp — 정의가 여기 있다</div>
+  <pre class="after"><code>#include "scan_math.hpp"
+#include &lt;cmath&gt;
+float mean_range(const std::vector&lt;float&gt; &amp; ranges, float lo, float hi)
+{
+  double sum = 0.0; int cnt = 0;
+  for (const float r : ranges) {
+    if (std::isfinite(r) &amp;&amp; r &gt;= lo &amp;&amp; r &lt;= hi) { sum += r; ++cnt; }
+  }
+  return (cnt &gt; 0) ? static_cast&lt;float&gt;(sum / cnt) : -1.0f;
+}</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>for (const float r : ranges)</dt>
+      <dd>배열을 <strong>처음부터 끝까지 하나씩</strong> 도는 문법이다(범위 for).
+          인덱스 <code>i</code>를 직접 다루지 않으므로 범위를 벗어날 자리가 없다.
+          여기서는 거리 값 일곱 개를 차례로 <code>r</code>에 받아 검사하는 데 썼다.</dd>
+
+      <dt>std::isfinite(r)</dt>
+      <dd>그 값이 <strong>보통 숫자인지</strong> 묻는다. 무한대(<code>inf</code>)나 「숫자가 아님」(<code>NaN</code>)이면 거짓이다.
+          라이다는 측정에 실패한 방향을 그런 값으로 채워 보내므로, 여기서는 그것부터 걸러 냈다.</dd>
+
+      <dt>static_cast&lt;float&gt;(sum / cnt)</dt>
+      <dd>값의 타입을 <strong>일부러 바꾼다</strong>는 표시다.
+          여기서는 <code>double</code>로 더한 합을 함수가 돌려줄 <code>float</code>으로 줄이는 데 썼다.
+          이렇게 적어 두면 "실수로 줄어든 것이 아니라 내가 줄인 것"이 코드에 남는다.</dd>
+    </dl>
+    <p class="later">제대로 다루는 곳: 12회(컨테이너와 범위 for) · 13회(<code>isfinite</code>와 라이다의 NaN)</p>
+  </div>
+
+  <div class="codelabel good">src/main.cpp — 쓰는 쪽</div>
+  <pre class="after"><code>#include "scan_math.hpp"
+#include &lt;cmath&gt;
+#include &lt;cstdio&gt;
+int main()
+{
+  const std::vector&lt;float&gt; raw{0.10f, 0.83f, INFINITY, 1.24f, 9.90f, NAN, 2.05f};
+  std::printf("유효값 평균 = %.3f m\n", mean_range(raw, 0.16f, 8.0f));
+  return 0;
+}</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>std::vector&lt;float&gt; raw{0.10f, 0.83f, …}</dt>
+      <dd>중괄호 안에 <strong>초깃값을 그대로 나열</strong>해서 만드는 방식이다.
+          여기서는 라이다가 준 거리 일곱 개를 흉내 내는 데 썼다. 값 일곱 개짜리 배열이 그 자리에서 만들어진다.</dd>
+
+      <dt>INFINITY / NAN</dt>
+      <dd>각각 <strong>무한대</strong>와 <strong>「숫자가 아님」</strong>을 뜻하는 이름이다(<code>&lt;cmath&gt;</code>에 들어 있다).
+          여기서는 <strong>라이다가 실패한 방향을 일부러 섞어 넣는 데</strong> 썼다.
+          위 <code>std::isfinite</code>가 이 둘을 걸러 낸다.</dd>
+
+      <dt>std::printf("… %.3f m\n", …)</dt>
+      <dd>서식을 정해 화면에 찍는다. <code>%.3f</code>가 <strong>소수점 아래 셋까지</strong>라는 뜻이라
+          출력이 <code>1.373</code>으로 나온다.</dd>
+    </dl>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 값 일곱 개 중 <code>0.10</code>(너무 가까움)·<code>INFINITY</code>·<code>9.90</code>(너무 멂)·<code>NAN</code> 넷이 버려지고
+    <code>0.83</code>·<code>1.24</code>·<code>2.05</code> 셋이 남는다. 셋의 평균이 <strong>1.373 m</strong>다.
+    <strong>이 숫자를 기억해 두면 실습에서 「제대로 고쳐졌는지」를 눈으로 판단할 수 있다.</strong>
+  </div>
+
+  <!-- ── ⌨ 명령어 블록: 빌드 ── -->
+  <h2 id="run">③ 빌드는 명령 두 줄이다 <span class="badge b-green">🟢 맡긴다</span></h2>
+
+  <h3>그때 이걸 친다 — ① 설정</h3>
+  <pre><code>$ cmake -S good -B good/build
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done (0.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: /work/l09_cmake/good/build</code></pre>
+  <p>
+    <strong>출력을 이렇게 읽는다:</strong> 마지막 두 줄만 본다.
+    <code>Generating done</code>이 나오면 계획표가 만들어진 것이고,
+    <code>Build files have been written to:</code> 뒤가 그 계획표가 놓인 폴더다.
+    <strong>여기서는 아직 컴파일이 한 줄도 일어나지 않았다.</strong>
+  </p>
+
+  <h3>그때 이걸 친다 — ② 빌드</h3>
+  <pre><code>$ cmake --build good/build
+[ 25%] Building CXX object CMakeFiles/scan_math.dir/src/scan_math.cpp.o
+[ 50%] Linking CXX static library libscan_math.a
+[ 50%] Built target scan_math
+[ 75%] Building CXX object CMakeFiles/scan_app.dir/src/main.cpp.o
+[100%] Linking CXX executable scan_app
+[100%] Built target scan_app</code></pre>
+  <p>
+    <strong>출력을 이렇게 읽는다:</strong> 앞의 백분율이 아니라 <strong>줄머리의 동사</strong>를 본다.
+    <code>Building</code>이 컴파일이고 <code>Linking</code>이 링크다. 둘이 번갈아 나온다.
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>줄</th><th>무슨 일이 일어났나</th><th>만들어진 것</th></tr>
+    <tr><td><code>[ 25%] Building … scan_math.cpp.o</code></td><td>소스 하나를 컴파일했다</td><td><code>scan_math.cpp.o</code></td></tr>
+    <tr><td><code>[ 50%] Linking … libscan_math.a</code></td><td><code>.o</code>를 라이브러리로 묶었다</td><td><code>libscan_math.a</code></td></tr>
+    <tr><td><code>[ 75%] Building … main.cpp.o</code></td><td>나머지 소스를 컴파일했다</td><td><code>main.cpp.o</code></td></tr>
+    <tr><td><code>[100%] Linking … scan_app</code></td><td>둘을 이어 붙였다</td><td><strong><code>scan_app</code> (실행 파일)</strong></td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 명령 두 줄이 <strong>네 단계</strong>를 대신했다.
+    손으로 하면 소스마다 컴파일 한 번씩, 라이브러리로 묶기 한 번, 링크 한 번을 순서 틀리지 않게 쳐야 한다.
+    소스가 스무 개면 그 줄이 스물두 줄이 된다. <strong>줄 수가 아니라 「순서를 안 틀린다」가 이득이다.</strong>
+  </div>
+
+  <h3>그때 이걸 친다 — ③ 실행</h3>
+  <pre><code>$ ./good/build/scan_app
+유효값 평균 = 1.373 m
+$ ls good/build
+CMakeCache.txt  CMakeFiles  cmake_install.cmake  libscan_math.a  Makefile  scan_app</code></pre>
+  <p>
+    <code>build/</code> 안에 <code>libscan_math.a</code>와 <code>scan_app</code>이 실제로 생겼다.
+    나머지는 CMake가 쓰는 부산물이라 통째로 지워도 된다 — 그래서 <code>build/</code>는 git에 올리지 않는다.
+  </p>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 명령에서 처음 나오는 것</p>
+    <dl>
+      <dt>cmake -S &lt;소스 폴더&gt; -B &lt;빌드 폴더&gt;</dt>
+      <dd><strong>설정 단계</strong>다. <code>-S</code>가 <code>CMakeLists.txt</code>가 있는 곳,
+          <code>-B</code>가 결과물을 쏟아 놓을 곳이다.
+          여기서는 <code>good/build</code>로 따로 뺐다 — <strong>소스 폴더를 부산물로 더럽히지 않기 위해서다.</strong></dd>
+
+      <dt>cmake --build &lt;빌드 폴더&gt;</dt>
+      <dd><strong>실제로 만드는 단계</strong>다. 설정 때 정해진 계획표대로 컴파일과 링크를 돌린다.
+          <code>make</code>를 직접 치는 것과 같은 일인데, <strong>운영체제가 달라져도 이 명령은 같다.</strong></dd>
+    </dl>
+  </div>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    include/ 에 헤더, src/ 에 소스가 있는 C++17 프로젝트야. CMakeLists.txt 를 만들어 줘. 조건은 세 가지야. ① 헤더를 쓰는 부분은 include_directories 말고 target_include_directories 로 걸어 줘. ② 계산 부분은 add_library 로 따로 빼고 실행 파일에 target_link_libraries 로 붙여 줘. ③ 빌드 폴더는 build/ 로 분리해서 cmake -S . -B build 로 되게 해 줘.
+  </div>
+
+  <!-- ── 💻 코딩 블록: 낡은 방식 vs 지금 방식 ── -->
+  <h2 id="modern">④ 낡은 CMake는 한 줄만 보면 알아챌 수 있다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <h3>언제 이게 필요해지나</h3>
+  <p>
+    AI에게 <code>CMakeLists.txt</code>를 만들어 달라고 하면 대개 <strong>돌아가는 파일</strong>이 온다.
+    빌드도 되고 실행도 된다. 그래서 그냥 쓰게 된다.
+    문제는 그 파일이 <strong>2014년 이전 방식</strong>일 때가 많다는 것이다.
+  </p>
+
+  <div class="codelabel bad">AI가 보통 주는 코드 🔴</div>
+  <pre class="before"><code>include_directories(include)              # ← 여기가 문제다
+link_directories(lib)                     # ← 같은 종류의 문제다
+add_executable(robot main.cpp)
+target_link_libraries(robot mylib)</code></pre>
+
+  <h3>무엇이 문제인가</h3>
+  <p>
+    <code>include_directories(include)</code>는 <strong>이 아래에서 만들어지는 모든 타깃</strong>에 그 폴더를 걸어 버린다.
+    지금 만드는 것 하나에만 걸린 것이 아니다.
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>무엇이 걸리나</th><th>왜 문제인가</th></tr>
+    <tr><td>거는 대상이 안 적혀 있다</td><td><strong>누구에게 거는지가 코드에 없다.</strong> 타깃이 열 개면 열 개 전부에 걸린다</td></tr>
+    <tr><td>지울 수가 없다</td><td>한 타깃만 빼고 싶어도 뺄 방법이 없다. 폴더 전체에 이미 걸렸다</td></tr>
+    <tr><td>이름이 겹친다</td><td>붙이는 라이브러리가 늘어날수록 <strong>같은 이름의 헤더</strong>를 엉뚱한 폴더에서 집어 온다</td></tr>
+    <tr><td><code>target_link_libraries(robot mylib)</code>에 키워드가 없다</td><td><code>PRIVATE</code>·<code>PUBLIC</code>을 안 적었다. 옛 문법이라 통과는 되지만 <strong>전파 범위가 정해지지 않는다</strong></td></tr>
+  </table>
+  </div>
+
+  <h3>이렇게 말하면 된다</h3>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    이 CMakeLists.txt 에 include_directories 나 link_directories 가 있으면 전부 target_include_directories 와 target_link_libraries 로 바꿔 줘. target_link_libraries 에는 PRIVATE / PUBLIC 을 반드시 붙이고, 왜 그 쪽을 골랐는지 한 줄로 알려 줘.
+  </div>
+
+  <div class="codelabel good">받은 코드</div>
+  <pre class="after"><code>add_executable(robot main.cpp)
+target_include_directories(robot PRIVATE include)   # ← 대상마다 따로
+target_link_libraries(robot PRIVATE mylib)          # ← 전파 범위를 밝힌다</code></pre>
+
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 한 줄 판별법 — 오늘 가져갈 것이 이것 하나여도 된다</div>
+    <p>
+      받은 <code>CMakeLists.txt</code>에서 <strong><code>include_directories</code> 또는 <code>link_directories</code></strong>를 찾는다.
+      <strong>보이면 낡은 방식이다.</strong> 앞에 <code>target_</code>이 붙어 있으면 지금 방식이다.
+      한 단어 차이인데 하는 일이 다르다.
+    </p>
+    <pre><code>$ grep -n "include_directories\|link_directories" CMakeLists.txt</code></pre>
+    <p>
+      <strong>왜 AI가 여기서 유독 약한가:</strong> CMake는 2014년 무렵 <strong>「전역 설정」에서 「타깃 중심」으로</strong>
+      사고방식이 통째로 바뀌었다. 그런데 인터넷에 쌓인 예제와 블로그 글은 그 이전 것이 훨씬 많다.
+      AI는 <strong>흔한 것</strong>을 재현하므로, 요구하지 않으면 낡은 쪽이 나온다.
+      <strong>이것은 AI가 틀린 것이 아니라 「가장 흔한 답」을 고른 것이다.</strong> 그래서 지적하면 바로 고친다.
+    </p>
+  </div>
+
+  <h3>쓸 때 / 안 쓸 때</h3>
+  <div class="tablewrap">
+  <table>
+    <tr><th>이걸 쓴다</th><th>언제</th><th>수준</th></tr>
+    <tr><td><code>target_include_directories(&lt;타깃&gt; …)</code></td><td><strong>기본값.</strong> 헤더 위치를 알려 줄 때는 항상 이것</td><td><span class="badge b-lv">[요구]</span></td></tr>
+    <tr><td><code>target_link_libraries(&lt;타깃&gt; PRIVATE …)</code></td><td><strong>기본값.</strong> 라이브러리를 붙일 때는 항상 이것</td><td><span class="badge b-lv">[요구]</span></td></tr>
+    <tr><td><code>include_directories(...)</code></td><td><strong>안 쓴다.</strong> 남의 옛 코드를 읽을 때 알아보기만 하면 된다</td><td><span class="badge b-lv">[판단]</span></td></tr>
+    <tr><td><code>set(CMAKE_CXX_STANDARD 17)</code></td><td>프로젝트 전체가 같은 표준을 쓸 때는 이대로 둔다. 우리 파일이 그 경우다</td><td><span class="badge b-lv">[알아보기]</span></td></tr>
+  </table>
+  </div>
+
+  <h3>한 줄 점검</h3>
+  <p>받은 <code>CMakeLists.txt</code>에 <code>target_</code>이 안 붙은 <code>include_directories</code>가 남아 있지 않나?</p>
+
+  <!-- ── PRIVATE / PUBLIC ── -->
+  <h2 id="scope">⑤ <code>PRIVATE</code>가 기본값이다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <p>
+    <code>target_</code>으로 시작하는 명령에는 <strong>대상 이름 다음에 대문자 단어 하나</strong>가 붙는다.
+    이것이 <strong>"이 설정을 나만 쓸 것인가, 나를 쓰는 쪽까지 물려줄 것인가"</strong>를 정한다.
+  </p>
+
+  <figure>
+    <img src="assets/img/09_target_scope.png"
+         alt="PUBLIC·PRIVATE·INTERFACE 세 줄 비교 그림. 각 줄에서 libfoo 타깃에 걸린 속성이 user 타깃까지 화살표로 전파되는지 여부가 다르게 그려져 있다">
+    <figcaption>오른쪽 <strong>PROPERTY 타원에서 나가는 화살표가 몇 개인지</strong>만 본다.
+      <code>PUBLIC</code>은 둘(자기 자신 + 쓰는 쪽), <code>PRIVATE</code>는 하나(자기 자신만),
+      <code>INTERFACE</code>는 하나(쓰는 쪽만)다.</figcaption>
+  </figure>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 그림에서 처음 나오는 것</p>
+    <dl>
+      <dt>PRIVATE</dt>
+      <dd><strong>이 설정은 나만 쓴다.</strong> 나를 가져다 쓰는 쪽에는 안 물려준다.
+          여기서는 <code>scan_app</code>이 <code>scan_math</code>를 붙일 때 썼다 —
+          <code>scan_app</code>은 최종 실행 파일이라 <strong>누구도 이것을 가져다 쓰지 않기 때문이다.</strong></dd>
+
+      <dt>PUBLIC</dt>
+      <dd><strong>나도 쓰고, 나를 쓰는 쪽에도 물려준다.</strong>
+          여기서는 <code>scan_math</code>의 <code>include</code> 폴더에 썼다 —
+          <code>scan_math.hpp</code>는 <strong><code>main.cpp</code>도 <code>#include</code>해야 하기 때문이다.</strong>
+          <code>PRIVATE</code>로 바꾸면 <code>main.cpp</code>가 헤더를 못 찾는다.</dd>
+
+      <dt>INTERFACE</dt>
+      <dd><strong>나는 안 쓰고 나를 쓰는 쪽만 쓴다.</strong>
+          헤더만 있고 소스가 없는 라이브러리에 쓴다. <strong>이 과목에서 우리가 쓸 일은 없다.</strong>
+          남의 <code>CMakeLists.txt</code>에서 보면 "아, 헤더만 있는 것이구나"로 읽으면 된다.</dd>
+    </dl>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 셋을 다 외우려 하지 않는다. <strong>규칙은 하나다 — 고민되면 <code>PRIVATE</code>.</strong>
+    그러다 헤더를 못 찾는 오류가 나면 <strong>그 라이브러리의 헤더 줄만</strong> <code>PUBLIC</code>으로 올린다.
+    우리 파일에서 <code>PUBLIC</code>이 딱 한 줄인 이유가 그것이다.
+  </div>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    이 CMakeLists.txt 에서 PUBLIC 으로 둔 줄과 PRIVATE 로 둔 줄이 각각 왜 그런지 한 줄씩 설명해 줘. 그리고 둘을 서로 바꾸면 무엇이 깨지는지도 알려 줘. 파일은 고치지 말고 설명만 해 줘.
+  </div>
+
+  <!-- ── ⌨ 명령어 블록: 오류 읽기 ── -->
+  <h2 id="errors">⑥ 빌드가 터지면 먼저 「어느 단계였나」를 가른다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <p>
+    빌드가 실패하면 화면에 수십 줄이 쏟아진다.
+    <strong>학생이 가장 많이 하는 실수는 마지막 줄부터 읽는 것이다.</strong>
+    마지막 줄은 거의 언제나 <code>gmake: *** [Makefile:91: all] Error 2</code>인데,
+    이 줄에는 아무 정보가 없다. <em>"아래쪽에서 뭔가 실패했다"</em>는 말뿐이다.
+  </p>
+
+  <div class="box stop">
+    <div class="boxtitle">⛔ 이 줄들은 읽지 않는다</div>
+    <pre><code>gmake[2]: *** [CMakeFiles/scan_app.dir/build.make:76: …] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:111: CMakeFiles/scan_app.dir/all] Error 2
+gmake: *** [Makefile:91: all] Error 2</code></pre>
+    <p>
+      <code>gmake</code>로 시작하는 줄은 <strong>"내 밑에서 뭔가 실패했다"</strong>는 보고일 뿐이다.
+      세 줄이 나오는 이유는 실패가 아래에서 위로 세 번 전달됐기 때문이다.
+      <strong>위로 올라가서 첫 번째 <code>error:</code> 줄을 찾는다.</strong> 거기에만 정보가 있다.
+    </p>
+  </div>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>오류가 난 자리</th><th>무슨 뜻인가</th><th>어디를 고치나</th></tr>
+    <tr><td><code>cmake</code> 단계</td><td><strong>계획표 자체가 잘못됐다.</strong> 아직 컴파일은 시작도 안 했다</td><td><code>CMakeLists.txt</code> — <strong>줄 번호를 알려 준다</strong></td></tr>
+    <tr><td>컴파일 단계 (<code>error:</code>)</td><td>코드 문법이 틀렸다</td><td>소스 파일 — <strong>경로와 줄:칸 번호를 알려 준다</strong></td></tr>
+    <tr><td>링크 단계 (<code>undefined reference</code>)</td><td><strong>선언만 있고 정의를 못 찾았다</strong></td><td><code>CMakeLists.txt</code>의 <code>target_link_libraries</code> — <strong>소스가 아니다</strong></td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 세 번째 줄이 학생을 가장 많이 괴롭힌다.
+    메시지에 <strong>소스 파일 이름(<code>main.cpp</code>)이 찍혀 나오기 때문에</strong> 소스를 고치러 간다.
+    그런데 소스는 멀쩡하다. <strong>고칠 곳은 <code>CMakeLists.txt</code>다.</strong>
+    이 한 줄을 아는 것과 모르는 것이 한 학기 동안 몇 시간 차이를 낸다.
+  </div>
+
+  <!-- ── 오류 3종 실제 메시지 ── -->
+  <h2 id="err3">⑦ 오류 3종을 직접 재현해 읽어 본다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+  <p>
+    아래 셋은 <strong>같은 프로젝트를 한 군데씩만 망가뜨려서 실제로 얻은 화면</strong>이다.
+    한 글자도 고치지 않았다.
+    <span class="src">잰 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0, CMake 3.28.3)</span>
+  </p>
+
+  <h3>① cmake 단계 — 파일 이름을 <code>mian.cpp</code>로 잘못 적었다</h3>
+  <pre><code>$ cmake -S bad_cmake -B bad_cmake/build
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done (0.2s)
+CMake Error at CMakeLists.txt:7 (add_executable):
+  Cannot find source file:
+
+    src/mian.cpp
+
+  Tried extensions .c .C .c++ .cc .cpp .cxx .cu .mpp .m .M .mm .ixx .cppm
+  .ccm .cxxm .c++m .h .hh .h++ .hm .hpp .hxx .in .txx .f .F .for .f77 .f90
+  .f95 .f03 .hip .ispc
+
+
+CMake Error at CMakeLists.txt:7 (add_executable):
+  No SOURCES given to target: scan_app
+
+
+CMake Generate step failed.  Build files cannot be regenerated correctly.</code></pre>
+  <p>
+    <strong>어느 줄을 보나:</strong> <code>CMake Error at CMakeLists.txt:7 (add_executable)</code> 한 줄이다.
+    <strong>파일 이름과 줄 번호가 그대로 나온다</strong> — <code>CMakeLists.txt</code>의 7번째 줄, 그중에서도 <code>add_executable</code> 명령이다.
+    그 밑 <code>src/mian.cpp</code>가 못 찾은 파일 이름이다. <code>main</code>이 <code>mian</code>이 됐다.
+  </p>
+  <p>
+    <strong>나머지는 안 봐도 된다.</strong> <code>Tried extensions</code> 세 줄은 CMake가 시도해 본 확장자 목록이고,
+    두 번째 <code>CMake Error</code>(<code>No SOURCES given</code>)는 첫 번째의 <strong>후속 피해</strong>다.
+    소스를 하나도 못 찾았으니 타깃이 빈 것이다. <strong>첫 번째를 고치면 같이 사라진다.</strong>
+  </p>
+
+  <h3>② 컴파일 단계 — 세미콜론을 빠뜨렸다</h3>
+  <pre><code>$ cmake --build bad_compile/build
+[ 25%] Building CXX object CMakeFiles/scan_math.dir/src/scan_math.cpp.o
+[ 50%] Linking CXX static library libscan_math.a
+[ 50%] Built target scan_math
+[ 75%] Building CXX object CMakeFiles/scan_app.dir/src/main.cpp.o
+/work/l09_cmake/bad_compile/src/main.cpp: In function ‘int main()’:
+/work/l09_cmake/bad_compile/src/main.cpp:7:70: error: expected ‘;’ before ‘return’
+    7 |   std::printf("유효값 평균 = %.3f m\n", mean_range(raw, 0.16f, 8.0f))
+      |                                                                      ^
+      |                                                                      ;
+    8 |   return 0;
+      |   ~~~~~~
+gmake[2]: *** [CMakeFiles/scan_app.dir/build.make:76: CMakeFiles/scan_app.dir/src/main.cpp.o] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:111: CMakeFiles/scan_app.dir/all] Error 2
+gmake: *** [Makefile:91: all] Error 2</code></pre>
+  <p>
+    <strong>어느 줄을 보나:</strong> <code>error:</code>가 들어 있는 줄이다.
+    앞부분이 <code>…/src/main.cpp:7:70</code>인데, 이것이 <strong>파일 경로 · 7번째 줄 · 70번째 칸</strong>이다.
+    그 아래 <code>^</code> 표시가 정확히 그 칸을 가리키고, 그 밑에 컴파일러가 <strong><code>;</code>를 여기 넣으라고 직접 적어 준다.</strong>
+  </p>
+  <p>
+    <strong>눈여겨볼 것 하나:</strong> 이 화면에서 <code>[ 50%] Built target scan_math</code>까지는 <strong>성공했다.</strong>
+    라이브러리는 이미 만들어졌고 <code>main.cpp</code> 하나에서만 터진 것이다.
+    <strong>성공한 줄과 실패한 줄이 한 화면에 섞여 나온다</strong>는 것을 알아 두면 덜 당황한다.
+  </p>
+
+  <h3>③ 링크 단계 — <code>target_link_libraries</code> 줄을 통째로 빠뜨렸다</h3>
+  <pre><code>$ cmake --build bad_link/build
+[ 25%] Building CXX object CMakeFiles/scan_math.dir/src/scan_math.cpp.o
+[ 50%] Linking CXX static library libscan_math.a
+[ 50%] Built target scan_math
+[ 75%] Building CXX object CMakeFiles/scan_app.dir/src/main.cpp.o
+[100%] Linking CXX executable scan_app
+/usr/bin/ld: CMakeFiles/scan_app.dir/src/main.cpp.o: in function `main':
+main.cpp:(.text+0xca): undefined reference to `mean_range(std::vector&lt;float, std::allocator&lt;float&gt; &gt; const&amp;, float, float)'
+collect2: error: ld returned 1 exit status
+gmake[2]: *** [CMakeFiles/scan_app.dir/build.make:97: scan_app] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:111: CMakeFiles/scan_app.dir/all] Error 2
+gmake: *** [Makefile:91: all] Error 2</code></pre>
+  <p>
+    <strong>어느 줄을 보나:</strong> <code>undefined reference to `mean_range(...)'</code> 한 줄이다.
+    <strong>여기서 함정에 빠진다.</strong> 그 앞뒤로 <code>main.cpp</code>가 두 번 찍혀 있어서
+    <strong>소스를 고치러 가게 된다.</strong> 그런데 <code>main.cpp</code>는 문법이 완벽하다 —
+    <code>[ 75%] Building … main.cpp.o</code> 줄이 <strong>이미 성공했다는 증거다.</strong>
+  </p>
+  <p>
+    터진 곳은 <code>[100%] Linking</code> 다음이다. <strong>이어 붙이는 단계에서 터졌다.</strong>
+    <code>mean_range</code>의 실제 내용이 들어 있는 <code>libscan_math.a</code>를 아무도 넘겨 주지 않았다.
+    <strong>고칠 곳은 <code>CMakeLists.txt</code>이고, 넣을 줄은 한 줄이다.</strong>
+  </p>
+  <div class="codelabel good">이 한 줄을 되살리면 끝난다</div>
+  <pre class="after"><code>target_link_libraries(scan_app PRIVATE scan_math)</code></pre>
+
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 이 셋 중 셋째만 성격이 다르다</div>
+    <p>
+      ①과 ②는 <strong>화면이 고칠 자리를 직접 짚어 준다.</strong> 파일 이름도, 줄 번호도 나온다.
+      그대로 가서 고치면 된다.
+    </p>
+    <p>
+      ③은 다르다. <strong>화면이 가리키는 파일과 고쳐야 할 파일이 다르다.</strong>
+      메시지에는 <code>main.cpp</code>가 나오는데 고칠 곳은 <code>CMakeLists.txt</code>다.
+      <strong>이 어긋남 때문에 셋째가 학생을 가장 오래 붙잡는다.</strong>
+      <code>undefined reference</code>를 보면 <strong>소스를 열기 전에 <code>CMakeLists.txt</code>부터 연다</strong>는 습관을 만든다.
+    </p>
+  </div>
+
+  <!-- ── AI 활용 ── -->
+  <h2 id="ai">⑧ 빌드 오류는 통째로 붙여 넣어도 된다 — 조건이 하나 있다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+  <p>
+    <strong>이 회차에서는 AI 활용을 권장한다.</strong> 빌드 오류는 AI가 특히 잘 푸는 종류다.
+    메시지가 정형화돼 있고, 인터넷에 같은 메시지가 수없이 쌓여 있기 때문이다.
+    <strong>화면을 통째로 복사해 붙여 넣는 것이 가장 빠르다.</strong>
+  </p>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    아래는 빌드하다 나온 화면 전체야. 먼저 이게 cmake 설정 / 컴파일 / 링크 중 어느 단계에서 난 오류인지 한 줄로 말해 줘. 그다음 어느 파일 몇 번째 줄을 어떻게 고쳐야 하는지 알려 줘. 고친 파일 전체를 다시 주지 말고 바뀌는 줄만 보여 줘.
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 조건은 <strong>"어느 단계였는지 한 줄로 말하게 하는 것"</strong> 하나다.
+    이것이 왜 중요한가 하면, <strong>답만 받으면 다음에 또 못 고치기 때문이다.</strong>
+    같은 오류는 학기 내내 다시 나온다. 단계 이름을 세 번만 적어 보면 그다음부터는 화면만 보고 안다.
+    <strong>HW2의 점수도 고친 결과가 아니라 이 한 줄에 붙는다.</strong>
+  </div>
+  <div class="box stop">
+    <div class="boxtitle">⛔ 그래도 넘기면 안 되는 것</div>
+    <p>
+      <em>"빌드 안 되는데 알아서 다 고쳐 줘"</em>라고 시키고 결과만 받는 것.
+      에이전트는 <strong>고치는 김에 <code>CMakeLists.txt</code>를 통째로 다시 쓰기도 한다.</strong>
+      그러면서 <code>include_directories</code>가 슬쩍 들어오고, 다음 주에 다른 오류로 돌아온다.
+      <strong>바뀐 줄만 받아서 눈으로 본다.</strong>
+    </p>
+  </div>
+
+  <!-- ── 🧪 실습 ── -->
+  <h2 id="lab">🧪 실습 — 오류 3종을 직접 내고 직접 고친다</h2>
+  <div class="lab-block">
+    <div class="boxtitle">🧪 실습 (약 35분) — HW2로 바로 이어집니다</div>
+    <p><strong>알게 되는 것:</strong> 화면만 보고 <strong>어느 단계에서 났는지</strong> 가르는 감각.
+      명령어가 아니라 <strong>가르는 순서</strong>가 이 실습의 목표다.</p>
+    <p><strong>준비물:</strong> WSL 터미널 한 칸, 배포된 <code>l09_cmake</code> 폴더(<code>good</code>·<code>bad_cmake</code>·<code>bad_compile</code>·<code>bad_link</code> 네 개),
+      <code>g++</code>와 <code>cmake</code>. 로봇도 ROS도 필요 없다.</p>
+    <p><strong>절차</strong></p>
+    <ol>
+      <li>폴더를 받아 풀고 <code>good</code>부터 돌린다. <code>cmake -S good -B good/build</code> →
+        <code>cmake --build good/build</code> → <code>./good/build/scan_app</code>.
+        <strong><code>유효값 평균 = 1.373 m</code></strong>가 나오는 것을 눈으로 확인한다. (5분)</li>
+      <li><code>cmake -S bad_cmake -B bad_cmake/build</code>를 친다.
+        화면에서 <strong><code>CMakeLists.txt:</code> 뒤의 숫자</strong>를 찾아 적는다.
+        그 줄을 열어 고친 뒤 다시 설정한다. (7분)</li>
+      <li><code>cmake --build bad_compile/build</code>를 친다.
+        <strong>맨 아래가 아니라 위로 올라가서</strong> 첫 <code>error:</code> 줄을 찾는다.
+        <code>파일:줄:칸</code>을 적고 그 자리를 고친다. (7분)</li>
+      <li><code>cmake --build bad_link/build</code>를 친다.
+        <strong>소스는 절대 열지 않는다.</strong> <code>CMakeLists.txt</code>만 보고 빠진 한 줄을 넣는다. (10분)</li>
+      <li>넷 다 <code>cmake --build</code> 후 실행해서 <strong>전부 <code>1.373 m</code></strong>가 나오는지 확인한다. (3분)</li>
+      <li>세 오류 각각에 대해 <strong>「어느 단계였나 · 화면의 어느 줄을 보고 알았나」</strong>를 한 줄씩 적는다. (3분)</li>
+    </ol>
+    <p>
+      <strong>이렇게 되면 성공:</strong> 네 폴더 전부에서 <code>유효값 평균 = 1.373 m</code>가 찍힌다.
+      그리고 6번에 적은 세 줄이 <strong>실제로 그 단계와 맞는다.</strong>
+    </p>
+    <pre><code>$ ./bad_link/build/scan_app
+유효값 평균 = 1.373 m</code></pre>
+    <div class="box trap" style="margin-top:1rem">
+      <div class="boxtitle">4번에서 소스를 열고 싶어질 것이다</div>
+      <p>
+        <code>undefined reference</code> 메시지에 <code>main.cpp</code>가 두 번 나오기 때문이다.
+        <strong>거기서 참는 것이 이 실습 전체의 목적이다.</strong>
+        열어 봐야 아무것도 안 틀려 있다.
+      </p>
+    </div>
+  </div>
+
+  <!-- ── HW2 ── -->
+  <h2 id="hw2">📄 HW2 — 고장난 CMake 프로젝트 고치기 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+  <p>
+    실습에서 쓴 것과 <strong>다른</strong> 고장난 프로젝트 하나를 따로 배포한다.
+    거기에는 위 세 가지 중 <strong>두 가지가 동시에</strong> 들어 있다.
+  </p>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>배점 열</strong>을 본다. 고친 결과보다 <strong>근거에 붙는 점수가 더 크다.</strong></p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>제출물</th><th>형식</th><th>배점</th></tr>
+    <tr><td>고친 <code>CMakeLists.txt</code>와 소스</td><td>폴더 전체를 압축. <code>build/</code>는 빼고 낸다</td><td>1점</td></tr>
+    <tr><td><strong>오류마다 「어느 단계였나」</strong></td><td>cmake 설정 / 컴파일 / 링크 중 하나를 고르고 한 줄</td><td><strong>1점</strong></td></tr>
+    <tr><td><strong>그렇게 판단한 근거</strong></td><td><strong>화면의 어느 줄을 보고 알았는지</strong> 그 줄을 그대로 붙인다</td><td><strong>0.5점</strong></td></tr>
+    <tr><td>고친 뒤 실행 화면</td><td><code>유효값 평균 = …</code> 이 나온 터미널을 글자로 붙인다</td><td>0.5점</td></tr>
+    <tr><td>AI 활용 기록</td><td>물어봤으면 <strong>주고받은 문장 그대로.</strong> 안 썼으면 "안 씀"</td><td>감점 없음</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> <strong>AI에게 물어봐서 고쳐도 된다.</strong> 감점이 없다.
+    다만 <strong>「어느 단계였나」와 그 근거를 못 쓰면 절반이 날아간다.</strong>
+    고친 사람과 원인을 아는 사람은 다르고, 이 과목이 평가하는 것은 뒤쪽이다.
+  </div>
+  <p>내기 전에 마지막으로 한 번 훑게 시킨다. <strong>고치라고 하지 말고 목록만 받는다.</strong></p>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    내 CMakeLists.txt 를 검사만 해 줘. 고치지 말고 걸리는 것만 목록으로 알려 줘. ① target_ 이 안 붙은 include_directories 나 link_directories 가 있나 ② target_link_libraries 에 PRIVATE / PUBLIC 이 빠진 곳이 있나 ③ 빌드 결과가 소스 폴더에 섞이게 돼 있나 ④ .gitignore 에 build/ 가 있나.
+  </div>
+
+  <!-- ── 프롬프트 모음 ── -->
+  <h2 id="prompts">🤖 오늘 나온 프롬프트 모음</h2>
+  <div class="tablewrap">
+  <table>
+    <tr><th>이럴 때</th><th>이렇게 말한다</th></tr>
+    <tr><td>프로젝트를 처음 만들 때</td><td>"include/ 에 헤더, src/ 에 소스가 있어. <code>target_include_directories</code>와 <code>target_link_libraries</code>만 써서 CMakeLists.txt 를 만들어 줘."</td></tr>
+    <tr><td>받은 파일이 낡아 보일 때</td><td>"<code>include_directories</code>나 <code>link_directories</code>가 있으면 전부 <code>target_</code> 방식으로 바꿔 줘."</td></tr>
+    <tr><td>빌드가 터졌을 때</td><td>"이게 cmake 설정 / 컴파일 / 링크 중 어느 단계 오류인지 먼저 한 줄로 말해 줘. 그다음 바뀌는 줄만 보여 줘."</td></tr>
+    <tr><td><code>PRIVATE</code>·<code>PUBLIC</code>이 헷갈릴 때</td><td>"이 <code>target_link_libraries</code>에 왜 <code>PRIVATE</code>를 골랐는지 한 줄로 알려 줘. <code>PUBLIC</code>이면 뭐가 달라지나?"</td></tr>
+    <tr><td>부산물이 소스에 섞였을 때</td><td>"빌드 결과가 소스 폴더에 섞이지 않게 <code>-S . -B build</code> 방식으로 바꾸고 <code>.gitignore</code>에 <code>build/</code>를 넣어 줘."</td></tr>
+  </table>
+  </div>
+
+  <!-- ── ✅ 점검 ── -->
+  <h2 id="check">✅ 오늘의 점검</h2>
+  <ul class="check">
+    <li><input type="checkbox" id="c1"><label for="c1">받은 <code>CMakeLists.txt</code>에 <code>target_</code>이 안 붙은 <code>include_directories</code>가 남아 있지 않나?</label></li>
+    <li><input type="checkbox" id="c2"><label for="c2"><code>target_link_libraries</code>에 <code>PRIVATE</code>나 <code>PUBLIC</code>이 붙어 있나?</label></li>
+    <li><input type="checkbox" id="c3"><label for="c3">빌드가 터졌을 때 <strong>맨 아래가 아니라 첫 <code>error:</code> 줄</strong>을 찾았나?</label></li>
+    <li><input type="checkbox" id="c4"><label for="c4"><code>undefined reference</code>를 보고 <strong>소스가 아니라 <code>CMakeLists.txt</code></strong>를 열었나?</label></li>
+    <li><input type="checkbox" id="c5"><label for="c5">AI에게 오류를 물어본 뒤 <strong>어느 단계였는지 한 줄로 적었나?</strong></label></li>
+    <li><input type="checkbox" id="c6"><label for="c6">빌드 결과물이 소스 폴더가 아니라 <code>build/</code>에 따로 쌓이고 있나?</label></li>
+    <li><input type="checkbox" id="c7"><label for="c7">고친 뒤 <strong>실제로 실행해서</strong> 값이 나오는 것을 눈으로 봤나?</label></li>
+  </ul>
+
+  <!-- ── 조금 더 알아두면 ── -->
+  <h2 id="more">조금 더 알아두면 <span class="badge b-lv">시험 범위 아님</span></h2>
+
+  <details>
+    <summary>make 파일은 실제로 어떻게 생겼나 — 탭 문자를 눈으로 보기</summary>
+    <p>
+      CMake가 대신 만들어 주므로 <strong>우리가 이 파일을 쓸 일은 없다.</strong> 모양만 보고 넘어간다.
+    </p>
+    <pre><code>hello: hello.o
+&lt;탭&gt;gcc -o hello hello.o
+hello.o: hello.c</code></pre>
+    <p>
+      첫 줄은 <em>"<code>hello</code>를 만들려면 <code>hello.o</code>가 있어야 한다"</em>는 의존 관계다.
+      둘째 줄이 <strong>만드는 방법</strong>인데, <strong>맨 앞이 반드시 탭 문자</strong>여야 한다.
+      스페이스 여덟 칸으로 바꾸면 <code>missing separator</code>라는 오류가 난다.
+      <strong>화면에서는 두 경우가 완전히 똑같이 보인다.</strong> 이야기 블록의 그 탭이 이것이다.
+    </p>
+  </details>
+
+  <details>
+    <summary>정적 라이브러리(.a)와 동적 라이브러리(.so)는 뭐가 다른가</summary>
+    <p>
+      <code>add_library</code>는 기본으로 <strong>정적 라이브러리</strong>를 만든다. 우리가 본 <code>libscan_math.a</code>가 그것이다.
+    </p>
+    <div class="tablewrap">
+    <table>
+      <tr><th>무엇</th><th>언제 합쳐지나</th><th>결과</th></tr>
+      <tr><td><code>.a</code> (정적)</td><td><strong>링크할 때</strong> 실행 파일 안으로 복사돼 들어간다</td><td>실행 파일이 커지지만 혼자 돈다</td></tr>
+      <tr><td><code>.so</code> (동적)</td><td><strong>실행할 때</strong> 밖에서 불러 온다</td><td>실행 파일은 작지만 <code>.so</code>가 없으면 안 뜬다</td></tr>
+    </table>
+    </div>
+    <p>
+      <code>add_library(scan_math SHARED src/scan_math.cpp)</code>로 적으면 <code>.so</code>가 나온다.
+      <strong>ROS 2 패키지는 대부분 <code>SHARED</code>다</strong> — 여러 노드가 같은 코드를 나눠 쓰기 때문이다.
+      <strong>이 과목에서 우리가 골라야 할 일은 없다.</strong> 나중에 남의 <code>CMakeLists.txt</code>에서 보면 알아보면 된다.
+    </p>
+  </details>
+
+  <details>
+    <summary>ROS 2에서는 이 파일이 어떻게 달라지나 (19회 예고)</summary>
+    <p>
+      ROS 2 패키지의 <code>CMakeLists.txt</code>도 <strong>지금 본 것과 뼈대가 같다.</strong>
+      <code>add_executable</code>과 <code>target_link_libraries</code>가 그대로 나온다.
+      다르게 생긴 줄은 앞뒤에 붙는 몇 개뿐이다.
+    </p>
+    <pre><code>find_package(rclcpp REQUIRED)          # 남이 만든 것을 찾아 온다
+add_executable(my_node src/my_node.cpp)
+ament_target_dependencies(my_node rclcpp)
+install(TARGETS my_node DESTINATION lib/${PROJECT_NAME})
+ament_package()</code></pre>
+    <p>
+      <code>install(...)</code> 줄이 없으면 <code>ros2 run</code>이 실행 파일을 못 찾는다.
+      <strong>지금은 모양만 봐 두면 된다. 19회에서 제대로 다룬다.</strong>
+    </p>
+  </details>
+
+  <details>
+    <summary>빌드 폴더를 왜 따로 빼나 — <code>cmake .</code>을 쓰지 않는 이유</summary>
+    <p>
+      옛날 예제에는 <code>cmake .</code>이 많이 나온다. 소스 폴더에서 바로 설정하는 방식이다.
+      그러면 <code>CMakeCache.txt</code>·<code>CMakeFiles/</code>·<code>Makefile</code>이 <strong>소스 옆에 그대로 쏟아진다.</strong>
+    </p>
+    <ul>
+      <li>git에 올릴 것과 안 올릴 것이 한 폴더에 섞인다.</li>
+      <li>지우려면 <strong>어느 것이 부산물인지 하나씩 골라내야 한다.</strong></li>
+      <li><code>-B build</code>로 빼면 <strong><code>rm -rf build</code> 한 줄로 처음 상태가 된다.</strong></li>
+    </ul>
+    <p>그래서 <code>.gitignore</code>에는 언제나 <code>build/</code>가 들어간다.</p>
+  </details>
+
+  <footer>
+    로봇공학 · 순천향대학교 전자정보공학과 ·
+    다음 회차: <a href="robotics_10.html">10회 상속·다형성과 RAII</a>
+  </footer>
+</main>
+</div>
+
+<script>
+function copyPrompt(btn) {
+  const box = btn.parentElement.cloneNode(true);
+  box.querySelector('button').remove();
+  navigator.clipboard.writeText(box.textContent.trim()).then(function () {
+    const old = btn.textContent;
+    btn.textContent = '복사됨';
+    setTimeout(function () { btn.textContent = old; }, 1200);
+  });
+}
+</script>
+</body>
+</html>

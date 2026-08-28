@@ -1,0 +1,866 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>12회 · 스마트 포인터와 컨테이너 | 로봇공학</title>
+<link rel="stylesheet" href="assets/lecture.css">
+</head>
+<body>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="toc-title">이 회차 목차</div>
+  <a href="#summary">한 장 요약</a>
+  <a href="#raii">① 뒷정리를 사람이 하지 않는다</a>
+  <a href="#own">② 주인이 하나인가 여럿인가</a>
+  <a href="#choose">③ AI는 뭐든 shared_ptr 로 만든다</a>
+  <a href="#rosptr">④ ROS 2 의 SharedPtr</a>
+  <a href="#container">⑤ 그릇은 vector 하나로 시작한다</a>
+  <a href="#reserve">⑥ reserve 한 줄이 1.89배</a>
+  <a href="#rangefor">⑦ const auto &amp; 를 빼면 복사가 난다</a>
+  <a href="#lab">🧪 실습</a>
+  <a href="#hw3">📝 HW3</a>
+  <a href="#prompts">🤖 프롬프트 모음</a>
+  <a href="#check">✅ 점검</a>
+  <a href="#more">조금 더 알아두면</a>
+</nav>
+
+<main>
+  <a class="backlink" href="../index.html">← 강의자료 목록</a>
+
+  <div class="lec-no">로봇공학 · 12회 · 2부 C++</div>
+  <h1>스마트 포인터와 컨테이너 — 누가 주인이고, 어디에 담나</h1>
+
+  <div class="questions">
+    <span class="lab">오늘 답할 질문</span>
+    <ol>
+      <li>손으로 만든 것을 언제 정리해야 하나? — 그 질문을 <strong>아예 안 하게 만드는 방법</strong>이 있다</li>
+      <li><code>unique_ptr</code>와 <code>shared_ptr</code> 중 무엇을 고르나?</li>
+      <li>ROS 2 코드에 늘 보이는 <code>SharedPtr</code>은 무엇인가?</li>
+      <li><code>reserve()</code> 한 줄이 실제로 얼마나 이득인가?</li>
+    </ol>
+  </div>
+
+  <p>
+    C++에는 이 언어 전체를 관통하는 한 문장이 있다.
+    <strong>중괄호를 벗어나면 뒷정리가 자동으로 된다.</strong>
+    파일을 열었으면 닫히고, 잠금을 걸었으면 풀린다. 사람이 닫으라고 쓰지 않아도 그렇게 된다.
+  </p>
+
+  <p>
+    <strong>오늘 배우는 스마트 포인터는 그 원리를 「메모리」에 적용한 것</strong>이다.
+    손으로 만든 물건을 손으로 치우는 대신, <strong>치우는 일을 물건 자신에게 맡긴다.</strong>
+    이름이 거창하지만 하는 일은 그것 하나다.
+  </p>
+
+  <p>
+    뒤쪽 절반은 <strong>값을 담는 그릇</strong>이다.
+    이 과목에서 쓰는 그릇은 사실상 <code>std::vector</code> 하나이고,
+    <strong>그 하나를 제대로 쓰는 법</strong>이 나머지 전부보다 중요하다.
+    오늘도 주장에는 숫자를 붙인다 — <code>reserve()</code> 한 줄이 <strong>몇 배</strong>인지 재서 확인한다.
+  </p>
+
+  <!-- ── 한 장 요약표 ── -->
+  <h2 id="summary">한 장 요약 — 학기가 끝나도 이 표만 남으면 된다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>가운데 「언제 쓰나」 열</strong>만 읽어도 판단이 선다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>이걸 쓴다</th><th>언제 쓰나</th><th>수준</th></tr>
+    <tr><td><code>std::make_unique&lt;T&gt;(...)</code></td><td><strong>기본값.</strong> 손으로 만든 것을 담을 때. <strong>주인이 하나</strong>다</td><td><span class="badge b-lv">[요구]</span></td></tr>
+    <tr><td><code>std::make_shared&lt;T&gt;(...)</code></td><td>같은 것을 <strong>여러 곳이 나눠 가져야</strong> 할 때만</td><td><span class="badge b-lv">[판단]</span></td></tr>
+    <tr><td><code>new</code> / <code>delete</code></td><td><strong>쓰지 않는다.</strong> 짝을 맞추는 일을 사람이 하면 반드시 틀린다</td><td><span class="badge b-lv">[요구]</span></td></tr>
+    <tr><td><code>std::vector&lt;T&gt;</code></td><td><strong>기본값.</strong> 개수가 실행 중에 정해지거나 바뀔 때</td><td><span class="badge b-lv">[요구]</span></td></tr>
+    <tr><td><code>std::array&lt;T, N&gt;</code></td><td>개수가 <strong>코드에 이미 적혀 있을</strong> 때 (바퀴 4개, 좌표 3개)</td><td><span class="badge b-lv">[판단]</span></td></tr>
+    <tr><td><code>v.reserve(n)</code></td><td><strong>몇 개 들어올지 알 때.</strong> 담기 시작하기 전에 한 줄</td><td><span class="badge b-lv">[요구]</span></td></tr>
+    <tr><td><code>for (const auto &amp; x : v)</code></td><td><strong>기본값.</strong> 그릇을 읽으면서 한 바퀴 돌 때</td><td><span class="badge b-lv">[요구]</span></td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> <strong>「기본값」이라고 적힌 네 줄</strong>이 오늘의 알맹이다.
+    나머지 세 줄은 그 기본값을 벗어날 이유가 있을 때만 고른다.
+    받은 코드에서 <strong>기본값이 아닌 것이 보이면 "왜 이걸 골랐지?"를 묻는 것</strong>이 이 회차의 검사 방법이다.
+  </div>
+
+  <!-- ══════════ ① RAII ══════════ -->
+  <h2 id="raii">① 뒷정리를 사람이 하면 반드시 잊는다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <h3>언제 이게 필요해지나</h3>
+  <p>
+    센서 하나를 켜고, 상태를 확인하고, 문제가 있으면 그만두는 코드를 짠다고 하자.
+    센서 객체는 <strong>함수 안에서 만들어 쓰고 끝나면 치워야</strong> 한다.
+  </p>
+
+  <div class="codelabel bad">AI가 보통 주는 코드 🔴</div>
+  <pre class="before"><code>void setup()
+{
+  Sensor * s = new Sensor("라이다");   // 손으로 만들었다
+  if (!s-&gt;ok()) {
+    return;                            // ← 여기서 나가면 delete 를 못 한다
+  }
+  s-&gt;start();
+  delete s;                            // 잊으면 새고, 두 번 부르면 부서진다
+}</code></pre>
+
+  <h3>무엇이 문제인가</h3>
+  <p>
+    이 코드에는 <strong>오류가 없다.</strong> 컴파일되고, 대부분의 경우 잘 돈다.
+    문제는 <strong>가운데 <code>return</code> 한 줄</strong>이다.
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>어떤 길로 나가나</th><th>무슨 일이 나나</th></tr>
+    <tr><td>끝까지 간다</td><td><code>delete</code>가 불린다. <strong>정상</strong></td></tr>
+    <tr><td>가운데에서 <code>return</code></td><td><code>delete</code>를 지나치고 나간다. <strong>메모리가 샌다</strong></td></tr>
+    <tr><td>중간에서 예외가 난다</td><td>역시 <code>delete</code>를 지나친다. <strong>같은 문제</strong></td></tr>
+    <tr><td>나중에 누가 줄을 하나 더 넣는다</td><td>그 줄이 <code>return</code>이면 <strong>또 새기 시작한다</strong></td></tr>
+  </table>
+  </div>
+  <p>
+    <strong>새는 메모리는 화면에 아무것도 안 띄운다.</strong> 프로그램은 계속 돈다.
+    노트북에서 몇 분 돌려서는 아무 일도 안 일어난다.
+    <strong>로봇 위에서 몇 시간 도는 노드에서만 드러난다.</strong>
+    그래서 이것은 실력 문제가 아니라 <strong>구조 문제</strong>다. 사람이 짝을 맞추는 한 언젠가 틀린다.
+  </p>
+
+  <h3>이렇게 말하면 된다</h3>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    <code>new</code>와 <code>delete</code>를 쓰지 말고 <code>std::make_unique</code>로 바꿔 줘. 함수 중간에서 <code>return</code>해도 정리가 되게 해 줘.
+  </div>
+
+  <div class="codelabel good">받은 코드</div>
+  <pre class="after"><code>void setup()
+{
+  auto s = std::make_unique&lt;Sensor&gt;("라이다");
+  if (!s-&gt;ok()) {
+    return;                            // 여기서 나가도 알아서 정리된다
+  }
+  s-&gt;start();
+}                                      // 중괄호를 벗어나는 순간 끝. delete 가 없다</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>std::unique_ptr&lt;T&gt;</dt>
+      <dd>물건 하나를 <strong>혼자 책임지는 손잡이</strong>다.
+          이 손잡이가 사라질 때 <strong>물건도 같이 정리된다.</strong>
+          여기서는 <code>setup()</code>의 중괄호를 벗어날 때 <code>Sensor</code>가 정리되게 하는 데 썼다.</dd>
+
+      <dt>std::make_unique&lt;T&gt;(...)</dt>
+      <dd><code>unique_ptr</code>를 만드는 정식 방법이다. 꺾쇠 안이 <strong>무엇을 만들지</strong>,
+          괄호 안이 <strong>그것을 만들 때 줄 값</strong>이다.
+          여기서는 <code>Sensor("라이다")</code>를 만들어 손잡이에 끼웠다.
+          <strong><code>new</code>라는 단어가 코드에서 사라지는 것</strong>이 요점이다.</dd>
+    </dl>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 두 코드의 줄 수는 거의 같다. 달라진 것은 <strong><code>delete</code>가 없어졌다</strong>는 것 하나다.
+    <strong>없어진 줄은 잊을 수 없다.</strong> 이것이 이득의 전부이고, 충분히 크다.
+  </div>
+
+  <h3>한 줄 점검</h3>
+  <p>받은 코드에 <code>new</code>나 <code>delete</code>가 남아 있나?</p>
+
+  <!-- ══════════ ② 소유권 ══════════ -->
+  <h2 id="own">② 주인이 하나면 <code>unique_ptr</code>, 나눠 가지면 <code>shared_ptr</code> <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <p>
+    손잡이는 두 종류다. 고르는 기준은 성능이 아니라 <strong>"이 물건의 주인이 몇인가"</strong>다.
+    말로만 하면 안 와닿으므로 <strong>켜지고 꺼지는 것을 직접 출력하는 프로그램</strong>을 만들어 돌렸다.
+    오늘 나오는 두 프로그램 중 첫 번째다.
+  </p>
+
+  <div class="codelabel good">smart_ptr.cpp — 누가 주인인가</div>
+  <pre><code>#include &lt;iostream&gt;
+#include &lt;memory&gt;
+#include &lt;string&gt;
+#include &lt;vector&gt;
+
+class Sensor {
+public:
+  explicit Sensor(std::string n) : n_(std::move(n)) { std::cout &lt;&lt; "  [" &lt;&lt; n_ &lt;&lt; " 켜짐]\n"; }
+  ~Sensor() { std::cout &lt;&lt; "  [" &lt;&lt; n_ &lt;&lt; " 꺼짐]\n"; }
+  const std::string &amp; name() const { return n_; }
+private:
+  std::string n_;
+};
+
+int main()
+{
+  std::cout &lt;&lt; "① unique_ptr — 주인이 하나다\n";
+  {
+    std::unique_ptr&lt;Sensor&gt; a = std::make_unique&lt;Sensor&gt;("라이다");
+    std::cout &lt;&lt; "  a 가 가리키는 것: " &lt;&lt; a-&gt;name() &lt;&lt; "\n";
+    std::unique_ptr&lt;Sensor&gt; b = std::move(a);      // 주인이 바뀐다. 복사는 안 된다
+    std::cout &lt;&lt; "  넘긴 뒤 a 는 비었나? " &lt;&lt; (a == nullptr ? "그렇다" : "아니다") &lt;&lt; "\n";
+    std::cout &lt;&lt; "  이제 주인은 b: " &lt;&lt; b-&gt;name() &lt;&lt; "\n";
+  }
+  std::cout &lt;&lt; "  중괄호를 나오면 delete 를 안 써도 꺼졌다\n\n";
+
+  std::cout &lt;&lt; "② shared_ptr — 여럿이 나눠 가진다. 마지막이 끄고 나간다\n";
+  {
+    std::shared_ptr&lt;Sensor&gt; p1 = std::make_shared&lt;Sensor&gt;("카메라");
+    std::cout &lt;&lt; "  주인 수 = " &lt;&lt; p1.use_count() &lt;&lt; "\n";
+    {
+      std::shared_ptr&lt;Sensor&gt; p2 = p1;             // 복사가 된다. 세는 숫자가 는다
+      std::cout &lt;&lt; "  주인 수 = " &lt;&lt; p1.use_count() &lt;&lt; "  (p2 가 생겼다)\n";
+    }
+    std::cout &lt;&lt; "  주인 수 = " &lt;&lt; p1.use_count() &lt;&lt; "  (p2 가 사라졌다)\n";
+  }
+  std::cout &lt;&lt; "\n③ ROS 2 의 SharedPtr 은 별명일 뿐이다\n";
+  std::cout &lt;&lt; "  Sensor::SharedPtr 같은 이름은 std::shared_ptr&lt;Sensor&gt; 를 줄여 쓴 것이다\n";
+  return 0;
+}</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>std::shared_ptr&lt;T&gt;</dt>
+      <dd>물건 하나를 <strong>여럿이 나눠 가지는 손잡이</strong>다.
+          손잡이가 몇 개 살아 있는지를 <strong>어딘가에 세어 두고</strong>,
+          <strong>마지막 하나가 사라질 때</strong> 물건을 정리한다.</dd>
+
+      <dt>std::make_shared&lt;T&gt;(...)</dt>
+      <dd><code>shared_ptr</code>를 만드는 정식 방법이다. 쓰는 모양은 <code>make_unique</code>와 같다.</dd>
+
+      <dt>p1.use_count()</dt>
+      <dd>지금 <strong>이 물건을 몇 명이 잡고 있는지</strong> 알려 준다.
+          여기서는 <code>p2</code>가 생기고 사라질 때 <strong>이 숫자가 어떻게 변하는지</strong> 보려고 썼다.</dd>
+
+      <dt>explicit Sensor(std::string n)</dt>
+      <dd>생성자 앞의 <code>explicit</code>는 <strong>"몰래 자동 변환되지 말라"</strong>는 표시다.
+          이게 없으면 <code>Sensor s = "라이다";</code> 같은 줄이 <strong>조용히 통과</strong>한다.
+          생성자에 붙여 두면 손해가 없어서 <strong>붙이는 것이 기본</strong>이다.</dd>
+
+      <dt>const std::string &amp; name() const</dt>
+      <dd>함수 이름 <strong>뒤</strong>에 붙은 <code>const</code>는
+          <strong>"이 함수는 객체의 상태를 안 바꾼다"</strong>는 약속이다.
+          지금은 모양만 봐 두면 된다.</dd>
+    </dl>
+    <p class="later">제대로 다루는 곳: 14회(<code>const</code> 정확성 — 함수 뒤에 붙는 <code>const</code>)</p>
+  </div>
+
+  <p>컨테이너에서 빌드해 돌린 결과다.</p>
+  <pre><code>$ g++ -std=c++17 -O2 -o smart_ptr smart_ptr.cpp &amp;&amp; ./smart_ptr
+① unique_ptr — 주인이 하나다
+  [라이다 켜짐]
+  a 가 가리키는 것: 라이다
+  넘긴 뒤 a 는 비었나? 그렇다
+  이제 주인은 b: 라이다
+  [라이다 꺼짐]
+  중괄호를 나오면 delete 를 안 써도 꺼졌다
+
+② shared_ptr — 여럿이 나눠 가진다. 마지막이 끄고 나간다
+  [카메라 켜짐]
+  주인 수 = 1
+  주인 수 = 2  (p2 가 생겼다)
+  주인 수 = 1  (p2 가 사라졌다)
+  [카메라 꺼짐]
+
+③ ROS 2 의 SharedPtr 은 별명일 뿐이다
+  Sensor::SharedPtr 같은 이름은 std::shared_ptr&lt;Sensor&gt; 를 줄여 쓴 것이다</code></pre>
+
+  <div class="interp">
+    <strong>해석:</strong> 출력에서 <strong>세 자리</strong>를 짚어 본다.
+    첫째, <strong>「넘긴 뒤 a 는 비었나? 그렇다」</strong> — <code>unique_ptr</code>는 복사가 안 되고
+    넘기면 <strong>주인이 바뀐다.</strong> 넘겨준 쪽은 <code>nullptr</code>이 된다.
+    둘째, <strong>주인 수가 1 → 2 → 1로 변하는 세 줄</strong> — 안쪽 중괄호에서
+    <code>p2</code>가 생겼다 사라지는 동안 숫자가 오르내린다.
+    셋째, <strong>「꺼짐」이 찍히는 위치</strong> — <code>delete</code>를 한 번도 안 썼는데
+    중괄호를 나올 때마다 꺼졌다.
+  </div>
+
+  <figure>
+    <img src="assets/img/12_ownership.png"
+         alt="unique_ptr 은 a 하나가 라이다 객체를 가리키고, shared_ptr 은 p1과 p2 두 개가 카메라 객체를 함께 가리키는 그림">
+    <figcaption>
+      위아래의 차이는 <strong>객체를 가리키는 화살표의 개수</strong>다.
+      화살표가 하나면 <code>unique_ptr</code>, 여럿이면 <code>shared_ptr</code>다.
+      <strong>화살표가 몇 개인지는 코드를 짜는 사람이 정하는 것</strong>이지 라이브러리가 정해 주지 않는다.
+    </figcaption>
+  </figure>
+
+  <!-- ══════════ ③ 판단 ══════════ -->
+  <h2 id="choose">③ AI는 뭐든지 <code>shared_ptr</code>로 만든다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <p>
+    <strong>이것이 이 회차에서 AI가 가장 자주 하는 실수다.</strong>
+    "메모리를 안전하게 관리해 줘"라고 하면 대부분 <code>shared_ptr</code>이 온다.
+    돌아간다. 새지도 않는다. <strong>그런데 대개 필요 없는 선택이다.</strong>
+  </p>
+  <p>
+    <code>shared_ptr</code>은 <strong>손잡이가 몇 개인지 세는 일</strong>을 계속 한다.
+    그 숫자는 <strong>여러 스레드가 동시에 건드려도 안전하게</strong> 세야 하므로,
+    손잡이를 만들고 없앨 때마다 <strong>보통 변수를 더하고 빼는 것보다 비싼 방식</strong>으로 세어진다.
+    <code>unique_ptr</code>에는 그 숫자 자체가 없다.
+  </p>
+  <p>
+    <strong>비용보다 더 중요한 것은 코드가 말하는 내용이다.</strong>
+    <code>shared_ptr</code>이 보이면 읽는 사람은 <strong>"이건 여러 곳이 같이 쓰는구나"</strong>라고 이해한다.
+    실제로는 한 곳만 쓰는데 <code>shared_ptr</code>이면, <strong>코드가 거짓말을 하고 있는 것</strong>이다.
+  </p>
+
+  <p class="readme-first">무엇을 먼저 볼지: <strong>왼쪽 두 질문에 답하는 순서</strong>가 곧 고르는 순서다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>주인이 몇인가</th><th>다른 곳에 넘길 일이 있나</th><th>고를 것</th></tr>
+    <tr><td>하나</td><td>없다</td><td><strong>손잡이 자체가 필요 없다.</strong> 그냥 멤버 변수로 갖는다</td></tr>
+    <tr><td>하나</td><td>있다 (만든 곳과 쓰는 곳이 다르다)</td><td><code>std::unique_ptr</code> — 넘길 때 <code>std::move</code></td></tr>
+    <tr><td><strong>여럿</strong></td><td>—</td><td><code>std::shared_ptr</code></td></tr>
+    <tr><td>여럿인데 <strong>서로를 가리킨다</strong></td><td>—</td><td><strong>여기서 멈추고 설계를 다시 본다.</strong> 서로 잡고 있으면 아무도 안 꺼진다</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 첫 줄을 빠뜨리기 쉽다.
+    <strong>손잡이가 아예 필요 없는 경우가 생각보다 많다.</strong>
+    클래스가 자기 것을 하나 갖고 평생 쓴다면 <code>std::unique_ptr&lt;Sensor&gt;</code>가 아니라
+    <code>Sensor</code> 자체를 멤버로 두면 된다.
+    <strong>"포인터를 안전하게 만드는 법"보다 "포인터를 안 쓰는 법"이 먼저다.</strong>
+  </div>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    이 코드에서 <code>shared_ptr</code>을 쓴 자리마다 <strong>주인이 정말 여럿인지</strong> 확인해 줘. 한 곳만 쓰는 것은 <code>unique_ptr</code>로 바꾸고, 왜 바꿨는지 한 줄씩 적어 줘.
+  </div>
+
+  <!-- ══════════ ④ ROS SharedPtr ══════════ -->
+  <h2 id="rosptr">④ ROS 2의 <code>SharedPtr</code>은 새로운 것이 아니라 별명이다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <p>
+    ROS 2 코드를 열면 이런 이름이 계속 나온다.
+  </p>
+  <pre><code>sensor_msgs::msg::LaserScan::SharedPtr msg;</code></pre>
+  <p>
+    처음 보면 <strong>ROS가 만든 특별한 포인터</strong>처럼 보인다. 아니다.
+    <code>rclcpp</code>(ROS 2의 C++ 라이브러리)가 <strong>메시지 타입마다 붙여 놓은 짧은 별명</strong>일 뿐이다.
+    아래 두 줄은 <strong>완전히 같은 뜻</strong>이다.
+  </p>
+  <pre><code>sensor_msgs::msg::LaserScan::SharedPtr        msg;   // ROS 코드에서 보는 모양
+std::shared_ptr&lt;sensor_msgs::msg::LaserScan&gt;  msg;   // 실제로는 이것</code></pre>
+  <p>
+    <strong>별명을 붙인 이유는 짧게 쓰기 위해서다.</strong> 아래 줄은 너무 길다.
+    그래서 오늘 배운 것을 알면 ROS 2 코드의 이 부분은 <strong>따로 배울 것이 없다.</strong>
+  </p>
+  <p>
+    <strong>메시지가 왜 나눠 가지는 물건인지</strong>도 이유가 있다.
+    라이다 메시지 하나가 도착하면 <strong>그것을 받는 곳이 여러 군데일 수 있다.</strong>
+    누가 마지막까지 쓰는지 미리 알 수 없으므로, <strong>마지막이 끄고 나가는 방식</strong>이 맞는 자리다.
+    <strong>20회에서 콜백의 인자로 이 이름을 직접 만난다.</strong>
+  </p>
+
+  <!-- ══════════ ⑤ 컨테이너 ══════════ -->
+  <h2 id="container">⑤ 그릇은 <code>vector</code> 하나로 시작한다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <p>
+    C++ 표준에는 값을 담는 그릇이 여러 개 있다. 이름을 다 외울 필요가 없다.
+    <strong>이 과목의 코드는 <code>std::vector</code> 하나로 전부 돌아간다.</strong>
+    라이다 값 360개도, 찾아낸 콘 목록도, 지나온 위치도 전부 <code>vector</code>에 담긴다.
+  </p>
+  <p>
+    <strong>딱 하나 갈라지는 자리</strong>가 있다. <strong>개수가 코드에 이미 적혀 있는 경우</strong>다.
+    바퀴 4개, 좌표 3개처럼 <strong>절대 변하지 않는 개수</strong>라면 <code>std::array</code>가 맞다.
+  </p>
+
+  <pre><code>std::array&lt;float, 4&gt; wheel = {0.0f, 0.0f, 0.0f, 0.0f};   // 크기가 코드에 박혀 있다
+std::vector&lt;float&gt; ranges(360, 1.0f);                    // 크기를 실행 중에 정한다
+
+ranges.push_back(2.0f);    // vector 는 이렇게 늘릴 수 있다
+// wheel.push_back(...)    // array 에는 이런 함수가 아예 없다</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>std::array&lt;T, N&gt;</dt>
+      <dd>크기가 <strong>꺾쇠 안에 숫자로 박혀 있는 그릇</strong>이다.
+          <code>N</code>이 <strong>컴파일할 때</strong> 정해지므로 실행 중에는 못 바꾼다.
+          여기서는 <strong>바퀴 4개</strong>처럼 개수가 변할 리 없는 것에 썼다.</dd>
+
+      <dt>ranges.push_back(2.0f)</dt>
+      <dd>그릇 <strong>맨 뒤에 값을 하나 더 붙인다.</strong>
+          <code>vector</code>에만 있고 <code>array</code>에는 없다 — 크기가 고정이니 붙일 자리가 없기 때문이다.</dd>
+    </dl>
+  </div>
+
+  <p>실제로 돌려 보면 이렇게 나온다.</p>
+  <pre><code>$ g++ -std=c++17 -O2 -Wall -o array_vs_vector array_vs_vector.cpp &amp;&amp; ./array_vs_vector
+array  : 크기 4  (컴파일할 때 이미 정해졌다)
+vector : 크기 360  (실행 중에 정했다)
+vector : push_back 뒤 크기 361  (array 는 이렇게 늘릴 수 없다)</code></pre>
+
+  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 열</strong>이 고르는 기준이다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>그릇</th><th>크기가 정해지는 때</th><th>이 과목에서 쓰는 자리</th></tr>
+    <tr><td><code>std::vector&lt;T&gt;</code></td><td>실행 중. 늘었다 줄었다 한다</td><td><strong>기본값.</strong> 라이다 값 360개, 찾아낸 콘 목록</td></tr>
+    <tr><td><code>std::array&lt;T, N&gt;</code></td><td>컴파일할 때. 못 바꾼다</td><td>바퀴 속도 4개, x·y·z 3개</td></tr>
+    <tr><td>C 스타일 배열 <code>float a[4]</code></td><td>컴파일할 때</td><td><strong>쓰지 않는다.</strong> 크기를 물어볼 방법이 없어 실수가 난다</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 셋째 줄이 중요하다. <code>float a[4]</code>는 <strong>자기 크기를 모른다.</strong>
+    함수에 넘기는 순간 개수 정보가 사라지므로 <strong>개수를 따로 들고 다녀야</strong> 하고, 그 짝이 어긋나면 범위를 넘는다.
+    <code>vector</code>와 <code>array</code>는 <strong><code>size()</code>를 물어보면 답한다.</strong>
+    <strong>AI가 C 스타일 배열을 주면 그건 옛날 코드를 베낀 것</strong>이므로 바꿔 달라고 한다.
+  </div>
+
+  <!-- ══════════ ⑥ reserve ══════════ -->
+  <h2 id="reserve">⑥ <code>reserve()</code> 한 줄이 1.89배다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <h3>언제 이게 필요해지나</h3>
+  <p>
+    라이다 값 360개 중 <strong>쓸 만한 것만 골라 다른 그릇에 담는</strong> 코드는 이 과목 어디에나 나온다.
+    담을 때는 <code>push_back</code>으로 하나씩 밀어 넣는다.
+    <strong>그런데 그릇은 처음에 비어 있다.</strong> 자리는 어디서 나오나?
+  </p>
+
+  <figure>
+    <img src="assets/img/12_vector_growth.png"
+         alt="size 3 capacity 4 인 배열에 push_back 을 두 번 해서 자리가 모자라자 더 큰 자리를 새로 잡고 값을 전부 옮기는 그림">
+    <figcaption>
+      <strong>세 번째 줄</strong>을 본다. 자리가 꽉 찼는데 하나를 더 넣으라고 하자,
+      <strong>더 큰 자리를 새로 잡고 있던 값을 전부 옮긴 뒤</strong> 원래 자리를 버렸다.
+      <code>size</code>는 <strong>들어 있는 개수</strong>, <code>capacity</code>는 <strong>지금 잡아 둔 자리</strong>다.
+    </figcaption>
+  </figure>
+
+  <p>
+    <strong>이 이사가 공짜가 아니다.</strong> 새 자리를 잡고, 값을 옮기고, 옛 자리를 반납한다.
+    그리고 <strong>담는 동안 여러 번 일어난다.</strong> 얼마나 여러 번인지 세어 보는 것이 오늘의 두 번째 프로그램이다.
+  </p>
+
+  <div class="codelabel good">reserve_bench.cpp — reserve 가 실제로 얼마나 이득인가</div>
+  <pre><code>#include &lt;chrono&gt;
+#include &lt;cstdio&gt;
+#include &lt;vector&gt;
+
+int main()
+{
+  const int N = 360;
+  const int LOOPS = 100000;
+  size_t sink = 0;
+
+  auto t0 = std::chrono::steady_clock::now();
+  for (int k = 0; k &lt; LOOPS; ++k) {
+    std::vector&lt;float&gt; v;
+    for (int i = 0; i &lt; N; ++i) { v.push_back(0.5f); }
+    sink += v.size();
+  }
+  auto t1 = std::chrono::steady_clock::now();
+  const double no_res = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+
+  t0 = std::chrono::steady_clock::now();
+  for (int k = 0; k &lt; LOOPS; ++k) {
+    std::vector&lt;float&gt; v;
+    v.reserve(N);
+    for (int i = 0; i &lt; N; ++i) { v.push_back(0.5f); }
+    sink += v.size();
+  }
+  t1 = std::chrono::steady_clock::now();
+  const double res = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+
+  std::printf("reserve 없이 : %7.1f ms\n", no_res);
+  std::printf("reserve 하고 : %7.1f ms\n", res);
+  std::printf("차이         : %.2f배 (%d회 기준, sink=%zu)\n", no_res / res, LOOPS, sink);
+
+  // 자리를 몇 번 다시 잡는지도 세어 본다
+  std::vector&lt;float&gt; v;
+  size_t cap = v.capacity(); int grow = 0;
+  for (int i = 0; i &lt; N; ++i) {
+    v.push_back(0.5f);
+    if (v.capacity() != cap) { cap = v.capacity(); ++grow; }
+  }
+  std::printf("360개를 담는 동안 자리를 %d번 다시 잡았다 (최종 capacity=%zu)\n", grow, v.capacity());
+  return 0;
+}</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>v.reserve(n)</dt>
+      <dd><strong>값 <code>n</code>개가 들어갈 자리를 미리 잡아 둔다.</strong>
+          값이 들어가는 것은 아니다 — <code>size()</code>는 그대로 0이다.
+          여기서는 <strong>360개가 들어올 것을 알고 있으므로</strong> 미리 잡았다.</dd>
+
+      <dt>v.capacity()</dt>
+      <dd><strong>지금 잡아 둔 자리가 몇 개인지</strong> 알려 준다.
+          <code>size()</code>(들어 있는 개수)와 다르다.
+          여기서는 <strong>이 숫자가 언제 바뀌는지</strong>를 보고 이사 횟수를 셌다.</dd>
+    </dl>
+  </div>
+
+  <pre><code>$ g++ -std=c++17 -O2 -o reserve_bench reserve_bench.cpp &amp;&amp; ./reserve_bench
+reserve 없이 :    34.2 ms
+reserve 하고 :    18.1 ms
+차이         : 1.89배 (100000회 기준, sink=72000000)
+360개를 담는 동안 자리를 10번 다시 잡았다 (최종 capacity=512)</code></pre>
+
+  <figure>
+    <img src="assets/img/12_reserve_bench.png"
+         alt="가로 막대 그래프. reserve 없이 34.2밀리초, reserve 하고 18.1밀리초">
+    <figcaption>
+      두 코드가 만드는 결과는 <strong>글자 하나까지 같다.</strong>
+      다른 것은 <code>v.reserve(360);</code> <strong>한 줄</strong>뿐인데 <strong>1.89배</strong>가 났다.
+    </figcaption>
+  </figure>
+
+  <h3>capacity 가 왜 512인가</h3>
+  <p>
+    담은 것은 <strong>360개</strong>인데 잡힌 자리는 <strong>512개</strong>다. 152칸이 비어 있다.
+    이유는 <strong>자리를 늘리는 방식</strong>에 있다.
+    <strong>자리가 모자랄 때마다 대개 지금의 두 배로 늘린다.</strong>
+    1 → 2 → 4 → 8 → … 로 가면 <strong>360을 넘기는 첫 숫자가 512</strong>다.
+  </p>
+  <p>
+    <strong>그래서 이사 횟수가 10번</strong>이다.
+    빈 그릇에서 <strong>1칸을 잡는 것이 첫 번째</strong>이고, 거기서 512까지 <strong>두 배씩 아홉 번 더</strong> 늘어나 모두 열 번이다.
+    한 번 늘릴 때마다 <strong>있던 값을 전부 새 자리로 옮긴다.</strong>
+    <strong>왜 한 칸씩 안 늘리는지</strong>도 여기서 나온다 — 한 칸씩 늘리면 360개를 담는 데 359번 이사해야 한다.
+  </p>
+  <div class="interp">
+    <strong>해석:</strong> 배수 1.89배보다 <strong>「10번」이라는 횟수</strong>가 더 중요하다.
+    <code>reserve(360)</code> 한 줄이 그 <strong>열 번을 0번으로</strong> 만든다.
+    그리고 <strong>몇 개가 들어올지는 코드를 짠 사람만 안다.</strong>
+    라이다 값이 360개라는 사실은 AI가 모른다. <strong>알려 주면 그때부터 넣어 준다.</strong>
+    잰 곳: 컨테이너(우분투 24.04.4, g++ 13.3.0 <code>-O2</code>).
+  </div>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    담는 코드 앞에 <code>reserve</code>를 넣어 줘. 몇 개가 들어올지는 <strong>원본 배열의 크기</strong>로 잡으면 돼. 숫자를 코드에 박지 말아 줘.
+  </div>
+
+  <!-- ══════════ ⑦ 범위 for ══════════ -->
+  <h2 id="rangefor">⑦ 한 바퀴 도는 코드에서 <code>const auto &amp;</code>를 빼면 매 바퀴 복사가 난다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <h3>언제 이게 필요해지나</h3>
+  <p>
+    그릇에 담은 것을 <strong>처음부터 끝까지 한 바퀴 도는</strong> 코드다.
+    보관해 둔 스캔들을 훑으면서 가까운 값이 몇 개인지 세는 상황을 생각하자.
+    담아 둔 것의 모양은 이렇다.
+  </p>
+
+  <pre><code>struct ScanMsg {
+  std::vector&lt;float&gt; ranges;      // 거리 값 360개가 들어 있다
+};
+
+std::vector&lt;ScanMsg&gt; history;     // 스캔 100개를 모아 두었다</code></pre>
+
+  <div class="codelabel bad">AI가 보통 주는 코드 🔴</div>
+  <pre class="before"><code>for (auto s : history) {          // ← 한 바퀴마다 s 에 사본이 하나 만들어진다
+  sum += s.ranges[0];
+}</code></pre>
+
+  <div class="codelabel good">이게 맞다</div>
+  <pre class="after"><code>for (const auto &amp; s : history) {  // ← 이름표만 붙인다. 사본이 없다
+  sum += s.ranges[0];
+}</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>for (const auto &amp; x : v)</dt>
+      <dd><strong>범위 기반 for</strong>다. <code>v</code>에 담긴 것을 <strong>앞에서부터 하나씩</strong> <code>x</code>에 담아 준다.
+          번호를 세는 변수가 없으므로 <strong>범위를 넘어갈 자리 자체가 없다.</strong>
+          앞의 <code>const auto &amp;</code>가 <strong>"사본 만들지 말고 이름표만 붙여라"</strong>라는 뜻이다.</dd>
+    </dl>
+  </div>
+
+  <h3>무엇이 문제인가</h3>
+  <p>
+    <code>auto s</code>와 <code>const auto &amp; s</code>는 <strong>글자 여덟 개 차이</strong>다.
+    그런데 앞의 것은 <strong>한 바퀴마다 사본을 하나 만든다.</strong>
+    돌 것이 <code>float</code> 같은 작은 값이면 상관없다.
+    <strong>돌 것이 스캔 하나(값 360개)라면 이야기가 완전히 달라진다.</strong>
+  </p>
+  <p>세어 봤다.</p>
+  <pre><code>$ g++ -std=c++17 -O2 -Wall -o rangefor_copy rangefor_copy.cpp &amp;&amp; ./rangefor_copy
+for (auto s : history)         : ScanMsg 복사 100회
+for (const auto &amp; s : history) : ScanMsg 복사 0회
+스캔 100개를 한 바퀴씩 돌았다 (sum=200)</code></pre>
+
+  <div class="interp">
+    <strong>해석:</strong> <strong>100회와 0회</strong>다.
+    담아 둔 개수가 늘어나면 복사 횟수도 그만큼 늘어난다.
+    <strong>두 줄이 내는 답(<code>sum</code>)은 같다.</strong> 여기서도 맞지만 둔한 코드다.
+    잰 곳: 컨테이너(우분투 24.04.4, g++ 13.3.0 <code>-O2</code>).
+  </div>
+
+  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 열</strong>에서 자기 상황을 찾는다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>이렇게 쓴다</th><th>무슨 일이 나나</th><th>언제 쓰나</th></tr>
+    <tr><td><code>for (const auto &amp; x : v)</code></td><td>사본 없음. 못 고침</td><td><strong>기본값.</strong> 읽기만 할 때</td></tr>
+    <tr><td><code>for (auto &amp; x : v)</code></td><td>사본 없음. <strong>고칠 수 있음</strong></td><td>돌면서 <strong>값을 바꿔야</strong> 할 때</td></tr>
+    <tr><td><code>for (auto x : v)</code></td><td><strong>한 바퀴마다 사본</strong></td><td><code>float</code>·<code>int</code>처럼 작은 값일 때만</td></tr>
+  </table>
+  </div>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    범위 for 문에서 <code>auto</code> 대신 <code>const auto &amp;</code>를 써 줘. 값을 바꿔야 하는 자리만 <code>auto &amp;</code>로 하고, 왜 그 자리만 그런지 알려 줘.
+  </div>
+
+  <h3>한 줄 점검</h3>
+  <p>범위 for 에서 도는 것이 <strong>작은 값이 아닌데</strong> <code>const auto &amp;</code>가 아닌 자리가 있나?</p>
+
+  <!-- ══════════ 🧪 실습 ══════════ -->
+  <h2 id="lab">🧪 실습 — 자리를 몇 번 다시 잡는지 직접 세어 본다</h2>
+  <div class="lab-block">
+    <div class="boxtitle">🧪 실습 — 손잡이와 그릇을 내 노트북에서 돌리기 (30분)</div>
+    <p><strong>이걸 해 보면 무엇을 알게 되나:</strong>
+      <code>delete</code> 없이도 정리가 된다는 것을 <strong>눈으로</strong> 보고,
+      <strong>담는 개수를 열 배로 늘리면 이사 횟수가 어떻게 되는지</strong>를 확인한다.</p>
+    <p><strong>준비물:</strong> WSL 터미널 한 칸, <code>g++</code>.
+      코드 두 개는 이 자료의 ②·⑥절에 전문이 있다. <strong>복사해서 파일로 저장하면 된다.</strong></p>
+    <p><strong>절차</strong></p>
+    <ol>
+      <li><code>smart_ptr.cpp</code>와 <code>reserve_bench.cpp</code>를 같은 폴더에 저장한다. (3분)</li>
+      <li>손잡이 쪽을 돌린다. <strong>「꺼짐」이 어느 줄 다음에 찍히는지</strong> 확인한다. (5분)
+        <pre><code>g++ -std=c++17 -O2 -o smart_ptr smart_ptr.cpp
+./smart_ptr</code></pre>
+      </li>
+      <li>그릇 쪽을 돌린다. 마지막 줄의 <strong>이사 횟수와 최종 capacity</strong>를 적어 둔다. (5분)
+        <pre><code>g++ -std=c++17 -O2 -o reserve_bench reserve_bench.cpp
+./reserve_bench</code></pre>
+      </li>
+      <li><code>reserve_bench.cpp</code>의 맨 위 <code>const int N = 360;</code>을
+        <strong><code>const int N = 3600;</code></strong>으로 바꾸고 다시 빌드해서 돌린다. (10분)</li>
+      <li>3번과 4번의 <strong>이사 횟수와 최종 capacity를 나란히 적고</strong>,
+        개수를 열 배로 늘렸는데 이사가 <strong>왜 열 배가 되지 않는지</strong> 한 줄로 쓴다. (7분)</li>
+    </ol>
+    <p>
+      <strong>이렇게 되면 성공:</strong> 4번에서 이사 횟수가 <strong>10번에서 13번</strong>으로 늘고,
+      최종 capacity가 <strong>512에서 4096</strong>이 된다.
+      담는 개수는 열 배가 됐는데 <strong>이사는 세 번밖에 안 늘었다</strong> — 두 배씩 늘리기 때문이다.
+    </p>
+    <div class="box trap" style="margin-top:1rem">
+      <div class="boxtitle">마지막 줄의 「360개」는 안 바뀐다</div>
+      <p>
+        <code>N</code>을 3600으로 바꿔도 출력에는 <strong>「360개를 담는 동안」</strong>이라고 그대로 찍힌다.
+        <strong>그 숫자가 문장 안에 글자로 박혀 있기 때문</strong>이다.
+        <strong>볼 것은 「자리를 몇 번」과 「최종 capacity」 두 자리</strong>다.
+        그리고 이것이 <strong>코드에 숫자를 박아 두면 생기는 일</strong>의 아주 작은 예다.
+      </p>
+    </div>
+  </div>
+
+  <!-- ══════════ HW3 ══════════ -->
+  <h2 id="hw3">📝 HW3 — 나은 쪽을 고르고 <strong>이유를 댄다</strong> <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <p>
+    아래는 <strong>같은 일을 하는 코드 두 개</strong>다. 스캔을 보관해 두었다가
+    <strong>가까운 값이 몇 개인지 세는 클래스</strong>다.
+    <strong>둘 다 컴파일되고, 둘 다 같은 답을 낸다.</strong>
+  </p>
+
+  <div class="codelabel bad">코드 A</div>
+  <pre class="before"><code>class ScanKeeper {
+public:
+  void add(ScanMsg msg)
+  {
+    history_.push_back(std::make_shared&lt;ScanMsg&gt;(msg));
+  }
+
+  int count_close(float limit)
+  {
+    int n = 0;
+    for (auto p : history_) {
+      for (float r : p-&gt;ranges) { if (r &lt; limit) { ++n; } }
+    }
+    return n;
+  }
+
+private:
+  std::vector&lt;std::shared_ptr&lt;ScanMsg&gt;&gt; history_;
+};</code></pre>
+
+  <div class="codelabel good">코드 B</div>
+  <pre class="after"><code>class ScanKeeper {
+public:
+  void add(ScanMsg msg)
+  {
+    history_.push_back(std::make_unique&lt;ScanMsg&gt;(std::move(msg)));
+  }
+
+  int count_close(float limit)
+  {
+    int n = 0;
+    for (const auto &amp; p : history_) {
+      for (float r : p-&gt;ranges) { if (r &lt; limit) { ++n; } }
+    }
+    return n;
+  }
+
+private:
+  std::vector&lt;std::unique_ptr&lt;ScanMsg&gt;&gt; history_;
+};</code></pre>
+
+  <p>
+    두 코드를 한 파일에 넣고 <strong>복사 횟수를 세면서</strong> 돌려 봤다.
+    <code>ScanMsg</code>에는 <strong>복사될 때 숫자를 하나 올리는 코드</strong>가 들어 있다.
+  </p>
+  <pre><code>$ g++ -std=c++17 -O2 -Wall -o hw3_ab hw3_ab.cpp &amp;&amp; ./hw3_ab
+코드 A: 0.5m 안쪽 값 1800개,  그동안 ScanMsg 복사 5회
+코드 B: 0.5m 안쪽 값 1800개,  그동안 ScanMsg 복사 0회
+스캔 5개를 넣고 셌다. 두 코드가 낸 답은 같다.</code></pre>
+
+  <div class="interp">
+    <strong>해석:</strong> <strong>답은 같고 복사 횟수만 다르다.</strong>
+    이 출력은 <strong>결론이 아니라 단서</strong>다.
+    과제는 "복사가 5회 났다"를 옮겨 적는 것이 아니라,
+    <strong>그 5회가 정확히 어느 줄에서 났는지</strong>와
+    <strong><code>shared_ptr</code>이 여기서 맞는 선택인지</strong>를 설명하는 것이다.
+  </div>
+
+  <h3>제출물</h3>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>가운데 열</strong>이 실제로 쓸 내용이고, 오른쪽 열이 채점에서 보는 것이다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>항목</th><th>무엇을 쓰나</th><th>채점에서 보는 것</th></tr>
+    <tr><td>① 고른 코드</td><td>A 또는 B 하나</td><td>고르기만 한 것에는 점수가 없다</td></tr>
+    <tr><td>② 이유 세 가지</td><td>줄 번호를 가리키며 <strong>무엇이 왜 다른지</strong></td><td><strong>「어느 줄」이 있나.</strong> "더 효율적이다"만 쓰면 감점</td></tr>
+    <tr><td>③ 복사 5회의 출처</td><td>그 5회가 <strong>어느 줄에서</strong> 났는지</td><td>스캔 5개를 넣었다는 사실과 연결했나</td></tr>
+    <tr><td>④ 반대 상황</td><td><strong>A가 더 나은 상황</strong>을 하나 지어내 설명</td><td><code>shared_ptr</code>이 맞는 자리를 아는가</td></tr>
+    <tr><td>⑤ AI 활용 기록</td><td>물어본 것과 <strong>그 답을 어떻게 확인했는지</strong></td><td>확인 방법이 적혀 있나</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> ④가 이 과제의 핵심이다.
+    <strong>B가 낫다는 것만 아는 사람과, A가 맞는 자리를 아는 사람은 다르다.</strong>
+    "<code>shared_ptr</code>은 나쁘다"고 배우면 그것도 틀린 것이다.
+    <strong>주인이 정말 여럿인 자리에서는 A의 방식이 유일한 답이다.</strong>
+  </div>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    이 코드 두 개의 차이를 <strong>줄 단위로</strong> 짚어 줘. 어느 쪽이 낫다고 말하기 전에, <strong>각 줄에서 무슨 일이 일어나는지</strong>부터 설명해 줘.
+  </div>
+
+  <div class="box stop">
+    <div class="boxtitle">⛔ 이 과제에서 하면 안 되는 것</div>
+    <p>
+      <strong>AI에게 "어느 쪽이 나아?"라고 묻고 그 답을 그대로 내는 것</strong>이다.
+      AI는 B라고 답할 것이고 그 답은 맞다. <strong>그런데 그것은 제출물이 아니다.</strong>
+      이 과제가 묻는 것은 <strong>당신이 그 이유를 코드의 어느 줄에서 읽어 냈는가</strong>다.
+      물어보는 것 자체는 괜찮다. <strong>받은 답을 어떻게 확인했는지를 ⑤에 적으면 된다.</strong>
+    </p>
+  </div>
+
+  <!-- ══════════ 🤖 프롬프트 모음 ══════════ -->
+  <h2 id="prompts">🤖 오늘 나온 프롬프트 모음</h2>
+  <p class="readme-first">무엇을 먼저 볼지: 왼쪽 「이럴 때」를 먼저 읽는다. <strong>상황을 알아보는 것이 문장을 외우는 것보다 먼저다.</strong></p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>이럴 때</th><th>이렇게 말한다</th></tr>
+    <tr><td><code>new</code>·<code>delete</code>가 보일 때</td><td>"<code>new</code>와 <code>delete</code>를 쓰지 말고 <code>std::make_unique</code>로 바꿔 줘. 함수 중간에서 <code>return</code>해도 정리되게 해 줘."</td></tr>
+    <tr><td><code>shared_ptr</code>이 여러 개 보일 때</td><td>"<code>shared_ptr</code>을 쓴 자리마다 주인이 정말 여럿인지 확인해 줘. 한 곳만 쓰는 것은 <code>unique_ptr</code>로 바꿔 줘."</td></tr>
+    <tr><td>담는 코드일 때</td><td>"담는 코드 앞에 <code>reserve</code>를 넣어 줘. 개수는 원본 배열의 크기로 잡고, 숫자를 코드에 박지 말아 줘."</td></tr>
+    <tr><td>반복문이 보일 때</td><td>"범위 for 에서 <code>auto</code> 대신 <code>const auto &amp;</code>를 써 줘. 값을 바꿔야 하는 자리만 <code>auto &amp;</code>로 해 줘."</td></tr>
+    <tr><td>C 스타일 배열이 보일 때</td><td>"<code>float a[4]</code> 같은 배열을 <code>std::array</code>나 <code>std::vector</code>로 바꿔 줘. 크기를 따로 들고 다니지 않게 해 줘."</td></tr>
+    <tr><td>코드를 비교할 때</td><td>"두 코드의 차이를 줄 단위로 짚어 줘. 어느 쪽이 낫다고 말하기 전에 각 줄에서 무슨 일이 나는지부터 설명해 줘."</td></tr>
+  </table>
+  </div>
+
+  <!-- ══════════ ✅ 점검 ══════════ -->
+  <h2 id="check">✅ 오늘의 점검</h2>
+  <ul class="check">
+    <li><input type="checkbox" id="c1"><label for="c1">받은 코드에 <code>new</code>나 <code>delete</code>가 남아 있지 않나?</label></li>
+    <li><input type="checkbox" id="c2"><label for="c2"><code>shared_ptr</code>을 쓴 자리마다 <strong>주인이 정말 여럿</strong>인가?</label></li>
+    <li><input type="checkbox" id="c3"><label for="c3">사실은 <strong>포인터가 아예 필요 없는</strong> 자리는 없나?</label></li>
+    <li><input type="checkbox" id="c4"><label for="c4">담는 코드 앞에 <code>reserve</code>가 있나? 그 개수는 <strong>숫자가 아니라 크기</strong>로 잡았나?</label></li>
+    <li><input type="checkbox" id="c5"><label for="c5">범위 for 가 <code>const auto &amp;</code>인가? 값을 바꾸는 자리만 <code>auto &amp;</code>인가?</label></li>
+    <li><input type="checkbox" id="c6"><label for="c6">개수가 고정인데 <code>vector</code>를 쓰거나, 변하는데 <code>array</code>를 쓰지 않았나?</label></li>
+    <li><input type="checkbox" id="c7"><label for="c7">C 스타일 배열 <code>float a[4]</code>가 남아 있지 않나?</label></li>
+  </ul>
+
+  <!-- ══════════ 조금 더 ══════════ -->
+  <h2 id="more">조금 더 알아두면 <span class="badge b-lv">시험 범위 아님</span></h2>
+
+  <details>
+    <summary><code>make_shared</code>가 <code>shared_ptr(new T)</code>보다 나은 이유</summary>
+    <p>
+      <code>shared_ptr</code>은 물건 말고 <strong>세는 숫자를 둘 자리</strong>도 따로 필요하다.
+      <code>std::shared_ptr&lt;Sensor&gt; p(new Sensor("라이다"));</code>라고 쓰면
+      <strong>자리를 두 번 잡는다</strong> — 물건 한 번, 세는 숫자 한 번.
+    </p>
+    <p>
+      <code>std::make_shared&lt;Sensor&gt;("라이다")</code>는 <strong>둘을 한 번에 잡는다.</strong>
+      자리를 잡는 일이 한 번 줄고, 두 개가 붙어 있어 읽기도 빠르다.
+      <strong>쓰는 모양이 더 짧기까지 하므로 고민할 이유가 없다.</strong>
+    </p>
+  </details>
+
+  <details>
+    <summary>서로를 가리키면 아무도 안 꺼진다 (순환 참조)</summary>
+    <p>
+      <code>shared_ptr</code>은 <strong>세는 숫자가 0이 될 때</strong> 물건을 정리한다.
+      그런데 A가 B를 잡고 B가 A를 잡으면 <strong>둘 다 영원히 1 이상</strong>이다.
+      둘을 쓰던 코드가 다 끝나도 <strong>둘 다 안 꺼진다.</strong>
+    </p>
+    <p>
+      이것이 <strong>스마트 포인터를 쓰고도 메모리가 새는 거의 유일한 경우</strong>다.
+      해결하는 도구(<code>std::weak_ptr</code>)가 표준에 있지만,
+      <strong>이 과목의 코드에서는 그런 구조를 만들지 않는 것이 답</strong>이다.
+      <strong>서로를 가리키는 설계가 나오면 설계를 다시 보는 편이 빠르다.</strong>
+    </p>
+  </details>
+
+  <details>
+    <summary><code>list</code>와 <code>deque</code>는 왜 안 다루나</summary>
+    <p>
+      C++ 표준에는 <code>std::list</code>·<code>std::deque</code> 같은 그릇이 더 있다.
+      <strong>중간에 값을 자주 끼워 넣거나 빼는 경우</strong>에 유리한 그릇들이다.
+      <code>vector</code>는 중간에 끼워 넣으면 <strong>뒤에 있는 값을 전부 한 칸씩 밀어야</strong> 하기 때문이다.
+    </p>
+    <p>
+      <strong>그런데 이 과목의 코드에는 그런 자리가 없다.</strong>
+      라이다 값은 통째로 왔다가 통째로 버려지고, 찾아낸 콘 목록은 뒤에만 붙는다.
+      <strong>중간에 끼워 넣는 코드를 우리는 한 줄도 쓰지 않는다.</strong>
+    </p>
+    <p>
+      그리고 값이 <strong>메모리에 나란히 붙어 있다</strong>는 점 때문에
+      <code>vector</code>는 한 바퀴 도는 일에서 특히 빠르다.
+      <strong>고민되면 <code>vector</code>다.</strong> 이 문장이 이 절의 전부다.
+    </p>
+  </details>
+
+  <details>
+    <summary><code>reserve</code>와 <code>resize</code>는 다르다</summary>
+    <p>
+      이름이 비슷해서 AI도 가끔 바꿔 쓴다. <strong>하는 일이 완전히 다르다.</strong>
+    </p>
+    <ul>
+      <li><code>v.reserve(360)</code> — <strong>자리만</strong> 잡는다. <code>size()</code>는 그대로 <strong>0</strong>이다.
+        이어서 <code>push_back</code>으로 채운다.</li>
+      <li><code>v.resize(360)</code> — <strong>값을 360개 만들어 채운다.</strong> <code>size()</code>가 <strong>360</strong>이 된다.
+        여기에 <code>push_back</code>을 하면 361번째가 생긴다.</li>
+    </ul>
+    <p>
+      <strong>담을 준비를 하는 것이 목적이면 <code>reserve</code></strong>다.
+      <code>resize</code>를 쓰고 <code>push_back</code>까지 하면 <strong>앞쪽 360칸이 0으로 채워진 채 남는다.</strong>
+      라이다 값 앞에 0이 360개 붙으면 <strong>가장 가까운 장애물이 0m</strong>가 된다.
+    </p>
+  </details>
+
+  <footer>
+    로봇공학 · 순천향대학교 전자정보공학과 ·
+    다음 회차: <a href="robotics_13.html">13회 STL 알고리즘 — 직접 짜지 마라</a>
+  </footer>
+</main>
+</div>
+
+<script>
+function copyPrompt(btn) {
+  const box = btn.parentElement.cloneNode(true);
+  box.querySelector('button').remove();
+  navigator.clipboard.writeText(box.textContent.trim()).then(function () {
+    const old = btn.textContent;
+    btn.textContent = '복사됨';
+    setTimeout(function () { btn.textContent = old; }, 1200);
+  });
+}
+</script>
+</body>
+</html>
