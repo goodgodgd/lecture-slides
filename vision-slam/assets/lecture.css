@@ -1,0 +1,132 @@
+/* 3D Vision & SLAM 강의자료 — 본문 블록 스타일
+   색 토큰·글꼴·상단 경로 막대는 ../assets/site.css 에 있다. 이 파일과 함께 읽어야 한다.
+   블록 형식은 ../robotics/_notes/강의자료_제작지침.md 4절을, 그림은 6절을 따른다.
+   로봇공학과 같은 파일에서 시작했다. 이 과목에만 필요한 것이 생기면 여기에만 더한다. */
+
+/* ── 레이아웃: 왼쪽 고정 목차 + 본문 ── */
+.wrap { display: flex; gap: 2rem; max-width: 1180px; margin: 0 auto; padding: 0 1.25rem; }
+
+nav.toc {
+  position: sticky; top: 72px; align-self: flex-start;
+  width: 210px; flex: none; max-height: calc(100vh - 72px); overflow-y: auto;
+  padding: 2rem 0; font-size: .85rem;
+}
+nav.toc .toc-title { font-weight: 700; color: var(--muted); margin-bottom: .6rem; font-size: .78rem; letter-spacing: .04em; }
+nav.toc a { display: block; padding: .25rem 0 .25rem .6rem; color: var(--muted); text-decoration: none; border-left: 2px solid var(--line); }
+nav.toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+nav.toc a.sub { padding-left: 1.4rem; font-size: .8rem; }
+
+main { flex: 1; min-width: 0; max-width: 760px; padding: 2rem 0 6rem; }
+
+@media (max-width: 900px) {
+  .wrap { display: block; }
+  nav.toc { position: static; width: auto; max-height: none; padding: 1.25rem 0 0; }
+  nav.toc a { display: inline-block; border-left: 0; padding: .2rem .6rem .2rem 0; }
+  main { max-width: none; padding-top: 1rem; }
+}
+
+/* ── 머리 ── */
+.lec-no { color: var(--muted); font-size: .85rem; letter-spacing: .06em; }
+h1 { font-family: var(--serif); font-size: 1.9rem; line-height: 1.3;
+     margin: .2rem 0 .8rem; letter-spacing: -.025em; }
+.questions { background: var(--accent-soft); border-radius: 10px; padding: 1rem 1.25rem; margin: 1.25rem 0 2rem; }
+.questions .lab { font-weight: 700; font-size: .85rem; color: var(--accent); display: block; margin-bottom: .4rem; }
+.questions ol { margin: 0; padding-left: 1.2rem; }
+
+h2 { font-size: 1.2rem; margin: 3rem 0 .9rem; padding-bottom: .45rem; border-bottom: 1px solid var(--line); letter-spacing: -.01em; }
+h3 { font-size: 1.02rem; margin: 2rem 0 .6rem; }
+h4 { font-size: .95rem; margin: 1.4rem 0 .4rem; color: var(--muted); }
+p { margin: .8rem 0; }
+
+/* ── 신호등 배지 ── */
+.badge { font-size: .72rem; font-weight: 700; padding: .12rem .5rem; border-radius: 999px; vertical-align: middle; margin-left: .4rem; white-space: nowrap; }
+.b-green { background: var(--good-soft); color: var(--good); }
+.b-yellow { background: var(--warn-soft); color: var(--warn); }
+.b-red { background: var(--bad-soft); color: var(--bad); }
+.b-stop { background: #2b2b2b; color: #fff; }
+.b-lv { background: var(--card); color: var(--muted); border: 1px solid var(--line); }
+h2 .badge, h3 .badge { float: right; margin-top: .3rem; }
+
+/* ── 표 ── */
+.tablewrap { overflow-x: auto; margin: 1rem 0; }
+table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+th, td { border: 1px solid var(--line); padding: .5rem .7rem; text-align: left; vertical-align: top; }
+th { background: var(--card); font-weight: 600; }
+td code, th code { font-size: .88em; }
+.readme-first { font-size: .88rem; color: var(--muted); margin: 1.2rem 0 .3rem; }
+.interp { background: var(--card); border-left: 3px solid var(--accent); padding: .7rem 1rem; margin: .9rem 0; font-size: .95rem; }
+
+/* ── 코드 ── */
+pre { background: var(--code-bg); border-radius: 8px; padding: .9rem 1rem; overflow-x: auto; font-size: .875rem; line-height: 1.6; margin: .8rem 0; border-left: 3px solid var(--line); }
+code { font-family: var(--mono); }
+p code, li code, td code { background: var(--code-bg); padding: .08em .35em; border-radius: 4px; }
+pre.before { border-left-color: var(--bad); background: var(--bad-soft); }
+pre.after { border-left-color: var(--good); background: var(--good-soft); }
+.codelabel { font-size: .78rem; font-weight: 700; margin: 1.1rem 0 -.4rem; }
+.codelabel.bad { color: var(--bad); }
+.codelabel.good { color: var(--good); }
+
+/* ── 프롬프트 상자 (복사 버튼) ── */
+.prompt { position: relative; background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 8px; padding: .85rem 3.4rem .85rem 1rem; margin: 1rem 0; font-size: .95rem; }
+.prompt::before { content: "🤖 그대로 복사해서 쓰세요"; display: block; font-size: .74rem; font-weight: 700; color: var(--accent); margin-bottom: .35rem; }
+.prompt button { position: absolute; top: .6rem; right: .6rem; font: inherit; font-size: .75rem; padding: .25rem .55rem; border: 1px solid var(--accent); background: var(--bg); color: var(--accent); border-radius: 5px; cursor: pointer; }
+.prompt button:hover { background: var(--accent); color: #fff; }
+
+/* ── 블록 상자 ── */
+.box { border-radius: 8px; padding: 1rem 1.15rem; margin: 1.4rem 0; }
+.box .boxtitle { font-weight: 700; font-size: .95rem; margin: 0 0 .5rem; }
+.box p:last-child, .box ul:last-child, .box ol:last-child { margin-bottom: 0; }
+
+.trap { background: var(--warn-soft); border: 1px solid var(--warn); }
+.trap .boxtitle { color: var(--warn); }
+.stop { background: var(--bad-soft); border: 1px solid var(--bad); }
+.stop .boxtitle { color: var(--bad); }
+
+/* ── 🆕 첫 등장 블록 — 이 회차에서 처음 나오는 이름을 그 자리에서 푼다 ── */
+.firstseen { background: var(--new-soft); border: 1px solid var(--new); }
+.firstseen .boxtitle { color: var(--new); }
+.firstseen dl { margin: 0; }
+.firstseen dt { font-family: var(--mono); font-size: .9rem; font-weight: 700; margin: .7rem 0 .15rem; }
+.firstseen dt:first-of-type { margin-top: .2rem; }
+.firstseen dd { margin: 0 0 .1rem; font-size: .95rem; }
+.firstseen .later { font-size: .82rem; color: var(--muted); margin: .8rem 0 0; }
+.firstseen .later::before { content: "↪ "; }
+
+/* ── 이야기 블록 (접기) ── */
+details.story { background: var(--story-soft); border: 1px solid var(--story); border-radius: 8px; padding: .3rem 1.15rem; margin: 1.6rem 0; }
+details.story > summary { cursor: pointer; font-weight: 700; color: var(--story); padding: .7rem 0; list-style: none; }
+details.story > summary::-webkit-details-marker { display: none; }
+details.story > summary::before { content: "📖 "; }
+details.story > summary::after { content: " ▸ 펼치기"; font-size: .78rem; font-weight: 400; opacity: .75; }
+details.story[open] > summary::after { content: " ▾ 접기"; }
+details.story[open] { padding-bottom: 1rem; }
+details.story h4 { color: var(--story); margin-top: 1.2rem; }
+details.story blockquote { border-left: 3px solid var(--story); margin: .8rem 0; padding: .2rem 0 .2rem 1rem; color: var(--fg); font-style: normal; }
+.src { font-size: .82rem; color: var(--muted); }
+.src li { margin: .15rem 0; }
+
+/* ── 화면 캡쳐 그림 ── */
+figure { margin: 1.4rem 0; }
+figure img { display: block; max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--card); }
+figure figcaption { font-size: .85rem; color: var(--muted); margin-top: .45rem; }
+figure.narrow img { max-width: 420px; }
+figure.wide img { max-width: 100%; }
+
+/* ── 실습 ── */
+.lab-block { border: 1px solid var(--accent); border-radius: 8px; padding: 1rem 1.15rem; margin: 1.4rem 0; }
+.lab-block .boxtitle { color: var(--accent); font-weight: 700; margin: 0 0 .5rem; }
+
+/* ── 점검 체크박스 ── */
+ul.check { list-style: none; padding: 0; }
+ul.check li { margin: .45rem 0; }
+ul.check input { margin-right: .55rem; transform: scale(1.15); }
+ul.check label { cursor: pointer; }
+ul.check input:checked + label { color: var(--muted); text-decoration: line-through; }
+
+/* ── 요약표 강조 ── */
+.summary-table th { background: var(--accent-soft); color: var(--accent); }
+
+footer { margin-top: 4rem; padding-top: 1.2rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .85rem; }
+footer a { color: var(--accent); }
+.backlink { display: inline-block; margin-bottom: 1.5rem; font-size: .85rem; color: var(--muted); text-decoration: none; }
+.backlink:hover { color: var(--accent); }

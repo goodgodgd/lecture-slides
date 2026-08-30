@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1회 · 무엇을 만들고, 맞는지 어떻게 아나 | 3D Vision &amp; SLAM</title>
+<script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}})();</script>
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="assets/lecture.css">
+</head>
+<body>
+<header class="bar">
+  <div class="barin wide">
+    <a class="up" href="index.html" aria-label="3D Vision &amp; SLAM 회차 목록"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a>
+    <nav class="crumb" aria-label="경로">
+      <a href="../index.html">강의자료</a><span class="sep">/</span><a href="index.html">3D Vision &amp; SLAM</a><span class="sep">/</span><span class="here">1회 · 무엇을 만들고, 맞는지 어떻게 아나</span>
+    </nav>
+    <span class="spacer"></span>
+    <div class="seg" data-theme-switch role="group" aria-label="밝기">
+      <button type="button" data-mode="auto" aria-pressed="true">자동</button>
+      <button type="button" data-mode="light" aria-pressed="false">밝게</button>
+      <button type="button" data-mode="dark" aria-pressed="false">어둡게</button>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="toc-title">이 회차 목차</div>
+  <a href="#info">강의 정보</a>
+  <a href="#what">① 무엇을 만드나</a>
+  <a href="#why">② 왜 카메라와 IMU를 같이 쓰나</a>
+  <a href="#map">③ 14회의 지도</a>
+  <a href="#classic">④ 왜 고전 SLAM인가</a>
+  <a href="#ai">⑤ AI를 어떻게 쓰나</a>
+  <a href="#ai" class="sub">코드와 프롬프트</a>
+  <a href="#verify">⑥ 맞는지 어떻게 아나</a>
+  <a href="#see">⑦ 눈으로 본다 — 시각화</a>
+  <a href="#prompts">🤖 에이전트에게 말하는 법</a>
+  <a href="#check">✅ 오늘의 점검</a>
+  <a href="#more">조금 더 알아두면</a>
+</nav>
+
+<main>
+  <div class="lec-no mono">3D Vision &amp; SLAM · 1회 · 1부 3차원 기하</div>
+  <h1>무엇을 만들고, 맞는지 어떻게 아나</h1>
+
+  <div class="questions">
+    <span class="lab">오늘 답할 질문</span>
+    <ol>
+      <li>이 수업에서 구체적으로 무엇을 만드나?</li>
+      <li>카메라가 있는데 IMU를 왜 넣나? IMU가 있는데 카메라를 왜 넣나?</li>
+      <li>코드를 AI가 짜 준다면, 사람에게는 무엇이 남나?</li>
+      <li>만든 것이 맞는지는 어떻게 아나?</li>
+    </ol>
+  </div>
+
+  <p>
+    첫 시간에 궁금한 것은 보통 두 가지다. <strong>무엇을 만드는가</strong>와
+    <strong>내가 무엇을 하게 되는가</strong>. 오늘은 그 둘을 먼저 정리하고,
+    그다음에 이 과목이 다른 SLAM 수업과 다르게 잡은 지점 하나를 이야기한다.
+    그 지점이 네 번째 질문이다.
+  </p>
+
+  <h2 id="info">강의 정보</h2>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th style="width:22%">수업 목표</th><td>카메라 한 대와 IMU 하나로 3차원 궤적과 점 지도를 만드는 프로그램을 직접 완성한다</td></tr>
+    <tr><th>수업 내용</th><td>3차원 기하 · 카메라 모델 · 특징 추적 · 상태 추정 · IMU 사전적분 · 그래프 최적화</td></tr>
+    <tr><th>선수 지식</th><td>선형대수(고유값·SVD·최소제곱), 확률(가우시안·조건부확률), C++를 읽을 수 있는 정도.
+      <strong>C++ 문법 자체는 다루지 않는다</strong></td></tr>
+    <tr><th>대상</th><td>대학원. 「고속영상처리」를 개편한 과목입니다.
+      수식이 계속 나오지만 외우는 시간보다 <strong>돌려 보고 틀린 곳을 찾는 시간</strong>이 훨씬 깁니다</td></tr>
+    <tr><th>강의자료</th><td><a href="https://goodgodgd.github.io/lecture-slides/">goodgodgd.github.io/lecture-slides</a>
+      — 매 회차 자료가 여기 올라옵니다. 따로 받지 않아도 되고, 브라우저에서 바로 보면 됩니다</td></tr>
+    <tr><th>참고 문헌</th><td>Ma 외, <em>An Invitation to 3-D Vision</em> (기하) ·
+      高翔, <em>Introduction to Visual SLAM</em> (구현) — 사서 보지 않아도 따라올 수 있게 자료를 씁니다</td></tr>
+    <tr><th>데이터</th><td>EuRoC MAV (ETH Zürich). <strong>클라우드 드라이브로 배포합니다.</strong>
+      한 시퀀스가 1.15 GB쯤 됩니다</td></tr>
+    <tr><th>개발환경</th><td>도커 이미지 하나를 드립니다 · C++17 · Eigen · OpenCV · Ceres</td></tr>
+    <tr><th>평가</th><td>중간고사와 개인 프로젝트로 봅니다. <strong>세부는 학기 중에 안내합니다</strong></td></tr>
+    <tr><th>진행</th><td>주 1회 · 100분 · 14회</td></tr>
+  </table>
+  </div>
+
+  <h2 id="what">① 무엇을 만드나 <span class="badge b-lv">전체 그림</span></h2>
+
+  <p>
+    만드는 것은 하나다. <strong>영상과 IMU 값을 받아서, 자기가 어디를 어떻게 지나왔는지와
+    주변에 무엇이 있었는지를 내놓는 프로그램</strong>이다.
+    이름을 붙이면 단안 시각-관성 SLAM(monocular visual-inertial SLAM)이 된다.
+  </p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>들어가는 것</th><th>나오는 것</th></tr>
+    <tr>
+      <td>흑백 영상 한 대분 (752×480, 초당 20장)<br>IMU 값 (초당 200개, 가속도 3 + 각속도 3)</td>
+      <td>시각마다의 위치와 자세 — <strong>미터 단위</strong>로<br>3차원 점 지도<br>그 결과가 얼마나 맞는지를 재는 수치</td>
+    </tr>
+  </table>
+  </div>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 오늘 처음 나오는 이름들</p>
+    <dl>
+      <dt>SLAM</dt>
+      <dd>Simultaneous Localization and Mapping. 지도를 모르는 채로 지도를 만들면서 동시에 그 안에서 자기 위치를 찾는 일이다.</dd>
+      <dt>VO · VIO</dt>
+      <dd>VO(Visual Odometry)는 영상만으로 얼마나 움직였는지를 잇는 것이고, VIO는 거기에 IMU를 더한 것이다.
+        SLAM과의 차이는 <strong>지도를 계속 들고 있으면서 예전에 온 곳을 다시 알아보느냐</strong>다.</dd>
+      <dt>IMU</dt>
+      <dd>가속도계와 자이로가 든 관성 센서. 카메라보다 훨씬 빠르게(여기서는 10배) 값을 낸다.</dd>
+      <dt>프론트엔드 · 백엔드</dt>
+      <dd>프론트엔드는 영상에서 「무엇이 무엇과 같은 점인가」를 뽑는 쪽이고,
+        백엔드는 그 관측들을 모아 위치와 지도를 푸는 쪽이다. 이 강의는 둘을 나눠서 만든다.</dd>
+      <dt>랜드마크</dt>
+      <dd>지도를 이루는 3차원 점 하나. 영상에서는 여러 프레임에 걸쳐 같은 곳으로 보이는 점이다.</dd>
+      <dt>ATE</dt>
+      <dd>Absolute Trajectory Error. 내가 만든 궤적과 정답 궤적의 차이를 미터로 잰 값. 이 과목의 성적표 같은 숫자다.</dd>
+    </dl>
+    <p class="later">이 이름들은 뒤 회차에서 하나씩 다시 나옵니다. 지금은 대충 감만 잡아 두면 됩니다.</p>
+  </div>
+
+  <p>
+    쓰는 데이터는 <strong>EuRoC</strong>다. 취리히 공대에서 드론에 카메라와 IMU를 달고 실내를 날린 기록이고,
+    <strong>모션캡처 장비로 잰 정답 궤적이 같이 들어 있다.</strong>
+    정답이 있다는 것이 이 강의에서 아주 중요해진다 — ⑥절에서 다시 나온다.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>V1_01_easy 한 시퀀스</th><th>값</th></tr>
+    <tr><td>길이</td><td>145.6초 · 이동 거리 58.59 m</td></tr>
+    <tr><td>방 크기</td><td>4.4 × 5.8 m</td></tr>
+    <tr><td>평균 속도</td><td>0.41 m/s (최대 각속도 54 °/s)</td></tr>
+    <tr><td>영상과 IMU의 시각</td><td>영상 간격 50.000 ms · IMU 5.000 ms — <strong>영상 사이에 IMU가 정확히 10개</strong></td></tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 마지막 줄이 고마운 조건이다. 실제 로봇에서는 두 센서의 시각이 조금씩 어긋나서
+    그것부터 맞춰야 하는 경우가 많다. 이 데이터는 그 문제가 없어서
+    <strong>한 학기 동안 SLAM 자체에만 집중할 수 있다.</strong>
+  </div>
+
+  <h2 id="why">② 왜 카메라와 IMU를 같이 쓰나 — 두 개의 실패</h2>
+
+  <p>
+    센서를 둘 쓰면 좋겠다는 말은 하나 마나 한 말이다. 그보다는
+    <strong>각각을 혼자 썼을 때 어떻게 무너지는지</strong>를 먼저 보는 편이 낫다.
+    아래 표는 EuRoC 데이터에서 실제로 재 본 값이다.
+  </p>
+
+  <h3>실패 ① — IMU만 적분하면</h3>
+
+  <p>
+    가속도를 두 번 적분하면 위치가 나온다. 원리는 맞다. 결과는 이렇다.
+  </p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>경과</th><th>바이어스를 정답으로 보정해도</th><th>바이어스를 모르면</th></tr>
+    <tr><td>1초</td><td>0.04 m</td><td>0.40 m</td></tr>
+    <tr><td>10초</td><td><strong>11.98 m</strong></td><td>121.3 m</td></tr>
+    <tr><td>60초</td><td>617 m</td><td><strong>11.8 km</strong></td></tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 방이 4.4 × 5.8 m다. <strong>10초면 이미 방 바깥이다.</strong>
+    그리고 두 번째 열이 더 중요하다 — <strong>바이어스를 정답으로 넣어 줘도</strong> 10초에 12 m가 벌어진다.
+    센서를 더 좋은 것으로 바꿔서 될 문제가 아니라는 뜻이다.
+    왜 이렇게 되는지는 10회에서 숫자로 따라가 본다.
+  </div>
+
+  <h3>실패 ② — 카메라만 쓰면</h3>
+
+  <p>
+    영상만으로도 궤적을 만들 수 있다. 다만 <strong>크기를 정하지 못한다.</strong>
+    같은 영상이 「작은 방에서 천천히 움직인 것」인지 「큰 방에서 빠르게 움직인 것」인지 구별되지 않는다.
+    모양은 맞는데 배율을 모르는 상태다. 이것을 스케일 모호성이라고 하고, 5회에서 식으로 확인한다.
+  </p>
+
+  <div class="box lab-block">
+    <p class="boxtitle">그래서 둘을 합친다</p>
+    <p style="margin:0">
+      IMU는 <strong>짧은 시간에는 정확하고 길게 가면 무너진다.</strong>
+      카메라는 <strong>길게 봐도 안정적인데 크기를 모른다.</strong>
+      서로의 빈칸을 정확히 메우는 조합이라서 요즘 나오는 드론·헤드셋·로봇이 거의 다 이 둘을 쓴다.
+    </p>
+  </div>
+
+  <h2 id="map">③ 14회의 지도 <span class="badge b-lv">전체 그림</span></h2>
+
+  <p>
+    14회를 네 부로 나눠 두었다. 앞의 두 부는 <strong>영상에서 3차원을 꺼내는 법</strong>이고,
+    뒤의 두 부는 <strong>거기에 IMU를 묶어 하나의 추정 문제로 만드는 법</strong>이다.
+    한 부가 끝날 때마다 「이제 이건 돌아간다」가 하나씩 늘어나도록 놓았습니다.
+  </p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>부</th><th>회차</th><th>무엇을 하나</th><th>끝나면 할 수 있는 것</th></tr>
+    <tr><td><strong>1부</strong><br>3차원 기하</td><td>1~5</td>
+      <td>좌표계와 표기 규약, 회전과 Lie 이론, 카메라 모델과 왜곡, 에피폴라 기하와 삼각측량</td>
+      <td>사진 두 장에서 3차원 점을 만들고, 그 점이 영상 어디에 찍혀야 하는지 계산할 수 있다</td></tr>
+    <tr><td><strong>2부</strong><br>프론트엔드</td><td>6~9</td>
+      <td>SLAM 30년의 지도, 특징점 검출·추적·매칭, 아웃라이어 제거, 번들조정</td>
+      <td>영상에서 믿을 수 있는 대응점을 뽑고, 재투영 오차를 최소화해 다듬을 수 있다</td></tr>
+    <tr><td><strong>3부</strong><br>IMU와 상태추정</td><td>10~12</td>
+      <td>IMU 측정 모델과 바이어스, 베이즈 필터·칼만필터·오차상태 필터, IMU 사전적분과 초기화</td>
+      <td>불확실한 값을 확률로 다루고, 영상과 IMU를 하나의 문제로 묶을 수 있다</td></tr>
+    <tr><td><strong>4부</strong><br>백엔드와 시스템</td><td>13~14</td>
+      <td>그래프 SLAM과 marginalization, 루프 클로징, 전체 시스템과 평가</td>
+      <td>완성한 시스템을 정답 궤적과 비교해 <strong>숫자로</strong> 평가할 수 있다</td></tr>
+  </table>
+  </div>
+
+  <p class="readme-first">중간고사는 8회입니다. 1부와 2부 앞쪽에서 다룬 기하가 범위입니다.</p>
+
+  <div class="interp">
+    <strong>해석:</strong> 1부가 다섯 회로 가장 길다. 좌표계와 회전에 그만큼 시간을 쓰는 이유가 있다 —
+    이 부분이 틀리면 뒤가 전부 흔들리는데, <strong>틀려도 프로그램은 죽지 않기 때문이다.</strong>
+    궤적은 여전히 그럴듯한 곡선으로 나오고, 숫자만 조용히 틀려 있다.
+    이 과목에서 가장 자주 겪게 되는 상황이고, ⑥절이 그것을 다룬다.
+  </div>
+
+  <h2 id="classic">④ 왜 고전 SLAM인가</h2>
+
+  <p>
+    요즘 3차원 쪽에서 화제가 되는 것은 NeRF나 3D Gaussian Splatting 같은 이름들이다.
+    그런데 이 수업에서 만드는 것은 2015~2018년쯤에 정리된 시스템(ORB-SLAM, VINS-Mono)에 가깝다.
+    <strong>왜 지금 그걸 만드나</strong> 하는 생각이 들 수 있다.
+  </p>
+
+  <p>
+    이유는 그 시스템들이 지금도 뼈대이기 때문이다. 최신 방법들이 바꾼 것은 대체로 둘이다 —
+    <strong>대응점을 어떻게 찾느냐</strong>와 <strong>지도를 무엇으로 표현하느냐</strong>.
+    그 안쪽에서 <strong>측정 오차의 제곱합을 최소화한다</strong>는 뼈대는 거의 그대로 남아 있다.
+    그래서 뼈대를 한 번 손으로 세워 본 사람은 최신 논문을 읽을 때 무엇이 새로운지 바로 보이고,
+    안 세워 본 사람은 매번 처음부터 읽게 된다.
+  </p>
+
+  <p>
+    그렇다고 최신 쪽을 구경만 하고 넘어가지는 않습니다. 이 강의에는 <strong>갈아 끼우는 자리</strong>를 둡니다.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>갈아 끼우는 자리</th><th>기본으로 만드는 것</th><th>바꿔 끼워 볼 수 있는 것</th></tr>
+    <tr><td>특징점 검출·기술</td><td>Shi-Tomasi · ORB</td><td>학습 기반 특징점 (SuperPoint 계열)</td></tr>
+    <tr><td>대응점 찾기</td><td>KLT 추적 · 기술자 매칭</td><td>학습 기반 매칭 (LightGlue 계열)</td></tr>
+    <tr><td>예전에 온 곳 알아보기</td><td>BoW (DBoW2)</td><td>학습 기반 장소 인식 (NetVLAD 계열)</td></tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 세 자리 모두 <strong>프론트엔드</strong>다. 백엔드는 그대로 둔다.
+    학습이 실제로 고전 방법을 이긴 자리가 대체로 여기이기 때문이다 —
+    조명이 바뀌거나 시점이 크게 달라졌을 때 「같은 점인가」를 판단하는 일은 기하 문제라기보다 인식 문제에 가깝다.
+    <strong>백엔드를 고정해 두고 프론트엔드만 바꾸면, 무엇이 얼마나 좋아졌는지 같은 데이터에서 숫자로 비교할 수 있다.</strong>
+  </div>
+
+  <p>
+    SLAM이 EKF에서 시작해 여기까지 오는 동안 무엇이 왜 바뀌었는지는
+    <strong>6회에서 한 번에 정리합니다.</strong> 지금은 「고전을 만들지만 최신과 끊겨 있지는 않다」 정도로 두면 됩니다.
+  </p>
+
+  <h2 id="ai">⑤ AI를 어떻게 쓰나 <span class="badge b-red">사람이 한다</span></h2>
+
+  <p>
+    코드는 에이전트가 짜 준다. SLAM 코드도 꽤 잘 짜 준다. 그러면 이 과목에서 사람은 무엇을 하나?
+  </p>
+
+  <p>
+    이 강의가 잡은 답은 이렇다. <strong>좌표계를 정하고, 상태를 정의하고, 검증을 설계하고,
+    틀린 결과를 보고 어느 모듈이 범인인지 가르는 것.</strong>
+    네 가지 다 코드를 치는 일이 아니고, 네 가지 다 대신 시키기 어려운 일이다.
+    에이전트는 여러분이 어제 어떤 궤적을 봤는지 모르기 때문이다.
+  </p>
+
+  <div class="box lab-block">
+    <p class="boxtitle">이 과목의 AI 사용 규칙</p>
+    <p style="margin:0">
+      에이전트를 쓰는 것은 괜찮습니다. 오히려 권합니다.
+      다만 <strong>자기가 설명하지 못하는 코드는 내지 않기로 합니다.</strong>
+    </p>
+  </div>
+
+  <h3>신호등 — 자료 곳곳에 붙어 있는 표시</h3>
+
+  <p>
+    매 회차 절 제목 옆에 배지가 하나씩 붙어 있습니다. <strong>이 일을 누가 하는 게 좋은가</strong>를 나타냅니다.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>배지</th><th>뜻</th><th>예</th></tr>
+    <tr><td><span class="badge b-green">맡긴다</span></td><td>에이전트가 하고 결과만 본다</td>
+      <td>파일 파싱, CMake, 시각화 코드, PLY 쓰기</td></tr>
+    <tr><td><span class="badge b-yellow">맡기되 검사한다</span></td><td>코드는 맡기고 <strong>검증은 사람이 설계한다</strong></td>
+      <td>야코비안, 사전적분, 삼각측량</td></tr>
+    <tr><td><span class="badge b-red">사람이 한다</span></td><td>대신 시키기 어려운 것</td>
+      <td>좌표계 규약, 상태 정의, 잡음 값의 출처, 실패 원인 좁히기</td></tr>
+    <tr><td><span class="badge b-stop">권하지 않는다</span></td><td>해 보면 대체로 시간을 더 쓰게 되는 것</td>
+      <td>검증 없이 한 번에 전체 통합, 결과가 안 맞을 때 계수부터 바꾸기</td></tr>
+  </table>
+  </div>
+
+  <h3>자료에 코드가 나올 때와 프롬프트가 나올 때</h3>
+
+  <p>
+    강의자료에 코드를 그대로 싣는 경우와, 코드 대신 <strong>그 코드를 받아내는 프롬프트</strong>를 싣는 경우가 있습니다.
+    기준은 하나입니다 — <strong>개념이 코드 모양 안에 들어 있느냐</strong>.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>어떤 코드</th><th>자료에서</th><th>왜</th></tr>
+    <tr><td>짧고, 그 몇 줄에 개념이 들어 있는 것<br><span class="mono" style="font-size:.85rem">예: 잡음 이산화 두 줄, 순역방향 검사</span></td>
+      <td><strong>코드를 그대로</strong> 싣는다</td>
+      <td>읽는 것이 곧 이해하는 것이다</td></tr>
+    <tr><td>길고 기계적인 것<br><span class="mono" style="font-size:.85rem">예: 데이터 파서, Ceres 팩터, 사전적분 전파</span></td>
+      <td><strong>프롬프트와 검사 목록</strong>을 싣는다</td>
+      <td>200줄을 읽는 시간보다 <strong>받은 200줄에서 무엇을 확인할지</strong> 아는 편이 남는다</td></tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 프롬프트만 덩그러니 싣지는 않습니다. 프롬프트 옆에는 언제나
+    <strong>「받은 코드에서 확인할 것」</strong>이 따라붙습니다. 그게 없으면 프롬프트를 보여 주는 의미가 없기 때문이다.
+    이 강의에서 실제로 연습하는 것은 코드를 쓰는 일이 아니라 <strong>일을 의뢰하고 받은 것을 검사하는 일</strong>에 가깝다.
+  </div>
+
+  <h2 id="verify">⑥ 맞는지 어떻게 아나 <span class="badge b-red">사람이 한다</span></h2>
+
+  <p>
+    이 절이 이 과목을 다른 SLAM 수업과 가르는 자리다.
+  </p>
+
+  <p>
+    보통의 프로그램은 틀리면 죽는다. 예외가 나거나, 화면이 깨지거나, 값이 발산한다.
+    <strong>SLAM은 그렇지 않다.</strong> 회전 하나가 전치돼 있어도 프로그램은 잘 돌고,
+    궤적도 여전히 그럴듯한 곡선으로 나온다. 눈으로는 구별되지 않는다.
+  </p>
+
+  <p>
+    그래서 <strong>틀렸다는 사실을 알아내는 장치를 먼저 만들어 두는 순서</strong>로 학기를 짰다.
+    아래 여섯 단을 학기 내내 쓴다. 규칙은 하나다 — <strong>아래 단을 통과하지 못한 것은 위로 올리지 않는다.</strong>
+  </p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>단</th><th>무엇을 하나</th><th>통과 기준</th><th>여기서 걸리는 것</th></tr>
+    <tr><td>1</td><td><strong>항등식 검사</strong> — 수식이 성립하는지 본다</td>
+      <td><span class="mono">RᵀR = I</span>, 오차 <span class="mono">&lt; 1e-12</span></td><td>정규화 누락, 전치 실수</td></tr>
+    <tr><td>2</td><td><strong>수치 야코비안 대조</strong> — 손으로 쓴 미분 vs 유한차분</td>
+      <td>상대오차 <span class="mono">&lt; 1e-6</span></td><td>부호 실수, 섭동 방향 혼동</td></tr>
+    <tr><td>3</td><td><strong>무잡음 합성 데이터</strong> — 정답을 아는 데이터를 넣는다</td>
+      <td>추정 오차 <span class="mono">&lt; 1e-8</span></td><td>좌표계 규약 위반, 시각 정렬 실수</td></tr>
+    <tr><td>4</td><td><strong>정답 부분 주입</strong> — 한 모듈만 정답으로 바꿔 본다</td>
+      <td>어느 모듈을 바꿨을 때 정상이 되나</td><td>범인 특정</td></tr>
+    <tr><td>5</td><td><strong>잡음 켜기</strong> — 합성 데이터에 잡음을 단계적으로 넣는다</td>
+      <td>오차가 잡음에 비례해 늘어나는가</td><td>잘못 설정한 잡음 값</td></tr>
+    <tr><td>6</td><td><strong>실제 데이터 평가</strong> — EuRoC + ATE</td>
+      <td>궤적 오차와 일관성 지표</td><td>나머지 전부</td></tr>
+  </table>
+  </div>
+
+  <div class="box stop">
+    <p class="boxtitle">⛔ 이 과목에서 권하지 않는 것 하나</p>
+    <p style="margin:0">
+      <strong>결과가 안 맞을 때 잡음 계수·임계값·반복 횟수부터 바꿔 보는 것.</strong>
+      3단(무잡음 합성)에서 오차가 0이 아니면 그건 튜닝할 문제가 아니라 버그일 가능성이 높다.
+      계수를 만지면 증상은 가려지고 원인은 남아서, 나중에 훨씬 찾기 어려워진다.
+    </p>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 3단이 이 사다리의 핵심이다. <strong>정답을 아는 데이터를 스스로 만들어 넣는 것</strong>인데,
+    이걸 건너뛰고 곧장 실제 데이터로 가는 것이 학기 중에 가장 많이 헤매게 되는 경로다.
+    그래서 합성 데이터를 만드는 일을 학기 중반에 따로 한 번 다룹니다.
+  </div>
+
+  <h2 id="see">⑦ 눈으로 본다 — 시각화 <span class="badge b-green">맡긴다</span></h2>
+
+  <p>
+    SLAM에서 「ATE가 0.6 m입니다」라는 숫자 하나는 원인을 거의 알려 주지 않는다.
+    <strong>그림 한 장이 훨씬 많이 말해 준다.</strong> 궤적이 통째로 돌아가 있는지, 크기만 다른지,
+    특정 구간에서만 튀는지는 그려 보면 몇 초 만에 구별된다.
+  </p>
+
+  <p>
+    그래서 매 회차마다 <strong>그 회차에서 새로 그리게 되는 그림</strong>을 하나씩 정해 두었습니다.
+    학기 내내 보게 되는 그림은 대체로 네 종류입니다.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>무엇을 그리나</th><th>무엇이 보이나</th></tr>
+    <tr><td>영상 위 겹쳐 그리기 — 특징점, 추적선, 재투영 오차</td><td>프론트엔드가 건강한지</td></tr>
+    <tr><td>3차원 궤적과 점 지도, 카메라 시야뿔</td><td>좌표계를 잘못 잡았는지 (통째로 돌아가 있으면 바로 보인다)</td></tr>
+    <tr><td>시계열 — 추적된 점 개수, 잔차, 바이어스, 불확실도</td><td>언제부터 나빠지기 시작했는지</td></tr>
+    <tr><td>정답 궤적과 겹쳐 보기</td><td>모양이 틀린 건지 크기가 틀린 건지</td></tr>
+  </table>
+  </div>
+
+  <h3>쓰는 도구</h3>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>도구</th><th>무엇에 쓰나</th></tr>
+    <tr><td><strong>Rerun</strong></td><td>영상·3차원·시계열을 <strong>하나의 시간축</strong>에 올려 놓고 앞뒤로 돌려 본다. SLAM 디버깅에 가장 잘 맞는다</td></tr>
+    <tr><td><strong>evo</strong></td><td>궤적 오차(ATE·RPE)를 재고 그리는 표준 도구. 평가는 직접 짜지 않는다</td></tr>
+    <tr><td>Open3D · CloudCompare</td><td>만든 점 지도를 정답 점군과 겹쳐 놓고 거리 분포를 본다</td></tr>
+    <tr><td>matplotlib</td><td>시계열과 히스토그램</td></tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 시각화 코드는 <span class="badge b-green">맡긴다</span>입니다. 에이전트가 잘 짜는 영역이고,
+    틀려도 결과가 눈에 바로 보여서 위험이 낮다.
+    다만 편한 방법이 하나 있다 — <strong>C++ 쪽은 표준 형식(궤적 파일·PLY·로그)으로 파일만 남기고,
+    그리는 일은 파이썬이 그 파일을 읽어서 하는 것.</strong>
+    빌드가 가벼워지고, 같은 파일이 평가에도 그대로 쓰인다.
+  </div>
+
+  <h2 id="prompts">🤖 에이전트에게 말하는 법 <span class="badge b-yellow">맡기되 검사한다</span></h2>
+
+  <p>
+    학기 내내 쓰게 될 부탁 방식 네 가지입니다. 지금 외울 필요는 없고, 막힐 때 이 절로 돌아와 보면 됩니다.
+  </p>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    첨부한 <strong>좌표계 규약 문서</strong>를 먼저 읽고, 거기 적힌 표기와 부호 약속을 그대로 따라 줘.
+    규약에 없어서 네가 임의로 정한 것이 있으면 <strong>코드 위에 목록으로</strong> 적어 줘.
+  </div>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    이 함수를 짜면서 <strong>검증 테스트도 같이</strong> 써 줘.
+    해석적으로 구한 야코비안을 <strong>유한차분과 비교하는 테스트</strong>를 포함해 줘.
+  </div>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    잡음을 0으로 둔 합성 데이터에서 위치 오차가 0.34 m로 나온다.
+    <strong>원인 후보를 세 개</strong> 대고, 각각을 확인할 수 있는 <strong>가장 작은 실험</strong>을 하나씩 제안해 줘.
+    <strong>코드는 아직 고치지 말아 줘.</strong>
+  </div>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    방금 준 코드에서 <strong>내가 눈으로 확인해야 할 곳</strong>을 다섯 개만 짚어 줘.
+    각각 어떤 값이 어떻게 나오면 맞는 건지 같이 알려 줘.
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 세 번째가 이 강의에서 가장 자주 쓰게 되는 부탁입니다.
+    「고쳐 줘」라고 하면 에이전트는 대체로 <strong>증상이 사라질 때까지</strong> 코드를 바꾼다.
+    증상은 없어지고 원인은 남는데, SLAM에서는 그 상태가 꽤 오래 안 들킨다.
+    <strong>후보를 대게 하고 고르는 것은 사람이 하는 편</strong>이 결국 빠릅니다.
+  </div>
+
+  <h2 id="check">✅ 오늘의 점검</h2>
+  <ul class="check">
+    <li><input type="checkbox" id="c1"><label for="c1">이 수업에서 무엇을 만드는지 입력과 출력으로 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c2"><label for="c2">IMU만 쓰면 왜 안 되는지, 카메라만 쓰면 왜 안 되는지 각각 한 문장으로 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c3"><label for="c3">14회가 네 부로 어떻게 나뉘는지 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c4"><label for="c4">「SLAM에서 틀린 코드는 죽지 않는다」가 무슨 뜻인지 설명할 수 있다</label></li>
+    <li><input type="checkbox" id="c5"><label for="c5">검증 사다리에서 3단이 무엇이고 왜 중요한지 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c6"><label for="c6">AI 사용 규칙 한 문장을 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c7"><label for="c7">강의자료 주소를 즐겨찾기에 넣었다</label></li>
+  </ul>
+
+  <h2 id="more">조금 더 알아두면 <span class="badge b-lv">시험 범위 아님</span></h2>
+
+  <p>
+    다음 시간(2회)에는 <strong>좌표계와 표기 규약</strong>을 다룹니다.
+    「<span class="mono">T_WB</span>인가 <span class="mono">T_BW</span>인가」를 한 시간 내내 이야기하는 회차라
+    처음에는 좀 심심하게 들릴 수 있는데, 학기 전체에서 가장 수익률이 높은 시간입니다.
+    나중에 궤적이 이상하게 나오는 이유의 절반쯤이 여기서 나옵니다.
+  </p>
+
+  <p>
+    데이터와 도커 이미지는 클라우드 드라이브 주소로 따로 안내합니다.
+    EuRoC은 한 시퀀스가 1.15 GB쯤 되니 <strong>수업 전에 미리 받아 두면</strong> 수월합니다.
+  </p>
+
+  <details class="story">
+    <summary>이 데이터가 어디서 왔나</summary>
+    <p>
+      EuRoC은 유럽연합이 지원한 로봇 과제(European Robotics Challenges)의 이름이고,
+      데이터는 취리히 공대(ETH Zürich) 자율시스템연구소에서 2016년에 공개했다.
+      실내에 <strong>모션캡처 장비를 깔아 두고</strong> 드론을 날려서, 밀리미터 수준의 정답 궤적을 같이 기록했다.
+      방 하나를 통째로 레이저 스캐너로 떠 놓은 점군까지 들어 있다.
+    </p>
+    <p>
+      이 데이터가 지금까지 쓰이는 이유는 <strong>정답이 여러 겹으로 있기 때문</strong>이다.
+      궤적의 정답이 있고, 속도와 바이어스의 정답까지 있고, 지도의 정답도 있다.
+      덕분에 「어딘가 틀렸다」가 아니라 「여기가 틀렸다」까지 갈 수 있다.
+      ⑥절의 4단(정답 부분 주입)이 가능한 것도 이 때문이다.
+    </p>
+    <p class="src">
+      출처: Burri 외, <em>The EuRoC micro aerial vehicle datasets</em>, IJRR 2016.
+      라이선스는 비상업적 사용 허용(In Copyright – Non-Commercial Use Permitted)이다.
+    </p>
+  </details>
+
+  <footer>
+    3D Vision &amp; SLAM · 1회 · <a href="index.html">회차 목록으로</a>
+  </footer>
+</main>
+
+</div>
+<script src="../assets/site.js" defer></script>
+</body>
+</html>
