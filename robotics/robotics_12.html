@@ -85,7 +85,7 @@
     <tr><th>이걸 쓴다</th><th>언제 쓰나</th><th>수준</th></tr>
     <tr><td><code>std::make_unique&lt;T&gt;(...)</code></td><td><strong>기본값.</strong> 손으로 만든 것을 담을 때. <strong>주인이 하나</strong>다</td><td><span class="badge b-lv">[요구]</span></td></tr>
     <tr><td><code>std::make_shared&lt;T&gt;(...)</code></td><td>같은 것을 <strong>여러 곳이 나눠 가져야</strong> 할 때만</td><td><span class="badge b-lv">[판단]</span></td></tr>
-    <tr><td><code>new</code> / <code>delete</code></td><td><strong>쓰지 않는다.</strong> 짝을 맞추는 일을 사람이 하면 반드시 틀린다</td><td><span class="badge b-lv">[요구]</span></td></tr>
+    <tr><td><code>new</code> / <code>delete</code></td><td><strong>쓰지 않는다.</strong> 짝을 맞추는 일을 사람이 하면 언젠가 어긋난다</td><td><span class="badge b-lv">[요구]</span></td></tr>
     <tr><td><code>std::vector&lt;T&gt;</code></td><td><strong>기본값.</strong> 개수가 실행 중에 정해지거나 바뀔 때</td><td><span class="badge b-lv">[요구]</span></td></tr>
     <tr><td><code>std::array&lt;T, N&gt;</code></td><td>개수가 <strong>코드에 이미 적혀 있을</strong> 때 (바퀴 4개, 좌표 3개)</td><td><span class="badge b-lv">[판단]</span></td></tr>
     <tr><td><code>v.reserve(n)</code></td><td><strong>몇 개 들어올지 알 때.</strong> 담기 시작하기 전에 한 줄</td><td><span class="badge b-lv">[요구]</span></td></tr>
@@ -99,7 +99,7 @@
   </div>
 
   <!-- ══════════ ① RAII ══════════ -->
-  <h2 id="raii">① 뒷정리를 사람이 하면 반드시 잊는다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+  <h2 id="raii">① 뒷정리를 사람이 하면 언젠가 빠뜨린다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
   <h3>언제 이게 필요해지나</h3>
   <p>
@@ -862,7 +862,7 @@ private:
 
   <footer>
     로봇공학 · 순천향대학교 전자정보공학과 ·
-    다음 회차: <a href="robotics_13.html">13회 STL 알고리즘 — 직접 짜지 마라</a>
+    다음 회차: <a href="robotics_13.html">13회 STL 알고리즘 — 이미 있는 것을 먼저 찾는다</a>
   </footer>
 </main>
 </div>
