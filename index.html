@@ -4,78 +4,42 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>강의자료 — 순천향대 전자정보공학과</title>
-<style>
-  :root {
-    --bg: #ffffff; --fg: #1a1a1a; --muted: #666; --line: #e3e3e3;
-    --card: #fafafa; --accent: #1f5fa8;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg:#16181c; --fg:#e8e8e8; --muted:#9aa0a6; --line:#2c3038; --card:#1e2126; --accent:#7fb3ec; }
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; padding: 3rem 1.25rem 5rem;
-    background: var(--bg); color: var(--fg);
-    font-family: "Pretendard", "Malgun Gothic", system-ui, sans-serif;
-    line-height: 1.7;
-  }
-  main { max-width: 720px; margin: 0 auto; }
-  h1 { font-size: 1.6rem; margin: 0 0 .3rem; letter-spacing: -.02em; }
-  .sub { color: var(--muted); margin: 0 0 2.5rem; font-size: .95rem; }
-  h2 { font-size: 1.05rem; margin: 2.5rem 0 .8rem; padding-bottom: .5rem;
-       border-bottom: 1px solid var(--line); font-weight: 600; }
-  ul { list-style: none; padding: 0; margin: 0; display: grid; gap: .5rem; }
-  a.item {
-    display: block; padding: .85rem 1rem; background: var(--card);
-    border: 1px solid var(--line); border-radius: 8px;
-    color: var(--fg); text-decoration: none;
-  }
-  a.item:hover { border-color: var(--accent); color: var(--accent); }
-  a.item .wk { color: var(--muted); font-size: .85rem; margin-right: .6rem; }
-  .part { margin: 1.6rem 0 .5rem; font-size: .82rem; font-weight: 600;
-          color: var(--accent); letter-spacing: .02em; }
-  .note { color: var(--muted); font-weight: 400; font-size: .8rem; margin-left: .4rem; }
-  footer { margin-top: 4rem; color: var(--muted); font-size: .85rem;
-           border-top: 1px solid var(--line); padding-top: 1rem; }
-</style>
+<script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}})();</script>
+<link rel="stylesheet" href="assets/site.css">
 </head>
 <body>
-<main>
-  <h1>강의자료</h1>
-  <p class="sub">순천향대학교 전자정보공학과</p>
+<header class="bar">
+  <div class="barin narrow">
+    <nav class="crumb" aria-label="경로"><span class="here">강의자료</span></nav>
+    <span class="spacer"></span>
+    <div class="seg" data-theme-switch role="group" aria-label="밝기">
+      <button type="button" data-mode="auto" aria-pressed="true">자동</button>
+      <button type="button" data-mode="light" aria-pressed="false">밝게</button>
+      <button type="button" data-mode="dark" aria-pressed="false">어둡게</button>
+    </div>
+  </div>
+</header>
+<main class="page narrow">
+  <header>
+    <p class="eyebrow">순천향대학교 전자정보공학과</p>
+    <h1>강의자료</h1>
+    <p class="lede">수업에서 쓰는 자료를 그대로 웹에 올려 둡니다. 과목을 고르면 회차 목록이 나옵니다.</p>
+  </header>
 
-  <h2>로봇공학</h2>
-  <p class="part">1부 · 환경과 도구</p>
-  <ul>
-    <li><a class="item" href="robotics/robotics_01.html"><span class="wk">1회</span>이 강의가 요구하는 것</a></li>
-    <li><a class="item" href="robotics/robotics_02.html"><span class="wk">2회</span>리눅스와 WSL — 우주여행 게임에서 시작된 운영체제</a></li>
-    <li><a class="item" href="robotics/robotics_03.html"><span class="wk">3회</span>에이전트를 개발환경에 붙이기</a></li>
-    <li><a class="item" href="robotics/robotics_04.html"><span class="wk">4회</span>리눅스 명령어 — 알아야 할 것과 맡길 것</a></li>
-    <li><a class="item" href="robotics/robotics_05.html"><span class="wk">5회</span>Git — 열흘 만에 만든 도구</a></li>
-  </ul>
-  <p class="part">2부 · C++</p>
-  <ul>
-    <li><a class="item" href="robotics/robotics_06.html"><span class="wk">6회</span>왜 아직도 C++인가</a></li>
-    <li><a class="item" href="robotics/robotics_07.html"><span class="wk">7회</span>코드를 읽기 위한 최소 장비</a></li>
-    <li><a class="item" href="robotics/robotics_08.html"><span class="wk">8회</span>클래스 — 노드가 상태를 갖는 방식</a></li>
-    <li><a class="item" href="robotics/robotics_09.html"><span class="wk">9회</span>빌드 시스템 — 탭 문자 하나가 40년을 갔다</a></li>
-    <li><a class="item" href="robotics/robotics_10.html"><span class="wk">10회</span>상속·다형성과 RAII</a></li>
-    <li><a class="item" href="robotics/robotics_11.html"><span class="wk">11회</span>복사와 이동</a></li>
-    <li><a class="item" href="robotics/robotics_12.html"><span class="wk">12회</span>스마트 포인터와 컨테이너</a></li>
-    <li><a class="item" href="robotics/robotics_13.html"><span class="wk">13회</span>STL 알고리즘 — 직접 짜지 마라</a></li>
-    <li><a class="item" href="robotics/robotics_14.html"><span class="wk">14회</span>람다·const·C++17</a></li>
-  </ul>
-  <p class="part">3부 · ROS 2 <span class="note">— 준비 중</span></p>
-  <ul>
-    <li><a class="item" href="robotics/robotics_18.html"><span class="wk">18회</span>확인 명령어 열 개 <span class="note">3부 미리보기 — 개정 예정</span></a></li>
-  </ul>
+  <div class="cards">
+      <a class="card" href="robotics/index.html">
+        <span style="color: var(--accent); display: inline-flex;"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="12" cy="17.5" r="2.1"/><path d="M4.6 17.5a7.4 7.4 0 0 1 14.8 0"/><path d="M8 17.5a4 4 0 0 1 8 0"/><circle cx="5.6" cy="7.4" r=".95" fill="currentColor" stroke="none"/><circle cx="12" cy="4.8" r=".95" fill="currentColor" stroke="none"/><circle cx="18.4" cy="7.9" r=".95" fill="currentColor" stroke="none"/></svg></span>
+        <div>
+          <h2>로봇공학</h2>
+          <p class="meta">학부 · 주 2회 · 30회차</p>
+        </div>
+        <p class="desc">라이다로 콘을 보고 스스로 길을 찾는 로봇을 학기 끝에 만든다.</p>
+        <span class="go">들어가기<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg></span>
+      </a>
+  </div>
 
-  <h2>마이크로프로세서</h2>
-  <ul>
-    <li><a class="item" href="micro/w01.html"><span class="wk">1주차</span>강의 소개와 ATmega128 개요</a></li>
-  </ul>
-
-  <footer>자료는 수업 진행에 따라 계속 추가됩니다.</footer>
+  <footer class="sitefoot">자료는 수업 진행에 따라 계속 추가됩니다.</footer>
 </main>
+<script src="assets/site.js" defer></script>
 </body>
 </html>
