@@ -40,6 +40,7 @@
   <a href="#lab">🧪 실습</a>
   <a href="#hw">📝 HW4</a>
   <a href="#prompts">🤖 프롬프트 모음</a>
+  <a href="#skill">🛠 2부를 스킬 하나로 굳힌다</a>
   <a href="#check">✅ 점검</a>
   <a href="#more">조금 더 알아두면</a>
 </nav>
@@ -450,40 +451,68 @@ note:   in call to ‘void Tracker::record(float)’
   </div>
 
   <!-- ── ⑤ 로깅 ── -->
-  <h2 id="block5">⑤ 로봇에서는 로그가 유일한 단서다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+  <h2 id="block5">⑤ 조용히 넘어가지 않고 기록을 남긴다 <span class="badge b-red">🔴 사람이 한다</span></h2>
 
   <p>
     콘솔 프로그램은 이상하면 멈춰 세우고 들여다볼 수 있다.
     <strong>주행 중인 로봇은 그럴 수 없다.</strong> 로봇은 바닥을 굴러가고 있고,
-    무슨 일이 있었는지 알려 주는 것은 <strong>그때 남긴 로그뿐</strong>이다.
+    무슨 일이 있었는지 알려 주는 것은 <strong>그때 남긴 기록뿐</strong>이다.
+  </p>
+  <p>
+    <strong>그런데 무엇을 남길지는 문법 문제가 아니다.</strong>
+    아래 두 코드는 문법이 똑같이 맞지만 <strong>나중에 원인을 찾을 수 있느냐가 갈린다.</strong>
   </p>
 
+<pre><code>// ① 조용히 넘어간다 — 나중에 아무것도 알 수 없다
+float nearest(const std::vector&lt;float&gt; &amp; ranges)
+{
+  if (ranges.empty()) { return -1.0f; }        // 왜 -1 인지 아무 데도 없다
+  return *std::min_element(ranges.begin(), ranges.end());
+}
+
+// ② 무슨 일이 있었는지 남긴다
+float nearest(const std::vector&lt;float&gt; &amp; ranges)
+{
+  if (ranges.empty()) {
+    std::fprintf(stderr, "[warn] nearest: 거리 값이 하나도 없다\n");
+    return -1.0f;
+  }
+  return *std::min_element(ranges.begin(), ranges.end());
+}</code></pre>
+
   <div class="tablewrap">
-  <table>
-    <tr><th>이렇게 찍으면</th><th>무엇이 아쉬운가</th></tr>
-    <tr><td><code>std::printf("error\n");</code></td><td>언제 났는지, 어느 노드인지, 얼마나 심각한지가 없다</td></tr>
-    <tr><td><code>std::cout &lt;&lt; d &lt;&lt; "\n";</code></td><td>같은 문제. 게다가 여러 노드가 같이 찍으면 섞인다</td></tr>
-    <tr><td><code>RCLCPP_ERROR(get_logger(), "유효한 거리 값이 없다");</code></td><td>시각·노드 이름·심각도가 자동으로 붙는다. 파일로도 남는다</td></tr>
+  <table class="summary-table">
+    <tr><th>기록에 들어가야 하는 것</th><th>왜</th></tr>
+    <tr><td><strong>무슨 일이 있었나</strong></td><td>"거리 값이 하나도 없다" — <strong>사실</strong>을 적는다. "에러"만 적으면 소용없다</td></tr>
+    <tr><td><strong>어디에서 났나</strong></td><td>함수 이름 하나면 충분하다. 같은 메시지가 여러 곳에 있으면 못 찾는다</td></tr>
+    <tr><td><strong>얼마나 심각한가</strong></td><td><code>[info]</code>(그냥 알림) · <code>[warn]</code>(이상하다) · <code>[error]</code>(잘못됐다)</td></tr>
   </table>
   </div>
 
   <div class="box firstseen">
     <p class="boxtitle">🆕 여기서 처음 나오는 것</p>
     <dl>
-      <dt>RCLCPP_ERROR(logger, "...") / RCLCPP_WARN / RCLCPP_INFO</dt>
-      <dd>ROS 2가 주는 로그 찍기 도구다. 뒤 이름이 <strong>심각도</strong>다 —
-          <code>INFO</code>(그냥 알림) · <code>WARN</code>(이상하다) · <code>ERROR</code>(뭔가 잘못됐다).
-          여기서는 "거리 값이 하나도 안 들어왔다"처럼 <strong>나중에 원인을 찾을 때 필요한 사실</strong>을
-          남기는 데 쓴다.</dd>
+      <dt><code>std::fprintf(stderr, "...")</code></dt>
+      <dd>글자를 <strong>표준 오류(2번 관)로</strong> 찍는다.
+          <strong>4회 ⑦절에서 관이 두 개라고 한 그 2번</strong>이다.
+          정상 결과와 섞이지 않아서 <strong><code>2&gt;</code>로 따로 파일에 담을 수 있다.</strong></dd>
     </dl>
-    <p class="later">제대로 다루는 곳: 22회(로깅과 throttle — 초당 수십 번 찍히는 로그를 줄이는 법)</p>
   </div>
 
   <div class="interp">
     <strong>해석:</strong> 오늘 여기서 알아야 할 것은 딱 하나다 —
-    <strong>"값이 없다"·"범위를 벗어났다" 같은 판단을 조용히 넘기지 말고 로그로 남긴다.</strong>
+    <strong>"값이 없다"·"범위를 벗어났다" 같은 판단을 조용히 넘기지 말고 남긴다.</strong>
     그 판단이 바로 다음 절의 <code>std::optional</code>과 짝이다.
-    값이 없을 때 <code>nullopt</code>를 돌려주고, 받는 쪽에서 <code>RCLCPP_WARN</code>을 찍는다.
+    값이 없을 때 <code>nullopt</code>를 돌려주고, <strong>받는 쪽에서 기록을 남긴다.</strong>
+  </div>
+
+  <div class="box firstseen">
+    <p class="boxtitle">📌 3부에 가면 이 자리에 전용 도구가 들어온다</p>
+    <p>
+      위 <code>fprintf</code> 자리에 <strong>시각·프로그램 이름·심각도를 자동으로 붙여 주고
+      파일로도 남겨 주는 도구</strong>가 들어온다. <strong>남길 것을 고르는 기준은 오늘 배운 그대로다.</strong>
+    </p>
+    <p class="later">제대로 다루는 곳: 22회(로깅 — 초당 수십 번 찍히는 기록을 줄이는 법)</p>
   </div>
 
   <!-- ── ⑥ optional ── -->
@@ -719,6 +748,115 @@ const auto [x, y] = to_xy(1.5f, 0.5236f);</code></pre>
   </div>
 
   <!-- ── ✅ 점검 ── -->
+  <!-- ══════════ 🛠 스킬로 굳히기 ══════════ -->
+  <h2 id="skill">🛠 2부를 스킬 하나로 굳힌다 — 같은 요구를 매번 다시 적지 않는다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <p>
+    바로 위 프롬프트 모음의 여섯 줄을 보면 <strong>전부 「어떻게 짜라」는 요구</strong>다.
+    문제는 이 요구를 <strong>새 대화를 열 때마다 다시 적어야 한다</strong>는 것이다.
+    2부에서 정한 원칙이 열 개쯤 되는데 매번 열 줄을 붙여 넣을 수는 없다.
+  </p>
+  <p>
+    3회에서 <code>AGENTS.md</code>로 같은 문제를 한 번 풀었다.
+    <strong>스킬은 그것의 다음 단계다.</strong> 차이는 하나다.
+  </p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th></th><th>언제 읽히나</th><th>무엇을 적나</th></tr>
+    <tr>
+      <td><code>AGENTS.md</code></td>
+      <td><strong>대화를 시작할 때 늘</strong></td>
+      <td>이 프로젝트에서 <strong>항상</strong> 지킬 것 (말투, 승인 규칙)</td>
+    </tr>
+    <tr>
+      <td><strong>스킬</strong></td>
+      <td><strong>그 일을 할 때만</strong></td>
+      <td>특정 작업의 <strong>자세한 규칙</strong> (C++를 짤 때의 원칙)</td>
+    </tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 항상 읽히는 자리에 열 줄을 넣으면 <strong>C++를 안 짜는 대화에서도 그 열 줄을 읽는다.</strong>
+    스킬은 <strong>필요할 때만 불려 온다.</strong> 그래서 길게 써도 된다.
+  </div>
+
+  <h3>어디에 만드나 — 프로젝트 폴더 안이다</h3>
+  <p>
+    Antigravity CLI는 <strong>지금 열려 있는 폴더 아래의 정해진 자리</strong>를 뒤진다.
+  </p>
+
+<pre><code>~/robot_ws/
+└── .agents/
+    └── skills/
+        └── cpp-rules/
+            └── SKILL.md      ← 여기에 원칙을 적는다</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 자리에서 처음 나오는 것</p>
+    <dl>
+      <dt>.agents/</dt>
+      <dd>점으로 시작하니 <strong>평소에는 안 보이는 폴더</strong>다(<code>ls -a</code>로 봐야 나온다).
+          에이전트가 쓰는 것들을 여기 모아 둔다.</dd>
+      <dt>SKILL.md</dt>
+      <dd><strong>이름이 정확히 이것이어야</strong> 스킬로 알아본다. 맨 위에 <strong>이름과 설명</strong> 두 줄이 들어간다.
+          그 설명을 보고 <strong>지금 이 스킬이 필요한지</strong>를 에이전트가 판단한다.</dd>
+      <dt>프로젝트 안에 둔다</dt>
+      <dd>내 계정 어딘가가 아니라 <strong>작업 폴더 안</strong>이다. 그래서
+          <strong>git으로 같이 올라가고, 팀원이 받으면 그대로 쓴다.</strong>
+          프로젝트 규칙이 코드와 같이 다니는 것이 이 자리의 값어치다.</dd>
+    </dl>
+  </div>
+
+  <h3>만드는 것도 시킨다</h3>
+  <p>
+    파일을 손으로 쓸 필요는 없다. <strong>아래 한 덩어리를 그대로 주면 만들어 준다.</strong>
+  </p>
+
+  <div class="prompt"><button onclick="copyPrompt(this)">복사</button>
+    이 프로젝트 폴더 안에 <code>.agents/skills/cpp-rules/SKILL.md</code>를 만들어 줘.<br><br>
+    맨 위에 <code>---</code>로 감싼 앞머리를 두고 <code>name: cpp-rules</code>와 <code>description:</code>을 넣어 줘.
+    설명에는 <strong>"C++ 코드를 새로 짜거나 고칠 때 적용한다"</strong>는 뜻이 들어가야 해.<br><br>
+    본문에는 아래 <strong>일곱 가지 원칙</strong>을 규칙 목록으로 적어 줘.
+    규칙마다 <strong>① 무엇을 하라 ② 왜 그런지 한 줄 ③ 어기는 코드와 지키는 코드 한 줄씩</strong>을 넣어 줘.<br><br>
+    1. 큰 값은 <code>const</code> 참조로 받는다<br>
+    2. <code>new</code>·<code>delete</code>를 직접 쓰지 않고 <code>unique_ptr</code>·<code>shared_ptr</code>를 쓴다<br>
+    3. 직접 루프를 짜기 전에 STL 알고리즘에 이미 있는지 먼저 찾는다<br>
+    4. 센서 값처럼 <code>inf</code>·<code>NaN</code>이 섞이는 데이터는 계산 전에 거른다<br>
+    5. 람다 캡처는 <code>[=]</code>·<code>[&amp;]</code> 대신 필요한 것만 적는다. 저장해 두는 람다는 참조로 캡처하지 않는다<br>
+    6. 상태를 바꾸지 않는 멤버 함수에는 <code>const</code>를 붙인다<br>
+    7. 실패할 수 있는 함수는 <code>-1</code>·<code>nullptr</code> 대신 <code>std::optional</code>로 알린다<br><br>
+    마지막에 <strong>"이 스킬을 적용한 뒤 스스로 점검할 것"</strong> 목록을 넣어 줘.<br>
+    다 만들면 <strong>파일 경로와 내용을 보여 주고</strong>, 이 스킬이 제대로 잡혔는지 내가 확인할 방법을 알려 줘.
+  </div>
+
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 받은 다음에 이 네 줄을 내가 본다</div>
+    <p>스킬은 <strong>앞으로 계속 쓰이는 파일</strong>이다. 여기서 틀리면 학기 내내 틀린 것을 따른다.</p>
+    <ul>
+      <li>파일 자리가 <strong><code>.agents/skills/cpp-rules/SKILL.md</code>가 맞나</strong>
+          (<code>ls -a</code>·<code>find . -name SKILL.md</code>로 직접 본다)</li>
+      <li>맨 위 앞머리에 <strong><code>name</code>과 <code>description</code>이 둘 다</strong> 있나</li>
+      <li>일곱 개가 <strong>다 들어갔나.</strong> 넷째 줄(<code>NaN</code> 거르기)이 자주 빠진다</li>
+      <li>예시 코드가 <strong>이 강의에서 배운 모양인가.</strong> 못 보던 문법이 섞였으면 빼 달라고 한다</li>
+    </ul>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 마지막 줄이 이 절의 요점이다.
+    <strong>스킬은 내가 아는 것만 담아야 한다.</strong>
+    내가 설명 못 하는 규칙이 들어가 있으면, 그 규칙대로 짠 코드도 설명할 수 없다.
+    1회차의 규칙이 여기서도 그대로 적용된다.
+  </div>
+
+  <p>
+    <strong>잘 만들었으면 앞으로는 이렇게 짧아진다.</strong>
+  </p>
+  <div class="prompt"><button onclick="copyPrompt(this)">복사</button> <code>cpp-rules</code> 스킬을 따라서 이 함수를 다시 짜 줘. 어느 규칙을 적용했는지 한 줄씩 알려 줘.</div>
+  <!-- TODO: 미검증 — 스킬이 실제로 불려 오는 화면. 저장 자리(.agents/skills/<이름>/SKILL.md)는
+       agy 1.1.22 바이너리에서 확인했으나, 로그인이 필요해 실행 화면은 못 봤다 (2026-09-01) -->
+
   <h2 id="check">✅ 오늘의 점검</h2>
   <ul class="check">
     <li><input type="checkbox" id="c1"><label for="c1">람다 캡처가 <code>[=]</code>나 <code>[&amp;]</code>가 아니라 필요한 것만으로 돼 있나?</label></li>
