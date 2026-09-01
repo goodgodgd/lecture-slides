@@ -71,6 +71,22 @@ pre.after { border-left-color: var(--good); background: var(--good-soft); }
 .prompt button { position: absolute; top: .6rem; right: .6rem; font: inherit; font-size: .75rem; padding: .25rem .55rem; border: 1px solid var(--accent); background: var(--bg); color: var(--accent); border-radius: 5px; cursor: pointer; }
 .prompt button:hover { background: var(--accent); color: #fff; }
 
+/* 보고서 양식처럼 「그대로 복사해 붙여 넣는」 긴 덩어리. .prompt 와 같은 구조인데 안내 문구와 색만 다르다 */
+.copyform { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+            padding: .85rem 3.4rem .85rem 1rem; margin: 1.2rem 0; }
+.copyform::before { content: "📋 그대로 복사해 보고서에 붙여 넣으세요"; display: block; font-size: .74rem;
+                    font-weight: 700; color: var(--muted); margin-bottom: .35rem; }
+.copyform button { position: absolute; top: .6rem; right: .6rem; font: inherit; font-size: .75rem;
+                   padding: .25rem .55rem; border: 1px solid var(--accent); background: var(--bg);
+                   color: var(--accent); border-radius: 5px; cursor: pointer; }
+.copyform button:hover { background: var(--accent); color: #fff; }
+.copyform pre { margin: 0; background: transparent; border-left: 0; padding: 0; font-size: .82rem; }
+
+/* 마감일 한 줄 — 페이지에서 가장 먼저 눈에 들어와야 한다 */
+.deadline { border: 1px solid var(--accent); border-radius: 8px; background: var(--accent-soft);
+            padding: .75rem 1rem; margin: 1.2rem 0; font-size: 1.02rem; }
+.deadline strong { font-size: 1.12rem; }
+
 /* ── 블록 상자 ── */
 .box { border-radius: 8px; padding: 1rem 1.15rem; margin: 1.4rem 0; }
 .box .boxtitle { font-weight: 700; font-size: .95rem; margin: 0 0 .5rem; }

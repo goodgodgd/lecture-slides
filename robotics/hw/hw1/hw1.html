@@ -32,20 +32,16 @@
   <a href="#taskA">작업 A — 리눅스</a>
   <a href="#taskB">작업 B — git</a>
   <a href="#form">제출 양식</a>
-  <a href="#submit">제출과 점수</a>
+  <a href="#submit">제출 방법과 점수</a>
 </nav>
 
 <main>
 
-  <div class="lec-no">로봇공학 · HW1 · 5회에 배부</div>
+  <div class="lec-no">로봇공학 · HW1</div>
   <h1>리눅스와 git, 내 눈으로 확인하기</h1>
 
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th>배부</th><th>마감</th><th>확인 퀴즈</th><th>배점</th></tr>
-    <tr><td>5회 수업 후</td><td><strong>7회 수업 전날 23:59</strong></td><td>7회 수업 시작 직후 · 3분</td><td><strong>10점</strong></td></tr>
-  </table>
-  </div>
+  <!-- ▼ 마감일은 이 한 줄만 고치면 된다 ▼ -->
+  <p class="deadline">📅 제출 마감 — <strong>수업 시간에 공지합니다</strong></p>
 
   <div class="questions">
     <span class="lab">이 과제가 묻는 것</span>
@@ -57,8 +53,8 @@
   </div>
 
   <h2 id="why">왜 이걸 하나요</h2>
-  <p><strong>새로운 것을 배우는 과제가 아닙니다.</strong> 4회와 5회에서 한 것을 혼자 한 번 더 합니다.</p>
-  <p>수업에서는 화면을 따라 쳤습니다. 그때는 됩니다. <strong>일주일 뒤에 혼자 치면 다릅니다.</strong></p>
+  <p><strong>새로운 것을 배우는 과제가 아닙니다.</strong> 수업에서 한 것을 혼자 한 번 더 합니다.</p>
+  <p>수업에서는 화면을 따라 쳤습니다. 그때는 됩니다. <strong>며칠 뒤에 혼자 치면 다릅니다.</strong></p>
   <p>
     그리고 한 가지가 더 있습니다. 에이전트는 일을 끝내면 <em>"완료했습니다"</em>라고 말합니다.
     그 말이 맞는지는 <strong>여러분이 무언가를 쳐서 화면을 봐야</strong> 알 수 있습니다.
@@ -70,14 +66,17 @@
   </div>
 
   <h2 id="before">시작하기 전에</h2>
-  <p>파일 이름과 값을 <strong>그대로</strong> 쓰세요. 그래야 확인 퀴즈에서 같은 것을 물을 수 있습니다.</p>
+  <p>
+    파일 이름과 값을 <strong>그대로</strong> 쓰세요. 그래야 확인 퀴즈에서 같은 것을 물을 수 있습니다.
+    <strong>출력은 고르지 말고 화면에 나온 것을 통째로</strong> 붙여 넣으면 됩니다.
+  </p>
 
   <div class="box firstseen">
     <p class="boxtitle">🆕 작업 B는 수업에서 만든 저장소를 그대로 씁니다</p>
     <p>
-      5회 수업에서 만든 <code>sch-robotics</code> 저장소와 그때 <code>clone</code>한 폴더를 씁니다.
-      <strong>새로 만들지 않습니다.</strong>
-      수업에서 못 만들었으면 <a href="../../robotics_05.html#setup">5회 자료 ②절</a>부터 보고 먼저 만들어 두세요.
+      <a href="../../robotics_05.html">Git 수업</a>에서 만든 <code>sch-robotics</code> 저장소와
+      그때 <code>clone</code>한 폴더를 씁니다. <strong>새로 만들지 않습니다.</strong>
+      아직 없으면 <a href="../../robotics_05.html#setup">그 자료의 「준비」 절</a>부터 보고 먼저 만들어 두세요.
     </p>
   </div>
 
@@ -86,18 +85,18 @@
     <p>중간에 닫거나 새로 열면 <strong>A-⑦에서 볼 화면이 달라집니다.</strong> 그 장면이 이 과제에서 볼 것 중 하나입니다.</p>
   </div>
 
-  <h2 id="taskA">작업 A — 리눅스 <span class="badge b-green">4회 복습</span></h2>
+  <h2 id="taskA">작업 A — 리눅스</h2>
   <div class="tablewrap">
   <table>
-    <tr><th>#</th><th>무엇을 합니다</th><th>무엇을 적어 옵니다</th></tr>
-    <tr><td>①</td><td><code>cd ~/robotics</code>로 들어가 <code>pwd</code>를 칩니다</td><td>출력 한 줄</td></tr>
-    <tr><td>②</td><td><code>echo "hw1 confirm" &gt; hw1.txt</code> 뒤 <code>cat hw1.txt</code></td><td>출력</td></tr>
-    <tr><td>③</td><td><code>echo "second line" &gt;&gt; hw1.txt</code> 뒤 <code>cat hw1.txt</code></td><td>출력 (<strong>몇 줄인가</strong>)</td></tr>
-    <tr><td>④</td><td><code>printf '#!/bin/bash\necho "hello hw1"\n' &gt; run.sh</code> 뒤 <code>ls -l run.sh</code></td><td><strong>맨 앞 열 글자</strong></td></tr>
-    <tr><td>⑤</td><td><code>./run.sh</code>를 칩니다. <strong>막힙니다</strong></td><td>메시지 · 이어서 친 <code>echo $?</code>의 숫자</td></tr>
-    <tr><td>⑥</td><td><code>chmod +x run.sh</code> 뒤 <code>ls -l run.sh</code>와 <code>./run.sh</code></td><td><strong>바뀐 열 글자</strong> · 실행 결과</td></tr>
-    <tr><td>⑦</td><td><code>~/.bashrc</code> <strong>맨 아래</strong>에 <code>export MY_LIDAR=LDS-02</code>를 <strong><code>&gt;&gt;</code>로</strong> 넣고, <strong>그 터미널에서 바로</strong> <code>echo "[$MY_LIDAR]"</code></td><td>화면에 나온 것</td></tr>
-    <tr><td>⑧</td><td><code>source ~/.bashrc</code> 뒤 같은 것을 다시 칩니다</td><td>화면에 나온 것</td></tr>
+    <tr><th>#</th><th>무엇을 합니다</th></tr>
+    <tr><td>①</td><td><code>cd ~/robotics</code>로 들어가 <code>pwd</code>를 칩니다</td></tr>
+    <tr><td>②</td><td><code>echo "hw1 confirm" &gt; hw1.txt</code> 뒤 <code>cat hw1.txt</code></td></tr>
+    <tr><td>③</td><td><code>echo "second line" &gt;&gt; hw1.txt</code> 뒤 <code>cat hw1.txt</code></td></tr>
+    <tr><td>④</td><td><code>printf '#!/bin/bash\necho "hello hw1"\n' &gt; run.sh</code> 뒤 <code>ls -l run.sh</code></td></tr>
+    <tr><td>⑤</td><td><code>./run.sh</code>를 칩니다. <strong>막힙니다.</strong> 이어서 <code>echo $?</code></td></tr>
+    <tr><td>⑥</td><td><code>chmod +x run.sh</code> 뒤 <code>ls -l run.sh</code>와 <code>./run.sh</code></td></tr>
+    <tr><td>⑦</td><td><code>~/.bashrc</code> <strong>맨 아래</strong>에 <code>export MY_LIDAR=LDS-02</code>를 <strong><code>&gt;&gt;</code>로</strong> 넣고, <strong>그 터미널에서 바로</strong> <code>echo "[$MY_LIDAR]"</code></td></tr>
+    <tr><td>⑧</td><td><code>source ~/.bashrc</code> 뒤 같은 것을 다시 칩니다</td></tr>
   </table>
   </div>
 
@@ -105,32 +104,32 @@
     <div class="boxtitle">⚠️ ⑦에서 <code>&gt;&gt;</code>가 두 개인지 꼭 확인하세요</div>
     <p>
       하나만 치면 <code>.bashrc</code>에 원래 있던 설정이 <strong>통째로 지워집니다</strong>
-      (<a href="../../robotics_04.html#redirect">4회 ③절</a>).
+      (<a href="../../robotics_04.html#redirect">리눅스 자료 ③절</a>).
     </p>
   </div>
 
   <div class="interp">
-    <strong>⑤에서 막히는 것이 정상입니다.</strong> <a href="../../robotics_04.html#perm">4회 ④절</a>에 왜 그런지 있습니다.
+    <strong>⑤에서 막히는 것이 정상입니다.</strong>
+    <a href="../../robotics_04.html#perm">리눅스 자료 ④절</a>에 왜 그런지 있습니다.
     <strong>⑦에서 빈 줄이 나와도 잘못한 것이 아닙니다.</strong> ⑧과 비교해 보세요.
-    <strong>이 한 줄이 16회부터 학기 끝까지 따라다닙니다.</strong>
   </div>
 
-  <h2 id="taskB">작업 B — git <span class="badge b-green">5회 복습</span></h2>
-  <p>5회 수업에서 만든 <code>sch-robotics</code> 폴더에서 합니다. <strong>고치고 → 담고 → 굳히고 → 올리는 한 바퀴</strong>를 혼자 돕니다.</p>
+  <h2 id="taskB">작업 B — git</h2>
+  <p><code>sch-robotics</code> 폴더에서 합니다. <strong>고치고 → 담고 → 굳히고 → 올리는 한 바퀴</strong>를 혼자 돕니다.</p>
 
   <div class="tablewrap">
   <table>
-    <tr><th>#</th><th>무엇을 합니다</th><th>무엇을 적어 옵니다</th></tr>
-    <tr><td>①</td><td>폴더로 가서 <code>git status</code>를 칩니다</td><td>출력 전부</td></tr>
-    <tr><td>②</td><td><code>echo "print('hw1')" &gt; hw1.py</code> 뒤 <code>git status</code></td><td><strong>파일이 어느 칸에 있나</strong></td></tr>
-    <tr><td>③</td><td><code>git add hw1.py</code> 뒤 <code>git status</code></td><td><strong>어느 칸으로 옮겨 갔나</strong></td></tr>
-    <tr><td>④</td><td><code>git commit -m "HW1 확인용 hw1.py 추가"</code></td><td>출력 두 줄</td></tr>
-    <tr><td>⑤</td><td><code>mkdir -p build &amp;&amp; echo "binary" &gt; build/out</code> 뒤 <code>git status --short</code></td><td>나온 줄</td></tr>
-    <tr><td>⑥</td><td><code>echo "build/" &gt; .gitignore</code> 뒤 <code>git status --short</code></td><td><strong>나온 줄</strong></td></tr>
-    <tr><td>⑦</td><td><code>git add .gitignore</code> · <code>git commit -m "빌드 결과는 올리지 않는다"</code></td><td>출력</td></tr>
-    <tr><td>⑧</td><td><code>git push origin main</code></td><td>마지막 줄</td></tr>
-    <tr><td>⑨</td><td><code>git log --oneline</code></td><td>나온 줄 전부</td></tr>
-    <tr><td>⑩</td><td>GitHub 웹 화면을 새로 고칩니다</td><td><strong>파일 목록 화면 그림 한 장</strong></td></tr>
+    <tr><th>#</th><th>무엇을 합니다</th></tr>
+    <tr><td>①</td><td>폴더로 가서 <code>git status</code>를 칩니다</td></tr>
+    <tr><td>②</td><td><code>echo "print('hw1')" &gt; hw1.py</code> 뒤 <code>git status</code></td></tr>
+    <tr><td>③</td><td><code>git add hw1.py</code> 뒤 <code>git status</code></td></tr>
+    <tr><td>④</td><td><code>git commit -m "HW1 확인용 hw1.py 추가"</code></td></tr>
+    <tr><td>⑤</td><td><code>mkdir -p build &amp;&amp; echo "binary" &gt; build/out</code> 뒤 <code>git status --short</code></td></tr>
+    <tr><td>⑥</td><td><code>echo "build/" &gt; .gitignore</code> 뒤 <code>git status --short</code></td></tr>
+    <tr><td>⑦</td><td><code>git add .gitignore</code> · <code>git commit -m "빌드 결과는 올리지 않는다"</code></td></tr>
+    <tr><td>⑧</td><td><code>git push origin main</code></td></tr>
+    <tr><td>⑨</td><td><code>git log --oneline</code></td></tr>
+    <tr><td>⑩</td><td>GitHub 웹 화면을 새로 고치고 <strong>파일 목록을 그림으로 남깁니다</strong></td></tr>
   </table>
   </div>
 
@@ -146,7 +145,8 @@
   <div class="box trap">
     <div class="boxtitle">⚠️ ⑧에서 비밀번호를 물으면 <strong>토큰</strong>을 붙여 넣습니다</div>
     <p>
-      <a href="../../robotics_05.html#setup">5회 ②절</a>에서 만든 토큰입니다. <strong>계정 비밀번호가 아닙니다.</strong>
+      <a href="../../robotics_05.html#setup">Git 자료 ②절</a>에서 만든 토큰입니다.
+      <strong>계정 비밀번호가 아닙니다.</strong>
       붙여 넣어도 <strong>화면에 글자가 안 보이는 것이 정상</strong>입니다. 한 번 붙이고 엔터를 치세요.
     </p>
     <p><strong>⑩에서 <code>build</code> 폴더가 없으면</strong> ⑥이 제대로 된 것입니다.</p>
@@ -154,61 +154,85 @@
 
   <h2 id="form">제출 양식</h2>
   <p class="readme-first">
-    아래 표를 그대로 옮겨 채웁니다.
-    <strong>출력은 다듬지 말고 화면에 나온 그대로</strong> 붙여 넣으세요. 오류 메시지도 그대로 둡니다.
+    아래 <strong>「복사」 버튼</strong>을 누르면 양식이 통째로 복사됩니다.
+    보고서에 붙여 넣고 <strong>빈 칸을 채우면</strong> 됩니다.
+  </p>
+  <p>
+    칸 안에는 <strong>친 명령과 화면에 나온 것을 통째로</strong> 붙여 넣습니다.
+    <strong>고르거나 다듬지 마세요.</strong> 오류 메시지도 그대로 둡니다 — 그게 이 과제에서 볼 것입니다.
   </p>
 
-  <div class="lab-block">
-    <div class="boxtitle">HW1 제출 — 학번 __________ 이름 __________</div>
+  <div class="copyform">
+    <button onclick="copyPrompt(this)">복사</button>
+<pre><code># HW1 제출 — 학번 ______  이름 ______
 
-    <p><strong>A. 리눅스</strong></p>
-    <div class="tablewrap">
-    <table>
-      <tr><th>#</th><th>친 명령</th><th>화면에 나온 것</th></tr>
-      <tr><td>①</td><td><code>pwd</code></td><td></td></tr>
-      <tr><td>②</td><td><code>cat hw1.txt</code></td><td></td></tr>
-      <tr><td>③</td><td><code>cat hw1.txt</code> (<code>&gt;&gt;</code> 뒤)</td><td></td></tr>
-      <tr><td>④</td><td><code>ls -l run.sh</code></td><td>맨 앞 열 글자:</td></tr>
-      <tr><td>⑤</td><td><code>./run.sh</code> · <code>echo $?</code></td><td>메시지: / 숫자:</td></tr>
-      <tr><td>⑥</td><td><code>chmod +x</code> 뒤 <code>ls -l run.sh</code> · <code>./run.sh</code></td><td>열 글자: / 결과:</td></tr>
-      <tr><td>⑦</td><td><code>echo "[$MY_LIDAR]"</code> (<code>.bashrc</code> 고친 직후)</td><td></td></tr>
-      <tr><td>⑧</td><td><code>source ~/.bashrc</code> 뒤 같은 명령</td><td></td></tr>
-    </table>
-    </div>
-    <p><strong>⑦과 ⑧이 다른 이유를 한 줄로:</strong><br>______________________________________________</p>
+## A. 리눅스
 
-    <p><strong>B. git</strong></p>
-    <div class="tablewrap">
-    <table>
-      <tr><th>#</th><th>친 명령</th><th>화면에 나온 것</th></tr>
-      <tr><td>①</td><td><code>git status</code></td><td></td></tr>
-      <tr><td>②</td><td><code>git status</code> (파일 만든 뒤)</td><td>파일이 있는 칸 이름:</td></tr>
-      <tr><td>③</td><td><code>git status</code> (<code>git add</code> 뒤)</td><td>파일이 있는 칸 이름:</td></tr>
-      <tr><td>④</td><td><code>git commit -m "…"</code></td><td></td></tr>
-      <tr><td>⑤</td><td><code>git status --short</code> (<code>.gitignore</code> 전)</td><td></td></tr>
-      <tr><td>⑥</td><td><code>git status --short</code> (<code>.gitignore</code> 후)</td><td></td></tr>
-      <tr><td>⑧</td><td><code>git push origin main</code></td><td>마지막 줄:</td></tr>
-      <tr><td>⑨</td><td><code>git log --oneline</code></td><td></td></tr>
-      <tr><td>⑩</td><td>GitHub 파일 목록</td><td>(그림을 붙입니다)</td></tr>
-    </table>
-    </div>
-    <p><strong>⑤와 ⑥에서 목록이 왜 달라졌는지 한 줄로:</strong><br>______________________________________________</p>
+### A-1. 폴더와 파일 만들기 (지시 ①②③)
+```
+여기에 친 명령과 화면에 나온 것을 그대로 붙여 넣습니다
+```
 
-    <p><strong>마지막 — 두 줄만</strong><br>
-    에이전트에게 시킨 것 중 「완료했습니다」라고 했는데 실제로는 안 된 것이 있었나요?
-    있었다면 무엇을 쳐서 알아챘나요? 없었으면 "없음"이라고 적으면 됩니다.<br>
-    ______________________________________________<br>
-    ______________________________________________</p>
+### A-2. 실행 권한 (지시 ④⑤⑥)
+```
+
+```
+
+### A-3. 환경변수 (지시 ⑦⑧)
+```
+
+```
+
+**⑦과 ⑧의 결과가 다른 이유 한 줄:**
+
+
+## B. git
+
+### B-1. 상태 보기와 담기 (지시 ①②③④)
+```
+
+```
+
+### B-2. .gitignore (지시 ⑤⑥⑦)
+```
+
+```
+
+### B-3. 올리기와 기록 (지시 ⑧⑨)
+```
+
+```
+
+**⑤와 ⑥에서 목록이 달라진 이유 한 줄:**
+
+
+### B-4. GitHub 화면 (지시 ⑩)
+여기에 파일 목록 화면 그림을 붙입니다
+
+
+## 마지막 — 두 줄만
+
+에이전트에게 시킨 것 중 「완료했습니다」라고 했는데 실제로는 안 된 것이 있었나요?
+있었다면 무엇을 쳐서 알아챘나요? 없었으면 "없음"이라고 적으면 됩니다.
+
+</code></pre>
   </div>
 
-  <h2 id="submit">제출과 점수</h2>
-  <p>위 양식을 채운 뒤 <strong>PDF 한 개</strong>로 LMS에 올립니다. 파일 이름은 <code>HW1_학번.pdf</code>입니다.</p>
+  <div class="interp">
+    <strong>명령과 출력은 그림이 아니라 글자로 붙여 넣으세요.</strong>
+    터미널에서 드래그해 복사하면 됩니다.
+    그림으로 찍으면 흐려서 안 읽히고, 무엇보다 <strong>여러분이 다시 찾아보기 어렵습니다.</strong>
+    (GitHub 화면 하나만 그림입니다)
+  </div>
+
+  <h2 id="submit">제출 방법과 점수</h2>
+  <p>채운 보고서를 <strong>PDF 한 개</strong>로 만들어 LMS에 올립니다. 파일 이름은 <code>HW1_학번.pdf</code>입니다.</p>
 
   <div class="tablewrap">
   <table class="summary-table">
     <tr><th>무엇</th><th>점수</th><th>어떻게 봅니다</th></tr>
     <tr><td>과제 제출</td><td><strong>7점</strong></td><td>양식을 채워서 냈으면 받습니다. <strong>출력의 내용은 채점하지 않습니다</strong></td></tr>
-    <tr><td>확인 퀴즈</td><td><strong>3점</strong></td><td>7회 수업 시작 직후 3분. 객관식이고 <strong>정답은 그 자리에서 공개합니다</strong></td></tr>
+    <tr><td>확인 퀴즈</td><td><strong>3점</strong></td><td>수업 시간에 짧게 봅니다. 객관식이고 <strong>정답은 그 자리에서 공개합니다</strong></td></tr>
     <tr><td><strong>합계</strong></td><td><strong>10점</strong></td><td></td></tr>
   </table>
   </div>
@@ -221,8 +245,8 @@
 
   <footer>
     로봇공학 · 순천향대학교 전자정보공학과 ·
-    같이 볼 것: <a href="../../robotics_04.html">4회 리눅스 명령어</a> ·
-    <a href="../../robotics_05.html">5회 Git</a>
+    같이 볼 것: <a href="../../robotics_04.html">리눅스 명령어</a> ·
+    <a href="../../robotics_05.html">Git</a>
   </footer>
 </main>
 </div>
