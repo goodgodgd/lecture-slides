@@ -314,17 +314,7 @@ $ python3 scan_filter.py</code></pre>
     같은 답을 내는 데 <strong>23.6 밀리초와 3963.8 밀리초</strong>가 걸렸다. 168배다.
   </p>
 
-  <figure>
-    <img src="assets/img/06_cpp_vs_python.png"
-         alt="가로 막대 그래프. C++ (g++ 13.3, -O2)이 23.6 밀리초, 파이썬 3.12가 3963.8 밀리초">
-    <figcaption>
-      위 막대가 <strong>거의 보이지 않는다</strong>는 것이 이 그림의 전부다.
-      두 막대는 같은 축 위에 있다. C++ 막대(23.6)는 파이썬 막대(3963.8) 옆에서 선 하나로 눌린다.
-      잰 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0 <code>-O2</code>, CPython 3.12.3).
-    </figcaption>
-  </figure>
-
-  <!-- ── 📐 이론 블록 ② ── -->
+<!-- ── 📐 이론 블록 ② ── -->
   <h2 id="budget">② 168배가 로봇에서 무슨 뜻인지는 예산표로 봐야 한다 <span class="badge b-red">🔴 사람이 한다</span></h2>
 
   <h3>무엇을 알고 싶은 건가</h3>
@@ -526,17 +516,7 @@ $ python3 scan_filter.py</code></pre>
     같은 회사, 같은 코드베이스에서 <strong>AI가 만든 코드와 사람이 만든 코드를 나눠 세었다.</strong>
   </p>
 
-  <figure>
-    <img src="assets/img/06_ai_vs_human.png"
-         alt="가로 막대 그래프. AI 코드 ÷ 사람 코드 비율. 복사·할당 오버헤드 1.39배, 명시적 for 루프 2.0배, 표준 라이브러리 사용 0.4배, 정확성·안전성 문제 0.94배. 1.0에 세로 점선">
-    <figcaption>
-      <strong>가운데 세로 점선(1.0)</strong>이 "사람이 쓴 코드와 같음"이다.
-      점선보다 오른쪽으로 나간 막대가 <strong>AI가 더 많이 한 것</strong>이고, 왼쪽이 <strong>덜 한 것</strong>이다.
-      <strong>맨 아래 막대가 점선 왼쪽에 있는 것</strong>을 눈여겨본다.
-    </figcaption>
-  </figure>
-
-  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 아래 줄</strong>부터 읽는다. 나머지 세 줄의 뜻이 거기서 정해진다.</p>
+<p class="readme-first">무엇을 먼저 볼지: <strong>맨 아래 줄</strong>부터 읽는다. 나머지 세 줄의 뜻이 거기서 정해진다.</p>
   <div class="tablewrap">
   <table class="summary-table">
     <tr><th>무엇</th><th>AI ÷ 사람</th><th>무슨 뜻인가</th><th>어디서 다루나</th></tr>

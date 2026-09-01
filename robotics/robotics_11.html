@@ -446,16 +446,7 @@ int main()
 const 참조로 받기:     0.17 ms
 차이             : 22배  (100000회 기준, sink=200000)</code></pre>
 
-  <figure>
-    <img src="assets/img/11_copy_cost.png"
-         alt="가로 막대 그래프. 값으로 받기 3.66밀리초, const 참조로 받기 0.17밀리초">
-    <figcaption>
-      두 코드가 하는 일은 <strong>둘 다 <code>ranges[0]</code> 하나를 읽는 것</strong>뿐이다.
-      다른 것은 함수 인자 앞의 <strong><code>const &amp;</code> 두 글자</strong>뿐인데 <strong>22배</strong>가 났다.
-    </figcaption>
-  </figure>
-
-  <div class="interp">
+<div class="interp">
     <strong>해석:</strong> 22배라는 배수에만 눈이 가지만, <strong>한 번당으로 나눠 보는 것</strong>이 더 정직하다.
     3.66밀리초를 10만 번으로 나누면 <strong>한 번에 0.037마이크로초</strong>다.
     <strong>콜백 한 번만 보면 아무도 못 느낀다.</strong>

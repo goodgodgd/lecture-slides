@@ -175,12 +175,16 @@ const auto n = std::count_if(ranges.begin(), ranges.end(),
     네 가지가 있고, <strong>AI는 거의 항상 넷 중 하나를 습관적으로 고른다.</strong>
   </p>
 
-  <figure>
-    <img src="assets/img/14_capture_kinds.png"
-         alt="네 가지 캡처 비교표. this, &amp;x, &amp;, = 각각의 뜻과 언제 쓰는지">
-    <figcaption><strong>맨 아래 두 줄</strong>을 본다. <code>[&amp;]</code>와 <code>[=]</code>는
-      "바깥 전부"라는 점이 같고, 원본을 가리키느냐 복사하느냐만 다르다.</figcaption>
-  </figure>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 아래 두 줄</strong>이다. <code>[&amp;]</code>와 <code>[=]</code>는 "바깥 전부"라는 점이 같고, <strong>원본을 가리키느냐 복사하느냐</strong>만 다르다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>적는 것</th><th>무엇을 가져오나</th><th>이럴 때 쓴다</th></tr>
+    <tr><td><code>[this]</code></td><td>이 객체의 멤버를 쓴다</td><td>멤버 하나를 쓸 때. <strong>콜백의 기본값</strong></td></tr>
+    <tr><td><code>[&amp;x]</code></td><td><code>x</code> <strong>만</strong> 원본을 가리킨다</td><td><strong>무엇을 쓰는지 코드에 드러난다</strong></td></tr>
+    <tr><td><code>[&amp;]</code></td><td>바깥의 <strong>모든 것</strong>을 원본으로</td><td>편하지만 <strong>무엇을 쓰는지 안 보인다</strong></td></tr>
+    <tr><td><code>[=]</code></td><td>바깥의 <strong>모든 것</strong>을 복사로</td><td><strong>큰 것이 통째로 복사된다</strong></td></tr>
+  </table>
+  </div>
 
   <pre><code>class Driver {
 public:
