@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3회 · 회전의 표현과 Lie 이론 | 3D Vision &amp; SLAM</title>
+<script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}})();</script>
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="assets/lecture.css">
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['$$','$$']]},
+  options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+<header class="bar">
+  <div class="barin wide">
+    <a class="up" href="index.html" aria-label="3D Vision &amp; SLAM 회차 목록"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a>
+    <nav class="crumb" aria-label="경로">
+      <a href="../index.html">강의자료</a><span class="sep">/</span><a href="index.html">3D Vision &amp; SLAM</a><span class="sep">/</span><span class="here">3회 · 회전의 표현과 Lie 이론</span>
+    </nav>
+    <span class="spacer"></span>
+    <div class="seg" data-theme-switch role="group" aria-label="밝기">
+      <button type="button" data-mode="auto" aria-pressed="true">자동</button>
+      <button type="button" data-mode="light" aria-pressed="false">밝게</button>
+      <button type="button" data-mode="dark" aria-pressed="false">어둡게</button>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="toc-title">이 회차 목차</div>
+  <a href="#summary">한 장 요약 — 표현 네 가지</a>
+  <a href="#dof">① 회전은 왜 3 자유도인가</a>
+  <a href="#euler">② 오일러각과 짐벌락</a>
+  <a href="#exp">③ 축-각과 로드리게스</a>
+  <a href="#quat">④ 쿼터니언과 이중 덮개</a>
+  <a href="#perturb">⑤ 섭동 — 회전은 더할 수 없다 <span class="mono">🔴</span></a>
+  <a href="#numjac">⑥ 수치 야코비안 대조</a>
+  <a href="#jr">⑦ 우야코비안 — 12회에 쓴다</a>
+  <a href="#prompt">🤖 의뢰서 — 회전 유틸</a>
+  <a href="#verify">🧪 맞는지 어떻게 아나</a>
+  <a href="#draw">🎨 이 회차의 그림</a>
+  <a href="#check">✅ 오늘의 점검</a>
+  <a href="#more">조금 더 알아두면</a>
+</nav>
+
+<main>
+  <div class="lec-no mono">3D Vision &amp; SLAM · 3회 · 1부 3차원 기하</div>
+  <h1>회전의 표현과 Lie 이론</h1>
+
+  <div class="questions">
+    <span class="lab">오늘 답할 질문</span>
+    <ol>
+      <li>회전을 표현하는 방법이 왜 이렇게 많은가? 무엇을 언제 쓰나?</li>
+      <li>최적화는 회전을 <strong>미분</strong>해야 하는데, 회전행렬은 그냥 더할 수가 없다. 어떻게 하나?</li>
+      <li>좌섭동과 우섭동은 무엇이 다르고, 섞으면 정확히 무슨 일이 생기나?</li>
+      <li>내가 손으로 쓴 야코비안이 맞다는 걸 어떻게 확인하나?</li>
+    </ol>
+  </div>
+
+  <p>
+    지난 시간에는 \(R\)을 <strong>주어진 것</strong>으로 놓고 곱하기만 했다.
+    오늘부터는 \(R\)이 <strong>우리가 추정할 변수</strong>가 된다.
+    변수가 되는 순간 미분이 필요하고, 거기서 문제가 생긴다 —
+    <strong>회전행렬은 더할 수 없기 때문이다.</strong> \(R + \delta R\)은 회전행렬이 아니다.
+  </p>
+
+  <p>
+    오늘 배우는 것은 그 문제를 푸는 표준적인 방법이다.
+    그리고 이것이 <strong>이 강의를 3D Vision에서 SLAM으로 넘기는 지점</strong>이다.
+    9회의 번들조정, 11회의 오차상태 필터, 12회의 사전적분이 전부 오늘 식을 다시 쓴다.
+  </p>
+
+  <h2 id="summary">한 장 요약 — 표현 네 가지 <span class="badge b-lv">학기 내내 본다</span></h2>
+
+  <p class="readme-first">마지막 열이 이 표의 결론이다. <strong>저장과 최적화에 다른 표현을 쓴다.</strong></p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>표현</th><th style="width:8%">수</th><th>약점</th><th>어디에 쓰나</th></tr>
+    <tr><td><strong>회전행렬</strong> \(R \in \mathbf{SO}(3)\)</td><td>9</td>
+      <td>제약이 6개다(\(R^\top R = I\)). <strong>최적화 변수로 못 쓴다</strong></td>
+      <td>계산, 저장</td></tr>
+    <tr><td><strong>오일러각</strong></td><td>3</td>
+      <td><strong>짐벌락.</strong> 게다가 축 순서가 12가지</td>
+      <td><strong>사람에게 보여 줄 때만</strong></td></tr>
+    <tr><td><strong>축-각</strong> \(\boldsymbol\phi \in \mathfrak{so}(3)\)</td><td>3</td>
+      <td>최소 표현이지만 \(\theta = 0\)과 \(\theta = \pi\)에서 조심해야 한다</td>
+      <td><strong>최적화 변수</strong></td></tr>
+    <tr><td><strong>쿼터니언</strong> \(q\)</td><td>4</td>
+      <td>이중 덮개 — \(q\)와 \(-q\)가 같은 회전이다</td>
+      <td>적분, 보간, 파일 저장</td></tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> <strong>저장은 쿼터니언(또는 행렬)으로, 최적화는 축-각으로 한다.</strong>
+    그 둘 사이를 오가는 다리가 오늘 배울 \(\mathrm{Exp}\)와 \(\mathrm{Log}\)다.
+    「어느 표현이 제일 좋은가」는 좋은 질문이 아니다. <strong>일마다 좋은 표현이 다르고, 변환식을 알면 된다.</strong>
+  </div>
+
+  <h2 id="dof">① 회전은 왜 3 자유도인가</h2>
+
+  <p>
+    아무리 복잡한 회전도 <strong>축 하나를 정하고 그 축으로 한 번 돌리는 것</strong>으로 만들 수 있다.
+    이것이 오일러 회전 정리이고, 자유도를 세는 근거이기도 하다.
+  </p>
+
+  <figure class="narrow">
+    <img src="assets/img/03_rotation_3dof.png"
+         alt="한 좌표계가 대각선 방향의 회전축을 중심으로 각도 θ만큼 돌아 다른 좌표계가 되는 그림">
+    <figcaption>축(방향 2개) + 각도(1개) = <strong>3</strong>.
+      축 벡터는 숫자 셋으로 쓰지만 크기를 1로 고정하므로 자유도는 둘이다.</figcaption>
+  </figure>
+
+  <p>
+    회전행렬은 이 3 자유도를 <strong>숫자 아홉 개</strong>로 담는다. 남는 여섯 개는 제약으로 묶여 있다.
+    최적화에서 이것이 왜 문제인지는 ⑤절에서 분명해진다 —
+    <strong>아홉 개를 자유롭게 움직이면 회전행렬 밖으로 나가 버린다.</strong>
+  </p>
+
+  <h2 id="euler">② 오일러각과 짐벌락 — 왜 사람에게 보여 줄 때만 쓰나</h2>
+
+  <p>
+    세 축을 차례로 돌려 회전을 만드는 방식이다. 사람이 읽기에 가장 편하다 —
+    「롤 5°, 피치 −12°, 요 90°」는 머릿속에 그림이 그려진다.
+    문제는 <strong>가운데 축이 ±90°가 되는 순간</strong>이다.
+  </p>
+
+  <figure>
+    <img src="assets/img/03_gimbal_lock.png"
+         alt="세 좌표계 그림. 각 단계에서 회전축이 표시되어 있고 두 번째 회전 뒤에 첫 축과 셋째 축이 같은 방향이 된다">
+    <figcaption>가운데 회전이 90°가 되면 <strong>첫째 축과 셋째 축이 같은 방향으로 겹친다.</strong>
+      돌릴 수 있는 방향이 셋에서 둘로 줄어든다. 이것이 짐벌락이다.</figcaption>
+  </figure>
+
+  <div class="interp">
+    <strong>해석:</strong> 짐벌락에서 나쁜 것은 「회전을 표현하지 못한다」가 아니다.
+    표현은 된다. 나쁜 것은 <strong>그 근처에서 각도 값이 폭주한다</strong>는 것이다.
+    자세가 조금 변했는데 요 값이 0에서 180으로 튄다. 그 값을 미분하거나 평균 내면 결과가 무너진다.
+    <strong>추정기 안에 오일러각을 넣지 않는 이유가 이것이다.</strong>
+  </div>
+
+  <div class="box trap">
+    <p class="boxtitle">⚠️ 순서가 12가지다</p>
+    <p style="margin:0">
+      ZYX인지 ZYZ인지, 고정축(extrinsic)인지 따라가는 축(intrinsic)인지에 따라 <strong>같은 세 숫자가 다른 회전</strong>이 된다.
+      논문이나 라이브러리에서 오일러각을 볼 때는 <strong>순서를 먼저 확인한다.</strong>
+      이 강의에서는 <strong>화면에 찍어 볼 때만</strong> 쓰고, 그때도 순서를 주석에 적는다.
+    </p>
+  </div>
+
+  <h2 id="exp">③ 축-각과 로드리게스 — \(\mathfrak{so}(3) \leftrightarrow \mathbf{SO}(3)\)</h2>
+
+  <p>
+    회전축 방향 \(\mathbf{a}\)(길이 1)와 각도 \(\theta\)를 <strong>하나의 벡터로 합친 것</strong>이 축-각 표현이다.
+  </p>
+
+  $$
+  \boldsymbol\phi = \theta\,\mathbf{a} \in \mathbb{R}^3, \qquad
+  \theta = \lVert \boldsymbol\phi \rVert, \qquad \mathbf{a} = \boldsymbol\phi / \theta
+  $$
+
+  <p>
+    벡터 하나에 축과 각이 다 들어 있다. <strong>제약이 없다</strong> — 어떤 세 숫자를 넣어도 회전 하나가 나온다.
+    이것이 최적화 변수로 쓰는 이유다. 회전행렬로 바꾸는 식이 로드리게스 공식이다.
+  </p>
+
+  $$
+  \mathrm{Exp}(\boldsymbol\phi) \;=\; I + \sin\theta\,[\mathbf{a}]_\times + (1-\cos\theta)\,[\mathbf{a}]_\times^2
+  $$
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 식에서 처음 나오는 기호</p>
+    <dl>
+      <dt>\([\mathbf{v}]_\times\) — 반대칭 행렬(skew-symmetric)</dt>
+      <dd>벡터를 3×3 행렬로 바꾸는 표기다.
+        \([\mathbf{v}]_\times = \begin{bmatrix} 0 &amp; -v_3 &amp; v_2 \\ v_3 &amp; 0 &amp; -v_1 \\ -v_2 &amp; v_1 &amp; 0\end{bmatrix}\)이고,
+        <strong>외적을 행렬 곱으로 쓴 것</strong>이다 — \([\mathbf{v}]_\times \mathbf{w} = \mathbf{v} \times \mathbf{w}\).
+        <strong>여기서는 로드리게스 공식을 행렬 식으로 적는 데 썼다.</strong></dd>
+
+      <dt>\(\mathfrak{so}(3)\) — 소문자 고딕체</dt>
+      <dd>\(\mathbf{SO}(3)\)의 <strong>접평면</strong>. 실제로는 반대칭 행렬들의 집합인데,
+        숫자 셋으로 적을 수 있으므로 <strong>실전에서는 그냥 \(\mathbb{R}^3\)처럼 쓴다.</strong>
+        축-각 벡터가 사는 곳이다.</dd>
+
+      <dt>\(\mathrm{Exp}\) · \(\mathrm{Log}\) — 대문자로 쓴 것</dt>
+      <dd>\(\mathbb{R}^3 \to \mathbf{SO}(3)\)와 그 역. 행렬 지수함수 \(\exp\)와 구별하려고 대문자로 쓴다.
+        <strong>이 강의에서는 대문자 쪽만 쓴다.</strong></dd>
+    </dl>
+  </div>
+
+  <p>반대 방향은 이렇게 간다.</p>
+
+  $$
+  \theta = \arccos\!\left(\frac{\mathrm{tr}\,R - 1}{2}\right), \qquad
+  \mathbf{a} = \frac{1}{2\sin\theta}\begin{bmatrix} R_{32}-R_{23} \\ R_{13}-R_{31} \\ R_{21}-R_{12} \end{bmatrix}
+  $$
+
+  <h3>숫자를 넣어 본다</h3>
+
+  <p>
+    \(\boldsymbol\phi = (0, 0, \pi/2)\)는 z축으로 90° 도는 회전이다.
+    이 회전으로 \((1,0,0)\)을 돌리면 \((0,1,0)\)이 나와야 한다.
+    <span class="mono">vision-slam/src/rotation_numbers.py</span>를 돌린 결과다.
+  </p>
+
+  <pre>Exp((0, 0, π/2)) · (1, 0, 0) = [0.  1.  0.]
+‖Log(Exp(φ)) − φ‖ = 0.000e+00
+‖RᵀR − I‖         = 0.000e+00
+det R − 1         = 0.000e+00</pre>
+
+  <p>
+    2회에서 읽은 EuRoC의 <span class="mono">R_BC</span>를 같은 식에 넣으면 이렇게 나온다.
+  </p>
+
+  <pre>EuRoC T_BC 의 회전:  축 (−0.0110, 0.0150, 0.9998),  각 89.16°</pre>
+
+  <div class="interp">
+    <strong>해석:</strong> 숫자 아홉 개짜리 행렬이 <strong>「z축으로 89.16°」</strong> 한 줄이 됐다.
+    이것이 축-각 표현의 값어치다 — <strong>사람이 읽을 수 있고, 틀렸는지 바로 보인다.</strong>
+    행렬을 전치해서 읽었다면 각도는 그대로인데 <strong>축의 부호가 뒤집힌다.</strong>
+    자세를 눈으로 검사할 때 축-각으로 바꿔 보는 습관이 학기 내내 도움이 된다.
+  </div>
+
+  <h2 id="quat">④ 쿼터니언과 이중 덮개</h2>
+
+  <p>
+    숫자 넷에 제약 하나(\(\lVert q \rVert = 1\))다. 곱셈이 싸고 수치적으로 안정해서
+    <strong>적분과 보간, 파일 저장</strong>에 쓴다. 회전행렬로 바꾸는 식은 라이브러리가 해 준다.
+  </p>
+
+  <p>
+    알아 둘 것은 하나다. <strong>\(q\)와 \(-q\)가 같은 회전이다.</strong>
+    구면 위 두 점이 같은 회전을 가리키므로 「이중 덮개」라고 부른다.
+  </p>
+
+  <div class="box trap">
+    <p class="boxtitle">⚠️ 부호를 통일하지 않으면 평균과 보간이 깨진다</p>
+    <p style="margin:0">
+      거의 같은 두 자세인데 하나는 \(q\), 다른 하나는 \(-q\)로 저장돼 있으면
+      <strong>단순 평균이 엉뚱한 회전</strong>이 된다. 두 점을 잇는 보간도 먼 쪽으로 돈다.
+      보통 <span class="mono">w</span> 성분이 음수면 부호를 뒤집어 통일한다.
+      <strong>루프 클로징(14회)에서 자세를 비교할 때 이 자리가 실제로 나온다.</strong>
+    </p>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 「쿼터니언은 짐벌락이 없으니 최적화도 쿼터니언으로 하면 된다」는 흔한 오해다.
+    숫자 넷에 제약 하나이므로 <strong>여전히 자유롭게 움직일 수 없다.</strong>
+    최적화는 <strong>제약 없는 세 숫자</strong>가 필요하고, 그것이 축-각이다.
+    쿼터니언으로 저장해 두고 <strong>갱신할 때만 축-각으로 옮겨 가는 것</strong>이 표준 방식이다.
+  </div>
+
+  <h2 id="perturb">⑤ 섭동 — 회전은 더할 수 없다 <span class="badge b-red">사람이 한다</span></h2>
+
+  <p>
+    보통의 최적화는 <strong>변수를 조금 흔들어 보고 결과가 얼마나 변하는지</strong>를 보면서 내려간다.
+    \(x \leftarrow x + \delta x\)다. 회전에는 이게 안 된다.
+    \(R + \delta R\)은 \(R^\top R = I\)를 만족하지 않으므로 <strong>회전행렬이 아니다.</strong>
+  </p>
+
+  <p>
+    그래서 <strong>더하는 대신 곱한다.</strong> 그런데 곱하는 자리가 두 곳이다.
+  </p>
+
+  $$
+  \text{우섭동:}\quad R \leftarrow R\,\mathrm{Exp}(\delta\boldsymbol\theta)
+  \qquad\qquad
+  \text{좌섭동:}\quad R \leftarrow \mathrm{Exp}(\delta\boldsymbol\varphi)\,R
+  $$
+
+  <div class="tablewrap">
+  <table>
+    <tr><th style="width:16%">어느 쪽</th><th>\(\delta\)는 어느 좌표계에서 본 미소 회전인가</th><th>이 강의에서</th></tr>
+    <tr><td><strong>우섭동</strong></td><td><strong>몸체 좌표계</strong>에서 본 것. \(R\)이 먼저 있고 그 뒤에 조금 더 돈다</td>
+      <td><strong>이것으로 통일한다</strong></td></tr>
+    <tr><td>좌섭동</td><td><strong>월드 좌표계</strong>에서 본 것. 먼저 조금 돌고 \(R\)이 적용된다</td>
+      <td>쓰지 않는다</td></tr>
+  </table>
+  </div>
+
+  <p>
+    <strong>왜 우섭동인가.</strong> IMU 측정이 몸체 좌표계에서 나오기 때문이다(10회).
+    자이로가 재는 각속도도, 가속도계가 재는 비력도 전부 몸체 좌표계 값이다.
+    우섭동을 쓰면 <strong>야코비안이 측정과 같은 좌표계에 놓인다.</strong>
+  </p>
+
+  <h3>같은 점을 돌려 미분하면 다른 식이 나온다</h3>
+
+  $$
+  \frac{\partial\big(R\,\mathrm{Exp}(\delta\boldsymbol\theta)\,\mathbf{p}\big)}{\partial \delta\boldsymbol\theta}\bigg|_{0}
+  = -R\,[\mathbf{p}]_\times
+  \qquad\qquad
+  \frac{\partial\big(\mathrm{Exp}(\delta\boldsymbol\varphi)\,R\,\mathbf{p}\big)}{\partial \delta\boldsymbol\varphi}\bigg|_{0}
+  = -[R\mathbf{p}]_\times
+  $$
+
+  <p>
+    <strong>두 식은 다르다.</strong> 얼마나 다른지 실제 숫자로 보면 이렇다.
+    \(R = \mathrm{Exp}((0.3, -0.5, 0.9))\), \(\mathbf{p} = (0.4, 1.2, -0.7)\)일 때다.
+  </p>
+
+  <pre>−R[p]× =                          −[Rp]× =
+[[-0.908  -0.248  -0.945]         [[ 0.000  -0.329  -1.292]
+ [-0.126  -0.288  -0.566]          [ 0.329   0.000  -0.558]
+ [ 1.044  -0.711  -0.622]]         [ 1.292   0.558   0.000]]</pre>
+
+  <p>
+    오른쪽은 <strong>대각이 0인 반대칭 행렬</strong>이고 왼쪽은 아니다. 아예 다른 행렬이다.
+    수치 미분과 대조하면 이렇게 갈린다.
+  </p>
+
+  <pre>우섭동 식(맞는 것) 상대오차   5.001e-07   ← 통과 기준 1e-6
+좌섭동 식(틀린 것) 상대오차   8.886e-01   ← 거의 90 % 가 틀렸다</pre>
+
+  <figure>
+    <img src="assets/img/03_perturbation.png"
+         alt="구 위에서 한 점이 두 갈래 곡선을 따라 움직이는 그림. 파란 곡선은 우섭동, 붉은 곡선은 좌섭동이며 δ가 0일 때 같은 점에서 출발해 서로 다른 방향으로 갈라진다">
+    <figcaption><strong>같은 \(\delta\) 값을 넣어도 점이 가는 방향이 다르다.</strong>
+      \(\delta = 0\)에서는 둘이 같은 점이므로 <strong>값만 보면 구별되지 않는다.</strong>
+      구별되는 것은 <strong>미분</strong>, 즉 갈라지는 방향이다.</figcaption>
+  </figure>
+
+  <div class="box stop">
+    <p class="boxtitle">⛔ 두 방향을 섞으면 무슨 일이 생기나</p>
+    <p style="margin:0">
+      <strong>에러가 나지 않는다.</strong> 최적화는 돌아간다.
+      다만 야코비안이 실제 기울기와 다른 방향을 가리키므로
+      <strong>수렴이 느려지거나, 엉뚱한 곳에서 멈추거나, 어떤 데이터에서만 발산한다.</strong>
+      「반복 횟수를 늘리면 되겠지」로 덮이는 일이 흔하고, 그러면 원인은 학기 끝까지 남는다.
+    </p>
+  </div>
+
+  <h2 id="numjac">⑥ 수치 야코비안 대조 — 오늘 배우면 학기 내내 쓴다 <span class="badge b-yellow">맡기되 검사한다</span></h2>
+
+  <p>
+    ⑤절의 두 식 중 어느 것이 맞는지 <strong>손으로 다시 유도해서 확인하지 않는다.</strong>
+    그건 틀린 유도를 두 번 하게 될 뿐이다. <strong>기계에게 물어본다.</strong>
+  </p>
+
+  <p>
+    방법은 간단하다. 변수를 아주 조금 흔들어 결과가 얼마나 변하는지 직접 재고,
+    손으로 쓴 식과 비교한다. 흔드는 방식만 <strong>다양체 위에서</strong> 해 주면 된다 —
+    더하는 대신 \(\mathrm{Exp}\)로 곱한다.
+  </p>
+
+  <pre>// 다양체 위의 유한차분. ⊞ 가 회전이면 R·Exp(ε·e_i) 다.
+for (int i = 0; i &lt; N; ++i) {
+  Eigen::VectorXd e = Eigen::VectorXd::Zero(N);
+  e(i) = eps;                                    // eps = 1e-6
+  J_num.col(i) = ( f(boxplus(x, e)) - f(x) ) / eps;
+}
+// 판정: (J_num - J_analytic).norm() / J_num.norm() &lt; 1e-6</pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt><span class="mono">boxplus(x, e)</span> — 흔히 \(x \boxplus e\)로 쓴다</dt>
+      <dd>「다양체 위의 더하기」. 변수가 보통 벡터면 그냥 \(x + e\)이고,
+        <strong>회전이면 \(R\,\mathrm{Exp}(e)\)</strong>다.
+        <strong>여기서는 유한차분을 회전 위에서 하기 위해 썼다.</strong>
+        상태에 위치와 회전이 섞여 있으면 성분마다 다르게 처리한다.</dd>
+      <dt><span class="mono">eps = 1e-6</span></dt>
+      <dd>너무 크면 근사 오차가, 너무 작으면 반올림 오차가 커진다.
+        <span class="mono">double</span>에서는 <span class="mono">1e-6</span> 근처가 무난하다.
+        <strong>기준을 통과하지 못하면 eps를 열 배씩 바꿔 보는 것이 첫 확인</strong>이다 —
+        eps에 따라 결과가 크게 달라지면 수치 쪽 문제이고, 어느 eps에서도 같은 값으로 틀리면 식이 틀린 것이다.</dd>
+    </dl>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 이 시험이 <strong>이 강의에서 가장 많은 버그를 잡아낸다.</strong>
+    야코비안 부호 하나가 틀려도 <strong>에러는 안 난다.</strong>
+    결과가 조금 나쁠 뿐이고, 그 「조금 나쁨」은 잡음이나 데이터 탓으로 오해되기 딱 좋다.
+    <strong>검증 사다리 2단</strong>이 바로 이것이고, 오늘이 그 2단을 처음 밟는 날이다.
+  </div>
+
+  <h2 id="jr">⑦ 우야코비안 — 오늘 해 두면 12회가 반으로 준다</h2>
+
+  <p>
+    \(\mathrm{Exp}\)에 미소 회전을 곱한 뒤 다시 \(\mathrm{Log}\)를 취하면 무엇이 되나.
+    「그냥 더해지겠지」가 답이면 좋겠지만 아니다. <strong>보정 행렬이 하나 붙는다.</strong>
+  </p>
+
+  $$
+  \mathrm{Log}\big(\mathrm{Exp}(\boldsymbol\phi)\,\mathrm{Exp}(\delta\boldsymbol\varphi)\big)
+  \;\approx\; \boldsymbol\phi + J_r(\boldsymbol\phi)^{-1}\,\delta\boldsymbol\varphi
+  $$
+
+  $$
+  J_r(\boldsymbol\phi) = I - \frac{1-\cos\theta}{\theta^2}[\boldsymbol\phi]_\times
+    + \frac{\theta - \sin\theta}{\theta^3}[\boldsymbol\phi]_\times^2
+  $$
+
+  <p>
+    근사가 얼마나 좋은지 재 보면 이렇다. \(\boldsymbol\phi = (0.3, -0.5, 0.9)\)에 크기가 다른 \(\delta\)를 넣었다.
+  </p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>\(\lVert\delta\boldsymbol\varphi\rVert\)</th><th>1차 근사 오차</th><th>앞 줄 대비</th></tr>
+    <tr><td>0.1285</td><td>9.014e-04</td><td>—</td></tr>
+    <tr><td>0.0128</td><td>8.949e-06</td><td><strong>100분의 1</strong></td></tr>
+    <tr><td>0.0013</td><td>8.943e-08</td><td><strong>100분의 1</strong></td></tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> \(\delta\)를 10분의 1로 줄이면 오차가 100분의 1이 된다.
+    <strong>2차 수렴</strong>이고, 이것이 「1차 근사」라는 말이 실제로 뜻하는 바다.
+    이 표는 그 자체로 시험이기도 하다 — <strong>비율이 100이 아니라 10으로 나오면 \(J_r\) 식이 틀린 것</strong>이다.
+    상수 계수 하나만 틀려도 여기서 걸린다.
+  </div>
+
+  <p>
+    이 두 줄은 <strong>12회 IMU 사전적분에서 그대로 다시 나온다.</strong>
+    바이어스가 조금 바뀌었을 때 적분값을 다시 계산하지 않고 보정하는 자리에서 필요하다.
+    오늘 해 두면 그때는 「아, 그 식」으로 넘어간다.
+  </p>
+
+  <h2 id="prompt">🤖 의뢰서 — 회전 유틸과 그 시험 <span class="badge b-yellow">맡기되 검사한다</span></h2>
+
+  <p>
+    회전 유틸은 짧다. 그런데 <strong>부호 하나가 틀려도 티가 안 나는</strong> 대표적인 코드다.
+    그래서 의뢰서의 [검증] 칸을 <strong>오늘 배운 통과 기준으로</strong> 채운다.
+  </p>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    <strong>[규약]</strong> 첨부한 <span class="mono">conventions.md</span>를 따라 줘.
+    <strong>섭동은 우섭동으로 통일한다</strong> — <span class="mono">R ← R * Exp(dtheta)</span>. 좌섭동은 쓰지 않는다.<br><br>
+    <strong>[인터페이스]</strong> <span class="mono">Sophus::SO3d</span>를 쓰고, 아래 두 함수를 만들어 줘.<br>
+    ① 점 하나를 회전시킬 때의 <strong>우섭동 야코비안</strong> <span class="mono">Eigen::Matrix3d dRp_dtheta(const SO3d&amp; R, const Vector3d&amp; p)</span><br>
+    ② 임의의 함수에 대한 <strong>다양체 유한차분</strong> <span class="mono">numericJacobian(f, R, eps)</span><br><br>
+    <strong>[참조]</strong> Barfoot <em>State Estimation for Robotics</em>의 표기를 따라 줘.
+    우야코비안 <span class="mono">Jr</span>도 같이 만들어 줘.<br><br>
+    <strong>[검증]</strong> 아래 시험을 같이 써 줘. <strong>기준을 넘으면 실패로 출력한다.</strong><br>
+    ① <span class="mono">Log(Exp(phi)) == phi</span> — 오차 <span class="mono">&lt; 1e-12</span>, 무작위 φ 1000개로<br>
+    ② <span class="mono">RᵀR = I</span>, <span class="mono">det R = 1</span> — <span class="mono">&lt; 1e-12</span><br>
+    ③ ①의 해석 야코비안과 ②의 수치 야코비안 — <strong>상대오차 <span class="mono">&lt; 1e-6</span></strong><br>
+    ④ <span class="mono">Log(Exp(phi)*Exp(d)) ≈ phi + Jr(phi).inverse()*d</span>가
+    <strong>‖d‖를 10분의 1로 줄일 때 오차가 100분의 1</strong>이 되는가<br>
+    <strong>실패하면 어느 성분이 얼마나 벌어졌는지 함께 찍어 줘.</strong><br><br>
+    <strong>[함정]</strong> θ가 0에 가까울 때 <span class="mono">sinθ/θ</span>를 그냥 나누면 0으로 나눈다.
+    <strong>테일러 전개로 갈라 줘.</strong> θ가 π에 가까울 때도 <span class="mono">Log</span>가 불안정하다.<br><br>
+    <strong>[남긴다]</strong> 규약에 없어서 임의로 정한 것을 코드 맨 위에 목록으로 적어 줘.
+  </div>
+
+  <p class="readme-first">받은 코드에서 확인할 것</p>
+
+  <pre>□ 야코비안이 −R[p]× 인가 −[Rp]× 인가          ← 우섭동이면 앞쪽이다
+□ 유한차분이 x+e 가 아니라 <strong>R·Exp(e)</strong> 로 흔드는가
+□ θ→0 갈래가 실제로 있는가, 그 갈래를 <strong>시험이 지나가는가</strong>
+□ 요구한 시험 네 개가 다 있고 돌려 봤는가
+□ ④번 시험의 비율이 100 근처로 나오는가          ← 10 이면 Jr 식이 틀렸다</pre>
+
+  <p>그리고 결과가 이상할 때.</p>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    수치 야코비안 대조가 <strong>상대오차 0.89</strong>로 실패한다.
+    <span class="mono">Log(Exp(phi)) == phi</span> 시험은 통과하고, <span class="mono">RᵀR = I</span>도 통과한다.
+    <span class="mono">eps</span>를 <span class="mono">1e-4</span>에서 <span class="mono">1e-8</span>까지 바꿔도 <strong>같은 값이 나온다.</strong><br>
+    <strong>원인 후보를 세 개</strong> 대고, 각각을 확인할 <strong>가장 작은 실험</strong>을 하나씩 제안해 줘.
+    <strong>코드는 아직 고치지 말아 줘.</strong>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 「<span class="mono">eps</span>를 바꿔도 같은 값」이 이 의뢰서에서 가장 중요한 한 줄이다.
+    <strong>수치 문제라면 <span class="mono">eps</span>에 따라 값이 흔들린다.</strong> 흔들리지 않는다는 것은
+    두 식이 <strong>정말로 다른 함수</strong>라는 뜻이고, 그러면 남는 후보는 셋뿐이다 —
+    섭동 방향, 부호, 흔드는 방식(\(\boxplus\)). <strong>증상을 좁혀서 말하면 후보도 좁게 돌아온다.</strong>
+  </div>
+
+  <h2 id="verify">🧪 오늘 만든 것이 맞는지 어떻게 아나 <span class="badge b-red">사람이 한다</span></h2>
+
+  <p>
+    오늘은 사다리를 <strong>한 단 올라간다.</strong> 1단(항등식)에 더해 <strong>2단(수치 야코비안 대조)</strong>이 들어온다.
+  </p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th style="width:8%">단</th><th>시험</th><th>통과 기준</th><th>여기서 걸리는 것</th></tr>
+    <tr><td>1</td><td>\(\mathrm{Log}(\mathrm{Exp}(\boldsymbol\phi)) = \boldsymbol\phi\)</td>
+      <td><span class="mono">&lt; 1e-12</span></td><td>\(\theta \to 0\) 갈래 누락</td></tr>
+    <tr><td>1</td><td>\(R^\top R = I\), \(\det R = 1\)</td>
+      <td><span class="mono">&lt; 1e-12</span></td><td>정규화 누락, 누적 오차</td></tr>
+    <tr><td><strong>2</strong></td><td><strong>해석 야코비안 vs 수치 야코비안</strong></td>
+      <td><strong>상대오차 <span class="mono">&lt; 1e-6</span></strong></td>
+      <td><strong>부호 실수, 좌·우 섭동 혼동</strong></td></tr>
+    <tr><td>2</td><td>BCH 1차 근사의 수렴 차수</td>
+      <td>\(\lVert\delta\rVert\)를 \(1/10\)로 하면 오차가 \(1/100\)</td><td>\(J_r\)의 계수 실수</td></tr>
+  </table>
+  </div>
+
+  <div class="box stop">
+    <p class="boxtitle">⛔ 2단을 통과하지 못한 야코비안을 최적화에 넣지 않는다</p>
+    <p style="margin:0">
+      넣어도 <strong>돌아간다.</strong> 그게 문제다.
+      9회에서 번들조정이 이상하게 수렴할 때, 원인이 오늘 만든 야코비안인지
+      그때 짠 팩터인지 <strong>가릴 방법이 없어진다.</strong>
+      사다리의 규칙은 하나다 — <strong>아래 단을 통과하지 못한 것은 위로 올리지 않는다.</strong>
+    </p>
+  </div>
+
+  <h2 id="draw">🎨 이 회차의 그림 <span class="badge b-green">맡긴다</span></h2>
+
+  <p>
+    벡터 하나를 놓고 \(\delta\)를 0부터 조금씩 키우면서
+    \(R\,\mathrm{Exp}(\delta\boldsymbol\theta)\,\mathbf{p}\)와 \(\mathrm{Exp}(\delta\boldsymbol\varphi)\,R\,\mathbf{p}\)를
+    <strong>구 위에 두 색으로 겹쳐 그린다.</strong> 위의 ⑤절 그림이 그것이다.
+  </p>
+
+  <p>
+    <strong>이 그림으로 판정하는 것:</strong> 두 곡선이 <strong>같은 점에서 출발해 다른 방향으로 갈라지는가.</strong>
+    갈라지지 않고 겹쳐 보인다면 코드에서 좌·우를 실제로 구별하지 않고 있다는 뜻이다.
+    <span class="mono">R</span>을 단위행렬로 두면 실제로 둘이 같아지므로, <strong>반드시 회전이 섞인 \(R\)로 그린다.</strong>
+  </p>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    <strong>[할 일]</strong> 좌섭동과 우섭동을 비교하는 matplotlib 3차원 그림을 그려 줘.
+    단위 구를 옅게 깔고, 벡터 <span class="mono">p</span> 하나를 <span class="mono">R</span>로 돌린 점에서 출발해
+    <span class="mono">δ</span>를 0부터 1.25까지 키우며 두 궤적을 <strong>다른 색으로</strong> 그린다.<br><br>
+    <strong>[규약]</strong> <span class="mono">R</span>은 <strong>세 축이 다 섞인 회전</strong>으로 잡아 줘.
+    단위행렬로 두면 두 곡선이 겹쳐서 그림의 의미가 사라진다.<br><br>
+    <strong>[검증]</strong> <span class="mono">δ = 0</span>에서 두 곡선의 시작점이 <strong>같은 점</strong>인지
+    <span class="mono">1e-12</span> 안에서 확인하고, 아니면 경고를 찍어 줘.
+    그리고 <span class="mono">δ</span>가 가장 클 때 두 끝점 사이 거리를 화면에 숫자로 적어 줘.<br><br>
+    <strong>[남긴다]</strong> 어떤 <span class="mono">R</span>과 <span class="mono">p</span>를 골랐는지 코드 위에 적어 줘.
+  </div>
+
+  <p class="readme-first">받은 그림에서 확인할 것</p>
+
+  <pre>□ 두 곡선이 <strong>한 점에서 출발</strong>하는가            ← 안 그러면 δ=0 처리가 틀렸다
+□ 갈라지는가, 겹치는가                        ← 겹치면 R 이 단위행렬에 가깝다
+□ 두 곡선이 <strong>구 위에</strong> 있는가                  ← 벗어나면 Exp 가 아니라 더하기를 쓴 것이다
+□ 색과 범례로 어느 쪽이 좌·우인지 구별되는가</pre>
+
+  <h2 id="check">✅ 오늘의 점검</h2>
+  <ul class="check">
+    <li><input type="checkbox" id="c1"><label for="c1">회전이 3 자유도인 이유를 한 문장으로 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c2"><label for="c2">짐벌락에서 실제로 나쁜 것이 무엇인지 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c3"><label for="c3">저장과 최적화에 왜 다른 표현을 쓰는지 설명할 수 있다</label></li>
+    <li><input type="checkbox" id="c4"><label for="c4">\(R + \delta R\)을 쓰지 않는 이유를 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c5"><label for="c5">우섭동 야코비안 \(-R[\mathbf{p}]_\times\)를 보고 좌섭동 식과 구별할 수 있다</label></li>
+    <li><input type="checkbox" id="c6"><label for="c6">수치 야코비안을 다양체 위에서 만드는 법을 코드로 쓸 수 있다</label></li>
+    <li><input type="checkbox" id="c7"><label for="c7">2단 시험을 돌렸고 상대오차가 <span class="mono">1e-6</span> 아래로 나왔다</label></li>
+    <li><input type="checkbox" id="c8"><label for="c8">규약 문서에 「우섭동으로 통일한다」 한 줄을 추가했다</label></li>
+  </ul>
+
+  <h2 id="more">조금 더 알아두면 <span class="badge b-lv">시험 범위 아님</span></h2>
+
+  <details class="story">
+    <summary>미소 회전을 「그냥 더하면」 실제로 얼마나 망가지나 — 재 봤다</summary>
+    <p>
+      「미소 회전이니까 1차 근사로 더해도 되지 않나」는 자연스러운 생각이고,
+      한 스텝만 보면 실제로 맞다. 문제는 <strong>누적</strong>이다.
+      V1_01_easy의 최대 각속도(0.94 rad/s)로 IMU 주기 5 ms마다 회전을 갱신하면서
+      두 방식을 나란히 돌려 봤다.
+    </p>
+    <div class="tablewrap">
+    <table class="summary-table">
+      <tr><th>경과</th><th>\(\lVert R^\top R - I\rVert\) — 더하기</th><th>같은 값 — \(\mathrm{Exp}\)로 곱하기</th><th>\(\det R\) — 더하기</th></tr>
+      <tr><td>1초</td><td>6.26e-03</td><td>2.12e-14</td><td>1.004428</td></tr>
+      <tr><td>10초</td><td>6.39e-02</td><td>2.16e-13</td><td>1.045170</td></tr>
+      <tr><td>60초</td><td><strong>4.29e-01</strong></td><td>1.27e-12</td><td><strong>1.303531</strong></td></tr>
+    </table>
+    </div>
+    <p>
+      60초 뒤에 행렬식이 1.30이다. <strong>이 행렬은 회전이 아니라 확대까지 하고 있다.</strong>
+      이것으로 점을 돌리면 <strong>거리가 30 % 늘어난다.</strong> 지도가 그만큼 부풀어 오른다는 뜻이고,
+      그런데도 궤적은 여전히 매끄러운 곡선으로 보인다.
+    </p>
+    <p>
+      오른쪽 열이 오늘의 결론이다. \(\mathrm{Exp}\)로 곱하면 60초를 돌려도
+      \(\lVert R^\top R - I\rVert\)가 <strong>기계 정밀도 근처에 머문다.</strong> 정규화를 따로 하지 않아도 그렇다.
+      <strong>다양체 위에 남아 있는 연산만 쓰면 벗어날 일 자체가 없기 때문</strong>이다.
+    </p>
+    <p class="src">재현: <span class="mono">python3 vision-slam/src/rotation_numbers.py</span></p>
+  </details>
+
+  <details class="story">
+    <summary>흔한 오해 셋</summary>
+    <div class="tablewrap">
+    <table>
+      <tr><th style="width:42%">오해</th><th>사실</th></tr>
+      <tr><td>「쿼터니언이면 짐벌락이 없으니 최적화도 쿼터니언으로」</td>
+        <td>숫자 넷에 제약 하나라 여전히 자유롭게 못 움직인다. <strong>접평면(3차원)에서 최적화하고 쿼터니언은 저장용으로 쓴다</strong></td></tr>
+      <tr><td>「\(q\)와 \(-q\)는 다른 회전」</td>
+        <td>같은 회전이다. 부호를 통일하지 않으면 평균과 보간이 깨진다</td></tr>
+      <tr><td>「좌섭동과 우섭동은 결국 부호만 다르다」</td>
+        <td>아니다. ⑤절의 두 행렬을 보면 <strong>구조가 다르다</strong> — 하나는 반대칭이고 하나는 아니다</td></tr>
+    </table>
+    </div>
+  </details>
+
+  <details class="story">
+    <summary>\(\mathbf{SE}(3)\)에도 같은 이야기가 있다</summary>
+    <p>
+      오늘은 회전만 다뤘지만, 위치와 회전을 <strong>함께</strong> 하나의 다양체로 보는 방식도 있다.
+      \(\mathbf{SE}(3)\)의 \(\mathrm{Exp}\)와 \(\mathrm{Log}\)는 6차원 벡터를 받고,
+      우야코비안도 6×6짜리가 있다.
+    </p>
+    <p>
+      이 강의에서는 <strong>위치와 회전을 나눠서 다룬다.</strong>
+      위치는 보통 벡터라 그냥 더해지고, 회전만 \(\mathrm{Exp}\)로 곱한다.
+      \(\mathbf{SE}(3)\) 쪽이 수학적으로 더 깔끔하지만,
+      <strong>IMU 상태에는 속도와 바이어스도 함께 들어가므로</strong> 어차피 성분별로 다루게 된다(11회).
+      두 방식 다 쓰이니, 논문을 읽을 때 어느 쪽인지만 확인하면 된다.
+    </p>
+    <p class="src">읽을거리: Solà, Deray, Atchuthan, <em>A micro Lie theory for state estimation in robotics</em> (2018).
+      이 강의에서 쓰는 표기가 대체로 이 문서와 같다.</p>
+  </details>
+
+  <p>
+    다음 시간(4회)에는 <strong>3차원 점 하나가 픽셀 하나가 되기까지</strong>를 따라간다.
+    그리고 이 강의에서 <strong>처음으로 눈으로 판정하는 검증</strong>을 한다 —
+    정답 자세로 방 전체의 3차원 점군을 영상에 투영해서, 겹치는지 본다.
+    2회의 좌표계와 4회의 카메라 모델이 <strong>둘 다 맞아야만</strong> 겹친다.
+  </p>
+
+  <footer>
+    3D Vision &amp; SLAM · 3회 · <a href="index.html">회차 목록으로</a>
+  </footer>
+</main>
+
+</div>
+<script src="../assets/site.js" defer></script>
+</body>
+</html>

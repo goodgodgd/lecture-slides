@@ -32,11 +32,13 @@
   <a href="#why">② 왜 카메라와 IMU를 같이 쓰나</a>
   <a href="#map">③ 14회의 지도</a>
   <a href="#classic">④ 왜 고전 SLAM인가</a>
-  <a href="#ai">⑤ AI를 어떻게 쓰나</a>
-  <a href="#ai" class="sub">코드와 프롬프트</a>
+  <a href="#ai">⑤ 코드를 맡기면 무엇이 남나</a>
+  <a href="#ai" class="sub">신호등 · 코드와 프롬프트</a>
   <a href="#verify">⑥ 맞는지 어떻게 아나</a>
   <a href="#see">⑦ 눈으로 본다 — 시각화</a>
-  <a href="#prompts">🤖 에이전트에게 말하는 법</a>
+  <a href="#prompts">🤖 의뢰서 여섯 칸</a>
+  <a href="#prompts" class="sub">검증을 프롬프트 안에 넣는다</a>
+  <a href="#prompts" class="sub">틀렸을 때 하는 말</a>
   <a href="#check">✅ 오늘의 점검</a>
   <a href="#more">조금 더 알아두면</a>
 </nav>
@@ -168,6 +170,14 @@
   </table>
   </div>
 
+  <figure>
+    <img src="assets/img/01_imu_drift.png"
+         alt="가로축은 적분한 시간, 세로축은 위치 오차인 로그 그래프. 바이어스를 보정한 경우와 보정하지 않은 경우의 곡선 두 개가 있고, 방의 긴 변 5.79 m를 나타내는 가로 점선이 그어져 있다">
+    <figcaption>가로 점선이 <strong>방의 크기</strong>다. 두 곡선이 그 선을 넘는 순간
+      <strong>궤적이 방을 뚫고 나간다.</strong> 표의 값을 로그로 이어 읽으면
+      바이어스를 알아도 <strong>7.9초</strong>, 모르면 <strong>2.9초</strong>다.</figcaption>
+  </figure>
+
   <div class="interp">
     <strong>해석:</strong> 방이 4.4 × 5.8 m다. <strong>10초면 이미 방 바깥이다.</strong>
     그리고 두 번째 열이 더 중요하다 — <strong>바이어스를 정답으로 넣어 줘도</strong> 10초에 12 m가 벌어진다.
@@ -268,41 +278,42 @@
     <strong>6회에서 한 번에 정리합니다.</strong> 지금은 「고전을 만들지만 최신과 끊겨 있지는 않다」 정도로 두면 됩니다.
   </p>
 
-  <h2 id="ai">⑤ AI를 어떻게 쓰나 <span class="badge b-red">사람이 한다</span></h2>
+  <h2 id="ai">⑤ 코드를 맡기면 무엇이 남나 <span class="badge b-red">사람이 한다</span></h2>
 
   <p>
-    코드는 에이전트가 짜 준다. SLAM 코드도 꽤 잘 짜 준다. 그러면 이 과목에서 사람은 무엇을 하나?
+    SLAM 코드는 에이전트가 꽤 잘 짜 준다. 빌드되고, 돌아가고, 궤적을 뱉는다.
+    그러면 이 과목에서 사람은 무엇을 하나?
   </p>
 
   <p>
-    이 강의가 잡은 답은 이렇다. <strong>좌표계를 정하고, 상태를 정의하고, 검증을 설계하고,
+    이 강의가 잡은 답은 넷이다. <strong>좌표계를 정하고, 상태를 정의하고, 검증을 설계하고,
     틀린 결과를 보고 어느 모듈이 범인인지 가르는 것.</strong>
-    네 가지 다 코드를 치는 일이 아니고, 네 가지 다 대신 시키기 어려운 일이다.
-    에이전트는 여러분이 어제 어떤 궤적을 봤는지 모르기 때문이다.
+    넷 다 코드를 치는 일이 아니고, 넷 다 대신 시키기 어렵다.
+    에이전트는 여러분이 어제 어떤 궤적을 봤는지 모르고, <strong>무엇을 맞다고 부를지도 모른다.</strong>
   </p>
 
-  <div class="box lab-block">
-    <p class="boxtitle">이 과목의 AI 사용 규칙</p>
-    <p style="margin:0">
-      에이전트를 쓰는 것은 괜찮습니다. 오히려 권합니다.
-      다만 <strong>자기가 설명하지 못하는 코드는 내지 않기로 합니다.</strong>
-    </p>
+  <div class="interp">
+    <strong>해석:</strong> 그래서 이 과목이 실제로 연습시키는 것은
+    <strong>일을 의뢰하고 받은 것을 판정하는 일</strong>이다.
+    판정 기준을 사람이 먼저 숫자로 정해 두지 않으면, 돌아오는 것은
+    「정상적으로 동작합니다」라는 문장뿐이다. 그 문장은 SLAM에서 아무 정보도 아니다 — ⑥절.
   </div>
 
   <h3>신호등 — 자료 곳곳에 붙어 있는 표시</h3>
 
   <p>
-    매 회차 절 제목 옆에 배지가 하나씩 붙어 있습니다. <strong>이 일을 누가 하는 게 좋은가</strong>를 나타냅니다.
+    매 회차 절 제목 옆에 배지가 하나씩 붙어 있습니다.
+    <strong>그 일이 검증 가능한 일인가</strong>를 나타냅니다.
   </p>
 
   <div class="tablewrap">
   <table>
     <tr><th>배지</th><th>뜻</th><th>예</th></tr>
-    <tr><td><span class="badge b-green">맡긴다</span></td><td>에이전트가 하고 결과만 본다</td>
+    <tr><td><span class="badge b-green">맡긴다</span></td><td>틀려도 결과가 바로 눈에 보인다</td>
       <td>파일 파싱, CMake, 시각화 코드, PLY 쓰기</td></tr>
-    <tr><td><span class="badge b-yellow">맡기되 검사한다</span></td><td>코드는 맡기고 <strong>검증은 사람이 설계한다</strong></td>
+    <tr><td><span class="badge b-yellow">맡기되 검사한다</span></td><td>코드는 맡기고 <strong>판정 기준은 사람이 정한다</strong></td>
       <td>야코비안, 사전적분, 삼각측량</td></tr>
-    <tr><td><span class="badge b-red">사람이 한다</span></td><td>대신 시키기 어려운 것</td>
+    <tr><td><span class="badge b-red">사람이 한다</span></td><td>대신 시킬 대상 자체가 없다</td>
       <td>좌표계 규약, 상태 정의, 잡음 값의 출처, 실패 원인 좁히기</td></tr>
     <tr><td><span class="badge b-stop">권하지 않는다</span></td><td>해 보면 대체로 시간을 더 쓰게 되는 것</td>
       <td>검증 없이 한 번에 전체 통합, 결과가 안 맞을 때 계수부터 바꾸기</td></tr>
@@ -312,7 +323,7 @@
   <h3>자료에 코드가 나올 때와 프롬프트가 나올 때</h3>
 
   <p>
-    강의자료에 코드를 그대로 싣는 경우와, 코드 대신 <strong>그 코드를 받아내는 프롬프트</strong>를 싣는 경우가 있습니다.
+    강의자료에 코드를 그대로 싣는 경우와, 코드 대신 <strong>그 코드를 받아내는 의뢰서</strong>를 싣는 경우가 있습니다.
     기준은 하나입니다 — <strong>개념이 코드 모양 안에 들어 있느냐</strong>.
   </p>
 
@@ -323,16 +334,12 @@
       <td><strong>코드를 그대로</strong> 싣는다</td>
       <td>읽는 것이 곧 이해하는 것이다</td></tr>
     <tr><td>길고 기계적인 것<br><span class="mono" style="font-size:.85rem">예: 데이터 파서, Ceres 팩터, 사전적분 전파</span></td>
-      <td><strong>프롬프트와 검사 목록</strong>을 싣는다</td>
+      <td><strong>의뢰서와 검사 목록</strong>을 싣는다</td>
       <td>200줄을 읽는 시간보다 <strong>받은 200줄에서 무엇을 확인할지</strong> 아는 편이 남는다</td></tr>
   </table>
   </div>
 
-  <div class="interp">
-    <strong>해석:</strong> 프롬프트만 덩그러니 싣지는 않습니다. 프롬프트 옆에는 언제나
-    <strong>「받은 코드에서 확인할 것」</strong>이 따라붙습니다. 그게 없으면 프롬프트를 보여 주는 의미가 없기 때문이다.
-    이 강의에서 실제로 연습하는 것은 코드를 쓰는 일이 아니라 <strong>일을 의뢰하고 받은 것을 검사하는 일</strong>에 가깝다.
-  </div>
+  <p class="readme-first">의뢰서를 어떻게 쓰는지는 아래 🤖절에서 여섯 칸으로 정리합니다.</p>
 
   <h2 id="verify">⑥ 맞는지 어떻게 아나 <span class="badge b-red">사람이 한다</span></h2>
 
@@ -427,42 +434,142 @@
     빌드가 가벼워지고, 같은 파일이 평가에도 그대로 쓰인다.
   </div>
 
-  <h2 id="prompts">🤖 에이전트에게 말하는 법 <span class="badge b-yellow">맡기되 검사한다</span></h2>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    <strong>[할 일]</strong> 위 그래프의 3차원 판을 만들어 줘.
+    정답 궤적에서 한 시각을 골라 그 상태로 출발해 <strong>IMU만 적분한 궤적</strong>을 그리고,
+    같은 구간의 정답 궤적을 <strong>다른 색으로</strong> 겹쳐 줘.
+    방 크기(4.4 × 5.8 × 1.0 m)를 <strong>상자로 같이</strong> 그려 줘 — 그래야 「벗어난다」가 눈에 보인다.<br><br>
+    <strong>[규약]</strong> z축이 위이고 중력은 <span class="mono">(0, 0, −9.81)</span>이다.
+    시각은 나노초 정수로 다뤄 줘.<br><br>
+    <strong>[검증]</strong> <strong>10초 지점에서 두 궤적의 거리를 숫자로 찍어 줘.</strong>
+    <strong>12 m 근처가 아니면 경고를 띄워 줘</strong> — 위 표의 실측값이다.
+    출발 시각을 세 군데 다르게 잡아 세 번 재고, 세 값을 모두 찍어 줘.<br><br>
+    <strong>[함정]</strong> 정답 궤적은 첫 영상보다 <strong>1.040초 늦게</strong> 시작한다.
+    그 앞 구간에서 출발점을 고르면 정답이 없다.<br><br>
+    <strong>[남긴다]</strong> 중력값을 얼마로 썼는지 적어 줘.
+  </div>
+
+  <p class="readme-first">받은 코드에서 확인할 것</p>
+
+  <pre>□ 10초 오차가 12 m 근처로 나오는가          ← 크게 다르면 중력 방향이나 좌표계가 틀렸다
+□ 출발 시각 세 군데의 값이 <strong>비슷한가</strong>       ← 하나만 튀면 그 구간에 뭔가 있다
+□ 방 상자를 정답 궤적의 범위로 그렸는가, 숫자를 그냥 박았는가
+□ 중력을 9.81 로 썼는가 9.8081 로 썼는가    ← 10회에서 이 차이가 다시 나온다</pre>
+
+  <h2 id="prompts">🤖 의뢰서 여섯 칸 <span class="badge b-yellow">맡기되 검사한다</span></h2>
 
   <p>
-    학기 내내 쓰게 될 부탁 방식 네 가지입니다. 지금 외울 필요는 없고, 막힐 때 이 절로 돌아와 보면 됩니다.
+    이 과목에서 프롬프트는 대화가 아니라 <strong>작업 지시서</strong>입니다.
+    아래 여섯 칸을 채우면 쓸 만한 구현이 오고, 빠뜨리면 <strong>빠뜨린 칸이 그대로 결함으로 돌아옵니다.</strong>
+    오른쪽 열이 그 대응입니다.
+  </p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th style="width:4%">#</th><th>의뢰서에 넣는 것</th><th>빠지면 오는 것</th></tr>
+    <tr><td>1</td><td><strong>규약을 함께 준다</strong> — 표기·부호·단위 약속</td>
+      <td>좌섭동과 우섭동이 섞인 코드. <strong>돌아가지만 수렴이 이상하다</strong></td></tr>
+    <tr><td>2</td><td><strong>인터페이스를 고정해 준다</strong> — 헤더를 그대로 붙여 준다</td>
+      <td>시험을 붙일 자리가 없는 코드. 인터페이스를 맡기면 검증 지점이 사라진다</td></tr>
+    <tr><td>3</td><td><strong>참조 구현을 지목한다</strong> — "VINS-Mono와 같은 방식으로"</td>
+      <td>어디서도 본 적 없는 자기류 구현. 논문과 대조가 안 된다</td></tr>
+    <tr><td>4</td><td><strong>검증을 같은 의뢰서 안에서 요구한다</strong> 🔴</td>
+      <td>돌아가는데 맞는지 모르는 코드. <strong>이 과목에서 가장 비싼 실수</strong></td></tr>
+    <tr><td>5</td><td><strong>알려진 함정을 미리 적어 준다</strong></td>
+      <td>인터넷 예제의 옛 API를 그대로 쓴 코드</td></tr>
+    <tr><td>6</td><td><strong>임의로 정한 것을 적어 내게 한다</strong></td>
+      <td>조용히 정해진 부호와 단위. 나중에 원인을 못 찾는다</td></tr>
+  </table>
+  </div>
+
+  <h3>여섯 칸을 다 채운 의뢰서 한 장 — 이번 주 과제가 그대로 예제입니다</h3>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    <strong>[규약]</strong> 아래 다섯 줄을 표기 약속으로 삼아 줘. 코드 전체에서 이것만 쓴다.
+    <span class="mono" style="font-size:.85rem">T_WB = 월드에서 본 몸체 · 몸체 프레임 = IMU · 카메라는 +z 광축/+x 오른쪽/+y 아래 ·
+    중력은 g_W = (0, 0, −9.81) · 쿼터니언은 Hamilton</span><br><br>
+    <strong>[인터페이스]</strong> 아래 헤더의 시그니처를 <strong>바꾸지 말고</strong>
+    EuRoC ASL 형식을 읽는 <span class="mono">EurocSource</span>를 구현해 줘.
+    <span class="mono" style="font-size:.85rem">(여기에 data_source.hpp 를 붙여 넣는다)</span><br><br>
+    <strong>[단위]</strong> 시각은 <span class="mono">int64_t</span> 나노초로만 다뤄 줘.
+    <strong>double 초로 바꾸지 말아 줘.</strong><br><br>
+    <strong>[검증]</strong> 아래 두 시험을 같이 써 줘.
+    ① 영상 한 장 사이의 IMU 샘플 수를 세어 <strong>10이 아니면 실패</strong>로 출력하는 시험.
+    ② 첫 영상보다 앞선 시각에서 <span class="mono">groundTruth()</span>가
+    <span class="mono">nullopt</span>를 주는지 보는 시험.
+    <strong>실패하면 어느 프레임에서 몇 개가 나왔는지 함께 찍어 줘.</strong><br><br>
+    <strong>[함정]</strong> 압축을 풀면 <span class="mono">__MACOSX/</span>와
+    <span class="mono">.DS_Store</span>가 섞여 있다. 정답 궤적은 첫 영상보다 <strong>1.040초 늦게</strong> 시작한다.<br><br>
+    <strong>[남긴다]</strong> 규약에 없어서 <strong>네가 임의로 정한 것</strong>이 있으면 코드 맨 위에 목록으로 적어 줘.
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 이 의뢰서에서 <strong>[검증] 칸이 절반</strong>입니다.
+    나머지 다섯 칸은 좋은 코드를 받기 위한 것이고, 이 칸은 <strong>받은 것을 판정하기 위한 것</strong>입니다.
+    다음 절이 그 칸을 자세히 봅니다.
+  </div>
+
+  <h3>[검증] 칸에 들어가는 네 줄 <span class="badge b-red">사람이 한다</span></h3>
+
+  <p>
+    코드를 받고 나서 「테스트도 짜 줘」라고 덧붙이는 것으로는 부족합니다.
+    그때 오는 것은 <strong>방금 짠 코드가 통과하도록 맞춰진 시험</strong>입니다.
+    그래서 <strong>무엇으로 판정할지를 코드보다 먼저</strong> 말합니다.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>무엇을 적나</th><th>위 의뢰서에서는</th></tr>
+    <tr><td><strong>어떤 시험을</strong></td><td>영상 사이 IMU 개수를 세는 시험</td></tr>
+    <tr><td><strong>어떤 입력으로</strong></td><td>V1_01_easy 전체 구간</td></tr>
+    <tr><td><strong>어떤 숫자를 넘으면 실패인지</strong> 🔴</td><td><strong>10이 아니면 실패</strong></td></tr>
+    <tr><td><strong>실패했을 때 무엇을 찍을지</strong></td><td>어느 프레임에서 몇 개가 나왔는지</td></tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 세 번째 줄이 이 과목이 갈리는 자리입니다.
+    통과 기준을 사람이 <strong>먼저 숫자로</strong> 정해 줍니다.
+    기준을 에이전트가 정하게 두면 <strong>「오차가 충분히 작습니다」</strong>가 돌아옵니다.
+    그게 <span class="mono">1e-6</span>인지 <span class="mono">1e-2</span>인지가 이 강의에서 갈리는 전부입니다.
+  </div>
+
+  <h3>받은 코드에서 확인할 것</h3>
+
+  <p>
+    의뢰서 옆에는 언제나 이 목록이 따라붙습니다. <strong>목록 없이 의뢰서만 있는 것은
+    코드를 그냥 붙여 넣는 것보다 나쁩니다</strong> — 읽지 않은 200줄이 프로젝트에 쌓이기 때문입니다.
+  </p>
+
+  <pre>□ 시각을 double 로 바꾼 곳이 정말 하나도 없는가        ← grep 한 번이면 된다
+□ 요구한 시험 두 개가 실제로 있는가, 그리고 <strong>돌려 봤는가</strong>
+□ 실패했을 때 프레임 번호가 찍히는가                    ← 안 찍히면 원인을 못 좁힌다
+□ __MACOSX/ 를 거른 코드가 어디 있는가
+□ 임의로 정한 것 목록이 맨 위에 있는가, 그중 <strong>내가 동의하지 않는 것</strong>이 있는가</pre>
+
+  <h3>틀렸을 때 하는 말은 따로 있습니다 <span class="badge b-stop">권하지 않는다</span></h3>
+
+  <p>
+    <strong>「고쳐 줘」는 이 과목에서 권하지 않는 문장입니다.</strong>
+    그렇게 말하면 에이전트는 <strong>증상이 사라질 때까지</strong> 코드를 바꿉니다.
+    증상은 없어지고 원인은 남는데, SLAM에서는 그 상태가 아주 오래 안 들킵니다.
   </p>
 
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
-    첨부한 <strong>좌표계 규약 문서</strong>를 먼저 읽고, 거기 적힌 표기와 부호 약속을 그대로 따라 줘.
-    규약에 없어서 네가 임의로 정한 것이 있으면 <strong>코드 위에 목록으로</strong> 적어 줘.
-  </div>
-
-  <div class="prompt">
-    <button onclick="copyPrompt(this)">복사</button>
-    이 함수를 짜면서 <strong>검증 테스트도 같이</strong> 써 줘.
-    해석적으로 구한 야코비안을 <strong>유한차분과 비교하는 테스트</strong>를 포함해 줘.
-  </div>
-
-  <div class="prompt">
-    <button onclick="copyPrompt(this)">복사</button>
-    잡음을 0으로 둔 합성 데이터에서 위치 오차가 0.34 m로 나온다.
+    영상 한 장 사이의 IMU 개수를 세는 시험이 <strong>2 137번 프레임에서 9개</strong>로 실패한다.
+    앞뒤 프레임은 10개다.<br>
     <strong>원인 후보를 세 개</strong> 대고, 각각을 확인할 수 있는 <strong>가장 작은 실험</strong>을 하나씩 제안해 줘.
     <strong>코드는 아직 고치지 말아 줘.</strong>
   </div>
 
-  <div class="prompt">
-    <button onclick="copyPrompt(this)">복사</button>
-    방금 준 코드에서 <strong>내가 눈으로 확인해야 할 곳</strong>을 다섯 개만 짚어 줘.
-    각각 어떤 값이 어떻게 나오면 맞는 건지 같이 알려 줘.
-  </div>
-
   <div class="interp">
-    <strong>해석:</strong> 세 번째가 이 강의에서 가장 자주 쓰게 되는 부탁입니다.
-    「고쳐 줘」라고 하면 에이전트는 대체로 <strong>증상이 사라질 때까지</strong> 코드를 바꾼다.
-    증상은 없어지고 원인은 남는데, SLAM에서는 그 상태가 꽤 오래 안 들킨다.
-    <strong>후보를 대게 하고 고르는 것은 사람이 하는 편</strong>이 결국 빠릅니다.
+    <strong>해석:</strong> 이것이 학기 내내 가장 자주 쓰게 되는 의뢰서입니다.
+    <strong>후보를 대게 하는 것은 에이전트, 고르는 것은 사람</strong>입니다.
+    고르려면 데이터를 알아야 하고, 데이터를 아는 쪽은 여러분입니다.
+    ⑤절에서 말한 「범인을 가르는 일」이 실제로는 이 모양을 하고 있습니다.
   </div>
 
   <h2 id="check">✅ 오늘의 점검</h2>
@@ -472,7 +579,8 @@
     <li><input type="checkbox" id="c3"><label for="c3">14회가 네 부로 어떻게 나뉘는지 말할 수 있다</label></li>
     <li><input type="checkbox" id="c4"><label for="c4">「SLAM에서 틀린 코드는 죽지 않는다」가 무슨 뜻인지 설명할 수 있다</label></li>
     <li><input type="checkbox" id="c5"><label for="c5">검증 사다리에서 3단이 무엇이고 왜 중요한지 말할 수 있다</label></li>
-    <li><input type="checkbox" id="c6"><label for="c6">AI 사용 규칙 한 문장을 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c6"><label for="c6">의뢰서 여섯 칸을 대고, 그중 [검증] 칸에 무엇을 적는지 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c8"><label for="c8">결과가 틀렸을 때 「고쳐 줘」 대신 무엇이라고 하는지 안다</label></li>
     <li><input type="checkbox" id="c7"><label for="c7">강의자료 주소를 즐겨찾기에 넣었다</label></li>
   </ul>
 

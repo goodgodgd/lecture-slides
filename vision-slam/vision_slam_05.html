@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>5회 · 에피폴라 기하와 삼각측량 | 3D Vision &amp; SLAM</title>
+<script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}})();</script>
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="assets/lecture.css">
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['$$','$$']]},
+  options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+<header class="bar">
+  <div class="barin wide">
+    <a class="up" href="index.html" aria-label="3D Vision &amp; SLAM 회차 목록"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a>
+    <nav class="crumb" aria-label="경로">
+      <a href="../index.html">강의자료</a><span class="sep">/</span><a href="index.html">3D Vision &amp; SLAM</a><span class="sep">/</span><span class="here">5회 · 에피폴라 기하와 삼각측량</span>
+    </nav>
+    <span class="spacer"></span>
+    <div class="seg" data-theme-switch role="group" aria-label="밝기">
+      <button type="button" data-mode="auto" aria-pressed="true">자동</button>
+      <button type="button" data-mode="light" aria-pressed="false">밝게</button>
+      <button type="button" data-mode="dark" aria-pressed="false">어둡게</button>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="toc-title">이 회차 목차</div>
+  <a href="#summary">한 장 요약 — 알 수 있는 것과 없는 것</a>
+  <a href="#constraint">① 대응점 하나가 주는 제약</a>
+  <a href="#essential">② Essential과 Fundamental</a>
+  <a href="#scale">③ 스케일 모호성 <span class="mono">🔴</span></a>
+  <a href="#tri">④ 삼각측량 — 두 직선의 교점</a>
+  <a href="#parallax">⑤ 시차 — 언제 잘 되고 언제 안 되나</a>
+  <a href="#prompt">🤖 의뢰서 — 두 시점 재구성</a>
+  <a href="#verify">🧪 맞는지 어떻게 아나 — 사다리 3단</a>
+  <a href="#draw">🎨 이 회차의 그림</a>
+  <a href="#check">✅ 오늘의 점검</a>
+  <a href="#more">조금 더 알아두면</a>
+</nav>
+
+<main>
+  <div class="lec-no mono">3D Vision &amp; SLAM · 5회 · 1부 3차원 기하</div>
+  <h1>에피폴라 기하와 삼각측량</h1>
+
+  <div class="questions">
+    <span class="lab">오늘 답할 질문</span>
+    <ol>
+      <li>두 영상에서 같은 점을 찾았다. 그것만으로 무엇을 알 수 있나?</li>
+      <li>삼각측량은 언제 잘 되고 언제 안 되나?</li>
+      <li><strong>단안 카메라가 끝내 알 수 없는 것</strong>은 무엇인가?</li>
+      <li>「매 프레임마다 삼각측량」이 왜 원리적으로 틀렸나?</li>
+    </ol>
+  </div>
+
+  <p>
+    4회 마지막에 이렇게 적었다 — <strong>픽셀 하나로는 3차원 점을 복원할 수 없다.</strong>
+    \(\mathbf{p}_C = Z K^{-1}\mathbf{u}\)에서 \(Z\)를 모르기 때문이다.
+    오늘은 <strong>영상을 한 장 더</strong> 가져온다. 그러면 무엇이 풀리고 무엇이 안 풀리는지가 오늘의 내용이다.
+  </p>
+
+  <p>
+    결론을 미리 말하면 <strong>거의 다 풀리고 하나가 안 풀린다.</strong>
+    그리고 그 하나가 이 강의에 IMU가 들어오는 이유다.
+  </p>
+
+  <h2 id="summary">한 장 요약 — 영상 두 장으로 알 수 있는 것과 없는 것 <span class="badge b-lv">학기 내내 본다</span></h2>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th style="width:30%">무엇</th><th>알 수 있나</th><th>왜</th></tr>
+    <tr><td>두 카메라의 <strong>상대 회전</strong> \(R\)</td><td><strong>안다</strong></td>
+      <td>대응점 다섯 쌍이면 결정된다</td></tr>
+    <tr><td>두 카메라의 <strong>이동 방향</strong> \(\mathbf{t}/\lVert\mathbf{t}\rVert\)</td><td><strong>안다</strong></td>
+      <td>같이 나온다</td></tr>
+    <tr><td>두 카메라 사이 <strong>거리</strong> \(\lVert\mathbf{t}\rVert\)</td><td><strong class="mono">모른다</strong></td>
+      <td>③절. <strong>영상만으로는 원리적으로 불가능하다</strong></td></tr>
+    <tr><td>3차원 점의 <strong>모양</strong> (점들의 상대 배치)</td><td><strong>안다</strong></td>
+      <td>④절 삼각측량</td></tr>
+    <tr><td>3차원 점까지의 <strong>실제 거리</strong></td><td><strong class="mono">모른다</strong></td>
+      <td>위와 같은 이유. <strong>모양은 맞고 배율만 모른다</strong></td></tr>
+    <tr><td>모양이 <strong>얼마나 정확한가</strong></td><td>계산할 수 있다</td>
+      <td>⑤절. <strong>기선이 짧으면 크게 흔들린다</strong></td></tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 「모른다」가 두 줄인데 <strong>사실은 같은 하나</strong>다.
+    거리를 모르니 점까지의 거리도 모른다. <strong>배율 하나가 통째로 빠져 있는 상태</strong>이고,
+    이것을 스케일 모호성이라고 한다. 그리고 마지막 줄이 오늘 시간을 가장 많이 쓰는 곳이다 —
+    <strong>모양조차 항상 잘 나오는 것은 아니다.</strong>
+  </div>
+
+  <h2 id="constraint">① 대응점 하나가 주는 제약</h2>
+
+  <p>
+    첫 영상의 픽셀 하나는 <strong>방향 하나</strong>를 정한다(4회 역투영).
+    그 방향 위 어디에 점이 있는지는 모른다. 그런데 두 번째 카메라의 위치를 안다면,
+    <strong>그 광선 위의 후보들이 두 번째 영상에서 어디에 찍힐지</strong>는 계산할 수 있다.
+  </p>
+
+  <figure>
+    <img src="assets/img/05_epipolar.png"
+         alt="두 카메라가 기선으로 이어져 있고, 첫 카메라에서 나온 하나의 광선 위에 여러 깊이 후보가 놓여 있다. 각 후보에서 두 번째 카메라로 가는 선들이 그려져 있다">
+    <figcaption>깊이 후보들이 두 번째 영상에서 <strong>한 직선 위에</strong> 찍힌다.
+      이 직선을 <strong>에피폴라 선</strong>이라고 한다. 대응점을 온 영상에서 찾을 필요가 없어진다는 뜻이고,
+      <strong>7회 매칭이 실제로 이 성질을 쓴다.</strong></figcaption>
+  </figure>
+
+  <p>이 사실을 식 한 줄로 적은 것이 에피폴라 제약이다.</p>
+
+  $$
+  \mathbf{x}_2^\top E\,\mathbf{x}_1 = 0, \qquad E = [\mathbf{t}]_\times R
+  $$
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 절에서 처음 나오는 이름</p>
+    <dl>
+      <dt>에피폴라 선 (epipolar line)</dt>
+      <dd>한 영상의 점 하나에 대응하는, 다른 영상에서의 <strong>직선</strong>.
+        <strong>여기서는 「대응점이 있을 수 있는 자리」를 한 줄로 줄이는 데 썼다.</strong></dd>
+      <dt>에피폴 (epipole)</dt>
+      <dd>기선이 영상과 만나는 점. <strong>모든 에피폴라 선이 여기서 만난다.</strong>
+        카메라가 정면으로 다가가면 에피폴이 영상 한가운데에 온다.</dd>
+      <dt>\(E\) — Essential 행렬 · \(F\) — Fundamental 행렬</dt>
+      <dd>\(E\)는 <strong>정규화 좌표</strong>에서의 제약(카메라 내부 파라미터를 이미 안다),
+        \(F\)는 <strong>픽셀 좌표</strong>에서의 제약이다. \(F = K^{-\top}EK^{-1}\)로 이어져 있다.
+        <strong>우리는 \(K\)를 알고 있으므로 \(E\)만 쓴다.</strong></dd>
+    </dl>
+  </div>
+
+  <p>
+    \(E\)는 3×3인데 자유도는 <strong>5</strong>다 — 회전 3, 이동 방향 2. 크기가 빠져 있다.
+    <strong>이 「5」가 오늘 전체의 핵심 숫자</strong>이고, 왜 크기가 빠지는지는 ③절에서 본다.
+  </p>
+
+  <h2 id="essential">② \(E\)에서 자세를 꺼낸다 <span class="badge b-green">맡긴다</span></h2>
+
+  <p>
+    대응점이 충분히 있으면 \(E\)를 풀 수 있다. 자유도가 5이므로 <strong>다섯 쌍이면 된다</strong>(5점 알고리즘).
+    제약을 일부 무시하고 선형으로 푸는 8점 알고리즘도 있고, 구현이 훨씬 쉽다.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th style="width:20%">방법</th><th>필요한 대응점</th><th>특징</th></tr>
+    <tr><td><strong>8점</strong></td><td>8쌍</td>
+      <td>선형이라 간단하다. 대신 \(E\)의 제약을 안 걸어서 <strong>SVD로 다시 눌러 줘야</strong> 한다</td></tr>
+    <tr><td><strong>5점</strong></td><td>5쌍</td>
+      <td>제약을 다 쓴다. <strong>RANSAC 안에서 훨씬 유리하다</strong> — 뽑을 점이 적을수록 성공 확률이 높다</td></tr>
+  </table>
+  </div>
+
+  <p>
+    실제 데이터에는 잘못 짝지어진 대응점이 섞여 있다. 그래서 <strong>RANSAC</strong>으로 감싼다 —
+    무작위로 최소 개수만 뽑아 풀어 보고, 그 답에 동의하는 점이 가장 많은 것을 고른다.
+    <strong>이 절의 계산은 OpenCV가 다 해 준다</strong>(<span class="mono">findEssentialMat</span>,
+    <span class="mono">recoverPose</span>). 여기는 🟢다.
+  </p>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 절에서 처음 나오는 이름</p>
+    <dl>
+      <dt>RANSAC (RANdom SAmple Consensus)</dt>
+      <dd>「최소 개수만 무작위로 뽑아 풀고, 그 답에 동의하는 점을 센다」를 여러 번 반복해
+        <strong>가장 많이 동의받은 답</strong>을 고르는 방식.
+        <strong>여기서는 잘못 짝지어진 대응점을 걸러 내는 데 썼다.</strong>
+        뽑는 개수가 적을수록 「전부 맞는 점일 확률」이 높아지므로 <strong>5점이 8점보다 유리하다.</strong></dd>
+      <dt>인라이어 (inlier) · 아웃라이어 (outlier)</dt>
+      <dd>답에 동의하는 점과 안 하는 점. 「동의한다」의 기준은 <strong>사람이 정하는 임계값</strong>이다 —
+        보통 에피폴라 선까지의 거리 몇 픽셀. <strong>7회에서 이 비율을 계기판으로 계속 본다.</strong></dd>
+      <dt>시차 (parallax)</dt>
+      <dd>한 점을 두 위치에서 볼 때 <strong>두 시선이 이루는 각도.</strong>
+        <strong>⑤절 전체가 이 값에 관한 이야기</strong>이고, 삼각측량이 될지 안 될지를 이 값으로 판정한다.</dd>
+    </dl>
+  </div>
+
+  <div class="box trap">
+    <p class="boxtitle">⚠️ \(E\)에서 나오는 자세는 <strong>네 개</strong>다</p>
+    <p style="margin:0">
+      \(E\)를 분해하면 \((R, \mathbf{t})\) 후보가 네 쌍 나온다. 회전 두 가지 × 이동 부호 두 가지다.
+      고르는 조건은 <strong>4회에 나온 \(Z &gt; 0\)</strong>이다 — 삼각측량한 점이
+      <strong>두 카메라 모두의 앞에</strong> 있어야 한다.
+      나머지 셋은 점이 카메라 뒤에 생긴다.
+      <span class="mono">recoverPose</span>가 이 판정까지 해 주지만,
+      <strong>「앞에 있는 점의 개수」를 직접 세어 보는 것</strong>이 좋은 검사가 된다.
+    </p>
+  </div>
+
+  <h2 id="scale">③ 스케일 모호성 — 이 강의의 분기점 <span class="badge b-red">사람이 한다</span></h2>
+
+  <p>
+    \(E = [\mathbf{t}]_\times R\)에서 \(\mathbf{t}\)를 두 배로 하면 \(E\)도 두 배가 된다.
+    그런데 제약식은 \(\mathbf{x}_2^\top E \mathbf{x}_1 = 0\)이다. <strong>오른쪽이 0이다.</strong>
+    양변에 2를 곱해도 식은 그대로 성립한다.
+  </p>
+
+  $$
+  \mathbf{x}_2^\top (\alpha E)\,\mathbf{x}_1 = \alpha \cdot 0 = 0 \qquad \text{어떤 } \alpha &gt; 0 \text{ 에 대해서도}
+  $$
+
+  <p>
+    <strong>그래서 \(E\)는 \(\mathbf{t}\)의 방향만 준다. 크기는 못 준다.</strong>
+    수식이 그렇게 생겼다는 것이 전부이고, 더 나은 알고리즘으로 해결될 성질의 것이 아니다.
+  </p>
+
+  <div class="box lab-block">
+    <p class="boxtitle">왜 원리적으로 불가능한가 — 생각 실험 하나</p>
+    <p style="margin:0">
+      방을 <strong>두 배로 키우고</strong> 카메라도 <strong>두 배로 멀리 움직였다</strong>고 하자.
+      모든 점의 3차원 좌표가 두 배가 되고 카메라 위치도 두 배가 된다.
+      그러면 \(X/Z\)는 그대로다. <strong>찍히는 영상이 완전히 같다.</strong>
+      <br><br>
+      영상이 같으면 어떤 알고리즘도 둘을 구별할 수 없다.
+      <strong>정보 자체가 영상에 없다.</strong>
+    </p>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 1회에서 「카메라만 쓰면 크기를 모른다」고 했던 것의 증명이 이 절이다.
+    그리고 <strong>이것을 깨는 것이 IMU</strong>다.
+    가속도계는 m/s²라는 <strong>절대 단위</strong>로 잰다.
+    같은 영상이라도 「두 배 큰 방을 두 배 빠르게」 지나갔다면 가속도가 다르게 찍힌다.
+    <strong>12회 초기화가 하는 일이 정확히 이것이다 — 영상이 준 모양에 IMU가 준 자를 대는 것.</strong>
+  </div>
+
+  <p>
+    당장은 배율을 하나 정해 두고 간다. 보통 <strong>\(\lVert\mathbf{t}\rVert = 1\)</strong>로 놓는다.
+    그러면 지도의 단위가 「첫 두 프레임 사이 거리」가 된다. 미터가 아니다.
+    <strong>이 사실을 잊고 미터인 것처럼 평가하면 ATE가 이유 없이 크게 나온다.</strong>
+  </p>
+
+  <h2 id="tri">④ 삼각측량 — 두 직선의 교점을 찾는다</h2>
+
+  <p>
+    자세를 알았으면 이제 점의 위치를 구한다.
+    각 영상의 픽셀은 <strong>3차원 방향</strong>이 되고, 카메라 원점에서 그 방향으로 나가는 <strong>직선</strong>이 된다.
+  </p>
+
+  $$
+  \mathbf{p}_1 = \mathbf{o}_1 + t_1\mathbf{v}_1, \qquad
+  \mathbf{p}_2 = \mathbf{o}_2 + t_2\mathbf{v}_2
+  $$
+
+  <p>
+    두 직선이 만나는 점이 답이다. 그런데 <strong>3차원에서 두 직선이 실제로 만날 확률은 0이다.</strong>
+    픽셀 좌표에 잡음이 조금만 있어도 어긋난다.
+    그래서 <strong>두 직선에 가장 가까운 점</strong>을 찾는 최소제곱 문제로 바꾼다.
+  </p>
+
+  $$
+  \mathbf{o}_1 + t_1\mathbf{v}_1 = \mathbf{o}_2 + t_2\mathbf{v}_2
+  \quad\Longrightarrow\quad
+  \begin{bmatrix} \mathbf{v}_1 &amp; -\mathbf{v}_2 \end{bmatrix}
+  \begin{bmatrix} t_1 \\ t_2 \end{bmatrix}
+  = \mathbf{o}_2 - \mathbf{o}_1
+  $$
+
+  $$
+  \begin{bmatrix} t_1 \\ t_2 \end{bmatrix} = V^{+}(\mathbf{o}_2 - \mathbf{o}_1),
+  \qquad V^{+} = (V^\top V)^{-1}V^\top
+  $$
+
+  <p>
+    \(t_1, t_2\)를 구해 두 점을 각각 계산하고 <strong>가운데를 답으로 삼는다.</strong> 중점법이다.
+    이름은 거창해도 하는 일은 2×2 연립방정식 하나다.
+  </p>
+
+  <div class="box trap">
+    <p class="boxtitle">⚠️ \(\mathbf{v}_1\)과 \(\mathbf{v}_2\)가 평행하면 풀 수 없다</p>
+    <p style="margin:0">
+      \(V^\top V\)가 특이해진다. 두 광선이 평행하다는 것은 <strong>두 카메라가 같은 자리에서 봤다</strong>는 뜻이고,
+      실제로 그런 경우가 자주 생긴다 — <strong>제자리에서 회전만 했을 때</strong>다.
+      기선이 0이면 삼각측량은 원리적으로 불가능하다.
+      <span class="mono">inverse()</span>가 <strong>에러를 내지 않고 거대한 숫자를 돌려주는 것</strong>이 이 자리의 위험이다.
+      <strong>조건수를 재서 미리 걸러야 한다.</strong>
+    </p>
+  </div>
+
+  <h2 id="parallax">⑤ 시차 — 언제 잘 되고 언제 안 되나 <span class="badge b-red">사람이 한다</span></h2>
+
+  <p>
+    ④절이 풀린다고 해서 답이 정확한 것은 아니다. <strong>얼마나 흔들리는지</strong>는 따로 계산해야 한다.
+    픽셀 잡음 \(\sigma_{px}\)가 깊이 오차로 얼마나 번지는지는 이 식으로 어림된다.
+  </p>
+
+  $$
+  \sigma_Z \;\approx\; \frac{Z^2\,\sigma_{px}}{f\,B}
+  $$
+
+  <p>
+    \(f = 458.65\) px(4회), \(\sigma_{px} = 1\) px로 두고 실제 숫자를 넣어 보면 이렇다.
+    <span class="mono">vision-slam/src/camera_numbers.py</span>가 계산한 값이다.
+  </p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>깊이 \(Z\)</th><th>기선 5 cm</th><th>10 cm</th><th>20 cm</th><th>40 cm</th></tr>
+    <tr><td>2 m</td><td>0.17 m</td><td>0.09 m</td><td>0.04 m</td><td>0.02 m</td></tr>
+    <tr><td><strong>3 m</strong></td><td><strong>0.39 m</strong></td><td>0.20 m</td><td><strong>0.10 m</strong></td><td>0.05 m</td></tr>
+    <tr><td>5 m</td><td>1.09 m</td><td>0.55 m</td><td>0.27 m</td><td>0.14 m</td></tr>
+  </table>
+  </div>
+
+  <figure>
+    <img src="assets/img/05_depth_sigma.png"
+         alt="깊이에 따른 깊이 표준편차 곡선 네 개. 기선 5·10·20·40cm에 대해 그려져 있고 깊이가 커질수록 제곱으로 커진다">
+    <figcaption><strong>깊이의 제곱으로 커지고, 기선에 반비례한다.</strong>
+      기선을 두 배로 늘리는 것과 깊이가 \(\sqrt2\)배 가까워지는 것이 같은 효과다.</figcaption>
+  </figure>
+
+  <p>
+    이제 이 방의 숫자를 넣어 본다. V1_01_easy의 평균 속도는 <strong>0.41 m/s</strong>이고
+    영상은 <strong>초당 20장</strong>이다. 연속한 두 프레임 사이 기선은 <strong>약 2 cm</strong>다.
+  </p>
+
+  <figure>
+    <img src="assets/img/05_triangulation_rays.png"
+         alt="두 장면 비교 그림. 왼쪽은 기선 5cm에서 두 카메라의 광선이 거의 평행하게 만나며 깊이 흔들림이 크고, 오른쪽은 기선 40cm에서 광선이 뚜렷한 각도로 만나며 흔들림이 작다">
+    <figcaption>같은 <strong>1 px</strong> 오차가 기선에 따라 깊이에서 얼마가 되는지.
+      왼쪽에서는 두 광선이 <strong>거의 평행</strong>해서 어디서 만나는지가 흐릿하다.</figcaption>
+  </figure>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>기선</th><th>시차 각도 (깊이 3 m)</th><th>\(\sigma_Z\)</th><th>그때까지 걸리는 시간</th></tr>
+    <tr><td><strong>2 cm</strong> (연속 두 프레임)</td><td><strong>0.38°</strong></td><td><strong>0.98 m</strong></td><td>0.05초</td></tr>
+    <tr><td>5 cm</td><td>0.95°</td><td>0.39 m</td><td>0.12초</td></tr>
+    <tr><td>10 cm</td><td>1.91°</td><td>0.20 m</td><td>0.24초</td></tr>
+    <tr><td><strong>20 cm</strong></td><td>3.82°</td><td><strong>0.10 m</strong></td><td><strong>0.49초 = 영상 10장</strong></td></tr>
+    <tr><td>40 cm</td><td>7.63°</td><td>0.05 m</td><td>0.98초</td></tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 첫 줄이 오늘의 결론이다.
+    <strong>연속한 두 프레임으로 삼각측량하면 깊이 3 m에서 오차가 1 m에 가깝다.</strong>
+    방이 5.8 m니까 <strong>방 크기의 6분의 1</strong>이 한 점의 오차로 들어온다는 뜻이다.
+    「매 프레임 삼각측량」은 게으른 구현이 아니라 <strong>원리적으로 틀린 구현</strong>이다.
+  </div>
+
+  <p>
+    그러면 어떻게 하나. <strong>시차가 쌓일 때까지 기다렸다가 만든다.</strong>
+    영상 열 장쯤 지나 기선이 20 cm가 되면 오차가 10 cm로 떨어진다.
+    <strong>이것이 키프레임이 필요한 이유</strong>이고, 14회의 키프레임 정책이 여기서 시작된다.
+  </p>
+
+  <div class="box stop">
+    <p class="boxtitle">⛔ 제자리 회전에서 새 점을 만드는 것</p>
+    <p style="margin:0">
+      기선이 0이면 시차도 0이고 삼각측량은 <strong>불가능하다.</strong> 정확도가 나쁜 게 아니라 아예 안 된다.
+      그런데 코드는 답을 하나 뱉는다 — 아주 먼 곳에 있는 점을.
+      <strong>V1_01_easy의 최대 각속도가 0.94 rad/s(54 °/s)다.</strong> 제자리 회전 구간이 실제로 있다.
+      <strong>시차를 재서 임계값 아래면 새 점을 만들지 않는 것</strong>이 옳은 처리다.
+      임계값을 얼마로 둘지는 위 표를 보고 <strong>사람이 정한다.</strong>
+    </p>
+  </div>
+
+  <h2 id="prompt">🤖 의뢰서 — 두 시점 재구성 <span class="badge b-yellow">맡기되 검사한다</span></h2>
+
+  <p>
+    \(E\)를 풀고 자세를 꺼내고 삼각측량하는 코드는 <strong>대부분 OpenCV 호출</strong>이다.
+    그래서 의뢰서를 싣는다. 다만 [검증] 칸에 <strong>사다리 3단</strong>을 처음으로 넣는다.
+  </p>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    <strong>[규약]</strong> 첨부한 <span class="mono">conventions.md</span>를 따라 줘.
+    자세는 <span class="mono">T_WC</span> 표기이고, 카메라는 <span class="mono">+z</span> 광축이다.<br><br>
+    <strong>[인터페이스]</strong> 아래 두 함수를 만들어 줘.<br>
+    ① <span class="mono">Sophus::SE3d recoverPose(const vector&lt;Vector2d&gt;&amp; uv1, const vector&lt;Vector2d&gt;&amp; uv2, vector&lt;bool&gt;&amp; inlier)</span><br>
+    ② <span class="mono">optional&lt;Vector3d&gt; triangulate(const SE3d&amp; T_WC1, const SE3d&amp; T_WC2, const Vector2d&amp; uv1, const Vector2d&amp; uv2)</span><br>
+    ②는 <strong>시차가 임계값 아래면 <span class="mono">nullopt</span></strong>을 돌려줘 — 값을 지어내지 말아 줘.<br><br>
+    <strong>[참조]</strong> OpenCV <span class="mono">findEssentialMat</span> + <span class="mono">recoverPose</span>를 쓰되,
+    <strong>삼각측량은 중점법으로 직접</strong> 짜 줘. 조건수를 보고 판정해야 하기 때문이다.<br><br>
+    <strong>[검증]</strong> 아래 시험을 같이 써 줘. <strong>기준을 넘으면 실패로 출력한다.</strong><br>
+    ① <strong>무잡음 합성 데이터</strong>로 — 3차원 점 100개와 카메라 두 대를 직접 만들고,
+    정확한 픽셀 좌표를 계산해 넣는다. <strong>재구성 오차 <span class="mono">&lt; 1e-8</span></strong><br>
+    ② 같은 데이터에서 회전 오차 <span class="mono">&lt; 1e-8</span> rad, 이동 <strong>방향</strong> 오차 <span class="mono">&lt; 1e-8</span> rad
+    (<strong>크기는 비교하지 말아 줘</strong> — 원리적으로 모른다)<br>
+    ③ 두 카메라를 <strong>같은 위치</strong>에 두고 회전만 시켰을 때 <span class="mono">triangulate</span>가
+    <strong>전부 <span class="mono">nullopt</span></strong>을 돌려주는가<br>
+    ④ 픽셀에 <span class="mono">σ = 1 px</span> 잡음을 넣었을 때 깊이 3 m·기선 20 cm에서
+    <strong>오차가 0.10 m 근처</strong>인가 (표와 대조)<br>
+    <strong>실패하면 어느 점에서 얼마나 벌어졌는지 함께 찍어 줘.</strong><br><br>
+    <strong>[함정]</strong> <span class="mono">findEssentialMat</span>은 <strong>정규화 좌표</strong>를 받는다 —
+    왜곡을 먼저 풀어야 한다(4회). \(E\)에서 나오는 자세 후보는 <strong>네 개</strong>이고
+    \(Z &gt; 0\)으로 고른다. <span class="mono">recoverPose</span>가 돌려주는 것이
+    <span class="mono">T_C1C2</span>인지 <span class="mono">T_C2C1</span>인지 <strong>문서에서 확인하고 주석에 적어 줘.</strong><br><br>
+    <strong>[남긴다]</strong> 시차 임계값을 얼마로 정했고 <strong>왜 그 값인지</strong> 코드 위에 적어 줘.
+  </div>
+
+  <p class="readme-first">받은 코드에서 확인할 것</p>
+
+  <pre>□ 시험 ①이 <strong>정말 무잡음</strong>인가 — 합성 픽셀에 반올림이 섞이지 않았는가
+□ 이동 <strong>크기</strong>를 비교하는 시험이 있는가            ← 있으면 잘못된 시험이다
+□ 시차 임계값이 <strong>어디서 왔는지</strong> 적혀 있는가
+□ recoverPose 의 방향(T_C1C2 인가)이 주석에 적혀 있는가
+□ 시험 ③이 nullopt 를 <strong>실제로</strong> 확인하는가, 값이 크다는 것만 보는가</pre>
+
+  <p>그리고 결과가 이상할 때.</p>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    무잡음 합성 데이터에서 <strong>재구성 오차가 0.34</strong>로 나온다. 잡음은 넣지 않았다.
+    회전 오차는 <span class="mono">1e-9</span>로 통과하고, <strong>이동 방향 오차도 통과</strong>한다.
+    삼각측량한 점들의 <strong>모양은 맞는데 전체가 한 배율로 커져</strong> 있다.<br>
+    <strong>원인 후보를 세 개</strong> 대고, 각각을 확인할 <strong>가장 작은 실험</strong>을 하나씩 제안해 줘.
+    <strong>코드는 아직 고치지 말아 줘.</strong>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 이 증상은 오늘 배운 것 안에 답이 있다.
+    <strong>「모양은 맞는데 배율만 다르다」는 버그가 아닐 수 있다.</strong>
+    \(\lVert\mathbf{t}\rVert = 1\)로 정규화된 답과 정답을 그냥 비교하면 이렇게 나온다.
+    <strong>시험이 틀린 것</strong>이다. 이런 경우를 한 번 겪어 두는 것이 오늘의 목적 중 하나다 —
+    <strong>코드가 아니라 판정 기준을 의심해야 하는 때</strong>가 있다.
+  </div>
+
+  <h2 id="verify">🧪 오늘 만든 것이 맞는지 어떻게 아나 — 사다리 3단 <span class="badge b-red">사람이 한다</span></h2>
+
+  <p>
+    오늘 <strong>검증 사다리 3단(무잡음 합성 데이터)</strong>을 처음 쓴다.
+    그리고 이 단이 학기 내내 가장 많이 쓰이는 단이 된다.
+  </p>
+
+  <p>
+    방법은 단순하다. <strong>정답을 아는 데이터를 직접 만든다.</strong>
+    3차원 점을 원하는 대로 뿌리고, 카메라 두 대를 원하는 자세로 놓고,
+    4회의 투영 함수로 <strong>정확한 픽셀 좌표를 계산</strong>한다. 잡음은 0이다.
+  </p>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    <strong>[할 일]</strong> 무잡음 합성 데이터 생성기를 만들어 줘.
+    3차원 점 <span class="mono">N</span>개를 상자 표면에 뿌리고, 카메라 두 대를 주어진 자세로 놓고,
+    <strong>4회의 투영 함수를 그대로 써서</strong> 픽셀 좌표를 만든다.<br><br>
+    <strong>[인터페이스]</strong> 잡음 표준편차와 기선 길이를 <strong>인자로 받게</strong> 해 줘.
+    <span class="mono">sigma_px = 0</span>이 <strong>기본값</strong>이어야 한다.<br><br>
+    <strong>[검증]</strong> 생성기 자체를 시험하는 코드도 같이 써 줘.<br>
+    ① <span class="mono">sigma_px = 0</span>일 때, 만든 픽셀을 다시 역투영해 광선을 만들면
+    <strong>원래 3차원 점을 정확히 지나는가</strong> — 점과 광선의 거리 <span class="mono">&lt; 1e-12</span><br>
+    ② 화면 밖으로 나가거나 <span class="mono">Z &lt;= 0</span>인 점이 <strong>결과에 섞이지 않는가</strong><br>
+    ③ 요청한 기선 길이가 <strong>실제로 그 값인가</strong> — <span class="mono">1e-12</span><br><br>
+    <strong>[함정]</strong> 픽셀 좌표를 <strong>정수로 반올림하지 말아 줘.</strong>
+    반올림하는 순간 「무잡음」이 아니게 되고, 3단 시험의 기준 <span class="mono">1e-8</span>을 절대 통과할 수 없다.<br><br>
+    <strong>[남긴다]</strong> 점을 어떤 모양으로 뿌렸는지, 왜 그렇게 골랐는지 적어 줘.
+  </div>
+
+  <p class="readme-first">받은 코드에서 확인할 것 — <strong>생성기가 틀리면 모든 3단 시험이 무의미해진다.</strong></p>
+
+  <pre>□ 픽셀 좌표가 <strong>실수</strong>인가, 정수로 반올림됐는가
+□ 투영에 <strong>4회에 만든 함수를 그대로</strong> 썼는가, 새로 짰는가   ← 새로 짰으면 두 벌이 된다
+□ 잡음 기본값이 0 인가
+□ 시험 ①이 <strong>1e-12</strong> 로 통과하는가
+□ 점을 뿌린 모양이 <strong>한 평면에 몰려 있지 않은가</strong>        ← 평면이면 E 가 잘 안 풀린다</pre>
+
+  <div class="interp">
+    <strong>해석:</strong> 마지막 항목이 함정이다. 점을 벽 하나에만 뿌리면
+    <strong>장면이 평면</strong>이 되고, 그러면 \(E\)를 푸는 문제가 <strong>퇴화한다</strong> —
+    답이 하나로 정해지지 않는다. 「합성 데이터에서만 이상하다」의 흔한 원인이고,
+    <strong>합성 데이터를 만드는 것도 설계라는 것</strong>을 보여 주는 자리다.
+  </div>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th style="width:8%">단</th><th>시험</th><th>통과 기준</th><th>여기서 걸리는 것</th></tr>
+    <tr><td>1</td><td>\(\mathbf{x}_2^\top E \mathbf{x}_1 = 0\)이 정답 대응점에서 성립하는가</td>
+      <td><span class="mono">&lt; 1e-12</span></td><td>\(E\)의 정의, 좌표계 방향</td></tr>
+    <tr><td><strong>3</strong></td><td><strong>무잡음 합성에서 재구성 오차</strong></td>
+      <td><strong><span class="mono">&lt; 1e-8</span></strong></td>
+      <td>좌표계 규약 위반, 왜곡 처리 누락</td></tr>
+    <tr><td>3</td><td>무잡음에서 회전·이동 <strong>방향</strong> 오차</td>
+      <td><span class="mono">&lt; 1e-8</span> rad</td><td>\(T_{C_1C_2}\)와 \(T_{C_2C_1}\) 혼동</td></tr>
+    <tr><td>3</td><td>기선 0(제자리 회전)에서 삼각측량이 <strong>거부되는가</strong></td>
+      <td>전부 <span class="mono">nullopt</span></td><td>조건수 검사 누락</td></tr>
+    <tr><td>5</td><td>잡음 1 px에서 깊이 오차가 ⑤절 표와 맞는가</td>
+      <td>0.10 m 근처 (3 m·20 cm)</td><td>모델과 구현이 다르다</td></tr>
+  </table>
+  </div>
+
+  <div class="box stop">
+    <p class="boxtitle">⛔ 3단에서 오차가 0이 아닐 때 계수를 만지는 것</p>
+    <p style="margin:0">
+      잡음이 0인 데이터다. <strong>정답이 있고, 그 정답이 정확히 나와야 한다.</strong>
+      오차가 <span class="mono">1e-8</span>보다 크면 <strong>튜닝할 문제가 아니라 버그다.</strong>
+      RANSAC 임계값이나 반복 횟수를 바꿔서 숫자가 좋아졌다면,
+      <strong>증상만 가려졌고 원인은 그대로 남아 있다.</strong>
+      실제 데이터로 넘어간 뒤에는 그 원인을 찾기가 훨씬 어려워진다.
+    </p>
+  </div>
+
+  <h2 id="draw">🎨 이 회차의 그림 <span class="badge b-green">맡긴다</span></h2>
+
+  <p>
+    <strong>두 카메라의 시야뿔 + 각 점으로 가는 광선 + 두 광선이 이루는 시차 각도.</strong>
+    기선을 2 cm에서 40 cm까지 늘려 가며 <strong>광선이 만나는 지점의 흔들림</strong>을 같이 그린다.
+    ⑤절의 그림이 그것이다.
+  </p>
+
+  <p>
+    <strong>이 그림으로 판정하는 것:</strong> ⑤절 표의 숫자와 그림의 흔들림 폭이 맞는가.
+    맞으면 「기선이 짧으면 깊이가 흔들린다」가 <strong>식과 그림 양쪽에서 확인된 것</strong>이다.
+    학기 중에 삼각측량이 이상할 때 <strong>제일 먼저 여는 그림</strong>이 된다.
+  </p>
+
+  <h2 id="check">✅ 오늘의 점검</h2>
+  <ul class="check">
+    <li><input type="checkbox" id="c1"><label for="c1">에피폴라 제약이 무엇을 줄여 주는지 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c2"><label for="c2">\(E\)의 자유도가 5인 이유를 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c3"><label for="c3">스케일을 모르는 이유를 <strong>식으로</strong> 설명할 수 있다</label></li>
+    <li><input type="checkbox" id="c4"><label for="c4">\(E\)에서 나오는 네 개의 해 중 하나를 고르는 조건을 안다</label></li>
+    <li><input type="checkbox" id="c5"><label for="c5">연속한 두 프레임으로 삼각측량하면 안 되는 이유를 <strong>숫자로</strong> 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c6"><label for="c6">제자리 회전에서 무엇을 하지 말아야 하는지 안다</label></li>
+    <li><input type="checkbox" id="c7"><label for="c7">무잡음 합성 데이터를 직접 만들어 3단 시험을 돌렸다</label></li>
+    <li><input type="checkbox" id="c8"><label for="c8">3단에서 오차가 크면 왜 튜닝하면 안 되는지 설명할 수 있다</label></li>
+  </ul>
+
+  <h2 id="more">조금 더 알아두면 <span class="badge b-lv">시험 범위 아님</span></h2>
+
+  <details class="story">
+    <summary>중점법 말고 DLT — 그리고 왜 둘 다 알아 둘 만한가</summary>
+    <p>
+      ④절의 중점법은 <strong>3차원 공간에서</strong> 두 직선의 거리를 최소화한다.
+      직관적이고 코드가 짧다. 단점은 <strong>최소화하는 양이 우리가 실제로 재는 값이 아니라는 것</strong>이다 —
+      우리가 재는 것은 픽셀이지 3차원 거리가 아니다.
+    </p>
+    <p>
+      DLT(Direct Linear Transform)는 투영식 \(\mathbf{u} \times (P\mathbf{X}) = 0\)을 그대로 선형 연립방정식으로 만들고
+      SVD로 푼다. 역시 픽셀 오차를 직접 최소화하지는 않지만,
+      <strong>여러 시점을 한꺼번에 넣기 쉽다.</strong> 세 장, 네 장으로 늘려도 행이 늘어날 뿐이다.
+    </p>
+    <p>
+      <strong>둘 다 최적해는 아니다.</strong> 진짜로 픽셀 오차를 최소화하려면 비선형 최적화가 필요하고,
+      그게 9회의 번들조정이다. <strong>여기서는 좋은 초기값을 만드는 것이 목적</strong>이므로 어느 쪽이든 된다.
+      <strong>초기값을 만드는 방법과 다듬는 방법이 다르다</strong>는 것이 이 강의에서 반복해서 나오는 구조다.
+    </p>
+  </details>
+
+  <details class="story">
+    <summary>순수 회전에서는 \(E\) 대신 무엇을 쓰나 — homography</summary>
+    <p>
+      기선이 0이면 \(E\)를 풀 수 없다(④절). 그런데 이때도 두 영상 사이에는 관계가 있다 —
+      <strong>회전만으로 이어지는 관계</strong>다. 이것은 3×3 행렬 하나로 표현되고 homography라고 부른다.
+      장면이 평면일 때도 같은 형태가 나온다.
+    </p>
+    <p>
+      실제 SLAM 시스템은 <strong>둘을 같이 풀어 보고 더 잘 맞는 쪽을 고른다.</strong>
+      ORB-SLAM의 초기화가 그렇게 되어 있다 — \(E\)와 homography를 둘 다 풀고 점수를 비교한다.
+      <strong>「지금 상황이 삼각측량이 가능한 상황인가」를 시스템이 스스로 판단하게 만드는 것</strong>이고,
+      ⑤절에서 시차 임계값으로 하는 일의 더 정교한 판이다.
+    </p>
+    <p>
+      이 강의에서는 homography를 구현하지 않는다. 대신 <strong>시차가 부족하면 새 점을 만들지 않는</strong> 쪽으로 처리한다.
+      IMU가 있으므로 그 구간의 자세는 IMU가 이어 준다 — <strong>이것이 시각-관성 시스템의 값어치</strong>이기도 하다.
+    </p>
+  </details>
+
+  <details class="story">
+    <summary>1부가 여기서 끝난다 — 무엇이 손에 남았나</summary>
+    <p>
+      다섯 회차 동안 만든 것을 세어 보면 이렇다.
+    </p>
+    <div class="tablewrap">
+    <table>
+      <tr><th>회</th><th>손에 남은 것</th><th>어느 시험을 통과했나</th></tr>
+      <tr><td>1~2</td><td>데이터셋 로더, <span class="mono">conventions.md</span></td><td>1단 항등식</td></tr>
+      <tr><td>3</td><td>회전 유틸과 <strong>수치 야코비안 대조 도구</strong></td><td>2단</td></tr>
+      <tr><td>4</td><td>카메라 모델, 점군 오버레이</td><td>1·2·4단</td></tr>
+      <tr><td>5</td><td>두 시점 재구성, <strong>무잡음 합성 데이터 생성</strong></td><td>3단</td></tr>
+    </table>
+    </div>
+    <p>
+      굵게 표시한 둘이 <strong>도구</strong>다. 이 강의에서 만드는 것 중
+      <strong>다른 모든 모듈을 검사하는 데 쓰이는 것</strong>이고, 학기 끝까지 계속 부른다.
+      9회의 번들조정도, 11회의 필터도, 12회의 사전적분도 <strong>이 둘로 검사한다.</strong>
+    </p>
+    <p>
+      2부는 실제 영상에서 대응점을 뽑는 이야기로 시작한다.
+      그전에 6회에서 <strong>SLAM이라는 분야가 30년 동안 어떻게 여기까지 왔는지</strong>를 한 번 펼쳐 본다.
+      지금까지 만든 것들이 그 지도의 어디쯤에 있는지가 그때 보인다.
+    </p>
+  </details>
+
+  <footer>
+    3D Vision &amp; SLAM · 5회 · <a href="index.html">회차 목록으로</a>
+  </footer>
+</main>
+
+</div>
+<script src="../assets/site.js" defer></script>
+</body>
+</html>
