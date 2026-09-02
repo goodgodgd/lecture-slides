@@ -30,12 +30,14 @@
   <a href="#info">강의 정보</a>
   <a href="#what">① 무엇을 만드나</a>
   <a href="#why">② 왜 카메라와 IMU를 같이 쓰나</a>
-  <a href="#map">③ 14회의 지도</a>
-  <a href="#classic">④ 왜 고전 SLAM인가</a>
-  <a href="#ai">⑤ 코드를 맡기면 무엇이 남나</a>
+  <a href="#data">③ EuRoC 한 줄 읽기</a>
+  <a href="#map">④ 14회의 지도</a>
+  <a href="#classic">⑤ 왜 고전 SLAM인가</a>
+  <a href="#ai">⑥ 코드를 맡기면 무엇이 남나</a>
   <a href="#ai" class="sub">신호등 · 코드와 프롬프트</a>
-  <a href="#verify">⑥ 맞는지 어떻게 아나</a>
-  <a href="#see">⑦ 눈으로 본다 — 시각화</a>
+  <a href="#verify">⑦ 맞는지 어떻게 아나</a>
+  <a href="#see">⑧ 눈으로 본다 — 시각화</a>
+  <a href="#env">⑨ 환경과 데이터</a>
   <a href="#prompts">🤖 의뢰서 여섯 칸</a>
   <a href="#prompts" class="sub">검증을 프롬프트 안에 넣는다</a>
   <a href="#prompts" class="sub">틀렸을 때 하는 말</a>
@@ -125,10 +127,42 @@
     <p class="later">이 이름들은 뒤 회차에서 하나씩 다시 나옵니다. 지금은 대충 감만 잡아 두면 됩니다.</p>
   </div>
 
+  <h3>안에 무엇이 들어가나 — 여섯 덩이</h3>
+
+  <p>
+    한 번에 통째로 만들지 않는다. <strong>덩이를 하나씩 만들고, 매번 「이제 이건 돌아간다」를 하나씩 늘린다.</strong>
+    아래가 학기 끝에 손에 남을 구조다.
+  </p>
+
+  <pre>영상 · IMU  →  ① 데이터 소스  →  ② 특징 추적  ─┐
+                                                 ├→  ④ 백엔드  →  ⑤ 루프 클로징  →  궤적 · 지도
+                    ③ IMU 사전적분  ─────────────┘
+                                        ⑥ 평가 (ATE · 일관성)</pre>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th style="width:8%">덩이</th><th>하는 일</th><th>언제 만드나</th></tr>
+    <tr><td>①</td><td><strong>데이터 소스</strong> — 파일을 읽어 영상과 IMU를 시각 맞춰 내놓는다</td><td>1~2회</td></tr>
+    <tr><td>②</td><td><strong>특징 추적</strong> — 영상에서 「무엇이 무엇과 같은 점인가」를 뽑는다</td><td>5·7회</td></tr>
+    <tr><td>③</td><td><strong>IMU 사전적분</strong> — 영상 사이의 IMU를 하나로 묶는다</td><td>10·12회</td></tr>
+    <tr><td>④</td><td><strong>백엔드</strong> — 관측을 모아 위치와 지도를 푼다. <strong>두 벌 만든다</strong></td><td>11·13회</td></tr>
+    <tr><td>⑤</td><td><strong>루프 클로징</strong> — 예전에 온 곳을 알아보고 과거를 고친다</td><td>14회</td></tr>
+    <tr><td>⑥</td><td><strong>평가</strong> — 얼마나 맞는지 숫자로 낸다</td><td>내내</td></tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> ④번이 <strong>두 벌</strong>인 것에 주목한다.
+    필터로 한 번 완주하고, 최적화로 다시 만든다.
+    프론트엔드는 그대로 두고 <strong>백엔드만 갈아 끼워 같은 데이터에서 숫자를 비교</strong>하기 위해서다.
+    <strong>그러려면 처음부터 갈아 끼워지도록 설계돼 있어야 한다</strong> —
+    이것이 이 강의가 「설계」에 시간을 쓰는 이유이고, 2회에서 바로 시작한다.
+  </div>
+
   <p>
     쓰는 데이터는 <strong>EuRoC</strong>다. 취리히 공대에서 드론에 카메라와 IMU를 달고 실내를 날린 기록이고,
     <strong>모션캡처 장비로 잰 정답 궤적이 같이 들어 있다.</strong>
-    정답이 있다는 것이 이 강의에서 아주 중요해진다 — ⑥절에서 다시 나온다.
+    정답이 있다는 것이 이 강의에서 아주 중요해진다 — ⑦절에서 다시 나온다.
   </p>
 
   <div class="tablewrap">
@@ -202,7 +236,119 @@
     </p>
   </div>
 
-  <h2 id="map">③ 14회의 지도 <span class="badge b-lv">전체 그림</span></h2>
+  <h2 id="data">③ EuRoC 한 줄 읽기 — 이 데이터가 무엇을 주나</h2>
+
+  <p>
+    학기 내내 이 데이터 하나를 본다. 그러니 <strong>어떻게 생겼는지</strong>부터 알아 둔다.
+    압축을 풀면 센서마다 폴더가 하나씩 있고, 각 폴더에 <strong>측정값 CSV와 사양 YAML</strong>이 들어 있다.
+  </p>
+
+  <pre>mav0/
+├── cam0/   data/*.png (2912장) · data.csv · sensor.yaml     ← 우리가 쓰는 카메라
+├── cam1/   data/*.png (2912장) · data.csv · sensor.yaml     ← 오른쪽 카메라. 안 쓴다
+├── imu0/   data.csv (29 120줄) · sensor.yaml
+├── vicon0/ data.csv · sensor.yaml                           ← 모션캡처 원시 측정
+├── state_groundtruth_estimate0/                             ← <strong>이게 정답이다</strong>
+│        data.csv (28 712줄) · sensor.yaml
+├── pointcloud0/ data.ply (111.8 MB) · sensor.yaml           ← Leica 레이저 스캔
+└── body.yaml</pre>
+
+  <div class="interp">
+    <strong>해석:</strong> 눈여겨볼 것은 <strong>정답이 여러 겹</strong>이라는 점이다.
+    궤적의 정답이 있고(<span class="mono">state_groundtruth_estimate0</span>),
+    <strong>지도의 정답</strong>도 있다(<span class="mono">pointcloud0</span>).
+    ⑦절에서 나올 「어느 모듈이 범인인지 가르는 일」이 가능한 것은 이 구조 덕분이다.
+  </div>
+
+  <h3>IMU의 첫 줄 — 이 한 줄이 10회의 절반이다</h3>
+
+  <p><span class="mono">imu0/data.csv</span>의 첫 줄은 이렇게 생겼다.</p>
+
+  <pre>1403715273262142976, -0.00209, 0.01745, 0.07749,  9.08750, 0.13076, -3.69384
+└───── 시각(ns) ─────┘ └── 각속도 rad/s ──┘ └──── 가속도 m/s² ────┘</pre>
+
+  <p>
+    기체는 <strong>아직 멈춰 있다.</strong> 그런데 세 숫자 모두 0이 아니다.
+    <strong>왜 그런지가 이 강의의 3부 전체</strong>이고, 지금은 세 가지만 짚어 둔다.
+  </p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th style="width:26%">보이는 것</th><th>무슨 뜻인가</th><th>어디서 다시 나오나</th></tr>
+    <tr><td>가속도 세 성분의 크기가 <strong>9.8183 m/s²</strong></td>
+      <td>멈춰 있는데 값이 있다. <strong>가속도계는 중력을 재고 있다.</strong>
+        「가속도」가 아니라 <strong>비력(specific force)</strong>을 잰다는 뜻이다</td>
+      <td><strong>10회</strong> IMU 측정 모델</td></tr>
+    <tr><td>자이로 z가 <strong>0.077 rad/s</strong></td>
+      <td>안 돌고 있는데 0이 아니다. <strong>이것이 바이어스다.</strong>
+        1분이면 263°가 돌아간 것으로 계산된다</td>
+      <td><strong>10~12회</strong> 바이어스 추정</td></tr>
+    <tr><td>시각이 <strong>19자리 정수</strong></td>
+      <td>단위가 나노초다. <span class="mono">double</span>에 넣으면 뒤가 잘린다</td>
+      <td><strong>2회</strong> 시각 규약</td></tr>
+  </table>
+  </div>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 줄에서 처음 나오는 이름</p>
+    <dl>
+      <dt>비력 (specific force)</dt>
+      <dd>가속도계가 <strong>실제로 재는 값</strong>이다. 「가속도」가 아니라
+        <strong>「가속도에서 중력을 뺀 것」을 몸체 좌표계에서 본 것</strong>이다.
+        그래서 <strong>가만히 있으면 위쪽으로 9.8이 찍히고, 자유낙하하면 0이 찍힌다.</strong>
+        <strong>여기서는 멈춘 기체에서 왜 값이 0이 아닌지를 설명하는 데 썼다.</strong></dd>
+      <dt>바이어스 (bias)</dt>
+      <dd>센서가 <strong>0이어야 할 때 내놓는 값</strong>. 온도와 시간에 따라 천천히 변한다.
+        <strong>없앨 수 없으므로 「보정한다」가 아니라 「같이 추정한다」</strong>가 이 강의의 방식이다.</dd>
+      <dt>정답 (ground truth, GT)</dt>
+      <dd>모션캡처처럼 <strong>훨씬 정확한 다른 장비로 잰 값.</strong> 우리 추정과 비교할 기준이 된다.
+        <strong>완벽한 참값이 아니라 「훨씬 나은 값」</strong>이라는 것만 알아 둔다.</dd>
+    </dl>
+    <p class="later">셋 다 10회에서 식으로 제대로 다룹니다. 지금은 이름만 익혀 두면 됩니다.</p>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 두 번째 줄이 이 강의의 논지와 이어진다.
+    ②절의 표에서 「바이어스를 모르면 10초에 121 m」였다.
+    <strong>그 바이어스가 바로 이 0.077이라는 숫자</strong>다.
+    보이지도 않고 크지도 않은 값 하나가 <strong>10초 만에 방을 스무 번 벗어나게 만든다.</strong>
+  </div>
+
+  <h3>정답에 무엇이 들어 있나 — 자세만이 아니다</h3>
+
+  <p><span class="mono">state_groundtruth_estimate0/data.csv</span>의 열은 17개다.</p>
+
+  <pre>timestamp, p_RS_R_{x,y,z}, q_RS_{w,x,y,z}, v_RS_R_{x,y,z},
+b_w_RS_S_{x,y,z}, b_a_RS_S_{x,y,z}</pre>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th style="width:22%">들어 있는 것</th><th>이 강의에서 무엇에 쓰나</th></tr>
+    <tr><td>위치와 자세</td><td>궤적 오차(ATE) 평가. <strong>4회</strong> 점군 오버레이</td></tr>
+    <tr><td><strong>속도</strong></td><td><strong>11~12회.</strong> 필터 상태에 속도가 들어가는데, 그 정답을 알 수 있다</td></tr>
+    <tr><td><strong>IMU 바이어스</strong></td><td><strong>10·12회.</strong> 「바이어스를 정답으로 넣으면 어떻게 되나」가 가능해진다</td></tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 아래 두 줄이 <strong>이 데이터셋을 고른 결정적인 이유</strong>다.
+    보통의 데이터셋은 자세만 준다. 그러면 결과가 틀렸을 때
+    <strong>「어딘가 틀렸다」까지만 알 수 있다.</strong>
+    속도와 바이어스의 정답이 있으면 <strong>「속도 추정은 맞는데 바이어스가 틀렸다」</strong>까지 갈 수 있고,
+    그것이 ⑦절 4단(정답 부분 주입)이 하는 일이다.
+  </div>
+
+  <div class="box trap">
+    <p class="boxtitle">⚠️ 정답이 데이터 전체를 덮지 않는다</p>
+    <p style="margin:0">
+      정답 궤적은 첫 영상보다 <strong>1.040초 늦게 시작</strong>하고,
+      마지막 영상보다 <strong>0.955초 일찍 끝난다.</strong>
+      그 구간을 정답이 있는 것처럼 다루면 <strong>첫 프레임부터 아무것도 안 맞는다.</strong>
+      <strong>이번 주 과제(로더)의 함정이 정확히 이것이다.</strong>
+    </p>
+  </div>
+
+  <h2 id="map">④ 14회의 지도 <span class="badge b-lv">전체 그림</span></h2>
 
   <p>
     14회를 네 부로 나눠 두었다. 앞의 두 부는 <strong>영상에서 3차원을 꺼내는 법</strong>이고,
@@ -234,10 +380,10 @@
     <strong>해석:</strong> 1부가 다섯 회로 가장 길다. 좌표계와 회전에 그만큼 시간을 쓰는 이유가 있다 —
     이 부분이 틀리면 뒤가 전부 흔들리는데, <strong>틀려도 프로그램은 죽지 않기 때문이다.</strong>
     궤적은 여전히 그럴듯한 곡선으로 나오고, 숫자만 조용히 틀려 있다.
-    이 과목에서 가장 자주 겪게 되는 상황이고, ⑥절이 그것을 다룬다.
+    이 과목에서 가장 자주 겪게 되는 상황이고, ⑦절이 그것을 다룬다.
   </div>
 
-  <h2 id="classic">④ 왜 고전 SLAM인가</h2>
+  <h2 id="classic">⑤ 왜 고전 SLAM인가</h2>
 
   <p>
     요즘 3차원 쪽에서 화제가 되는 것은 NeRF나 3D Gaussian Splatting 같은 이름들이다.
@@ -278,7 +424,7 @@
     <strong>6회에서 한 번에 정리합니다.</strong> 지금은 「고전을 만들지만 최신과 끊겨 있지는 않다」 정도로 두면 됩니다.
   </p>
 
-  <h2 id="ai">⑤ 코드를 맡기면 무엇이 남나 <span class="badge b-red">사람이 한다</span></h2>
+  <h2 id="ai">⑥ 코드를 맡기면 무엇이 남나 <span class="badge b-red">사람이 한다</span></h2>
 
   <p>
     SLAM 코드는 에이전트가 꽤 잘 짜 준다. 빌드되고, 돌아가고, 궤적을 뱉는다.
@@ -341,7 +487,7 @@
 
   <p class="readme-first">의뢰서를 어떻게 쓰는지는 아래 🤖절에서 여섯 칸으로 정리합니다.</p>
 
-  <h2 id="verify">⑥ 맞는지 어떻게 아나 <span class="badge b-red">사람이 한다</span></h2>
+  <h2 id="verify">⑦ 맞는지 어떻게 아나 <span class="badge b-red">사람이 한다</span></h2>
 
   <p>
     이 절이 이 과목을 다른 SLAM 수업과 가르는 자리다.
@@ -360,19 +506,25 @@
 
   <div class="tablewrap">
   <table class="summary-table">
-    <tr><th>단</th><th>무엇을 하나</th><th>통과 기준</th><th>여기서 걸리는 것</th></tr>
+    <tr><th style="width:5%">단</th><th>무엇을 하나</th><th>통과 기준</th><th>여기서 걸리는 것</th><th style="width:13%">처음 쓰는 곳</th></tr>
     <tr><td>1</td><td><strong>항등식 검사</strong> — 수식이 성립하는지 본다</td>
-      <td><span class="mono">RᵀR = I</span>, 오차 <span class="mono">&lt; 1e-12</span></td><td>정규화 누락, 전치 실수</td></tr>
+      <td><span class="mono">RᵀR = I</span>, 오차 <span class="mono">&lt; 1e-12</span></td><td>정규화 누락, 전치 실수</td>
+      <td><strong>2회</strong></td></tr>
     <tr><td>2</td><td><strong>수치 야코비안 대조</strong> — 손으로 쓴 미분 vs 유한차분</td>
-      <td>상대오차 <span class="mono">&lt; 1e-6</span></td><td>부호 실수, 섭동 방향 혼동</td></tr>
+      <td>상대오차 <span class="mono">&lt; 1e-6</span></td><td>부호 실수, perturbation 방향 혼동</td>
+      <td><strong>3회</strong></td></tr>
     <tr><td>3</td><td><strong>무잡음 합성 데이터</strong> — 정답을 아는 데이터를 넣는다</td>
-      <td>추정 오차 <span class="mono">&lt; 1e-8</span></td><td>좌표계 규약 위반, 시각 정렬 실수</td></tr>
+      <td>추정 오차 <span class="mono">&lt; 1e-8</span></td><td>좌표계 규약 위반, 시각 정렬 실수</td>
+      <td><strong>5회</strong></td></tr>
     <tr><td>4</td><td><strong>정답 부분 주입</strong> — 한 모듈만 정답으로 바꿔 본다</td>
-      <td>어느 모듈을 바꿨을 때 정상이 되나</td><td>범인 특정</td></tr>
+      <td>어느 모듈을 바꿨을 때 정상이 되나</td><td>범인 특정</td>
+      <td><strong>4회</strong></td></tr>
     <tr><td>5</td><td><strong>잡음 켜기</strong> — 합성 데이터에 잡음을 단계적으로 넣는다</td>
-      <td>오차가 잡음에 비례해 늘어나는가</td><td>잘못 설정한 잡음 값</td></tr>
+      <td>오차가 잡음에 비례해 늘어나는가</td><td>잘못 설정한 잡음 값</td>
+      <td><strong>11회</strong></td></tr>
     <tr><td>6</td><td><strong>실제 데이터 평가</strong> — EuRoC + ATE</td>
-      <td>궤적 오차와 일관성 지표</td><td>나머지 전부</td></tr>
+      <td>궤적 오차와 일관성 지표</td><td>나머지 전부</td>
+      <td><strong>13회</strong></td></tr>
   </table>
   </div>
 
@@ -391,7 +543,7 @@
     그래서 합성 데이터를 만드는 일을 학기 중반에 따로 한 번 다룹니다.
   </div>
 
-  <h2 id="see">⑦ 눈으로 본다 — 시각화 <span class="badge b-green">맡긴다</span></h2>
+  <h2 id="see">⑧ 눈으로 본다 — 시각화 <span class="badge b-green">맡긴다</span></h2>
 
   <p>
     SLAM에서 「ATE가 0.6 m입니다」라는 숫자 하나는 원인을 거의 알려 주지 않는다.
@@ -457,6 +609,66 @@
 □ 방 상자를 정답 궤적의 범위로 그렸는가, 숫자를 그냥 박았는가
 □ 중력을 9.81 로 썼는가 9.8081 로 썼는가    ← 10회에서 이 차이가 다시 나온다</pre>
 
+  <h2 id="env">⑨ 환경과 데이터 <span class="badge b-green">맡긴다</span></h2>
+
+  <p>
+    <strong>첫 주에 빌드로 시간을 쓰지 않습니다.</strong> 도커 이미지 하나를 드리고,
+    그 안에 필요한 것이 다 들어 있습니다. 무엇이 왜 들어 있는지만 알아 두면 됩니다.
+  </p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th style="width:20%">무엇</th><th>버전</th><th>왜 이것인가</th></tr>
+    <tr><td>Ubuntu</td><td>24.04 (컨테이너)</td><td>아래 라이브러리가 apt로 다 깔린다</td></tr>
+    <tr><td><strong>C++</strong></td><td><strong>C++17</strong></td>
+      <td><span class="mono">std::optional</span>과 구조적 바인딩까지. 20은 필요 없다</td></tr>
+    <tr><td>Eigen</td><td>3.4</td><td>선형대수 전부. 2회부터 쓴다</td></tr>
+    <tr><td><strong>Sophus</strong></td><td>1.24.6</td>
+      <td><span class="mono">SO3</span>·<span class="mono">SE3</span>와 <span class="mono">exp</span>/<span class="mono">log</span>.
+        <strong>3회의 회전 이야기가 전부 이 안에 있다</strong></td></tr>
+    <tr><td>OpenCV</td><td>4.x</td><td>영상 I/O, 특징점, 광류, RANSAC. <strong>5.0은 아직 쓰지 않는다</strong></td></tr>
+    <tr><td><strong>Ceres Solver</strong></td><td><strong>2.2.0</strong></td>
+      <td>번들조정과 슬라이딩 윈도우. 9회부터</td></tr>
+    <tr><td>GTSAM</td><td>4.2.2</td><td>팩터그래프. 사전적분 정답 대조용(12회)</td></tr>
+    <tr><td><strong>Rerun</strong> · evo</td><td>최신 (파이썬)</td><td>시각화와 평가. ⑧절</td></tr>
+  </table>
+  </div>
+
+  <div class="box trap">
+    <p class="boxtitle">⚠️ 에이전트가 자주 틀리는 것 하나를 미리 말해 둡니다</p>
+    <p style="margin:0">
+      인터넷의 Ceres 예제 대부분이 <span class="mono">LocalParameterization</span>을 씁니다.
+      <strong>2.2에서 그 클래스는 없습니다.</strong> <span class="mono">Manifold</span>로 바뀌었습니다.
+      빌드 오류로 바로 드러나긴 하는데, <strong>「왜 예제가 안 되지」에서 시간을 버리기 쉬운 자리</strong>라
+      9회 자료에도 다시 적어 둡니다.
+      <strong>의뢰서의 [함정] 칸에 이런 것을 미리 적는 연습</strong>이 🤖절에서 하는 일입니다.
+    </p>
+  </div>
+
+  <h3>데이터를 받는 법</h3>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th style="width:22%">무엇</th><th>크기</th><th>언제 쓰나</th></tr>
+    <tr><td><strong>연습판</strong> (V1_01의 첫 30초)</td><td>약 100 MB</td>
+      <td><strong>1~4회.</strong> 로더와 카메라 모델. 반복이 빨라야 한다</td></tr>
+    <tr><td><strong>V1_01_easy</strong> 전체</td><td>1.15 GB</td><td>5회부터 학기 내내</td></tr>
+    <tr><td>Leica 점군</td><td>111.8 MB</td><td><strong>4회</strong> 오버레이 검증</td></tr>
+    <tr><td>V1_02_medium</td><td>비슷</td><td><strong>최종 평가에서만.</strong> 처음 보는 난이도</td></tr>
+  </table>
+  </div>
+
+  <p>
+    <strong>클라우드 드라이브 주소로 따로 안내합니다.</strong>
+    공식 배포처는 묶음 단위(6 GB)라서 그대로 받으면 안 쓰는 것이 대부분입니다.
+    <strong>수업 전에 미리 받아 두면</strong> 수월합니다.
+  </p>
+
+  <p class="src">
+    데이터 출처: Burri 외, <em>The EuRoC micro aerial vehicle datasets</em>, IJRR 2016.
+    라이선스는 비상업적 사용 허용(In Copyright – Non-Commercial Use Permitted)입니다.
+  </p>
+
   <h2 id="prompts">🤖 의뢰서 여섯 칸 <span class="badge b-yellow">맡기되 검사한다</span></h2>
 
   <p>
@@ -469,7 +681,7 @@
   <table class="summary-table">
     <tr><th style="width:4%">#</th><th>의뢰서에 넣는 것</th><th>빠지면 오는 것</th></tr>
     <tr><td>1</td><td><strong>규약을 함께 준다</strong> — 표기·부호·단위 약속</td>
-      <td>좌섭동과 우섭동이 섞인 코드. <strong>돌아가지만 수렴이 이상하다</strong></td></tr>
+      <td>left 와 right perturbation이 섞인 코드. <strong>돌아가지만 수렴이 이상하다</strong></td></tr>
     <tr><td>2</td><td><strong>인터페이스를 고정해 준다</strong> — 헤더를 그대로 붙여 준다</td>
       <td>시험을 붙일 자리가 없는 코드. 인터페이스를 맡기면 검증 지점이 사라진다</td></tr>
     <tr><td>3</td><td><strong>참조 구현을 지목한다</strong> — "VINS-Mono와 같은 방식으로"</td>
@@ -569,7 +781,7 @@
     <strong>해석:</strong> 이것이 학기 내내 가장 자주 쓰게 되는 의뢰서입니다.
     <strong>후보를 대게 하는 것은 에이전트, 고르는 것은 사람</strong>입니다.
     고르려면 데이터를 알아야 하고, 데이터를 아는 쪽은 여러분입니다.
-    ⑤절에서 말한 「범인을 가르는 일」이 실제로는 이 모양을 하고 있습니다.
+    ⑥절에서 말한 「범인을 가르는 일」이 실제로는 이 모양을 하고 있습니다.
   </div>
 
   <h2 id="check">✅ 오늘의 점검</h2>
@@ -581,7 +793,9 @@
     <li><input type="checkbox" id="c5"><label for="c5">검증 사다리에서 3단이 무엇이고 왜 중요한지 말할 수 있다</label></li>
     <li><input type="checkbox" id="c6"><label for="c6">의뢰서 여섯 칸을 대고, 그중 [검증] 칸에 무엇을 적는지 말할 수 있다</label></li>
     <li><input type="checkbox" id="c8"><label for="c8">결과가 틀렸을 때 「고쳐 줘」 대신 무엇이라고 하는지 안다</label></li>
-    <li><input type="checkbox" id="c7"><label for="c7">강의자료 주소를 즐겨찾기에 넣었다</label></li>
+    <li><input type="checkbox" id="c9"><label for="c9">IMU 첫 줄의 세 가지(중력·바이어스·나노초)를 각각 설명할 수 있다</label></li>
+    <li><input type="checkbox" id="c10"><label for="c10">정답 궤적에 <strong>속도와 바이어스까지</strong> 들어 있다는 것이 왜 중요한지 안다</label></li>
+    <li><input type="checkbox" id="c7"><label for="c7">도커 이미지를 받아 컨테이너가 뜨는 것을 확인했고, 데이터도 받아 두었다</label></li>
   </ul>
 
   <h2 id="more">조금 더 알아두면 <span class="badge b-lv">시험 범위 아님</span></h2>
@@ -610,7 +824,7 @@
       이 데이터가 지금까지 쓰이는 이유는 <strong>정답이 여러 겹으로 있기 때문</strong>이다.
       궤적의 정답이 있고, 속도와 바이어스의 정답까지 있고, 지도의 정답도 있다.
       덕분에 「어딘가 틀렸다」가 아니라 「여기가 틀렸다」까지 갈 수 있다.
-      ⑥절의 4단(정답 부분 주입)이 가능한 것도 이 때문이다.
+      ⑦절의 4단(정답 부분 주입)이 가능한 것도 이 때문이다.
     </p>
     <p class="src">
       출처: Burri 외, <em>The EuRoC micro aerial vehicle datasets</em>, IJRR 2016.

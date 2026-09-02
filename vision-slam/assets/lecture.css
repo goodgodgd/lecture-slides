@@ -49,6 +49,10 @@ h2 .badge, h3 .badge { float: right; margin-top: .3rem; }
 
 /* ── 표 ── */
 .tablewrap { overflow-x: auto; margin: 1rem 0; }
+/* 열이 많거나 수식이 든 표. 칸이 한 글자씩 눌리는 대신 표만 가로로 스크롤한다 */
+.tablewrap.scroll table { min-width: 900px; }
+/* 표 칸 안의 보조 설명 — 작고 흐리게 */
+td .q { display: inline-block; margin-top: .25rem; font-size: .86em; color: var(--muted); }
 table { border-collapse: collapse; width: 100%; font-size: .92rem; }
 th, td { border: 1px solid var(--line); padding: .5rem .7rem; text-align: left; vertical-align: top; }
 th { background: var(--card); font-weight: 600; }

@@ -32,12 +32,22 @@
   <div class="toc-title">이 회차 목차</div>
   <a href="#summary">한 장 요약 — 표현 네 가지</a>
   <a href="#dof">① 회전은 왜 3 자유도인가</a>
-  <a href="#euler">② 오일러각과 짐벌락</a>
-  <a href="#exp">③ 축-각과 로드리게스</a>
-  <a href="#quat">④ 쿼터니언과 이중 덮개</a>
-  <a href="#perturb">⑤ 섭동 — 회전은 더할 수 없다 <span class="mono">🔴</span></a>
-  <a href="#numjac">⑥ 수치 야코비안 대조</a>
-  <a href="#jr">⑦ 우야코비안 — 12회에 쓴다</a>
+  <a href="#matrix">② 회전행렬</a>
+  <a href="#euler">③ 오일러각</a>
+  <a href="#euler" class="sub">짐벌락</a>
+  <a href="#axisangle">④ 축-각 (rotation vector)</a>
+  <a href="#axisangle" class="sub">로드리게스 공식</a>
+  <a href="#quat">⑤ 쿼터니언</a>
+  <a href="#quat" class="sub">quaternion product</a>
+  <a href="#quat" class="sub">벡터를 돌리는 법 · SLERP</a>
+  <a href="#convert">⑥ 표현 사이를 오가는 지도</a>
+  <a href="#lie">⑦ Lie theory <span class="mono">🔴</span></a>
+  <a href="#lie" class="sub">group · manifold · algebra</a>
+  <a href="#lie" class="sub">Adjoint · Lie bracket · BCH</a>
+  <a href="#lie" class="sub">이 강의가 쓰는 부분</a>
+  <a href="#perturb">⑧ left · right perturbation</a>
+  <a href="#numjac">⑨ 수치 야코비안 대조</a>
+  <a href="#jr">⑩ right Jacobian</a>
   <a href="#prompt">🤖 의뢰서 — 회전 유틸</a>
   <a href="#verify">🧪 맞는지 어떻게 아나</a>
   <a href="#draw">🎨 이 회차의 그림</a>
@@ -52,9 +62,11 @@
   <div class="questions">
     <span class="lab">오늘 답할 질문</span>
     <ol>
-      <li>회전을 표현하는 방법이 왜 이렇게 많은가? 무엇을 언제 쓰나?</li>
+      <li>회전을 표현하는 방법이 왜 이렇게 많은가? 각각은 <strong>무엇을 어떻게 담고</strong> 있나?</li>
+      <li>표현마다 <strong>벡터를 실제로 돌리는 방법</strong>이 어떻게 다른가?</li>
       <li>최적화는 회전을 <strong>미분</strong>해야 하는데, 회전행렬은 그냥 더할 수가 없다. 어떻게 하나?</li>
-      <li>좌섭동과 우섭동은 무엇이 다르고, 섞으면 정확히 무슨 일이 생기나?</li>
+      <li><strong>Lie 이론</strong>이란 무엇이고, 그중 강체 변환에 쓰이는 것은 어느 부분인가?</li>
+      <li>left perturbation과 right perturbation은 무엇이 다르고, 섞으면 무슨 일이 생기나?</li>
       <li>내가 손으로 쓴 야코비안이 맞다는 걸 어떻게 확인하나?</li>
     </ol>
   </div>
@@ -62,42 +74,79 @@
   <p>
     지난 시간에는 \(R\)을 <strong>주어진 것</strong>으로 놓고 곱하기만 했다.
     오늘부터는 \(R\)이 <strong>우리가 추정할 변수</strong>가 된다.
-    변수가 되는 순간 미분이 필요하고, 거기서 문제가 생긴다 —
-    <strong>회전행렬은 더할 수 없기 때문이다.</strong> \(R + \delta R\)은 회전행렬이 아니다.
+    변수가 되는 순간 두 가지가 필요해진다 — <strong>표현</strong>과 <strong>미분</strong>이다.
   </p>
 
   <p>
-    오늘 배우는 것은 그 문제를 푸는 표준적인 방법이다.
-    그리고 이것이 <strong>이 강의를 3D Vision에서 SLAM으로 넘기는 지점</strong>이다.
+    앞의 절반(①~⑥)은 표현 이야기다. 회전을 담는 그릇이 네 가지 있고,
+    <strong>각각 담는 방식·성질·벡터를 돌리는 방법·서로 오가는 식</strong>이 다르다.
+    뒤의 절반(⑦~⑩)은 미분 이야기다. 회전은 벡터공간이 아니라서
+    <strong>\(R + \delta R\)이 회전이 아니다.</strong> 그 문제를 푸는 표준적인 틀이 Lie 이론이고,
+    이 강의가 그중 무엇을 빌려 쓰는지를 ⑦절에서 정리한다.
+  </p>
+
+  <p>
+    <strong>이 회차가 이 강의를 3D Vision에서 SLAM으로 넘기는 지점이다.</strong>
     9회의 번들조정, 11회의 오차상태 필터, 12회의 사전적분이 전부 오늘 식을 다시 쓴다.
   </p>
 
   <h2 id="summary">한 장 요약 — 표현 네 가지 <span class="badge b-lv">학기 내내 본다</span></h2>
 
-  <p class="readme-first">마지막 열이 이 표의 결론이다. <strong>저장과 최적화에 다른 표현을 쓴다.</strong></p>
+  <p class="readme-first">
+    가운데 두 열이 오늘 새로 채우는 칸이다. <strong>「벡터를 어떻게 돌리나」와 「둘을 어떻게 잇나」</strong>가
+    표현마다 다르고, 그 차이가 각 표현을 어디에 쓸지를 정한다.
+  </p>
 
   <div class="tablewrap">
   <table class="summary-table">
-    <tr><th>표현</th><th style="width:8%">수</th><th>약점</th><th>어디에 쓰나</th></tr>
-    <tr><td><strong>회전행렬</strong> \(R \in \mathbf{SO}(3)\)</td><td>9</td>
-      <td>제약이 6개다(\(R^\top R = I\)). <strong>최적화 변수로 못 쓴다</strong></td>
-      <td>계산, 저장</td></tr>
-    <tr><td><strong>오일러각</strong></td><td>3</td>
-      <td><strong>짐벌락.</strong> 게다가 축 순서가 12가지</td>
-      <td><strong>사람에게 보여 줄 때만</strong></td></tr>
-    <tr><td><strong>축-각</strong> \(\boldsymbol\phi \in \mathfrak{so}(3)\)</td><td>3</td>
-      <td>최소 표현이지만 \(\theta = 0\)과 \(\theta = \pi\)에서 조심해야 한다</td>
-      <td><strong>최적화 변수</strong></td></tr>
-    <tr><td><strong>쿼터니언</strong> \(q\)</td><td>4</td>
-      <td>이중 덮개 — \(q\)와 \(-q\)가 같은 회전이다</td>
-      <td>적분, 보간, 파일 저장</td></tr>
+    <tr>
+      <th style="width:23%">표현</th>
+      <th style="width:29%">벡터 \(\mathbf{v}\)를 돌리는 법</th>
+      <th style="width:24%">두 회전을 잇는 법</th><th style="width:24%">쓰는 자리</th>
+    </tr>
+    <tr>
+      <td><strong>회전행렬</strong> \(R \in \mathbf{SO}(3)\)<br>
+        <span class="q">숫자 9개 · 제약 6개<br>\(R^\top R = I\), \(\det R = 1\)</span></td>
+      <td>\(R\mathbf{v}\) — <strong>곱 한 번.</strong> 가장 싸다</td>
+      <td>\(R_2R_1\) — 행렬곱</td>
+      <td><strong>실행.</strong> 모든 표현이 결국 여기로 온다</td>
+    </tr>
+    <tr>
+      <td><strong>오일러각</strong> \((\alpha,\beta,\gamma)\)<br>
+        <span class="q">숫자 3개 · 제약 없다<br>대신 짐벌락</span></td>
+      <td>축 회전행렬 <strong>세 개를 곱해</strong> 회전행렬을 만든다</td>
+      <td><strong>못 잇는다.</strong> 행렬로 바꿔 곱하고 다시 뽑는다</td>
+      <td><strong>사람에게 보여 줄 때만</strong></td>
+    </tr>
+    <tr>
+      <td><strong>축-각</strong> \(\boldsymbol\phi = \theta\mathbf{u}\)<br>
+        <span class="q">숫자 3개 · 제약 없다<br>\(\lVert\boldsymbol\phi\rVert \le \pi\)로 감싼다</span></td>
+      <td>로드리게스 벡터 형태 (④절)<br>행렬을 안 만들어도 된다</td>
+      <td><strong>못 잇는다.</strong> 더하는 것이 아니다 (⑩절 BCH)</td>
+      <td><strong>최적화 변수 · 미소 회전</strong></td>
+    </tr>
+    <tr>
+      <td><strong>쿼터니언</strong> \(q = q_0 + \mathbf{q}\)<br>
+        <span class="q">숫자 4개 · 제약 1개<br>\(\lVert q\rVert = 1\)</span></td>
+      <td>\(q \otimes \mathbf{v} \otimes q^{*}\)<br><strong>양쪽에서 곱한다</strong></td>
+      <td>\(q_2 \otimes q_1\) — quaternion product</td>
+      <td><strong>적분 · 보간 · 저장</strong></td>
+    </tr>
   </table>
   </div>
 
   <div class="interp">
-    <strong>해석:</strong> <strong>저장은 쿼터니언(또는 행렬)으로, 최적화는 축-각으로 한다.</strong>
-    그 둘 사이를 오가는 다리가 오늘 배울 \(\mathrm{Exp}\)와 \(\mathrm{Log}\)다.
-    「어느 표현이 제일 좋은가」는 좋은 질문이 아니다. <strong>일마다 좋은 표현이 다르고, 변환식을 알면 된다.</strong>
+    <strong>해석 ①:</strong> 표현은 넷인데 <strong>회전을 실제로 실행하는 것은 두 개뿐</strong>이다 —
+    회전행렬과 쿼터니언. 오일러각과 축-각은 <strong>담아 두는 방식</strong>이고,
+    벡터를 돌리려면 결국 둘 중 하나로 바꿔야 한다.
+    <strong>그래서 어떤 표현을 쓰든 회전행렬(또는 쿼터니언)과의 변환식을 반드시 알아야 한다.</strong>
+  </div>
+
+  <div class="interp">
+    <strong>해석 ②:</strong> 「가장 좋은 표현」을 묻는 것은 좋은 질문이 아니다.
+    <strong>일마다 좋은 표현이 다르다.</strong> 이 강의의 선택은 이렇다 —
+    <strong>저장과 적분은 쿼터니언, 최적화는 축-각, 실행은 회전행렬, 화면 출력은 오일러각.</strong>
+    네 개를 다 쓰고, 그 사이를 오가는 식이 ⑥절에 있다.
   </div>
 
   <h2 id="dof">① 회전은 왜 3 자유도인가</h2>
@@ -116,175 +165,920 @@
 
   <p>
     회전행렬은 이 3 자유도를 <strong>숫자 아홉 개</strong>로 담는다. 남는 여섯 개는 제약으로 묶여 있다.
-    최적화에서 이것이 왜 문제인지는 ⑤절에서 분명해진다 —
-    <strong>아홉 개를 자유롭게 움직이면 회전행렬 밖으로 나가 버린다.</strong>
+    그래서 회전행렬은 <strong>계산에는 좋지만 표현으로는 불편하다.</strong> 이유가 넷이다.
   </p>
 
-  <h2 id="euler">② 오일러각과 짐벌락 — 왜 사람에게 보여 줄 때만 쓰나</h2>
+  <div class="tablewrap">
+  <table>
+    <tr><th style="width:44%">무엇이 불편한가</th><th>결과</th></tr>
+    <tr><td>3 자유도를 아홉 개로 담아 <strong>제약이 여섯 개</strong>다</td>
+      <td>아홉 개를 자유롭게 움직이면 회전행렬 밖으로 나간다 — <strong>최적화 변수로 못 쓴다</strong></td></tr>
+    <tr><td>제약이 많을수록 <strong>수학적 최적화가 까다롭다</strong></td>
+      <td>제약 최적화로 풀거나, 다른 표현으로 갈아타야 한다 (⑦절이 후자다)</td></tr>
+    <tr><td>사람이 숫자 아홉 개를 보고 <strong>어느 방향으로 얼마나 도는지</strong> 못 읽는다</td>
+      <td>결과를 눈으로 검사할 수 없다. 축-각으로 바꿔 봐야 한다 (④절)</td></tr>
+    <tr><td>저장에 <strong>아홉 칸</strong>을 쓴다</td>
+      <td>궤적 하나에 프레임이 수천 개다. 쿼터니언이면 네 칸이다</td></tr>
+  </table>
+  </div>
 
   <p>
-    세 축을 차례로 돌려 회전을 만드는 방식이다. 사람이 읽기에 가장 편하다 —
-    「롤 5°, 피치 −12°, 요 90°」는 머릿속에 그림이 그려진다.
-    문제는 <strong>가운데 축이 ±90°가 되는 순간</strong>이다.
+    그래서 회전행렬 말고도 표현이 몇 개 더 있다 — <strong>오일러각, 축-각, 쿼터니언.</strong>
+    아래에서 하나씩 본다. <strong>각각에 대해 네 가지를 확인한다</strong> —
+    무엇을 어떻게 담나 · 어떤 성질이 있나 · 벡터를 어떻게 돌리나 · 회전행렬과 어떻게 오가나.
   </p>
+
+  <h2 id="matrix">② 회전행렬 — 실행은 결국 여기서 일어난다</h2>
+
+  <h3>무엇을 담나</h3>
+
+  <p>
+    2회에서 본 그대로다. <strong>각 열이 「상대 좌표계의 축을 내 좌표계에서 본 방향」</strong>이다.
+    \(R_{WB}\)의 첫 열은 「몸체의 x축을 월드에서 본 방향」이고, 그 이상도 이하도 아니다.
+  </p>
+
+  $$
+  R = \begin{bmatrix} \mathbf{r}_x &amp; \mathbf{r}_y &amp; \mathbf{r}_z \end{bmatrix},
+  \qquad \mathbf{r}_i^\top\mathbf{r}_j = \delta_{ij},
+  \qquad \mathbf{r}_x \times \mathbf{r}_y = \mathbf{r}_z
+  $$
+
+  <h3>성질</h3>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th style="width:26%">성질</th><th>식</th><th>쓸모</th></tr>
+    <tr><td>직교</td><td>\(R^\top R = R R^\top = I\)</td><td><strong>역행렬이 전치다</strong> — 역변환이 공짜다</td></tr>
+    <tr><td>행렬식이 +1</td><td>\(\det R = 1\)</td><td>뒤집기가 아니라는 보증 (2회 ②절)</td></tr>
+    <tr><td>길이와 각을 보존</td><td>\(\lVert R\mathbf{v}\rVert = \lVert\mathbf{v}\rVert\)</td><td>강체 변환의 정의 그 자체</td></tr>
+    <tr><td>고유값</td><td>\(1,\ e^{\pm i\theta}\)</td><td><strong>고유값 1의 고유벡터가 회전축</strong>이다. \(\theta\)는 회전각</td></tr>
+    <tr><td>대각합</td><td>\(\mathrm{tr}\,R = 1 + 2\cos\theta\)</td><td>각도를 바로 뽑는 식. ④절 \(\mathrm{Log}\)에서 쓴다</td></tr>
+    <tr><td>합성</td><td>\(R_2R_1\)</td><td>순서가 있다. \(R_1R_2 \ne R_2R_1\)</td></tr>
+  </table>
+  </div>
+
+  <h3>벡터를 돌리는 법 — 곱 한 번</h3>
+
+  <p>
+    \(\mathbf{v}' = R\mathbf{v}\)다. 곱셈 9번, 덧셈 6번.
+    <strong>네 표현 중 가장 싸다.</strong> 점을 수천 개 돌려야 하는 자리
+    (4회의 점군 오버레이, 9회의 재투영)에서는 무조건 회전행렬로 바꿔 놓고 돌린다.
+  </p>
+
+  <h3>⚠️ 곱을 반복하면 회전이 아니게 된다</h3>
+
+  <p>
+    \(R \leftarrow R\,\Delta R\)을 수천 번 반복하면 부동소수점 오차가 쌓여
+    <strong>\(R^\top R\)이 조금씩 \(I\)에서 벗어난다.</strong> 그러면 길이 보존이 깨지고,
+    그 행렬로 돌린 점들의 <strong>거리가 미세하게 늘거나 준다.</strong>
+    지도가 부풀어 오르는데 궤적은 매끄럽다 — 이 강의에서 계속 만나는 모양이다.
+  </p>
+
+  <p>
+    고치려면 <strong>다시 직교화</strong>해야 한다. 방법이 둘이다.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th style="width:26%">방법</th><th>어떻게</th><th>성격</th></tr>
+    <tr><td><strong>Gram-Schmidt</strong></td>
+      <td>첫 열을 정규화하고, 둘째 열에서 첫 열 성분을 빼고 정규화하고, 셋째는 외적으로 만든다</td>
+      <td>싸다. 다만 <strong>첫 열을 특별 취급</strong>해서 오차가 열마다 다르게 남는다</td></tr>
+    <tr><td><strong>SVD (극분해)</strong></td>
+      <td>\(R = U\Sigma V^\top\)에서 \(\Sigma\)를 \(I\)로 바꿔 \(UV^\top\)을 쓴다</td>
+      <td>세 열을 <strong>공평하게</strong> 고친다. 원래 행렬에 가장 가까운 회전이 나온다</td></tr>
+  </table>
+  </div>
+
+  <p>
+    <strong>비용을 재 봤다.</strong> 회전행렬 하나를 Gram-Schmidt로 고치는 데 25.4 µs,
+    쿼터니언 하나를 정규화하는 데 1.9 µs다. <strong>13배 차이</strong>다.
+    (numpy로 잰 값이라 절대 수치보다 비율만 본다. 재현: <span class="mono">src/rotation_numbers.py</span>)
+  </p>
+
+  <div class="interp">
+    <strong>해석:</strong> 이것이 <strong>적분에 쿼터니언을 쓰는 이유</strong>다.
+    IMU는 초당 200번 회전을 갱신한다(10회). 매번 회전행렬을 다시 직교화하는 것보다
+    <strong>쿼터니언을 네 번 나누는 쪽</strong>이 싸고, 수치적으로도 더 안정적이다.
+    <strong>돌릴 때는 행렬, 쌓을 때는 쿼터니언</strong>이 실전의 기본형이다.
+  </div>
+
+  <h2 id="euler">③ 오일러각 — 사람에게 보여 줄 때만</h2>
+
+  <h3>무엇을 담나</h3>
+
+  <p>
+    <strong>좌표축을 기준으로 세 번 돌린 각도 세 개</strong>다.
+    아래 그림은 \(Z\)축으로 \(\phi\), 그다음 \(X\)축으로 \(\theta\), 다시 \(Z\)축으로 \(\psi\)만큼 돌린 것이다 — ZXZ 조합이다.
+  </p>
+
+  <figure>
+    <img src="assets/img/03_euler_zyz.png"
+         alt="세 단계로 나눈 오일러각 그림. 첫 번째는 Z0축으로 φ만큼, 두 번째는 X1축으로 θ만큼, 세 번째는 Z2축으로 ψ만큼 회전하는 모습이 차례로 그려져 있다">
+    <figcaption>파란 축이 처음 좌표계, 검은 축이 돌아간 좌표계다.
+      <strong>세 번의 회전이 각각 어느 축을 쓰는지</strong>가 오일러각의 정체 전부다.</figcaption>
+  </figure>
+
+  <p>
+    축 조합은 <strong>같은 축이 연속으로 나오지만 않으면</strong> 된다.
+    XXZ나 ZYY는 사실상 회전이 두 번이라 임의의 회전을 표현하지 못한다.
+    조건을 만족하는 조합을 세면 <strong>12가지</strong>다.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th style="width:22%">종류</th><th>조합</th><th>어디서 쓰나</th></tr>
+    <tr><td><strong>Tait-Bryan</strong><br>축 셋이 다 다르다</td>
+      <td>XYZ · XZY · YXZ · YZX · ZXY · <strong>ZYX</strong> — 6가지</td>
+      <td><strong>로봇·항공.</strong> ZYX가 roll-pitch-yaw다</td></tr>
+    <tr><td><strong>proper Euler</strong><br>첫 축과 셋째 축이 같다</td>
+      <td>XYX · XZX · YXY · YZY · ZXZ · ZYZ — 6가지</td>
+      <td>고전역학·천문. 위 그림이 ZXZ다</td></tr>
+  </table>
+  </div>
+
+  <div class="box trap">
+    <p class="boxtitle">⚠️ 12가지가 끝이 아니다 — 「어느 축을 도나」가 한 번 더 갈린다</p>
+    <p style="margin:0">
+      두 번째 회전을 <strong>처음의 고정된 축</strong>으로 하느냐(extrinsic),
+      <strong>방금 돌아간 축</strong>으로 하느냐(intrinsic)에 따라 결과가 다르다.
+      다행히 둘은 <strong>순서를 뒤집으면 같아진다</strong> —
+      intrinsic ZYX는 extrinsic XYZ와 같은 회전이다.
+      <strong>그래서 「ZYX 오일러각」이라고만 쓰면 아직 무엇인지 정해지지 않는다.</strong>
+      논문이나 라이브러리에서 오일러각을 볼 때 <strong>축 순서와 intrinsic/extrinsic을 둘 다</strong> 확인한다.
+    </p>
+  </div>
+
+  <h3>벡터를 돌리는 법 — 세 번 곱한다</h3>
+
+  <p>
+    오일러각 자체로는 벡터를 못 돌린다. <strong>축 회전행렬 세 개를 곱해</strong> 회전행렬을 만들고, 그것으로 돌린다.
+    아래는 intrinsic ZYX (= yaw \(\alpha\) → pitch \(\beta\) → roll \(\gamma\)) 조합이다.
+  </p>
+
+  $$
+  R(\alpha,\beta,\gamma) = R_z(\alpha)\,R_y(\beta)\,R_x(\gamma)
+  $$
+
+  $$
+  R_x(\gamma) = \begin{bmatrix} 1 &amp; 0 &amp; 0 \\ 0 &amp; \cos\gamma &amp; -\sin\gamma \\ 0 &amp; \sin\gamma &amp; \cos\gamma \end{bmatrix},\quad
+  R_y(\beta) = \begin{bmatrix} \cos\beta &amp; 0 &amp; \sin\beta \\ 0 &amp; 1 &amp; 0 \\ -\sin\beta &amp; 0 &amp; \cos\beta \end{bmatrix},\quad
+  R_z(\alpha) = \begin{bmatrix} \cos\alpha &amp; -\sin\alpha &amp; 0 \\ \sin\alpha &amp; \cos\alpha &amp; 0 \\ 0 &amp; 0 &amp; 1 \end{bmatrix}
+  $$
+
+  <p>
+    각 행렬은 외울 것이 없다. <strong>「그 축은 그대로 두고 나머지 두 축을 2차원 회전시킨다」</strong>가 전부다.
+    부호는 2회의 규칙으로 확인한다 — <strong>열이 상대 좌표계의 축을 내 좌표계에서 본 방향</strong>이다.
+  </p>
+
+  <h3>회전행렬 → 오일러각</h3>
+
+  <p>ZYX 조합에서는 이렇게 뽑는다.</p>
+
+  $$
+  \beta = \arcsin(-R_{31}), \qquad
+  \alpha = \mathrm{atan2}(R_{21},\, R_{11}), \qquad
+  \gamma = \mathrm{atan2}(R_{32},\, R_{33})
+  $$
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 식에서 처음 나오는 것</p>
+    <dl>
+      <dt><span class="mono">atan2(y, x)</span></dt>
+      <dd>\(\arctan(y/x)\)인데 <strong>\(x\)와 \(y\)의 부호를 둘 다 보고</strong> 사분면을 정한다.
+        그래서 \(-\pi \sim \pi\) 전체를 돌려준다. <strong>여기서는 각도를 반 바퀴 틀리지 않게 하는 데 썼다.</strong>
+        회전을 다룰 때 <span class="mono">atan</span> 대신 이것을 쓰는 것이 사실상 규칙이다.</dd>
+    </dl>
+  </div>
+
+  <h3 id="gimbal">짐벌락 — 「표현이 안 된다」가 아니라 「값이 폭주한다」 🔴</h3>
 
   <figure>
     <img src="assets/img/03_gimbal_lock.png"
          alt="세 좌표계 그림. 각 단계에서 회전축이 표시되어 있고 두 번째 회전 뒤에 첫 축과 셋째 축이 같은 방향이 된다">
-    <figcaption>가운데 회전이 90°가 되면 <strong>첫째 축과 셋째 축이 같은 방향으로 겹친다.</strong>
-      돌릴 수 있는 방향이 셋에서 둘로 줄어든다. 이것이 짐벌락이다.</figcaption>
+    <figcaption>\(X_1\)로 90°, \(Z_2\)로 −90° 돌리고 나면 <strong>\(Y_3\)의 방향이 처음의 \(X_1\)과 같아진다.</strong>
+      여기서 \(Y_3\)로 \(\theta\)만큼 돌리는 것은 처음에 \(X_1\)으로 \(90°+\theta\)만큼 돌린 것과 같다.
+      <strong>돌릴 수 있는 방향이 셋에서 둘로 줄어든다.</strong></figcaption>
+  </figure>
+
+  <p>
+    ZYX 조합에서는 <strong>\(\beta = \pm 90°\)</strong>일 때 이 일이 생긴다. 그때 \(R_{11}\)과 \(R_{21}\)이 둘 다 0이 되어
+    <span class="mono">atan2(0, 0)</span>이 되고, \(\alpha\)와 \(\gamma\)는 <strong>각각은 정해지지 않고 그 합(또는 차)만 정해진다.</strong>
+  </p>
+
+  <p>
+    그런데 실전에서 진짜 문제는 <strong>정확히 90°인 순간</strong>이 아니다.
+    <strong>그 근처</strong>다. 자세를 아주 조금 흔들었을 때 오일러각이 얼마나 움직이는지 재 보면 이렇다.
+  </p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>피치 \(\beta\)</th><th>자세를 0.01° 흔들면 오일러각이</th><th>증폭</th><th>\(1/\cos\beta\)</th></tr>
+    <tr><td>0°</td><td>0.0100°</td><td>1.0배</td><td>1.0</td></tr>
+    <tr><td>30°</td><td>0.0128°</td><td>1.3배</td><td>1.2</td></tr>
+    <tr><td>60°</td><td>0.0260°</td><td>2.6배</td><td>2.0</td></tr>
+    <tr><td>80°</td><td>0.0793°</td><td>7.9배</td><td>5.8</td></tr>
+    <tr><td><strong>89°</strong></td><td><strong>0.7957°</strong></td><td><strong>79.6배</strong></td><td>57.3</td></tr>
+    <tr><td><strong>89.9°</strong></td><td><strong>8.0755°</strong></td><td><strong>807.5배</strong></td><td>573.0</td></tr>
+  </table>
+  </div>
+
+  <figure>
+    <img src="assets/img/03_euler_sensitivity.png"
+         alt="피치 각도에 따른 오일러각 증폭 배수 그래프. 로그 세로축이고 90도에 가까워질수록 급격히 치솟는다. 1/cos β 이론 곡선이 점선으로 함께 그려져 있다">
+    <figcaption>점선이 \(1/\cos\beta\)다. 실제 증폭이 그 곡선을 따라간다.
+      <strong>85° 근처부터 이미 못 쓸 값이 된다.</strong> 짐벌락은 한 점이 아니라 <strong>구역</strong>이다.</figcaption>
   </figure>
 
   <div class="interp">
-    <strong>해석:</strong> 짐벌락에서 나쁜 것은 「회전을 표현하지 못한다」가 아니다.
-    표현은 된다. 나쁜 것은 <strong>그 근처에서 각도 값이 폭주한다</strong>는 것이다.
-    자세가 조금 변했는데 요 값이 0에서 180으로 튄다. 그 값을 미분하거나 평균 내면 결과가 무너진다.
+    <strong>해석:</strong> 자세는 0.01°만 변했는데 표현하는 숫자가 8°나 움직인다.
+    이 값을 <strong>미분하거나 평균 내거나 필터에 넣으면</strong> 결과가 무너진다.
+    드론이 수직으로 상승·하강하는 구간이 정확히 \(\beta \approx 90°\)이고, 그래서
+    <strong>항공 쪽에서 짐벌락이 실제 사고 이야기로 남아 있다.</strong>
     <strong>추정기 안에 오일러각을 넣지 않는 이유가 이것이다.</strong>
   </div>
 
-  <div class="box trap">
-    <p class="boxtitle">⚠️ 순서가 12가지다</p>
+  <div class="box lab-block">
+    <p class="boxtitle">그럼 왜 아직도 쓰나</p>
     <p style="margin:0">
-      ZYX인지 ZYZ인지, 고정축(extrinsic)인지 따라가는 축(intrinsic)인지에 따라 <strong>같은 세 숫자가 다른 회전</strong>이 된다.
-      논문이나 라이브러리에서 오일러각을 볼 때는 <strong>순서를 먼저 확인한다.</strong>
-      이 강의에서는 <strong>화면에 찍어 볼 때만</strong> 쓰고, 그때도 순서를 주석에 적는다.
+      <strong>사람이 읽을 수 있는 유일한 표현</strong>이기 때문이다.
+      「롤 5°, 피치 −12°, 요 90°」는 머릿속에 그림이 그려지지만
+      「\(q = (0.707, 0, 0, 0.707)\)」은 안 그려진다.
+      <strong>화면에 찍을 때, 로그를 눈으로 볼 때, 초기값을 손으로 줄 때</strong>만 쓰고
+      <strong>계산에는 절대 넣지 않는다</strong>는 것이 이 강의의 규칙이다.
+      찍을 때는 <strong>축 순서를 주석에 같이 적는다.</strong>
     </p>
   </div>
 
-  <h2 id="exp">③ 축-각과 로드리게스 — \(\mathfrak{so}(3) \leftrightarrow \mathbf{SO}(3)\)</h2>
+  <h2 id="axisangle">④ 축-각 — 회전 벡터 하나로 담는다</h2>
+
+  <h3>무엇을 담나</h3>
 
   <p>
-    회전축 방향 \(\mathbf{a}\)(길이 1)와 각도 \(\theta\)를 <strong>하나의 벡터로 합친 것</strong>이 축-각 표현이다.
+    회전축 방향 \(\mathbf{u}\)(길이 1)와 각도 \(\theta\)를 <strong>벡터 하나로 합친다.</strong>
+    교재(Ma 외)에서는 이것을 <strong>twist coordinates</strong>라고 부른다.
   </p>
 
   $$
-  \boldsymbol\phi = \theta\,\mathbf{a} \in \mathbb{R}^3, \qquad
-  \theta = \lVert \boldsymbol\phi \rVert, \qquad \mathbf{a} = \boldsymbol\phi / \theta
+  \boldsymbol\phi = \theta\,\mathbf{u} \in \mathbb{R}^3, \qquad
+  \theta = \lVert \boldsymbol\phi \rVert, \qquad \mathbf{u} = \boldsymbol\phi / \theta
   $$
 
   <p>
-    벡터 하나에 축과 각이 다 들어 있다. <strong>제약이 없다</strong> — 어떤 세 숫자를 넣어도 회전 하나가 나온다.
-    이것이 최적화 변수로 쓰는 이유다. 회전행렬로 바꾸는 식이 로드리게스 공식이다.
+    <strong>벡터의 방향이 회전축, 벡터의 크기가 회전각</strong>이다. 이보다 직관적일 수 없다.
+    그리고 <strong>제약이 없다</strong> — 어떤 세 숫자를 넣어도 회전 하나가 나온다.
+    이것이 최적화 변수로 쓰는 이유다.
   </p>
-
-  $$
-  \mathrm{Exp}(\boldsymbol\phi) \;=\; I + \sin\theta\,[\mathbf{a}]_\times + (1-\cos\theta)\,[\mathbf{a}]_\times^2
-  $$
 
   <div class="box firstseen">
-    <p class="boxtitle">🆕 이 식에서 처음 나오는 기호</p>
+    <p class="boxtitle">🆕 이 절에서 처음 나오는 기호</p>
     <dl>
-      <dt>\([\mathbf{v}]_\times\) — 반대칭 행렬(skew-symmetric)</dt>
+      <dt>\([\mathbf{v}]_\times\) — 반대칭 행렬(skew-symmetric matrix). \(\hat{\mathbf{v}}\)로도 쓴다</dt>
       <dd>벡터를 3×3 행렬로 바꾸는 표기다.
         \([\mathbf{v}]_\times = \begin{bmatrix} 0 &amp; -v_3 &amp; v_2 \\ v_3 &amp; 0 &amp; -v_1 \\ -v_2 &amp; v_1 &amp; 0\end{bmatrix}\)이고,
-        <strong>외적을 행렬 곱으로 쓴 것</strong>이다 — \([\mathbf{v}]_\times \mathbf{w} = \mathbf{v} \times \mathbf{w}\).
-        <strong>여기서는 로드리게스 공식을 행렬 식으로 적는 데 썼다.</strong></dd>
+        <strong>외적을 행렬 곱으로 쓴 것</strong>이다 — \([\mathbf{v}]_\times\mathbf{w} = \mathbf{v}\times\mathbf{w}\).
+        이름 그대로 \([\mathbf{v}]_\times^\top = -[\mathbf{v}]_\times\)다.
+        <strong>여기서는 축-각 벡터를 로드리게스 공식에 넣을 수 있는 모양으로 바꾸는 데 썼다.</strong></dd>
 
       <dt>\(\mathfrak{so}(3)\) — 소문자 고딕체</dt>
-      <dd>\(\mathbf{SO}(3)\)의 <strong>접평면</strong>. 실제로는 반대칭 행렬들의 집합인데,
-        숫자 셋으로 적을 수 있으므로 <strong>실전에서는 그냥 \(\mathbb{R}^3\)처럼 쓴다.</strong>
-        축-각 벡터가 사는 곳이다.</dd>
+      <dd><strong>반대칭 행렬 전부의 집합</strong>이다. 벡터 셋과 1:1로 대응하므로
+        실전에서는 <strong>그냥 \(\mathbb{R}^3\)처럼 쓴다.</strong>
+        왜 이 집합에 \(\mathbf{SO}(3)\)의 소문자 이름이 붙었는지는 ⑦절에서 답한다.</dd>
 
       <dt>\(\mathrm{Exp}\) · \(\mathrm{Log}\) — 대문자로 쓴 것</dt>
-      <dd>\(\mathbb{R}^3 \to \mathbf{SO}(3)\)와 그 역. 행렬 지수함수 \(\exp\)와 구별하려고 대문자로 쓴다.
+      <dd>\(\mathbb{R}^3 \to \mathbf{SO}(3)\)와 그 역. 행렬 지수함수 \(\exp(\hat{\boldsymbol\phi})\)와 구별하려고 대문자로 쓴다.
+        \(\mathrm{Exp}(\boldsymbol\phi) = \exp([\boldsymbol\phi]_\times)\)이고,
         <strong>이 강의에서는 대문자 쪽만 쓴다.</strong></dd>
     </dl>
   </div>
 
-  <p>반대 방향은 이렇게 간다.</p>
+  <h3>회전행렬로 — 로드리게스 공식이 왜 저렇게 생겼나</h3>
+
+  <p>
+    출발점은 행렬 지수함수의 정의, 즉 무한급수다.
+  </p>
+
+  $$
+  \exp([\boldsymbol\phi]_\times) = I + [\boldsymbol\phi]_\times + \frac{[\boldsymbol\phi]_\times^2}{2!}
+  + \frac{[\boldsymbol\phi]_\times^3}{3!} + \cdots
+  $$
+
+  <p>
+    무한급수라 계산할 수 없어 보이는데, <strong>반대칭 행렬에는 특별한 성질이 하나 있다.</strong>
+    단위벡터 \(\mathbf{u}\)에 대해 이렇다.
+  </p>
+
+  $$
+  [\mathbf{u}]_\times^3 = -[\mathbf{u}]_\times
+  $$
+
+  <p>
+    (실제로 재 보면 \(\lVert [\mathbf{a}]_\times^3 + \lVert\mathbf{a}\rVert^2[\mathbf{a}]_\times \rVert = 4.2\times10^{-17}\)이다.)
+    세제곱이 자기 자신으로 돌아오므로 <strong>급수에 나오는 행렬은 \([\mathbf{u}]_\times\)와 \([\mathbf{u}]_\times^2\) 둘뿐</strong>이다.
+    \(\boldsymbol\phi = \theta\mathbf{u}\)로 두고 항을 모으면 홀수 항이 \(\sin\), 짝수 항이 \(1-\cos\)로 합쳐진다.
+  </p>
+
+  $$
+  \mathrm{Exp}(\boldsymbol\phi) = I + \sin\theta\,[\mathbf{u}]_\times + (1-\cos\theta)\,[\mathbf{u}]_\times^2
+  $$
+
+  <div class="interp">
+    <strong>해석:</strong> <strong>무한급수가 닫힌 형태로 접히는 것</strong>이 로드리게스 공식의 전부다.
+    그리고 접히는 이유는 \([\mathbf{u}]_\times^3 = -[\mathbf{u}]_\times\) 한 줄이다.
+    이 성질은 나중에 \(J_r\)(⑩절)과 사전적분(12회)에서도 같은 방식으로 다시 쓰인다 —
+    <strong>\([\cdot]_\times\)가 들어간 급수는 대체로 닫힌다.</strong>
+  </div>
+
+  <h3>벡터를 돌리는 법 — 행렬을 만들지 않고도 된다</h3>
+
+  <p>
+    위 식을 \(\mathbf{v}\)에 직접 적용하면 <strong>행렬을 만들지 않고</strong> 벡터를 돌릴 수 있다.
+    로드리게스 공식의 벡터 형태다.
+  </p>
+
+  $$
+  \mathbf{v}' = \mathbf{v}\cos\theta
+  + (\mathbf{u}\times\mathbf{v})\sin\theta
+  + \mathbf{u}(\mathbf{u}\cdot\mathbf{v})(1-\cos\theta)
+  $$
+
+  <p>
+    세 항이 각각 뜻이 있다. <strong>\(\mathbf{v}\)를 축에 <em>수직인</em> 성분과 <em>나란한</em> 성분으로 나누면</strong>,
+    나란한 성분은 안 돌고(셋째 항) 수직인 성분만 평면 안에서 도는 것(첫째·둘째 항)이다.
+    <strong>회전의 정의를 그대로 쓴 식</strong>이다.
+  </p>
+
+  <h3>회전행렬 → 축-각</h3>
 
   $$
   \theta = \arccos\!\left(\frac{\mathrm{tr}\,R - 1}{2}\right), \qquad
-  \mathbf{a} = \frac{1}{2\sin\theta}\begin{bmatrix} R_{32}-R_{23} \\ R_{13}-R_{31} \\ R_{21}-R_{12} \end{bmatrix}
+  \mathbf{u} = \frac{1}{2\sin\theta}\begin{bmatrix} R_{32}-R_{23} \\ R_{13}-R_{31} \\ R_{21}-R_{12} \end{bmatrix},
+  \qquad \boldsymbol\phi = \theta\,\mathbf{u}
   $$
 
-  <h3>숫자를 넣어 본다</h3>
+  <h3>⚠️ 성질과 함정 — 여기가 축-각의 약한 자리다</h3>
 
-  <p>
-    \(\boldsymbol\phi = (0, 0, \pi/2)\)는 z축으로 90° 도는 회전이다.
-    이 회전으로 \((1,0,0)\)을 돌리면 \((0,1,0)\)이 나와야 한다.
-    <span class="mono">vision-slam/src/rotation_numbers.py</span>를 돌린 결과다.
-  </p>
-
-  <pre>Exp((0, 0, π/2)) · (1, 0, 0) = [0.  1.  0.]
-‖Log(Exp(φ)) − φ‖ = 0.000e+00
-‖RᵀR − I‖         = 0.000e+00
-det R − 1         = 0.000e+00</pre>
-
-  <p>
-    2회에서 읽은 EuRoC의 <span class="mono">R_BC</span>를 같은 식에 넣으면 이렇게 나온다.
-  </p>
-
-  <pre>EuRoC T_BC 의 회전:  축 (−0.0110, 0.0150, 0.9998),  각 89.16°</pre>
-
-  <div class="interp">
-    <strong>해석:</strong> 숫자 아홉 개짜리 행렬이 <strong>「z축으로 89.16°」</strong> 한 줄이 됐다.
-    이것이 축-각 표현의 값어치다 — <strong>사람이 읽을 수 있고, 틀렸는지 바로 보인다.</strong>
-    행렬을 전치해서 읽었다면 각도는 그대로인데 <strong>축의 부호가 뒤집힌다.</strong>
-    자세를 눈으로 검사할 때 축-각으로 바꿔 보는 습관이 학기 내내 도움이 된다.
+  <div class="tablewrap">
+  <table>
+    <tr><th style="width:26%">무엇</th><th>내용</th><th>어떻게 다루나</th></tr>
+    <tr><td><strong>\(\theta \to 0\)</strong></td>
+      <td>\(\mathbf{u} = \boldsymbol\phi/\theta\)가 \(0/0\)이 된다. \(\mathrm{Log}\)에서도 \(\sin\theta \to 0\)</td>
+      <td><strong>테일러 전개로 갈라 준다.</strong> \(\mathrm{Exp}(\boldsymbol\phi) \approx I + [\boldsymbol\phi]_\times\)</td></tr>
+    <tr><td><strong>\(\theta \to \pi\)</strong></td>
+      <td>\(\mathrm{Log}\)의 분모 \(2\sin\theta\)가 0으로 간다. 아래 표</td>
+      <td>대각 성분으로 축을 구하는 <strong>별도 갈래</strong>가 필요하다</td></tr>
+    <tr><td><strong>\(\theta = \pi\)에서 부호 모호</strong></td>
+      <td>\(\mathrm{Exp}(\pi\mathbf{u}) = \mathrm{Exp}(-\pi\mathbf{u})\)다 (차이 \(3.5\times10^{-16}\)). <strong>축의 부호를 정할 수 없다</strong></td>
+      <td>규칙을 하나 정해 고정한다 (예: 첫 0 아닌 성분을 양수로)</td></tr>
+    <tr><td><strong>주기성</strong></td>
+      <td>\(\theta\)와 \(\theta + 2\pi\)가 같은 회전이다. <strong>같은 회전에 무한히 많은 \(\boldsymbol\phi\)</strong></td>
+      <td>\(\lVert\boldsymbol\phi\rVert \le \pi\)로 감싼다(wrap). 안 하면 최적화가 먼 길로 돈다</td></tr>
+    <tr><td><strong>합성이 안 된다</strong></td>
+      <td>\(\mathrm{Log}(\mathrm{Exp}(\mathbf{a})\mathrm{Exp}(\mathbf{b})) \ne \mathbf{a}+\mathbf{b}\)</td>
+      <td>⑩절 BCH. <strong>축-각을 더하는 코드를 보면 의심한다</strong></td></tr>
+  </table>
   </div>
 
-  <h2 id="quat">④ 쿼터니언과 이중 덮개</h2>
+  <p>\(\theta \to \pi\)에서 분모가 어떻게 되는지 실제 값이다.</p>
+
+  <pre>θ = 179.00°   2 sin θ = 3.490e-02
+θ = 179.90°   2 sin θ = 3.491e-03
+θ = 179.99°   2 sin θ = 3.491e-04
+θ = 180.00°   2 sin θ = 2.449e-16      ← 0 으로 나눈다</pre>
+
+  <div class="interp">
+    <strong>해석:</strong> \(\theta = \pi\)는 「거의 반 바퀴 돌아간 자세」다.
+    이 강의의 데이터에서는 잘 안 나오지만(V1_01_easy는 손으로 들고 걷는 정도다),
+    <strong>루프 클로징에서 반대 방향으로 되돌아온 프레임을 비교할 때</strong>는 실제로 나온다(14회).
+    라이브러리는 이 갈래를 다 갖고 있다. <strong>직접 짤 때만 문제가 된다</strong> —
+    그래서 이 강의는 Sophus를 쓴다.
+  </div>
+
+  <h2 id="quat">⑤ 쿼터니언 — 적분과 보간의 표준</h2>
+
+  <h3>무엇을 담나</h3>
 
   <p>
-    숫자 넷에 제약 하나(\(\lVert q \rVert = 1\))다. 곱셈이 싸고 수치적으로 안정해서
-    <strong>적분과 보간, 파일 저장</strong>에 쓴다. 회전행렬로 바꾸는 식은 라이브러리가 해 준다.
+    복소수를 3차원으로 확장한 것이다. 허수 단위가 셋이고, 다음 관계로 묶여 있다.
+  </p>
+
+  $$
+  \mathbf{i}^2 = \mathbf{j}^2 = \mathbf{k}^2 = \mathbf{i}\mathbf{j}\mathbf{k} = -1,
+  \qquad \mathbf{i}\mathbf{j} = \mathbf{k},\quad \mathbf{j}\mathbf{k} = \mathbf{i},\quad \mathbf{k}\mathbf{i} = \mathbf{j}
+  $$
+
+  <p>표기가 세 가지 있고, 셋 다 같은 것을 가리킨다.</p>
+
+  $$
+  q = \underbrace{q_0 + \mathbf{q}}_{\text{스칼라-벡터}}
+  = \underbrace{q_0 + q_1\mathbf{i} + q_2\mathbf{j} + q_3\mathbf{k}}_{\text{복소수}}
+  = \underbrace{\begin{bmatrix} q_0 &amp; q_1 &amp; q_2 &amp; q_3 \end{bmatrix}^\top}_{\text{벡터}}
+  $$
+
+  <p>
+    3 자유도를 넷으로 담으므로 제약이 하나 필요하다 — <strong>크기가 1</strong>이어야 한다.
+    이것을 <strong>단위 쿼터니언</strong>이라고 하고, 회전을 나타내는 것은 단위 쿼터니언뿐이다.
+  </p>
+
+  $$
+  \lVert q \rVert = \sqrt{q_0^2+q_1^2+q_2^2+q_3^2} = 1
+  $$
+
+  <h3>축-각과의 관계 — 왜 반각인가</h3>
+
+  <p>
+    회전축 \(\mathbf{u}\), 회전각 \(\theta\)인 회전에 대응하는 단위 쿼터니언은 이것이다.
+  </p>
+
+  $$
+  q = \cos\!\left(\frac{\theta}{2}\right) + \mathbf{u}\,\sin\!\left(\frac{\theta}{2}\right)
+  $$
+
+  <p>
+    <strong>각도가 절반</strong>으로 들어가는 것이 처음 보면 이상하다. 이유는 아래
+    「벡터를 돌리는 법」에 있다 — <strong>쿼터니언을 양쪽에서 두 번 곱하기 때문에</strong>
+    회전이 두 번 먹고, 그래서 절반을 넣어야 맞는다.
   </p>
 
   <p>
-    알아 둘 것은 하나다. <strong>\(q\)와 \(-q\)가 같은 회전이다.</strong>
-    구면 위 두 점이 같은 회전을 가리키므로 「이중 덮개」라고 부른다.
+    \(\theta = 0\)이면 \(q = (1, 0, 0, 0)\)이다. <strong>항등 회전이 \(q_0 = 1\)</strong>이라는 것만 외워 두면
+    부호와 순서를 헷갈릴 때 되돌아올 자리가 된다.
+  </p>
+
+  <h3 id="qprod">quaternion product — 두 회전을 잇는 연산</h3>
+
+  <p>
+    쿼터니언끼리 곱하는 연산을 <strong>Hamilton product</strong>라고 하고 \(\otimes\)로 쓴다.
+    허수 관계를 그대로 전개하면 스칼라-벡터 형태로 이렇게 정리된다.
+  </p>
+
+  $$
+  q \otimes p =
+  \begin{bmatrix}
+    q_0 p_0 - \mathbf{q}\cdot\mathbf{p} \\[4pt]
+    q_0\mathbf{p} + p_0\mathbf{q} + \mathbf{q}\times\mathbf{p}
+  \end{bmatrix}
+  $$
+
+  <p>
+    <strong>내적이 스칼라 쪽으로, 외적이 벡터 쪽으로</strong> 간다.
+    그리고 외적이 들어 있으므로 <strong>순서를 바꾸면 결과가 다르다</strong> —
+    회전 합성이 순서에 의존한다는 사실이 여기 그대로 들어 있다.
+  </p>
+
+  <p>
+    구현할 때는 <strong>행렬 곱으로 쓰는 편</strong>이 편하다. 왼쪽 곱과 오른쪽 곱을 각각 4×4 행렬로 만들 수 있다.
+  </p>
+
+  $$
+  q \otimes p = [q]_L\,p = [p]_R\,q
+  $$
+
+  $$
+  [q]_L = \begin{bmatrix} q_0 &amp; -\mathbf{q}^\top \\ \mathbf{q} &amp; q_0 I + [\mathbf{q}]_\times \end{bmatrix},
+  \qquad
+  [p]_R = \begin{bmatrix} p_0 &amp; -\mathbf{p}^\top \\ \mathbf{p} &amp; p_0 I - [\mathbf{p}]_\times \end{bmatrix}
+  $$
+
+  <div class="interp">
+    <strong>해석:</strong> 두 행렬의 <strong>차이는 \([\cdot]_\times\)의 부호 하나뿐</strong>이다.
+    그 부호 하나가 「왼쪽에서 곱하는가 오른쪽에서 곱하는가」를 가른다.
+    ⑧절의 left/right perturbation과 <strong>같은 구조</strong>이고, 우연이 아니다 —
+    둘 다 「군의 원소를 어느 쪽에서 곱하는가」라는 같은 질문이다(⑦절).
+  </div>
+
+  <h3>켤레·역·노름</h3>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th style="width:24%">무엇</th><th>식</th><th>뜻</th></tr>
+    <tr><td>켤레 (conjugate)</td><td>\(q^{*} = q_0 - \mathbf{q}\)</td><td>벡터부의 부호만 뒤집는다</td></tr>
+    <tr><td>노름</td><td>\(\lVert q \rVert^2 = q \otimes q^{*}\)의 스칼라부</td><td>\(\lVert q \otimes p\rVert = \lVert q\rVert\lVert p\rVert\)</td></tr>
+    <tr><td>역</td><td>\(q^{-1} = q^{*}/\lVert q\rVert^2\)</td><td><strong>단위 쿼터니언이면 \(q^{-1} = q^{*}\)</strong> — 역회전이 공짜다</td></tr>
+    <tr><td>항등원</td><td>\((1,0,0,0)\)</td><td>\(q \otimes q^{*} = (1,0,0,0)\) (측정 오차 \(0\))</td></tr>
+  </table>
+  </div>
+
+  <h3>벡터를 돌리는 법 — 양쪽에서 곱한다</h3>
+
+  <p>
+    벡터 \(\mathbf{v}\)를 <strong>스칼라부가 0인 쿼터니언</strong> \((0, \mathbf{v})\)로 만들어 놓고
+    양쪽에서 곱한다. 이것이 쿼터니언이 회전을 실행하는 방식이다.
+  </p>
+
+  $$
+  (0,\ \mathbf{v}') = q \otimes (0,\ \mathbf{v}) \otimes q^{*}
+  $$
+
+  <p>
+    결과의 스칼라부는 항상 0이고, 벡터부가 돌아간 벡터다.
+    <strong>정말 회전행렬과 같은 일을 하는지</strong> 실제로 재 봤다.
+    \(\boldsymbol\phi = (0.3, -0.5, 0.9)\), \(\mathbf{v} = (0.4, 1.2, -0.7)\)이다.
+  </p>
+
+  <pre>‖q→R  −  Exp(φ)‖            = 2.306e-16      ← 같은 회전행렬이 나온다
+‖q⊗v⊗q*  −  R·v‖            = 2.220e-16      ← 벡터를 같은 자리로 보낸다
+‖(q⊗p)→R  −  (q→R)(p→R)‖    = 3.029e-16      ← 곱이 합성과 같다
+‖q⊗q*  −  (1,0,0,0)‖        = 0.000e+00      ← 켤레가 역이다
+q 와 −q 가 같은 회전인가      = 0.000e+00      ← 이중 덮개</pre>
+
+  <div class="interp">
+    <strong>해석:</strong> 이 다섯 줄이 그대로 <strong>쿼터니언 구현의 시험지</strong>다.
+    직접 짜든 라이브러리를 쓰든 <strong>먼저 이 다섯 개를 돌려 본다.</strong>
+    특히 두 번째 줄이 중요하다 — 첫 줄만 통과하고 두 번째에서 실패하면
+    <strong>\(q\)와 \(q^{*}\)의 자리를 바꿔 곱한 것</strong>이다(역회전을 하고 있다).
+  </div>
+
+  <h3>이중 덮개 — \(q\)와 \(-q\)가 같은 회전이다</h3>
+
+  <p>
+    위 마지막 줄이 그것이다. \(q\)의 모든 부호를 뒤집어도 \(q \otimes \mathbf{v} \otimes q^{*}\)는 그대로다
+    (\(q\)가 두 번 들어가므로 부호가 상쇄된다).
+    그래서 <strong>4차원 구 위의 두 점이 같은 회전 하나를 가리킨다.</strong>
+    이것을 이중 덮개(double cover)라고 한다.
   </p>
 
   <div class="box trap">
     <p class="boxtitle">⚠️ 부호를 통일하지 않으면 평균과 보간이 깨진다</p>
     <p style="margin:0">
       거의 같은 두 자세인데 하나는 \(q\), 다른 하나는 \(-q\)로 저장돼 있으면
-      <strong>단순 평균이 엉뚱한 회전</strong>이 된다. 두 점을 잇는 보간도 먼 쪽으로 돈다.
-      보통 <span class="mono">w</span> 성분이 음수면 부호를 뒤집어 통일한다.
-      <strong>루프 클로징(14회)에서 자세를 비교할 때 이 자리가 실제로 나온다.</strong>
+      <strong>단순 평균이 엉뚱한 회전</strong>이 되고, 두 점을 잇는 보간은 <strong>먼 쪽으로 한 바퀴 돈다.</strong>
+      보통 <span class="mono">q0</span>가 음수면 부호를 뒤집어 통일한다.
+      <strong>루프 클로징(14회)에서 자세를 비교할 때, 그리고 궤적 파일을 읽을 때</strong> 실제로 나온다.
     </p>
   </div>
 
-  <div class="interp">
-    <strong>해석:</strong> 「쿼터니언은 짐벌락이 없으니 최적화도 쿼터니언으로 하면 된다」는 흔한 오해다.
-    숫자 넷에 제약 하나이므로 <strong>여전히 자유롭게 움직일 수 없다.</strong>
-    최적화는 <strong>제약 없는 세 숫자</strong>가 필요하고, 그것이 축-각이다.
-    쿼터니언으로 저장해 두고 <strong>갱신할 때만 축-각으로 옮겨 가는 것</strong>이 표준 방식이다.
-  </div>
-
-  <h2 id="perturb">⑤ 섭동 — 회전은 더할 수 없다 <span class="badge b-red">사람이 한다</span></h2>
+  <h3>보간 — SLERP</h3>
 
   <p>
-    보통의 최적화는 <strong>변수를 조금 흔들어 보고 결과가 얼마나 변하는지</strong>를 보면서 내려간다.
-    \(x \leftarrow x + \delta x\)다. 회전에는 이게 안 된다.
-    \(R + \delta R\)은 \(R^\top R = I\)를 만족하지 않으므로 <strong>회전행렬이 아니다.</strong>
-  </p>
-
-  <p>
-    그래서 <strong>더하는 대신 곱한다.</strong> 그런데 곱하는 자리가 두 곳이다.
+    두 자세 사이를 매끄럽게 잇는 일이 자주 생긴다 —
+    <strong>영상 시각과 IMU 시각 사이의 자세를 알아야 할 때</strong>가 대표적이다(12회).
+    가장 단순한 방법은 두 쿼터니언을 선형으로 섞고 정규화하는 것(LERP)인데, <strong>등속이 아니다.</strong>
   </p>
 
   $$
-  \text{우섭동:}\quad R \leftarrow R\,\mathrm{Exp}(\delta\boldsymbol\theta)
+  \mathrm{SLERP}(q_1, q_2, t) = \frac{\sin((1-t)\Omega)}{\sin\Omega}\,q_1 + \frac{\sin(t\Omega)}{\sin\Omega}\,q_2,
+  \qquad \cos\Omega = q_1 \cdot q_2
+  $$
+
+  <figure>
+    <img src="assets/img/03_slerp_lerp.png"
+         alt="보간 변수 t에 따른 각속도 그래프. SLERP는 90도로 평평한 직선이고 LERP는 가운데가 볼록한 곡선으로 81.1도에서 94.9도 사이를 오간다">
+    <figcaption>90° 떨어진 두 자세를 이었다. <strong>SLERP는 어디서나 90°/단위</strong>로 일정하고,
+      LERP는 <strong>81.1°에서 94.9°까지</strong> 오간다 — 가운데서 빨라진다.</figcaption>
+  </figure>
+
+  <div class="interp">
+    <strong>해석:</strong> 최대/최소 비가 1.17이다. <strong>17 %</strong>다.
+    두 자세가 가까우면(연속한 IMU 샘플처럼) 차이가 거의 없어서 LERP를 써도 된다.
+    <strong>먼 두 자세를 이을 때만</strong> SLERP가 필요하고,
+    그때 LERP를 쓰면 <strong>속도가 일정하지 않아 보간한 값으로 잰 각속도가 틀린다.</strong>
+    <strong>두 자세가 얼마나 떨어져 있는지를 보고 고른다</strong> — 이것도 사람이 하는 판단이다.
+  </div>
+
+  <h3>회전행렬과 오가는 식</h3>
+
+  <p>쿼터니언 → 회전행렬은 닫힌 형태다.</p>
+
+  $$
+  R(q) = (q_0^2 - \mathbf{q}^\top\mathbf{q})\,I + 2\,\mathbf{q}\mathbf{q}^\top + 2q_0\,[\mathbf{q}]_\times
+  $$
+
+  <p>반대 방향은 축과 각을 거쳐 간다 — ④절의 \(\mathrm{Log}\)를 그대로 쓴다.</p>
+
+  $$
+  \theta = \arccos\!\left(\frac{\mathrm{tr}\,R - 1}{2}\right), \qquad
+  \mathbf{u} = \frac{1}{2\sin\theta}\begin{bmatrix} R_{32}-R_{23} \\ R_{13}-R_{31} \\ R_{21}-R_{12}\end{bmatrix},
+  \qquad q = \cos\frac{\theta}{2} + \mathbf{u}\sin\frac{\theta}{2}
+  $$
+
+  <div class="box trap">
+    <p class="boxtitle">⚠️ 실전 라이브러리는 이 식을 그대로 쓰지 않는다</p>
+    <p style="margin:0">
+      \(\theta\)가 0이나 \(\pi\)에 가까우면 위 식이 불안정하다(④절).
+      그래서 Eigen이나 Sophus는 <strong>대각 성분 중 가장 큰 것을 골라 갈래를 나누는</strong> 방식(Shepperd 방법)을 쓴다.
+      <strong>직접 짤 일은 없지만, 「왜 코드가 저렇게 갈래가 많지」의 답이 이것</strong>이다.
+    </p>
+  </div>
+
+  <h3>Hamilton과 JPL — 논문마다 다르다</h3>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th style="width:20%"></th><th>Hamilton</th><th>JPL</th></tr>
+    <tr><td>허수 관계</td><td>\(\mathbf{i}\mathbf{j} = \mathbf{k}\)</td><td>\(\mathbf{i}\mathbf{j} = -\mathbf{k}\)</td></tr>
+    <tr><td>합성 순서</td><td>\(q_{AC} = q_{AB} \otimes q_{BC}\)</td><td>순서가 뒤집힌다</td></tr>
+    <tr><td>누가 쓰나</td><td><strong>Eigen · ROS · EuRoC 정답 궤적 · 이 강의</strong></td><td>MSCKF 계열 논문 상당수, 항공우주 쪽</td></tr>
+  </table>
+  </div>
+
+  <p>
+    <strong>어느 쪽이 맞는 것이 아니라 약속이 다른 것이다.</strong> 문제는 섞을 때 생기고,
+    섞으면 <strong>회전이 반대 방향으로 합성된다.</strong> 궤적이 이상해지는데 발산하지는 않는다.
+    <strong>논문을 읽을 때 어느 쪽인지 먼저 확인하는 것</strong>이 대학원에서 오래 도움이 된다.
+  </p>
+
+  <p>
+    그리고 관례와 <strong>별개로</strong> 저장 순서 문제가 하나 더 있다. 이 프로젝트에서 만나는 자리가 넷이다.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>어디</th><th>순서</th></tr>
+    <tr><td><span class="mono">Eigen::Quaterniond(w,x,y,z)</span> 생성자</td><td><span class="mono">w</span>가 앞</td></tr>
+    <tr><td><span class="mono">q.coeffs()</span>가 돌려주는 벡터</td><td><span class="mono">(x,y,z,w)</span> — <strong>같은 클래스인데 다르다</strong></td></tr>
+    <tr><td>EuRoC 정답 궤적 CSV</td><td><span class="mono">(w,x,y,z)</span></td></tr>
+    <tr><td>TUM 궤적 형식 (evo가 먹는 것)</td><td><span class="mono">(x,y,z,w)</span></td></tr>
+  </table>
+  </div>
+
+  <p>
+    그래서 2회 규약에 <strong>「코드 안에서는 <span class="mono">Sophus::SO3d</span>만 쓴다」</strong>고 적었다.
+    순서를 신경 써야 하는 자리를 <strong>파일을 읽고 쓰는 두 곳으로 몰아넣는 것</strong>이 목적이다.
+  </p>
+
+  <h2 id="convert">⑥ 표현 사이를 오가는 지도</h2>
+
+  <p class="readme-first">
+    화살표를 따라가면 어느 표현에서 어느 표현으로든 갈 수 있다.
+    <strong>직접 가는 길이 없으면 회전행렬이나 축-각을 거친다.</strong>
+  </p>
+
+  <div class="tablewrap scroll">
+  <table class="summary-table">
+    <tr><th style="width:16%">에서 ↓ 로 →</th><th>회전행렬</th><th>오일러각</th><th>축-각</th><th>쿼터니언</th></tr>
+    <tr><td><strong>회전행렬</strong></td><td>—</td>
+      <td>\(\arcsin\)·\(\mathrm{atan2}\) (③절)</td>
+      <td>\(\mathrm{Log}\) (④절)</td>
+      <td>\(\mathrm{Log}\) 뒤 반각 (⑤절)</td></tr>
+    <tr><td><strong>오일러각</strong></td><td>\(R_z R_y R_x\) (③절)</td><td>—</td>
+      <td colspan="2">직접 가는 길이 없다. <strong>회전행렬을 거친다</strong></td></tr>
+    <tr><td><strong>축-각</strong></td><td>\(\mathrm{Exp}\) — 로드리게스 (④절)</td>
+      <td>회전행렬을 거친다</td><td>—</td>
+      <td>\(q = \cos\frac{\theta}{2} + \mathbf{u}\sin\frac{\theta}{2}\)</td></tr>
+    <tr><td><strong>쿼터니언</strong></td><td>\(R(q)\) 닫힌 형태 (⑤절)</td>
+      <td>회전행렬을 거친다</td>
+      <td>\(\theta = 2\arccos q_0\), \(\mathbf{u} = \mathbf{q}/\lVert\mathbf{q}\rVert\)</td><td>—</td></tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 오일러각만 <strong>가로줄과 세로줄이 다 비어 있다.</strong>
+    다른 표현과 직접 오갈 수 없고 항상 회전행렬을 거쳐야 한다.
+    <strong>이것이 오일러각을 계산에 쓰지 않는 실무적인 이유</strong>이기도 하다 —
+    무엇을 하든 변환이 한 번 더 들어간다.
+  </div>
+
+  <h2 id="lie">⑦ Lie theory — 무엇이고, 우리가 쓰는 것은 어느 부분인가 <span class="badge b-red">사람이 한다</span></h2>
+
+  <h3>왜 이 이론이 필요한가</h3>
+
+  <p>
+    지금까지는 회전을 <strong>담는 방법</strong>을 봤다. 이제 회전을 <strong>추정</strong>해야 한다.
+    그런데 우리가 아는 추정 도구는 전부 <strong>벡터공간을 전제로</strong> 만들어져 있다.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th style="width:30%">도구</th><th>무엇을 전제하나</th><th>회전에서는</th></tr>
+    <tr><td>기울기 하강 · 가우스-뉴턴</td><td>\(x \leftarrow x + \delta x\)</td>
+      <td><strong>\(R + \delta R\)은 회전이 아니다</strong></td></tr>
+    <tr><td>미분 · 야코비안</td><td>\(\lim (f(x+\delta)-f(x))/\delta\)</td>
+      <td>\(x+\delta\)를 만들 수 없다</td></tr>
+    <tr><td>가우시안 분포</td><td>평균 \(\mu\), 오차 \(x - \mu\)</td>
+      <td><strong>회전끼리 뺄 수 없다</strong></td></tr>
+    <tr><td>평균 · 보간</td><td>\(\frac{1}{n}\sum x_i\)</td>
+      <td>회전을 더해 \(n\)으로 나누면 회전이 아니다</td></tr>
+  </table>
+  </div>
+
+  <p>
+    <strong>네 줄 전부 「더하기」와 「빼기」에서 막힌다.</strong>
+    Lie 이론은 이 문제에 대한 표준적인 답이다 —
+    <strong>더할 수 있는 자리를 따로 만들어 두고, 계산은 거기서 하고, 결과만 다시 회전으로 보낸다.</strong>
+  </p>
+
+  <h3>Lie group — 「곱할 수 있는 매끄러운 곡면」</h3>
+
+  <p>이름이 둘로 나뉘어 있다. <strong>group</strong>이 절반, <strong>manifold</strong>가 나머지 절반이다.</p>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 Lie 이론의 용어 넷</p>
+    <dl>
+      <dt><strong>group</strong> (군)</dt>
+      <dd>원소끼리 <strong>곱할 수 있고</strong>, 곱이 다시 그 집합 안에 있고(닫힘),
+        <strong>항등원</strong>과 <strong>역원</strong>이 있는 집합.
+        \(\mathbf{SO}(3)\)를 확인해 보면 — 회전끼리 곱하면 회전이고(닫힘),
+        \(I\)가 있고(항등원), \(R^\top\)이 있다(역원). <strong>군이다.</strong></dd>
+
+      <dt><strong>manifold</strong> (다양체)</dt>
+      <dd><strong>국소적으로는 평평한 공간처럼 보이는 곡면.</strong>
+        지구 표면이 예다 — 전체로 보면 구인데, 동네 하나만 보면 평면 지도로 그릴 수 있다.
+        \(\mathbf{SO}(3)\)는 9차원 공간 안에 놓인 <strong>3차원 곡면</strong>이다.</dd>
+
+      <dt><strong>Lie group</strong></dt>
+      <dd><strong>둘 다인 것.</strong> 군이면서 매끄러운 다양체이고,
+        곱하기와 역을 취하는 연산이 매끄럽다.
+        \(\mathbf{SO}(3)\)·\(\mathbf{SE}(3)\)가 그렇고, 그래서 이 이론이 로봇에서 쓰인다.</dd>
+
+      <dt><strong>tangent space</strong> (접공간) · <strong>Lie algebra</strong></dt>
+      <dd>곡면 위 한 점에서 <strong>곡면을 스치는 평평한 공간.</strong> 여기서는 <strong>더하기가 된다.</strong>
+        <strong>항등원 \(I\)에서의 접공간</strong>에 특별히 이름을 붙인 것이 Lie algebra이고,
+        \(\mathbf{SO}(3)\)의 것이 \(\mathfrak{so}(3)\) — <strong>④절의 반대칭 행렬 집합</strong>이다.</dd>
+    </dl>
+    <p class="later">이름을 외울 필요는 없다. <strong>「곡면 위에서 계산할 수 없으니 접평면으로 내려와 계산한다」</strong>가 전부다.</p>
+  </div>
+
+  <h3>왜 하필 항등원의 접공간인가</h3>
+
+  <p>
+    곡면 위 점마다 접평면이 하나씩 있다. 그런데 <strong>군에서는 한 점의 접평면만 알면 나머지가 전부 따라온다.</strong>
+    아무 원소나 곱해서 옮길 수 있기 때문이다.
+  </p>
+
+  $$
+  \text{점 } R \text{ 에서의 접벡터} \;=\; R \cdot (\text{항등원에서의 접벡터})
+  $$
+
+  <p>
+    그래서 <strong>항등원에서의 접공간 하나만 정의해 두고</strong>, 다른 점에서는 거기에 \(R\)을 곱해 쓴다.
+    이 「곱해서 옮기는」 동작이 왼쪽에서도 오른쪽에서도 가능하고,
+    <strong>그것이 ⑧절의 left/right perturbation</strong>이다. 여기서 이미 예고된다.
+  </p>
+
+  <h3>각속도가 \(\mathfrak{so}(3)\)에 사는 이유</h3>
+
+  <p>
+    \(R(t)\)가 시간에 따라 변하는 회전이라고 하자. \(R^\top R = I\)를 시간으로 미분하면 이렇게 된다.
+  </p>
+
+  $$
+  \dot{R}^\top R + R^\top \dot{R} = 0
+  \quad\Longrightarrow\quad
+  (R^\top\dot{R})^\top = -(R^\top\dot{R})
+  $$
+
+  <p>
+    <strong>\(R^\top\dot{R}\)이 반대칭이다.</strong> 즉 \(\mathfrak{so}(3)\)의 원소다.
+    이것을 \([\boldsymbol\omega]_\times\)라고 이름 붙이면 다음 미분방정식이 나온다.
+  </p>
+
+  $$
+  \dot{R} = R\,[\boldsymbol\omega]_\times
+  \qquad\Longrightarrow\qquad
+  R(t) = R(0)\,\exp([\boldsymbol\omega]_\times t) = R(0)\,\mathrm{Exp}(\boldsymbol\omega t)
+  $$
+
+  <div class="interp">
+    <strong>해석:</strong> 여기서 두 가지가 한꺼번에 나온다.
+    <strong>①</strong> 자이로가 재는 각속도 \(\boldsymbol\omega\)는 <strong>Lie algebra의 원소</strong>다 —
+    「반대칭 행렬 집합」이라는 추상적인 것이 사실은 <strong>각속도가 사는 곳</strong>이었다.
+    <strong>②</strong> 각속도를 회전으로 바꾸는 연산이 바로 \(\mathrm{Exp}\)다.
+    <strong>10회에서 IMU를 적분할 때 쓰는 식이 이 한 줄</strong>이고,
+    12회 사전적분의 \(\Delta R\)도 여기서 나온다.
+    <strong>\(\mathrm{Exp}\)는 수학적 장식이 아니라 자이로 값을 자세로 바꾸는 함수다.</strong>
+  </div>
+
+  <h3>Exp와 Log — 곡면과 접평면을 오간다</h3>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th style="width:22%">연산</th><th>어디서 어디로</th><th>실전에서 하는 일</th></tr>
+    <tr><td>\(\mathrm{Exp}: \mathbb{R}^3 \to \mathbf{SO}(3)\)</td>
+      <td>접평면 → 곡면</td>
+      <td>각속도·보정량을 <strong>회전으로 만든다</strong></td></tr>
+    <tr><td>\(\mathrm{Log}: \mathbf{SO}(3) \to \mathbb{R}^3\)</td>
+      <td>곡면 → 접평면</td>
+      <td>두 자세의 <strong>차이를 벡터로 잰다</strong></td></tr>
+  </table>
+  </div>
+
+  <p>
+    이 둘로 <strong>더하기와 빼기를 흉내 낸다.</strong> 기호를 따로 쓴다 — \(\boxplus\)와 \(\boxminus\)다.
+  </p>
+
+  $$
+  R \boxplus \boldsymbol\delta = R\,\mathrm{Exp}(\boldsymbol\delta),
+  \qquad
+  R_2 \boxminus R_1 = \mathrm{Log}(R_1^\top R_2)
+  $$
+
+  <div class="interp">
+    <strong>해석:</strong> 이 두 줄이 이 절의 결론이다.
+    <strong>\(+\)를 \(\boxplus\)로, \(-\)를 \(\boxminus\)로 바꿔 놓으면
+    앞의 표에 있던 도구 넷이 전부 다시 돌아간다.</strong>
+    최적화는 \(R \boxplus \delta\)로 갱신하고, 오차는 \(\hat{R} \boxminus R\)로 재고,
+    공분산은 \(\boldsymbol\delta\)의 공분산으로 둔다.
+    <strong>11회의 오차상태 칼만필터가 정확히 이 아이디어 하나로 만들어져 있다.</strong>
+  </div>
+
+  <h3>Lie bracket — algebra라는 이름이 붙은 이유</h3>
+
+  <p>
+    Lie algebra에는 더하기 말고 연산이 하나 더 있다. <strong>Lie bracket</strong>이라고 하고,
+    행렬에서는 \([A, B] = AB - BA\)다. \(\mathfrak{so}(3)\)에서 이것을 계산해 보면 놀랍게도 <strong>외적</strong>이 나온다.
+  </p>
+
+  $$
+  \big[[\mathbf{a}]_\times,\ [\mathbf{b}]_\times\big] = [\mathbf{a}\times\mathbf{b}]_\times
+  \qquad\text{(측정 오차 } 0.000\times10^{0}\text{)}
+  $$
+
+  <p>
+    <strong>「회전은 순서를 바꾸면 결과가 다르다」를 숫자로 잰 것이 Lie bracket</strong>이다.
+    두 회전이 교환 가능하면 bracket이 0이 되고, 실제로 \(\mathbf{a}\)와 \(\mathbf{b}\)가 나란하면
+    \(\mathbf{a}\times\mathbf{b} = 0\)이다 — <strong>같은 축의 회전끼리는 순서를 바꿔도 된다.</strong>
+    아는 사실인데 식이 그것을 그대로 말해 준다.
+  </p>
+
+  <h3 id="adjoint">Adjoint — 왼쪽과 오른쪽을 잇는다</h3>
+
+  <p>
+    ⑦절 앞에서 「접벡터를 곱해서 옮긴다」고 했다. 왼쪽으로 옮기는 것과 오른쪽으로 옮기는 것을
+    이어 주는 연산자가 <strong>Adjoint</strong>다. \(\mathbf{SO}(3)\)에서는 놀랄 만큼 간단하다.
+  </p>
+
+  $$
+  R\,[\boldsymbol\omega]_\times R^\top = [R\boldsymbol\omega]_\times
+  \qquad\Longrightarrow\qquad
+  \mathrm{Ad}_R = R
+  $$
+
+  <p>여기서 바로 다음 관계가 따라 나온다. 이것이 ⑧절의 핵심 식이다.</p>
+
+  $$
+  \mathrm{Exp}(\delta\boldsymbol\varphi)\,R \;=\; R\,\mathrm{Exp}(R^\top \delta\boldsymbol\varphi)
+  \qquad\text{(측정 오차 } 2.1\times10^{-16}\text{)}
+  $$
+
+  <div class="interp">
+    <strong>해석:</strong> <strong>left perturbation과 right perturbation은 다른 것이 아니라
+    \(R\)로 변환하면 서로 옮겨 가는 것</strong>이다.
+    \(\delta\boldsymbol\theta_{\text{right}} = R^\top \delta\boldsymbol\varphi_{\text{left}}\)이다.
+    <strong>그래서 「어느 쪽이 맞나」는 질문이 성립하지 않는다.</strong> 둘 다 맞고,
+    <strong>섞는 것만 틀린다.</strong> 섞으면 야코비안에 \(R\)이 하나 빠지거나 더 들어간다.
+  </div>
+
+  <h3 id="lieuse">Lie 이론 전체 중 이 강의가 쓰는 부분</h3>
+
+  <p>
+    Lie 이론은 수학의 큰 분야다. <strong>강체 변환에 쓰는 것은 그중 아주 좁은 부분</strong>이고,
+    실제로 필요한 것은 아래 표가 전부다.
+  </p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th style="width:22%">무엇</th><th>이 강의에서 하는 일</th><th>어느 회차</th></tr>
+    <tr><td>\(\mathbf{SO}(3)\)</td><td>회전. 자세의 회전 부분</td><td>2회~</td></tr>
+    <tr><td>\(\mathfrak{so}(3)\)</td><td><strong>각속도가 사는 곳.</strong> 최적화 변수, 오차 상태</td><td>3 · 9 · 11 · 12회</td></tr>
+    <tr><td>\(\mathrm{Exp}\) · \(\mathrm{Log}\)</td><td>각속도 → 회전 / 자세 차이 → 벡터</td><td>3 · 10 · 12회</td></tr>
+    <tr><td>\(\boxplus\) · \(\boxminus\)</td><td>최적화 갱신, 오차 정의, 수치 야코비안</td><td>3 · 9 · 11회</td></tr>
+    <tr><td><strong>right Jacobian</strong> \(J_r\)</td><td>바이어스가 바뀌었을 때 사전적분 보정</td><td>⑩절 · <strong>12회</strong></td></tr>
+    <tr><td><strong>Adjoint</strong> \(\mathrm{Ad}_R = R\)</td><td>left ↔ right 변환, 공분산 옮기기</td><td>⑧절 · 12 · 13회</td></tr>
+    <tr><td>Lie bracket</td><td><strong>개념만.</strong> BCH가 왜 그렇게 생겼는지 설명할 때</td><td>⑩절</td></tr>
+    <tr><td>\(\mathbf{SE}(3)\) · \(\mathfrak{se}(3)\)</td><td><strong>이름만.</strong> 이 강의는 위치와 회전을 나눠 다룬다</td><td>「조금 더」</td></tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 표의 위 네 줄이 <strong>오늘 손으로 만드는 것</strong>이고,
+    가운데 두 줄이 <strong>12~13회에서 회수되는 것</strong>이다.
+    맨 아래 두 줄은 알아만 둔다. <strong>Lie 이론을 「공부」할 필요는 없고,
+    이 여덟 줄이 무엇을 하는지만 알면 이 강의가 끝까지 간다.</strong>
+    더 깊이 보고 싶으면 「조금 더」에 읽을거리를 적어 두었다.
+  </div>
+
+  <h2 id="perturb">⑧ left perturbation과 right perturbation <span class="badge b-red">사람이 한다</span></h2>
+
+  <p>
+    이제 ⑦절의 도구로 원래 문제를 푼다. 회전을 조금 흔들어 보려면 <strong>곱해야 한다.</strong>
+    그런데 곱하는 자리가 두 곳이다.
+  </p>
+
+  $$
+  \text{right perturbation:}\quad R \leftarrow R\,\mathrm{Exp}(\delta\boldsymbol\theta)
   \qquad\qquad
-  \text{좌섭동:}\quad R \leftarrow \mathrm{Exp}(\delta\boldsymbol\varphi)\,R
+  \text{left perturbation:}\quad R \leftarrow \mathrm{Exp}(\delta\boldsymbol\varphi)\,R
   $$
 
   <div class="tablewrap">
   <table>
-    <tr><th style="width:16%">어느 쪽</th><th>\(\delta\)는 어느 좌표계에서 본 미소 회전인가</th><th>이 강의에서</th></tr>
-    <tr><td><strong>우섭동</strong></td><td><strong>몸체 좌표계</strong>에서 본 것. \(R\)이 먼저 있고 그 뒤에 조금 더 돈다</td>
+    <tr><th style="width:20%">어느 쪽</th><th>\(\delta\)가 어느 좌표계에서 본 미소 회전인가</th><th>이 강의에서</th></tr>
+    <tr><td><strong>right</strong></td>
+      <td><strong>몸체 좌표계</strong>에서 본 것. \(R\)이 먼저 적용되고 그 뒤에 조금 더 돈다</td>
       <td><strong>이것으로 통일한다</strong></td></tr>
-    <tr><td>좌섭동</td><td><strong>월드 좌표계</strong>에서 본 것. 먼저 조금 돌고 \(R\)이 적용된다</td>
+    <tr><td>left</td>
+      <td><strong>월드 좌표계</strong>에서 본 것. 먼저 조금 돌고 \(R\)이 적용된다</td>
       <td>쓰지 않는다</td></tr>
   </table>
   </div>
 
   <p>
-    <strong>왜 우섭동인가.</strong> IMU 측정이 몸체 좌표계에서 나오기 때문이다(10회).
+    <strong>왜 right인가.</strong> IMU 측정이 몸체 좌표계에서 나오기 때문이다(10회).
     자이로가 재는 각속도도, 가속도계가 재는 비력도 전부 몸체 좌표계 값이다.
-    우섭동을 쓰면 <strong>야코비안이 측정과 같은 좌표계에 놓인다.</strong>
+    right perturbation을 쓰면 <strong>야코비안이 측정과 같은 좌표계에 놓인다.</strong>
+    ⑦절에서 유도한 \(\dot{R} = R[\boldsymbol\omega]_\times\)도 <strong>이미 오른쪽에 붙어 있다</strong> —
+    각속도가 몸체 좌표계 값이라는 사실이 식에 그대로 들어 있다.
   </p>
 
   <h3>같은 점을 돌려 미분하면 다른 식이 나온다</h3>
@@ -298,8 +1092,7 @@ det R − 1         = 0.000e+00</pre>
   $$
 
   <p>
-    <strong>두 식은 다르다.</strong> 얼마나 다른지 실제 숫자로 보면 이렇다.
-    \(R = \mathrm{Exp}((0.3, -0.5, 0.9))\), \(\mathbf{p} = (0.4, 1.2, -0.7)\)일 때다.
+    <strong>두 식은 다르다.</strong> \(R = \mathrm{Exp}((0.3, -0.5, 0.9))\), \(\mathbf{p} = (0.4, 1.2, -0.7)\)로 실제 값을 보면 이렇다.
   </p>
 
   <pre>−R[p]× =                          −[Rp]× =
@@ -308,20 +1101,27 @@ det R − 1         = 0.000e+00</pre>
  [ 1.044  -0.711  -0.622]]         [ 1.292   0.558   0.000]]</pre>
 
   <p>
-    오른쪽은 <strong>대각이 0인 반대칭 행렬</strong>이고 왼쪽은 아니다. 아예 다른 행렬이다.
-    수치 미분과 대조하면 이렇게 갈린다.
+    오른쪽은 <strong>대각이 0인 반대칭 행렬</strong>이고 왼쪽은 아니다. 구조부터 다르다.
+    수치 미분(⑨절)과 대조하면 이렇게 갈린다.
   </p>
 
-  <pre>우섭동 식(맞는 것) 상대오차   5.001e-07   ← 통과 기준 1e-6
-좌섭동 식(틀린 것) 상대오차   8.886e-01   ← 거의 90 % 가 틀렸다</pre>
+  <pre>right perturbation 식(맞는 것) 상대오차   5.001e-07   ← 통과 기준 1e-6
+left  perturbation 식(틀린 것) 상대오차   8.886e-01   ← 거의 90 % 가 틀렸다</pre>
 
   <figure>
     <img src="assets/img/03_perturbation.png"
-         alt="구 위에서 한 점이 두 갈래 곡선을 따라 움직이는 그림. 파란 곡선은 우섭동, 붉은 곡선은 좌섭동이며 δ가 0일 때 같은 점에서 출발해 서로 다른 방향으로 갈라진다">
+         alt="구 위에서 한 점이 두 갈래 곡선을 따라 움직이는 그림. 파란 곡선은 right perturbation, 붉은 곡선은 left perturbation이며 δ가 0일 때 같은 점에서 출발해 서로 다른 방향으로 갈라진다">
     <figcaption><strong>같은 \(\delta\) 값을 넣어도 점이 가는 방향이 다르다.</strong>
       \(\delta = 0\)에서는 둘이 같은 점이므로 <strong>값만 보면 구별되지 않는다.</strong>
       구별되는 것은 <strong>미분</strong>, 즉 갈라지는 방향이다.</figcaption>
   </figure>
+
+  <p>
+    그리고 ⑦절에서 본 대로 <strong>둘은 Adjoint로 이어져 있다.</strong>
+    \(\delta\boldsymbol\varphi = R\,\delta\boldsymbol\theta\)를 넣으면 두 식이 서로 옮겨 간다 —
+    \(-[R\mathbf{p}]_\times R = -R[\mathbf{p}]_\times\)다.
+    <strong>두 식 중 하나만 외워 두고 필요할 때 \(R\)을 곱해 옮기면 된다.</strong>
+  </p>
 
   <div class="box stop">
     <p class="boxtitle">⛔ 두 방향을 섞으면 무슨 일이 생기나</p>
@@ -330,23 +1130,24 @@ det R − 1         = 0.000e+00</pre>
       다만 야코비안이 실제 기울기와 다른 방향을 가리키므로
       <strong>수렴이 느려지거나, 엉뚱한 곳에서 멈추거나, 어떤 데이터에서만 발산한다.</strong>
       「반복 횟수를 늘리면 되겠지」로 덮이는 일이 흔하고, 그러면 원인은 학기 끝까지 남는다.
+      <strong>규약 문서에 「right perturbation으로 통일한다」 한 줄을 적어 두는 것</strong>이
+      이 사고를 막는 가장 싼 방법이다.
     </p>
   </div>
 
-  <h2 id="numjac">⑥ 수치 야코비안 대조 — 오늘 배우면 학기 내내 쓴다 <span class="badge b-yellow">맡기되 검사한다</span></h2>
+  <h2 id="numjac">⑨ 수치 야코비안 대조 — 오늘 배우면 학기 내내 쓴다 <span class="badge b-yellow">맡기되 검사한다</span></h2>
 
   <p>
-    ⑤절의 두 식 중 어느 것이 맞는지 <strong>손으로 다시 유도해서 확인하지 않는다.</strong>
+    ⑧절의 두 식 중 어느 것이 맞는지 <strong>손으로 다시 유도해서 확인하지 않는다.</strong>
     그건 틀린 유도를 두 번 하게 될 뿐이다. <strong>기계에게 물어본다.</strong>
   </p>
 
   <p>
     방법은 간단하다. 변수를 아주 조금 흔들어 결과가 얼마나 변하는지 직접 재고,
-    손으로 쓴 식과 비교한다. 흔드는 방식만 <strong>다양체 위에서</strong> 해 주면 된다 —
-    더하는 대신 \(\mathrm{Exp}\)로 곱한다.
+    손으로 쓴 식과 비교한다. 흔드는 방식만 <strong>⑦절의 \(\boxplus\)로</strong> 하면 된다.
   </p>
 
-  <pre>// 다양체 위의 유한차분. ⊞ 가 회전이면 R·Exp(ε·e_i) 다.
+  <pre>// 다양체 위의 유한차분. x ⊞ e 가 회전이면 R·Exp(e) 다.
 for (int i = 0; i &lt; N; ++i) {
   Eigen::VectorXd e = Eigen::VectorXd::Zero(N);
   e(i) = eps;                                    // eps = 1e-6
@@ -357,16 +1158,16 @@ for (int i = 0; i &lt; N; ++i) {
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
     <dl>
-      <dt><span class="mono">boxplus(x, e)</span> — 흔히 \(x \boxplus e\)로 쓴다</dt>
-      <dd>「다양체 위의 더하기」. 변수가 보통 벡터면 그냥 \(x + e\)이고,
-        <strong>회전이면 \(R\,\mathrm{Exp}(e)\)</strong>다.
+      <dt><span class="mono">boxplus(x, e)</span> — \(x \boxplus e\) (⑦절)</dt>
+      <dd>변수가 보통 벡터면 \(x + e\)이고, <strong>회전이면 \(R\,\mathrm{Exp}(e)\)</strong>다.
         <strong>여기서는 유한차분을 회전 위에서 하기 위해 썼다.</strong>
-        상태에 위치와 회전이 섞여 있으면 성분마다 다르게 처리한다.</dd>
+        상태에 위치·속도·회전이 섞여 있으면 <strong>성분마다 다르게 처리한다</strong> — 11회에서 그렇게 된다.</dd>
       <dt><span class="mono">eps = 1e-6</span></dt>
       <dd>너무 크면 근사 오차가, 너무 작으면 반올림 오차가 커진다.
         <span class="mono">double</span>에서는 <span class="mono">1e-6</span> 근처가 무난하다.
         <strong>기준을 통과하지 못하면 eps를 열 배씩 바꿔 보는 것이 첫 확인</strong>이다 —
-        eps에 따라 결과가 크게 달라지면 수치 쪽 문제이고, 어느 eps에서도 같은 값으로 틀리면 식이 틀린 것이다.</dd>
+        eps에 따라 결과가 크게 달라지면 수치 쪽 문제이고,
+        어느 eps에서도 같은 값으로 틀리면 <strong>식이 틀린 것</strong>이다.</dd>
     </dl>
   </div>
 
@@ -377,11 +1178,28 @@ for (int i = 0; i &lt; N; ++i) {
     <strong>검증 사다리 2단</strong>이 바로 이것이고, 오늘이 그 2단을 처음 밟는 날이다.
   </div>
 
-  <h2 id="jr">⑦ 우야코비안 — 오늘 해 두면 12회가 반으로 준다</h2>
+  <h2 id="jr">⑩ right Jacobian과 BCH — 오늘 해 두면 12회가 반으로 준다</h2>
 
   <p>
-    \(\mathrm{Exp}\)에 미소 회전을 곱한 뒤 다시 \(\mathrm{Log}\)를 취하면 무엇이 되나.
-    「그냥 더해지겠지」가 답이면 좋겠지만 아니다. <strong>보정 행렬이 하나 붙는다.</strong>
+    ④절에서 <strong>축-각은 더할 수 없다</strong>고 했다. 그럼 \(\mathrm{Exp}(\mathbf{a})\mathrm{Exp}(\mathbf{b})\)는
+    어떤 축-각에 해당하나? 이 질문의 답이 <strong>BCH 공식</strong>(Baker-Campbell-Hausdorff)이다.
+  </p>
+
+  $$
+  \mathrm{Log}\big(\mathrm{Exp}(\mathbf{a})\mathrm{Exp}(\mathbf{b})\big)
+  = \mathbf{a} + \mathbf{b} + \tfrac{1}{2}[\mathbf{a}, \mathbf{b}] + \cdots
+  $$
+
+  <p>
+    <strong>더하기가 첫 항이고, 그다음부터 Lie bracket이 붙는다.</strong>
+    ⑦절에서 본 대로 \(\mathfrak{so}(3)\)의 bracket은 외적이므로,
+    <strong>두 회전축이 나란하면 나머지 항이 전부 0이 되어 그냥 더해진다.</strong>
+    나란하지 않을 때만 보정이 붙는다는 뜻이다.
+  </p>
+
+  <p>
+    실전에서는 <strong>둘째 항이 아주 작을 때</strong>의 형태만 쓴다. 그때 보정이 행렬 하나로 정리되고,
+    그 행렬을 <strong>right Jacobian</strong> \(J_r\)이라고 한다.
   </p>
 
   $$
@@ -395,8 +1213,11 @@ for (int i = 0; i &lt; N; ++i) {
   $$
 
   <p>
-    근사가 얼마나 좋은지 재 보면 이렇다. \(\boldsymbol\phi = (0.3, -0.5, 0.9)\)에 크기가 다른 \(\delta\)를 넣었다.
+    ④절의 로드리게스와 <strong>모양이 같다</strong> — \(I\) 더하기 \([\cdot]_\times\) 더하기 \([\cdot]_\times^2\)다.
+    계수만 다르다. 같은 이유로 급수가 닫힌 것이다.
   </p>
+
+  <p>근사가 얼마나 좋은지 재 보면 이렇다.</p>
 
   <div class="tablewrap">
   <table class="summary-table">
@@ -415,8 +1236,8 @@ for (int i = 0; i &lt; N; ++i) {
   </div>
 
   <p>
-    이 두 줄은 <strong>12회 IMU 사전적분에서 그대로 다시 나온다.</strong>
-    바이어스가 조금 바뀌었을 때 적분값을 다시 계산하지 않고 보정하는 자리에서 필요하다.
+    <strong>12회에서 이 식이 그대로 다시 나온다.</strong> IMU 바이어스가 조금 바뀌었을 때
+    수백 개의 샘플을 다시 적분하지 않고 <strong>보정만 하는</strong> 자리다.
     오늘 해 두면 그때는 「아, 그 식」으로 넘어간다.
   </p>
 
@@ -430,31 +1251,39 @@ for (int i = 0; i &lt; N; ++i) {
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
     <strong>[규약]</strong> 첨부한 <span class="mono">conventions.md</span>를 따라 줘.
-    <strong>섭동은 우섭동으로 통일한다</strong> — <span class="mono">R ← R * Exp(dtheta)</span>. 좌섭동은 쓰지 않는다.<br><br>
-    <strong>[인터페이스]</strong> <span class="mono">Sophus::SO3d</span>를 쓰고, 아래 두 함수를 만들어 줘.<br>
-    ① 점 하나를 회전시킬 때의 <strong>우섭동 야코비안</strong> <span class="mono">Eigen::Matrix3d dRp_dtheta(const SO3d&amp; R, const Vector3d&amp; p)</span><br>
-    ② 임의의 함수에 대한 <strong>다양체 유한차분</strong> <span class="mono">numericJacobian(f, R, eps)</span><br><br>
-    <strong>[참조]</strong> Barfoot <em>State Estimation for Robotics</em>의 표기를 따라 줘.
-    우야코비안 <span class="mono">Jr</span>도 같이 만들어 줘.<br><br>
-    <strong>[검증]</strong> 아래 시험을 같이 써 줘. <strong>기준을 넘으면 실패로 출력한다.</strong><br>
+    <strong>right perturbation 으로 통일한다</strong> — <span class="mono">R ← R * Exp(dtheta)</span>.
+    left perturbation 은 쓰지 않는다. 쿼터니언은 Hamilton 관례다.<br><br>
+    <strong>[인터페이스]</strong> <span class="mono">Sophus::SO3d</span>를 쓰고, 아래 세 함수를 만들어 줘.<br>
+    ① 점 하나를 회전시킬 때의 야코비안
+    <span class="mono">Eigen::Matrix3d dRp_dtheta(const SO3d&amp; R, const Vector3d&amp; p)</span><br>
+    ② 임의의 함수에 대한 다양체 유한차분 <span class="mono">numericJacobian(f, R, eps)</span><br>
+    ③ right Jacobian <span class="mono">Eigen::Matrix3d rightJacobian(const Vector3d&amp; phi)</span><br><br>
+    <strong>[참조]</strong> Barfoot <em>State Estimation for Robotics</em>의 표기를 따라 줘.<br><br>
+    <strong>[검증]</strong> 아래 여섯 시험을 같이 써 줘. <strong>기준을 넘으면 실패로 출력한다.</strong><br>
     ① <span class="mono">Log(Exp(phi)) == phi</span> — 오차 <span class="mono">&lt; 1e-12</span>, 무작위 φ 1000개로<br>
     ② <span class="mono">RᵀR = I</span>, <span class="mono">det R = 1</span> — <span class="mono">&lt; 1e-12</span><br>
     ③ ①의 해석 야코비안과 ②의 수치 야코비안 — <strong>상대오차 <span class="mono">&lt; 1e-6</span></strong><br>
     ④ <span class="mono">Log(Exp(phi)*Exp(d)) ≈ phi + Jr(phi).inverse()*d</span>가
     <strong>‖d‖를 10분의 1로 줄일 때 오차가 100분의 1</strong>이 되는가<br>
+    ⑤ <strong>쿼터니언과 회전행렬이 같은 일을 하는가</strong> —
+    <span class="mono">‖q⊗v⊗q* − R·v‖ &lt; 1e-12</span>, <span class="mono">‖(q⊗p)→R − (q→R)(p→R)‖ &lt; 1e-12</span><br>
+    ⑥ <strong>Adjoint</strong> — <span class="mono">‖Exp(d)*R − R*Exp(Rᵀ d)‖ &lt; 1e-12</span><br>
     <strong>실패하면 어느 성분이 얼마나 벌어졌는지 함께 찍어 줘.</strong><br><br>
     <strong>[함정]</strong> θ가 0에 가까울 때 <span class="mono">sinθ/θ</span>를 그냥 나누면 0으로 나눈다.
-    <strong>테일러 전개로 갈라 줘.</strong> θ가 π에 가까울 때도 <span class="mono">Log</span>가 불안정하다.<br><br>
+    <strong>테일러 전개로 갈라 줘.</strong> θ가 π에 가까울 때 <span class="mono">Log</span>의 분모 <span class="mono">2 sinθ</span>도 0으로 간다 —
+    <strong>대각 성분으로 축을 구하는 갈래가 따로 필요하다.</strong>
+    쿼터니언은 <span class="mono">q0 &lt; 0</span> 이면 부호를 뒤집어 통일해 줘.<br><br>
     <strong>[남긴다]</strong> 규약에 없어서 임의로 정한 것을 코드 맨 위에 목록으로 적어 줘.
   </div>
 
   <p class="readme-first">받은 코드에서 확인할 것</p>
 
-  <pre>□ 야코비안이 −R[p]× 인가 −[Rp]× 인가          ← 우섭동이면 앞쪽이다
+  <pre>□ 야코비안이 −R[p]× 인가 −[Rp]× 인가          ← right perturbation 이면 앞쪽이다
 □ 유한차분이 x+e 가 아니라 <strong>R·Exp(e)</strong> 로 흔드는가
-□ θ→0 갈래가 실제로 있는가, 그 갈래를 <strong>시험이 지나가는가</strong>
-□ 요구한 시험 네 개가 다 있고 돌려 봤는가
-□ ④번 시험의 비율이 100 근처로 나오는가          ← 10 이면 Jr 식이 틀렸다</pre>
+□ θ→0 과 θ→π 갈래가 실제로 있는가, 그 갈래를 <strong>시험이 지나가는가</strong>
+□ 시험 ⑤가 q⊗v⊗q* 를 <strong>정말 그 순서로</strong> 곱하는가       ← q*⊗v⊗q 이면 역회전이다
+□ ④번 시험의 비율이 100 근처로 나오는가          ← 10 이면 Jr 식이 틀렸다
+□ 임의로 정한 것 목록에 내가 동의하지 않는 항목이 있는가</pre>
 
   <p>그리고 결과가 이상할 때.</p>
 
@@ -471,8 +1300,29 @@ for (int i = 0; i &lt; N; ++i) {
     <strong>해석:</strong> 「<span class="mono">eps</span>를 바꿔도 같은 값」이 이 의뢰서에서 가장 중요한 한 줄이다.
     <strong>수치 문제라면 <span class="mono">eps</span>에 따라 값이 흔들린다.</strong> 흔들리지 않는다는 것은
     두 식이 <strong>정말로 다른 함수</strong>라는 뜻이고, 그러면 남는 후보는 셋뿐이다 —
-    섭동 방향, 부호, 흔드는 방식(\(\boxplus\)). <strong>증상을 좁혀서 말하면 후보도 좁게 돌아온다.</strong>
+    perturbation 방향, 부호, 흔드는 방식(\(\boxplus\)).
+    <strong>증상을 좁혀서 말하면 후보도 좁게 돌아온다.</strong>
   </div>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    <strong>[할 일]</strong> left perturbation 과 right perturbation 을 비교하는 matplotlib 3차원 그림을 그려 줘.
+    단위 구를 옅게 깔고, 벡터 <span class="mono">p</span> 하나를 <span class="mono">R</span>로 돌린 점에서 출발해
+    <span class="mono">δ</span>를 0부터 1.25까지 키우며 두 궤적을 <strong>다른 색으로</strong> 그린다.<br><br>
+    <strong>[규약]</strong> <span class="mono">R</span>은 <strong>세 축이 다 섞인 회전</strong>으로 잡아 줘.
+    단위행렬로 두면 두 곡선이 겹쳐서 그림의 의미가 사라진다.<br><br>
+    <strong>[검증]</strong> <span class="mono">δ = 0</span>에서 두 곡선의 시작점이 <strong>같은 점</strong>인지
+    <span class="mono">1e-12</span> 안에서 확인하고, 아니면 경고를 찍어 줘.
+    그리고 <span class="mono">δ</span>가 가장 클 때 두 끝점 사이 거리를 화면에 숫자로 적어 줘.<br><br>
+    <strong>[남긴다]</strong> 어떤 <span class="mono">R</span>과 <span class="mono">p</span>를 골랐는지 코드 위에 적어 줘.
+  </div>
+
+  <p class="readme-first">받은 그림에서 확인할 것</p>
+
+  <pre>□ 두 곡선이 <strong>한 점에서 출발</strong>하는가            ← 안 그러면 δ=0 처리가 틀렸다
+□ 갈라지는가, 겹치는가                        ← 겹치면 R 이 단위행렬에 가깝다
+□ 두 곡선이 <strong>구 위에</strong> 있는가                  ← 벗어나면 Exp 가 아니라 더하기를 쓴 것이다
+□ 색과 범례로 어느 쪽이 left·right 인지 구별되는가</pre>
 
   <h2 id="verify">🧪 오늘 만든 것이 맞는지 어떻게 아나 <span class="badge b-red">사람이 한다</span></h2>
 
@@ -487,9 +1337,13 @@ for (int i = 0; i &lt; N; ++i) {
       <td><span class="mono">&lt; 1e-12</span></td><td>\(\theta \to 0\) 갈래 누락</td></tr>
     <tr><td>1</td><td>\(R^\top R = I\), \(\det R = 1\)</td>
       <td><span class="mono">&lt; 1e-12</span></td><td>정규화 누락, 누적 오차</td></tr>
+    <tr><td>1</td><td>\(q \otimes \mathbf{v} \otimes q^{*} = R\mathbf{v}\)</td>
+      <td><span class="mono">&lt; 1e-12</span></td><td><strong>\(q\)와 \(q^{*}\)의 자리를 바꿨다</strong></td></tr>
+    <tr><td>1</td><td>\(\mathrm{Exp}(\delta)R = R\,\mathrm{Exp}(R^\top\delta)\) (Adjoint)</td>
+      <td><span class="mono">&lt; 1e-12</span></td><td>전치 누락</td></tr>
     <tr><td><strong>2</strong></td><td><strong>해석 야코비안 vs 수치 야코비안</strong></td>
       <td><strong>상대오차 <span class="mono">&lt; 1e-6</span></strong></td>
-      <td><strong>부호 실수, 좌·우 섭동 혼동</strong></td></tr>
+      <td><strong>부호 실수, left·right 혼동</strong></td></tr>
     <tr><td>2</td><td>BCH 1차 근사의 수렴 차수</td>
       <td>\(\lVert\delta\rVert\)를 \(1/10\)로 하면 오차가 \(1/100\)</td><td>\(J_r\)의 계수 실수</td></tr>
   </table>
@@ -510,45 +1364,30 @@ for (int i = 0; i &lt; N; ++i) {
   <p>
     벡터 하나를 놓고 \(\delta\)를 0부터 조금씩 키우면서
     \(R\,\mathrm{Exp}(\delta\boldsymbol\theta)\,\mathbf{p}\)와 \(\mathrm{Exp}(\delta\boldsymbol\varphi)\,R\,\mathbf{p}\)를
-    <strong>구 위에 두 색으로 겹쳐 그린다.</strong> 위의 ⑤절 그림이 그것이다.
+    <strong>구 위에 두 색으로 겹쳐 그린다.</strong> ⑧절의 그림이 그것이다.
   </p>
 
   <p>
     <strong>이 그림으로 판정하는 것:</strong> 두 곡선이 <strong>같은 점에서 출발해 다른 방향으로 갈라지는가.</strong>
-    갈라지지 않고 겹쳐 보인다면 코드에서 좌·우를 실제로 구별하지 않고 있다는 뜻이다.
+    갈라지지 않고 겹쳐 보인다면 코드에서 left와 right를 실제로 구별하지 않고 있다는 뜻이다.
     <span class="mono">R</span>을 단위행렬로 두면 실제로 둘이 같아지므로, <strong>반드시 회전이 섞인 \(R\)로 그린다.</strong>
   </p>
 
-  <div class="prompt">
-    <button onclick="copyPrompt(this)">복사</button>
-    <strong>[할 일]</strong> 좌섭동과 우섭동을 비교하는 matplotlib 3차원 그림을 그려 줘.
-    단위 구를 옅게 깔고, 벡터 <span class="mono">p</span> 하나를 <span class="mono">R</span>로 돌린 점에서 출발해
-    <span class="mono">δ</span>를 0부터 1.25까지 키우며 두 궤적을 <strong>다른 색으로</strong> 그린다.<br><br>
-    <strong>[규약]</strong> <span class="mono">R</span>은 <strong>세 축이 다 섞인 회전</strong>으로 잡아 줘.
-    단위행렬로 두면 두 곡선이 겹쳐서 그림의 의미가 사라진다.<br><br>
-    <strong>[검증]</strong> <span class="mono">δ = 0</span>에서 두 곡선의 시작점이 <strong>같은 점</strong>인지
-    <span class="mono">1e-12</span> 안에서 확인하고, 아니면 경고를 찍어 줘.
-    그리고 <span class="mono">δ</span>가 가장 클 때 두 끝점 사이 거리를 화면에 숫자로 적어 줘.<br><br>
-    <strong>[남긴다]</strong> 어떤 <span class="mono">R</span>과 <span class="mono">p</span>를 골랐는지 코드 위에 적어 줘.
-  </div>
-
-  <p class="readme-first">받은 그림에서 확인할 것</p>
-
-  <pre>□ 두 곡선이 <strong>한 점에서 출발</strong>하는가            ← 안 그러면 δ=0 처리가 틀렸다
-□ 갈라지는가, 겹치는가                        ← 겹치면 R 이 단위행렬에 가깝다
-□ 두 곡선이 <strong>구 위에</strong> 있는가                  ← 벗어나면 Exp 가 아니라 더하기를 쓴 것이다
-□ 색과 범례로 어느 쪽이 좌·우인지 구별되는가</pre>
-
   <h2 id="check">✅ 오늘의 점검</h2>
   <ul class="check">
-    <li><input type="checkbox" id="c1"><label for="c1">회전이 3 자유도인 이유를 한 문장으로 말할 수 있다</label></li>
-    <li><input type="checkbox" id="c2"><label for="c2">짐벌락에서 실제로 나쁜 것이 무엇인지 말할 수 있다</label></li>
-    <li><input type="checkbox" id="c3"><label for="c3">저장과 최적화에 왜 다른 표현을 쓰는지 설명할 수 있다</label></li>
-    <li><input type="checkbox" id="c4"><label for="c4">\(R + \delta R\)을 쓰지 않는 이유를 말할 수 있다</label></li>
-    <li><input type="checkbox" id="c5"><label for="c5">우섭동 야코비안 \(-R[\mathbf{p}]_\times\)를 보고 좌섭동 식과 구별할 수 있다</label></li>
-    <li><input type="checkbox" id="c6"><label for="c6">수치 야코비안을 다양체 위에서 만드는 법을 코드로 쓸 수 있다</label></li>
-    <li><input type="checkbox" id="c7"><label for="c7">2단 시험을 돌렸고 상대오차가 <span class="mono">1e-6</span> 아래로 나왔다</label></li>
-    <li><input type="checkbox" id="c8"><label for="c8">규약 문서에 「우섭동으로 통일한다」 한 줄을 추가했다</label></li>
+    <li><input type="checkbox" id="c1"><label for="c1">네 표현이 각각 <strong>무엇을 몇 개의 숫자로</strong> 담는지 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c2"><label for="c2">표현마다 <strong>벡터를 돌리는 방법</strong>이 어떻게 다른지 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c3"><label for="c3">쿼터니언에서 <strong>왜 반각</strong>이 들어가는지 설명할 수 있다</label></li>
+    <li><input type="checkbox" id="c4"><label for="c4">quaternion product를 스칼라-벡터 형태로 쓸 수 있다</label></li>
+    <li><input type="checkbox" id="c5"><label for="c5">짐벌락에서 실제로 나쁜 것이 무엇인지 <strong>숫자로</strong> 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c6"><label for="c6">로드리게스 공식의 무한급수가 <strong>왜 닫히는지</strong> 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c7"><label for="c7">Lie group · Lie algebra · tangent space가 각각 무엇인지 한 문장씩으로 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c8"><label for="c8">각속도가 왜 \(\mathfrak{so}(3)\)에 사는지 설명할 수 있다</label></li>
+    <li><input type="checkbox" id="c9"><label for="c9">\(\boxplus\)와 \(\boxminus\)가 무엇을 대신하는지 안다</label></li>
+    <li><input type="checkbox" id="c10"><label for="c10">left와 right perturbation이 <strong>Adjoint로 이어진다</strong>는 것을 식으로 쓸 수 있다</label></li>
+    <li><input type="checkbox" id="c11"><label for="c11">수치 야코비안을 다양체 위에서 만드는 법을 코드로 쓸 수 있다</label></li>
+    <li><input type="checkbox" id="c12"><label for="c12">2단 시험을 돌렸고 상대오차가 <span class="mono">1e-6</span> 아래로 나왔다</label></li>
+    <li><input type="checkbox" id="c13"><label for="c13">규약 문서에 「right perturbation으로 통일한다」 한 줄을 추가했다</label></li>
   </ul>
 
   <h2 id="more">조금 더 알아두면 <span class="badge b-lv">시험 범위 아님</span></h2>
@@ -583,36 +1422,66 @@ for (int i = 0; i &lt; N; ++i) {
   </details>
 
   <details class="story">
-    <summary>흔한 오해 셋</summary>
+    <summary>\(\mathbf{SE}(3)\) — 위치와 회전을 함께 다루는 방법, 그리고 이 강의가 그러지 않는 이유</summary>
+    <p>
+      오늘은 회전만 다뤘다. 위치와 회전을 <strong>하나의 다양체</strong>로 보는 방식도 있다.
+      \(\mathbf{SE}(3)\)의 Lie algebra \(\mathfrak{se}(3)\)는 <strong>6차원 벡터</strong>이고
+      (앞 3개가 이동, 뒤 3개가 회전), \(\mathrm{Exp}\)·\(\mathrm{Log}\)와 6×6짜리 right Jacobian,
+      6×6짜리 Adjoint가 전부 있다.
+    </p>
+    <p>
+      \(\mathbf{SE}(3)\)의 \(\mathrm{Exp}\)에서 이동 부분에 붙는 행렬이 실은
+      ⑩절의 \(J_r\)과 <strong>같은 계열</strong>이다. 그래서 「회전만 배운 것」이 헛되지 않는다.
+    </p>
+    <p>
+      <strong>이 강의는 위치와 회전을 나눠 다룬다.</strong> 이유는 실용적이다 —
+      IMU 상태에는 위치·회전 말고도 <strong>속도와 바이어스 두 개</strong>가 더 들어간다(11회).
+      \(\mathbf{SE}(3)\)로 묶어도 나머지 셋은 어차피 성분별로 다뤄야 하므로,
+      <strong>처음부터 성분별로 두는 편이 코드가 단순하다.</strong>
+      다만 논문에는 \(\mathbf{SE}(3)\) 표기가 많으니 <strong>읽을 수는 있어야 한다.</strong>
+      (참고로 \(\mathbf{SE}(3)\) 대신 속도까지 묶은 \(\mathbf{SE}_2(3)\)를 쓰는 계열도 있다 — invariant EKF 쪽이다.)
+    </p>
+    <p class="src">읽을거리: Solà, Deray, Atchuthan, <em>A micro Lie theory for state estimation in robotics</em> (2018).
+      이 강의에서 쓰는 표기가 대체로 이 문서와 같고, 40쪽 남짓이라 한 번에 읽을 만하다.</p>
+  </details>
+
+  <details class="story">
+    <summary>회전을 평균 내는 법 — 「더할 수 없다」가 실제로 발목을 잡는 자리</summary>
+    <p>
+      자세 \(n\)개의 평균을 구해야 하는 일이 생긴다.
+      여러 프레임에서 추정한 자세를 합칠 때, 또는 초기 정렬을 잡을 때다.
+      <strong>회전행렬을 더해서 \(n\)으로 나누면 회전이 아니다.</strong>
+      쿼터니언을 더해 정규화하는 방법도 있지만 <strong>부호를 통일하지 않으면 깨진다</strong>(⑤절).
+    </p>
+    <p>
+      제대로 하는 방법은 <strong>⑦절의 도구를 그대로 쓰는 것</strong>이다.
+      기준 \(R_0\)를 하나 잡고, 각 자세를 \(\boldsymbol\delta_i = \mathrm{Log}(R_0^\top R_i)\)로 접평면에 내리고,
+      <strong>거기서 평균 내고</strong>, \(R_0\,\mathrm{Exp}(\bar{\boldsymbol\delta})\)로 돌아온다.
+      기준을 갱신하며 몇 번 반복하면 수렴한다.
+    </p>
+    <p>
+      <strong>이 절차가 「접평면으로 내려가 계산하고 돌아온다」의 가장 짧은 예제</strong>다.
+      최적화도, 필터도, 보간도 전부 같은 모양을 하고 있다.
+    </p>
+  </details>
+
+  <details class="story">
+    <summary>흔한 오해 다섯</summary>
     <div class="tablewrap">
     <table>
       <tr><th style="width:42%">오해</th><th>사실</th></tr>
       <tr><td>「쿼터니언이면 짐벌락이 없으니 최적화도 쿼터니언으로」</td>
         <td>숫자 넷에 제약 하나라 여전히 자유롭게 못 움직인다. <strong>접평면(3차원)에서 최적화하고 쿼터니언은 저장용으로 쓴다</strong></td></tr>
       <tr><td>「\(q\)와 \(-q\)는 다른 회전」</td>
-        <td>같은 회전이다. 부호를 통일하지 않으면 평균과 보간이 깨진다</td></tr>
-      <tr><td>「좌섭동과 우섭동은 결국 부호만 다르다」</td>
-        <td>아니다. ⑤절의 두 행렬을 보면 <strong>구조가 다르다</strong> — 하나는 반대칭이고 하나는 아니다</td></tr>
+        <td>같은 회전이다. 부호를 통일하지 않으면 평균·보간이 깨진다</td></tr>
+      <tr><td>「left와 right perturbation은 결국 부호만 다르다」</td>
+        <td>아니다. ⑧절의 두 행렬은 <strong>구조가 다르다</strong> — 하나는 반대칭이고 하나는 아니다. 둘을 잇는 것은 부호가 아니라 <strong>Adjoint</strong>다</td></tr>
+      <tr><td>「축-각을 더하면 회전이 합성된다」</td>
+        <td>축이 나란할 때만 그렇다. 일반적으로는 <strong>BCH 보정이 붙는다</strong>(⑩절)</td></tr>
+      <tr><td>「짐벌락은 정확히 90°에서만 생긴다」</td>
+        <td>85° 근처부터 이미 못 쓸 값이다. <strong>점이 아니라 구역</strong>이다(③절 그래프)</td></tr>
     </table>
     </div>
-  </details>
-
-  <details class="story">
-    <summary>\(\mathbf{SE}(3)\)에도 같은 이야기가 있다</summary>
-    <p>
-      오늘은 회전만 다뤘지만, 위치와 회전을 <strong>함께</strong> 하나의 다양체로 보는 방식도 있다.
-      \(\mathbf{SE}(3)\)의 \(\mathrm{Exp}\)와 \(\mathrm{Log}\)는 6차원 벡터를 받고,
-      우야코비안도 6×6짜리가 있다.
-    </p>
-    <p>
-      이 강의에서는 <strong>위치와 회전을 나눠서 다룬다.</strong>
-      위치는 보통 벡터라 그냥 더해지고, 회전만 \(\mathrm{Exp}\)로 곱한다.
-      \(\mathbf{SE}(3)\) 쪽이 수학적으로 더 깔끔하지만,
-      <strong>IMU 상태에는 속도와 바이어스도 함께 들어가므로</strong> 어차피 성분별로 다루게 된다(11회).
-      두 방식 다 쓰이니, 논문을 읽을 때 어느 쪽인지만 확인하면 된다.
-    </p>
-    <p class="src">읽을거리: Solà, Deray, Atchuthan, <em>A micro Lie theory for state estimation in robotics</em> (2018).
-      이 강의에서 쓰는 표기가 대체로 이 문서와 같다.</p>
   </details>
 
   <p>

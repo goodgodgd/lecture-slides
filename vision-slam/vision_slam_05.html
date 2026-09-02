@@ -32,10 +32,15 @@
   <div class="toc-title">이 회차 목차</div>
   <a href="#summary">한 장 요약 — 알 수 있는 것과 없는 것</a>
   <a href="#constraint">① 대응점 하나가 주는 제약</a>
-  <a href="#essential">② Essential과 Fundamental</a>
-  <a href="#scale">③ 스케일 모호성 <span class="mono">🔴</span></a>
-  <a href="#tri">④ 삼각측량 — 두 직선의 교점</a>
-  <a href="#parallax">⑤ 시차 — 언제 잘 되고 언제 안 되나</a>
+  <a href="#constraint" class="sub">에피폴라 제약을 유도한다</a>
+  <a href="#EF">② E와 F의 성질</a>
+  <a href="#solve">③ E를 푸는 법</a>
+  <a href="#solve" class="sub">8점 · 5점 · RANSAC</a>
+  <a href="#decompose">④ E에서 자세를 꺼낸다</a>
+  <a href="#scale">⑤ 스케일 모호성 <span class="mono">🔴</span></a>
+  <a href="#tri">⑥ 삼각측량 — 두 방법</a>
+  <a href="#parallax">⑦ 시차 — 언제 잘 되고 언제 안 되나</a>
+  <a href="#degenerate">⑧ 퇴화 조건과 homography</a>
   <a href="#prompt">🤖 의뢰서 — 두 시점 재구성</a>
   <a href="#verify">🧪 맞는지 어떻게 아나 — 사다리 3단</a>
   <a href="#draw">🎨 이 회차의 그림</a>
@@ -51,15 +56,16 @@
     <span class="lab">오늘 답할 질문</span>
     <ol>
       <li>두 영상에서 같은 점을 찾았다. 그것만으로 무엇을 알 수 있나?</li>
-      <li>삼각측량은 언제 잘 되고 언제 안 되나?</li>
+      <li>대응점 몇 쌍이면 <strong>두 카메라의 관계</strong>가 정해지나? 왜 그 개수인가?</li>
+      <li>삼각측량은 언제 잘 되고 언제 <strong>아예 안 되나?</strong></li>
       <li><strong>단안 카메라가 끝내 알 수 없는 것</strong>은 무엇인가?</li>
       <li>「매 프레임마다 삼각측량」이 왜 원리적으로 틀렸나?</li>
     </ol>
   </div>
 
   <p>
-    4회 마지막에 이렇게 적었다 — <strong>픽셀 하나로는 3차원 점을 복원할 수 없다.</strong>
-    \(\mathbf{p}_C = Z K^{-1}\mathbf{u}\)에서 \(Z\)를 모르기 때문이다.
+    4회 ①절에서 이렇게 적었다 — <strong>투영은 깊이를 잃는다.</strong>
+    \(\mathbf{p}_C = Z K^{-1}\tilde{\mathbf{u}}\)에서 \(Z\)를 모르기 때문이다.
     오늘은 <strong>영상을 한 장 더</strong> 가져온다. 그러면 무엇이 풀리고 무엇이 안 풀리는지가 오늘의 내용이다.
   </p>
 
@@ -74,25 +80,28 @@
   <table class="summary-table">
     <tr><th style="width:30%">무엇</th><th>알 수 있나</th><th>왜</th></tr>
     <tr><td>두 카메라의 <strong>상대 회전</strong> \(R\)</td><td><strong>안다</strong></td>
-      <td>대응점 다섯 쌍이면 결정된다</td></tr>
+      <td>대응점 다섯 쌍이면 결정된다 (③절)</td></tr>
     <tr><td>두 카메라의 <strong>이동 방향</strong> \(\mathbf{t}/\lVert\mathbf{t}\rVert\)</td><td><strong>안다</strong></td>
       <td>같이 나온다</td></tr>
     <tr><td>두 카메라 사이 <strong>거리</strong> \(\lVert\mathbf{t}\rVert\)</td><td><strong class="mono">모른다</strong></td>
-      <td>③절. <strong>영상만으로는 원리적으로 불가능하다</strong></td></tr>
+      <td>⑤절. <strong>영상만으로는 원리적으로 불가능하다</strong></td></tr>
     <tr><td>3차원 점의 <strong>모양</strong> (점들의 상대 배치)</td><td><strong>안다</strong></td>
-      <td>④절 삼각측량</td></tr>
+      <td>⑥절 삼각측량</td></tr>
     <tr><td>3차원 점까지의 <strong>실제 거리</strong></td><td><strong class="mono">모른다</strong></td>
       <td>위와 같은 이유. <strong>모양은 맞고 배율만 모른다</strong></td></tr>
     <tr><td>모양이 <strong>얼마나 정확한가</strong></td><td>계산할 수 있다</td>
-      <td>⑤절. <strong>기선이 짧으면 크게 흔들린다</strong></td></tr>
+      <td>⑦절. <strong>기선이 짧으면 크게 흔들린다</strong></td></tr>
+    <tr><td><strong>제자리에서 돌기만 했을 때</strong></td><td><strong class="mono">아무것도 못 한다</strong></td>
+      <td>⑧절. 삼각측량이 원리적으로 불가능하다</td></tr>
   </table>
   </div>
 
   <div class="interp">
-    <strong>해석:</strong> 「모른다」가 두 줄인데 <strong>사실은 같은 하나</strong>다.
+    <strong>해석:</strong> 「모른다」가 세 줄인데 <strong>위의 둘은 같은 하나</strong>다.
     거리를 모르니 점까지의 거리도 모른다. <strong>배율 하나가 통째로 빠져 있는 상태</strong>이고,
-    이것을 스케일 모호성이라고 한다. 그리고 마지막 줄이 오늘 시간을 가장 많이 쓰는 곳이다 —
-    <strong>모양조차 항상 잘 나오는 것은 아니다.</strong>
+    이것을 스케일 모호성이라고 한다.
+    마지막 줄은 성격이 다르다 — <strong>배율이 아니라 아예 풀 수 없는 상황</strong>이고,
+    실제 데이터에서 실제로 자주 생긴다.
   </div>
 
   <h2 id="constraint">① 대응점 하나가 주는 제약</h2>
@@ -105,16 +114,48 @@
 
   <figure>
     <img src="assets/img/05_epipolar.png"
-         alt="두 카메라가 기선으로 이어져 있고, 첫 카메라에서 나온 하나의 광선 위에 여러 깊이 후보가 놓여 있다. 각 후보에서 두 번째 카메라로 가는 선들이 그려져 있다">
+         alt="두 카메라가 기선으로 이어져 있고, 첫 카메라에서 나온 하나의 광선 위에 여러 깊이 후보가 놓여 있다. 각 후보가 두 번째 카메라의 이미지 평면 위 한 직선에 찍히는 모습이 그려져 있다">
     <figcaption>깊이 후보들이 두 번째 영상에서 <strong>한 직선 위에</strong> 찍힌다.
       이 직선을 <strong>에피폴라 선</strong>이라고 한다. 대응점을 온 영상에서 찾을 필요가 없어진다는 뜻이고,
       <strong>7회 매칭이 실제로 이 성질을 쓴다.</strong></figcaption>
   </figure>
 
-  <p>이 사실을 식 한 줄로 적은 것이 에피폴라 제약이다.</p>
+  <h3>제약을 유도한다 — 세 벡터가 한 평면에 있다</h3>
+
+  <p>
+    유도는 한 줄이다. <strong>「두 광선과 기선이 한 평면 위에 있다」</strong>는 사실을 식으로 쓰면 끝난다.
+    두 카메라 좌표계 사이의 관계를 \((R, \mathbf{t})\)라 하고,
+    같은 3차원 점을 각 카메라에서 본 정규화 좌표를 \(\mathbf{x}_1, \mathbf{x}_2\)라고 하자.
+  </p>
+
+  <p>
+    같은 점이므로 카메라 1의 좌표 \(\lambda_1\mathbf{x}_1\)을 카메라 2로 옮기면 \(\lambda_2\mathbf{x}_2\)가 된다.
+  </p>
 
   $$
-  \mathbf{x}_2^\top E\,\mathbf{x}_1 = 0, \qquad E = [\mathbf{t}]_\times R
+  \lambda_2\,\mathbf{x}_2 = R\,(\lambda_1\mathbf{x}_1) + \mathbf{t}
+  $$
+
+  <p>
+    양변에 \(\mathbf{t}\)를 <strong>외적</strong>하면 오른쪽의 \(\mathbf{t}\)가 사라지고,
+    거기에 다시 \(\mathbf{x}_2\)를 <strong>내적</strong>하면 왼쪽도 사라진다
+    (\(\mathbf{a}\times\mathbf{b}\)는 \(\mathbf{a}\)와 \(\mathbf{b}\) 둘 다에 수직이다 — 2회 ①절).
+  </p>
+
+  $$
+  \mathbf{x}_2^\top\big(\mathbf{t}\times R\,\mathbf{x}_1\big) = 0
+  \qquad\Longrightarrow\qquad
+  \mathbf{x}_2^\top\,[\mathbf{t}]_\times R\;\mathbf{x}_1 = 0
+  $$
+
+  <p>
+    가운데 3×3 행렬에 이름을 붙인 것이 <strong>Essential 행렬</strong>이다.
+    <strong>\(\lambda_1, \lambda_2\)가 식에서 사라졌다는 것</strong>이 이 유도의 핵심이다 —
+    깊이를 몰라도 성립하는 제약이 남았다.
+  </p>
+
+  $$
+  \boxed{\;\mathbf{x}_2^\top E\,\mathbf{x}_1 = 0, \qquad E = [\mathbf{t}]_\times R\;}
   $$
 
   <div class="box firstseen">
@@ -122,45 +163,148 @@
     <dl>
       <dt>에피폴라 선 (epipolar line)</dt>
       <dd>한 영상의 점 하나에 대응하는, 다른 영상에서의 <strong>직선</strong>.
-        <strong>여기서는 「대응점이 있을 수 있는 자리」를 한 줄로 줄이는 데 썼다.</strong></dd>
+        식으로는 \(\boldsymbol\ell_2 = E\mathbf{x}_1\)이고, 제약식은 「\(\mathbf{x}_2\)가 그 직선 위에 있다」는 뜻이다.
+        <strong>여기서는 「대응점이 있을 수 있는 자리」를 2차원에서 1차원으로 줄이는 데 썼다.</strong></dd>
       <dt>에피폴 (epipole)</dt>
       <dd>기선이 영상과 만나는 점. <strong>모든 에피폴라 선이 여기서 만난다.</strong>
-        카메라가 정면으로 다가가면 에피폴이 영상 한가운데에 온다.</dd>
+        \(E\mathbf{e} = 0\)을 만족하는 \(\mathbf{e}\)가 그것이고,
+        <strong>카메라가 정면으로 다가가면 에피폴이 영상 한가운데에 온다.</strong></dd>
       <dt>\(E\) — Essential 행렬 · \(F\) — Fundamental 행렬</dt>
       <dd>\(E\)는 <strong>정규화 좌표</strong>에서의 제약(카메라 내부 파라미터를 이미 안다),
-        \(F\)는 <strong>픽셀 좌표</strong>에서의 제약이다. \(F = K^{-\top}EK^{-1}\)로 이어져 있다.
+        \(F\)는 <strong>픽셀 좌표</strong>에서의 제약이다.
+        \(\tilde{\mathbf{u}} = K\mathbf{x}\)이므로 \(F = K^{-\top}EK^{-1}\)로 이어져 있다.
         <strong>우리는 \(K\)를 알고 있으므로 \(E\)만 쓴다.</strong></dd>
+      <dt>기선 (baseline)</dt>
+      <dd>두 카메라 중심을 잇는 선, 또는 그 길이 \(\lVert\mathbf{t}\rVert\).
+        <strong>⑦절 전체가 이 길이에 관한 이야기</strong>다.</dd>
     </dl>
   </div>
 
-  <p>
-    \(E\)는 3×3인데 자유도는 <strong>5</strong>다 — 회전 3, 이동 방향 2. 크기가 빠져 있다.
-    <strong>이 「5」가 오늘 전체의 핵심 숫자</strong>이고, 왜 크기가 빠지는지는 ③절에서 본다.
-  </p>
-
-  <h2 id="essential">② \(E\)에서 자세를 꺼낸다 <span class="badge b-green">맡긴다</span></h2>
-
-  <p>
-    대응점이 충분히 있으면 \(E\)를 풀 수 있다. 자유도가 5이므로 <strong>다섯 쌍이면 된다</strong>(5점 알고리즘).
-    제약을 일부 무시하고 선형으로 푸는 8점 알고리즘도 있고, 구현이 훨씬 쉽다.
-  </p>
+  <h2 id="EF">② E와 F의 성질 — 자유도 5가 오늘의 핵심 숫자</h2>
 
   <div class="tablewrap">
-  <table>
-    <tr><th style="width:20%">방법</th><th>필요한 대응점</th><th>특징</th></tr>
-    <tr><td><strong>8점</strong></td><td>8쌍</td>
-      <td>선형이라 간단하다. 대신 \(E\)의 제약을 안 걸어서 <strong>SVD로 다시 눌러 줘야</strong> 한다</td></tr>
-    <tr><td><strong>5점</strong></td><td>5쌍</td>
-      <td>제약을 다 쓴다. <strong>RANSAC 안에서 훨씬 유리하다</strong> — 뽑을 점이 적을수록 성공 확률이 높다</td></tr>
+  <table class="summary-table">
+    <tr><th style="width:22%">성질</th><th>\(E\) (정규화 좌표)</th><th>\(F\) (픽셀 좌표)</th></tr>
+    <tr><td>크기</td><td>3×3</td><td>3×3</td></tr>
+    <tr><td><strong>자유도</strong></td><td><strong>5</strong> — 회전 3 + 이동 방향 2</td><td><strong>7</strong> — 내부 파라미터를 모르므로 둘 더</td></tr>
+    <tr><td>랭크</td><td>2 (\(\det E = 0\))</td><td>2 (\(\det F = 0\))</td></tr>
+    <tr><td><strong>특이값</strong></td><td>\((\sigma, \sigma, 0)\) — <strong>앞 둘이 같다</strong></td><td>제약 없음</td></tr>
+    <tr><td>필요한 대응점</td><td><strong>5쌍</strong> (또는 선형으로 8쌍)</td><td>7쌍 (또는 8쌍)</td></tr>
+    <tr><td>언제 쓰나</td><td><strong>캘리브레이션을 안다</strong> — 우리 경우</td><td>모르는 카메라, 인터넷 사진</td></tr>
   </table>
   </div>
 
   <p>
-    실제 데이터에는 잘못 짝지어진 대응점이 섞여 있다. 그래서 <strong>RANSAC</strong>으로 감싼다 —
-    무작위로 최소 개수만 뽑아 풀어 보고, 그 답에 동의하는 점이 가장 많은 것을 고른다.
-    <strong>이 절의 계산은 OpenCV가 다 해 준다</strong>(<span class="mono">findEssentialMat</span>,
-    <span class="mono">recoverPose</span>). 여기는 🟢다.
+    특이값이 \((\sigma, \sigma, 0)\)인 것을 실제로 확인해 보면 이렇다.
+    <span class="mono">vision-slam/src/epipolar_numbers.py</span>가 계산한 값이다.
   </p>
+
+  <pre>특이값        = [0.207123  0.207123  0.]      ← 앞 둘이 같고 셋째가 0
+‖t‖           = 0.207123                     ← 특이값이 기선 길이와 같다
+det E         = 3.360e-20                    ← 랭크가 2다
+x1ᵀ E x2      = -3.469e-18                   ← 정답 대응점에서 0이다</pre>
+
+  <div class="interp">
+    <strong>해석:</strong> <strong>「자유도 5, 숫자 9개」</strong>가 오늘의 구조다.
+    9개를 자유롭게 풀면 \(E\)가 아닌 행렬이 나오고, 그래서 <strong>푼 뒤에 제약을 다시 걸어야 한다</strong>(③절).
+    3회의 회전행렬과 <strong>똑같은 상황</strong>이다 — 자유도보다 숫자가 많고, 남는 것은 제약이다.
+    <strong>특이값 앞 둘이 같다</strong>는 것이 그 제약을 거는 실용적인 방법이 된다.
+  </div>
+
+  <div class="box trap">
+    <p class="boxtitle">⚠️ \(\mathbf{x}_1\)과 \(\mathbf{x}_2\) 중 어느 쪽이 왼쪽에 오나</p>
+    <p style="margin:0">
+      \(\mathbf{x}_2^\top E\mathbf{x}_1 = 0\)과 \(\mathbf{x}_1^\top E\mathbf{x}_2 = 0\)은
+      <strong>같은 식이 아니다</strong> — 뒤쪽은 \(E^\top\)을 쓴 것과 같다.
+      그리고 \((R, \mathbf{t})\)가 <strong>「1에서 2로」인지 「2에서 1로」인지</strong>에 따라서도 달라진다.
+      <strong>OpenCV의 <span class="mono">recoverPose</span>가 무엇을 돌려주는지 문서에서 확인하고 주석에 적는다.</strong>
+      이 자리를 틀리면 <strong>궤적이 정확히 역방향으로 나온다</strong> — 발산하지 않는다.
+    </p>
+  </div>
+
+  <h2 id="solve">③ \(E\)를 푸는 법 <span class="badge b-green">맡긴다</span></h2>
+
+  <h3>8점 알고리즘 — 선형이라 간단하다</h3>
+
+  <p>
+    제약식 \(\mathbf{x}_2^\top E\mathbf{x}_1 = 0\)은 \(E\)의 아홉 성분에 대해 <strong>선형</strong>이다.
+    \(E\)를 9차원 벡터 \(\mathbf{e}\)로 펴면 대응점 한 쌍이 방정식 하나를 준다.
+  </p>
+
+  $$
+  \big[\,x_2x_1,\; x_2y_1,\; x_2,\; y_2x_1,\; y_2y_1,\; y_2,\; x_1,\; y_1,\; 1\,\big]\;\mathbf{e} = 0
+  $$
+
+  <p>
+    여덟 쌍을 모으면 \(A\mathbf{e} = 0\)인 8×9 행렬이 되고,
+    <strong>\(A\)의 최소 특이벡터</strong>가 답이다(SVD의 마지막 열).
+    9개를 자유롭게 풀었으므로 나온 행렬은 \(E\)의 조건을 안 만족한다 —
+    그래서 <strong>다시 SVD를 해서 특이값을 \((1,1,0)\)으로 눌러 준다.</strong>
+  </p>
+
+  <div class="box trap">
+    <p class="boxtitle">⚠️ 픽셀 좌표를 그대로 넣으면 안 된다 — Hartley 정규화</p>
+    <p style="margin:0 0 .5rem">
+      위 행벡터를 보면 \(x_2x_1\) 같은 <strong>제곱 항</strong>과 상수 1이 섞여 있다.
+      픽셀 좌표를 그대로 넣으면 \(u \sim 700\)이라 제곱 항은 50만쯤 되고 상수 항은 1이다.
+      <strong>열마다 크기가 20만 배 차이 난다.</strong> SVD가 큰 열만 보고 답을 정하게 된다.
+    </p>
+    <pre style="margin:0">A 행렬 열 크기의 최대/최소
+  픽셀 좌표 그대로 : 2.08e+05
+  정규화 좌표      : 1.16e+01      ← 이 정도면 괜찮다</pre>
+    <p style="margin:.5rem 0 0">
+      그래서 좌표를 <strong>평균이 0, 평균 거리가 \(\sqrt2\)가 되도록</strong> 미리 옮기고 키운다.
+      Hartley 정규화라고 하고, <strong>8점 알고리즘을 쓸 때는 사실상 필수</strong>다.
+      우리는 \(K\)를 알아서 정규화 좌표를 쓰므로 이 문제가 이미 절반은 해결돼 있다.
+    </p>
+  </div>
+
+  <h3>5점 알고리즘 — 제약을 다 쓴다</h3>
+
+  <p>
+    자유도가 5이므로 <strong>다섯 쌍이면 충분</strong>하다.
+    다만 \(\det E = 0\)과 특이값 조건까지 넣으면 방정식이 비선형이 되고,
+    <strong>10차 다항식을 푸는 문제</strong>가 된다(Nistér, 2004). 구현이 훨씬 복잡하다.
+  </p>
+
+  <p>
+    그런데도 실전에서 5점을 쓴다. 이유는 다음 절에 있다.
+  </p>
+
+  <h3>RANSAC — 왜 뽑는 점이 적을수록 유리한가</h3>
+
+  <p>
+    실제 데이터에는 <strong>잘못 짝지어진 대응점</strong>이 섞여 있다(7회).
+    그래서 최소 개수만 무작위로 뽑아 풀어 보고, <strong>그 답에 동의하는 점이 가장 많은 것</strong>을 고른다.
+    필요한 반복 횟수는 이렇게 계산된다.
+  </p>
+
+  $$
+  N = \frac{\log(1-p)}{\log(1 - w^s)}
+  $$
+
+  <p>
+    \(p\)는 원하는 성공 확률, \(w\)는 인라이어 비율, <strong>\(s\)는 한 번에 뽑는 점의 개수</strong>다.
+    \(w^s\)가 「뽑은 \(s\)개가 전부 인라이어일 확률」이고, <strong>\(s\)가 지수에 있다.</strong>
+  </p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>인라이어 비율</th><th>5점 (\(s=5\))</th><th>8점 (\(s=8\))</th><th>배수</th></tr>
+    <tr><td>80 %</td><td>12회</td><td>25회</td><td>2.2배</td></tr>
+    <tr><td>60 %</td><td>57회</td><td>272회</td><td>4.8배</td></tr>
+    <tr><td><strong>50 %</strong></td><td><strong>145회</strong></td><td><strong>1 177회</strong></td><td><strong>8.1배</strong></td></tr>
+    <tr><td>40 %</td><td>447회</td><td>7 025회</td><td>15.7배</td></tr>
+    <tr><td>30 %</td><td>1 893회</td><td>70 188회</td><td>37.1배</td></tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 이 표가 <strong>5점 알고리즘이 구현의 복잡함을 감수할 만한 이유</strong>다.
+    인라이어가 절반일 때 8배, 30 %일 때 <strong>37배</strong> 차이가 난다.
+    그리고 <strong>실제로 30~50 %가 드물지 않다</strong> — 빠르게 돌거나 조명이 바뀌면 그렇게 된다.
+    <strong>「최소 개수를 줄이는 것」이 알고리즘 설계에서 왜 그렇게 중요한지</strong>를 보여 주는 표이기도 하다.
+  </div>
 
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 절에서 처음 나오는 이름</p>
@@ -168,30 +312,56 @@
       <dt>RANSAC (RANdom SAmple Consensus)</dt>
       <dd>「최소 개수만 무작위로 뽑아 풀고, 그 답에 동의하는 점을 센다」를 여러 번 반복해
         <strong>가장 많이 동의받은 답</strong>을 고르는 방식.
-        <strong>여기서는 잘못 짝지어진 대응점을 걸러 내는 데 썼다.</strong>
-        뽑는 개수가 적을수록 「전부 맞는 점일 확률」이 높아지므로 <strong>5점이 8점보다 유리하다.</strong></dd>
+        <strong>여기서는 잘못 짝지어진 대응점을 걸러 내는 데 썼다.</strong></dd>
       <dt>인라이어 (inlier) · 아웃라이어 (outlier)</dt>
       <dd>답에 동의하는 점과 안 하는 점. 「동의한다」의 기준은 <strong>사람이 정하는 임계값</strong>이다 —
-        보통 에피폴라 선까지의 거리 몇 픽셀. <strong>7회에서 이 비율을 계기판으로 계속 본다.</strong></dd>
-      <dt>시차 (parallax)</dt>
-      <dd>한 점을 두 위치에서 볼 때 <strong>두 시선이 이루는 각도.</strong>
-        <strong>⑤절 전체가 이 값에 관한 이야기</strong>이고, 삼각측량이 될지 안 될지를 이 값으로 판정한다.</dd>
+        보통 <strong>에피폴라 선까지의 거리 몇 픽셀</strong>.
+        4회 ②절의 표를 대면 1 px이 깊이 3 m에서 6.5 mm다.
+        <strong>7회에서 이 비율을 계기판으로 계속 본다.</strong></dd>
+      <dt>Hartley 정규화</dt>
+      <dd>선형 방정식을 풀기 전에 좌표를 <strong>평균 0, 평균 거리 \(\sqrt2\)</strong>로 맞추는 것.
+        <strong>여기서는 SVD가 큰 항만 보고 답을 정하는 것을 막는 데 썼다.</strong></dd>
     </dl>
   </div>
 
+  <h2 id="decompose">④ \(E\)에서 자세를 꺼낸다 — 그리고 네 개의 해</h2>
+
+  <p>
+    \(E = U\Sigma V^\top\)로 SVD한 뒤 특별한 행렬 \(W\) 하나를 끼우면 \(R\)과 \(\mathbf{t}\)가 나온다.
+  </p>
+
+  $$
+  W = \begin{bmatrix} 0 &amp; -1 &amp; 0 \\ 1 &amp; 0 &amp; 0 \\ 0 &amp; 0 &amp; 1 \end{bmatrix}
+  $$
+  $$
+  R \in \{\,UWV^\top,\ UW^\top V^\top\,\},
+  \qquad
+  \mathbf{t} \in \{\,+\mathbf{u}_3,\ -\mathbf{u}_3\,\}
+  $$
+
+  <p>
+    \(\mathbf{u}_3\)은 \(U\)의 마지막 열이다. <strong>회전 두 가지 × 이동 부호 두 가지 = 네 개의 해</strong>가 나온다.
+  </p>
+
   <div class="box trap">
-    <p class="boxtitle">⚠️ \(E\)에서 나오는 자세는 <strong>네 개</strong>다</p>
+    <p class="boxtitle">⚠️ 네 해 중 하나를 고르는 조건 — \(Z &gt; 0\)</p>
     <p style="margin:0">
-      \(E\)를 분해하면 \((R, \mathbf{t})\) 후보가 네 쌍 나온다. 회전 두 가지 × 이동 부호 두 가지다.
-      고르는 조건은 <strong>4회에 나온 \(Z &gt; 0\)</strong>이다 — 삼각측량한 점이
-      <strong>두 카메라 모두의 앞에</strong> 있어야 한다.
-      나머지 셋은 점이 카메라 뒤에 생긴다.
+      고르는 조건은 <strong>4회에 나온 cheirality</strong>다 — 삼각측량한 점이
+      <strong>두 카메라 모두의 앞에</strong> 있어야 한다. 나머지 셋은 점이 카메라 뒤에 생긴다.
       <span class="mono">recoverPose</span>가 이 판정까지 해 주지만,
-      <strong>「앞에 있는 점의 개수」를 직접 세어 보는 것</strong>이 좋은 검사가 된다.
+      <strong>「앞에 있는 점의 개수」를 직접 세어 보는 것</strong>이 좋은 검사가 된다 —
+      제대로 된 해에서는 인라이어의 거의 전부가 앞에 있고, 나머지 셋에서는 절반 이하다.
+      <strong>세 개가 비슷하게 나오면 데이터가 퇴화 조건에 걸린 것</strong>이다(⑧절).
     </p>
   </div>
 
-  <h2 id="scale">③ 스케일 모호성 — 이 강의의 분기점 <span class="badge b-red">사람이 한다</span></h2>
+  <p>
+    그리고 <strong>\(\det R = 1\)을 확인해야 한다.</strong> SVD의 \(U, V\)는 부호가 정해져 있지 않아서
+    그대로 곱하면 \(\det R = -1\)인 뒤집기가 나올 수 있다(2회 ③절).
+    라이브러리는 이 처리를 하지만, <strong>직접 짤 때는 반드시 넣는다.</strong>
+  </p>
+
+  <h2 id="scale">⑤ 스케일 모호성 — 이 강의의 분기점 <span class="badge b-red">사람이 한다</span></h2>
 
   <p>
     \(E = [\mathbf{t}]_\times R\)에서 \(\mathbf{t}\)를 두 배로 하면 \(E\)도 두 배가 된다.
@@ -206,6 +376,7 @@
   <p>
     <strong>그래서 \(E\)는 \(\mathbf{t}\)의 방향만 준다. 크기는 못 준다.</strong>
     수식이 그렇게 생겼다는 것이 전부이고, 더 나은 알고리즘으로 해결될 성질의 것이 아니다.
+    ②절에서 자유도를 6이 아니라 <strong>5</strong>로 센 것이 바로 이 이유다.
   </p>
 
   <div class="box lab-block">
@@ -224,17 +395,18 @@
     <strong>해석:</strong> 1회에서 「카메라만 쓰면 크기를 모른다」고 했던 것의 증명이 이 절이다.
     그리고 <strong>이것을 깨는 것이 IMU</strong>다.
     가속도계는 m/s²라는 <strong>절대 단위</strong>로 잰다.
-    같은 영상이라도 「두 배 큰 방을 두 배 빠르게」 지나갔다면 가속도가 다르게 찍힌다.
-    <strong>12회 초기화가 하는 일이 정확히 이것이다 — 영상이 준 모양에 IMU가 준 자를 대는 것.</strong>
+    같은 영상이라도 「두 배 큰 방을 두 배 빠르게」 지나갔다면 <strong>가속도가 네 배로 찍힌다.</strong>
+    <strong>12회 초기화가 하는 일이 정확히 이것 — 영상이 준 모양에 IMU가 준 자를 대는 것</strong>이다.
   </div>
 
   <p>
     당장은 배율을 하나 정해 두고 간다. 보통 <strong>\(\lVert\mathbf{t}\rVert = 1\)</strong>로 놓는다.
-    그러면 지도의 단위가 「첫 두 프레임 사이 거리」가 된다. 미터가 아니다.
-    <strong>이 사실을 잊고 미터인 것처럼 평가하면 ATE가 이유 없이 크게 나온다.</strong>
+    그러면 지도의 단위가 「첫 두 프레임 사이 거리」가 된다. <strong>미터가 아니다.</strong>
+    이 사실을 잊고 미터인 것처럼 평가하면 ATE가 이유 없이 크게 나온다 —
+    <strong>⑨절 의뢰서의 마지막 증상이 그것이다.</strong>
   </p>
 
-  <h2 id="tri">④ 삼각측량 — 두 직선의 교점을 찾는다</h2>
+  <h2 id="tri">⑥ 삼각측량 — 두 직선의 교점을 찾는다</h2>
 
   <p>
     자세를 알았으면 이제 점의 위치를 구한다.
@@ -252,10 +424,14 @@
     그래서 <strong>두 직선에 가장 가까운 점</strong>을 찾는 최소제곱 문제로 바꾼다.
   </p>
 
+  <h3>방법 ① 중점법 — 3차원 거리를 최소화한다</h3>
+
+  <p>두 직선이 만난다고 두고 식을 세운 뒤, 해가 없으므로 최소제곱으로 푼다.</p>
+
   $$
   \mathbf{o}_1 + t_1\mathbf{v}_1 = \mathbf{o}_2 + t_2\mathbf{v}_2
   \quad\Longrightarrow\quad
-  \begin{bmatrix} \mathbf{v}_1 &amp; -\mathbf{v}_2 \end{bmatrix}
+  \underbrace{\begin{bmatrix} \mathbf{v}_1 &amp; -\mathbf{v}_2 \end{bmatrix}}_{V \in \mathbb{R}^{3\times2}}
   \begin{bmatrix} t_1 \\ t_2 \end{bmatrix}
   = \mathbf{o}_2 - \mathbf{o}_1
   $$
@@ -266,25 +442,61 @@
   $$
 
   <p>
-    \(t_1, t_2\)를 구해 두 점을 각각 계산하고 <strong>가운데를 답으로 삼는다.</strong> 중점법이다.
-    이름은 거창해도 하는 일은 2×2 연립방정식 하나다.
+    \(t_1, t_2\)를 구해 두 점을 각각 계산하고 <strong>가운데를 답으로 삼는다.</strong>
+    이름은 거창해도 하는 일은 <strong>2×2 연립방정식 하나</strong>다.
   </p>
+
+  <h3>방법 ② DLT — 투영식을 그대로 선형화한다</h3>
+
+  <p>
+    투영식은 \(\tilde{\mathbf{u}} \sim P\tilde{\mathbf{X}}\)다. <strong>동차좌표라 배율이 자유</strong>이므로
+    「\(\tilde{\mathbf{u}}\)와 \(P\tilde{\mathbf{X}}\)가 <em>평행</em>하다」로 쓸 수 있고, 그것은 <strong>외적이 0</strong>이라는 뜻이다.
+  </p>
+
+  $$
+  \tilde{\mathbf{u}} \times (P\tilde{\mathbf{X}}) = 0
+  $$
+
+  <p>
+    풀어 쓰면 영상 하나마다 <strong>독립인 방정식 두 개</strong>가 나온다.
+    두 영상이면 4×4 행렬 \(A\)가 되고, \(A\tilde{\mathbf{X}} = 0\)의 <strong>최소 특이벡터</strong>가 답이다.
+  </p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th style="width:18%"></th><th>중점법</th><th>DLT</th></tr>
+    <tr><td>무엇을 최소화</td><td>3차원에서 두 직선까지의 거리</td><td>대수적 오차 (기하적 의미가 약하다)</td></tr>
+    <tr><td>영상 개수</td><td><strong>둘</strong>일 때 간단하다</td><td><strong>셋 이상으로 바로 늘어난다</strong> — 행이 늘 뿐</td></tr>
+    <tr><td>구현</td><td>2×2 역행렬</td><td>4×4 SVD</td></tr>
+    <tr><td>퇴화 판정</td><td>\(V^\top V\)의 <strong>조건수</strong>를 보면 된다</td><td>특이값 비를 본다</td></tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> <strong>둘 다 최적해가 아니다.</strong>
+    우리가 실제로 재는 것은 <strong>픽셀</strong>인데, 중점법은 3차원 거리를,
+    DLT는 대수적 양을 최소화한다.
+    진짜로 재투영 오차를 최소화하려면 비선형 최적화가 필요하고, 그게 <strong>9회의 번들조정</strong>이다.
+    <strong>여기서는 좋은 초기값을 만드는 것이 목적</strong>이므로 어느 쪽이든 된다.
+    <strong>「초기값을 만드는 방법」과 「다듬는 방법」이 다르다</strong>는 구조가 이 강의에서 계속 나온다 —
+    ③절의 8점/5점도, 12회의 초기화도 같은 모양이다.
+  </div>
 
   <div class="box trap">
     <p class="boxtitle">⚠️ \(\mathbf{v}_1\)과 \(\mathbf{v}_2\)가 평행하면 풀 수 없다</p>
     <p style="margin:0">
       \(V^\top V\)가 특이해진다. 두 광선이 평행하다는 것은 <strong>두 카메라가 같은 자리에서 봤다</strong>는 뜻이고,
-      실제로 그런 경우가 자주 생긴다 — <strong>제자리에서 회전만 했을 때</strong>다.
+      실제로 그런 경우가 자주 생긴다 — <strong>제자리에서 회전만 했을 때</strong>다(⑧절).
       기선이 0이면 삼각측량은 원리적으로 불가능하다.
-      <span class="mono">inverse()</span>가 <strong>에러를 내지 않고 거대한 숫자를 돌려주는 것</strong>이 이 자리의 위험이다.
+      <strong><span class="mono">inverse()</span>가 에러를 내지 않고 거대한 숫자를 돌려주는 것</strong>이 이 자리의 위험이다.
       <strong>조건수를 재서 미리 걸러야 한다.</strong>
     </p>
   </div>
 
-  <h2 id="parallax">⑤ 시차 — 언제 잘 되고 언제 안 되나 <span class="badge b-red">사람이 한다</span></h2>
+  <h2 id="parallax">⑦ 시차 — 언제 잘 되고 언제 안 되나 <span class="badge b-red">사람이 한다</span></h2>
 
   <p>
-    ④절이 풀린다고 해서 답이 정확한 것은 아니다. <strong>얼마나 흔들리는지</strong>는 따로 계산해야 한다.
+    ⑥절이 풀린다고 해서 답이 정확한 것은 아니다. <strong>얼마나 흔들리는지</strong>는 따로 계산해야 한다.
     픽셀 잡음 \(\sigma_{px}\)가 깊이 오차로 얼마나 번지는지는 이 식으로 어림된다.
   </p>
 
@@ -293,8 +505,13 @@
   $$
 
   <p>
+    식의 모양이 4회 ⑤절의 야코비안과 같다 — <strong>\(Z^2\)이 위에 있다.</strong>
+    거기서 「먼 점은 픽셀이 덜 움직인다」고 했던 것이 여기서 「먼 점은 깊이가 더 흔들린다」가 된다.
+    같은 사실의 앞뒤다.
+  </p>
+
+  <p>
     \(f = 458.65\) px(4회), \(\sigma_{px} = 1\) px로 두고 실제 숫자를 넣어 보면 이렇다.
-    <span class="mono">vision-slam/src/camera_numbers.py</span>가 계산한 값이다.
   </p>
 
   <div class="tablewrap">
@@ -322,7 +539,8 @@
     <img src="assets/img/05_triangulation_rays.png"
          alt="두 장면 비교 그림. 왼쪽은 기선 5cm에서 두 카메라의 광선이 거의 평행하게 만나며 깊이 흔들림이 크고, 오른쪽은 기선 40cm에서 광선이 뚜렷한 각도로 만나며 흔들림이 작다">
     <figcaption>같은 <strong>1 px</strong> 오차가 기선에 따라 깊이에서 얼마가 되는지.
-      왼쪽에서는 두 광선이 <strong>거의 평행</strong>해서 어디서 만나는지가 흐릿하다.</figcaption>
+      왼쪽에서는 두 광선이 <strong>거의 평행</strong>해서 어디서 만나는지가 흐릿하다.
+      ⑥절의 「\(V^\top V\)가 특이해진다」가 그림으로는 이렇게 보인다.</figcaption>
   </figure>
 
   <div class="tablewrap">
@@ -349,16 +567,85 @@
     <strong>이것이 키프레임이 필요한 이유</strong>이고, 14회의 키프레임 정책이 여기서 시작된다.
   </p>
 
+  <div class="box lab-block">
+    <p class="boxtitle">임계값은 사람이 정한다 🔴</p>
+    <p style="margin:0">
+      「시차가 얼마 이상이면 만든다」의 <strong>그 값을 정하는 것이 사람이 하는 일</strong>이다.
+      위 표를 보고 <strong>「이 프로젝트에서 받아들일 수 있는 깊이 오차」</strong>를 먼저 정하면
+      임계값이 거기서 따라 나온다. 예를 들어 <strong>0.1 m를 기준으로 잡으면 시차 3.8°</strong>다.
+      <strong>설계문서에 「임계값 3.8°, 근거는 깊이 3 m에서 σ_Z = 0.1 m」라고 적는 것</strong>이
+      이 강의가 요구하는 형태다. 숫자만 적고 근거가 없으면 절반이다.
+    </p>
+  </div>
+
+  <h2 id="degenerate">⑧ 퇴화 조건 — 풀 수 없는 상황을 알아보는 법</h2>
+
+  <p>
+    알고리즘이 <strong>답을 못 내는 것</strong>보다 나쁜 것은 <strong>엉뚱한 답을 내는 것</strong>이다.
+    오늘 배운 것에는 그런 상황이 둘 있고, 둘 다 실제 데이터에서 나온다.
+  </p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th style="width:20%">상황</th><th>무엇이 깨지나</th><th>어떻게 알아보나</th><th>어떻게 하나</th></tr>
+    <tr><td><strong>제자리 회전</strong><br>(기선 ≈ 0)</td>
+      <td>\(\mathbf{t} \to 0\)이라 \(E = [\mathbf{t}]_\times R \to 0\).
+        <strong>\(E\)가 정해지지 않는다.</strong> 삼각측량도 불가능</td>
+      <td>시차 각도, \(V^\top V\)의 조건수</td>
+      <td><strong>새 점을 만들지 않는다.</strong> 자세는 IMU가 잇는다</td></tr>
+    <tr><td><strong>평면 장면</strong><br>(모든 점이 한 평면에)</td>
+      <td>\(E\)의 해가 <strong>하나로 정해지지 않는다.</strong> 8점 알고리즘이 특히 취약</td>
+      <td>homography가 \(E\)만큼 잘 맞는가</td>
+      <td>homography로 풀거나, 그 구간을 건너뛴다</td></tr>
+  </table>
+  </div>
+
   <div class="box stop">
     <p class="boxtitle">⛔ 제자리 회전에서 새 점을 만드는 것</p>
     <p style="margin:0">
       기선이 0이면 시차도 0이고 삼각측량은 <strong>불가능하다.</strong> 정확도가 나쁜 게 아니라 아예 안 된다.
-      그런데 코드는 답을 하나 뱉는다 — 아주 먼 곳에 있는 점을.
+      그런데 코드는 답을 하나 뱉는다 — <strong>아주 먼 곳에 있는 점을.</strong>
+      그 점이 지도에 들어가면 이후 모든 최적화가 그 점에 끌려간다.
       <strong>V1_01_easy의 최대 각속도가 0.94 rad/s(54 °/s)다.</strong> 제자리 회전 구간이 실제로 있다.
       <strong>시차를 재서 임계값 아래면 새 점을 만들지 않는 것</strong>이 옳은 처리다.
-      임계값을 얼마로 둘지는 위 표를 보고 <strong>사람이 정한다.</strong>
     </p>
   </div>
+
+  <h3>homography — 평면일 때 쓰는 다른 관계</h3>
+
+  <p>
+    기선이 0이거나 장면이 평면이면 \(E\)를 못 푼다. 그런데 <strong>그때도 두 영상 사이에는 관계가 있다.</strong>
+    <strong>3×3 행렬 하나로 픽셀이 픽셀로 직접 대응된다</strong>는 관계이고, homography라고 한다.
+  </p>
+
+  $$
+  \mathbf{x}_2 \sim H\,\mathbf{x}_1
+  \qquad
+  \begin{cases}
+    H = R &amp; \text{순수 회전} \\[2pt]
+    H = R + \dfrac{\mathbf{t}\mathbf{n}^\top}{d} &amp; \text{평면 장면 (법선 } \mathbf{n}\text{, 거리 } d)
+  \end{cases}
+  $$
+
+  <p>
+    \(E\)와 다른 점은 <strong>「선 위에 있다」가 아니라 「이 점이다」</strong>라고 말해 준다는 것이다.
+    제약이 더 세지만, 대신 <strong>깊이 정보가 없다</strong> — 평면이거나 회전만 했으므로 당연하다.
+  </p>
+
+  <div class="interp">
+    <strong>해석:</strong> 실제 SLAM 시스템은 <strong>둘을 같이 풀어 보고 더 잘 맞는 쪽을 고른다.</strong>
+    ORB-SLAM의 초기화가 그렇게 되어 있다 — \(E\)와 homography를 둘 다 풀고 점수를 비교한다.
+    <strong>「지금 상황이 삼각측량이 가능한 상황인가」를 시스템이 스스로 판단하게 만드는 것</strong>이고,
+    ⑦절에서 시차 임계값으로 하는 일의 더 정교한 판이다.
+  </div>
+
+  <p>
+    <strong>이 강의에서는 homography를 구현하지 않는다.</strong>
+    대신 <strong>시차가 부족하면 새 점을 만들지 않는</strong> 쪽으로 처리한다.
+    IMU가 있으므로 그 구간의 자세는 IMU가 이어 준다 —
+    <strong>이것이 시각-관성 시스템의 값어치</strong>이기도 하다.
+    단안 카메라만 있는 시스템은 이 자리에서 homography를 반드시 넣어야 한다.
+  </p>
 
   <h2 id="prompt">🤖 의뢰서 — 두 시점 재구성 <span class="badge b-yellow">맡기되 검사한다</span></h2>
 
@@ -377,7 +664,7 @@
     ②는 <strong>시차가 임계값 아래면 <span class="mono">nullopt</span></strong>을 돌려줘 — 값을 지어내지 말아 줘.<br><br>
     <strong>[참조]</strong> OpenCV <span class="mono">findEssentialMat</span> + <span class="mono">recoverPose</span>를 쓰되,
     <strong>삼각측량은 중점법으로 직접</strong> 짜 줘. 조건수를 보고 판정해야 하기 때문이다.<br><br>
-    <strong>[검증]</strong> 아래 시험을 같이 써 줘. <strong>기준을 넘으면 실패로 출력한다.</strong><br>
+    <strong>[검증]</strong> 아래 다섯 시험을 같이 써 줘. <strong>기준을 넘으면 실패로 출력한다.</strong><br>
     ① <strong>무잡음 합성 데이터</strong>로 — 3차원 점 100개와 카메라 두 대를 직접 만들고,
     정확한 픽셀 좌표를 계산해 넣는다. <strong>재구성 오차 <span class="mono">&lt; 1e-8</span></strong><br>
     ② 같은 데이터에서 회전 오차 <span class="mono">&lt; 1e-8</span> rad, 이동 <strong>방향</strong> 오차 <span class="mono">&lt; 1e-8</span> rad
@@ -386,11 +673,13 @@
     <strong>전부 <span class="mono">nullopt</span></strong>을 돌려주는가<br>
     ④ 픽셀에 <span class="mono">σ = 1 px</span> 잡음을 넣었을 때 깊이 3 m·기선 20 cm에서
     <strong>오차가 0.10 m 근처</strong>인가 (표와 대조)<br>
+    ⑤ \(E\)의 <strong>특이값 앞 둘이 같고 셋째가 0</strong>인가 — 상대오차 <span class="mono">1e-6</span><br>
     <strong>실패하면 어느 점에서 얼마나 벌어졌는지 함께 찍어 줘.</strong><br><br>
     <strong>[함정]</strong> <span class="mono">findEssentialMat</span>은 <strong>정규화 좌표</strong>를 받는다 —
     왜곡을 먼저 풀어야 한다(4회). \(E\)에서 나오는 자세 후보는 <strong>네 개</strong>이고
     \(Z &gt; 0\)으로 고른다. <span class="mono">recoverPose</span>가 돌려주는 것이
-    <span class="mono">T_C1C2</span>인지 <span class="mono">T_C2C1</span>인지 <strong>문서에서 확인하고 주석에 적어 줘.</strong><br><br>
+    <span class="mono">T_C1C2</span>인지 <span class="mono">T_C2C1</span>인지 <strong>문서에서 확인하고 주석에 적어 줘.</strong>
+    <span class="mono">det R = 1</span>도 확인해 줘.<br><br>
     <strong>[남긴다]</strong> 시차 임계값을 얼마로 정했고 <strong>왜 그 값인지</strong> 코드 위에 적어 줘.
   </div>
 
@@ -400,6 +689,7 @@
 □ 이동 <strong>크기</strong>를 비교하는 시험이 있는가            ← 있으면 잘못된 시험이다
 □ 시차 임계값이 <strong>어디서 왔는지</strong> 적혀 있는가
 □ recoverPose 의 방향(T_C1C2 인가)이 주석에 적혀 있는가
+□ det R = 1 을 확인하는가                       ← 아니면 뒤집힌 해가 통과한다
 □ 시험 ③이 nullopt 를 <strong>실제로</strong> 확인하는가, 값이 크다는 것만 보는가</pre>
 
   <p>그리고 결과가 이상할 때.</p>
@@ -416,9 +706,43 @@
   <div class="interp">
     <strong>해석:</strong> 이 증상은 오늘 배운 것 안에 답이 있다.
     <strong>「모양은 맞는데 배율만 다르다」는 버그가 아닐 수 있다.</strong>
-    \(\lVert\mathbf{t}\rVert = 1\)로 정규화된 답과 정답을 그냥 비교하면 이렇게 나온다.
+    \(\lVert\mathbf{t}\rVert = 1\)로 정규화된 답과 정답을 그냥 비교하면 이렇게 나온다(⑤절).
     <strong>시험이 틀린 것</strong>이다. 이런 경우를 한 번 겪어 두는 것이 오늘의 목적 중 하나다 —
     <strong>코드가 아니라 판정 기준을 의심해야 하는 때</strong>가 있다.
+    12회에서 스케일이 실제로 안 잡힐 때도 <strong>증상이 똑같이 보인다</strong>는 것이 더 중요하다.
+  </div>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    <strong>[할 일]</strong> 무잡음 합성 데이터 생성기를 만들어 줘.
+    3차원 점 <span class="mono">N</span>개를 상자 표면에 뿌리고, 카메라 두 대를 주어진 자세로 놓고,
+    <strong>4회의 투영 함수를 그대로 써서</strong> 픽셀 좌표를 만든다.<br><br>
+    <strong>[인터페이스]</strong> 잡음 표준편차와 기선 길이를 <strong>인자로 받게</strong> 해 줘.
+    <span class="mono">sigma_px = 0</span>이 <strong>기본값</strong>이어야 한다.<br><br>
+    <strong>[검증]</strong> 생성기 자체를 시험하는 코드도 같이 써 줘.<br>
+    ① <span class="mono">sigma_px = 0</span>일 때, 만든 픽셀을 다시 역투영해 광선을 만들면
+    <strong>원래 3차원 점을 정확히 지나는가</strong> — 점과 광선의 거리 <span class="mono">&lt; 1e-12</span><br>
+    ② 화면 밖으로 나가거나 <span class="mono">Z &lt;= 0</span>인 점이 <strong>결과에 섞이지 않는가</strong><br>
+    ③ 요청한 기선 길이가 <strong>실제로 그 값인가</strong> — <span class="mono">1e-12</span><br><br>
+    <strong>[함정]</strong> 픽셀 좌표를 <strong>정수로 반올림하지 말아 줘.</strong>
+    반올림하는 순간 「무잡음」이 아니게 되고, 3단 시험의 기준 <span class="mono">1e-8</span>을 절대 통과할 수 없다.
+    점을 <strong>한 평면에 몰아 뿌리지 말아 줘</strong> — 퇴화 조건에 걸린다(⑧절).<br><br>
+    <strong>[남긴다]</strong> 점을 어떤 모양으로 뿌렸는지, 왜 그렇게 골랐는지 적어 줘.
+  </div>
+
+  <p class="readme-first">받은 코드에서 확인할 것 — <strong>생성기가 틀리면 모든 3단 시험이 무의미해진다.</strong></p>
+
+  <pre>□ 픽셀 좌표가 <strong>실수</strong>인가, 정수로 반올림됐는가
+□ 투영에 <strong>4회에 만든 함수를 그대로</strong> 썼는가, 새로 짰는가   ← 새로 짰으면 두 벌이 된다
+□ 잡음 기본값이 0 인가
+□ 시험 ①이 <strong>1e-12</strong> 로 통과하는가
+□ 점을 뿌린 모양이 <strong>한 평면에 몰려 있지 않은가</strong>        ← 평면이면 E 가 잘 안 풀린다</pre>
+
+  <div class="interp">
+    <strong>해석:</strong> 마지막 항목이 함정이다. 점을 벽 하나에만 뿌리면
+    <strong>장면이 평면</strong>이 되고, ⑧절의 퇴화 조건에 정확히 걸린다.
+    「합성 데이터에서만 이상하다」의 흔한 원인이고,
+    <strong>합성 데이터를 만드는 것도 설계라는 것</strong>을 보여 주는 자리다.
   </div>
 
   <h2 id="verify">🧪 오늘 만든 것이 맞는지 어떻게 아나 — 사다리 3단 <span class="badge b-red">사람이 한다</span></h2>
@@ -434,43 +758,14 @@
     4회의 투영 함수로 <strong>정확한 픽셀 좌표를 계산</strong>한다. 잡음은 0이다.
   </p>
 
-  <div class="prompt">
-    <button onclick="copyPrompt(this)">복사</button>
-    <strong>[할 일]</strong> 무잡음 합성 데이터 생성기를 만들어 줘.
-    3차원 점 <span class="mono">N</span>개를 상자 표면에 뿌리고, 카메라 두 대를 주어진 자세로 놓고,
-    <strong>4회의 투영 함수를 그대로 써서</strong> 픽셀 좌표를 만든다.<br><br>
-    <strong>[인터페이스]</strong> 잡음 표준편차와 기선 길이를 <strong>인자로 받게</strong> 해 줘.
-    <span class="mono">sigma_px = 0</span>이 <strong>기본값</strong>이어야 한다.<br><br>
-    <strong>[검증]</strong> 생성기 자체를 시험하는 코드도 같이 써 줘.<br>
-    ① <span class="mono">sigma_px = 0</span>일 때, 만든 픽셀을 다시 역투영해 광선을 만들면
-    <strong>원래 3차원 점을 정확히 지나는가</strong> — 점과 광선의 거리 <span class="mono">&lt; 1e-12</span><br>
-    ② 화면 밖으로 나가거나 <span class="mono">Z &lt;= 0</span>인 점이 <strong>결과에 섞이지 않는가</strong><br>
-    ③ 요청한 기선 길이가 <strong>실제로 그 값인가</strong> — <span class="mono">1e-12</span><br><br>
-    <strong>[함정]</strong> 픽셀 좌표를 <strong>정수로 반올림하지 말아 줘.</strong>
-    반올림하는 순간 「무잡음」이 아니게 되고, 3단 시험의 기준 <span class="mono">1e-8</span>을 절대 통과할 수 없다.<br><br>
-    <strong>[남긴다]</strong> 점을 어떤 모양으로 뿌렸는지, 왜 그렇게 골랐는지 적어 줘.
-  </div>
-
-  <p class="readme-first">받은 코드에서 확인할 것 — <strong>생성기가 틀리면 모든 3단 시험이 무의미해진다.</strong></p>
-
-  <pre>□ 픽셀 좌표가 <strong>실수</strong>인가, 정수로 반올림됐는가
-□ 투영에 <strong>4회에 만든 함수를 그대로</strong> 썼는가, 새로 짰는가   ← 새로 짰으면 두 벌이 된다
-□ 잡음 기본값이 0 인가
-□ 시험 ①이 <strong>1e-12</strong> 로 통과하는가
-□ 점을 뿌린 모양이 <strong>한 평면에 몰려 있지 않은가</strong>        ← 평면이면 E 가 잘 안 풀린다</pre>
-
-  <div class="interp">
-    <strong>해석:</strong> 마지막 항목이 함정이다. 점을 벽 하나에만 뿌리면
-    <strong>장면이 평면</strong>이 되고, 그러면 \(E\)를 푸는 문제가 <strong>퇴화한다</strong> —
-    답이 하나로 정해지지 않는다. 「합성 데이터에서만 이상하다」의 흔한 원인이고,
-    <strong>합성 데이터를 만드는 것도 설계라는 것</strong>을 보여 주는 자리다.
-  </div>
-
   <div class="tablewrap">
   <table class="summary-table">
     <tr><th style="width:8%">단</th><th>시험</th><th>통과 기준</th><th>여기서 걸리는 것</th></tr>
-    <tr><td>1</td><td>\(\mathbf{x}_2^\top E \mathbf{x}_1 = 0\)이 정답 대응점에서 성립하는가</td>
+    <tr><td>1</td><td>\(\mathbf{x}_1^\top E \mathbf{x}_2 = 0\)이 정답 대응점에서 성립하는가</td>
       <td><span class="mono">&lt; 1e-12</span></td><td>\(E\)의 정의, 좌표계 방향</td></tr>
+    <tr><td>1</td><td>\(E\)의 특이값이 \((\sigma, \sigma, 0)\)인가</td>
+      <td>상대오차 <span class="mono">&lt; 1e-6</span></td><td>제약을 다시 안 걸었다</td></tr>
+    <tr><td>1</td><td>\(\det R = 1\)</td><td><span class="mono">&lt; 1e-12</span></td><td>SVD 부호 처리 누락</td></tr>
     <tr><td><strong>3</strong></td><td><strong>무잡음 합성에서 재구성 오차</strong></td>
       <td><strong><span class="mono">&lt; 1e-8</span></strong></td>
       <td>좌표계 규약 위반, 왜곡 처리 누락</td></tr>
@@ -478,7 +773,7 @@
       <td><span class="mono">&lt; 1e-8</span> rad</td><td>\(T_{C_1C_2}\)와 \(T_{C_2C_1}\) 혼동</td></tr>
     <tr><td>3</td><td>기선 0(제자리 회전)에서 삼각측량이 <strong>거부되는가</strong></td>
       <td>전부 <span class="mono">nullopt</span></td><td>조건수 검사 누락</td></tr>
-    <tr><td>5</td><td>잡음 1 px에서 깊이 오차가 ⑤절 표와 맞는가</td>
+    <tr><td>5</td><td>잡음 1 px에서 깊이 오차가 ⑦절 표와 맞는가</td>
       <td>0.10 m 근처 (3 m·20 cm)</td><td>모델과 구현이 다르다</td></tr>
   </table>
   </div>
@@ -499,64 +794,71 @@
   <p>
     <strong>두 카메라의 시야뿔 + 각 점으로 가는 광선 + 두 광선이 이루는 시차 각도.</strong>
     기선을 2 cm에서 40 cm까지 늘려 가며 <strong>광선이 만나는 지점의 흔들림</strong>을 같이 그린다.
-    ⑤절의 그림이 그것이다.
+    ⑦절의 그림이 그것이다.
   </p>
 
   <p>
-    <strong>이 그림으로 판정하는 것:</strong> ⑤절 표의 숫자와 그림의 흔들림 폭이 맞는가.
+    <strong>이 그림으로 판정하는 것:</strong> ⑦절 표의 숫자와 그림의 흔들림 폭이 맞는가.
     맞으면 「기선이 짧으면 깊이가 흔들린다」가 <strong>식과 그림 양쪽에서 확인된 것</strong>이다.
     학기 중에 삼각측량이 이상할 때 <strong>제일 먼저 여는 그림</strong>이 된다.
   </p>
 
   <h2 id="check">✅ 오늘의 점검</h2>
   <ul class="check">
-    <li><input type="checkbox" id="c1"><label for="c1">에피폴라 제약이 무엇을 줄여 주는지 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c1"><label for="c1">에피폴라 제약을 <strong>유도할 수 있다</strong> — 왜 깊이가 식에서 사라지나</label></li>
     <li><input type="checkbox" id="c2"><label for="c2">\(E\)의 자유도가 5인 이유를 말할 수 있다</label></li>
-    <li><input type="checkbox" id="c3"><label for="c3">스케일을 모르는 이유를 <strong>식으로</strong> 설명할 수 있다</label></li>
-    <li><input type="checkbox" id="c4"><label for="c4">\(E\)에서 나오는 네 개의 해 중 하나를 고르는 조건을 안다</label></li>
-    <li><input type="checkbox" id="c5"><label for="c5">연속한 두 프레임으로 삼각측량하면 안 되는 이유를 <strong>숫자로</strong> 말할 수 있다</label></li>
-    <li><input type="checkbox" id="c6"><label for="c6">제자리 회전에서 무엇을 하지 말아야 하는지 안다</label></li>
-    <li><input type="checkbox" id="c7"><label for="c7">무잡음 합성 데이터를 직접 만들어 3단 시험을 돌렸다</label></li>
-    <li><input type="checkbox" id="c8"><label for="c8">3단에서 오차가 크면 왜 튜닝하면 안 되는지 설명할 수 있다</label></li>
+    <li><input type="checkbox" id="c3"><label for="c3">\(E\)와 \(F\)의 차이를 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c4"><label for="c4">8점 알고리즘에 <strong>정규화가 왜 필요한지</strong> 안다</label></li>
+    <li><input type="checkbox" id="c5"><label for="c5">RANSAC에서 <strong>뽑는 점이 적을수록 유리한 이유</strong>를 식으로 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c6"><label for="c6">\(E\)에서 나오는 네 개의 해 중 하나를 고르는 조건을 안다</label></li>
+    <li><input type="checkbox" id="c7"><label for="c7">스케일을 모르는 이유를 <strong>식으로</strong> 설명할 수 있다</label></li>
+    <li><input type="checkbox" id="c8"><label for="c8">중점법과 DLT의 차이, 그리고 <strong>둘 다 최적해가 아닌 이유</strong>를 안다</label></li>
+    <li><input type="checkbox" id="c9"><label for="c9">연속한 두 프레임으로 삼각측량하면 안 되는 이유를 <strong>숫자로</strong> 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c10"><label for="c10">시차 임계값을 <strong>근거와 함께</strong> 정했다</label></li>
+    <li><input type="checkbox" id="c11"><label for="c11">퇴화 조건 둘을 대고, 각각 어떻게 알아보는지 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c12"><label for="c12">무잡음 합성 데이터를 직접 만들어 3단 시험을 돌렸다</label></li>
+    <li><input type="checkbox" id="c13"><label for="c13">3단에서 오차가 크면 왜 튜닝하면 안 되는지 설명할 수 있다</label></li>
   </ul>
 
   <h2 id="more">조금 더 알아두면 <span class="badge b-lv">시험 범위 아님</span></h2>
 
   <details class="story">
-    <summary>중점법 말고 DLT — 그리고 왜 둘 다 알아 둘 만한가</summary>
+    <summary>왜 「Essential」과 「Fundamental」인가 — 이름의 유래</summary>
     <p>
-      ④절의 중점법은 <strong>3차원 공간에서</strong> 두 직선의 거리를 최소화한다.
-      직관적이고 코드가 짧다. 단점은 <strong>최소화하는 양이 우리가 실제로 재는 값이 아니라는 것</strong>이다 —
-      우리가 재는 것은 픽셀이지 3차원 거리가 아니다.
+      \(E\)가 먼저 나왔다. Longuet-Higgins가 1981년 <em>Nature</em>에 실은 한 쪽짜리 논문에서
+      <strong>「캘리브레이션된 두 시점에서 여덟 점이면 구조를 복원할 수 있다」</strong>는 것을 보였고,
+      그때 나온 행렬이 essential matrix다. 8점 알고리즘도 그 논문 것이다.
     </p>
     <p>
-      DLT(Direct Linear Transform)는 투영식 \(\mathbf{u} \times (P\mathbf{X}) = 0\)을 그대로 선형 연립방정식으로 만들고
-      SVD로 푼다. 역시 픽셀 오차를 직접 최소화하지는 않지만,
-      <strong>여러 시점을 한꺼번에 넣기 쉽다.</strong> 세 장, 네 장으로 늘려도 행이 늘어날 뿐이다.
+      \(F\)는 10년쯤 뒤에 나왔다. <strong>캘리브레이션을 모르는 카메라</strong>로도
+      두 영상 사이의 관계를 잡을 수 있다는 것이 발견되면서
+      Faugeras와 Luong이 fundamental matrix를 정리했다.
+      <strong>「더 근본적(fundamental)」이라는 뜻</strong>이다 — 아는 것이 더 적어도 성립하니까.
     </p>
     <p>
-      <strong>둘 다 최적해는 아니다.</strong> 진짜로 픽셀 오차를 최소화하려면 비선형 최적화가 필요하고,
-      그게 9회의 번들조정이다. <strong>여기서는 좋은 초기값을 만드는 것이 목적</strong>이므로 어느 쪽이든 된다.
-      <strong>초기값을 만드는 방법과 다듬는 방법이 다르다</strong>는 것이 이 강의에서 반복해서 나오는 구조다.
+      그런데 우리 입장에서는 반대다. <strong>\(K\)를 알기 때문에 \(E\)를 쓰고, 그게 더 강하다</strong> —
+      자유도가 7이 아니라 5라서 대응점이 덜 필요하고 RANSAC이 훨씬 유리하다.
+      <strong>「아는 것을 쓰면 문제가 쉬워진다」</strong>는 이 강의 전체의 구조가 여기에도 있다.
     </p>
   </details>
 
   <details class="story">
-    <summary>순수 회전에서는 \(E\) 대신 무엇을 쓰나 — homography</summary>
+    <summary>스테레오 카메라는 왜 이 고민을 안 하나</summary>
     <p>
-      기선이 0이면 \(E\)를 풀 수 없다(④절). 그런데 이때도 두 영상 사이에는 관계가 있다 —
-      <strong>회전만으로 이어지는 관계</strong>다. 이것은 3×3 행렬 하나로 표현되고 homography라고 부른다.
-      장면이 평면일 때도 같은 형태가 나온다.
+      스테레오는 <strong>두 카메라 사이 거리를 미리 재 둔다.</strong>
+      그러면 ⑤절의 스케일 모호성이 통째로 사라진다 — 기선이 미터로 주어졌으므로
+      삼각측량한 점도 미터로 나온다.
     </p>
     <p>
-      실제 SLAM 시스템은 <strong>둘을 같이 풀어 보고 더 잘 맞는 쪽을 고른다.</strong>
-      ORB-SLAM의 초기화가 그렇게 되어 있다 — \(E\)와 homography를 둘 다 풀고 점수를 비교한다.
-      <strong>「지금 상황이 삼각측량이 가능한 상황인가」를 시스템이 스스로 판단하게 만드는 것</strong>이고,
-      ⑤절에서 시차 임계값으로 하는 일의 더 정교한 판이다.
+      게다가 <strong>기선이 고정</strong>이라 ⑦절의 표를 미리 그려 놓고 쓸 수 있다.
+      EuRoC의 스테레오 기선은 약 11 cm이고, 표를 보면 <strong>깊이 3 m에서 σ_Z ≈ 0.18 m</strong>다.
+      「이 카메라로는 3 m 넘어가면 깊이를 못 믿는다」가 <strong>설계 단계에서 정해진다.</strong>
     </p>
     <p>
-      이 강의에서는 homography를 구현하지 않는다. 대신 <strong>시차가 부족하면 새 점을 만들지 않는</strong> 쪽으로 처리한다.
-      IMU가 있으므로 그 구간의 자세는 IMU가 이어 준다 — <strong>이것이 시각-관성 시스템의 값어치</strong>이기도 하다.
+      그럼 왜 단안을 하나. 이유가 둘이다. <strong>①</strong> 단안 + IMU가
+      <strong>더 어렵고 더 일반적인 문제</strong>다 — 스테레오를 할 줄 알아도 단안을 못 하지만 반대는 아니다.
+      <strong>②</strong> 스케일을 IMU에서 얻는 과정(12회 초기화)이
+      <strong>이 강의에서 가장 배울 것이 많은 자리</strong>인데, 스테레오면 그 자리가 통째로 없어진다.
     </p>
   </details>
 
@@ -580,7 +882,13 @@
       9회의 번들조정도, 11회의 필터도, 12회의 사전적분도 <strong>이 둘로 검사한다.</strong>
     </p>
     <p>
-      2부는 실제 영상에서 대응점을 뽑는 이야기로 시작한다.
+      그리고 <strong>답하지 못한 질문 하나</strong>가 남았다 — <strong>스케일</strong>.
+      1부 내내 「모양은 맞는데 크기를 모른다」가 반복해서 나왔고,
+      그 답은 3부(IMU)에 있다.
+    </p>
+    <p>
+      2부는 <strong>실제 영상에서 대응점을 뽑는 이야기</strong>로 시작한다.
+      오늘까지는 「대응점이 주어졌다면」을 가정했는데, 그 대응점을 만드는 일이 프론트엔드다.
       그전에 6회에서 <strong>SLAM이라는 분야가 30년 동안 어떻게 여기까지 왔는지</strong>를 한 번 펼쳐 본다.
       지금까지 만든 것들이 그 지도의 어디쯤에 있는지가 그때 보인다.
     </p>

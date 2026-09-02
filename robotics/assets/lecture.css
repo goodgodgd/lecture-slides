@@ -120,6 +120,19 @@ details.story blockquote { border-left: 3px solid var(--story); margin: .8rem 0;
 .src { font-size: .82rem; color: var(--muted); }
 .src li { margin: .15rem 0; }
 
+/* ── 증상별 해결 블록 (접기) — 안 될 때만 펼쳐 본다 ── */
+details.fix { background: var(--card); border: 1px solid var(--line); border-left: 3px solid var(--warn);
+              border-radius: 8px; padding: 0 1.15rem; margin: .6rem 0; }
+details.fix > summary { cursor: pointer; font-weight: 700; padding: .7rem 0; list-style: none; }
+details.fix > summary::-webkit-details-marker { display: none; }
+details.fix > summary::before { content: "🛠 "; }
+details.fix > summary::after { content: " ▸ 펼치기"; font-size: .78rem; font-weight: 400; color: var(--muted); }
+details.fix[open] > summary::after { content: " ▾ 접기"; }
+details.fix[open] > summary { border-bottom: 1px solid var(--line); }
+details.fix[open] { padding-bottom: .9rem; }
+details.fix h4 { color: var(--warn); margin-top: 1.2rem; }
+details.fix h4:first-of-type { margin-top: .9rem; }
+
 /* ── 화면 캡쳐 그림 ── */
 figure { margin: 1.4rem 0; }
 figure img { display: block; max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--card); }
