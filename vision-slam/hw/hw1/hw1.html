@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HW1 · 데이터셋 로더와 좌표계 규약 | 3D Vision &amp; SLAM</title>
+<script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}})();</script>
+<link rel="stylesheet" href="../../../assets/site.css">
+<link rel="stylesheet" href="../../assets/lecture.css">
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['$$','$$']]},
+  options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+<header class="bar">
+  <div class="barin wide">
+    <a class="up" href="../../index.html" aria-label="3D Vision &amp; SLAM 회차 목록"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a>
+    <nav class="crumb" aria-label="경로">
+      <a href="../../../index.html">강의자료</a><span class="sep">/</span><a href="../../index.html">3D Vision &amp; SLAM</a><span class="sep">/</span><span class="here">HW1 · 데이터셋 로더와 좌표계 규약</span>
+    </nav>
+    <span class="spacer"></span>
+    <div class="seg" data-theme-switch role="group" aria-label="밝기">
+      <button type="button" data-mode="auto" aria-pressed="true">자동</button>
+      <button type="button" data-mode="light" aria-pressed="false">밝게</button>
+      <button type="button" data-mode="dark" aria-pressed="false">어둡게</button>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="toc-title">이 과제</div>
+  <a href="#why">왜 이걸 하나요</a>
+  <a href="#what">무엇을 내나요 — 셋</a>
+  <a href="#taskA">작업 A — 규약 문서</a>
+  <a href="#taskB">작업 B — 로더 구현</a>
+  <a href="#taskC">작업 C — 시험 여섯 개</a>
+  <a href="#prompt">🤖 의뢰서</a>
+  <a href="#trap">⚠️ 함정 넷</a>
+  <a href="#form">제출 양식</a>
+  <a href="#submit">제출 방법과 채점</a>
+</nav>
+
+<main>
+
+  <div class="lec-no mono">3D Vision &amp; SLAM · HW1</div>
+  <h1>데이터셋 로더와 좌표계 규약</h1>
+
+  <!-- ▼ 마감일은 이 한 줄만 고치면 된다 ▼ -->
+  <p class="deadline">📅 제출 마감 — <strong>4회 수업 시작 전</strong> · 정확한 날짜는 수업에서 공지합니다</p>
+
+  <div class="questions">
+    <span class="lab">이 과제가 묻는 것</span>
+    <ol>
+      <li>에이전트가 준 로더가 맞다는 것을 <strong>무엇을 돌려서</strong> 확인했나요?</li>
+      <li>규약을 정하지 않고 시작하면 <strong>무엇이 조용히 정해지나요?</strong></li>
+      <li>통과하지 못한 시험이 있었다면 <strong>어디까지 좁혔나요?</strong></li>
+    </ol>
+  </div>
+
+  <h2 id="why">왜 이걸 하나요</h2>
+
+  <p>
+    <strong>학기 내내 쓸 첫 모듈</strong>입니다. 여기서 만든 로더를 4회 점군 오버레이가 쓰고,
+    5회 재구성이 쓰고, 12회 첫 완주까지 그대로 씁니다.
+    <strong>여기가 흔들리면 뒤에서 무엇이 틀렸는지 가릴 수 없게 됩니다.</strong>
+  </p>
+
+  <p>
+    그런데 이 과제의 진짜 목적은 코드가 아닙니다.
+    파일을 읽는 코드는 에이전트가 몇 분이면 만들어 줍니다.
+    <strong>문제는 그 코드가 맞는지를 어떻게 아느냐</strong>이고, 이 과제가 훈련하는 것이 그것입니다.
+  </p>
+
+  <div class="interp">
+    <strong>에이전트에게 시키는 것을 전제로 합니다.</strong> 오히려 그렇게 하세요.
+    대신 <strong>무엇을 요구했고, 받은 것에서 무엇을 확인했고, 무엇을 고쳤는지</strong>를 적습니다.
+    점수가 되는 자리가 거기입니다 — 제출 양식의 마지막 칸입니다.
+  </div>
+
+  <h2 id="what">무엇을 내나요 — 셋이 한 묶음입니다</h2>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th style="width:8%">#</th><th>무엇</th><th>어디에</th></tr>
+    <tr><td>1</td><td><strong>코드</strong> — <span class="mono">EurocSource</span>와 <span class="mono">tests/</span>의 시험</td>
+      <td><span class="mono">mvins</span> 저장소에 <strong><span class="mono">hw1</span> 태그</strong>를 달아 제출</td></tr>
+    <tr><td>2</td><td><strong>규약 문서</strong> — <span class="mono">config/conventions.md</span></td>
+      <td>같은 저장소 안. <strong>이 과제의 절반입니다</strong></td></tr>
+    <tr><td>3</td><td><strong>검증 보고</strong> — 아래 양식 (A4 2~3장)</td>
+      <td>PDF로 따로</td></tr>
+  </table>
+  </div>
+
+  <div class="box trap">
+    <p class="boxtitle">⚠️ 저장소는 하나만 만들고 학기 내내 씁니다</p>
+    <p style="margin:0">
+      과제마다 새 폴더를 만들지 않습니다. <strong><span class="mono">mvins</span> 저장소 하나에 계속 쌓습니다.</strong>
+      제출은 <strong>태그</strong>로 합니다 — <span class="mono">git tag hw1 &amp;&amp; git push origin hw1</span>.
+      그래야 「HW1의 로더가 HW3에서 그대로 돈다」가 성립하고,
+      <strong>그게 이 과제들을 이렇게 자른 이유입니다.</strong>
+    </p>
+  </div>
+
+  <h2 id="taskA">작업 A — 규약 문서 <span class="badge b-red">사람이 한다</span></h2>
+
+  <p>
+    <span class="mono">config/conventions.md</span>를 만듭니다.
+    <strong>여섯 줄이 다 들어 있어야</strong> 합니다. 2회 자료 ⑦절에 그대로 복사해 쓸 수 있는 초안이 있습니다.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th style="width:8%">#</th><th>정해야 하는 것</th><th>안 정하면</th></tr>
+    <tr><td>①</td><td><strong>아래첨자 순서</strong> — <span class="mono">T_WB</span>가 무슨 뜻인지</td>
+      <td>파일마다 반대로 곱한다. <strong>궤적이 역방향으로 나온다</strong></td></tr>
+    <tr><td>②</td><td><strong>몸체 프레임</strong>이 무엇인지</td>
+      <td>IMU 값을 어디에 붙일지가 안 정해진다</td></tr>
+    <tr><td>③</td><td><strong>카메라 축</strong> 방향</td>
+      <td>4회 투영이 통째로 어긋난다</td></tr>
+    <tr><td>④</td><td><strong>중력 방향</strong>과 크기</td>
+      <td>10회에서 궤적이 위아래로 휜다</td></tr>
+    <tr><td>⑤</td><td><strong>쿼터니언 관례</strong>와 파일 입출력 순서</td>
+      <td>회전이 반대로 합성된다</td></tr>
+    <tr><td>⑥</td><td><strong>시각을 어떻게 다루는지</strong></td>
+      <td>구간마다 다른 오차가 조용히 들어간다</td></tr>
+  </table>
+  </div>
+
+  <div class="box lab-block">
+    <p class="boxtitle">「아직 정하지 않은 것」 절을 반드시 넣으세요</p>
+    <p style="margin:0">
+      지금 정할 수 없는 것이 있습니다 — <strong>perturbation 방향(3회)</strong>과
+      <strong>상태 벡터의 구성(10~11회)</strong>입니다.
+      <strong>정하지 않았다는 사실을 적어 두면 나중에 그 자리를 찾을 수 있습니다.</strong>
+      적어 두지 않으면 누군가가(대개 에이전트가) 조용히 정해 버리고,
+      그것이 어디서 정해졌는지 아무도 모르게 됩니다.
+    </p>
+  </div>
+
+  <h2 id="taskB">작업 B — 로더 구현 <span class="badge b-yellow">맡기되 검사한다</span></h2>
+
+  <p>
+    <span class="mono">DataSource</span> 인터페이스와 그 EuRoC 구현을 만듭니다.
+    <strong>아래 시그니처는 바꾸지 마세요.</strong> 인터페이스가 고정돼 있어야 뒤 회차에서 갈아 끼울 수 있고,
+    무엇보다 <strong>시험을 붙일 자리가 생깁니다.</strong>
+  </p>
+
+  <pre>using Timestamp = int64_t;                       // 나노초
+
+struct ImuSample  { Timestamp t; Eigen::Vector3d w, a; };
+struct ImageFrame { Timestamp t; cv::Mat gray; };
+
+struct NavState {
+  Timestamp t;
+  Sophus::SE3d    T_WB;
+  Eigen::Vector3d v_W, b_g, b_a;
+};
+
+class DataSource {
+ public:
+  virtual ~DataSource() = default;
+  virtual bool nextImage(ImageFrame&amp;) = 0;
+  virtual bool imuBetween(Timestamp t0, Timestamp t1, std::vector&lt;ImuSample&gt;&amp;) = 0;
+  virtual std::optional&lt;NavState&gt; groundTruth(Timestamp t) const = 0;   // 없으면 nullopt
+  virtual CameraModel  camera()    const = 0;
+  virtual ImuNoise     imuNoise()  const = 0;
+  virtual Sophus::SE3d T_BC()      const = 0;
+};</pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 헤더에서 눈여겨볼 것</p>
+    <dl>
+      <dt><span class="mono">std::optional&lt;NavState&gt; groundTruth(Timestamp)</span></dt>
+      <dd>정답이 없는 시각에는 <strong><span class="mono">nullopt</span>을 돌려줍니다.</strong>
+        0으로 채우거나 가장 가까운 값을 주지 않습니다 — <strong>「없다」와 「0이다」는 다릅니다.</strong>
+        정답 궤적이 첫 영상보다 <strong>1.040초 늦게 시작</strong>하므로 이 경우가 실제로 생깁니다.</dd>
+      <dt><span class="mono">groundTruth()</span>가 인터페이스에 있는 이유</dt>
+      <dd>평가 스크립트에서만 정답을 쓰면 <strong>「어느 모듈이 범인인가」를 못 가릅니다.</strong>
+        정답을 <strong>런타임에 꺼내 쓸 수 있어야</strong> 4회부터 쓸 검증 사다리 4단이 성립합니다.</dd>
+      <dt><span class="mono">Timestamp = int64_t</span></dt>
+      <dd>나노초 정수입니다. <strong>이 자리에 <span class="mono">double</span>을 쓰지 않는 것</strong>이
+        작업 A ⑥번에서 정한 규약이고, 작업 C의 시험 하나가 이것을 봅니다.</dd>
+    </dl>
+  </div>
+
+  <p>
+    데이터는 <strong>연습판</strong>(V1_01_easy의 첫 30초, 약 100 MB)으로 충분합니다.
+    전체를 받아도 되지만 <strong>반복 실행이 10배 느려집니다.</strong>
+  </p>
+
+  <h2 id="taskC">작업 C — 시험 여섯 개 <span class="badge b-red">사람이 한다</span></h2>
+
+  <p>
+    <strong>이 여섯 개가 이 과제의 통과 기준입니다.</strong>
+    전부 <strong>검증 사다리 1단</strong>(항등식 검사)이고, 통과 기준이 숫자로 정해져 있습니다.
+    <strong>기준을 넘으면 실패로 출력</strong>하게 만드세요 — 「오차가 작습니다」라고 찍는 시험은 시험이 아닙니다.
+  </p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th style="width:6%">#</th><th>무엇을 보나</th><th>통과 기준</th><th>여기서 걸리는 것</th></tr>
+    <tr><td>①</td><td>영상 한 장 사이의 IMU 샘플 수</td>
+      <td><strong>정확히 10개</strong> — 전 구간에서</td>
+      <td>경계 조건, 시각 비교 부호</td></tr>
+    <tr><td>②</td><td>정답이 없는 앞 구간에서 <span class="mono">groundTruth()</span></td>
+      <td><span class="mono">nullopt</span> — 첫 <strong>1.040초</strong></td>
+      <td>0으로 채웠다, 가장 가까운 값을 줬다</td></tr>
+    <tr><td>③</td><td>첫 IMU 샘플의 가속도 크기</td>
+      <td><strong>9.8104 m/s²</strong> ± 0.001</td>
+      <td>열 순서를 바꿔 읽었다 (각속도가 앞이다)</td></tr>
+    <tr><td>④</td><td>읽어 들인 <span class="mono">R_BC</span>의 항등식</td>
+      <td>\(R^\top R = I\), \(\det R = 1\) — 오차 <span class="mono">&lt; 1e-12</span></td>
+      <td>행 우선/열 우선을 헷갈렸다</td></tr>
+    <tr><td>⑤</td><td><span class="mono">R_BC</span>를 축-각으로 바꿨을 때</td>
+      <td>각이 <strong>89.16° ± 0.05°</strong>, 축이 z에 가깝다</td>
+      <td><strong>전치된 채 읽었다</strong></td></tr>
+    <tr><td>⑥</td><td>왕복 변환 <span class="mono">T_BW(T_WB p) = p</span></td>
+      <td>오차 <span class="mono">&lt; 1e-12</span></td>
+      <td>역변환에서 \(-R^\top t\) 대신 \(-t\)를 썼다</td></tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    <strong>①~③은 「데이터를 제대로 읽었나」</strong>이고 <strong>④~⑥은 「코드가 제정신인가」</strong>입니다.
+    <strong>둘 다 필요합니다.</strong> 항등식만 통과하면 엉뚱한 파일을 읽고도 통과할 수 있고,
+    ①~③만 통과하면 변환이 틀린 채로 넘어갑니다.
+    ⑤번이 특히 값어치가 있습니다 — <strong>숫자 아홉 개짜리 행렬을 사람이 읽을 수 있는 한 줄로 바꿔서</strong> 보는 것이라,
+    전치나 부호 실수를 즉시 잡아냅니다.
+  </div>
+
+  <h2 id="prompt">🤖 의뢰서 — 1회에서 본 여섯 칸을 그대로 씁니다</h2>
+
+  <p>
+    1회 🤖절의 여섯 칸(규약 · 인터페이스 · 참조 · <strong>검증</strong> · 함정 · 남긴다)을 채운 것입니다.
+    <strong>그대로 써도 되고, 고쳐 써도 됩니다.</strong> 다만 <strong>[검증] 칸을 지우지 마세요</strong> —
+    그 칸이 이 과제에서 보는 자리입니다.
+  </p>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    <strong>[규약]</strong> 첨부한 <span class="mono">conventions.md</span>의 표기와 부호 약속을 그대로 따라 줘.
+    코드 전체에서 그것만 쓴다.<br><br>
+    <strong>[인터페이스]</strong> 아래 헤더의 시그니처를 <strong>바꾸지 말고</strong>
+    EuRoC ASL 형식을 읽는 <span class="mono">EurocSource</span>를 구현해 줘.
+    <span class="mono">(여기에 data_source.hpp 를 붙여 넣는다)</span><br><br>
+    <strong>[단위]</strong> 시각은 <span class="mono">int64_t</span> 나노초로만 다뤄 줘.
+    <strong>double 초로 바꾸지 말아 줘.</strong> 뺄셈은 정수로 하고, 나눌 때만 실수로 바꿔 줘.<br><br>
+    <strong>[검증]</strong> 아래 여섯 시험을 같이 써 줘. <strong>기준을 넘으면 실패로 출력한다.</strong><br>
+    ① 영상 한 장 사이의 IMU 샘플 수가 <strong>전 구간에서 정확히 10개</strong>인가<br>
+    ② 첫 영상보다 앞선 시각에서 <span class="mono">groundTruth()</span>가 <span class="mono">nullopt</span>인가<br>
+    ③ 첫 IMU 샘플의 가속도 크기가 <strong>9.8104 ± 0.001 m/s²</strong>인가<br>
+    ④ <span class="mono">R_BC</span>가 <span class="mono">RᵀR = I</span>, <span class="mono">det R = 1</span>인가 — <span class="mono">1e-12</span><br>
+    ⑤ <span class="mono">R_BC</span>를 축-각으로 바꿨을 때 각이 <strong>89.16° ± 0.05°</strong>인가<br>
+    ⑥ <span class="mono">T_BW(T_WB p) = p</span>인가 — <span class="mono">1e-12</span><br>
+    <strong>실패하면 어느 프레임에서 어떤 값이 나왔는지 함께 찍어 줘.</strong><br><br>
+    <strong>[함정]</strong> 압축을 풀면 <span class="mono">__MACOSX/</span>와 <span class="mono">.DS_Store</span>가 섞여 있다.
+    정답 궤적은 첫 영상보다 <strong>1.040초 늦게</strong> 시작한다.
+    <span class="mono">sensor.yaml</span>의 <span class="mono">T_BS</span>는 <strong>행 우선 16개 숫자</strong>다 —
+    Eigen의 기본은 열 우선이라 그대로 <span class="mono">Map</span>하면 전치된다.<br><br>
+    <strong>[남긴다]</strong> 규약에 없어서 <strong>네가 임의로 정한 것</strong>이 있으면 코드 맨 위에 목록으로 적어 줘.
+  </div>
+
+  <p class="readme-first">받은 코드에서 확인할 것 — <strong>다섯 줄 다 눈으로 확인할 수 있는 것</strong>입니다.</p>
+
+  <pre>□ 시각을 double 로 바꾼 곳이 정말 하나도 없는가        ← grep 한 번이면 된다
+□ 요구한 시험 여섯 개가 실제로 있는가, 그리고 <strong>돌려 봤는가</strong>
+□ 실패했을 때 프레임 번호와 값이 찍히는가              ← 안 찍히면 원인을 못 좁힌다
+□ groundTruth() 가 없는 구간에서 <strong>정말 nullopt 인가</strong>, 0 을 채웠는가
+□ 임의로 정한 것 목록에 <strong>내가 동의하지 않는 항목</strong>이 있는가</pre>
+
+  <p>
+    그리고 시험이 실패했을 때. <strong>「고쳐 줘」라고 하지 않습니다.</strong>
+  </p>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    영상 한 장 사이의 IMU 개수를 세는 시험이 <strong>2 137번 프레임에서 9개</strong>로 실패한다.
+    앞뒤 프레임은 10개다.<br>
+    <strong>원인 후보를 세 개</strong> 대고, 각각을 확인할 수 있는 <strong>가장 작은 실험</strong>을 하나씩 제안해 줘.
+    <strong>코드는 아직 고치지 말아 줘.</strong>
+  </div>
+
+  <h2 id="trap">⚠️ 함정 넷 — 미리 알려 드립니다</h2>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th style="width:24%">함정</th><th>무슨 일이 생기나</th><th>어떤 시험이 잡나</th></tr>
+    <tr><td><span class="mono">__MACOSX/</span>와 <span class="mono">.DS_Store</span></td>
+      <td>macOS가 압축할 때 넣은 것들입니다. 영상 목록에 섞이면 <strong>파일 개수가 두 배가 되거나</strong>
+        읽을 수 없는 파일에서 멈춥니다</td>
+      <td>①</td></tr>
+    <tr><td><strong>정답이 1.040초 늦게 시작</strong></td>
+      <td>그 구간을 0으로 채우면 <strong>첫 프레임부터 아무것도 안 맞습니다.</strong>
+        그런데 발산하지는 않아서 한참 뒤에 알게 됩니다</td>
+      <td>②</td></tr>
+    <tr><td><span class="mono">double</span> 초로 바꾸기</td>
+      <td>19자리를 15자리에 넣습니다. 위험한 것은 부정확해지는 것이 아니라
+        <strong>구간마다 다르게 부정확해지는 것</strong>입니다 — 잡음처럼 보입니다</td>
+      <td>—<br><span class="mono">grep</span>으로 직접 봅니다</td></tr>
+    <tr><td><span class="mono">T_BS</span>의 행 우선 / 열 우선</td>
+      <td><span class="mono">yaml</span>은 행 우선, Eigen 기본은 열 우선입니다.
+        그대로 <span class="mono">Map</span>하면 <strong>전치된 행렬</strong>이 들어옵니다.
+        <span class="mono">RᵀR = I</span>는 여전히 통과합니다</td>
+      <td><strong>⑤</strong></td></tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    <strong>마지막 줄이 이 과제에서 가장 볼 만한 자리입니다.</strong>
+    전치된 회전행렬도 <strong>여전히 회전행렬</strong>이라 항등식 시험을 전부 통과합니다.
+    <strong>축-각으로 바꿔 봐야만</strong> 축의 부호가 뒤집힌 것이 보입니다.
+    「시험을 어디에 놓느냐」가 시험의 일부라는 것이 이 한 줄에 들어 있습니다.
+  </div>
+
+  <h2 id="form">제출 양식 — 검증 보고</h2>
+
+  <p class="readme-first">
+    아래 <strong>「복사」 버튼</strong>을 누르면 양식이 통째로 복사됩니다.
+    보고서에 붙여 넣고 <strong>빈 칸을 채우면</strong> 됩니다.
+  </p>
+
+  <p>
+    ③번 칸에는 <strong>기준과 결과를 둘 다 숫자로</strong> 적습니다.
+    「통과」만 적으면 절반입니다 — <strong>「기준 <span class="mono">1e-12</span>, 결과 <span class="mono">3.2e-15</span>, 통과」</strong>가 완성된 형태입니다.
+  </p>
+
+  <div class="copyform">
+    <button onclick="copyPrompt(this)">복사</button>
+<pre><code># HW1 검증 보고 — 학번 ______  이름 ______
+
+저장소: ______________________  태그: hw1
+
+## ① 무엇을 시험했나 (사다리 몇 단인가)
+
+시험 여섯 개 전부 검증 사다리 __단입니다.
+
+
+## ② 어떤 입력으로
+
+데이터: (연습판 30초 / V1_01_easy 전체 중 무엇을 썼는지)
+프레임 수: ______
+
+
+## ③ 기준과 결과 — 둘 다 숫자로
+
+| # | 시험 | 기준 | 결과 | 통과 |
+|---|---|---|---|---|
+| ① | 영상 사이 IMU 개수 | 정확히 10 |  |  |
+| ② | 앞 구간 groundTruth() | nullopt |  |  |
+| ③ | 첫 가속도 크기 | 9.8104 ± 0.001 |  |  |
+| ④ | RᵀR = I, det R = 1 | < 1e-12 |  |  |
+| ⑤ | R_BC 축-각 | 89.16° ± 0.05° |  |  |
+| ⑥ | 왕복 변환 | < 1e-12 |  |  |
+
+
+## ④ 통과하지 못한 것  ← 이 칸이 이 보고서의 핵심입니다
+
+(전부 통과했으면 "없음"이라고 적으면 됩니다.
+ 하나라도 막혔으면 아래 네 줄로 적습니다. 원인을 못 찾았어도 좁힌 만큼 적으면 됩니다.)
+
+- 증상:
+- 원인 후보 (세 개까지):
+- 확인한 방법:
+- 지금 어디까지 좁혔나:
+
+
+## ⑤ 에이전트에게 무엇을 어떻게 시켰나
+
+### 쓴 의뢰서 (하나만, 그대로)
+
+```
+
+```
+
+### 받은 코드에서 고친 것
+
+(무엇을 왜 고쳤는지. "고친 것 없음"이면 그렇게 적되,
+ 「받은 코드에서 확인할 것」 다섯 줄을 실제로 확인했는지 함께 적습니다.)
+
+-
+-
+
+
+### 에이전트가 임의로 정한 것 중 내가 바꾼 것
+
+-
+
+
+## ⑥ 규약 문서
+
+config/conventions.md 에 여섯 줄이 다 들어갔나요?  (예 / 아니오)
+"아직 정하지 않은 것" 절에 무엇을 적었나요?
+
+-
+
+</code></pre>
+  </div>
+
+  <div class="box lab-block">
+    <p class="boxtitle">④번 칸에 대해</p>
+    <p style="margin:0">
+      <strong>통과하지 못한 것을 적으면 감점하지 않습니다. 숨기면 감점합니다.</strong>
+      이 한 문장이 이 과목의 성격입니다.
+      막힌 것을 적어 내면 <strong>개별 면담에서 그 자리를 같이 봅니다.</strong>
+      다 됐다고 적어 놓고 실제로는 안 되는 쪽이 훨씬 나쁜 상태입니다 —
+      뒤 회차에서 그 위에 계속 쌓게 되기 때문입니다.
+    </p>
+  </div>
+
+  <h2 id="submit">제출 방법과 채점</h2>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th style="width:22%">무엇</th><th>어떻게</th></tr>
+    <tr><td><strong>코드와 규약</strong></td>
+      <td>저장소에 <span class="mono">hw1</span> 태그를 달고 주소를 보고서 맨 위에 적습니다</td></tr>
+    <tr><td><strong>검증 보고</strong></td>
+      <td>위 양식을 채워 <strong>PDF 한 개</strong>로. 파일 이름은 <span class="mono">HW1_학번.pdf</span></td></tr>
+    <tr><td><strong>구두 확인</strong></td>
+      <td>제출 뒤 개별 면담에서 <strong>낸 코드의 함수 하나를 지목해 설명</strong>합니다</td></tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    <strong>구두 확인에 대해.</strong> 에이전트를 쓴 것은 문제가 아닙니다 —
+    이 과목은 쓰는 것을 전제로 짜여 있습니다.
+    <strong>설명하지 못하는 것을 낸 것이 문제</strong>이고, 그때는 감점이 아니라 <strong>한 주 뒤에 다시 봅니다.</strong>
+  </div>
+
+  <p>
+    <strong>세부 배점은 학기 중에 안내합니다.</strong> 지금 확실한 것은 하나입니다 —
+    <strong>코드만 내면 이 과제는 절반입니다.</strong> 검증 보고가 나머지 절반입니다.
+  </p>
+
+  <footer>
+    3D Vision &amp; SLAM · 순천향대학교 전자정보공학과 ·
+    같이 볼 것: <a href="../../vision_slam_01.html">1회 무엇을 만들고, 맞는지 어떻게 아나</a> ·
+    <a href="../../vision_slam_02.html">2회 강체 변환과 좌표계 규약</a>
+  </footer>
+</main>
+</div>
+
+<script src="../../../assets/site.js" defer></script>
+</body>
+</html>

@@ -34,7 +34,7 @@
   <a href="#dof">① 회전은 왜 3 자유도인가</a>
   <a href="#matrix">② 회전행렬</a>
   <a href="#euler">③ 오일러각</a>
-  <a href="#euler" class="sub">짐벌락</a>
+  <a href="#gimbal" class="sub">짐벌락 — 지나가 본다</a>
   <a href="#axisangle">④ 축-각 (rotation vector)</a>
   <a href="#axisangle" class="sub">로드리게스 공식</a>
   <a href="#quat">⑤ 쿼터니언</a>
@@ -42,9 +42,12 @@
   <a href="#quat" class="sub">벡터를 돌리는 법 · SLERP</a>
   <a href="#convert">⑥ 표현 사이를 오가는 지도</a>
   <a href="#lie">⑦ Lie theory <span class="mono">🔴</span></a>
-  <a href="#lie" class="sub">group · manifold · algebra</a>
-  <a href="#lie" class="sub">Adjoint · Lie bracket · BCH</a>
-  <a href="#lie" class="sub">이 강의가 쓰는 부분</a>
+  <a href="#liehistory" class="sub">Lie는 사람 이름이다 — 이론의 내력</a>
+  <a href="#manifold" class="sub">SO(3) 곡면과 so(3) 접평면</a>
+  <a href="#tangent" class="sub">tangent space — 점 R에서의 접벡터</a>
+  <a href="#algebra" class="sub">Lie algebra의 정의와 범위</a>
+  <a href="#adjoint" class="sub">Adjoint · BCH</a>
+  <a href="#lieuse" class="sub">이 강의가 쓰는 부분</a>
   <a href="#perturb">⑧ left · right perturbation</a>
   <a href="#numjac">⑨ 수치 야코비안 대조</a>
   <a href="#jr">⑩ right Jacobian</a>
@@ -366,9 +369,79 @@
     <span class="mono">atan2(0, 0)</span>이 되고, \(\alpha\)와 \(\gamma\)는 <strong>각각은 정해지지 않고 그 합(또는 차)만 정해진다.</strong>
   </p>
 
+  <h3>짐벌락을 실제로 지나가 본다 — 드론이 기수를 들어 수직을 넘는 동안</h3>
+
   <p>
-    그런데 실전에서 진짜 문제는 <strong>정확히 90°인 순간</strong>이 아니다.
-    <strong>그 근처</strong>다. 자세를 아주 조금 흔들었을 때 오일러각이 얼마나 움직이는지 재 보면 이렇다.
+    말로만 들으면 「\(\beta\)가 하필 정확히 90°가 되는 일이 얼마나 있겠나」 싶다.
+    그래서 한 번 지나가 본다. 드론이 수평 자세에서 <strong>기수를 들어 수직을 넘겨 뒤로 넘어가는</strong> 동작이다.
+    회전축은 몸체 \(y\)축에서 <strong>1.5°만 기울어져</strong> 있고, 각도만 0°에서 110°까지
+    <strong>등속으로</strong> 커진다. 즉 <strong>자이로가 재는 각속도는 처음부터 끝까지 일정하고,
+    자세는 매끄럽게 돈다.</strong> 그 자세를 ZYX 오일러각으로 뽑아 보면 이렇게 된다.
+  </p>
+
+  <figure>
+    <img src="assets/img/03_gimbal_trajectory.png"
+         alt="위 그래프는 실제로 돌아간 각도에 따른 요·피치·롤 세 곡선. 피치는 88.5도까지 올라갔다 내려오고, 요와 롤은 90도 근처에서 거의 수직으로 치솟아 175도 부근에 자리 잡는다. 아래 그래프는 실제 1도당 오일러각이 움직인 양이며 로그 축에서 90도에서 76배로 뾰족하게 솟는다">
+    <figcaption>피치(초록)는 88.5°까지만 올라갔다 내려온다 — <strong>수직을 못 넘는다.</strong>
+      대신 요(파랑)와 롤(빨강)이 그 자리에서 <strong>한꺼번에 180° 가까이 뛴다.</strong>
+      아래 칸이 그것을 배수로 잰 것이고, <strong>실제 자세는 늘 1°씩 도는데</strong> 오일러각만 76배로 움직인다.</figcaption>
+  </figure>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>실제로 돌아간 각도</th><th>요 \(\alpha\)</th><th>피치 \(\beta\)</th><th>롤 \(\gamma\)</th>
+      <th>실제 1° 도는 동안 오일러각이 움직인 양</th></tr>
+    <tr><td>0°</td><td>0.00°</td><td>0.00°</td><td>0.00°</td><td>1.0°</td></tr>
+    <tr><td>60°</td><td>1.50°</td><td>59.97°</td><td>2.60°</td><td>1.2°</td></tr>
+    <tr><td>80°</td><td>7.07°</td><td>79.89°</td><td>8.44°</td><td>2.7°</td></tr>
+    <tr><td>85°</td><td>15.22°</td><td>84.78°</td><td>16.65°</td><td>7.4°</td></tr>
+    <tr><td>88°</td><td>35.37°</td><td>87.50°</td><td>36.85°</td><td>29.2°</td></tr>
+    <tr><td><strong>89°</strong></td><td><strong>54.81°</strong></td><td>88.20°</td><td><strong>56.30°</strong></td><td><strong>55.1°</strong></td></tr>
+    <tr><td><strong>90°</strong></td><td><strong>88.50°</strong></td><td><strong>88.50°</strong></td><td><strong>90.00°</strong></td><td><strong>76.3°</strong></td></tr>
+    <tr><td><strong>91°</strong></td><td><strong>122.19°</strong></td><td>88.20°</td><td><strong>123.70°</strong></td><td><strong>51.9°</strong></td></tr>
+    <tr><td>95°</td><td>161.78°</td><td>84.78°</td><td>163.35°</td><td>7.2°</td></tr>
+    <tr><td>110°</td><td>174.12°</td><td>69.95°</td><td>175.89°</td><td>1.4°</td></tr>
+  </table>
+  </div>
+
+  <p>
+    89°에서 91°까지 <strong>실제로는 2° 돌았다.</strong> 그 2° 동안
+    요는 54.81°에서 122.19°로, 롤은 56.30°에서 123.70°로 갔다 — <strong>각각 67°씩</strong>이다.
+    가장 심한 90° 자리에서는 <strong>1° 도는 동안 오일러각이 76°</strong> 움직인다.
+  </p>
+
+  <p>
+    같은 일을 <strong>「두 자세를 견주는」</strong> 쪽에서 보면 이렇다.
+    피치가 89.9°인 자세 \(A\)가 있고, 그 자세를 몸체 \(z\)축으로 <strong>0.01°만</strong> 흔든 자세 \(B\)가 있다.
+    두 자세는 <strong>눈으로도 센서로도 구별되지 않을 만큼 같다.</strong> 그런데 오일러각으로 적어 놓으면 이렇다.
+  </p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th style="width:34%">자세</th><th>요 \(\alpha\)</th><th>피치 \(\beta\)</th><th>롤 \(\gamma\)</th></tr>
+    <tr><td>\(A\)</td><td>17.189°</td><td>89.900°</td><td>−11.459°</td></tr>
+    <tr><td>\(B = A\) 를 0.01° 흔든 것</td><td>22.899°</td><td>89.901°</td><td>−5.749°</td></tr>
+    <tr><td><strong>차이</strong></td><td><strong>+5.710°</strong></td><td>+0.001°</td><td><strong>+5.710°</strong></td></tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 실제 자세의 차이는 <strong>0.01°</strong>인데 적어 놓은 숫자는 <strong>5.7°씩</strong> 다르다.
+    <strong>571배</strong>다. 여기서 나쁜 것이 무엇인지가 분명해진다 —
+    <strong>표현이 안 되는 것이 아니라, 표현은 되는데 그 숫자가 자세를 대표하지 못한다.</strong>
+    이 값으로 두 자세의 차이를 재면 5.7°라는 답이 나오고,
+    <strong>이 값을 미분하거나 평균 내거나 필터의 상태로 넣으면 그 오차가 그대로 들어간다.</strong>
+    드론이 수직으로 상승·하강하는 구간이 바로 \(\beta \approx 90°\)이고,
+    그래서 <strong>항공 쪽에서 짐벌락이 실제 사고 이야기로 남아 있다.</strong>
+    <span class="mono">python3 vision-slam/src/rotation_numbers.py</span> 로 위 두 표를 다시 잴 수 있다.
+  </div>
+
+  <h3>피치별 민감도 — 짐벌락은 점이 아니라 구역이다</h3>
+
+  <p>
+    지금 본 것은 궤적 하나다. <strong>피치를 여러 값에 두고</strong> 같은 실험을 하면
+    문제가 <strong>정확히 90°인 순간에만 있는 것이 아니라는 것</strong>이 더 뚜렷해진다.
+    자세를 0.01° 흔들었을 때 오일러각이 얼마나 움직이는지 피치마다 재 보면 이렇다.
   </p>
 
   <div class="tablewrap">
@@ -391,11 +464,11 @@
   </figure>
 
   <div class="interp">
-    <strong>해석:</strong> 자세는 0.01°만 변했는데 표현하는 숫자가 8°나 움직인다.
-    이 값을 <strong>미분하거나 평균 내거나 필터에 넣으면</strong> 결과가 무너진다.
-    드론이 수직으로 상승·하강하는 구간이 정확히 \(\beta \approx 90°\)이고, 그래서
-    <strong>항공 쪽에서 짐벌락이 실제 사고 이야기로 남아 있다.</strong>
-    <strong>추정기 안에 오일러각을 넣지 않는 이유가 이것이다.</strong>
+    <strong>해석:</strong> 증폭 배수가 \(1/\cos\beta\)를 따라간다.
+    \(\cos\beta\)는 90°에서 0이 되므로 <strong>그 부근 전체가 나쁘다</strong> —
+    89°에서 이미 80배이고, 80°에서도 8배다.
+    <strong>「90°만 피하면 된다」가 성립하지 않는 이유</strong>가 이것이고,
+    <strong>추정기 안에 오일러각을 넣지 않는 이유</strong>이기도 하다.
   </div>
 
   <div class="box lab-block">
@@ -858,6 +931,104 @@ q 와 −q 가 같은 회전인가      = 0.000e+00      ← 이중 덮개</pre>
     <strong>더할 수 있는 자리를 따로 만들어 두고, 계산은 거기서 하고, 결과만 다시 회전으로 보낸다.</strong>
   </p>
 
+  <h3 id="liehistory">Lie는 사람 이름이다 — 이 이론이 어디서 왔나</h3>
+
+  <p>
+    <strong>Lie는 무엇의 약자가 아니라 사람 이름이다.</strong>
+    노르웨이 수학자 <strong>Marius Sophus Lie</strong>(1842~1899)에서 왔고,
+    노르웨이식으로 <strong>「리」</strong>라고 읽는다. 영어권에서도 <span class="mono">Lee</span>처럼 읽는다.
+    「라이 그룹」이라고 읽는 것을 종종 보는데 원래 발음은 그쪽이 아니다.
+    그러니까 <strong>Lie group은 「리가 연구한 종류의 군」</strong>이라는 뜻이다.
+  </p>
+
+  <h4>무슨 문제를 풀려고 만든 것인가</h4>
+
+  <p>
+    19세기 초에 <strong>Galois</strong>가 한 일이 있다.
+    「이 5차 방정식이 근호로 풀리는가」를 <strong>해들을 서로 맞바꾸는 대칭</strong>으로 판정한 것이다.
+    방정식을 직접 푸는 대신 <strong>그 방정식이 가진 대칭의 구조</strong>를 보면 답이 나온다는 발상이었고,
+    <strong>군(group)이 수학의 도구가 된 출발점</strong>이 여기다.
+  </p>
+
+  <p>
+    Lie가 하려던 것은 <strong>같은 일을 미분방정식에 대해서</strong> 하는 것이었다.
+    그런데 대칭의 성격이 다르다. Galois의 대칭은 해를 하나씩 맞바꾸는 것이라 <strong>띄엄띄엄</strong>하다.
+    미분방정식의 대칭은 <strong>연속</strong>이다 — 조금 돌려도 대칭이고, 그보다 더 조금 돌려도 대칭이다.
+    <strong>연속으로 이어진 변환의 모임</strong>을 다룰 도구가 그때는 없었고, Lie가 그것을 만들었다.
+  </p>
+
+  <div class="interp">
+    <strong>해석:</strong> 여기에 오늘 절반이 이미 들어 있다.
+    <strong>「연속으로 이어져 있다」는 것이 곧 미분할 수 있다는 뜻</strong>이고,
+    Lie가 찾아낸 방법이 <strong>「항등원 근처에서 미분해 무한소 변환으로 바꿔 놓고, 계산은 거기서 한다」</strong>였다.
+    그 무한소 변환의 모임이 나중에 Lie algebra라고 불리게 된다.
+    <strong>\(\mathbf{SO}(3)\)를 \(\mathfrak{so}(3)\)로 내려서 계산하는 오늘의 절차가
+    150년 전에 나온 그 발상 그대로다.</strong>
+  </div>
+
+  <h4>사람과 연도</h4>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th style="width:16%">언제</th><th style="width:26%">누가</th><th>무엇을 했나</th></tr>
+    <tr><td>1830년경</td><td>Évariste Galois</td>
+      <td>대수방정식이 근호로 풀리는지를 <strong>대칭의 군</strong>으로 판정한다. 군의 출발점</td></tr>
+    <tr><td>1870</td><td><strong>Sophus Lie</strong> · Felix Klein</td>
+      <td>파리에서 함께 지내며 군과 기하를 잇는 착상을 나눈다. Lie가 <strong>연속 변환군</strong>으로 방향을 잡은 해다</td></tr>
+    <tr><td>1870 여름</td><td>Lie</td>
+      <td>보불전쟁이 터진다. 프랑스를 걸어서 빠져나오다 <strong>간첩으로 몰려 Fontainebleau에서 한 달가량 갇힌다.</strong>
+        수학 노트가 암호로 보였다고 한다. 갇힌 동안에도 계속 썼다</td></tr>
+    <tr><td>1888~1893</td><td>Lie · Friedrich Engel</td>
+      <td><em>Theorie der Transformationsgruppen</em> 세 권. <strong>이론의 뼈대가 여기서 갖춰진다</strong></td></tr>
+    <tr><td>1888~1894</td><td>Wilhelm Killing · Élie Cartan</td>
+      <td>단순 Lie algebra를 <strong>전부 분류한다.</strong> 「어떤 것들이 있을 수 있나」가 닫힌다</td></tr>
+    <tr><td>1930년대</td><td>Hermann Weyl</td>
+      <td><strong>「Lie group」·「Lie algebra」라는 이름이 이때 굳는다.</strong>
+        그전에는 「연속군」·「무한소군」이라고 불렀다</td></tr>
+    <tr><td>20세기</td><td>물리학</td>
+      <td>양자역학의 각운동량이 \(\mathfrak{so}(3)\)의 표현이고, 입자물리의 표준모형이
+        \(\mathbf{SU}(3)\times\mathbf{SU}(2)\times\mathbf{U}(1)\)이다</td></tr>
+    <tr><td>1994</td><td>Murray · Li · Sastry</td>
+      <td><em>A Mathematical Introduction to Robotic Manipulation</em>.
+        로봇 팔의 기구학을 <strong>\(\mathbf{SE}(3)\)로 다시 쓴다.</strong> 로봇 쪽 표준 표기의 출처다</td></tr>
+    <tr><td>2010년대</td><td>SLAM</td>
+      <td>최적화 기반 SLAM이 자리 잡으면서 <strong>실무 도구가 된다</strong> (바로 아래)</td></tr>
+  </table>
+  </div>
+
+  <h4>SLAM이 이것을 쓰게 된 것은 생각보다 최근이다</h4>
+
+  <p>
+    2000년대까지 SLAM의 주류는 EKF였고, 자세는 대체로 <strong>오일러각이나 쿼터니언 네 성분을 그대로</strong>
+    상태 벡터에 넣었다. 상태 하나에 갱신 한 번이니 <strong>「더할 수 없다」는 문제가 크게 불거지지 않았다.</strong>
+    정규화를 한 번씩 해 주면 그럭저럭 굴러갔다.
+  </p>
+
+  <p>
+    2010년대에 <strong>번들조정</strong> 쪽으로 무게가 옮겨 가면서 사정이 달라진다.
+    수백 개의 자세를 <strong>한꺼번에</strong> 흔들면서 반복해 푸는 계산에서는
+    <strong>자세를 어떻게 흔들 것인가</strong>가 곧 야코비안의 모양을 정한다.
+    이때부터 \(\boxplus\)·\(\boxminus\)와 right Jacobian이 <strong>논문이 아니라 코드에 들어오기 시작한다.</strong>
+    아래 셋은 학기 중에 계속 만나게 될 이름이다.
+  </p>
+
+  <ul>
+    <li><strong>Sophus</strong> — \(\mathbf{SO}(3)\)·\(\mathbf{SE}(3)\)를 다루는 C++ 라이브러리.
+      <strong>이름이 Sophus Lie에서 왔다.</strong> SLAM 코드 어디서나 보인다</li>
+    <li><strong>Forster 외 (2015 · 2017)</strong> — IMU 사전적분을 \(\mathbf{SO}(3)\) 위에서 다시 쓴 논문.
+      <strong>12회에서 이 식을 그대로 구현한다</strong></li>
+    <li><strong>Solà · Deray · Atchuthan (2018)</strong> — <em>A micro Lie theory for state estimation in robotics</em>.
+      <strong>이 강의의 표기가 대체로 이 문서와 같다</strong></li>
+  </ul>
+
+  <div class="interp">
+    <strong>해석:</strong> 그러니까 이 이론은 <strong>SLAM을 위해 만들어진 것이 아니다.</strong>
+    미분방정식의 대칭을 보려고 만든 것이 물리학을 거쳐 로봇으로 왔고,
+    <strong>「연속으로 이어진 변환은 항등원 근처를 보면 된다」</strong>는 한 줄이
+    150년 동안 살아남아 지금 자이로 값을 자세로 바꾸는 자리에 쓰이고 있다.
+    <strong>수학을 배우자는 것이 아니라, 그 한 줄이 우리 문제에 그대로 맞아서 빌려 쓰는 것이다.</strong>
+  </div>
+
   <h3>Lie group — 「곱할 수 있는 매끄러운 곡면」</h3>
 
   <p>이름이 둘로 나뉘어 있다. <strong>group</strong>이 절반, <strong>manifold</strong>가 나머지 절반이다.</p>
@@ -883,44 +1054,186 @@ q 와 −q 가 같은 회전인가      = 0.000e+00      ← 이중 덮개</pre>
 
       <dt><strong>tangent space</strong> (접공간) · <strong>Lie algebra</strong></dt>
       <dd>곡면 위 한 점에서 <strong>곡면을 스치는 평평한 공간.</strong> 여기서는 <strong>더하기가 된다.</strong>
-        <strong>항등원 \(I\)에서의 접공간</strong>에 특별히 이름을 붙인 것이 Lie algebra이고,
-        \(\mathbf{SO}(3)\)의 것이 \(\mathfrak{so}(3)\) — <strong>④절의 반대칭 행렬 집합</strong>이다.</dd>
+        Lie group에서는 <strong>항등원에서의 접공간</strong>이 특별해서 따로 이름을 붙였고, 그것이 Lie algebra다.
+        <strong>\(\mathbf{SO}(3)\)의 Lie algebra를 \(\mathfrak{so}(3)\)라고 쓴다</strong>
+        (같은 글자를 소문자 꺾인 글꼴로 쓰는 것이 관례다).
+        그리고 <strong>\(\mathfrak{so}(3)\)의 정체가 ④절에서 이미 만난 반대칭 행렬 \([\boldsymbol\omega]_\times\)들의 집합</strong>이다 —
+        왜 하필 그것인지는 바로 아래 두 절에서 계산으로 나온다.</dd>
     </dl>
     <p class="later">이름을 외울 필요는 없다. <strong>「곡면 위에서 계산할 수 없으니 접평면으로 내려와 계산한다」</strong>가 전부다.</p>
   </div>
 
-  <h3>왜 하필 항등원의 접공간인가</h3>
+  <h3 id="manifold">\(\mathbf{SO}(3)\)는 곡면, \(\mathfrak{so}(3)\)는 접평면 — 왜 이렇게 말하나</h3>
 
   <p>
-    곡면 위 점마다 접평면이 하나씩 있다. 그런데 <strong>군에서는 한 점의 접평면만 알면 나머지가 전부 따라온다.</strong>
-    아무 원소나 곱해서 옮길 수 있기 때문이다.
+    「\(\mathbf{SO}(3)\)는 곡면이고 \(\mathfrak{so}(3)\)는 접평면이다」는 말은 처음 들으면 비유처럼 들린다.
+    비유가 아니라 <strong>말 그대로의 뜻</strong>이다. 다만 <strong>그릴 수가 없어서</strong> 비유처럼 들린다.
+    무엇이 곡면이고 무엇이 그 위의 점인지부터 정하고 간다.
+  </p>
+
+  <h4>회전행렬을 전부 모아 놓으면 곡면이 된다</h4>
+
+  <p>
+    회전행렬 하나는 <strong>숫자 아홉 개</strong>다. 그러니 회전행렬 하나를
+    <strong>9차원 공간 속의 점 하나</strong>로 볼 수 있다.
+    <strong>여기서 「점」은 3차원 공간 속의 위치가 아니다</strong> — 2회에서 다루던 점과 다른 것이니
+    한 번 끊고 갈 만하다. 지금 말하는 점은 <strong>회전 하나</strong>다.
+  </p>
+
+  <p>
+    그런데 아홉 개를 아무렇게나 넣는다고 회전이 되지는 않는다. \(R^\top R = I\)가 걸려 있다.
+    이 등식은 <strong>양변이 대칭 행렬</strong>이라 실제 방정식은 9개가 아니라 <strong>6개</strong>다
+    (대각 3개 + 위삼각 3개). 그래서 남는 자유도가 이렇게 된다.
   </p>
 
   $$
-  \text{점 } R \text{ 에서의 접벡터} \;=\; R \cdot (\text{항등원에서의 접벡터})
+  \dim \mathbf{SO}(3) \;=\; \underbrace{9}_{\text{성분}} \;-\; \underbrace{6}_{R^\top R = I} \;=\; 3
   $$
 
   <p>
-    그래서 <strong>항등원에서의 접공간 하나만 정의해 두고</strong>, 다른 점에서는 거기에 \(R\)을 곱해 쓴다.
-    이 「곱해서 옮기는」 동작이 왼쪽에서도 오른쪽에서도 가능하고,
-    <strong>그것이 ⑧절의 left/right perturbation</strong>이다. 여기서 이미 예고된다.
+    \(\det R = 1\)은 자유도를 더 깎지 않는다. \(\det R = \pm 1\)로 갈라진 <strong>두 덩어리 중 하나를 고르는</strong> 역할만 한다.
+    그래서 \(\mathbf{SO}(3)\)는 <strong>9차원 공간 안에 놓인 3차원짜리 면</strong>이다.
+    ①절에서 「회전은 3 자유도」라고 한 것과 <strong>같은 3</strong>이고, 이것이 「곡면」이라는 말의 내용 전부다.
+  </p>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 「평평하다」와 「곡면이다」의 차이</p>
+    <dl>
+      <dt><strong>평평하다</strong> (vector space)</dt>
+      <dd>두 원소를 더해도, 상수배해도 <strong>여전히 그 집합 안에 있다.</strong> \(\mathbb{R}^n\)이 그렇다.
+        추정 도구들이 전제하는 것이 이것이다.</dd>
+      <dt><strong>곡면이다</strong> (manifold)</dt>
+      <dd>아주 좁게 보면 평평해 보이지만 <strong>더하면 밖으로 나간다.</strong>
+        회전행렬 둘을 더해 보면 \(R^\top R = I\)가 깨진다 — 그 결과는 회전이 아니다.
+        <strong>「곡면 위에 있다」는 말의 실질이 이 한 줄</strong>이다.</dd>
+    </dl>
+  </div>
+
+  <figure>
+    <img src="assets/img/03_manifold_tangent.png"
+         alt="왼쪽 그림은 원으로 그린 SO(3) 곡면과 항등원 I 에 댄 접선, 접선 위의 벡터 φ 에서 곡면 위의 점 R 로 가는 Exp 와 그 반대인 Log. 오른쪽 그림은 곡면 위의 점 R 에서 직선으로 나간 R+δR 이 곡면 밖에 X 로 표시되고, 곡면을 따라간 R·Exp(δ) 는 곡면 위에 남는 모습">
+    <figcaption>왼쪽이 <strong>접평면에서 계산하고 곡면으로 돌려보내는</strong> 절차이고,
+      오른쪽이 <strong>그냥 더하면 벗어난다</strong>는 것이다.
+      \(\mathbf{SO}(3)\)는 3차원이라 종이에 그릴 수 없어서 <strong>한 차원 낮춰 원과 접선으로</strong> 그렸다.
+      「평평하지 않다」는 성질만 같다.</figcaption>
+  </figure>
+
+  <h4>그 곡면 위 한 점에 평면을 대면 그것이 tangent space다</h4>
+
+  <p>
+    곡면 위의 한 점에서 <strong>곡면을 스치는 방향들</strong>을 전부 모으면 평평한 공간이 하나 나온다.
+    그것이 <strong>tangent space</strong>다. 항등원 \(I\)에서 그것이 무엇인지는 <strong>계산으로 나온다.</strong>
+    \(I\)를 지나는 곡선 \(R(t)\)를 아무거나 하나 잡고(\(R(0) = I\)),
+    <strong>곡면의 정의식 \(R^\top R = I\)를 시간으로 미분한다.</strong>
+  </p>
+
+  $$
+  \dot{R}^\top R + R^\top \dot{R} = 0
+  \qquad\Longrightarrow\qquad
+  \dot{R}(0)^\top + \dot{R}(0) = 0
+  $$
+
+  <p>
+    오른쪽 식이 <strong>「\(\dot{R}(0)\)이 반대칭이다」</strong>라는 뜻이다.
+    곡선을 어떻게 잡든 이렇게 된다. 그러니
+    <strong>항등원에서 곡면을 스치는 방향의 모임 = 3×3 반대칭 행렬 전부</strong>다.
+    이 집합에 붙인 이름이 \(\mathfrak{so}(3)\)이고, ④절에서 이미 만난 것이다.
+  </p>
+
+  $$
+  \mathfrak{so}(3) \;=\; \{\, [\boldsymbol\omega]_\times \;:\; \boldsymbol\omega \in \mathbb{R}^3 \,\},
+  \qquad
+  [\boldsymbol\omega]_\times^\top = -[\boldsymbol\omega]_\times
+  $$
+
+  <p>
+    반대칭 행렬은 <strong>독립인 숫자가 셋</strong>이다 — 대각은 0이고, 위삼각 셋이 아래삼각을 정한다.
+    그래서 \(\mathfrak{so}(3)\)는 <strong>3차원 벡터공간</strong>이고,
+    \([\cdot]_\times\)를 통해 \(\mathbb{R}^3\)와 <strong>일대일로 맞물린다.</strong>
+    실제 코드에서 \(\mathfrak{so}(3)\)의 원소를 <strong>3×3 행렬이 아니라 3차원 벡터로 들고 다니는</strong> 이유가 이것이다.
+  </p>
+
+  <div class="interp">
+    <strong>해석:</strong> 「\(\mathbf{SO}(3)\)의 Lie algebra가 \(\mathfrak{so}(3)\)이고, 그것이 반대칭 행렬 집합이다」라는
+    한 줄은 이 세 단계를 줄인 것이다 —
+    <strong>①</strong> \(\mathbf{SO}(3)\)는 9차원 안의 3차원 곡면이다.
+    <strong>②</strong> 그 항등원에 댄 접평면을 계산해 보니 반대칭 행렬 전부였다.
+    <strong>③</strong> 그 접평면에 \(\mathfrak{so}(3)\)라는 이름을 붙였다.
+    <strong>대문자 \(\mathbf{SO}(3)\)가 곡면, 꺾인 소문자 \(\mathfrak{so}(3)\)가 그 접평면</strong>이라는 표기 규칙도 여기서 나온다.
+  </div>
+
+  <h3 id="tangent">tangent space — 「점 \(R\)에서의 접벡터」란 무엇인가</h3>
+
+  <p>
+    지금까지 본 것은 <strong>항등원</strong>의 접평면이다. 곡면 위 <strong>점마다</strong> 접평면이 하나씩 있다.
+    그런데 <strong>군에서는 한 점의 접평면만 알면 나머지가 전부 따라온다.</strong> 그 이야기다.
+  </p>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 여기서 「점」과 「접벡터」가 무엇을 가리키나</p>
+    <dl>
+      <dt><strong>점 \(R\)</strong></dt>
+      <dd><strong>\(R\)은 점의 좌표가 아니다. 회전행렬 \(R\) 그 자체가 곡면 위의 한 점</strong>이다.
+        헷갈리기 쉬운 자리다 — 2회에서 「점」은 3차원 공간 속의 위치였고 \(R\)은 그 점을 돌리는 도구였다.
+        여기서는 <strong>\(R\) 자신이 점</strong>이고, 그 점들이 모여 이룬 것이 \(\mathbf{SO}(3)\)다.</dd>
+      <dt><strong>접벡터</strong></dt>
+      <dd><strong>그 점을 지나가는 곡선의 속도</strong>다.
+        \(R(t)\)가 곡면 위를 지나가는 자세의 궤적이면 <strong>\(\dot{R}(t)\)가 접벡터</strong>이고,
+        형태는 3×3 행렬이다. 「벡터」라는 이름이 붙었지만 3차원 화살표가 아니다 —
+        <strong>더할 수 있는 공간의 원소</strong>라는 뜻이다.</dd>
+    </dl>
+  </div>
+
+  <p>
+    자세의 궤적 \(R(t)\)를 잡고 이번에는 <strong>항등원이 아닌 자리</strong>에서 같은 미분을 한다.
+    \(R(t_0) = R\)이라고 하면 \(\dot{R}(t_0)\)이 <strong>점 \(R\)에서의 접벡터</strong>다.
+  </p>
+
+  $$
+  \dot{R}^\top R + R^\top \dot{R} = 0
+  \qquad\Longrightarrow\qquad
+  R^\top \dot{R} = [\boldsymbol\omega]_\times
+  \qquad\Longrightarrow\qquad
+  \dot{R} = R\,[\boldsymbol\omega]_\times
+  $$
+
+  <p>
+    맨 오른쪽 식이 답이다. <strong>점 \(R\)에서의 접벡터는 항등원에서의 접벡터 \([\boldsymbol\omega]_\times\)에
+    \(R\)을 곱해 놓은 것</strong>이다. 여기서 \(R\)은 <strong>좌표가 아니라 곡면 위의 그 점 자체</strong>이고,
+    <strong>곱셈이 「항등원에서 그 점으로 옮기는 동작」</strong>이다.
+    접공간 전체를 놓고 쓰면 이렇게 된다.
+  </p>
+
+  $$
+  \underbrace{T_R\,\mathbf{SO}(3)}_{\text{점 } R \text{ 의 접공간}}
+  \;=\; \{\, R\,[\boldsymbol\omega]_\times \;:\; \boldsymbol\omega \in \mathbb{R}^3 \,\}
+  \;=\; R \cdot \underbrace{\mathfrak{so}(3)}_{\text{항등원의 접공간}}
+  $$
+
+  <figure>
+    <img src="assets/img/03_tangent_at_R.png"
+         alt="원으로 그린 곡면 위에 항등원 I 와 점 R 이 있고, 두 점에 각각 접선이 그려져 있다. I 의 접선 위 접벡터와 R 의 접선 위 접벡터가 점선 화살표로 이어져 있으며 R 을 곱하면 옮겨진다고 적혀 있다">
+    <figcaption>접평면은 점마다 따로 있다. 그런데 <strong>항등원의 것 하나만 알면 나머지는 \(R\)을 곱해 만들 수 있다.</strong>
+      \(R\)이 「회전행렬」이면서 동시에 「곡면 위의 한 점」이고,
+      <strong>곱셈이 그 점으로 옮기는 동작</strong>이라는 것이 이 그림의 전부다.</figcaption>
+  </figure>
+
+  <p>
+    한 가지 덧붙이면, 위 식은 항등원의 접벡터 \([\boldsymbol\omega]_\times\)에 \(R\)을 <strong>앞에서</strong> 곱한 것이다.
+    <strong>뒤에서 곱해도 된다</strong> — \([\boldsymbol\varphi]_\times R\) 꼴이고, 이때 \(\boldsymbol\varphi\)는 다른 벡터다.
+    <strong>같은 접평면에 좌표를 두 가지 방식으로 매긴 것</strong>이고,
+    <strong>그 둘 사이의 환산이 아래의 Adjoint이며 ⑧절의 left/right perturbation</strong>이다.
+    여기서 이미 예고된다.
   </p>
 
   <h3>각속도가 \(\mathfrak{so}(3)\)에 사는 이유</h3>
 
   <p>
-    \(R(t)\)가 시간에 따라 변하는 회전이라고 하자. \(R^\top R = I\)를 시간으로 미분하면 이렇게 된다.
-  </p>
-
-  $$
-  \dot{R}^\top R + R^\top \dot{R} = 0
-  \quad\Longrightarrow\quad
-  (R^\top\dot{R})^\top = -(R^\top\dot{R})
-  $$
-
-  <p>
-    <strong>\(R^\top\dot{R}\)이 반대칭이다.</strong> 즉 \(\mathfrak{so}(3)\)의 원소다.
-    이것을 \([\boldsymbol\omega]_\times\)라고 이름 붙이면 다음 미분방정식이 나온다.
+    앞 절에서 \(\dot{R} = R\,[\boldsymbol\omega]_\times\)가 나왔다.
+    그때 물은 것은 <strong>「점 \(R\)에서의 접벡터가 어떻게 생겼나」</strong>였고,
+    \([\boldsymbol\omega]_\times\)는 <strong>반대칭 행렬에 그냥 붙인 이름</strong>이었다.
+    이번에는 <strong>그 \(\boldsymbol\omega\)가 무엇인가</strong>를 묻는다.
+    \(\boldsymbol\omega\)를 상수로 두고 그 미분방정식을 풀면 이렇게 된다.
   </p>
 
   $$
@@ -929,10 +1242,17 @@ q 와 −q 가 같은 회전인가      = 0.000e+00      ← 이중 덮개</pre>
   R(t) = R(0)\,\exp([\boldsymbol\omega]_\times t) = R(0)\,\mathrm{Exp}(\boldsymbol\omega t)
   $$
 
+  <p>
+    <strong>「지금 자세에 각속도를 시간만큼 곱해 돌린다」</strong>는 식이다.
+    그러니까 \(\boldsymbol\omega\)는 다름 아닌 <strong>자이로가 재는 각속도</strong>이고,
+    \(R\)을 오른쪽에서 곱하고 있으니 <strong>몸체 좌표계에서 잰 값</strong>이다.
+  </p>
+
   <div class="interp">
     <strong>해석:</strong> 여기서 두 가지가 한꺼번에 나온다.
     <strong>①</strong> 자이로가 재는 각속도 \(\boldsymbol\omega\)는 <strong>Lie algebra의 원소</strong>다 —
-    「반대칭 행렬 집합」이라는 추상적인 것이 사실은 <strong>각속도가 사는 곳</strong>이었다.
+    앞 두 절에서 「\(R^\top R = I\)를 미분하니 반대칭 행렬이 나왔다」고 한 그 집합이
+    사실은 <strong>각속도가 사는 곳</strong>이었다.
     <strong>②</strong> 각속도를 회전으로 바꾸는 연산이 바로 \(\mathrm{Exp}\)다.
     <strong>10회에서 IMU를 적분할 때 쓰는 식이 이 한 줄</strong>이고,
     12회 사전적분의 \(\Delta R\)도 여기서 나온다.
@@ -972,11 +1292,46 @@ q 와 −q 가 같은 회전인가      = 0.000e+00      ← 이중 덮개</pre>
     <strong>11회의 오차상태 칼만필터가 정확히 이 아이디어 하나로 만들어져 있다.</strong>
   </div>
 
-  <h3>Lie bracket — algebra라는 이름이 붙은 이유</h3>
+  <h3 id="algebra">Lie algebra — 정의는 무엇이고 어디까지가 그것인가</h3>
 
   <p>
-    Lie algebra에는 더하기 말고 연산이 하나 더 있다. <strong>Lie bracket</strong>이라고 하고,
-    행렬에서는 \([A, B] = AB - BA\)다. \(\mathfrak{so}(3)\)에서 이것을 계산해 보면 놀랍게도 <strong>외적</strong>이 나온다.
+    지금까지 \(\mathfrak{so}(3)\)를 <strong>「\(\mathbf{SO}(3)\)의 항등원에 댄 접평면」</strong>으로만 봤다.
+    그런데 <strong>Lie algebra는 Lie group 없이도 그 자체로 정의된다.</strong>
+    정의는 짧다 — <strong>벡터공간 하나에 곱셈 비슷한 연산 하나</strong>가 얹힌 것이다.
+  </p>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 Lie algebra의 정의</p>
+    <p style="margin:.2rem 0 .6rem">
+      벡터공간 \(V\)와 그 위의 연산 \([\cdot,\cdot] : V \times V \to V\)가 아래 셋을 만족하면
+      \((V, [\cdot,\cdot])\)를 <strong>Lie algebra</strong>라고 하고, 그 연산을 <strong>Lie bracket</strong>이라고 한다.
+    </p>
+    <dl>
+      <dt>① 쌍선형 (bilinear)</dt>
+      <dd>\([a\mathbf{x} + b\mathbf{y},\, \mathbf{z}] = a[\mathbf{x},\mathbf{z}] + b[\mathbf{y},\mathbf{z}]\).
+        두 번째 자리도 같다</dd>
+      <dt>② 교대 (alternating)</dt>
+      <dd>\([\mathbf{x},\mathbf{x}] = 0\).
+        여기서 \([\mathbf{x},\mathbf{y}] = -[\mathbf{y},\mathbf{x}]\)가 따라 나온다</dd>
+      <dt>③ Jacobi 항등식</dt>
+      <dd>\([\mathbf{x},[\mathbf{y},\mathbf{z}]] + [\mathbf{y},[\mathbf{z},\mathbf{x}]] + [\mathbf{z},[\mathbf{x},\mathbf{y}]] = 0\).
+        <strong>결합법칙이 들어갈 자리에 대신 들어가는 조건</strong>이다 —
+        Lie bracket은 결합법칙을 만족하지 않는다</dd>
+    </dl>
+    <p class="later">세 줄을 한 문장으로 줄이면 <strong>「곱셈처럼 굴되, 순서를 바꾸면 부호가 뒤집힌다」</strong>이다.</p>
+  </div>
+
+  <p>
+    <strong>정의에 「곡면」도 「회전」도 나오지 않는다.</strong> 벡터공간과 연산 하나뿐이다.
+    Lie group의 접평면이 <strong>언제나 이 조건을 만족하기 때문에</strong> 같은 이름으로 부르는 것이지,
+    <strong>거꾸로 Lie algebra가 반드시 어떤 곡면에서 나와야 하는 것은 아니다.</strong>
+  </p>
+
+  <h4>\(\mathfrak{so}(3)\)의 bracket은 외적이다</h4>
+
+  <p>
+    행렬로 이루어진 Lie algebra에서 bracket은 <strong>교환자</strong> \([A, B] = AB - BA\)로 정한다.
+    \(\mathfrak{so}(3)\)에서 이것을 계산해 보면 <strong>외적</strong>이 나온다.
   </p>
 
   $$
@@ -985,17 +1340,73 @@ q 와 −q 가 같은 회전인가      = 0.000e+00      ← 이중 덮개</pre>
   $$
 
   <p>
-    <strong>「회전은 순서를 바꾸면 결과가 다르다」를 숫자로 잰 것이 Lie bracket</strong>이다.
+    정의 세 줄이 실제로 맞는지도 외적에서 바로 보인다 —
+    외적은 <strong>쌍선형</strong>이고, \(\mathbf{a}\times\mathbf{a} = \mathbf{0}\)이라 <strong>교대</strong>이고,
+    <strong>Jacobi 항등식</strong>은 벡터해석에서 이미 본 그 식이다.
+    <strong>\(\mathbb{R}^3\)와 외적이 곧 \(\mathfrak{so}(3)\)</strong>인 셈이다.
+  </p>
+
+  <p>
+    뜻도 분명하다. <strong>「회전은 순서를 바꾸면 결과가 다르다」를 숫자로 잰 것이 Lie bracket</strong>이다.
     두 회전이 교환 가능하면 bracket이 0이 되고, 실제로 \(\mathbf{a}\)와 \(\mathbf{b}\)가 나란하면
-    \(\mathbf{a}\times\mathbf{b} = 0\)이다 — <strong>같은 축의 회전끼리는 순서를 바꿔도 된다.</strong>
+    \(\mathbf{a}\times\mathbf{b} = \mathbf{0}\)이다 — <strong>같은 축의 회전끼리는 순서를 바꿔도 된다.</strong>
     아는 사실인데 식이 그것을 그대로 말해 준다.
   </p>
+
+  <h4>그러면 Lie algebra는 어디까지 있나</h4>
+
+  <p>
+    \(\mathfrak{so}(3)\)는 여럿 중 하나다. 자주 만나는 것들을 모으면 이렇다.
+  </p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th style="width:16%">Lie algebra</th><th>무엇의 접평면인가</th><th style="width:10%">차원</th><th>bracket</th></tr>
+    <tr><td>\(\mathbb{R}^n\)</td><td>평행이동 \((\mathbb{R}^n, +)\)</td><td>\(n\)</td>
+      <td>\([\mathbf{x},\mathbf{y}] = 0\) — 전부 교환된다 (abelian)</td></tr>
+    <tr><td>\(\mathfrak{so}(2)\)</td><td>\(\mathbf{SO}(2)\) 평면 회전</td><td>1</td>
+      <td>0. <strong>2차원 회전은 순서를 바꿔도 같다</strong></td></tr>
+    <tr><td><strong>\(\mathfrak{so}(3)\)</strong></td><td><strong>\(\mathbf{SO}(3)\) 3차원 회전</strong></td><td><strong>3</strong></td>
+      <td><strong>외적 \(\mathbf{a}\times\mathbf{b}\)</strong></td></tr>
+    <tr><td>\(\mathfrak{su}(2)\)</td><td>\(\mathbf{SU}(2)\) — 단위 쿼터니언</td><td>3</td>
+      <td>\(\mathfrak{so}(3)\)와 <strong>구조가 같다</strong></td></tr>
+    <tr><td>\(\mathfrak{se}(3)\)</td><td>\(\mathbf{SE}(3)\) 강체 변환</td><td>6</td>
+      <td>회전과 이동이 섞인 꼴. 「조금 더」에 있다</td></tr>
+    <tr><td>\(\mathfrak{gl}(n)\) · \(\mathfrak{sl}(n)\)</td><td>가역 행렬 전부 · 행렬식이 1인 것</td>
+      <td>\(n^2\) · \(n^2\!-\!1\)</td><td>\(AB - BA\)</td></tr>
+  </table>
+  </div>
+
+  <p>
+    눈여겨볼 것은 <strong>\(\mathfrak{su}(2)\)</strong> 줄이다.
+    단위 쿼터니언의 모임 \(\mathbf{SU}(2)\)와 회전의 모임 \(\mathbf{SO}(3)\)는 <strong>서로 다른 군</strong>이다 —
+    ⑤절의 <strong>이중 덮개</strong>가 바로 그 이야기였다. 그런데 <strong>둘의 Lie algebra는 같다.</strong>
+    <strong>쿼터니언으로 짜든 회전행렬로 짜든 최적화 변수가 결국 같은 3차원 벡터인 이유</strong>가 이것이다.
+  </p>
+
+  <h4>group과 algebra는 어디까지 서로를 정하나</h4>
+
+  <p>
+    Lie group 하나에는 Lie algebra 하나가 붙는다. 반대 방향은 <strong>「거의」</strong> 성립한다 —
+    Lie algebra를 주면 <strong>항등원 근처의 모양은 유일하게 정해지지만</strong>
+    <strong>전체 모양까지 정해지지는 않는다.</strong> 방금 본 \(\mathbf{SU}(2)\)와 \(\mathbf{SO}(3)\)가 그 예다.
+    접평면이 같아도 곡면이 다를 수 있다.
+  </p>
+
+  <div class="interp">
+    <strong>해석:</strong> <strong>접평면은 국소적인 정보만 담는다.</strong>
+    이 강의가 Lie 이론에서 실제로 쓰는 것도 <strong>항등원 근처</strong>뿐이라 그것으로 충분하다 —
+    최적화의 갱신량, 오차 상태, 야코비안은 전부 <strong>작은 \(\boldsymbol\delta\)</strong>다.
+    반대로 <strong>이 강의에서 만난 함정들은 거의 다 「전체 모양」 쪽 이야기</strong>였다 —
+    ⑤절의 이중 덮개, ④절의 \(\theta = \pi\) 특이점, ③절의 짐벌락이 그렇다.
+    <strong>둘을 갈라 놓고 보면 어느 문제가 어디서 오는지가 정리된다.</strong>
+  </div>
 
   <h3 id="adjoint">Adjoint — 왼쪽과 오른쪽을 잇는다</h3>
 
   <p>
-    ⑦절 앞에서 「접벡터를 곱해서 옮긴다」고 했다. 왼쪽으로 옮기는 것과 오른쪽으로 옮기는 것을
-    이어 주는 연산자가 <strong>Adjoint</strong>다. \(\mathbf{SO}(3)\)에서는 놀랄 만큼 간단하다.
+    앞의 tangent space 절에서 「접벡터에 \(R\)을 앞에서 곱해도, 뒤에서 곱해도 된다」고 했다.
+    그 두 가지 좌표를 이어 주는 연산자가 <strong>Adjoint</strong>다. \(\mathbf{SO}(3)\)에서는 놀랄 만큼 간단하다.
   </p>
 
   $$
@@ -1035,7 +1446,7 @@ q 와 −q 가 같은 회전인가      = 0.000e+00      ← 이중 덮개</pre>
     <tr><td>\(\boxplus\) · \(\boxminus\)</td><td>최적화 갱신, 오차 정의, 수치 야코비안</td><td>3 · 9 · 11회</td></tr>
     <tr><td><strong>right Jacobian</strong> \(J_r\)</td><td>바이어스가 바뀌었을 때 사전적분 보정</td><td>⑩절 · <strong>12회</strong></td></tr>
     <tr><td><strong>Adjoint</strong> \(\mathrm{Ad}_R = R\)</td><td>left ↔ right 변환, 공분산 옮기기</td><td>⑧절 · 12 · 13회</td></tr>
-    <tr><td>Lie bracket</td><td><strong>개념만.</strong> BCH가 왜 그렇게 생겼는지 설명할 때</td><td>⑩절</td></tr>
+    <tr><td>Lie bracket</td><td><strong>개념만.</strong> algebra라는 이름의 근거이고, BCH가 왜 그렇게 생겼는지 설명할 때</td><td>⑩절</td></tr>
     <tr><td>\(\mathbf{SE}(3)\) · \(\mathfrak{se}(3)\)</td><td><strong>이름만.</strong> 이 강의는 위치와 회전을 나눠 다룬다</td><td>「조금 더」</td></tr>
   </table>
   </div>
@@ -1382,6 +1793,8 @@ for (int i = 0; i &lt; N; ++i) {
     <li><input type="checkbox" id="c5"><label for="c5">짐벌락에서 실제로 나쁜 것이 무엇인지 <strong>숫자로</strong> 말할 수 있다</label></li>
     <li><input type="checkbox" id="c6"><label for="c6">로드리게스 공식의 무한급수가 <strong>왜 닫히는지</strong> 말할 수 있다</label></li>
     <li><input type="checkbox" id="c7"><label for="c7">Lie group · Lie algebra · tangent space가 각각 무엇인지 한 문장씩으로 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c7a"><label for="c7a">\(\mathbf{SO}(3)\)가 왜 <strong>곡면</strong>인지 <strong>자유도를 세어</strong> 설명할 수 있다</label></li>
+    <li><input type="checkbox" id="c7b"><label for="c7b">\(\mathfrak{so}(3)\)가 <strong>왜 반대칭 행렬</strong>인지 \(R^\top R = I\)에서 유도할 수 있다</label></li>
     <li><input type="checkbox" id="c8"><label for="c8">각속도가 왜 \(\mathfrak{so}(3)\)에 사는지 설명할 수 있다</label></li>
     <li><input type="checkbox" id="c9"><label for="c9">\(\boxplus\)와 \(\boxminus\)가 무엇을 대신하는지 안다</label></li>
     <li><input type="checkbox" id="c10"><label for="c10">left와 right perturbation이 <strong>Adjoint로 이어진다</strong>는 것을 식으로 쓸 수 있다</label></li>
