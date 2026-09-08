@@ -381,10 +381,20 @@
       이 규약에서 <strong>\(y\)축을 양의 방향으로 도는 것이 기수를 아래로 숙이는 동작</strong>이라,
       아래에서 따라갈 동작은 <strong>드론이 기수를 숙여 수직으로 내리꽂았다가 뒤로 넘어가는</strong> 급강하다.
     </p>
-    <p style="margin:0">
-      자세는 <strong>축 하나를 잡고 처음부터 끝까지 같은 속도로</strong> 돈다 —
-      회전축은 몸체 \(y\)축에서 <strong>1.5°만 기울어져</strong> 있고, 각도만 0°에서 110°까지 고르게 커진다.
-      <strong>실제 움직임에는 특별한 것이 하나도 없다.</strong> 자이로가 재는 각속도도 내내 일정하다.
+    <p style="margin:0 0 .55rem">
+      <strong>회전은 처음부터 끝까지 「한 축 둘레로 한 번」이다.</strong>
+      그 축은 <strong>몸체 \(y\)축 자체가 아니라, \(y\)축을 \(x\)쪽으로 1.5°만 비켜 놓은 축</strong>이다 —
+      \(\mathbf{u} = (\sin 1.5°,\ \cos 1.5°,\ 0)\)이다.
+      <strong>1.5°는 축이 놓인 방향이지 돌아간 양이 아니다.</strong>
+      그 축을 붙잡아 두고 <strong>그 둘레로 도는 각만</strong> 0°에서 110°까지 고르게 키운다.
+      자이로가 재는 각속도는 내내 일정하고, <strong>실제 움직임에는 특별한 것이 하나도 없다.</strong>
+    </p>
+    <p class="later" style="margin:0">
+      <strong>왜 굳이 1.5°를 비켜 놓나.</strong> 축을 정확히 \(y\)에 두면 요와 롤이 내내 <strong>정확히 0</strong>으로
+      나오다가 90°를 지나는 순간 <strong>0°에서 180°로 뚝 끊긴다.</strong> 너무 깨끗해서 실제와 다르다.
+      진짜 비행에서는 축이 그렇게까지 맞지 않고, <strong>조금만 비켜 있어도 끊기는 대신
+      좁은 구간에서 급하게 치솟는</strong> 모양이 된다 — <strong>추정기를 실제로 망가뜨리는 것이 그 모양</strong>이다.
+      그리고 이 1.5°가 뒤에서 \(\alpha - \gamma\)로 다시 나온다.
     </p>
   </div>
 
@@ -400,6 +410,35 @@
       대신 요(파랑)와 롤(빨강)이 <strong>89°와 91° 사이에서 각각 67°씩 뛴다.</strong>
       <strong>실제로는 2° 돌았을 뿐인데</strong> 그렇다.</figcaption>
   </figure>
+
+  <p>
+    그림에서 읽은 값을 <strong>숫자로 그대로 옮기면</strong> 이렇다.
+    맨 오른쪽 칸은 <strong>그 자리에서 실제로 1° 도는 동안 오일러각 셋이 움직인 양을 합한 것</strong>이다 —
+    자세가 1° 돌았으니 <strong>1°에 가까우면 정상</strong>이고, 그보다 크면 그만큼 부풀려 적히고 있다는 뜻이다.
+  </p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>실제로 돌아간 각</th><th>요 \(\alpha\)</th><th>피치 \(\beta\)</th><th>롤 \(\gamma\)</th>
+      <th>1° 도는 동안 오일러각이 움직인 양</th></tr>
+    <tr><td>0°</td><td>0.00°</td><td>0.00°</td><td>0.00°</td><td>1.0°</td></tr>
+    <tr><td>60°</td><td>1.50°</td><td>59.97°</td><td>2.60°</td><td>1.2°</td></tr>
+    <tr><td>80°</td><td>7.07°</td><td>79.89°</td><td>8.44°</td><td>2.7°</td></tr>
+    <tr><td>85°</td><td>15.22°</td><td>84.78°</td><td>16.65°</td><td>7.4°</td></tr>
+    <tr><td>88°</td><td>35.37°</td><td>87.50°</td><td>36.85°</td><td>29.2°</td></tr>
+    <tr><td><strong>89°</strong></td><td><strong>54.81°</strong></td><td>88.20°</td><td><strong>56.30°</strong></td><td><strong>55.1°</strong></td></tr>
+    <tr><td><strong>90°</strong></td><td><strong>88.50°</strong></td><td><strong>88.50°</strong></td><td><strong>90.00°</strong></td><td><strong>76.3°</strong></td></tr>
+    <tr><td><strong>91°</strong></td><td><strong>122.19°</strong></td><td>88.20°</td><td><strong>123.70°</strong></td><td><strong>51.9°</strong></td></tr>
+    <tr><td>95°</td><td>161.78°</td><td>84.78°</td><td>163.35°</td><td>7.2°</td></tr>
+    <tr><td>110°</td><td>174.12°</td><td>69.95°</td><td>175.89°</td><td>1.4°</td></tr>
+  </table>
+  </div>
+
+  <p>
+    <strong>피치는 88.50°가 최대</strong>다 — 90°를 못 넘고 도로 내려온다.
+    <strong>89°에서 91°까지 실제로는 2° 돌았는데</strong> 요는 54.81°에서 122.19°로, 롤은 56.30°에서 123.70°로 갔다.
+    <strong>각각 67°씩</strong>이다. 가장 심한 90° 자리에서는 <strong>1° 도는 동안 오일러각이 76°</strong> 움직인다.
+  </p>
 
   <div class="interp">
     <strong>해석:</strong> 실제 자세와 그것을 적은 숫자가 <strong>서로 다른 이야기를 하고 있다.</strong>
@@ -488,6 +527,15 @@
     \(\mathbf{u}\)를 축으로 \(\theta\)만큼 돌린다는 것이 벡터 \(\mathbf{v}\)에 무슨 일을 하는지
     그림으로 보면 답이 바로 나온다. <strong>\(\mathbf{v}\)를 두 조각으로 나누는 것</strong>이 전부다.
   </p>
+
+  <figure>
+    <img src="assets/img/03_rodrigues.png"
+         alt="두 칸짜리 3차원 그림. 왼쪽 칸은 세로로 세운 축 u 와 벡터 v, 그리고 v 를 축에 나란한 조각과 수직인 조각으로 나눈 모습. 오른쪽 칸은 축에 수직인 원판 위에서 수직인 조각이 세타만큼 돌아 v 프라임이 되는 모습이고, 평면의 두 번째 축으로 u 와 v 의 외적이 그려져 있다">
+    <figcaption><strong>①</strong> \(\mathbf{v}\)를 <strong>축에 나란한 조각</strong>과 <strong>축에 수직인 조각</strong>으로 나눈다.
+      <strong>②</strong> 나란한 조각은 그대로 있고, 수직인 조각만 <strong>축에 수직인 평면(회색 원판) 안에서</strong> \(\theta\)만큼 돈다.
+      그 평면 안에서 돌리려면 <strong>좌표축이 둘</strong> 필요한데, \(\mathbf{v}_\perp\)와 \(\mathbf{u}\times\mathbf{v}\)가 그 한 쌍이다.
+      <strong>아래 글은 이 그림을 그대로 받아쓴 것</strong>이다.</figcaption>
+  </figure>
 
   <div class="tablewrap">
   <table>
