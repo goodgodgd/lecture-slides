@@ -34,12 +34,13 @@
   <a href="#dof">① 회전은 왜 3 자유도인가</a>
   <a href="#matrix">② 회전행렬</a>
   <a href="#euler">③ 오일러각</a>
-  <a href="#gimbal" class="sub">짐벌락 — 지나가 본다</a>
+  <a href="#gimbal" class="sub">짐벌락 — 한 가지 상황으로 본다</a>
   <a href="#axisangle">④ 축-각 (rotation vector)</a>
-  <a href="#axisangle" class="sub">로드리게스 공식</a>
+  <a href="#axisangle" class="sub">로드리게스 공식 · Exp</a>
   <a href="#quat">⑤ 쿼터니언</a>
   <a href="#quat" class="sub">quaternion product</a>
   <a href="#quat" class="sub">벡터를 돌리는 법 · SLERP</a>
+  <a href="#quat" class="sub">Hamilton과 JPL</a>
   <a href="#convert">⑥ 표현 사이를 오가는 지도</a>
   <a href="#lie">⑦ Lie theory <span class="mono">🔴</span></a>
   <a href="#liehistory" class="sub">Lie는 사람 이름이다 — 이론의 내력</a>
@@ -354,7 +355,14 @@
     </dl>
   </div>
 
-  <h3 id="gimbal">짐벌락 — 「표현이 안 된다」가 아니라 「값이 폭주한다」 🔴</h3>
+  <h3 id="gimbal">짐벌락 — 축 하나가 겹치면 무슨 일이 생기나</h3>
+
+  <p>
+    오일러각은 <strong>축 세 개를 차례로 돌리는</strong> 방식이다. 그런데 두 번째 회전이 90°가 되면
+    <strong>첫 번째 축과 세 번째 축이 같은 방향으로 겹쳐 버리는</strong> 자세가 생긴다.
+    겹치고 나면 그 두 축은 <strong>같은 회전을 만든다</strong> — 돌릴 수 있는 방향이 셋에서 둘로 준다.
+    이것이 짐벌락이고, 이름은 <strong>세 겹으로 된 회전 고리(gimbal)가 실제로 겹쳐 잠기는</strong> 기계에서 왔다.
+  </p>
 
   <figure>
     <img src="assets/img/03_gimbal_lock.png"
@@ -365,111 +373,54 @@
   </figure>
 
   <p>
-    ZYX 조합에서는 <strong>\(\beta = \pm 90°\)</strong>일 때 이 일이 생긴다. 그때 \(R_{11}\)과 \(R_{21}\)이 둘 다 0이 되어
-    <span class="mono">atan2(0, 0)</span>이 되고, \(\alpha\)와 \(\gamma\)는 <strong>각각은 정해지지 않고 그 합(또는 차)만 정해진다.</strong>
+    ③절에서 쓰는 ZYX 조합에서는 <strong>피치 \(\beta\)가 \(\pm 90°\)</strong>일 때 이 일이 생긴다.
+    그러면 앞의 추출식에서 \(R_{11}\)과 \(R_{21}\)이 둘 다 0이 되어 <span class="mono">atan2(0, 0)</span>이 되고,
+    <strong>요 \(\alpha\)와 롤 \(\gamma\)는 각각은 정해지지 않고 그 합(또는 차)만 정해진다.</strong>
   </p>
 
-  <h3>짐벌락을 실제로 지나가 본다 — 드론이 기수를 들어 수직을 넘는 동안</h3>
+  <h3>한 가지 상황으로 본다 — 드론이 기수를 들어 수직을 넘는 동안</h3>
 
   <p>
-    말로만 들으면 「\(\beta\)가 하필 정확히 90°가 되는 일이 얼마나 있겠나」 싶다.
-    그래서 한 번 지나가 본다. 드론이 수평 자세에서 <strong>기수를 들어 수직을 넘겨 뒤로 넘어가는</strong> 동작이다.
-    회전축은 몸체 \(y\)축에서 <strong>1.5°만 기울어져</strong> 있고, 각도만 0°에서 110°까지
-    <strong>등속으로</strong> 커진다. 즉 <strong>자이로가 재는 각속도는 처음부터 끝까지 일정하고,
-    자세는 매끄럽게 돈다.</strong> 그 자세를 ZYX 오일러각으로 뽑아 보면 이렇게 된다.
+    「\(\beta\)가 하필 정확히 90°가 되는 일이 얼마나 있겠나」 싶다.
+    그런데 <strong>드론이 기수를 들어 수직으로 세우는 동작</strong>이 정확히 그 자리를 지나간다.
+    수직 상승·급기동에서 늘 나오는 자세다. 그 한 가지 상황만 놓고 끝까지 따라가 본다.
+  </p>
+
+  <p>
+    드론이 <strong>수평에서 기수를 들어 수직을 넘겨 뒤로 넘어간다.</strong>
+    자세는 <strong>축 하나를 잡고 처음부터 끝까지 같은 속도로</strong> 돈다 —
+    회전축은 몸체 \(y\)축에서 1.5°만 기울어져 있고, 각도만 0°에서 110°까지 고르게 커진다.
+    <strong>실제 움직임에는 특별한 것이 하나도 없다.</strong>
+    아래 그림에서 <strong>위 줄이 그 자세를 옆에서 본 모습</strong>이고,
+    <strong>아래가 같은 자세를 ZYX 오일러각으로 적었을 때의 값</strong>이다.
   </p>
 
   <figure>
-    <img src="assets/img/03_gimbal_trajectory.png"
-         alt="위 그래프는 실제로 돌아간 각도에 따른 요·피치·롤 세 곡선. 피치는 88.5도까지 올라갔다 내려오고, 요와 롤은 90도 근처에서 거의 수직으로 치솟아 175도 부근에 자리 잡는다. 아래 그래프는 실제 1도당 오일러각이 움직인 양이며 로그 축에서 90도에서 76배로 뾰족하게 솟는다">
-    <figcaption>피치(초록)는 88.5°까지만 올라갔다 내려온다 — <strong>수직을 못 넘는다.</strong>
-      대신 요(파랑)와 롤(빨강)이 그 자리에서 <strong>한꺼번에 180° 가까이 뛴다.</strong>
-      아래 칸이 그것을 배수로 잰 것이고, <strong>실제 자세는 늘 1°씩 도는데</strong> 오일러각만 76배로 움직인다.</figcaption>
-  </figure>
-
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th>실제로 돌아간 각도</th><th>요 \(\alpha\)</th><th>피치 \(\beta\)</th><th>롤 \(\gamma\)</th>
-      <th>실제 1° 도는 동안 오일러각이 움직인 양</th></tr>
-    <tr><td>0°</td><td>0.00°</td><td>0.00°</td><td>0.00°</td><td>1.0°</td></tr>
-    <tr><td>60°</td><td>1.50°</td><td>59.97°</td><td>2.60°</td><td>1.2°</td></tr>
-    <tr><td>80°</td><td>7.07°</td><td>79.89°</td><td>8.44°</td><td>2.7°</td></tr>
-    <tr><td>85°</td><td>15.22°</td><td>84.78°</td><td>16.65°</td><td>7.4°</td></tr>
-    <tr><td>88°</td><td>35.37°</td><td>87.50°</td><td>36.85°</td><td>29.2°</td></tr>
-    <tr><td><strong>89°</strong></td><td><strong>54.81°</strong></td><td>88.20°</td><td><strong>56.30°</strong></td><td><strong>55.1°</strong></td></tr>
-    <tr><td><strong>90°</strong></td><td><strong>88.50°</strong></td><td><strong>88.50°</strong></td><td><strong>90.00°</strong></td><td><strong>76.3°</strong></td></tr>
-    <tr><td><strong>91°</strong></td><td><strong>122.19°</strong></td><td>88.20°</td><td><strong>123.70°</strong></td><td><strong>51.9°</strong></td></tr>
-    <tr><td>95°</td><td>161.78°</td><td>84.78°</td><td>163.35°</td><td>7.2°</td></tr>
-    <tr><td>110°</td><td>174.12°</td><td>69.95°</td><td>175.89°</td><td>1.4°</td></tr>
-  </table>
-  </div>
-
-  <p>
-    89°에서 91°까지 <strong>실제로는 2° 돌았다.</strong> 그 2° 동안
-    요는 54.81°에서 122.19°로, 롤은 56.30°에서 123.70°로 갔다 — <strong>각각 67°씩</strong>이다.
-    가장 심한 90° 자리에서는 <strong>1° 도는 동안 오일러각이 76°</strong> 움직인다.
-  </p>
-
-  <p>
-    같은 일을 <strong>「두 자세를 견주는」</strong> 쪽에서 보면 이렇다.
-    피치가 89.9°인 자세 \(A\)가 있고, 그 자세를 몸체 \(z\)축으로 <strong>0.01°만</strong> 흔든 자세 \(B\)가 있다.
-    두 자세는 <strong>눈으로도 센서로도 구별되지 않을 만큼 같다.</strong> 그런데 오일러각으로 적어 놓으면 이렇다.
-  </p>
-
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th style="width:34%">자세</th><th>요 \(\alpha\)</th><th>피치 \(\beta\)</th><th>롤 \(\gamma\)</th></tr>
-    <tr><td>\(A\)</td><td>17.189°</td><td>89.900°</td><td>−11.459°</td></tr>
-    <tr><td>\(B = A\) 를 0.01° 흔든 것</td><td>22.899°</td><td>89.901°</td><td>−5.749°</td></tr>
-    <tr><td><strong>차이</strong></td><td><strong>+5.710°</strong></td><td>+0.001°</td><td><strong>+5.710°</strong></td></tr>
-  </table>
-  </div>
-
-  <div class="interp">
-    <strong>해석:</strong> 실제 자세의 차이는 <strong>0.01°</strong>인데 적어 놓은 숫자는 <strong>5.7°씩</strong> 다르다.
-    <strong>571배</strong>다. 여기서 나쁜 것이 무엇인지가 분명해진다 —
-    <strong>표현이 안 되는 것이 아니라, 표현은 되는데 그 숫자가 자세를 대표하지 못한다.</strong>
-    이 값으로 두 자세의 차이를 재면 5.7°라는 답이 나오고,
-    <strong>이 값을 미분하거나 평균 내거나 필터의 상태로 넣으면 그 오차가 그대로 들어간다.</strong>
-    드론이 수직으로 상승·하강하는 구간이 바로 \(\beta \approx 90°\)이고,
-    그래서 <strong>항공 쪽에서 짐벌락이 실제 사고 이야기로 남아 있다.</strong>
-    <span class="mono">python3 vision-slam/src/rotation_numbers.py</span> 로 위 두 표를 다시 잴 수 있다.
-  </div>
-
-  <h3>피치별 민감도 — 짐벌락은 점이 아니라 구역이다</h3>
-
-  <p>
-    지금 본 것은 궤적 하나다. <strong>피치를 여러 값에 두고</strong> 같은 실험을 하면
-    문제가 <strong>정확히 90°인 순간에만 있는 것이 아니라는 것</strong>이 더 뚜렷해진다.
-    자세를 0.01° 흔들었을 때 오일러각이 얼마나 움직이는지 피치마다 재 보면 이렇다.
-  </p>
-
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th>피치 \(\beta\)</th><th>자세를 0.01° 흔들면 오일러각이</th><th>증폭</th><th>\(1/\cos\beta\)</th></tr>
-    <tr><td>0°</td><td>0.0100°</td><td>1.0배</td><td>1.0</td></tr>
-    <tr><td>30°</td><td>0.0128°</td><td>1.3배</td><td>1.2</td></tr>
-    <tr><td>60°</td><td>0.0260°</td><td>2.6배</td><td>2.0</td></tr>
-    <tr><td>80°</td><td>0.0793°</td><td>7.9배</td><td>5.8</td></tr>
-    <tr><td><strong>89°</strong></td><td><strong>0.7957°</strong></td><td><strong>79.6배</strong></td><td>57.3</td></tr>
-    <tr><td><strong>89.9°</strong></td><td><strong>8.0755°</strong></td><td><strong>807.5배</strong></td><td>573.0</td></tr>
-  </table>
-  </div>
-
-  <figure>
-    <img src="assets/img/03_euler_sensitivity.png"
-         alt="피치 각도에 따른 오일러각 증폭 배수 그래프. 로그 세로축이고 90도에 가까워질수록 급격히 치솟는다. 1/cos β 이론 곡선이 점선으로 함께 그려져 있다">
-    <figcaption>점선이 \(1/\cos\beta\)다. 실제 증폭이 그 곡선을 따라간다.
-      <strong>85° 근처부터 이미 못 쓸 값이 된다.</strong> 짐벌락은 한 점이 아니라 <strong>구역</strong>이다.</figcaption>
+    <img src="assets/img/03_gimbal_example.png"
+         alt="위 칸에는 실제로 돌아간 각 0도·60도·85도·89도·91도·110도에서 드론을 옆에서 본 모습이 차례로 그려져 있고 그 아래에 요·피치·롤 값이 적혀 있다. 89도와 91도의 그림은 거의 같은데 요는 54.8도에서 122.2도로, 롤은 56.3도에서 123.7도로 뛴다. 아래 칸은 실제로 돌아간 각에 따른 요·피치·롤 곡선이며 90도 부근에서 요와 롤이 수직으로 치솟는다">
+    <figcaption>위 줄의 여섯 자세는 <strong>고르게 조금씩 기울어질 뿐</strong>이다.
+      그런데 아래에 적힌 숫자는 89°와 91° 사이에서 <strong>요와 롤이 각각 67°씩 뛴다.</strong>
+      <strong>실제로는 2° 돌았는데</strong> 그렇다. 피치(초록)는 88.5°에서 멈췄다가 도로 내려온다 —
+      <strong>수직을 넘지 못한다.</strong></figcaption>
   </figure>
 
   <div class="interp">
-    <strong>해석:</strong> 증폭 배수가 \(1/\cos\beta\)를 따라간다.
-    \(\cos\beta\)는 90°에서 0이 되므로 <strong>그 부근 전체가 나쁘다</strong> —
-    89°에서 이미 80배이고, 80°에서도 8배다.
-    <strong>「90°만 피하면 된다」가 성립하지 않는 이유</strong>가 이것이고,
-    <strong>추정기 안에 오일러각을 넣지 않는 이유</strong>이기도 하다.
+    <strong>해석:</strong> 그림 위 줄과 아래 숫자가 <strong>서로 다른 이야기를 하고 있다.</strong>
+    자세는 아무 일 없이 매끄럽게 도는데 <strong>그것을 적은 숫자만 폭주한다.</strong>
+    그러니까 짐벌락에서 나쁜 것은 <strong>「그 자세를 표현하지 못한다」가 아니다</strong> —
+    표현은 된다. 문제는 <strong>그 숫자가 자세를 대표하지 못한다</strong>는 것이다.
+    89°와 91° 자세를 오일러각으로 빼서 차이를 재면 <strong>67°나 떨어진 것으로 나온다.</strong>
+    <strong>이 값을 미분하거나, 평균 내거나, 필터의 상태로 넣으면 그 오차가 그대로 들어간다.</strong>
+    자세는 멀쩡한데 추정기만 무너지는 모양이고, <strong>항공 쪽에서 짐벌락이 실제 사고 이야기로 남아 있는 이유</strong>다.
   </div>
+
+  <p>
+    한 가지 덧붙이면, <strong>나빠지는 것은 정확히 90°인 한 점이 아니라 그 부근 전체</strong>다.
+    증폭 배수가 \(1/\cos\beta\)를 따라가는데 \(\cos\beta\)는 90°에서 0이 되므로,
+    <strong>80°에서 이미 8배, 89°에서 80배</strong>다. 위 그림에서 곡선이 85° 언저리부터
+    휘기 시작하는 것이 그것이다. <strong>「90°만 피하면 된다」가 성립하지 않는다.</strong>
+    (재현: <span class="mono">python3 vision-slam/src/rotation_numbers.py</span>)
+  </p>
 
   <div class="box lab-block">
     <p class="boxtitle">그럼 왜 아직도 쓰나</p>
@@ -488,7 +439,10 @@
   <h3>무엇을 담나</h3>
 
   <p>
-    회전축 방향 \(\mathbf{u}\)(길이 1)와 각도 \(\theta\)를 <strong>벡터 하나로 합친다.</strong>
+    2회에서 <strong>어떤 회전이든 축 하나와 각 하나로 적을 수 있다</strong>는 것을 봤다(오일러 회전 정리).
+    ①절에서 자유도를 세었을 때 나온 3도 <strong>축 방향 2 + 각 1</strong>이었다.
+    그러면 <strong>그 축과 각을 숫자 셋에 그대로 담자</strong>는 것이 이 표현이다.
+    회전축 방향 \(\mathbf{u}\)(길이 1)에 각도 \(\theta\)를 곱해 <strong>벡터 하나로 합친다.</strong>
     교재(Ma 외)에서는 이것을 <strong>twist coordinates</strong>라고 부른다.
   </p>
 
@@ -500,35 +454,101 @@
   <p>
     <strong>벡터의 방향이 회전축, 벡터의 크기가 회전각</strong>이다. 이보다 직관적일 수 없다.
     그리고 <strong>제약이 없다</strong> — 어떤 세 숫자를 넣어도 회전 하나가 나온다.
-    이것이 최적화 변수로 쓰는 이유다.
+    회전행렬은 아홉 숫자에 제약이 여섯이었고 쿼터니언은 네 숫자에 제약이 하나인데,
+    이쪽은 <strong>세 숫자에 제약이 없다.</strong> 이것이 최적화 변수로 쓰는 이유다.
+  </p>
+
+  <h3>축과 각으로 벡터를 어떻게 돌리나 — 그림을 그대로 식으로 옮긴다</h3>
+
+  <p>
+    담는 방법은 정했으니 <strong>이제 실제로 벡터를 돌려야 한다.</strong>
+    \(\mathbf{u}\)를 축으로 \(\theta\)만큼 돌린다는 것이 벡터 \(\mathbf{v}\)에 무슨 일을 하는지
+    그림으로 보면 답이 바로 나온다. <strong>\(\mathbf{v}\)를 두 조각으로 나누는 것</strong>이 전부다.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th style="width:30%">조각</th><th>무엇인가</th><th>돌리면</th></tr>
+    <tr><td><strong>축에 나란한 조각</strong><br>\(\mathbf{v}_\parallel = \mathbf{u}(\mathbf{u}\cdot\mathbf{v})\)</td>
+      <td>\(\mathbf{v}\)를 축 위에 드리운 그림자</td>
+      <td><strong>그대로 있다.</strong> 축을 중심으로 돌리는데 축 위에 있으니 움직일 이유가 없다</td></tr>
+    <tr><td><strong>축에 수직인 조각</strong><br>\(\mathbf{v}_\perp = \mathbf{v} - \mathbf{u}(\mathbf{u}\cdot\mathbf{v})\)</td>
+      <td>남은 것. 축에 수직인 평면 안에 있다</td>
+      <td><strong>그 평면 안에서 \(\theta\)만큼 돈다.</strong> 평면 안의 회전이니 2차원 회전이다</td></tr>
+  </table>
+  </div>
+
+  <p>
+    수직인 조각을 돌리려면 <strong>그 평면의 좌표축 두 개</strong>가 있어야 한다.
+    하나는 \(\mathbf{v}_\perp\) 자신이고, 나머지 하나로 쓸 것이 <strong>\(\mathbf{u}\times\mathbf{v}\)</strong>다 —
+    외적이라 \(\mathbf{u}\)와 \(\mathbf{v}\) 둘 다에 수직이고, 길이도 \(\lVert\mathbf{v}_\perp\rVert\)와 같다.
+    <strong>그 평면의 직교 좌표축 한 쌍</strong>이 갖춰진 셈이라, 2차원 회전을 그대로 쓸 수 있다.
+  </p>
+
+  $$
+  \mathbf{v}_\perp' = \mathbf{v}_\perp\cos\theta + (\mathbf{u}\times\mathbf{v})\sin\theta
+  $$
+
+  <p>두 조각을 도로 합치면 식이 나온다.</p>
+
+  $$
+  \mathbf{v}' \;=\; \mathbf{v}_\parallel + \mathbf{v}_\perp'
+  \;=\; \mathbf{v}\cos\theta
+  + (\mathbf{u}\times\mathbf{v})\sin\theta
+  + \mathbf{u}(\mathbf{u}\cdot\mathbf{v})(1-\cos\theta)
+  $$
+
+  <div class="interp">
+    <strong>해석:</strong> 이 식을 <strong>로드리게스 공식</strong>(Rodrigues' rotation formula)이라고 한다.
+    외울 것이 없다 — <strong>「축에 나란한 것은 그대로 두고 수직인 것만 돌린다」</strong>를
+    그대로 받아쓴 것이다. 세 항이 각각 그 문장의 한 조각이다.
+    그리고 이 식은 <strong>행렬을 만들지 않고 벡터를 바로 돌린다</strong> — 외적 한 번, 내적 한 번이면 끝난다.
+  </div>
+
+  <h3>같은 식을 행렬 하나로 접는다</h3>
+
+  <p>
+    위 식은 \(\mathbf{v}\)에 대해 <strong>선형</strong>이다. 그러니 \(\mathbf{v}\)를 밖으로 빼내면
+    <strong>행렬 하나</strong>가 남는다. 그 행렬이 곧 \(R\)이다.
+    빼내려면 <strong>외적과 내적을 행렬 곱으로 바꿔 써야</strong> 하고, 그 표기가 아래 \([\cdot]_\times\)다.
   </p>
 
   <div class="box firstseen">
-    <p class="boxtitle">🆕 이 절에서 처음 나오는 기호</p>
+    <p class="boxtitle">🆕 이 자리에서 처음 나오는 기호</p>
     <dl>
       <dt>\([\mathbf{v}]_\times\) — 반대칭 행렬(skew-symmetric matrix). \(\hat{\mathbf{v}}\)로도 쓴다</dt>
-      <dd>벡터를 3×3 행렬로 바꾸는 표기다.
-        \([\mathbf{v}]_\times = \begin{bmatrix} 0 &amp; -v_3 &amp; v_2 \\ v_3 &amp; 0 &amp; -v_1 \\ -v_2 &amp; v_1 &amp; 0\end{bmatrix}\)이고,
-        <strong>외적을 행렬 곱으로 쓴 것</strong>이다 — \([\mathbf{v}]_\times\mathbf{w} = \mathbf{v}\times\mathbf{w}\).
-        이름 그대로 \([\mathbf{v}]_\times^\top = -[\mathbf{v}]_\times\)다.
-        <strong>여기서는 축-각 벡터를 로드리게스 공식에 넣을 수 있는 모양으로 바꾸는 데 썼다.</strong></dd>
-
-      <dt>\(\mathfrak{so}(3)\) — 소문자 고딕체</dt>
-      <dd><strong>반대칭 행렬 전부의 집합</strong>이다. 벡터 셋과 1:1로 대응하므로
-        실전에서는 <strong>그냥 \(\mathbb{R}^3\)처럼 쓴다.</strong>
-        왜 이 집합에 \(\mathbf{SO}(3)\)의 소문자 이름이 붙었는지는 ⑦절에서 답한다.</dd>
-
-      <dt>\(\mathrm{Exp}\) · \(\mathrm{Log}\) — 대문자로 쓴 것</dt>
-      <dd>\(\mathbb{R}^3 \to \mathbf{SO}(3)\)와 그 역. 행렬 지수함수 \(\exp(\hat{\boldsymbol\phi})\)와 구별하려고 대문자로 쓴다.
-        \(\mathrm{Exp}(\boldsymbol\phi) = \exp([\boldsymbol\phi]_\times)\)이고,
-        <strong>이 강의에서는 대문자 쪽만 쓴다.</strong></dd>
+      <dd><strong>외적을 행렬 곱으로 바꿔 쓰는 표기</strong>다 — \([\mathbf{v}]_\times\mathbf{w} = \mathbf{v}\times\mathbf{w}\)가 되도록
+        만든 3×3 행렬이고, 성분은 이렇다.
+        \([\mathbf{v}]_\times = \begin{bmatrix} 0 &amp; -v_3 &amp; v_2 \\ v_3 &amp; 0 &amp; -v_1 \\ -v_2 &amp; v_1 &amp; 0\end{bmatrix}\).
+        이름 그대로 전치하면 부호가 뒤집힌다 — \([\mathbf{v}]_\times^\top = -[\mathbf{v}]_\times\).
+        <strong>여기서는 로드리게스 공식에서 \(\mathbf{v}\)를 밖으로 빼내는 데 쓴다.</strong>
+        이 기호는 오늘 이후 계속 나온다.</dd>
     </dl>
   </div>
 
-  <h3>회전행렬로 — 로드리게스 공식이 왜 저렇게 생겼나</h3>
+  <p>
+    바꿔 쓸 것이 둘이다. 외적은 \(\mathbf{u}\times\mathbf{v} = [\mathbf{u}]_\times\mathbf{v}\)이고,
+    나란한 조각은 \(\mathbf{u}(\mathbf{u}\cdot\mathbf{v}) = (\mathbf{u}\mathbf{u}^\top)\mathbf{v}\)다.
+    그리고 길이 1인 \(\mathbf{u}\)에 대해 \([\mathbf{u}]_\times^2 = \mathbf{u}\mathbf{u}^\top - I\)가 성립하므로
+    \(\mathbf{u}\mathbf{u}^\top = I + [\mathbf{u}]_\times^2\)로 두면 \(I\)와 \([\mathbf{u}]_\times\)만으로 정리된다.
+  </p>
+
+  $$
+  R(\mathbf{u},\theta) \;=\; I + \sin\theta\,[\mathbf{u}]_\times + (1-\cos\theta)\,[\mathbf{u}]_\times^2
+  $$
 
   <p>
-    출발점은 행렬 지수함수의 정의, 즉 무한급수다.
+    <strong>앞의 벡터 식과 같은 식</strong>이고, 담는 그릇만 바뀌었다.
+    <strong>벡터 하나만 돌릴 때는 위쪽 형태가 싸고, 점을 여러 개 돌릴 때는 이 행렬을 한 번 만들어 두는 편이 싸다.</strong>
+  </p>
+
+  <h3>왜 이것을 「지수함수」라고 부르나</h3>
+
+  <p>
+    라이브러리와 논문에서는 이 변환을 <strong>\(\mathrm{Exp}\)</strong>라고 쓴다.
+    방금 만든 것은 삼각함수 두 개짜리 행렬인데 <strong>왜 지수함수라는 이름이 붙었나?</strong>
+    <strong>행렬 지수함수를 실제로 계산해 보면 위 식이 그대로 나오기 때문</strong>이다.
+    행렬 지수함수는 스칼라의 \(e^x\)와 같은 무한급수로 정의된다.
   </p>
 
   $$
@@ -538,48 +558,53 @@
 
   <p>
     무한급수라 계산할 수 없어 보이는데, <strong>반대칭 행렬에는 특별한 성질이 하나 있다.</strong>
-    단위벡터 \(\mathbf{u}\)에 대해 이렇다.
+    길이 1인 \(\mathbf{u}\)에 대해 <strong>세제곱이 자기 자신으로 돌아온다.</strong>
   </p>
 
   $$
   [\mathbf{u}]_\times^3 = -[\mathbf{u}]_\times
+  \qquad\text{(측정 오차 } 4.2\times10^{-17}\text{)}
   $$
 
   <p>
-    (실제로 재 보면 \(\lVert [\mathbf{a}]_\times^3 + \lVert\mathbf{a}\rVert^2[\mathbf{a}]_\times \rVert = 4.2\times10^{-17}\)이다.)
-    세제곱이 자기 자신으로 돌아오므로 <strong>급수에 나오는 행렬은 \([\mathbf{u}]_\times\)와 \([\mathbf{u}]_\times^2\) 둘뿐</strong>이다.
-    \(\boldsymbol\phi = \theta\mathbf{u}\)로 두고 항을 모으면 홀수 항이 \(\sin\), 짝수 항이 \(1-\cos\)로 합쳐진다.
+    그러면 <strong>급수에 나오는 행렬은 \([\mathbf{u}]_\times\)와 \([\mathbf{u}]_\times^2\) 둘뿐</strong>이다 —
+    그 위는 전부 이 둘로 되돌아온다. \(\boldsymbol\phi = \theta\mathbf{u}\)로 두고 항을 모으면
+    홀수 항이 \(\sin\theta\)로, 짝수 항이 \(1-\cos\theta\)로 합쳐지고,
+    <strong>앞 절에서 그림으로 얻은 그 행렬이 그대로 나온다.</strong>
   </p>
 
   $$
-  \mathrm{Exp}(\boldsymbol\phi) = I + \sin\theta\,[\mathbf{u}]_\times + (1-\cos\theta)\,[\mathbf{u}]_\times^2
+  \exp([\boldsymbol\phi]_\times) = I + \sin\theta\,[\mathbf{u}]_\times + (1-\cos\theta)\,[\mathbf{u}]_\times^2
+  \;=\; R(\mathbf{u},\theta)
   $$
 
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 여기서 붙는 이름 셋</p>
+    <dl>
+      <dt>\(\mathfrak{so}(3)\) — 소문자 고딕체</dt>
+      <dd><strong>반대칭 행렬 전부의 집합</strong>이다. 벡터 셋과 1:1로 대응하므로
+        실전에서는 <strong>그냥 \(\mathbb{R}^3\)처럼 쓴다.</strong>
+        왜 이 집합에 \(\mathbf{SO}(3)\)의 소문자 이름이 붙었는지는 ⑦절에서 답한다.</dd>
+
+      <dt>\(\mathrm{Exp}\) · \(\mathrm{Log}\) — 대문자로 쓴 것</dt>
+      <dd>\(\mathbb{R}^3 \to \mathbf{SO}(3)\)와 그 역이다.
+        행렬을 받는 \(\exp([\boldsymbol\phi]_\times)\)와 구별하려고
+        <strong>벡터를 바로 받는 쪽을 대문자로</strong> 쓴다 —
+        \(\mathrm{Exp}(\boldsymbol\phi) = \exp([\boldsymbol\phi]_\times)\)이고,
+        <strong>이 강의에서는 대문자 쪽만 쓴다.</strong></dd>
+    </dl>
+    <p class="later">지수함수라는 이름이 <strong>비유가 아니라는 것</strong>은 ⑦절에서 한 번 더 확인한다.
+      스칼라에서 \(e^{at}\)가 \(\dot{x} = ax\)의 해이듯,
+      \(\mathrm{Exp}(\boldsymbol\omega t)\)가 <strong>각속도로 자세를 굴리는 미분방정식의 해</strong>다.</p>
+  </div>
+
   <div class="interp">
-    <strong>해석:</strong> <strong>무한급수가 닫힌 형태로 접히는 것</strong>이 로드리게스 공식의 전부다.
+    <strong>해석:</strong> <strong>무한급수가 닫힌 형태로 접히는 것</strong>이 로드리게스 공식의 다른 얼굴이다.
     그리고 접히는 이유는 \([\mathbf{u}]_\times^3 = -[\mathbf{u}]_\times\) 한 줄이다.
     이 성질은 나중에 \(J_r\)(⑩절)과 사전적분(12회)에서도 같은 방식으로 다시 쓰인다 —
     <strong>\([\cdot]_\times\)가 들어간 급수는 대체로 닫힌다.</strong>
+    그래서 <strong>「급수가 나왔다」고 겁먹지 않아도 되는 자리</strong>가 이 강의에 여러 번 나온다.
   </div>
-
-  <h3>벡터를 돌리는 법 — 행렬을 만들지 않고도 된다</h3>
-
-  <p>
-    위 식을 \(\mathbf{v}\)에 직접 적용하면 <strong>행렬을 만들지 않고</strong> 벡터를 돌릴 수 있다.
-    로드리게스 공식의 벡터 형태다.
-  </p>
-
-  $$
-  \mathbf{v}' = \mathbf{v}\cos\theta
-  + (\mathbf{u}\times\mathbf{v})\sin\theta
-  + \mathbf{u}(\mathbf{u}\cdot\mathbf{v})(1-\cos\theta)
-  $$
-
-  <p>
-    세 항이 각각 뜻이 있다. <strong>\(\mathbf{v}\)를 축에 <em>수직인</em> 성분과 <em>나란한</em> 성분으로 나누면</strong>,
-    나란한 성분은 안 돌고(셋째 항) 수직인 성분만 평면 안에서 도는 것(첫째·둘째 항)이다.
-    <strong>회전의 정의를 그대로 쓴 식</strong>이다.
-  </p>
 
   <h3>회전행렬 → 축-각</h3>
 
@@ -781,12 +806,26 @@ q 와 −q 가 같은 회전인가      = 0.000e+00      ← 이중 덮개</pre>
     </p>
   </div>
 
-  <h3>보간 — SLERP</h3>
+  <h3>보간 — 두 자세 사이를 잇는다 (SLERP)</h3>
 
   <p>
-    두 자세 사이를 매끄럽게 잇는 일이 자주 생긴다 —
-    <strong>영상 시각과 IMU 시각 사이의 자세를 알아야 할 때</strong>가 대표적이다(12회).
-    가장 단순한 방법은 두 쿼터니언을 선형으로 섞고 정규화하는 것(LERP)인데, <strong>등속이 아니다.</strong>
+    두 자세 <strong>사이</strong>의 자세가 필요한 일이 자주 생긴다. 대표적인 자리가 12회다 —
+    카메라가 영상을 찍은 시각과 IMU가 값을 낸 시각이 어긋나 있어서,
+    <strong>그 사이 어느 순간의 자세를 앞뒤 두 자세로부터 만들어 내야</strong> 한다.
+  </p>
+
+  <p>
+    <strong>무엇을 만들려는 것인지부터 정한다.</strong>
+    자세 \(q_1\)과 \(q_2\)가 있고, <strong>0에서 1까지 움직이는 변수 \(t\)</strong>를 하나 둔다.
+    \(t=0\)이면 \(q_1\), \(t=1\)이면 \(q_2\), 그 사이면 두 자세를 이은 어딘가다.
+    여기서 원하는 성질이 하나 있다 — <strong>\(t\)를 일정하게 옮기면 자세도 일정하게 돌아야 한다.</strong>
+    \(t\)를 0.1씩 옮길 때마다 같은 각도씩 돌아야 <strong>그 값으로 잰 각속도가 맞는 값이 된다.</strong>
+  </p>
+
+  <p>
+    가장 단순한 방법은 두 쿼터니언을 <strong>선형으로 섞고 정규화하는 것</strong>이다 — <strong>LERP</strong>라고 한다.
+    잇기는 하는데 <strong>등속이 아니다.</strong> 등속으로 잇는 것이 <strong>SLERP</strong>이고,
+    이름은 <strong>구면 위에서 선형으로 간다</strong>는 뜻이다(spherical linear interpolation).
   </p>
 
   $$
@@ -794,18 +833,32 @@ q 와 −q 가 같은 회전인가      = 0.000e+00      ← 이중 덮개</pre>
   \qquad \cos\Omega = q_1 \cdot q_2
   $$
 
+  <p>
+    \(\Omega\)는 <strong>두 쿼터니언 사이의 각</strong>이다. 반각 때문에
+    <strong>실제 두 자세 사이 각의 절반</strong>이 된다 — 자세가 90° 떨어져 있으면 \(\Omega = 45°\)다.
+  </p>
+
+  <p>
+    실제로 등속인지 재 봤다. <strong>90° 떨어진 두 자세</strong>를 놓고 \(t\)를 0에서 1까지 옮긴다.
+    \(t\)가 1만큼 가는 동안 90°를 나눠 가야 하니, <strong>등속이라면 어디서나 「단위 \(t\)당 90°」</strong>여야 한다.
+    아래 그림 오른쪽의 <strong>세로축이 그 값</strong>이다 — 그 지점에서 \(t\)를 조금 밀었을 때
+    자세가 얼마나 도는지를 <strong>단위 \(t\)당 몇 도</strong>로 환산한 것이다.
+  </p>
+
   <figure>
     <img src="assets/img/03_slerp_lerp.png"
-         alt="보간 변수 t에 따른 각속도 그래프. SLERP는 90도로 평평한 직선이고 LERP는 가운데가 볼록한 곡선으로 81.1도에서 94.9도 사이를 오간다">
-    <figcaption>90° 떨어진 두 자세를 이었다. <strong>SLERP는 어디서나 90°/단위</strong>로 일정하고,
-      LERP는 <strong>81.1°에서 94.9°까지</strong> 오간다 — 가운데서 빨라진다.</figcaption>
+         alt="왼쪽은 90도 떨어진 두 자세를 화살표 두 개와 호로 그린 상황도. 오른쪽은 보간 변수 t에 따른 속도 그래프로, SLERP는 90도에서 평평한 직선이고 LERP는 가운데가 볼록해 81.1도에서 94.9도 사이를 오간다">
+    <figcaption>왼쪽이 상황이고 오른쪽이 결과다. <strong>SLERP는 어디서나 90°/단위로 평평하다</strong> — 등속이다.
+      <strong>LERP는 처음과 끝에서 느리고(81.1°) 가운데서 빠르다(94.9°).</strong>
+      \(t\)를 똑같이 옮겨도 실제로 도는 양이 다르다는 뜻이다.</figcaption>
   </figure>
 
   <div class="interp">
-    <strong>해석:</strong> 최대/최소 비가 1.17이다. <strong>17 %</strong>다.
-    두 자세가 가까우면(연속한 IMU 샘플처럼) 차이가 거의 없어서 LERP를 써도 된다.
-    <strong>먼 두 자세를 이을 때만</strong> SLERP가 필요하고,
-    그때 LERP를 쓰면 <strong>속도가 일정하지 않아 보간한 값으로 잰 각속도가 틀린다.</strong>
+    <strong>해석:</strong> 최대와 최소의 비가 <strong>1.17</strong>, 즉 <strong>17 %</strong>다.
+    두 자세가 가까우면(연속한 IMU 샘플처럼 몇 도 안 떨어져 있으면) 이 차이가 거의 없어져서
+    <strong>LERP를 써도 된다</strong> — 실제로 그렇게 짠 코드가 많다.
+    <strong>먼 두 자세를 이을 때만</strong> SLERP가 필요하고, 그때 LERP를 쓰면
+    <strong>보간한 자세로 잰 각속도가 실제와 17 %까지 어긋난다.</strong>
     <strong>두 자세가 얼마나 떨어져 있는지를 보고 고른다</strong> — 이것도 사람이 하는 판단이다.
   </div>
 
@@ -834,7 +887,33 @@ q 와 −q 가 같은 회전인가      = 0.000e+00      ← 이중 덮개</pre>
     </p>
   </div>
 
-  <h3>Hamilton과 JPL — 논문마다 다르다</h3>
+  <h3>Hamilton과 JPL — 쿼터니언에는 약속이 두 가지 있다</h3>
+
+  <p>
+    여기까지 읽고 논문을 펼치면 <strong>부호가 안 맞는 식</strong>을 만나게 된다.
+    쿼터니언에는 <strong>서로 다른 두 가지 약속</strong>이 굳어 있는데,
+    <strong>논문이 어느 쪽인지 밝히지 않는 경우가 많기</strong> 때문이다.
+    둘이 각각 무엇인지부터 본다.
+  </p>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 Hamilton과 JPL이 무엇을 가리키는 이름인가</p>
+    <dl>
+      <dt><strong>Hamilton</strong> — 사람 이름</dt>
+      <dd>쿼터니언을 처음 만든 아일랜드 수학자 <strong>William Rowan Hamilton</strong>(1805~1865)이다.
+        1843년에 \(\mathbf{i}^2 = \mathbf{j}^2 = \mathbf{k}^2 = \mathbf{i}\mathbf{j}\mathbf{k} = -1\)을 정하면서
+        <strong>\(\mathbf{i}\mathbf{j} = \mathbf{k}\)</strong>로 두었다.
+        <strong>⑤절에서 지금까지 쓴 식이 전부 이 약속</strong>이다.</dd>
+
+      <dt><strong>JPL</strong> — 기관 이름</dt>
+      <dd>NASA 제트추진연구소(<strong>J</strong>et <strong>P</strong>ropulsion <strong>L</strong>aboratory)에서 굳은
+        <strong>다른 약속</strong>이다. 1999년의 JPL 내부 기술문서가 출처로 인용되고,
+        <strong>\(\mathbf{i}\mathbf{j} = -\mathbf{k}\)</strong>로 둔다.
+        <strong>항공우주 쪽과 MSCKF 계열 논문</strong>이 대체로 이쪽이다.</dd>
+    </dl>
+    <p class="later">약속 하나(\(\mathbf{i}\mathbf{j}\)의 부호)가 바뀌면 <strong>곱셈이 통째로 바뀌고,</strong>
+      그래서 합성 순서까지 뒤집힌다. 아래 표가 그 결과다.</p>
+  </div>
 
   <div class="tablewrap">
   <table>
@@ -846,10 +925,15 @@ q 와 −q 가 같은 회전인가      = 0.000e+00      ← 이중 덮개</pre>
   </div>
 
   <p>
-    <strong>어느 쪽이 맞는 것이 아니라 약속이 다른 것이다.</strong> 문제는 섞을 때 생기고,
-    섞으면 <strong>회전이 반대 방향으로 합성된다.</strong> 궤적이 이상해지는데 발산하지는 않는다.
+    <strong>어느 쪽이 맞는 것이 아니라 약속이 다른 것이다.</strong> 문제는 섞을 때 생긴다.
+    한쪽 관례로 쓴 식에 다른 쪽 관례의 쿼터니언을 넣으면 <strong>회전이 반대 방향으로 합성되는데,</strong>
+    <strong>발산하지는 않고 궤적만 조금 이상해진다.</strong> 그래서 오래 안 들킨다.
     <strong>논문을 읽을 때 어느 쪽인지 먼저 확인하는 것</strong>이 대학원에서 오래 도움이 된다.
   </p>
+
+  <p class="src">두 관례를 나란히 놓고 식을 전부 대조해 둔 문서가 있다 —
+    Solà, <em>Quaternion kinematics for the error-state Kalman filter</em> (2017)의 부록이다.
+    <strong>부호가 안 맞을 때 펼쳐 보는 표</strong>가 거기 있다.</p>
 
   <p>
     그리고 관례와 <strong>별개로</strong> 저장 순서 문제가 하나 더 있다. 이 프로젝트에서 만나는 자리가 넷이다.
@@ -1336,8 +1420,10 @@ q 와 −q 가 같은 회전인가      = 0.000e+00      ← 이중 덮개</pre>
 
   $$
   \big[[\mathbf{a}]_\times,\ [\mathbf{b}]_\times\big] = [\mathbf{a}\times\mathbf{b}]_\times
-  \qquad\text{(측정 오차 } 0.000\times10^{0}\text{)}
   $$
+
+  <p class="readme-first">\(\mathbf{a} = (0.3, -0.2, 0.5)\), \(\mathbf{b} = (-0.1, 0.4, 0.2)\)로
+    양변을 실제로 계산해 빼 보면 <strong>차이가 정확히 0</strong>이다 — 근사가 아니라 항등식이다.</p>
 
   <p>
     정의 세 줄이 실제로 맞는지도 외적에서 바로 보인다 —
@@ -1628,7 +1714,13 @@ for (int i = 0; i &lt; N; ++i) {
     계수만 다르다. 같은 이유로 급수가 닫힌 것이다.
   </p>
 
-  <p>근사가 얼마나 좋은지 재 보면 이렇다.</p>
+  <p>
+    <strong>「1차 근사」라고 했으니 \(\delta\boldsymbol\varphi\)가 작을수록 잘 맞아야 한다.</strong>
+    정말 그런지 재 봤다. \(\boldsymbol\phi\)를 하나 고정해 두고
+    <strong>\(\delta\boldsymbol\varphi\)의 크기를 10분의 1씩 줄여 가며</strong>
+    위 근사식과 실제 \(\mathrm{Log}(\mathrm{Exp}(\boldsymbol\phi)\mathrm{Exp}(\delta\boldsymbol\varphi))\)의 차이를 잰 것이다
+    (\(\lVert\delta\boldsymbol\varphi\rVert\)의 단위는 라디안이다).
+  </p>
 
   <div class="tablewrap">
   <table class="summary-table">
@@ -1892,7 +1984,7 @@ for (int i = 0; i &lt; N; ++i) {
       <tr><td>「축-각을 더하면 회전이 합성된다」</td>
         <td>축이 나란할 때만 그렇다. 일반적으로는 <strong>BCH 보정이 붙는다</strong>(⑩절)</td></tr>
       <tr><td>「짐벌락은 정확히 90°에서만 생긴다」</td>
-        <td>85° 근처부터 이미 못 쓸 값이다. <strong>점이 아니라 구역</strong>이다(③절 그래프)</td></tr>
+        <td>85° 근처부터 이미 못 쓸 값이다. <strong>점이 아니라 구역</strong>이다(③절)</td></tr>
     </table>
     </div>
   </details>
