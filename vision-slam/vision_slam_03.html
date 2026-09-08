@@ -910,27 +910,55 @@ q 와 −q 가 같은 회전인가      = 0.000e+00      ← 이중 덮개</pre>
   </p>
 
   <p>
-    실제로 등속인지 재 봤다. <strong>90° 떨어진 두 자세</strong>를 놓고 \(t\)를 0에서 1까지 옮긴다.
-    \(t\)가 1만큼 가는 동안 90°를 나눠 가야 하니, <strong>등속이라면 어디서나 「단위 \(t\)당 90°」</strong>여야 한다.
-    아래 그림 오른쪽의 <strong>세로축이 그 값</strong>이다 — 그 지점에서 \(t\)를 조금 밀었을 때
-    자세가 얼마나 도는지를 <strong>단위 \(t\)당 몇 도</strong>로 환산한 것이다.
+    <strong>실제로 등속인지 재 봤다.</strong> 90° 떨어진 두 자세를 놓고 \(t\)를 0에서 1까지 옮기면서,
+    <strong>그때마다 시작 자세에서 실제로 몇 도 돌아가 있는지</strong>를 찍은 것이 아래 그림이다.
+    \(t\)가 1만큼 가는 동안 90°를 나눠 가야 하니,
+    <strong>등속이라면 0에서 90°까지 곧은 직선</strong>이어야 한다.
   </p>
 
   <figure>
     <img src="assets/img/03_slerp_lerp.png"
-         alt="왼쪽은 90도 떨어진 두 자세를 화살표 두 개와 호로 그린 상황도. 오른쪽은 보간 변수 t에 따른 속도 그래프로, SLERP는 90도에서 평평한 직선이고 LERP는 가운데가 볼록해 81.1도에서 94.9도 사이를 오간다">
-    <figcaption>왼쪽이 상황이고 오른쪽이 결과다. <strong>SLERP는 어디서나 90°/단위로 평평하다</strong> — 등속이다.
-      <strong>LERP는 처음과 끝에서 느리고(81.1°) 가운데서 빠르다(94.9°).</strong>
-      \(t\)를 똑같이 옮겨도 실제로 도는 양이 다르다는 뜻이다.</figcaption>
+         alt="왼쪽은 90도 떨어진 두 자세를 화살표 두 개와 호로 그린 상황도. 오른쪽은 보간 변수 t에 따라 시작 자세에서 실제로 돌아간 각을 그린 그래프로, SLERP는 0에서 90도까지 곧은 직선이고 LERP는 그 위에 거의 겹쳐 보인다. 오른쪽 아래 작은 칸에 두 곡선의 차이를 확대해 그렸고 앞쪽 절반에서 마이너스 0.9도, 뒤쪽 절반에서 플러스 0.9도인 S자 곡선이다">
+    <figcaption><strong>SLERP는 직선</strong>이다 — 등속이다.
+      <strong>LERP는 그 직선을 가로지르는 S자 곡선</strong>이고, 앞쪽 절반에서 처지고 뒤쪽 절반에서 앞선다.
+      그런데 <strong>가장 벌어진 곳이 0.92°</strong>라 90°짜리 축에서는 두 선이 겹쳐 보인다 —
+      그래서 <strong>그 차이만 따로 확대한 것이 오른쪽 아래 작은 칸</strong>이다.</figcaption>
   </figure>
 
   <div class="interp">
-    <strong>해석:</strong> 최대와 최소의 비가 <strong>1.17</strong>, 즉 <strong>17 %</strong>다.
-    두 자세가 가까우면(연속한 IMU 샘플처럼 몇 도 안 떨어져 있으면) 이 차이가 거의 없어져서
-    <strong>LERP를 써도 된다</strong> — 실제로 그렇게 짠 코드가 많다.
-    <strong>먼 두 자세를 이을 때만</strong> SLERP가 필요하고, 그때 LERP를 쓰면
-    <strong>보간한 자세로 잰 각속도가 실제와 17 %까지 어긋난다.</strong>
+    <strong>해석:</strong> <strong>자세의 위치로 보면 둘이 거의 같다.</strong>
+    90°를 가는 동안 가장 많이 어긋난 곳이 0.92°다.
+    그런데 <strong>그 작은 어긋남을 미분하면 이야기가 달라진다</strong> —
+    자세가 도는 <strong>속도</strong>로 보면 LERP는 처음과 끝에서 81.1°, 가운데서 94.9°로
+    <strong>최대와 최소의 비가 1.17배(17 %)</strong>다.
+    <strong>보간한 자세를 그대로 쓸 때는 티가 안 나고, 그것으로 각속도를 재는 순간 17 % 틀린다</strong>는 뜻이다.
+    12회에서 하려는 일이 정확히 그것이라 <strong>여기서는 이 차이가 그냥 넘어갈 것이 아니다.</strong>
+  </div>
+
+  <p>
+    <strong>그럼 언제 SLERP를 써야 하나.</strong> 두 자세가 <strong>얼마나 떨어져 있느냐</strong>에 달렸다.
+    떨어진 각을 바꿔 가며 같은 것을 재 보면 이렇다.
+  </p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>두 자세 사이</th><th>LERP가 직선에서 가장 벗어난 양</th><th>속도의 최대/최소</th></tr>
+    <tr><td>30°</td><td>0.03°</td><td>1.02배</td></tr>
+    <tr><td>60°</td><td>0.27°</td><td>1.07배</td></tr>
+    <tr><td><strong>90°</strong> (위 그림)</td><td><strong>0.92°</strong></td><td><strong>1.17배</strong></td></tr>
+    <tr><td>120°</td><td>2.23°</td><td>1.33배</td></tr>
+    <tr><td>150°</td><td>4.51°</td><td>1.59배</td></tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> <strong>가까울수록 빠르게 무해해진다.</strong>
+    30° 떨어진 두 자세를 LERP로 이으면 어긋남이 0.03°이고 속도도 2 %밖에 안 틀린다.
+    <strong>연속한 IMU 샘플처럼 몇 도 안 떨어진 자세들 사이라면 LERP를 써도 된다</strong> —
+    실제로 그렇게 짠 코드가 많고, 나쁜 선택이 아니다.
+    <strong>먼 두 자세를 이을 때만</strong> SLERP가 필요하다.
     <strong>두 자세가 얼마나 떨어져 있는지를 보고 고른다</strong> — 이것도 사람이 하는 판단이다.
+    (재현: <span class="mono">python3 vision-slam/src/rotation_numbers.py</span>)
   </div>
 
   <h3>회전행렬과 오가는 식</h3>
