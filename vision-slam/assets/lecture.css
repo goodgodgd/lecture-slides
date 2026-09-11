@@ -122,6 +122,15 @@ details.story[open] > summary::after { content: " ▾ 접기"; }
 details.story[open] { padding-bottom: 1rem; }
 details.story h4 { color: var(--story); margin-top: 1.2rem; }
 details.story blockquote { border-left: 3px solid var(--story); margin: .8rem 0; padding: .2rem 0 .2rem 1rem; color: var(--fg); font-style: normal; }
+/* ── 접이식 — 필요한 사람만 펼쳐 본다. details.story 와 달리 아이콘이 없다 ── */
+details.fold { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: .3rem 1.15rem; margin: 1.4rem 0; }
+details.fold > summary { cursor: pointer; font-weight: 700; padding: .7rem 0; list-style: none; }
+details.fold > summary::-webkit-details-marker { display: none; }
+details.fold > summary::after { content: " ▸ 펼치기"; font-size: .78rem; font-weight: 400; opacity: .75; }
+details.fold[open] > summary::after { content: " ▾ 접기"; }
+details.fold[open] { padding-bottom: 1rem; }
+details.fold > *:not(summary) { font-size: .95rem; }
+
 .src { font-size: .82rem; color: var(--muted); }
 .src li { margin: .15rem 0; }
 

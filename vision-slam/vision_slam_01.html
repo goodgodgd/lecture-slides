@@ -82,7 +82,7 @@
       高翔, <em>Introduction to Visual SLAM</em> (구현) — 사서 보지 않아도 따라올 수 있게 자료를 씁니다</td></tr>
     <tr><th>데이터</th><td>EuRoC MAV (ETH Zürich). <strong>클라우드 드라이브로 배포합니다.</strong>
       한 시퀀스가 1.15 GB쯤 됩니다</td></tr>
-    <tr><th>개발환경</th><td>도커 이미지 하나를 드립니다 · C++17 · Eigen · OpenCV · Ceres</td></tr>
+    <tr><th>개발환경</th><td>C++17 · Eigen · OpenCV · Sophus · Rerun. <strong>ROS는 쓰지 않습니다</strong> · ⑨절</td></tr>
     <tr><th>평가</th><td>중간고사와 개인 프로젝트로 봅니다. <strong>세부는 학기 중에 안내합니다</strong></td></tr>
     <tr><th>진행</th><td>주 1회 · 100분 · 14회. <strong>최종 발표는 14회가 끝난 뒤 따로 합니다</strong></td></tr>
   </table>
@@ -571,19 +571,38 @@ b_w_RS_S_{x,y,z}, b_a_RS_S_{x,y,z}</pre>
   <div class="tablewrap">
   <table>
     <tr><th>도구</th><th>무엇에 쓰나</th></tr>
-    <tr><td><strong>Rerun</strong></td><td>영상·3차원·시계열을 <strong>하나의 시간축</strong>에 올려 놓고 앞뒤로 돌려 본다. SLAM 디버깅에 가장 잘 맞는다</td></tr>
+    <tr><td><strong>Rerun</strong></td><td>영상·3차원·시계열을 <strong>하나의 시간축</strong>에 올려 놓고 앞뒤로 돌려 본다. SLAM 디버깅에 가장 잘 맞는다. <strong>C++와 파이썬 양쪽에 SDK가 있고 뷰어는 하나</strong>다</td></tr>
     <tr><td><strong>evo</strong></td><td>궤적 오차(ATE·RPE)를 재고 그리는 표준 도구. 평가는 직접 짜지 않는다</td></tr>
     <tr><td>Open3D · CloudCompare</td><td>만든 점 지도를 정답 점군과 겹쳐 놓고 거리 분포를 본다</td></tr>
     <tr><td>matplotlib</td><td>시계열과 히스토그램</td></tr>
   </table>
   </div>
 
+  <h3>그리는 길은 두 개입니다</h3>
+
+  <p>
+    쓰임이 다릅니다. 둘 다 만들어 두고 번갈아 씁니다.
+  </p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th style="width:24%">어디서</th><th>무엇을 읽나</th><th>언제 쓰나</th></tr>
+    <tr><td><strong>C++ (실시간)</strong></td>
+      <td>메모리에 있는 것을 <strong>돌면서 바로</strong> 밀어 넣는다</td>
+      <td><strong>만드는 중에.</strong> 고치고 다시 돌리면 바로 보인다</td></tr>
+    <tr><td><strong>파이썬 (파일)</strong></td>
+      <td>C++가 남긴 궤적 파일·PLY·로그</td>
+      <td><strong>끝난 뒤에.</strong> 평가·회귀·남의 결과를 열어 볼 때</td></tr>
+  </table>
+  </div>
+
   <div class="interp">
     <strong>해석:</strong> 시각화 코드는 <span class="badge b-green">맡긴다</span>입니다. 에이전트가 잘 짜는 영역이고,
     틀려도 결과가 눈에 바로 보여서 위험이 낮다.
-    다만 편한 방법이 하나 있다 — <strong>C++ 쪽은 표준 형식(궤적 파일·PLY·로그)으로 파일만 남기고,
-    그리는 일은 파이썬이 그 파일을 읽어서 하는 것.</strong>
-    빌드가 가벼워지고, 같은 파일이 평가에도 그대로 쓰인다.
+    <strong>다만 파일은 반드시 남긴다.</strong> 같은 파일이 평가에도 회귀 시험에도 그대로 쓰이고,
+    시각화를 꺼도 프로그램이 돌아야 하기 때문이다.
+    그리고 <strong>두 길이 같은 이름과 색을 쓰게 해 두면, 두 그림이 다른 것 자체가 신호</strong>가 된다 —
+    대개 파일로 나갈 때 뭔가를 빠뜨린 것이다.
   </div>
 
   <div class="prompt">
@@ -612,25 +631,36 @@ b_w_RS_S_{x,y,z}, b_a_RS_S_{x,y,z}</pre>
   <h2 id="env">⑨ 환경과 데이터 <span class="badge b-green">맡긴다</span></h2>
 
   <p>
-    <strong>첫 주에 빌드로 시간을 쓰지 않습니다.</strong> 도커 이미지 하나를 드리고,
-    그 안에 필요한 것이 다 들어 있습니다. 무엇이 왜 들어 있는지만 알아 두면 됩니다.
+    <strong>첫 주에 빌드로 시간을 쓰지 않습니다.</strong>
+    아래 목록을 <strong>에이전트에게 주고 설치를 시키세요.</strong> 무엇이 왜 필요한지만 알아 두면 됩니다.
+  </p>
+
+  <p>
+    <strong>ROS는 쓰지 않습니다.</strong> 이 데이터는 rosbag이 아니라 png와 csv이고,
+    영상은 <span class="mono">imread</span>로, 나머지는 한 줄씩 읽으면 됩니다.
+    ROS를 깔고 배우는 데 드는 시간을 이 과목의 내용에 씁니다.
   </p>
 
   <div class="tablewrap">
   <table class="summary-table">
     <tr><th style="width:20%">무엇</th><th>버전</th><th>왜 이것인가</th></tr>
-    <tr><td>Ubuntu</td><td>24.04 (컨테이너)</td><td>아래 라이브러리가 apt로 다 깔린다</td></tr>
+    <tr><td>Ubuntu</td><td>22.04 / 24.04</td>
+      <td>아래 라이브러리가 apt로 다 깔린다. <strong>윈도우만 있으면 WSL</strong>로 하면 된다</td></tr>
     <tr><td><strong>C++</strong></td><td><strong>C++17</strong></td>
       <td><span class="mono">std::optional</span>과 구조적 바인딩까지. 20은 필요 없다</td></tr>
     <tr><td>Eigen</td><td>3.4</td><td>선형대수 전부. 2회부터 쓴다</td></tr>
-    <tr><td><strong>Sophus</strong></td><td>1.24.6</td>
+    <tr><td><strong>Sophus</strong></td><td>1.22.10</td>
       <td><span class="mono">SO3</span>·<span class="mono">SE3</span>와 <span class="mono">exp</span>/<span class="mono">log</span>.
         <strong>3회의 회전 이야기가 전부 이 안에 있다</strong></td></tr>
     <tr><td>OpenCV</td><td>4.x</td><td>영상 I/O, 특징점, 광류, RANSAC. <strong>5.0은 아직 쓰지 않는다</strong></td></tr>
+    <tr><td>yaml-cpp</td><td>배포판 것</td><td>센서 설정 파일을 읽는다. 2회부터</td></tr>
+    <tr><td><strong>Rerun</strong></td><td>0.37</td>
+      <td>시각화. <strong>C++ SDK는 CMake가 받아 쓰므로 따로 설치하지 않는다.</strong>
+        파이썬 쪽은 <span class="mono">pip</span> 한 줄. ⑧절</td></tr>
+    <tr><td>evo</td><td>최신 (파이썬)</td><td>궤적 오차 평가. <span class="mono">pip</span> 한 줄</td></tr>
     <tr><td><strong>Ceres Solver</strong></td><td><strong>2.2.0</strong></td>
-      <td>번들조정과 슬라이딩 윈도우. 9회부터</td></tr>
-    <tr><td>GTSAM</td><td>4.2.2</td><td>팩터그래프. 사전적분 정답 대조용(12회)</td></tr>
-    <tr><td><strong>Rerun</strong> · evo</td><td>최신 (파이썬)</td><td>시각화와 평가. ⑧절</td></tr>
+      <td>번들조정과 슬라이딩 윈도우. <strong>9회에 가서 깔면 됩니다</strong></td></tr>
+    <tr><td>GTSAM</td><td>4.2.2</td><td>팩터그래프. 사전적분 정답 대조용. <strong>12회에 깔면 됩니다</strong></td></tr>
   </table>
   </div>
 
@@ -650,18 +680,19 @@ b_w_RS_S_{x,y,z}, b_a_RS_S_{x,y,z}</pre>
   <div class="tablewrap">
   <table>
     <tr><th style="width:22%">무엇</th><th>크기</th><th>언제 쓰나</th></tr>
-    <tr><td><strong>연습판</strong> (V1_01의 첫 30초)</td><td>약 100 MB</td>
-      <td><strong>1~4회.</strong> 로더와 카메라 모델. 반복이 빨라야 한다</td></tr>
-    <tr><td><strong>V1_01_easy</strong> 전체</td><td>1.15 GB</td><td>5회부터 학기 내내</td></tr>
-    <tr><td>Leica 점군</td><td>111.8 MB</td><td><strong>4회</strong> 오버레이 검증</td></tr>
-    <tr><td>V1_02_medium</td><td>비슷</td><td><strong>최종 평가에서만.</strong> 처음 보는 난이도</td></tr>
+    <tr><td><strong>V1_01_easy</strong> (영상 2912장 · IMU · 정답 · Leica 점군)</td><td><strong>629 MB</strong></td>
+      <td><strong>한 번 받으면 학기 내내 씁니다.</strong> 1회부터 14회까지 이것 하나입니다</td></tr>
+    <tr><td>V1_02_medium</td><td>비슷</td><td><strong>최종 평가에서만.</strong> 처음 보는 난이도라 그때 따로 드립니다</td></tr>
   </table>
   </div>
 
   <p>
     <strong>클라우드 드라이브 주소로 따로 안내합니다.</strong>
     공식 배포처는 묶음 단위(6 GB)라서 그대로 받으면 안 쓰는 것이 대부분입니다.
+    스테레오 두 번째 카메라처럼 <strong>이 과목이 안 쓰는 것은 미리 빼 두었습니다.</strong>
     <strong>수업 전에 미리 받아 두면</strong> 수월합니다.
+    만드는 동안 반복이 느리면 <strong>앞부분만 읽도록 설정에서 프레임 수를 줄이면</strong> 됩니다 —
+    데이터를 따로 받을 필요는 없습니다.
   </p>
 
   <p class="src">
@@ -712,8 +743,7 @@ b_w_RS_S_{x,y,z}, b_a_RS_S_{x,y,z}</pre>
     ② 첫 영상보다 앞선 시각에서 <span class="mono">groundTruth()</span>가
     <span class="mono">nullopt</span>를 주는지 보는 시험.
     <strong>실패하면 어느 프레임에서 몇 개가 나왔는지 함께 찍어 줘.</strong><br><br>
-    <strong>[함정]</strong> 압축을 풀면 <span class="mono">__MACOSX/</span>와
-    <span class="mono">.DS_Store</span>가 섞여 있다. 정답 궤적은 첫 영상보다 <strong>1.040초 늦게</strong> 시작한다.<br><br>
+    <strong>[함정]</strong> 정답 궤적은 첫 영상보다 <strong>1.040초 늦게</strong> 시작한다.<br><br>
     <strong>[남긴다]</strong> 규약에 없어서 <strong>네가 임의로 정한 것</strong>이 있으면 코드 맨 위에 목록으로 적어 줘.
   </div>
 
@@ -758,7 +788,6 @@ b_w_RS_S_{x,y,z}, b_a_RS_S_{x,y,z}</pre>
   <pre>□ 시각을 double 로 바꾼 곳이 정말 하나도 없는가        ← grep 한 번이면 된다
 □ 요구한 시험 두 개가 실제로 있는가, 그리고 <strong>돌려 봤는가</strong>
 □ 실패했을 때 프레임 번호가 찍히는가                    ← 안 찍히면 원인을 못 좁힌다
-□ __MACOSX/ 를 거른 코드가 어디 있는가
 □ 임의로 정한 것 목록이 맨 위에 있는가, 그중 <strong>내가 동의하지 않는 것</strong>이 있는가</pre>
 
   <h3>틀렸을 때 하는 말은 따로 있습니다 <span class="badge b-stop">권하지 않는다</span></h3>
