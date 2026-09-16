@@ -985,6 +985,26 @@ CMake Error at CMakeLists.txt:2 (project):
   </table>
   </div>
 
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 깔았는데 <code>g++</code>이 없다면 — 대개 설치가 안 된 것이다</div>
+    <p>
+      <code>build-essential</code>은 <code>g++</code>을 <strong>반드시 함께 끌어오는</strong> 묶음이라, 깔렸다면 <code>g++</code>이 없을 수 없다.
+      그런데 깔았다고 생각했는데 없는 일이 생긴다. 가장 흔한 원인은 <strong>첫 줄 <code>sudo apt update</code>를 건너뛴 것</strong>이다.
+      막 설치한 우분투는 패키지 목록이 비어 있어서, 갱신 없이 설치하면 이렇게 끝난다.
+    </p>
+    <pre><code>$ sudo apt install -y build-essential cmake gdb clangd
+Reading state information...
+E: Unable to locate package build-essential</code></pre>
+    <p>
+      <code>E:</code>로 시작하는 줄이 오류다. 이 줄이 지나갔으면 <strong>아무것도 깔리지 않은 것</strong>이다.
+      <code>sudo apt update</code>를 치고 설치 줄을 다시 친다.
+      깔렸는지는 우분투에 직접 물어보면 확실하다 — 두 줄 다 <code>ii</code>로 시작해야 한다.
+    </p>
+    <pre><code>$ dpkg -l g++ build-essential | tail -2
+ii  build-essential 12.10ubuntu1      amd64        Informational list of build-essential packages
+ii  g++             4:13.2.0-7ubuntu1 amd64        GNU C++ compiler</code></pre>
+  </div>
+
   <p>손으로 치기 싫으면 맡겨도 된다. 단, <code>sudo</code>가 붙는 줄은 보고 나서 허락한다.</p>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
