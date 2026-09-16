@@ -31,10 +31,12 @@
   <a href="#summary">한 장 요약</a>
   <a href="#speed">① 168배</a>
   <a href="#budget">② 200밀리초 예산</a>
-  <a href="#python">③ 파이썬을 버리는 게 아니다</a>
+  <a href="#fields">③ 로봇 밖의 예산들</a>
+  <a href="#python">④ 파이썬을 버리는 게 아니다</a>
   <a href="#story">📖 박사논문에서 나온 언어</a>
-  <a href="#ai">④ AI는 둔한 코드를 준다</a>
-  <a href="#map">⑤ 2부 아홉 회차</a>
+  <a href="#newlang">⑤ Go와 Rust는 무엇을 고치려 했나</a>
+  <a href="#ai">⑥ AI는 둔한 코드를 준다</a>
+  <a href="#map">⑦ 2부 아홉 회차</a>
   <a href="#lab">🧪 실습 — 내 노트북에서</a>
   <a href="#prompts">🤖 프롬프트 모음</a>
   <a href="#check">✅ 점검</a>
@@ -50,6 +52,8 @@
     <span class="lab">오늘 답할 질문</span>
     <ol>
       <li>파이썬이 훨씬 쉬운데 로봇은 왜 아직도 C++을 쓰나?</li>
+      <li>로봇을 안 하게 되면 C++은 필요 없어지나? — 게임·금융·자동차·AI 프레임워크는 무엇으로 짜여 있나</li>
+      <li>Go와 Rust 같은 새 언어가 나왔는데 C++은 왜 아직 남아 있나?</li>
       <li>AI가 코드를 짜 주는데 C++을 왜 알아야 하나?</li>
       <li>C++은 왜 이렇게 복잡한가?</li>
       <li>앞으로 아홉 번의 C++ 수업은 무엇을 하나?</li>
@@ -66,15 +70,22 @@
     자료에 나오는 숫자는 전부 그렇게 얻은 것이다.
   </p>
   <p>
-    두 번째 질문이 더 중요하다. AI가 코드를 짜 주는 시대에 C++을 아는 것이 무슨 소용인가.
+    그런데 「로봇이 C++을 쓴다」만으로는 답이 반쪽이다.
+    이 과를 나온 사람이 전부 로봇을 만들지는 않는다.
+    반도체·자동차·통신 장비·방산·게임·금융 IT — 어디로 가든 <strong>거기에 C++이 있는지, 있다면 왜 있는지</strong>를 같이 본다.
+    그리고 C++을 대신하겠다고 나온 언어들 — Go와 Rust — 가 <strong>C++의 무엇을 고치려 했는지</strong>도 본다.
+    그것을 알아야 「그래도 C++인가」를 스스로 판단할 수 있다.
+  </p>
+  <p>
+    마지막 질문이 가장 중요하다. AI가 코드를 짜 주는 시대에 C++을 아는 것이 무슨 소용인가.
     실제 회사의 C++ 코드 1천만 줄을 1년간 추적한 연구가 있다.
     거기서 나온 결론 한 줄이 이 강의 2부 전체의 뼈대다 —
     <strong>AI는 틀린 코드를 더 많이 만들지 않았다. 문제는 맞지만 둔한 코드였다.</strong>
   </p>
 
   <!-- ── 한 장 요약표 ── -->
-  <h2 id="summary">한 장 요약 — 오늘 남는 것은 숫자 네 개다</h2>
-  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 왼쪽 숫자 네 개</strong>만 외우면 오늘 수업은 남는다. 나머지는 그 숫자를 설명하는 이야기다.</p>
+  <h2 id="summary">한 장 요약 — 오늘 남는 것은 숫자 다섯 개다</h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 왼쪽 숫자 다섯 개</strong>만 외우면 오늘 수업은 남는다. 나머지는 그 숫자를 설명하는 이야기다.</p>
   <div class="tablewrap">
   <table class="summary-table">
     <tr><th>숫자</th><th>무엇을 잰 것인가</th><th>그래서 무엇이 달라지나</th></tr>
@@ -86,7 +97,8 @@
     <tr>
       <td><strong>200 ms</strong></td>
       <td>라이다가 초당 5번 들어올 때 한 스캔에 쓸 수 있는 시간</td>
-      <td>내가 짠 코드는 이 안에 끝나야 한다. 넘으면 밀린다</td>
+      <td>내가 짠 코드는 이 안에 끝나야 한다. 넘으면 밀린다.
+          게임은 16.7 ms, 초단타 매매는 수 µs — <strong>예산이 있는 분야마다 C++이 있다</strong></td>
     </tr>
     <tr>
       <td><strong>1.39 / 2 / 0.4배</strong></td>
@@ -98,12 +110,19 @@
       <td>AI 코드의 정확성·안전성 문제 발생률 ÷ 사람 코드의 발생률</td>
       <td><strong>AI는 틀린 코드를 더 많이 만들지 않는다.</strong> 그러니 "버그 잡기"는 오늘의 논지가 아니다</td>
     </tr>
+    <tr>
+      <td><strong>약 70%</strong></td>
+      <td>마이크로소프트(2019)와 구글 크롬 팀(2020)이 각자 센, 심각한 보안 결함 중 <strong>메모리를 잘못 다뤄서</strong> 생긴 것의 비율</td>
+      <td>Rust가 나온 이유다. 그리고 C++ 안에서 같은 문제를 다루는 10회·12회가 있는 이유이기도 하다</td>
+    </tr>
   </table>
   </div>
   <div class="interp">
-    <strong>해석:</strong> 첫 줄과 마지막 줄을 같이 읽어야 오늘의 논지가 나온다.
+    <strong>해석:</strong> 첫 줄과 넷째 줄을 같이 읽어야 오늘의 논지가 나온다.
     C++이 필요한 이유는 <strong>속도</strong>고, C++을 <em>사람이</em> 알아야 하는 이유는 <strong>AI가 속도를 놓친다</strong>는 것이다.
     두 이유는 다른 것이다. 앞의 것만 있으면 "AI에게 시키면 되지 않나"로 끝난다.
+    마지막 줄은 C++의 <strong>비용</strong>이다. 그 비용을 없애려고 나온 언어가 Rust이고,
+    그것을 알면 C++이 어디에 남고 어디에서 물러나는지가 보인다.
   </div>
 
   <!-- ── 📐 이론 블록 ① ── -->
@@ -381,8 +400,125 @@ $ python3 scan_filter.py</code></pre>
     이 계산이 한 번에 얼마나 걸리는지 <code>std::chrono</code>로 재는 코드를 붙여 줘. 결과를 밀리초로 찍고, 재는 구간이 어디부터 어디까지인지 주석으로 표시해 줘.
   </div>
 
-  <!-- ── ③ ── -->
-  <h2 id="python">③ 그래서 파이썬을 쓰지 말라는 결론이 아니다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+  <!-- ── ③ 로봇 밖의 예산들 ── -->
+  <h2 id="fields">③ 이 예산은 로봇에만 있는 것이 아니다 — C++이 쓰이는 자리 <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <h3>무엇을 알고 싶은 건가</h3>
+  <p>
+    여기까지는 「로봇에는 200 밀리초 예산이 있고, 그래서 C++이다」였다.
+    그러면 로봇을 안 하게 되면 C++은 필요 없어지나?
+    이 과를 나온 사람이 가는 자리는 여럿이다 — 반도체, 자동차, 통신 장비, 방산, 가전, 게임, 금융 IT, 그리고 AI.
+    <strong>그 자리들에도 C++이 있는지, 있다면 왜 있는지</strong>를 알아야 오늘 배우는 것이 로봇 하나에 묶이지 않는다.
+  </p>
+
+  <h3>「C++은 로봇과 게임의 언어」로는 왜 부족한가</h3>
+  <p>
+    흔히 그렇게 말한다. 틀린 말은 아닌데 <strong>이유가 빠져 있다.</strong>
+    이유를 모르면 새 분야를 만났을 때 거기서 C++이 필요한지 판단할 수 없다.
+    이유는 앞 절에 이미 나왔다 — <strong>예산이다.</strong> 200 밀리초는 라이다가 준 예산이었다.
+    다른 분야에는 다른 것이 예산을 준다. 그것이 무엇인지부터 세운다.
+  </p>
+
+  <h3>분야마다 예산을 주는 것이 있다</h3>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>둘째·셋째 열</strong>이다. 예산을 주는 것이 무엇이고 얼마인지가 읽히면 넷째 열은 따라온다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>분야</th><th>예산을 주는 것</th><th>예산</th><th>그 안에 끝내야 하는 일</th><th>C++로 쓰인 대표 소프트웨어</th></tr>
+    <tr><td><strong>로봇</strong> (오늘)</td><td>라이다 5 Hz</td><td><strong>200 ms</strong></td><td>값 걸러 콘 찾고 바퀴에 명령</td><td>ROS 2 · Nav2 · OpenCV · PCL</td></tr>
+    <tr><td><strong>게임</strong></td><td>화면 갱신 60 Hz</td><td><strong>16.7 ms</strong></td><td>물리 계산·그림 그리기·적 캐릭터 판단을 전부</td><td>언리얼 엔진 · 유니티 엔진 본체</td></tr>
+    <tr><td><strong>자동차</strong></td><td>제어 주기</td><td><strong>수 ms</strong></td><td>센서 읽고 조향·제동 명령</td><td>AUTOSAR Adaptive(C++14 기준) · Autoware</td></tr>
+    <tr><td><strong>통신 장비</strong></td><td>5G 무선 프레임</td><td><strong>1 ms 이하</strong></td><td>단말 수백 대의 패킷을 시간표에 맞춰 배정</td><td>기지국 소프트웨어(C/C++)</td></tr>
+    <tr><td><strong>금융</strong> (초단타 매매)</td><td>시세 한 건</td><td><strong>수 µs</strong></td><td>가격 보고 주문 내기 — 경쟁자보다 먼저</td><td>거래 회사의 자체 시스템 · 거래소 체결 엔진</td></tr>
+    <tr><td><strong>가전·임베디드</strong></td><td>배터리와 메모리</td><td><strong>시간이 아니라 자원</strong></td><td>메모리 수 MB, 전력 수 mW 안에서 돌기</td><td>가전·계측기 펌웨어(C/C++)</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 예산의 크기는 만 배 넘게 다르다 — 200 ms에서 수 µs까지.
+    <strong>그런데 예산이 있다는 점은 같다.</strong> 예산이 있으면 "잘 도나"가 아니라 "얼마나 걸리나"를 물어야 하고,
+    그 질문에 답이 되는 언어가 C++(과 C)이다. 게임 회사가 C++을 쓰는 이유와 이 과목이 C++을 쓰는 이유는 같은 이유다.
+    마지막 줄은 예산이 시간이 아니라 메모리와 전력이다. 그래도 답은 같다 —
+    <strong>자원을 딱 필요한 만큼만 쓰는 것</strong>이 프로그래머 손에 달린 언어여야 한다.
+  </div>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 표에 처음 나오는 이름</p>
+    <dl>
+      <dt>ms · µs</dt>
+      <dd>밀리초(1/1,000초)와 마이크로초(1/1,000,000초). 200 ms는 200,000 µs다.
+          초단타 매매의 예산은 로봇 예산의 <strong>10만분의 1</strong>쯤이다.</dd>
+      <dt>언리얼 엔진(Unreal Engine) · 유니티(Unity)</dt>
+      <dd>게임을 만들 때 바닥이 되는 소프트웨어(게임 엔진) 둘이다.
+          언리얼은 게임 코드도 C++로 쓰고, 유니티는 게임 코드는 C#으로 쓰지만 <strong>엔진 본체는 C++</strong>이다.
+          국내 큰 게임 회사들도 대개 이 둘 중 하나를 쓰거나 C++로 자체 엔진을 만든다.</dd>
+      <dt>AUTOSAR</dt>
+      <dd>자동차 회사와 부품 회사들이 모여 만든 <strong>차량용 소프트웨어 표준</strong>이다(기관이 아니라 표준의 이름이다).
+          자율주행처럼 계산이 많은 쪽 표준(Adaptive)은 C++14를 기준 언어로 정해 두었다.</dd>
+      <dt>Autoware · Nav2 · PCL</dt>
+      <dd>공개 소프트웨어들이다. Autoware는 자율주행 전체를, Nav2는 로봇 길찾기를, PCL은 라이다 점 처리를 맡는다.
+          셋 다 C++이고 앞의 둘은 ROS 2 위에서 돈다.</dd>
+      <dt>초단타 매매(HFT, High-Frequency Trading)</dt>
+      <dd>컴퓨터가 사람 대신 초당 수천 번 주문을 내는 거래 방식이다.
+          시세를 받아 주문을 내기까지가 마이크로초 단위라 <strong>C++ 개발자를 가장 많이 뽑는 업종 중 하나</strong>다.</dd>
+    </dl>
+  </div>
+
+  <h3>예산이 없는데도 C++인 자리가 있다 — 남이 그 위에 올라탈 때</h3>
+  <p>
+    표에 없는 종류가 하나 더 있다. 시간 예산이 뚜렷하지 않은데도 C++로 쓰인 것들이다.
+    <strong>"파이썬으로 딥러닝을 한다"는 문장의 안쪽</strong>이 그렇다.
+  </p>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>왼쪽 열은 여러분이 매일 쓰는 것</strong>이고 오른쪽 열은 그 안쪽이다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>겉에서 쓰는 것</th><th>그 안쪽은 무엇으로 짜여 있나</th></tr>
+    <tr><td>파이썬 (<code>python3</code> 그 자체)</td><td>파이썬을 실행하는 프로그램(CPython) — <strong>C</strong></td></tr>
+    <tr><td><code>numpy</code>로 행렬 곱하기</td><td>계산 부분 — C, 그 아래 수학 라이브러리 — C·포트란</td></tr>
+    <tr><td>PyTorch · TensorFlow로 모델 학습</td><td>본체(텐서 연산·자동 미분) — <strong>C++</strong>, GPU 커널 — CUDA(엔비디아 GPU용 C++ 확장)</td></tr>
+    <tr><td>크롬으로 웹 보기, 자바스크립트 실행</td><td>브라우저 본체와 자바스크립트 엔진(V8) — <strong>C++</strong></td></tr>
+    <tr><td>MySQL · MongoDB에 데이터 넣기</td><td>데이터베이스 본체 — C/<strong>C++</strong></td></tr>
+    <tr><td><code>g++</code>로 컴파일하기</td><td>컴파일러(GCC·LLVM) — <strong>C++</strong></td></tr>
+    <tr><td>포토샵 · 엑셀 · 3D 모델링 도구</td><td>응용프로그램 본체 — <strong>C++</strong></td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 이 줄들의 공통점은 <strong>남이 그 위에 올라탄다</strong>는 것이다.
+    수백만 명이 쓰는 바닥은 조금만 느려도 그 느림이 수백만 배로 불어난다.
+    그래서 겉은 파이썬·자바스크립트·C#처럼 편한 언어로 두고 <strong>바닥은 C++로 깐다.</strong>
+    ①절에서 "파이썬도 행렬 곱은 안 느리다"고 했던 것이 바로 이 구조 때문이다 — 그 행렬 곱을 파이썬이 하지 않는다.
+  </div>
+
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 그렇다고 모두가 바닥을 만들지는 않는다</div>
+    <p>
+      요즘 C/C++의 주 용도는 다른 언어가 가져다 쓰는 고성능 라이브러리를 만드는 것이고,
+      보통의 개발자는 그 라이브러리를 편한 언어에서 가져다 쓰기 때문에 <strong>C++을 직접 쓸 일이 없다</strong>는 말도 한다.
+      맞는 말이기도 하다. 모두가 파이썬 인터프리터나 언리얼 엔진이나 텐서플로를 만들 필요는 없다.
+    </p>
+    <p>
+      단, 전자정보공학과를 나와서 가게 되는 자리 — 자동차 제어기, 통신 장비, 반도체 펌웨어, 로봇, 방산 —
+      는 <strong>대체로 그 바닥 쪽</strong>이다. 그 자리에서는 예산이 있거나 남이 올라타거나 둘 중 하나이고,
+      둘 다인 경우도 많다.
+    </p>
+  </div>
+
+  <h3>그래서 C++을 배우면 남는 것은 셋이다</h3>
+  <p>
+    첫째는 위 표들의 자리에 <strong>갈 수 있는 자격</strong>이다.
+    둘째는 그 자리에 안 가더라도 남는 것 — <strong>프로그래밍에 대한 이해</strong>다.
+    C++은 메모리를 손으로 관리하는 낮은 자리부터 클래스처럼 높은 자리까지 한 언어 안에 다 있다.
+    그래서 C++을 한 번 지나가면 다른 언어가 <strong>무엇을 자동으로 해 주고 있었는지</strong>가 보인다.
+    파이썬에서 리스트를 함수에 넘기고 함수 안에서 바꿨을 때 밖의 리스트까지 바뀌는 이유가, C++을 알면 설명이 된다.
+    셋째는 ⑤절에서 본다 — 새로 나온 언어들이 <strong>C++의 무엇을 고치려 했는지</strong>는 C++을 알아야 보인다.
+  </p>
+  <p>어느 분야로 가고 싶은지 정해졌다면, 그 분야의 언어를 물어보는 것도 맡길 수 있다.
+     단, <strong>채용 공고를 근거로</strong> 달라고 해야 감으로 답하지 않는다.</p>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    나는 전자정보공학과 학생이고 졸업 후 (자동차 제어기 / 게임 클라이언트 / 통신 장비 / 반도체 펌웨어 / 금융 IT) 쪽으로 가고 싶어. 이 분야의 최근 채용 공고에서 요구하는 프로그래밍 언어를 빈도 순으로 정리해 주고, 각 언어가 그 분야에서 무엇을 하는 데 쓰이는지 한 줄씩 붙여 줘. 근거가 된 공고나 자료를 같이 알려 줘.
+  </div>
+
+  <!-- ── ④ ── -->
+  <h2 id="python">④ 그래서 파이썬을 쓰지 말라는 결론이 아니다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
   <p>
     <strong>ROS 2는 파이썬을 정식으로 지원한다.</strong>
@@ -481,12 +617,12 @@ $ python3 scan_filter.py</code></pre>
       <strong>그리고 바로 그 지점에서 AI가 평범한 쪽을 고른다.</strong>
       방법이 여러 개인 언어에서 AI는 "인터넷에 가장 많은 것"을 고르는데,
       인터넷에 가장 많은 C++ 코드는 최적화된 코드가 아니라 <strong>오래된 코드</strong>다.
-      다음 절이 그 이야기다.
+      ⑥절이 그 이야기다. 그 전에 ⑤절에서, 이 복잡함을 감수하지 않고 아예 새로 시작한 언어들을 먼저 본다.
     </p>
 
     <h4>⑤ 숫자로 확인한다</h4>
     <ul>
-      <li><strong>45년.</strong> 1979년에 시작한 언어다. 그동안 버려진 문법이 거의 없다.</li>
+      <li><strong>47년.</strong> 1979년에 시작한 언어다. 그동안 버려진 문법이 거의 없다.</li>
       <li><strong>표준 개정 7번.</strong> C++98 · 03 · 11 · 14 · 17 · 20 · 23. 개정마다 문법이 늘었고 줄지 않았다.</li>
       <li><strong>168배.</strong> 그 복잡함을 감수하고 얻는 것이 이 숫자다 —
         오늘 잰 같은 계산에서 C++ 23.6 ms, 파이썬 3963.8 ms.
@@ -503,8 +639,188 @@ $ python3 scan_filter.py</code></pre>
     </ul>
   </details>
 
-  <!-- ── ④ AI ── -->
-  <h2 id="ai">④ AI는 틀린 코드가 아니라 둔한 코드를 준다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+  <!-- ── ⑤ 새 언어 ── -->
+  <h2 id="newlang">⑤ 새 언어들은 C++의 무엇을 고치려 했나 — Go와 Rust <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <h3>무엇을 알고 싶은 건가</h3>
+  <p>
+    C++이 그렇게 좋으면 왜 새 언어가 계속 나오나.
+    Go나 Rust라는 이름을 들어 봤을 것이다. 어떤 회사는 C++을 버리고 Rust로 간다고 하고,
+    미국 정부까지 나서서 C/C++ 대신 다른 언어를 쓰라고 권고했다는 기사도 있다.
+    그러면 지금 C++을 배우는 것이 헛일이 되는 것 아닌가 하는 생각이 들 수 있다.
+    <strong>그 언어들이 C++의 무엇을 고치려 했는지</strong>를 알면 이 질문에 스스로 답할 수 있다.
+  </p>
+
+  <h3>「복잡하다」 말고 하나가 더 있다 — 메모리 안전성</h3>
+  <p>
+    바로 앞 이야기에서 C++의 비용은 <strong>복잡함</strong>이었다. 비용이 하나 더 있다.
+    C++은 프로그램이 쓰는 메모리를 <strong>프로그래머가 직접 책임진다.</strong>
+    언제 빌리고 언제 돌려줄지, 값을 통째로 복사할지 자리만 알려 줄지를 전부 프로그래머가 정한다.
+    이것이 C++의 철학이다 — 프로그램 안에서 일어나는 모든 일을 프로그래머가 통제한다.
+    통제할 수 있으니 빠르고, 자원을 딱 필요한 만큼만 쓴다.
+  </p>
+  <p>
+    그 뒷면이 있다. <strong>실수해도 아무도 잡아 주지 않는다.</strong>
+    이미 돌려준 메모리를 또 쓰거나, 360칸짜리 배열의 361번째 칸에 쓰거나 하는 실수가
+    컴파일도 되고 대개는 실행도 된다. 그러다 어느 날 엉뚱한 값을 읽거나, 죽거나,
+    <strong>남이 그 틈으로 들어온다.</strong> 이런 종류의 실수가 아예 일어날 수 없는 성질을 <strong>메모리 안전성</strong>이라 부른다.
+  </p>
+  <p>
+    얼마나 큰 문제인가. 마이크로소프트가 2019년에 자기 제품의 심각한 보안 결함을 세어 보니 <strong>약 70%</strong>가 메모리를 잘못 다뤄서 생긴 것이었다.
+    구글 크롬 팀이 2020년에 따로 세어 봤는데 역시 <strong>약 70%</strong>였다.
+    둘 다 C++로 된 수천만 줄짜리 프로그램이다. 이 숫자가 아래 두 언어가 태어난 배경이다.
+  </p>
+
+  <h3>Go — 구글이 「C++은 너무 크고 빌드가 느리다」에서 시작한 언어</h3>
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 절에서 처음 나오는 이름</p>
+    <dl>
+      <dt>Go</dt>
+      <dd>구글이 2009년에 공개한 언어다. 「고」라고 읽고, 검색할 때는 <strong>Golang</strong>이라고 쓰는 경우가 많다
+          (Go 두 글자로는 검색이 잘 안 되기 때문이다).</dd>
+      <dt>Rob Pike(롭 파이크) · Ken Thompson(켄 톰프슨) · Robert Griesemer(로버트 그리즈머)</dt>
+      <dd>셋 다 사람 이름이고 Go의 설계자다. 켄 톰프슨은 1970년대 벨 연구소에서 <strong>유닉스와 C 언어를 만든 사람 중 하나</strong>다.
+          C의 아버지 격인 사람이 C++을 보고 다른 답을 낸 셈이다.</dd>
+    </dl>
+  </div>
+  <p>
+    2000년대 후반 구글의 서버 프로그램은 대부분 C++이었고, 코드가 커지면서 세 가지가 힘들어졌다.
+    <strong>빌드가 너무 오래 걸렸고</strong>, 문법이 너무 많아 팀원마다 다른 C++을 썼고,
+    CPU가 여러 개인 서버에서 <strong>동시에 여러 요청을 처리하는 코드</strong>를 짜기가 어려웠다.
+    설계자 롭 파이크의 회고에 따르면 2007년 어느 날 45분짜리 C++ 빌드를 기다리는 동안 새 언어 이야기가 시작됐다고 한다.
+  </p>
+  <p>그래서 Go는 <strong>C++에서 덜어내는 쪽</strong>으로 갔다.</p>
+  <ul>
+    <li><strong>문법을 확 줄였다.</strong> 예약어가 25개다. C++은 그 서너 배다. 같은 일을 하는 방법이 대체로 하나뿐이라 누가 짜도 비슷하게 생긴다.</li>
+    <li><strong>메모리는 언어가 치운다.</strong> 프로그래머가 돌려주는 것을 잊어도 실행 중에 언어가 알아서 회수한다.
+        이 장치를 <strong>가비지 컬렉터(garbage collector, GC)</strong>라고 한다. 파이썬과 자바도 같은 방식이다.</li>
+    <li><strong>동시 처리를 쉽게 만들었다.</strong> 요청 하나마다 가벼운 실행 단위(고루틴, goroutine)를 하나씩 띄우는 식으로 짠다.</li>
+    <li><strong>컴파일이 빠르고, 실행 파일 하나로 배포된다.</strong> 큰 프로그램도 수 초 안에 빌드된다.</li>
+  </ul>
+  <p>
+    그 대가가 하나 있다. <strong>GC가 언제 돌지 프로그래머가 정하지 못한다.</strong>
+    GC가 도는 동안 프로그램은 잠깐 멈춘다. 대개는 밀리초 단위라 서버에서는 문제가 안 된다.
+    그런데 ②절의 예산이 있는 자리에서는 이야기가 달라진다 —
+    <strong>내 코드는 1 ms에 끝났는데 GC가 그 위에 10 ms를 얹는 일</strong>이 내가 모르는 순간에 생긴다.
+  </p>
+  <p>
+    실제 사례가 있다. 채팅 서비스 디스코드(Discord)는 Go로 짠 서버 하나에서
+    <strong>약 2분마다 응답이 튀는 현상</strong>을 겪었다. 코드에는 문제가 없었다. GC가 2분마다 돌았던 것이다.
+    2020년에 그 서비스를 Rust로 다시 쓰자 튀는 현상이 사라졌다고 회사가 직접 밝혔다.
+    ②절의 표현으로 하면, GC는 <strong>예산을 내 허락 없이 쓰는 동거인</strong>이다.
+  </p>
+  <p>
+    그래서 Go는 C++을 밀어냈다기보다 <strong>서버 쪽의 C++·자바·파이썬 자리에 들어갔다.</strong>
+    도커(Docker)와 쿠버네티스(Kubernetes) 같은 클라우드의 바닥 도구가 대부분 Go이고, 국내외 IT 회사의 서버 코드에도 많이 들어가 있다.
+    게임 엔진·자동차 제어기·로봇 콜백처럼 예산이 촘촘한 자리는 처음부터 겨냥하지 않았다.
+  </p>
+
+  <h3>Rust — 모질라가 「GC 없이 메모리 안전」을 목표로 만든 언어</h3>
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 절에서 처음 나오는 이름</p>
+    <dl>
+      <dt>Rust</dt>
+      <dd>「러스트」라고 읽는다. 2006년 그레이든 호어(Graydon Hoare, 사람 이름)가 개인 프로젝트로 시작했고,
+          2009년부터 모질라가 후원해 <strong>2015년에 1.0</strong>이 나왔다.</dd>
+      <dt>Mozilla(모질라)</dt>
+      <dd>파이어폭스(Firefox) 브라우저를 만드는 비영리 재단이다.
+          파이어폭스는 C++로 된 수백만 줄짜리 프로그램이고, 보안 결함의 대부분이 위에서 말한 메모리 문제였다.</dd>
+    </dl>
+  </div>
+  <p>
+    브라우저는 Go의 길로 갈 수 없었다. GC를 넣으면 화면이 멈칫거리고 메모리를 더 먹는다.
+    그래서 Rust의 목표는 처음부터 <strong>「C++만큼 빠르면서, 메모리 실수는 컴파일러가 잡는다」</strong>였다.
+    실행 중에 검사하면 느려지니 <strong>컴파일할 때</strong> 잡기로 한 것이다.
+  </p>
+  <p>방법은 규칙 세 줄이다.</p>
+  <ul>
+    <li>값마다 <strong>주인이 하나</strong>다. 주인이 사라지면 그 값도 같이 사라진다. 돌려주는 것을 잊을 수가 없다.</li>
+    <li>남에게 <strong>빌려 줄 수는 있다.</strong> 단, 읽기만 하는 쪽은 여럿이어도 되지만 <strong>고치는 쪽이 있으면 그 순간에는 그 하나뿐</strong>이어야 한다.</li>
+    <li>이 규칙에 어긋나는 코드는 <strong>컴파일이 안 된다.</strong> 그래서 실행 중에는 검사 비용이 0이다.</li>
+  </ul>
+  <p>
+    이 규칙을 <strong>소유권(ownership)</strong>이라고 부른다.
+    그 결과 Rust는 <strong>C++과 비슷한 속도</strong>를 내면서 「이미 돌려준 메모리를 또 쓰는」 종류의 실수가 문법상 불가능해진다.
+    (하드웨어를 직접 만지는 자리처럼 컴파일러가 판단할 수 없는 곳은 <code>unsafe</code>라고 표시하고 사람이 책임진다.)
+  </p>
+  <p>대가는 두 가지다.</p>
+  <ul>
+    <li><strong>배우기 어렵다.</strong> 처음 몇 주는 「컴파일러와 싸운다」는 말이 있다.
+        여태 되던 코드를 컴파일러가 거부하는데, 왜 거부하는지 이해하는 데 시간이 든다.</li>
+    <li><strong>이미 있는 C++ 라이브러리를 그대로 못 쓴다.</strong> 사이에 연결 계층을 만들어야 하고, 그 계층은 다시 <code>unsafe</code>가 된다.
+        OpenCV·PCL·언리얼 엔진 같은 것을 Rust에서 쓰려면 이 문제에 걸린다.</li>
+  </ul>
+  <p>
+    그런데도 Rust는 <strong>「새로 짜는 시스템 코드」</strong> 자리에 빠르게 들어가고 있다.
+    리눅스 커널이 2022년(6.1판)부터 Rust 코드를 받기 시작했고, 마이크로소프트도 2023년부터 윈도우 커널 일부를 Rust로 다시 쓰고 있다.
+    구글은 안드로이드의 새 코드를 Rust 등으로 쓰기 시작한 뒤 <strong>메모리 안전 결함의 비율이 2019년 76%에서 2024년 24%로</strong> 줄었다고 밝혔다.
+    2024년 2월에는 미국 백악관(ONCD)이 새 소프트웨어를 메모리 안전 언어로 쓰라고 권고하는 보고서를 냈다.
+  </p>
+  <p>
+    여러분에게 더 가까운 예도 있다. 요즘 파이썬 도구들 — 코드 검사기 <code>ruff</code>, 패키지 설치기 <code>uv</code>, 데이터프레임 <code>polars</code> — 이 Rust로 쓰여 있다.
+    ③절에서 「남이 올라타는 바닥은 C++」이라고 했는데, <strong>그 바닥을 새로 깔 때 Rust를 고르는 곳이 늘고 있다</strong>는 뜻이다.
+  </p>
+
+  <h3>이제 셋을 나란히 놓을 수 있다</h3>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>「메모리를 누가 책임지나」 줄</strong>이다. 나머지 줄은 전부 거기서 갈라진다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th></th><th>C++</th><th>Go</th><th>Rust</th></tr>
+    <tr><td>나온 때 · 만든 곳</td><td>1979~83 · 벨 연구소</td><td>2009 · 구글</td><td>2015(1.0) · 모질라</td></tr>
+    <tr><td>C++의 무엇을 고치려 했나</td><td>— (시뮬라의 느림과 C의 정리 안 됨을 고쳤다)</td><td><strong>복잡함 · 빌드 시간 · 동시 처리</strong></td><td><strong>메모리 안전성</strong></td></tr>
+    <tr><td><strong>메모리를 누가 책임지나</strong></td><td><strong>프로그래머</strong> (도구: 스마트 포인터 — 12회)</td><td><strong>실행 중의 GC</strong></td><td><strong>컴파일러</strong> (소유권 검사)</td></tr>
+    <tr><td>그 대가</td><td>실수하면 아무도 안 잡는다</td><td>GC가 멈추는 순간을 못 정한다</td><td>배우기 어렵다 · C++ 라이브러리를 바로 못 쓴다</td></tr>
+    <tr><td>속도</td><td>기준</td><td>대체로 더 느리고, GC 멈춤이 있다</td><td>C++과 비슷</td></tr>
+    <tr><td>배우기</td><td>방대하다</td><td>셋 중 가장 쉽다</td><td>초반 벽이 높다</td></tr>
+    <tr><td>200 ms 예산 콜백에 쓸 만한가</td><td>그렇다</td><td>GC 멈춤을 감수해야 한다</td><td>그렇다</td></tr>
+    <tr><td>로봇·게임·자동차의 기존 라이브러리</td><td><strong>전부 여기 있다</strong></td><td>거의 없다</td><td>연결 계층을 거쳐야 한다</td></tr>
+    <tr><td>주로 어디서 쓰나</td><td>게임 엔진 · 로봇 · 자동차 · 금융 · 브라우저 · AI 프레임워크 본체</td><td>서버 · 클라우드 인프라</td><td>운영체제·브라우저의 새 코드 · 개발 도구 · 일부 서버</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 셋이 다른 것은 결국 한 줄 — <strong>메모리를 누가 책임지나</strong>다.
+    C++은 프로그래머에게, Go는 실행 중의 GC에게, Rust는 컴파일러에게 맡겼다.
+    각자 대가가 있고, 그 대가를 감당할 수 있는 자리가 다르다.
+    <strong>Go의 대가(GC 멈춤)는 예산이 있는 자리에서 못 치르고, Rust의 대가(기존 라이브러리)는 20년치 C++ 위에 선 분야에서 못 치른다.</strong>
+    그 두 자리가 겹치는 곳이 로봇·게임·자동차이고, 그래서 거기는 아직 C++이다.
+  </div>
+
+  <h3>그러면 로봇은 언제 Rust로 가나</h3>
+  <p>
+    언어의 좋고 나쁨이 아니라 <strong>라이브러리의 문제</strong>다.
+    로봇에 필요한 것 — 센서 드라이버, 좌표 변환, 지도 작성, 길찾기, 시뮬레이터 — 이 이미 전부 C++로 쓰여 있다.
+    ROS 2를 Rust에서 쓰는 시도(<code>ros2_rust</code>)가 있지만 아직 공식 지원이 아니고,
+    그 위에 얹힌 Nav2·MoveIt 같은 것은 여전히 C++이다.
+    게임도 같다 — 언리얼 엔진이 C++이니 그 위의 게임도 C++이다. 자동차도 AUTOSAR가 C++14를 기준으로 정해 두었다.
+    새 언어가 온다면 <strong>새 코드부터</strong> 오고, 기존의 것은 오래 남는다. 리눅스 커널이 지금 그렇게 가고 있다.
+  </p>
+
+  <h3>C++을 알면 이 둘이 보인다</h3>
+  <p>
+    반대로 읽으면 이렇다. Rust의 소유권 규칙은 <strong>C++11이 들여온 「이동」과 「스마트 포인터」를 컴파일러가 강제하는 것</strong>에 가깝다.
+    11회(복사와 이동)와 12회(스마트 포인터)를 지나면 Rust 문서의 첫 장이 읽힌다.
+    Go의 GC는 파이썬이 하는 것과 같은 방식이다. C++에서 메모리를 한 번 손으로 다뤄 보면 GC가 <strong>무엇을 대신해 주고 무엇을 가져가는지</strong>가 보인다.
+    <strong>C++이 첫 언어로 나쁘지 않은 이유가 이것이다.</strong> 다른 언어가 자동으로 해 주는 것을 한 번은 손으로 해 본 사람이 그 자동화를 판단할 수 있다.
+  </p>
+  <p>
+    이 절의 「메모리 실수」가 무엇인지는 코드를 받았을 때 물어보면 된다. 컴파일러는 안 잡아 주지만 에이전트는 대체로 짚어 준다.
+  </p>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    이 C++ 코드에서 다 쓴 메모리를 다시 쓰거나, 배열 범위를 넘어 읽고 쓰거나, 돌려주는 것을 잊는 자리가 있는지 봐 줘. 있으면 어느 줄이 왜 위험한지, 그리고 Rust 컴파일러라면 무엇이라고 거부했을지도 한 줄씩 붙여 줘.
+  </div>
+
+  <h4>출처</h4>
+  <ul class="src">
+    <li>Rob Pike, <em>Go at Google: Language Design in the Service of Software Engineering</em>, 2012 — go.dev/talks/2012/splash.article</li>
+    <li>Discord Engineering, <em>Why Discord is switching from Go to Rust</em>, 2020</li>
+    <li>Microsoft Security Response Center, <em>A proactive approach to more secure code</em>, 2019 · Chromium Projects, <em>Memory safety</em>, 2020</li>
+    <li>Google Security Blog, <em>Eliminating Memory Safety Vulnerabilities at the Source</em>, 2024</li>
+    <li>The White House ONCD, <em>Back to the Building Blocks: A Path Toward Secure and Measurable Software</em>, 2024</li>
+  </ul>
+
+  <!-- ── ⑥ AI ── -->
+  <h2 id="ai">⑥ AI는 틀린 코드가 아니라 둔한 코드를 준다 <span class="badge b-red">🔴 사람이 한다</span></h2>
 
   <p>
     여기까지는 "왜 C++인가"였다. 이제 <strong>"왜 사람이 C++을 알아야 하는가"</strong>다.
@@ -569,8 +885,8 @@ $ python3 scan_filter.py</code></pre>
     그것이 사람이 C++을 아는 이유다. 코드를 짜기 위해서가 아니라 <strong>무엇을 요구할지 알기 위해서</strong>다.
   </p>
 
-  <!-- ── ⑤ 2부 지도 ── -->
-  <h2 id="map">⑤ 2부 아홉 회차는 그 둔함을 걷어내는 순서로 짜였다 <span class="badge b-green">🟢 맡긴다</span></h2>
+  <!-- ── ⑦ 2부 지도 ── -->
+  <h2 id="map">⑦ 2부 아홉 회차는 그 둔함을 걷어내는 순서로 짜였다 <span class="badge b-green">🟢 맡긴다</span></h2>
 
   <p class="readme-first">무엇을 먼저 볼지: <strong>★이 붙은 두 줄(11회·13회)</strong>이 위 표의 세 줄에 대응한다.</p>
   <div class="tablewrap">
@@ -694,6 +1010,8 @@ python3 --version</code></pre>
     <tr><td>코드를 받았을 때</td><td>"이 코드에서 불필요한 복사가 일어나는 자리가 있으면 짚어 줘. 값으로 받는 함수 인자와 통째로 대입하는 자리를 특히 봐 줘."</td></tr>
     <tr><td>속도가 궁금할 때</td><td>"이 계산이 얼마나 걸리는지 <code>std::chrono</code>로 재는 코드를 붙여 줘. 결과를 밀리초로 찍어 줘."</td></tr>
     <tr><td>언어를 고를 때</td><td>"이 처리는 라이다 콜백 안에서 200밀리초 안에 끝나야 해. C++과 파이썬 중 무엇이 맞는지, 근거를 들어 알려 줘."</td></tr>
+    <tr><td>진로의 언어가 궁금할 때</td><td>"나는 전자정보공학과 학생이고 (분야) 쪽으로 가고 싶어. 최근 채용 공고에서 요구하는 언어를 빈도 순으로 정리하고 근거 공고를 알려 줘."</td></tr>
+    <tr><td>메모리 실수가 걱정될 때</td><td>"이 코드에서 다 쓴 메모리를 다시 쓰거나 배열 범위를 넘는 자리가 있는지 봐 줘. 어느 줄이 왜 위험한지 한 줄씩 붙여 줘."</td></tr>
     <tr><td>컴파일이 안 될 때</td><td>"이 오류 메시지 전체를 붙일게. 무엇이 원인이고 어느 줄을 고쳐야 하는지 알려 줘."</td></tr>
   </table>
   </div>
@@ -708,6 +1026,9 @@ python3 --version</code></pre>
     <li><input type="checkbox" id="c5"><label for="c5">내 노트북에서 두 프로그램을 직접 돌려 배수를 적었나?</label></li>
     <li><input type="checkbox" id="c6"><label for="c6"><code>g++ -std=c++17 -O2 -o 이름 파일.cpp</code>의 네 조각이 각각 무슨 뜻인지 말할 수 있나?</label></li>
     <li><input type="checkbox" id="c7"><label for="c7">C++이 복잡해진 이유를 한 문장으로 말할 수 있나? (버리지 않고 더했다)</label></li>
+    <li><input type="checkbox" id="c8"><label for="c8">로봇 말고 C++이 쓰이는 분야를 <strong>세 가지 이상</strong>, 각각의 예산과 함께 댈 수 있나? (게임 16.7 ms · 자동차 수 ms · 금융 수 µs …)</label></li>
+    <li><input type="checkbox" id="c9"><label for="c9">Go와 Rust가 각각 C++의 <strong>무엇을</strong> 고치려 했는지 한 줄씩 말할 수 있나?</label></li>
+    <li><input type="checkbox" id="c10"><label for="c10">「메모리를 누가 책임지나」에 C++·Go·Rust가 어떻게 답하는지, 그 대가와 함께 말할 수 있나?</label></li>
   </ul>
 
   <!-- ── 조금 더 ── -->
@@ -732,18 +1053,19 @@ python3 --version</code></pre>
   </details>
 
   <details>
-    <summary>C++을 대체하려는 언어들 — Rust와 Go는 왜 아직 로봇에 안 왔나</summary>
+    <summary>⑤절의 「메모리 실수」 세 가지 — C++에서 어떻게 생기고, 2부 어디서 막는 법을 배우나</summary>
+    <div class="tablewrap">
+    <table>
+      <tr><th>실수</th><th>어떻게 생기나</th><th>Rust는 어떻게 막나</th><th>C++에서는 어디서 배우나</th></tr>
+      <tr><td>돌려준 메모리를 또 쓴다</td><td>지운 객체를 가리키는 자리가 남아 있다가 나중에 읽힌다</td><td>주인이 사라지면 가리키던 자리도 컴파일 오류</td><td><strong>10회</strong> 스코프와 수명 · <strong>12회</strong> 스마트 포인터</td></tr>
+      <tr><td>배열 범위를 넘는다</td><td>360칸짜리에 <code>[360]</code>을 쓴다. C++은 검사하지 않는다</td><td>실행 중 검사해서 즉시 멈춘다</td><td><strong>12회</strong> <code>std::vector</code>와 범위 for · <strong>13회</strong> 범위를 받는 알고리즘</td></tr>
+      <tr><td>돌려주는 것을 잊는다</td><td><code>new</code>로 받고 <code>delete</code>를 안 한다. 오래 돌면 메모리가 는다</td><td>주인이 사라질 때 자동으로 돌려준다</td><td><strong>10회</strong> RAII · <strong>12회</strong> <code>unique_ptr</code></td></tr>
+    </table>
+    </div>
     <p>
-      C++의 가장 큰 약점은 <strong>메모리 안전성</strong>이다. 잘못 쓰면 프로그램이 엉뚱한 자리를 읽고 쓴다.
-      Rust는 그 문제를 컴파일러가 잡아 주도록 설계된 언어이고, Go는 개발 편의성을 크게 올린 언어다.
-      둘 다 실제로 많이 쓰인다.
-    </p>
-    <p>
-      <strong>그런데 로봇 쪽은 아직 C++이다.</strong> 이유는 언어의 좋고 나쁨이 아니다.
-      로봇에 필요한 라이브러리 — 센서 드라이버, 좌표 변환, 지도 작성, 시뮬레이터 — 가
-      <strong>이미 전부 C++로 쓰여 있기 때문</strong>이다.
-      새 언어로 갈아타려면 그 20년치를 다시 써야 한다.
-      ROS 2에도 Rust 지원을 만드는 시도가 있지만 아직 공식이 아니다.
+      셋 다 <strong>「누가 이 메모리의 주인인가」</strong>를 흐리게 둬서 생긴다.
+      현대 C++(C++11 이후)은 스마트 포인터와 RAII로 주인을 코드에 적게 해서 이 셋을 대부분 막는다.
+      Rust는 그것을 <strong>선택이 아니라 의무</strong>로 만든 언어라고 보면 대체로 맞다.
     </p>
   </details>
 
