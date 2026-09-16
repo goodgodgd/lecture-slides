@@ -1137,34 +1137,35 @@ cd ~/robotics</code></pre>
     </p>
   </div>
 
-  <h3>확장은 세 개만 깐다</h3>
+  <h3>확장은 하나만 깐다</h3>
 
   <p>
     편집기의 기능은 <strong>확장(extension)</strong>을 깔아서 늘린다.
     왼쪽 세로줄 맨 아래쪽의 <strong>확장 아이콘</strong>을 누르고 이름으로 찾아 <code>Install</code>을 누른다.
-    <strong>이 학기에 필요한 것은 세 개뿐</strong>이고, 나머지는 필요할 때 그때 깔면 된다.
+    <strong>이 학기에 필요한 것은 묶음 하나뿐</strong>이고, 나머지는 필요할 때 그때 깔면 된다.
+    <strong>왼쪽 아래 구석이 <code>WSL: Ubuntu</code>인 상태에서</strong> 깔아야 리눅스 쪽에 들어간다.
   </p>
 
   <div class="tablewrap">
   <table>
     <tr><th>확장</th><th>무엇을 해 주나</th><th>내가 확인하는 것 ✅</th></tr>
-    <tr><td><strong>WSL</strong></td><td>편집기가 리눅스 쪽 파일을 직접 열게 해 준다. <strong>보통 이미 들어 있다</strong></td><td>왼쪽 아래 <code>WSL: Ubuntu</code></td></tr>
-    <tr><td><strong>C/C++</strong></td><td>코드 색칠, 이름 자동완성, 정의로 이동</td><td><code>.cpp</code> 파일을 열었을 때 글자에 색이 들어오나</td></tr>
-    <tr><td><strong>CMake · CMake Tools</strong></td><td>빌드 설정 파일을 알아보고 버튼으로 빌드하게 해 준다</td><td>목록에서 <code>INSTALLED</code> 아래에 보이나</td></tr>
+    <tr><td><strong>WSL 연결</strong></td><td>편집기가 리눅스 쪽 파일을 직접 열게 해 준다. <strong>Antigravity에 들어 있다. 따로 깔지 않는다</strong></td><td>왼쪽 아래 <code>WSL: Ubuntu</code></td></tr>
+    <tr><td><strong>Extension Pack for C/C++</strong><br><span style="color:var(--muted)">만든 곳: KylinIdeTeam</span></td><td>C++ 코드 색칠·자동완성(Kylin Clangd), CMake 빌드 단추(Kylin CMake Workflow), 중단점 디버그(C/C++ Debug) — 셋이 한 묶음으로 들어온다</td><td>목록의 <code>INSTALLED</code> 아래에 <strong>묶음 이름과 셋</strong>이 보이나</td></tr>
   </table>
   </div>
 
-  <!-- TODO: 미검증 — 확장 목록 화면은 VS Code 에서 찍은 것이다. Antigravity 는 VS Code 계열이라 화면은 거의 같지만,
-       C/C++·CMake 확장이 같은 이름으로 받아지는지는 윈도우에서 한 번 확인해야 한다 -->
-  <figure>
-    <img src="assets/img/02_vscode_extensions.png"
-         alt="편집기의 확장 목록 화면. INSTALLED 아래에 C/C++, CMake, CMake Tools 세 개가 설치되어 있다">
-    <figcaption><strong>설치됨(INSTALLED) 아래 세 줄</strong>만 보면 된다.
-      이 세 개가 있으면 이 학기의 코드 작업은 다 된다.</figcaption>
-  </figure>
+  <div class="box trap">
+    <div class="boxtitle">⚠️ VS Code에서 쓰던 「C/C++」(Microsoft)은 여기 없다</div>
+    <p>
+      Antigravity는 VS Code에서 갈라져 나온 편집기라 마이크로소프트의 확장 가게를 쓰지 못하고
+      <strong>Open VSX</strong>라는 공개 등록소에서 확장을 받는다. 마이크로소프트가 만든 C/C++ 확장은 그 등록소에 올라와 있지 않다.
+      고장이 아니고, <strong>이름이 같은 것을 찾지 말고 같은 일을 하는 위 묶음을 깐다.</strong>
+      왜 그런지와 각 확장이 무엇을 하는지는 6회에서 컴파일러를 깔 때 같이 본다.
+    </p>
+  </div>
 
   <div class="interp">
-    <strong>해석:</strong> 뒤의 두 개(C/C++·CMake)는 <strong>9회부터</strong> 실제로 쓴다.
+    <strong>해석:</strong> 이 묶음은 <strong>6회부터</strong> 실제로 쓴다.
     지금 깔아 두는 것은 <strong>그때 가서 설치로 시간을 쓰지 않기 위해서</strong>다.
     오늘 확인할 것은 「깔렸나」까지이고, 무엇을 해 주는지는 그 회차에서 본다.
   </div>

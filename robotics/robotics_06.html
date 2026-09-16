@@ -37,6 +37,7 @@
   <a href="#newlang">⑤ Go와 Rust는 무엇을 고치려 했나</a>
   <a href="#ai">⑥ AI는 둔한 코드를 준다</a>
   <a href="#map">⑦ 2부 아홉 회차</a>
+  <a href="#setup">🔧 C++ 세팅</a>
   <a href="#lab">🧪 실습 — 내 노트북에서</a>
   <a href="#prompts">🤖 프롬프트 모음</a>
   <a href="#check">✅ 점검</a>
@@ -909,6 +910,164 @@ $ python3 scan_filter.py</code></pre>
     7회가 맨 앞인 것도 같은 이유다 — 코드를 읽을 줄 알아야 나머지 여덟 회차의 「검사」가 가능해진다.
   </div>
 
+  <!-- ── 🔧 세팅 ── -->
+  <h2 id="setup">🔧 C++ 세팅 — 리눅스에 명령 한 줄, Antigravity에 확장 하나 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <p>
+    실습에 들어가기 전에 두 가지를 갖춘다. <strong>WSL 우분투 안의 컴파일러</strong>와 <strong>Antigravity의 C++ 확장</strong>이다.
+    우분투를 처음 깔면 파이썬(<code>python3</code>)은 들어 있지만 <strong>C++ 컴파일러는 없다.</strong>
+    <code>g++</code>도 <code>make</code>도 <code>cmake</code>도 따로 깔아야 한다.
+  </p>
+
+  <h3>안 깔린 채로 치면 어떻게 나오나</h3>
+  <p>아무것도 안 깐 우분투 24.04에서 두 명령을 치면 이렇게 나온다. 우분투가 무엇을 깔면 되는지 알려 준다.</p>
+  <pre><code>$ g++ --version
+Command 'g++' not found, but can be installed with:
+apt install g++
+$ cmake --version
+Command 'cmake' not found, but can be installed with:
+apt install cmake</code></pre>
+  <p>
+    <span style="color:var(--muted)">잰 곳: 우분투 24.04 컨테이너. 컨테이너는 관리자(root)라 <code>sudo</code>가 안 붙어 나왔다. WSL에서는 <code>sudo apt install g++</code>로 나온다.</span>
+  </p>
+  <p>
+    여기까지는 알아보기 쉽다. 문제는 <strong>CMake만 깔려 있고 컴파일러가 없는 경우</strong>다.
+    Antigravity의 CMake 확장은 프로젝트 폴더를 열자마자 CMake를 자동으로 돌리기 때문에, 컴파일러를 깔기 전에 이 오류부터 만나기도 한다.
+  </p>
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 이 오류는 CMake가 아니라 컴파일러가 없는 것이다</div>
+    <pre><code>$ cmake ..
+-- The CXX compiler identification is unknown
+CMake Error at CMakeLists.txt:2 (project):
+  No CMAKE_CXX_COMPILER could be found.
+
+  Tell CMake where to find the compiler by setting either the environment
+  variable "CXX" or the CMake cache entry CMAKE_CXX_COMPILER to the full path
+  to the compiler, or to the compiler name if it is in the PATH.
+
+
+-- Configuring incomplete, errors occurred!</code></pre>
+    <p>
+      <code>CMAKE_CXX_COMPILER</code>는 「C++ 컴파일러」라는 뜻이다.
+      메시지는 경로를 알려 달라고 하지만 진짜 원인은 대개 <strong>컴파일러가 아예 안 깔린 것</strong>이다.
+      경로를 찾아 헤매지 말고 아래 한 줄을 친다. 깔고 나면 같은 명령이 <code>The CXX compiler identification is GNU 13.3.0</code>으로 바뀐다.
+    </p>
+  </div>
+
+  <h3>리눅스 쪽 — 명령 한 줄</h3>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 「내가 확인하는 것」 열</strong>. 그 칸을 못 채우면 그 줄은 안 끝난 것이다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>무엇을 하나</th><th>이걸 친다</th><th>어디서</th><th>내가 확인하는 것 ✅</th></tr>
+    <tr>
+      <td>패키지 목록을 갱신한다</td>
+      <td><code>sudo apt update</code></td>
+      <td>WSL 우분투</td>
+      <td>마지막 줄에 <code>Reading package lists... Done</code></td>
+    </tr>
+    <tr>
+      <td>컴파일러와 빌드 도구를 깐다</td>
+      <td><code>sudo apt install -y build-essential cmake gdb clangd</code></td>
+      <td>WSL 우분투</td>
+      <td>오류 없이 프롬프트(<code>$</code>)로 돌아오나</td>
+    </tr>
+    <tr>
+      <td>깔렸는지 본다</td>
+      <td><code>g++ --version</code><br><code>cmake --version</code></td>
+      <td>WSL 우분투</td>
+      <td>첫 줄에 <code>g++ (Ubuntu 13.3.0-…) 13.3.0</code><br><code>cmake version 3.28.3</code></td>
+    </tr>
+  </table>
+  </div>
+
+  <p>손으로 치기 싫으면 맡겨도 된다. 단, <code>sudo</code>가 붙는 줄은 보고 나서 허락한다.</p>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    내 WSL 우분투에 C++ 컴파일러가 없어. build-essential, cmake, gdb, clangd 를 apt 로 설치해 줘. sudo 가 붙는 명령은 실행하기 전에 나에게 먼저 보여 줘. 끝나면 g++ --version 과 cmake --version 을 찍어 줘.
+  </div>
+
+  <p class="readme-first">무엇을 먼저 볼지: 네 개 중 <strong>오늘 실제로 쓰는 것은 첫 줄뿐</strong>이다. 나머지는 그 회차에 가서 다시 설치로 시간을 쓰지 않으려고 같이 깐다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>패키지</th><th>무엇이 들어 있나</th><th>언제 쓰나</th><th>깔린 판</th></tr>
+    <tr><td><strong><code>build-essential</code></strong></td><td>C 컴파일러 <code>gcc</code>, C++ 컴파일러 <code>g++</code>, 빌드 도구 <code>make</code>, 표준 라이브러리 헤더 묶음. 이름이 「필수」인 이유 — <strong>이게 없으면 C/C++ 소스를 한 줄도 실행 파일로 못 만든다</strong></td><td><strong>오늘부터</strong></td><td>g++ 13.3.0 · make 4.3</td></tr>
+    <tr><td><code>cmake</code></td><td>파일이 여러 개인 프로젝트의 빌드 순서를 적는 도구</td><td>9회 빌드 시스템</td><td>3.28.3</td></tr>
+    <tr><td><code>gdb</code></td><td>프로그램을 한 줄씩 멈춰 가며 보는 도구(디버거). Antigravity의 C/C++ Debug 확장이 이것을 부른다</td><td>10회 이후</td><td>15.1</td></tr>
+    <tr><td><code>clangd</code></td><td>편집기에 코드 색칠·자동완성·정의로 이동을 해 주는 프로그램(언어 서버). 아래 확장이 이것을 찾아 쓴다</td><td><strong>오늘부터</strong></td><td>18.1.3</td></tr>
+  </table>
+  </div>
+  <p>
+    <code>build-essential</code>이 정말 묶음인지는 우분투에 물어보면 나온다.
+  </p>
+  <pre><code>$ dpkg -s build-essential | grep Depends
+Depends: libc6-dev | libc-dev, gcc (>= 4:12.3), g++ (>= 4:12.3), make, dpkg-dev (>= 1.17.11)</code></pre>
+  <div class="interp">
+    <strong>해석:</strong> <code>build-essential</code> 자체는 아무것도 아니다. <strong>다섯 개를 한 번에 끌어오는 이름</strong>이다.
+    그래서 <code>apt install g++</code>만 치면 <code>make</code>가 빠지고, 나중에 CMake가 <code>make</code>를 못 찾아 다시 멈춘다.
+    <strong>묶음 이름으로 까는 것</strong>이 그 두 번째 멈춤을 미리 없애는 방법이다.
+  </div>
+
+  <h3>Antigravity 쪽 — 확장 하나: Extension Pack for C/C++ (KylinIdeTeam)</h3>
+  <p>
+    왼쪽 세로줄의 <strong>확장 아이콘</strong>을 누르고 <strong>Extension Pack for C/C++</strong>을 찾는다.
+    만든 곳이 <strong>KylinIdeTeam</strong>이라고 붙은 것이다.
+    <strong>왼쪽 아래 구석이 <code>WSL: Ubuntu</code>인 상태에서</strong> <code>Install</code>을 눌러야 리눅스 쪽에 깔린다.
+    하나를 깔면 셋이 같이 들어온다.
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>같이 들어오는 것</th><th>무엇을 해 주나</th><th>VS Code에서 쓰던 이름으로는</th></tr>
+    <tr><td><strong>Kylin Clangd</strong></td><td>코드 색칠, 이름 자동완성, 정의로 이동. 위에서 깐 <code>clangd</code>를 찾아 쓴다</td><td>C/C++ (Microsoft)</td></tr>
+    <tr><td><strong>Kylin CMake Workflow</strong></td><td><code>CMakeLists.txt</code>를 알아보고 단추로 빌드한다 (9회부터)</td><td>CMake Tools</td></tr>
+    <tr><td><strong>C/C++ Debug</strong></td><td>중단점을 걸고 한 줄씩 실행한다. 위에서 깐 <code>gdb</code>를 부른다 (10회 이후)</td><td>C/C++ (Microsoft)의 디버그 부분</td></tr>
+  </table>
+  </div>
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 절에서 처음 나오는 이름</p>
+    <dl>
+      <dt>KylinIdeTeam</dt>
+      <dd>중국의 리눅스 배포판 Kylin(기린)의 개발도구 팀이다. 마이크로소프트 확장을 쓸 수 없는 VS Code 계열 편집기를 위해
+          공개 소프트웨어(clangd·gdb)로 같은 기능을 내는 확장을 묶어 올렸다.</dd>
+      <dt>clangd</dt>
+      <dd>「클랭디」라고 읽는다. 컴파일러 프로젝트 LLVM이 만든 C++ 언어 서버다.
+          편집기가 코드를 이해하는 것처럼 보이는 것은 뒤에서 이 프로그램이 코드를 읽고 있기 때문이다.</dd>
+    </dl>
+  </div>
+  <!-- TODO: 캡쳐 필요 — Antigravity(윈도우)의 확장 목록에서 Extension Pack for C/C++ 이 INSTALLED 에 든 화면. 이 서버에는 Antigravity 가 없다 -->
+
+  <div class="box trap">
+    <div class="boxtitle">⚠️ VS Code에서 쓰던 「C/C++」과 「CMake Tools」가 안 보이는 이유</div>
+    <p>
+      VS Code를 써 본 사람은 마이크로소프트가 만든 <strong>C/C++</strong> 확장과 <strong>CMake Tools</strong>부터 찾게 된다.
+      Antigravity에서는 첫 번째가 <strong>목록에 아예 없다.</strong> 고장이 아니다.
+    </p>
+    <ul>
+      <li><strong>확장을 받아 오는 가게가 다르다.</strong> VS Code는 마이크로소프트의 가게(Visual Studio Marketplace)에서 받는다.
+          Antigravity처럼 VS Code에서 갈라져 나온 편집기(Cursor·Windsurf·VSCodium도 같다)는 그 가게를 쓸 수 없다 —
+          마이크로소프트가 <strong>자기 가게는 자기 제품에서만</strong> 쓰도록 약관을 정해 두었기 때문이다.
+          그래서 이 편집기들은 <strong>Open VSX</strong>라는 공개 등록소에서 확장을 받는다.</li>
+      <li>마이크로소프트의 <strong>C/C++ 확장은 Open VSX에 없다.</strong> 사용 허가 조건이 「마이크로소프트 제품 안에서만」이라 다른 가게에 올릴 수 없다.
+          그래서 위 묶음이 <strong>clangd</strong>로 같은 일을 한다.</li>
+      <li><strong>CMake Tools는 Open VSX에 있다</strong>(공개 소프트웨어라 올릴 수 있다). 검색하면 나올 수 있다.
+          다만 위 묶음에 이미 CMake 도구(Kylin CMake Workflow)가 들어 있으므로 <strong>또 깔지 않는다.</strong>
+          CMake 확장이 둘이면 서로 먼저 설정하겠다고 나서서 헷갈린다.</li>
+    </ul>
+    <p>
+      정리하면 — <strong>이름이 같은 것을 찾지 말고, 같은 일을 하는 것을 깐다.</strong>
+      「C/C++」은 Kylin Clangd가, 「CMake Tools」는 Kylin CMake Workflow가 대신한다.
+      이 학기에 쓰는 기능(색칠·자동완성·빌드 단추·중단점)은 이 묶음으로 전부 된다.
+    </p>
+  </div>
+
+  <h4>이 블록의 검증 목록 — 순서대로 확인한다</h4>
+  <ol>
+    <li><code>g++ --version</code> 첫 줄에 <strong><code>13.3.0</code></strong>이 있나</li>
+    <li><code>cmake --version</code>에 <strong><code>3.28.3</code></strong>이 있나</li>
+    <li>Antigravity 확장 목록의 <strong>INSTALLED</strong> 아래에 <strong>Extension Pack for C/C++ · Kylin Clangd · Kylin CMake Workflow · C/C++ Debug</strong> 넷이 보이나</li>
+    <li>Antigravity에서 <code>.cpp</code> 파일을 열었을 때 <strong>글자에 색이 들어오고</strong>, <code>std::</code>까지 치면 <strong>이름 목록이 뜨나</strong></li>
+    <li><strong>새 터미널을 열어도</strong> <code>g++ --version</code>이 되나</li>
+  </ol>
+
   <!-- ── 🧪 실습 ── -->
   <h2 id="lab">🧪 실습 — 내 노트북에서는 몇 배가 나오나 <span class="badge b-green">🟢 맡긴다</span></h2>
 
@@ -924,7 +1083,7 @@ $ python3 scan_filter.py</code></pre>
     <ul>
       <li>WSL 우분투 터미널 하나</li>
       <li>VS Code (WSL에 연결된 상태)</li>
-      <li><code>g++</code>와 <code>python3</code> — 없으면 3단계에서 깐다</li>
+      <li><code>g++</code>와 <code>python3</code> — 바로 위 🔧 블록을 마쳤으면 있다</li>
     </ul>
 
     <p class="boxtitle">③ 절차</p>
@@ -942,14 +1101,10 @@ code .</code></pre>
         위 ①절의 코드 블록을 그대로 복사해 붙인다. <strong>타이핑하지 않는다.</strong>
       </li>
       <li>
-        <strong>(2분) 컴파일러와 파이썬이 있는지 확인한다.</strong>
+        <strong>(1분) 컴파일러와 파이썬이 있는지 확인한다.</strong>
         <pre><code>g++ --version
 python3 --version</code></pre>
-        둘 중 하나라도 "command not found"가 나오면 아래 프롬프트를 쓴다.
-        <div class="prompt">
-          <button onclick="copyPrompt(this)">복사</button>
-          내 WSL 우분투에 g++ 과 python3 가 없어. 설치해 줘. sudo 가 붙는 명령은 실행하기 전에 나에게 먼저 보여 줘.
-        </div>
+        <code>Command 'g++' not found</code>가 나오면 🔧 블록의 <code>sudo apt install -y build-essential cmake gdb clangd</code>를 아직 안 한 것이다. 거기로 돌아간다.
       </li>
       <li>
         <strong>(1분) C++을 컴파일해서 돌린다.</strong>
@@ -1006,7 +1161,7 @@ python3 --version</code></pre>
   <div class="tablewrap">
   <table>
     <tr><th>이럴 때</th><th>이렇게 말한다</th></tr>
-    <tr><td>도구가 없을 때</td><td>"내 WSL 우분투에 g++ 과 python3 가 없어. 설치해 줘. <code>sudo</code>가 붙는 명령은 실행하기 전에 나에게 먼저 보여 줘."</td></tr>
+    <tr><td>컴파일러가 없을 때</td><td>"내 WSL 우분투에 C++ 컴파일러가 없어. build-essential, cmake, gdb, clangd 를 apt 로 설치해 줘. <code>sudo</code>가 붙는 명령은 실행하기 전에 나에게 먼저 보여 줘. 끝나면 <code>g++ --version</code>과 <code>cmake --version</code>을 찍어 줘."</td></tr>
     <tr><td>코드를 받았을 때</td><td>"이 코드에서 불필요한 복사가 일어나는 자리가 있으면 짚어 줘. 값으로 받는 함수 인자와 통째로 대입하는 자리를 특히 봐 줘."</td></tr>
     <tr><td>속도가 궁금할 때</td><td>"이 계산이 얼마나 걸리는지 <code>std::chrono</code>로 재는 코드를 붙여 줘. 결과를 밀리초로 찍어 줘."</td></tr>
     <tr><td>언어를 고를 때</td><td>"이 처리는 라이다 콜백 안에서 200밀리초 안에 끝나야 해. C++과 파이썬 중 무엇이 맞는지, 근거를 들어 알려 줘."</td></tr>
@@ -1029,6 +1184,8 @@ python3 --version</code></pre>
     <li><input type="checkbox" id="c8"><label for="c8">로봇 말고 C++이 쓰이는 분야를 <strong>세 가지 이상</strong>, 각각의 예산과 함께 댈 수 있나? (게임 16.7 ms · 자동차 수 ms · 금융 수 µs …)</label></li>
     <li><input type="checkbox" id="c9"><label for="c9">Go와 Rust가 각각 C++의 <strong>무엇을</strong> 고치려 했는지 한 줄씩 말할 수 있나?</label></li>
     <li><input type="checkbox" id="c10"><label for="c10">「메모리를 누가 책임지나」에 C++·Go·Rust가 어떻게 답하는지, 그 대가와 함께 말할 수 있나?</label></li>
+    <li><input type="checkbox" id="c11"><label for="c11"><code>sudo apt install build-essential</code>이 무엇을 깔아 주는지 셋 이상 댈 수 있나? (<code>gcc</code>·<code>g++</code>·<code>make</code>…) 그리고 <code>No CMAKE_CXX_COMPILER could be found</code>가 나오면 무엇이 없는 것인지 말할 수 있나?</label></li>
+    <li><input type="checkbox" id="c12"><label for="c12">Antigravity에 마이크로소프트의 C/C++ 확장이 안 보이는 이유를 한 문장으로 말할 수 있나? (가게가 다르다 — Open VSX)</label></li>
   </ul>
 
   <!-- ── 조금 더 ── -->
