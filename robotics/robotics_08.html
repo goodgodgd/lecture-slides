@@ -145,7 +145,7 @@
   </p>
 
   <div class="codelabel bad">1단계 — 클래스 없이 짠 판 <code>scattered.cpp</code> 🔴</div>
-  <pre class="before"><code>#include &lt;cmath&gt;
+  <pre class="lang-cpp before"><code>#include &lt;cmath&gt;
 #include &lt;cstdio&gt;
 #include &lt;string&gt;
 #include &lt;vector&gt;
@@ -197,7 +197,7 @@ int main()
   </div>
 
   <h3>돌려 보면 잘 된다 — 그게 문제다</h3>
-  <pre><code>$ g++ -std=c++17 -O2 -o scattered scattered.cpp
+  <pre class="lang-sh"><code>$ g++ -std=c++17 -O2 -o scattered scattered.cpp
 $ ./scattered
 LDS-02: 원본 7개 → 남은 값 3개, 버린 값 4개</code></pre>
 
@@ -207,7 +207,7 @@ LDS-02: 원본 7개 → 남은 값 3개, 버린 값 4개</code></pre>
 <details class="fullcode">
   <summary>전체 코드 — 1단계 · scattered.cpp (이대로 빌드된다)</summary>
   <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o scattered scattered.cpp &amp;&amp; ./scattered</code></p>
-  <div class="codefile"><div class="fname">scattered.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 8회 — 1단계: 클래스 없이 짠 판. 값과 함수가 흩어져 있다.
+  <div class="codefile"><div class="fname">scattered.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 8회 — 1단계: 클래스 없이 짠 판. 값과 함수가 흩어져 있다.
 #include &lt;cmath&gt;
 #include &lt;cstdio&gt;
 #include &lt;string&gt;
@@ -288,7 +288,7 @@ int main()
     무슨 함수가 있고 무슨 값을 들고 있는지만 적고, <strong>어떻게 하는지는 안 적는다.</strong>
   </p>
 
-  <pre><code>// 8회 — 헤더(.hpp): 무엇이 있는지만 적는다
+  <pre class="lang-cpp"><code>// 8회 — 헤더(.hpp): 무엇이 있는지만 적는다
 #ifndef RANGE_FILTER_HPP_
 #define RANGE_FILTER_HPP_
 
@@ -337,7 +337,7 @@ private:
   <div class="box trap">
     <div class="boxtitle">⚠️ 포함 보호를 빼면 어떤 오류가 나는가</div>
     <p>같은 헤더를 두 번 <code>#include</code>하고 포함 보호가 없으면 이렇게 된다.</p>
-    <pre><code>$ g++ -std=c++17 m.cpp -o y
+    <pre class="lang-sh"><code>$ g++ -std=c++17 m.cpp -o y
 In file included from m.cpp:2:
 guard.hpp:1:8: error: redefinition of ‘struct Scan’
     1 | struct Scan { float front; };
@@ -351,8 +351,8 @@ guard.hpp:1:8: note: previous definition of ‘struct Scan’</code></pre>
 <details class="fullcode">
   <summary>재현한 파일 — guard.hpp 와 m.cpp (일부러 포함 보호를 뺐다)</summary>
   <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 m.cpp -o y</code></p>
-  <div class="codefile"><div class="fname">guard.hpp</div><button onclick="copyCode(this)">복사</button><pre><code>struct Scan { float front; };</code></pre></div>
-  <div class="codefile"><div class="fname">m.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>#include &quot;guard.hpp&quot;
+  <div class="codefile"><div class="fname">guard.hpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>struct Scan { float front; };</code></pre></div>
+  <div class="codefile"><div class="fname">m.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>#include &quot;guard.hpp&quot;
 #include &quot;guard.hpp&quot;
 int main() { Scan s{0.5f}; return s.front &gt; 0 ? 0 : 1; }</code></pre></div>
 </details>
@@ -393,7 +393,7 @@ int main() { Scan s{0.5f}; return s.front &gt; 0 ? 0 : 1; }</code></pre></div>
     생성자 중괄호 안에서 값을 대입하고 있는데, 그 자리는 ⑤절에서 고친다.
   </p>
 
-  <pre><code>// 8회 — 소스(.cpp): 실제로 어떻게 하는지를 적는다
+  <pre class="lang-cpp"><code>// 8회 — 소스(.cpp): 실제로 어떻게 하는지를 적는다
 #include "range_filter.hpp"
 
 #include &lt;cmath&gt;
@@ -455,7 +455,7 @@ int RangeFilter::dropped() const { return dropped_; }</code></pre>
       <code>keep_valid</code> 안에 <code>dropped_</code>를 늘리는 줄이 아예 없기 때문이다.
       <strong>그럼 그 줄을 넣으면 되지 않나?</strong> 넣어 봤다.
     </p>
-    <pre><code>$ g++ -std=c++17 -c range_filter.cpp
+    <pre class="lang-sh"><code>$ g++ -std=c++17 -c range_filter.cpp
 range_filter.cpp: In member function ‘std::vector&lt;float&gt; RangeFilter::keep_valid(...) const’:
 range_filter.cpp:28:9: error: increment of member ‘RangeFilter::dropped_’ in read-only object
    28 |       ++dropped_;   // 버린 개수를 세어 보려 했다
@@ -466,7 +466,7 @@ range_filter.cpp:28:9: error: increment of member ‘RangeFilter::dropped_’ in
 <details class="fullcode">
   <summary>재현한 파일 — range_filter.cpp (++dropped_ 를 넣은 판. 헤더는 ②절 그대로)</summary>
   <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -c range_filter.cpp</code></p>
-  <div class="codefile"><div class="fname">range_filter.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 8회 — 소스(.cpp): 실제로 어떻게 하는지를 적는다
+  <div class="codefile"><div class="fname">range_filter.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 8회 — 소스(.cpp): 실제로 어떻게 하는지를 적는다
 #include &quot;range_filter.hpp&quot;
 
 #include &lt;cmath&gt;
@@ -523,7 +523,7 @@ int RangeFilter::dropped() const { return dropped_; }</code></pre></div>
 
   <p>세 번째 파일 <code>main.cpp</code>다. 1단계의 <code>main</code>과 하는 일은 같은데, 전역 변수 대신 <strong>필터 객체 하나를 만들어 쓴다.</strong></p>
 
-  <pre><code>// 8회 — 쓰는 쪽. 헤더만 include 하면 된다.
+  <pre class="lang-cpp"><code>// 8회 — 쓰는 쪽. 헤더만 include 하면 된다.
 #include "range_filter.hpp"
 
 #include &lt;cmath&gt;
@@ -558,7 +558,7 @@ int main()
   </p>
 
   <h3>빌드하고 돌린 결과</h3>
-  <pre><code>$ g++ -std=c++17 -O2 -o app main.cpp range_filter.cpp
+  <pre class="lang-sh"><code>$ g++ -std=c++17 -O2 -o app main.cpp range_filter.cpp
 $ ./app
 [생성] LDS-02 필터 (0.16~8 m)
 원본 7개 → 남은 값 3개: 0.83 1.24 2.05
@@ -579,7 +579,7 @@ $ ./app
 <details class="fullcode">
   <summary>전체 코드 — 2단계 · 파일 셋 (range_filter.hpp · range_filter.cpp · main.cpp)</summary>
   <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o app main.cpp range_filter.cpp &amp;&amp; ./app</code></p>
-  <div class="codefile"><div class="fname">range_filter.hpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 8회 — 헤더(.hpp): 무엇이 있는지만 적는다
+  <div class="codefile"><div class="fname">range_filter.hpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 8회 — 헤더(.hpp): 무엇이 있는지만 적는다
 #ifndef RANGE_FILTER_HPP_
 #define RANGE_FILTER_HPP_
 
@@ -603,7 +603,7 @@ private:
 };
 
 #endif  // RANGE_FILTER_HPP_</code></pre></div>
-  <div class="codefile"><div class="fname">range_filter.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 8회 — 소스(.cpp): 실제로 어떻게 하는지를 적는다
+  <div class="codefile"><div class="fname">range_filter.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 8회 — 소스(.cpp): 실제로 어떻게 하는지를 적는다
 #include &quot;range_filter.hpp&quot;
 
 #include &lt;cmath&gt;
@@ -635,7 +635,7 @@ std::vector&lt;float&gt; RangeFilter::keep_valid(const std::vector&lt;float&gt; 
 }
 
 int RangeFilter::dropped() const { return dropped_; }</code></pre></div>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 8회 — 쓰는 쪽. 헤더만 include 하면 된다.
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 8회 — 쓰는 쪽. 헤더만 include 하면 된다.
 #include &quot;range_filter.hpp&quot;
 
 #include &lt;cmath&gt;
@@ -671,7 +671,7 @@ int main()
 
   <h3>3단계 — <code>range_filter.cpp</code>의 생성자 한 곳만 고친다</h3>
   <div class="codelabel bad">고치기 전 — ③절의 생성자. AI가 흔히 내놓는 것 🔴</div>
-  <pre class="before"><code>RangeFilter::RangeFilter(const std::string &amp; name, float lo, float hi)
+  <pre class="lang-cpp before"><code>RangeFilter::RangeFilter(const std::string &amp; name, float lo, float hi)
 {
   name_ = name;           // 중괄호 안에서 대입한다 — 두 번 일한다
   lo_ = lo;
@@ -680,7 +680,7 @@ int main()
 }</code></pre>
 
   <div class="codelabel good">고친 뒤 — 콜론 뒤로 옮겼다</div>
-  <pre class="after"><code>// 멤버 초기화 리스트 — 콜론 뒤가 그것이다. 만들면서 바로 값을 넣는다.
+  <pre class="lang-cpp after"><code>// 멤버 초기화 리스트 — 콜론 뒤가 그것이다. 만들면서 바로 값을 넣는다.
 RangeFilter::RangeFilter(const std::string &amp; name, float lo, float hi)
 : name_(name), lo_(lo), hi_(hi)
 {
@@ -700,7 +700,7 @@ RangeFilter::RangeFilter(const std::string &amp; name, float lo, float hi)
 <details class="fullcode">
   <summary>전체 코드 — 3단계 · 완성본 (range_filter.hpp · range_filter.cpp · main.cpp)</summary>
   <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o app main.cpp range_filter.cpp &amp;&amp; ./app</code></p>
-  <div class="codefile"><div class="fname">range_filter.hpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 8회 — 헤더(.hpp): 무엇이 있는지만 적는다
+  <div class="codefile"><div class="fname">range_filter.hpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 8회 — 헤더(.hpp): 무엇이 있는지만 적는다
 #ifndef RANGE_FILTER_HPP_
 #define RANGE_FILTER_HPP_
 
@@ -724,7 +724,7 @@ private:
 };
 
 #endif  // RANGE_FILTER_HPP_</code></pre></div>
-  <div class="codefile"><div class="fname">range_filter.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 8회 — 소스(.cpp): 실제로 어떻게 하는지를 적는다
+  <div class="codefile"><div class="fname">range_filter.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 8회 — 소스(.cpp): 실제로 어떻게 하는지를 적는다
 #include &quot;range_filter.hpp&quot;
 
 #include &lt;cmath&gt;
@@ -755,7 +755,7 @@ std::vector&lt;float&gt; RangeFilter::keep_valid(const std::vector&lt;float&gt; 
 }
 
 int RangeFilter::dropped() const { return dropped_; }</code></pre></div>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 8회 — 쓰는 쪽. 헤더만 include 하면 된다.
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 8회 — 쓰는 쪽. 헤더만 include 하면 된다.
 #include &quot;range_filter.hpp&quot;
 
 #include &lt;cmath&gt;
@@ -803,7 +803,7 @@ int main()
     계산 앞뒤의 시각을 읽어 그 차이를 밀리초로 꺼내 잰다.
   </p>
 
-  <pre><code>// 8회 — 멤버 초기화 리스트가 실제로 얼마나 이득인가
+  <pre class="lang-cpp"><code>// 8회 — 멤버 초기화 리스트가 실제로 얼마나 이득인가
 #include &lt;chrono&gt;
 #include &lt;cstdio&gt;
 #include &lt;string&gt;
@@ -874,7 +874,7 @@ int main()
   </div>
 
   <h3>실제로 나온 출력</h3>
-  <pre><code>$ g++ -std=c++17 -O2 -o init_bench init_bench.cpp &amp;&amp; ./init_bench
+  <pre class="lang-sh"><code>$ g++ -std=c++17 -O2 -o init_bench init_bench.cpp &amp;&amp; ./init_bench
 생성자 안에서 대입     47.2 ms  (합 90000000)
 초기화 리스트        40.5 ms  (합 90000000)
 대입 방식이 1.17배 느리다 (3000000회 기준)</code></pre>
@@ -885,7 +885,7 @@ int main()
 <details class="fullcode">
   <summary>전체 코드 — init_bench.cpp (재는 프로그램. 파일 하나)</summary>
   <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o init_bench init_bench.cpp &amp;&amp; ./init_bench</code></p>
-  <div class="codefile"><div class="fname">init_bench.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 8회 — 멤버 초기화 리스트가 실제로 얼마나 이득인가
+  <div class="codefile"><div class="fname">init_bench.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 8회 — 멤버 초기화 리스트가 실제로 얼마나 이득인가
 // 문자열 멤버 하나를 100만 번 만들어 보고, 두 방식의 시간을 비교한다.
 #include &lt;chrono&gt;
 #include &lt;cstdio&gt;
@@ -1039,11 +1039,11 @@ int main()
   <p>실제로 밖에서 <code>private</code> 멤버를 건드리면 이렇게 된다.</p>
 
   <div class="codelabel bad">완성본 <code>main.cpp</code>에 한 줄을 끼워 넣어 봤다 🔴</div>
-  <pre class="before"><code>    RangeFilter f("LDS-02", 0.16f, 8.0f);
-<span class="ln-add">    f.lo_ = 0.0f;          // private 멤버를 밖에서 건드리려 했다</span>
+  <pre class="lang-cpp before"><code>    RangeFilter f("LDS-02", 0.16f, 8.0f);
+    f.lo_ = 0.0f;          // private 멤버를 밖에서 건드리려 했다
     const std::vector&lt;float&gt; good = f.keep_valid(raw);</code></pre>
 
-  <pre><code>$ g++ -std=c++17 -c main.cpp
+  <pre class="lang-sh"><code>$ g++ -std=c++17 -c main.cpp
 main.cpp: In function ‘int main()’:
 main.cpp:13:7: error: ‘float RangeFilter::lo_’ is private within this context
    13 |     f.lo_ = 0.0f;          // private 멤버를 밖에서 건드리려 했다
@@ -1058,7 +1058,7 @@ range_filter.hpp:19:9: note: declared private here
 <details class="fullcode">
   <summary>재현한 파일 — main.cpp (한 줄을 끼운 판. 헤더·소스는 3단계 그대로)</summary>
   <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -c main.cpp</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 8회 — 쓰는 쪽. 헤더만 include 하면 된다.
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 8회 — 쓰는 쪽. 헤더만 include 하면 된다.
 #include &quot;range_filter.hpp&quot;
 
 #include &lt;cmath&gt;
@@ -1108,11 +1108,11 @@ int main()
     6·7회에서는 파일이 하나여서 이렇게만 하면 됐다.
   </p>
 
-  <pre><code>$ g++ -std=c++17 main.cpp -o app</code></pre>
+  <pre class="lang-sh"><code>$ g++ -std=c++17 main.cpp -o app</code></pre>
 
   <p>같은 방법으로 완성본(3단계)의 <code>main.cpp</code>를 빌드해 봤다. 실제로 나온 결과다.</p>
 
-  <pre><code>$ g++ -std=c++17 main.cpp -o /tmp/a
+  <pre class="lang-sh"><code>$ g++ -std=c++17 main.cpp -o /tmp/a
 /usr/bin/ld: /tmp/ccQM9nvq.o: in function `main':
 main.cpp:(.text+0x110): undefined reference to `RangeFilter::RangeFilter(
     std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt; const&amp;, float, float)'
@@ -1151,7 +1151,7 @@ collect2: error: ld returned 1 exit status</code></pre>
   </div>
 
   <h3>고치는 법 — 파일을 다 준다</h3>
-  <pre><code>$ g++ -std=c++17 -O2 -o app main.cpp range_filter.cpp
+  <pre class="lang-sh"><code>$ g++ -std=c++17 -O2 -o app main.cpp range_filter.cpp
 $ ./app
 [생성] LDS-02 필터 (0.16~8 m)
 원본 7개 → 남은 값 3개: 0.83 1.24 2.05
@@ -1233,7 +1233,7 @@ code .</code></pre>
         <strong>(3분) 초기화 리스트를 지워 보고 여전히 되는지 확인한다.</strong>
         <code>range_filter.cpp</code>의 생성자를 ⑤절 「고치기 전」 모양으로 되돌리고 절차 3을 다시 한다.
         (④절 📄 상자의 <code>range_filter.cpp</code>가 정확히 그 판이다 — 통째로 바꿔 넣어도 된다.)
-        <pre><code>// 콜론 뒤를 지우고 중괄호 안에서 대입
+        <pre class="lang-cpp"><code>// 콜론 뒤를 지우고 중괄호 안에서 대입
 RangeFilter::RangeFilter(const std::string &amp; name, float lo, float hi)
 {
   name_ = name; lo_ = lo; hi_ = hi;
@@ -1316,7 +1316,7 @@ RangeFilter::RangeFilter(const std::string &amp; name, float lo, float hi)
 
   <details>
     <summary><code>#pragma once</code> — 포함 보호의 짧은 판</summary>
-    <pre><code>#pragma once      // 이 한 줄이 #ifndef / #define / #endif 세 줄을 대신한다
+    <pre class="lang-cpp"><code>#pragma once      // 이 한 줄이 #ifndef / #define / #endif 세 줄을 대신한다
 
 class RangeFilter { ... };</code></pre>
     <p>
@@ -1333,7 +1333,7 @@ class RangeFilter { ... };</code></pre>
   <details>
     <summary>상속 — 3부에서 만날 <code>: public rclcpp::Node</code></summary>
     <p>3부에 가면 ROS 2 프로그램이 전부 이렇게 시작한다.</p>
-    <pre><code>class LidarNode : public rclcpp::Node
+    <pre class="lang-cpp"><code>class LidarNode : public rclcpp::Node
 {
 public:
   LidarNode() : Node("lidar_node") { ... }

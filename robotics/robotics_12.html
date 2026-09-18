@@ -78,12 +78,12 @@
   </p>
 
   <p>
-    오늘의 코드는 <strong>파일 하나</strong>다. <code>ptr_container.cpp</code>라고 부른다.
+    오늘의 코드는 <strong>파일 하나</strong>, <code>main.cpp</code>다. 빌드하면 실행 파일 <code>ptr_container</code>가 나온다.
     ①절에서 센서 하나를 켜는 작은 프로그램으로 시작해서, <strong>절이 하나 넘어갈 때마다 줄이 몇 개씩 더해지거나 한 곳이 고쳐진다.</strong>
     ⑦절이 끝나면 오늘 배운 것이 전부 들어 있는 완성본이 된다. 읽는 법은 이렇다.
   </p>
   <ul>
-    <li>본문에는 <strong>그 절에서 새로 넣거나 고친 줄만</strong> 보인다. 초록 바탕이 새 줄, 붉은 바탕이 지운 줄이다.</li>
+    <li>본문에는 <strong>그 절에서 새로 넣거나 고친 부분만</strong> 보인다. 고치는 절은 「고치기 전」(붉은 테두리)과 「고친 뒤」(푸른 테두리)를 따로 보인다.</li>
     <li>그 아래 <strong>📄 「전체 코드」 상자</strong>를 누르면 그 단계까지의 파일 전체가 나온다.
         <strong>어느 단계를 펼쳐도 그대로 빌드되고 돌아간다.</strong> 오른쪽 위 「복사」로 통째로 가져갈 수 있다.</li>
     <li>「실제로 나온 출력」에는 그 절이 새로 찍는 줄만 보인다. 전체 출력은 실습 「성공 화면」에 있다.</li>
@@ -124,7 +124,7 @@
     먼저 센서를 흉내내는 클래스다. <strong>켜질 때와 꺼질 때 한 줄씩 찍는다.</strong>
     이 두 줄이 오늘 내내 <strong>"정리가 됐는지"를 눈으로 보는 장치</strong>가 된다.
   </p>
-  <pre><code>#include &lt;iostream&gt;
+  <pre class="lang-cpp"><code>#include &lt;iostream&gt;
 #include &lt;memory&gt;
 #include &lt;string&gt;
 #include &lt;vector&gt;
@@ -160,7 +160,7 @@ private:
   <p>그 아래가 AI에게 "센서를 켜고 상태를 확인하는 함수를 만들어 줘"라고 했을 때 흔히 받는 코드다.</p>
 
   <div class="codelabel bad">AI가 보통 주는 코드 🔴</div>
-  <pre class="before"><code>// 센서 하나를 켜고, 상태가 나쁘면 그만두고, 좋으면 측정을 시작한다
+  <pre class="lang-cpp before"><code>// 센서 하나를 켜고, 상태가 나쁘면 그만두고, 좋으면 측정을 시작한다
 void setup(const std::string &amp; name, bool ok)
 {
   Sensor * s = new Sensor(name, ok);   // 손으로 만들었다
@@ -188,13 +188,13 @@ int main()
   [카메라 켜짐]
   카메라 상태 불량 — 그만둔다</code></pre>
 
-  <!-- fullcode "전체 코드 — ptr_container.cpp (1단계 · AI가 준 new/delete 판)" build="g++ -std=c++17 -O2 -Wall -o ptr_container ptr_container.cpp && ./ptr_container"
-       l12_ptr_container/steps/step1.cpp as ptr_container.cpp
+  <!-- fullcode "전체 코드 — main.cpp (1단계 · AI가 준 new/delete 판)" build="g++ -std=c++17 -O2 -Wall -o ptr_container main.cpp && ./ptr_container"
+       l12_ptr_container/steps/step1.cpp as main.cpp
   -->
 <details class="fullcode">
-  <summary>전체 코드 — ptr_container.cpp (1단계 · AI가 준 new/delete 판)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -Wall -o ptr_container ptr_container.cpp &amp;&amp; ./ptr_container</code></p>
-  <div class="codefile"><div class="fname">ptr_container.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 12회 — 스마트 포인터와 컨테이너: 누가 주인이고, 어디에 담나
+  <summary>전체 코드 — main.cpp (1단계 · AI가 준 new/delete 판)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -Wall -o ptr_container main.cpp &amp;&amp; ./ptr_container</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 — 스마트 포인터와 컨테이너: 누가 주인이고, 어디에 담나
 #include &lt;iostream&gt;
 #include &lt;memory&gt;
 #include &lt;string&gt;
@@ -264,16 +264,14 @@ int main()
 
   <h3>2단계 — <code>setup()</code>을 고친다</h3>
   <div class="codelabel good">받은 코드</div>
-  <pre class="after"><code>void setup(const std::string &amp; name, bool ok)
+  <pre class="lang-cpp after"><code>void setup(const std::string &amp; name, bool ok)
 {
-<span class="ln-del">  Sensor * s = new Sensor(name, ok);   // 손으로 만들었다</span>
-<span class="ln-add">  auto s = std::make_unique&lt;Sensor&gt;(name, ok);</span>
+  auto s = std::make_unique&lt;Sensor&gt;(name, ok);
   if (!s-&gt;ok()) {
     std::cout &lt;&lt; "  " &lt;&lt; name &lt;&lt; " 상태 불량 — 그만둔다\n";
     return;                            // 여기서 나가도 알아서 정리된다
   }
   s-&gt;start();
-<span class="ln-del">  delete s;                            // 잊으면 새고, 두 번 부르면 부서진다</span>
 }                                      // 중괄호를 벗어나는 순간 끝. delete 가 없다</code></pre>
 
   <h3>실제로 나온 출력</h3>
@@ -285,13 +283,13 @@ int main()
   카메라 상태 불량 — 그만둔다
   [카메라 꺼짐]</code></pre>
 
-  <!-- fullcode "전체 코드 — ptr_container.cpp (2단계 · make_unique 로 고친 뒤)" build="g++ -std=c++17 -O2 -Wall -o ptr_container ptr_container.cpp && ./ptr_container"
-       l12_ptr_container/steps/step2.cpp as ptr_container.cpp
+  <!-- fullcode "전체 코드 — main.cpp (2단계 · make_unique 로 고친 뒤)" build="g++ -std=c++17 -O2 -Wall -o ptr_container main.cpp && ./ptr_container"
+       l12_ptr_container/steps/step2.cpp as main.cpp
   -->
 <details class="fullcode">
-  <summary>전체 코드 — ptr_container.cpp (2단계 · make_unique 로 고친 뒤)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -Wall -o ptr_container ptr_container.cpp &amp;&amp; ./ptr_container</code></p>
-  <div class="codefile"><div class="fname">ptr_container.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 12회 — 스마트 포인터와 컨테이너: 누가 주인이고, 어디에 담나
+  <summary>전체 코드 — main.cpp (2단계 · make_unique 로 고친 뒤)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -Wall -o ptr_container main.cpp &amp;&amp; ./ptr_container</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 — 스마트 포인터와 컨테이너: 누가 주인이고, 어디에 담나
 #include &lt;iostream&gt;
 #include &lt;memory&gt;
 #include &lt;string&gt;
@@ -365,27 +363,27 @@ int main()
 
   <h3>3단계 — <code>main</code>에 두 묶음을 더한다</h3>
   <p><code>setup("카메라", false);</code> 아래, <code>return 0;</code> 위에 넣는다. 중괄호로 감싼 자리가 두 곳이다 — <strong>그 중괄호가 언제 닫히는지</strong>가 이 절의 알맹이다.</p>
-  <pre><code>  // … 2단계까지의 줄은 그대로 …
-<span class="ln-add">  std::cout &lt;&lt; "\n② unique_ptr — 주인이 하나다\n";</span>
-<span class="ln-add">  {</span>
-<span class="ln-add">    std::unique_ptr&lt;Sensor&gt; a = std::make_unique&lt;Sensor&gt;("라이다", true);</span>
-<span class="ln-add">    std::cout &lt;&lt; "  a 가 가리키는 것: " &lt;&lt; a-&gt;name() &lt;&lt; "\n";</span>
-<span class="ln-add">    std::unique_ptr&lt;Sensor&gt; b = std::move(a);      // 주인이 바뀐다. 복사는 안 된다</span>
-<span class="ln-add">    std::cout &lt;&lt; "  넘긴 뒤 a 는 비었나? " &lt;&lt; (a == nullptr ? "그렇다" : "아니다") &lt;&lt; "\n";</span>
-<span class="ln-add">    std::cout &lt;&lt; "  이제 주인은 b: " &lt;&lt; b-&gt;name() &lt;&lt; "\n";</span>
-<span class="ln-add">  }</span>
-<span class="ln-add">  std::cout &lt;&lt; "  중괄호를 나오면 delete 를 안 써도 꺼졌다\n";</span>
-<span class="ln-add"></span>
-<span class="ln-add">  std::cout &lt;&lt; "\n② shared_ptr — 여럿이 나눠 가진다. 마지막이 끄고 나간다\n";</span>
-<span class="ln-add">  {</span>
-<span class="ln-add">    std::shared_ptr&lt;Sensor&gt; p1 = std::make_shared&lt;Sensor&gt;("카메라", true);</span>
-<span class="ln-add">    std::cout &lt;&lt; "  주인 수 = " &lt;&lt; p1.use_count() &lt;&lt; "\n";</span>
-<span class="ln-add">    {</span>
-<span class="ln-add">      std::shared_ptr&lt;Sensor&gt; p2 = p1;             // 복사가 된다. 세는 숫자가 는다</span>
-<span class="ln-add">      std::cout &lt;&lt; "  주인 수 = " &lt;&lt; p1.use_count() &lt;&lt; "  (p2 가 생겼다)\n";</span>
-<span class="ln-add">    }</span>
-<span class="ln-add">    std::cout &lt;&lt; "  주인 수 = " &lt;&lt; p1.use_count() &lt;&lt; "  (p2 가 사라졌다)\n";</span>
-<span class="ln-add">  }</span>
+  <pre class="lang-cpp"><code>  // … 2단계까지의 줄은 그대로 …
+  std::cout &lt;&lt; "\n② unique_ptr — 주인이 하나다\n";
+  {
+    std::unique_ptr&lt;Sensor&gt; a = std::make_unique&lt;Sensor&gt;("라이다", true);
+    std::cout &lt;&lt; "  a 가 가리키는 것: " &lt;&lt; a-&gt;name() &lt;&lt; "\n";
+    std::unique_ptr&lt;Sensor&gt; b = std::move(a);      // 주인이 바뀐다. 복사는 안 된다
+    std::cout &lt;&lt; "  넘긴 뒤 a 는 비었나? " &lt;&lt; (a == nullptr ? "그렇다" : "아니다") &lt;&lt; "\n";
+    std::cout &lt;&lt; "  이제 주인은 b: " &lt;&lt; b-&gt;name() &lt;&lt; "\n";
+  }
+  std::cout &lt;&lt; "  중괄호를 나오면 delete 를 안 써도 꺼졌다\n";
+
+  std::cout &lt;&lt; "\n② shared_ptr — 여럿이 나눠 가진다. 마지막이 끄고 나간다\n";
+  {
+    std::shared_ptr&lt;Sensor&gt; p1 = std::make_shared&lt;Sensor&gt;("카메라", true);
+    std::cout &lt;&lt; "  주인 수 = " &lt;&lt; p1.use_count() &lt;&lt; "\n";
+    {
+      std::shared_ptr&lt;Sensor&gt; p2 = p1;             // 복사가 된다. 세는 숫자가 는다
+      std::cout &lt;&lt; "  주인 수 = " &lt;&lt; p1.use_count() &lt;&lt; "  (p2 가 생겼다)\n";
+    }
+    std::cout &lt;&lt; "  주인 수 = " &lt;&lt; p1.use_count() &lt;&lt; "  (p2 가 사라졌다)\n";
+  }
   return 0;</code></pre>
 
   <div class="box firstseen">
@@ -425,13 +423,13 @@ int main()
   주인 수 = 1  (p2 가 사라졌다)
   [카메라 꺼짐]</code></pre>
 
-  <!-- fullcode "전체 코드 — ptr_container.cpp (3단계 · unique_ptr 와 shared_ptr 까지)" build="g++ -std=c++17 -O2 -Wall -o ptr_container ptr_container.cpp && ./ptr_container"
-       l12_ptr_container/steps/step3.cpp as ptr_container.cpp
+  <!-- fullcode "전체 코드 — main.cpp (3단계 · unique_ptr 와 shared_ptr 까지)" build="g++ -std=c++17 -O2 -Wall -o ptr_container main.cpp && ./ptr_container"
+       l12_ptr_container/steps/step3.cpp as main.cpp
   -->
 <details class="fullcode">
-  <summary>전체 코드 — ptr_container.cpp (3단계 · unique_ptr 와 shared_ptr 까지)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -Wall -o ptr_container ptr_container.cpp &amp;&amp; ./ptr_container</code></p>
-  <div class="codefile"><div class="fname">ptr_container.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 12회 — 스마트 포인터와 컨테이너: 누가 주인이고, 어디에 담나
+  <summary>전체 코드 — main.cpp (3단계 · unique_ptr 와 shared_ptr 까지)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -Wall -o ptr_container main.cpp &amp;&amp; ./ptr_container</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 — 스마트 포인터와 컨테이너: 누가 주인이고, 어디에 담나
 #include &lt;iostream&gt;
 #include &lt;memory&gt;
 #include &lt;string&gt;
@@ -568,22 +566,22 @@ int main()
     ③절은 판단만 하는 절이라 코드가 없었다. 여기서 프로그램에 <strong>두 번째 재료</strong>가 들어간다 —
     라이다 한 바퀴의 거리 값을 담는 <code>ScanMsg</code>다. <code>Sensor</code> 클래스 아래에 넣는다.
   </p>
-  <pre><code>  // … Sensor 클래스는 그대로 …
-<span class="ln-add">const int kScanSize = 360;             // 라이다 한 바퀴의 거리 값 개수</span>
-<span class="ln-add"></span>
-<span class="ln-add">struct ScanMsg {</span>
-<span class="ln-add">  std::vector&lt;float&gt; ranges;</span>
-<span class="ln-add">  ScanMsg() : ranges(kScanSize, 1.0f) {}</span>
-<span class="ln-add">  // 이 구조체 안에 별명을 하나 둔다</span>
-<span class="ln-add">  using SharedPtr = std::shared_ptr&lt;ScanMsg&gt;;</span>
-<span class="ln-add">};</span></code></pre>
+  <pre class="lang-cpp"><code>  // … Sensor 클래스는 그대로 …
+const int kScanSize = 360;             // 라이다 한 바퀴의 거리 값 개수
+
+struct ScanMsg {
+  std::vector&lt;float&gt; ranges;
+  ScanMsg() : ranges(kScanSize, 1.0f) {}
+  // 이 구조체 안에 별명을 하나 둔다
+  using SharedPtr = std::shared_ptr&lt;ScanMsg&gt;;
+};</code></pre>
   <p>그리고 <code>main</code>의 ② 묶음 아래에 세 줄. <strong>별명으로 만든 것과 원래 이름으로 만든 것이 같은 타입</strong>이라 서로 대입된다.</p>
-  <pre><code>  // … 3단계까지의 줄은 그대로 …
-<span class="ln-add">  std::cout &lt;&lt; "\n④ ::SharedPtr 은 별명일 뿐이다\n";</span>
-<span class="ln-add">  ScanMsg::SharedPtr       msg1 = std::make_shared&lt;ScanMsg&gt;();</span>
-<span class="ln-add">  std::shared_ptr&lt;ScanMsg&gt; msg2 = msg1;            // 같은 타입이므로 그대로 대입된다</span>
-<span class="ln-add">  std::cout &lt;&lt; "  msg1 과 msg2 가 같은 스캔을 잡고 있나? " &lt;&lt; (msg1 == msg2 ? "그렇다" : "아니다")</span>
-<span class="ln-add">            &lt;&lt; "  (주인 수 " &lt;&lt; msg1.use_count() &lt;&lt; ")\n";</span>
+  <pre class="lang-cpp"><code>  // … 3단계까지의 줄은 그대로 …
+  std::cout &lt;&lt; "\n④ ::SharedPtr 은 별명일 뿐이다\n";
+  ScanMsg::SharedPtr       msg1 = std::make_shared&lt;ScanMsg&gt;();
+  std::shared_ptr&lt;ScanMsg&gt; msg2 = msg1;            // 같은 타입이므로 그대로 대입된다
+  std::cout &lt;&lt; "  msg1 과 msg2 가 같은 스캔을 잡고 있나? " &lt;&lt; (msg1 == msg2 ? "그렇다" : "아니다")
+            &lt;&lt; "  (주인 수 " &lt;&lt; msg1.use_count() &lt;&lt; ")\n";
   return 0;</code></pre>
 
   <div class="box firstseen">
@@ -605,13 +603,13 @@ int main()
   <pre><code>④ ::SharedPtr 은 별명일 뿐이다
   msg1 과 msg2 가 같은 스캔을 잡고 있나? 그렇다  (주인 수 2)</code></pre>
 
-  <!-- fullcode "전체 코드 — ptr_container.cpp (4단계 · ScanMsg 와 SharedPtr 별명까지)" build="g++ -std=c++17 -O2 -Wall -o ptr_container ptr_container.cpp && ./ptr_container"
-       l12_ptr_container/steps/step4.cpp as ptr_container.cpp
+  <!-- fullcode "전체 코드 — main.cpp (4단계 · ScanMsg 와 SharedPtr 별명까지)" build="g++ -std=c++17 -O2 -Wall -o ptr_container main.cpp && ./ptr_container"
+       l12_ptr_container/steps/step4.cpp as main.cpp
   -->
 <details class="fullcode">
-  <summary>전체 코드 — ptr_container.cpp (4단계 · ScanMsg 와 SharedPtr 별명까지)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -Wall -o ptr_container ptr_container.cpp &amp;&amp; ./ptr_container</code></p>
-  <div class="codefile"><div class="fname">ptr_container.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 12회 — 스마트 포인터와 컨테이너: 누가 주인이고, 어디에 담나
+  <summary>전체 코드 — main.cpp (4단계 · ScanMsg 와 SharedPtr 별명까지)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -Wall -o ptr_container main.cpp &amp;&amp; ./ptr_container</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 — 스마트 포인터와 컨테이너: 누가 주인이고, 어디에 담나
 #include &lt;iostream&gt;
 #include &lt;memory&gt;
 #include &lt;string&gt;
@@ -724,17 +722,17 @@ int main()
 
   <h3>5단계 — 헤더 한 줄과 <code>main</code> 여섯 줄을 더한다</h3>
   <p>파일 맨 위 <code>#include</code> 목록에 <code>&lt;array&gt;</code>가 하나 는다. 그리고 ④의 <code>msg1</code>이 잡고 있는 스캔의 <code>ranges</code>를 <strong>vector 쪽 예</strong>로 그대로 쓴다.</p>
-  <pre><code><span class="ln-add">#include &lt;array&gt;</span>
+  <pre><code>#include &lt;array&gt;
 #include &lt;iostream&gt;
   // … 나머지 #include 와 클래스는 그대로 …</code></pre>
-  <pre><code>  // … 4단계까지의 줄은 그대로 …
-<span class="ln-add">  std::cout &lt;&lt; "\n⑤ array 와 vector — 크기가 언제 정해지나\n";</span>
-<span class="ln-add">  std::array&lt;float, 4&gt; wheel = {0.0f, 0.0f, 0.0f, 0.0f};   // 크기가 코드에 박혀 있다</span>
-<span class="ln-add">  wheel[0] = 0.5f;</span>
-<span class="ln-add">  std::cout &lt;&lt; "  array  : 크기 " &lt;&lt; wheel.size() &lt;&lt; "  (컴파일할 때 이미 정해졌다)\n";</span>
-<span class="ln-add">  std::cout &lt;&lt; "  vector : 크기 " &lt;&lt; msg1-&gt;ranges.size() &lt;&lt; "  (실행 중에 정했다)\n";</span>
-<span class="ln-add">  msg1-&gt;ranges.push_back(2.0f);                    // vector 는 이렇게 늘릴 수 있다</span>
-<span class="ln-add">  std::cout &lt;&lt; "  vector : push_back 뒤 크기 " &lt;&lt; msg1-&gt;ranges.size() &lt;&lt; "  (array 는 이렇게 늘릴 수 없다)\n";</span>
+  <pre class="lang-cpp"><code>  // … 4단계까지의 줄은 그대로 …
+  std::cout &lt;&lt; "\n⑤ array 와 vector — 크기가 언제 정해지나\n";
+  std::array&lt;float, 4&gt; wheel = {0.0f, 0.0f, 0.0f, 0.0f};   // 크기가 코드에 박혀 있다
+  wheel[0] = 0.5f;
+  std::cout &lt;&lt; "  array  : 크기 " &lt;&lt; wheel.size() &lt;&lt; "  (컴파일할 때 이미 정해졌다)\n";
+  std::cout &lt;&lt; "  vector : 크기 " &lt;&lt; msg1-&gt;ranges.size() &lt;&lt; "  (실행 중에 정했다)\n";
+  msg1-&gt;ranges.push_back(2.0f);                    // vector 는 이렇게 늘릴 수 있다
+  std::cout &lt;&lt; "  vector : push_back 뒤 크기 " &lt;&lt; msg1-&gt;ranges.size() &lt;&lt; "  (array 는 이렇게 늘릴 수 없다)\n";
   return 0;</code></pre>
 
   <div class="box firstseen">
@@ -758,13 +756,13 @@ int main()
   vector : 크기 360  (실행 중에 정했다)
   vector : push_back 뒤 크기 361  (array 는 이렇게 늘릴 수 없다)</code></pre>
 
-  <!-- fullcode "전체 코드 — ptr_container.cpp (5단계 · array 와 vector 까지)" build="g++ -std=c++17 -O2 -Wall -o ptr_container ptr_container.cpp && ./ptr_container"
-       l12_ptr_container/steps/step5.cpp as ptr_container.cpp
+  <!-- fullcode "전체 코드 — main.cpp (5단계 · array 와 vector 까지)" build="g++ -std=c++17 -O2 -Wall -o ptr_container main.cpp && ./ptr_container"
+       l12_ptr_container/steps/step5.cpp as main.cpp
   -->
 <details class="fullcode">
-  <summary>전체 코드 — ptr_container.cpp (5단계 · array 와 vector 까지)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -Wall -o ptr_container ptr_container.cpp &amp;&amp; ./ptr_container</code></p>
-  <div class="codefile"><div class="fname">ptr_container.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 12회 — 스마트 포인터와 컨테이너: 누가 주인이고, 어디에 담나
+  <summary>전체 코드 — main.cpp (5단계 · array 와 vector 까지)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -Wall -o ptr_container main.cpp &amp;&amp; ./ptr_container</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 — 스마트 포인터와 컨테이너: 누가 주인이고, 어디에 담나
 #include &lt;array&gt;
 #include &lt;iostream&gt;
 #include &lt;memory&gt;
@@ -896,47 +894,47 @@ int main()
     첫째는 <strong>이사 횟수를 세는 함수</strong>, 둘째는 <strong>같은 일을 10만 번 반복해 시간을 재는 함수</strong>다.
     둘 다 ④에서 만든 <code>kScanSize</code>를 쓴다.
   </p>
-  <pre><code>  // … setup() 은 그대로 …
-<span class="ln-add">// kScanSize 개를 push_back 하는 동안 자리를 몇 번 다시 잡는지 센다</span>
-<span class="ln-add">void count_grow(bool use_reserve)</span>
-<span class="ln-add">{</span>
-<span class="ln-add">  std::vector&lt;float&gt; v;</span>
-<span class="ln-add">  if (use_reserve) { v.reserve(kScanSize); }</span>
-<span class="ln-add">  size_t cap = v.capacity();</span>
-<span class="ln-add">  int grow = 0;</span>
-<span class="ln-add">  for (int i = 0; i &lt; kScanSize; ++i) {</span>
-<span class="ln-add">    v.push_back(0.5f);</span>
-<span class="ln-add">    if (v.capacity() != cap) { cap = v.capacity(); ++grow; }</span>
-<span class="ln-add">  }</span>
-<span class="ln-add">  std::cout &lt;&lt; "  " &lt;&lt; (use_reserve ? "reserve 하고" : "reserve 없이") &lt;&lt; " : " &lt;&lt; kScanSize</span>
-<span class="ln-add">            &lt;&lt; "개를 담는 동안 자리를 " &lt;&lt; grow &lt;&lt; "번 다시 잡았다 (최종 capacity=" &lt;&lt; v.capacity() &lt;&lt; ")\n";</span>
-<span class="ln-add">}</span>
-<span class="ln-add"></span>
-<span class="ln-add">// 같은 일을 loops 번 반복해 걸린 시간(ms)을 잰다</span>
-<span class="ln-add">double time_fill(bool use_reserve, int loops, size_t &amp; sink)</span>
-<span class="ln-add">{</span>
-<span class="ln-add">  const auto t0 = std::chrono::steady_clock::now();</span>
-<span class="ln-add">  for (int k = 0; k &lt; loops; ++k) {</span>
-<span class="ln-add">    std::vector&lt;float&gt; v;</span>
-<span class="ln-add">    if (use_reserve) { v.reserve(kScanSize); }</span>
-<span class="ln-add">    for (int i = 0; i &lt; kScanSize; ++i) { v.push_back(0.5f); }</span>
-<span class="ln-add">    sink += v.size();                  // 결과를 써야 컴파일러가 루프를 지우지 않는다</span>
-<span class="ln-add">  }</span>
-<span class="ln-add">  const auto t1 = std::chrono::steady_clock::now();</span>
-<span class="ln-add">  return std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();</span>
-<span class="ln-add">}</span></code></pre>
+  <pre class="lang-cpp"><code>  // … setup() 은 그대로 …
+// kScanSize 개를 push_back 하는 동안 자리를 몇 번 다시 잡는지 센다
+void count_grow(bool use_reserve)
+{
+  std::vector&lt;float&gt; v;
+  if (use_reserve) { v.reserve(kScanSize); }
+  size_t cap = v.capacity();
+  int grow = 0;
+  for (int i = 0; i &lt; kScanSize; ++i) {
+    v.push_back(0.5f);
+    if (v.capacity() != cap) { cap = v.capacity(); ++grow; }
+  }
+  std::cout &lt;&lt; "  " &lt;&lt; (use_reserve ? "reserve 하고" : "reserve 없이") &lt;&lt; " : " &lt;&lt; kScanSize
+            &lt;&lt; "개를 담는 동안 자리를 " &lt;&lt; grow &lt;&lt; "번 다시 잡았다 (최종 capacity=" &lt;&lt; v.capacity() &lt;&lt; ")\n";
+}
+
+// 같은 일을 loops 번 반복해 걸린 시간(ms)을 잰다
+double time_fill(bool use_reserve, int loops, size_t &amp; sink)
+{
+  const auto t0 = std::chrono::steady_clock::now();
+  for (int k = 0; k &lt; loops; ++k) {
+    std::vector&lt;float&gt; v;
+    if (use_reserve) { v.reserve(kScanSize); }
+    for (int i = 0; i &lt; kScanSize; ++i) { v.push_back(0.5f); }
+    sink += v.size();                  // 결과를 써야 컴파일러가 루프를 지우지 않는다
+  }
+  const auto t1 = std::chrono::steady_clock::now();
+  return std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+}</code></pre>
   <p><code>main</code>의 ⑤ 묶음 아래에는 아홉 줄.</p>
-  <pre><code>  // … 5단계까지의 줄은 그대로 …
-<span class="ln-add">  std::cout &lt;&lt; "\n⑥ reserve — 자리를 미리 잡는다\n";</span>
-<span class="ln-add">  count_grow(false);</span>
-<span class="ln-add">  count_grow(true);</span>
-<span class="ln-add">  const int loops = 100000;</span>
-<span class="ln-add">  size_t sink = 0;</span>
-<span class="ln-add">  const double no_res = time_fill(false, loops, sink);</span>
-<span class="ln-add">  const double res    = time_fill(true,  loops, sink);</span>
-<span class="ln-add">  std::printf("  reserve 없이 : %7.1f ms\n", no_res);</span>
-<span class="ln-add">  std::printf("  reserve 하고 : %7.1f ms\n", res);</span>
-<span class="ln-add">  std::printf("  차이         : %.2f배 (%d회 기준, sink=%zu)\n", no_res / res, loops, sink);</span>
+  <pre class="lang-cpp"><code>  // … 5단계까지의 줄은 그대로 …
+  std::cout &lt;&lt; "\n⑥ reserve — 자리를 미리 잡는다\n";
+  count_grow(false);
+  count_grow(true);
+  const int loops = 100000;
+  size_t sink = 0;
+  const double no_res = time_fill(false, loops, sink);
+  const double res    = time_fill(true,  loops, sink);
+  std::printf("  reserve 없이 : %7.1f ms\n", no_res);
+  std::printf("  reserve 하고 : %7.1f ms\n", res);
+  std::printf("  차이         : %.2f배 (%d회 기준, sink=%zu)\n", no_res / res, loops, sink);
   return 0;</code></pre>
 
   <div class="box firstseen">
@@ -966,13 +964,13 @@ int main()
   reserve 하고 :    18.4 ms
   차이         : 1.90배 (100000회 기준, sink=72000000)</code></pre>
 
-  <!-- fullcode "전체 코드 — ptr_container.cpp (6단계 · reserve 까지)" build="g++ -std=c++17 -O2 -Wall -o ptr_container ptr_container.cpp && ./ptr_container"
-       l12_ptr_container/steps/step6.cpp as ptr_container.cpp
+  <!-- fullcode "전체 코드 — main.cpp (6단계 · reserve 까지)" build="g++ -std=c++17 -O2 -Wall -o ptr_container main.cpp && ./ptr_container"
+       l12_ptr_container/steps/step6.cpp as main.cpp
   -->
 <details class="fullcode">
-  <summary>전체 코드 — ptr_container.cpp (6단계 · reserve 까지)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -Wall -o ptr_container ptr_container.cpp &amp;&amp; ./ptr_container</code></p>
-  <div class="codefile"><div class="fname">ptr_container.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 12회 — 스마트 포인터와 컨테이너: 누가 주인이고, 어디에 담나
+  <summary>전체 코드 — main.cpp (6단계 · reserve 까지)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -Wall -o ptr_container main.cpp &amp;&amp; ./ptr_container</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 — 스마트 포인터와 컨테이너: 누가 주인이고, 어디에 담나
 #include &lt;array&gt;
 #include &lt;chrono&gt;
 #include &lt;cstdio&gt;
@@ -1135,12 +1133,12 @@ int main()
   </p>
 
   <div class="codelabel bad">AI가 보통 주는 코드 🔴</div>
-  <pre class="before"><code>for (auto s : history) {          // ← 한 바퀴마다 s 에 사본이 하나 만들어진다
+  <pre class="lang-cpp before"><code>for (auto s : history) {          // ← 한 바퀴마다 s 에 사본이 하나 만들어진다
   sum += s.ranges[0];
 }</code></pre>
 
   <div class="codelabel good">이게 맞다</div>
-  <pre class="after"><code>for (const auto &amp; s : history) {  // ← 이름표만 붙인다. 사본이 없다
+  <pre class="lang-cpp after"><code>for (const auto &amp; s : history) {  // ← 이름표만 붙인다. 사본이 없다
   sum += s.ranges[0];
 }</code></pre>
 
@@ -1149,28 +1147,28 @@ int main()
     복사가 정말 나는지 보려면 <strong>복사될 때마다 숫자를 하나 올리는 코드</strong>가 필요하다.
     11회에서 복사 횟수를 셀 때 쓴 방법 그대로다. <code>ScanMsg</code>가 이렇게 바뀐다.
   </p>
-  <pre><code>const int kScanSize = 360;             // 라이다 한 바퀴의 거리 값 개수
-<span class="ln-add">int g_copy = 0;                        // ScanMsg 가 복사된 횟수</span>
+  <pre class="lang-cpp"><code>const int kScanSize = 360;             // 라이다 한 바퀴의 거리 값 개수
+int g_copy = 0;                        // ScanMsg 가 복사된 횟수
 
 struct ScanMsg {
   std::vector&lt;float&gt; ranges;
   ScanMsg() : ranges(kScanSize, 1.0f) {}
-<span class="ln-add">  ScanMsg(const ScanMsg &amp; o) : ranges(o.ranges) { ++g_copy; }   // 복사될 때마다 하나 센다</span>
+  ScanMsg(const ScanMsg &amp; o) : ranges(o.ranges) { ++g_copy; }   // 복사될 때마다 하나 센다
   // 이 구조체 안에 별명을 하나 둔다
   using SharedPtr = std::shared_ptr&lt;ScanMsg&gt;;
 };</code></pre>
   <p><code>main</code>의 ⑥ 묶음 아래에는 열 줄. 두 반복문이 <strong>같은 <code>history</code>를 같은 방식으로 한 바퀴씩</strong> 돈다.</p>
-  <pre><code>  // … 6단계까지의 줄은 그대로 …
-<span class="ln-add">  std::cout &lt;&lt; "\n⑦ 범위 for — const auto &amp; 를 빼면 매 바퀴 복사가 난다\n";</span>
-<span class="ln-add">  std::vector&lt;ScanMsg&gt; history(100);               // 스캔 100개를 모아 두었다</span>
-<span class="ln-add">  float sum = 0.0f;</span>
-<span class="ln-add">  g_copy = 0;</span>
-<span class="ln-add">  for (auto s : history) { sum += s.ranges[0]; }</span>
-<span class="ln-add">  std::cout &lt;&lt; "  for (auto s : history)         : ScanMsg 복사 " &lt;&lt; g_copy &lt;&lt; "회\n";</span>
-<span class="ln-add">  g_copy = 0;</span>
-<span class="ln-add">  for (const auto &amp; s : history) { sum += s.ranges[0]; }</span>
-<span class="ln-add">  std::cout &lt;&lt; "  for (const auto &amp; s : history) : ScanMsg 복사 " &lt;&lt; g_copy &lt;&lt; "회\n";</span>
-<span class="ln-add">  std::cout &lt;&lt; "  스캔 " &lt;&lt; history.size() &lt;&lt; "개를 한 바퀴씩 돌았다 (sum=" &lt;&lt; sum &lt;&lt; ")\n";</span>
+  <pre class="lang-cpp"><code>  // … 6단계까지의 줄은 그대로 …
+  std::cout &lt;&lt; "\n⑦ 범위 for — const auto &amp; 를 빼면 매 바퀴 복사가 난다\n";
+  std::vector&lt;ScanMsg&gt; history(100);               // 스캔 100개를 모아 두었다
+  float sum = 0.0f;
+  g_copy = 0;
+  for (auto s : history) { sum += s.ranges[0]; }
+  std::cout &lt;&lt; "  for (auto s : history)         : ScanMsg 복사 " &lt;&lt; g_copy &lt;&lt; "회\n";
+  g_copy = 0;
+  for (const auto &amp; s : history) { sum += s.ranges[0]; }
+  std::cout &lt;&lt; "  for (const auto &amp; s : history) : ScanMsg 복사 " &lt;&lt; g_copy &lt;&lt; "회\n";
+  std::cout &lt;&lt; "  스캔 " &lt;&lt; history.size() &lt;&lt; "개를 한 바퀴씩 돌았다 (sum=" &lt;&lt; sum &lt;&lt; ")\n";
   return 0;</code></pre>
 
   <div class="box firstseen">
@@ -1196,13 +1194,13 @@ struct ScanMsg {
   for (const auto &amp; s : history) : ScanMsg 복사 0회
   스캔 100개를 한 바퀴씩 돌았다 (sum=200)</code></pre>
 
-  <!-- fullcode "전체 코드 — ptr_container.cpp (7단계 · 완성본)" build="g++ -std=c++17 -O2 -Wall -o ptr_container ptr_container.cpp && ./ptr_container"
-       l12_ptr_container/steps/step7.cpp as ptr_container.cpp
+  <!-- fullcode "전체 코드 — main.cpp (7단계 · 완성본)" build="g++ -std=c++17 -O2 -Wall -o ptr_container main.cpp && ./ptr_container"
+       l12_ptr_container/steps/step7.cpp as main.cpp
   -->
 <details class="fullcode">
-  <summary>전체 코드 — ptr_container.cpp (7단계 · 완성본)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -Wall -o ptr_container ptr_container.cpp &amp;&amp; ./ptr_container</code></p>
-  <div class="codefile"><div class="fname">ptr_container.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 12회 — 스마트 포인터와 컨테이너: 누가 주인이고, 어디에 담나
+  <summary>전체 코드 — main.cpp (7단계 · 완성본)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -Wall -o ptr_container main.cpp &amp;&amp; ./ptr_container</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 — 스마트 포인터와 컨테이너: 누가 주인이고, 어디에 담나
 #include &lt;array&gt;
 #include &lt;chrono&gt;
 #include &lt;cstdio&gt;
@@ -1377,9 +1375,9 @@ int main()
       코드는 파일 하나다. ⑦절 끝의 📄 「전체 코드 — 7단계 · 완성본」 상자에 있다.</p>
     <p><strong>절차</strong></p>
     <ol>
-      <li>⑦절 끝의 📄 「전체 코드 — 7단계 · 완성본」 상자를 펼쳐 「복사」를 누르고, <code>ptr_container.cpp</code>로 저장한다. <strong>타이핑하지 않는다.</strong> (2분)</li>
+      <li>⑦절 끝의 📄 「전체 코드 — 7단계 · 완성본」 상자를 펼쳐 「복사」를 누르고, <code>main.cpp</code>로 저장한다. <strong>타이핑하지 않는다.</strong> (2분)</li>
       <li>빌드해서 돌린다. 출력이 아래 「성공 화면」과 같은지 본다. <strong>「꺼짐」이 어느 줄 다음에 찍히는지</strong>를 특히 본다. (5분)
-        <pre><code>g++ -std=c++17 -O2 -Wall -o ptr_container ptr_container.cpp
+        <pre><code>g++ -std=c++17 -O2 -Wall -o ptr_container main.cpp
 ./ptr_container</code></pre>
       </li>
       <li>⑥ 묶음의 <strong>이사 횟수와 최종 capacity</strong>를 적어 둔다. (3분)</li>
@@ -1462,7 +1460,7 @@ int main()
   </p>
 
   <div class="codelabel bad">코드 A</div>
-  <pre class="before"><code>class ScanKeeper {
+  <pre class="lang-cpp before"><code>class ScanKeeper {
 public:
   void add(ScanMsg msg)
   {
@@ -1483,7 +1481,7 @@ private:
 };</code></pre>
 
   <div class="codelabel good">코드 B</div>
-  <pre class="after"><code>class ScanKeeper {
+  <pre class="lang-cpp after"><code>class ScanKeeper {
 public:
   void add(ScanMsg msg)
   {
@@ -1507,18 +1505,18 @@ private:
     두 코드를 한 파일에 넣고 <strong>복사 횟수를 세면서</strong> 돌려 봤다.
     <code>ScanMsg</code>에는 <strong>복사될 때 숫자를 하나 올리는 코드</strong>가 들어 있다.
   </p>
-  <pre><code>$ g++ -std=c++17 -O2 -Wall -o hw3_ab hw3_ab.cpp &amp;&amp; ./hw3_ab
+  <pre class="lang-sh"><code>$ g++ -std=c++17 -O2 -Wall -o hw3_ab main.cpp &amp;&amp; ./hw3_ab
 코드 A: 0.5m 안쪽 값 1800개,  그동안 ScanMsg 복사 5회
 코드 B: 0.5m 안쪽 값 1800개,  그동안 ScanMsg 복사 0회
 스캔 5개를 넣고 셌다. 두 코드가 낸 답은 같다.</code></pre>
 
-  <!-- fullcode "전체 코드 — hw3_ab.cpp (코드 A·B 를 한 파일에 넣고 복사 횟수를 센다)" build="g++ -std=c++17 -O2 -Wall -o hw3_ab hw3_ab.cpp && ./hw3_ab"
-       l12_ptr_container/hw3_ab.cpp
+  <!-- fullcode "전체 코드 — main.cpp (HW3 · 코드 A·B 를 한 파일에 넣고 복사 횟수를 센다)" build="g++ -std=c++17 -O2 -Wall -o hw3_ab main.cpp && ./hw3_ab"
+       l12_ptr_container/hw3_ab.cpp as main.cpp
   -->
 <details class="fullcode">
-  <summary>전체 코드 — hw3_ab.cpp (코드 A·B 를 한 파일에 넣고 복사 횟수를 센다)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -Wall -o hw3_ab hw3_ab.cpp &amp;&amp; ./hw3_ab</code></p>
-  <div class="codefile"><div class="fname">hw3_ab.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 12회 HW3 — 같은 일을 하는 코드 두 개. 어느 쪽이 나은가?
+  <summary>전체 코드 — main.cpp (HW3 · 코드 A·B 를 한 파일에 넣고 복사 횟수를 센다)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -Wall -o hw3_ab main.cpp &amp;&amp; ./hw3_ab</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 HW3 — 같은 일을 하는 코드 두 개. 어느 쪽이 나은가?
 // 스캔을 보관해 두었다가 가까운 값의 개수를 세는 클래스다.
 #include &lt;cstdio&gt;
 #include &lt;memory&gt;

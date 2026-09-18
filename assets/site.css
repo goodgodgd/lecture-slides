@@ -14,6 +14,8 @@
   --story:#6b4ea8; --story-soft:#f2edfb;
   --new:#0f766e;   --new-soft:#e4f3f0;
   --code-bg:#f4f5f7;
+  /* 코드 색상 — assets/site.js 의 highlightCode 가 붙이는 .hl-* 에 쓴다 */
+  --hl-kw:#7c3aed; --hl-type:#0f766e; --hl-ns:#1f5fa8; --hl-str:#1e7a4f; --hl-num:#a85f1f; --hl-pre:#a56100; --hl-cmt:#8a919c;
   --bar:rgba(255,255,255,.86);
   --lift:0 1px 2px rgba(16,24,40,.05), 0 10px 26px rgba(16,24,40,.07);
   --sans:"Pretendard","Malgun Gothic",system-ui,-apple-system,sans-serif;
@@ -33,6 +35,7 @@
     --story:#b39ae8; --story-soft:#221c33;
     --new:#5ecfc0;   --new-soft:#10262a;
     --code-bg:#1f2228;
+    --hl-kw:#c4a5ff; --hl-type:#5ecfc0; --hl-ns:#7fb3ec; --hl-str:#74d3a4; --hl-num:#ecb37f; --hl-pre:#e0b25e; --hl-cmt:#7f8792;
     --bar:rgba(22,24,28,.86);
     --lift:0 1px 2px rgba(0,0,0,.32), 0 10px 26px rgba(0,0,0,.38);
     color-scheme: dark;
@@ -48,6 +51,7 @@
   --story:#b39ae8; --story-soft:#221c33;
   --new:#5ecfc0;   --new-soft:#10262a;
   --code-bg:#1f2228;
+  --hl-kw:#c4a5ff; --hl-type:#5ecfc0; --hl-ns:#7fb3ec; --hl-str:#74d3a4; --hl-num:#ecb37f; --hl-pre:#e0b25e; --hl-cmt:#7f8792;
   --bar:rgba(22,24,28,.86);
   --lift:0 1px 2px rgba(0,0,0,.32), 0 10px 26px rgba(0,0,0,.38);
   color-scheme: dark;

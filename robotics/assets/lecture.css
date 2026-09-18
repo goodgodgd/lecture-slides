@@ -180,6 +180,15 @@ details.fullcode .codefile button { position: absolute; top: 1.7rem; right: .5re
   padding: .18rem .55rem; border: 1px solid var(--accent); background: var(--bg); color: var(--accent);
   border-radius: 6px; cursor: pointer; }
 details.fullcode .codefile button:hover { background: var(--accent); color: #fff; }
-/* 본문 조각에서 「이번 단계에 새로 넣은 줄」을 표시한다 — 줄 전체를 <span class="ln-add"> 로 감싼다 */
-pre code .ln-add { display: inline-block; width: 100%; background: var(--good-soft); box-shadow: -1rem 0 0 var(--good-soft); }
-pre code .ln-del { display: inline-block; width: 100%; background: var(--bad-soft); box-shadow: -1rem 0 0 var(--bad-soft); text-decoration: line-through; opacity: .8; }
+
+/* ── 코드 색상 — site.js 의 highlightCode 가 pre.lang-cpp / lang-cmake / lang-sh / lang-py 안에 붙인다 ── */
+.hl-kw { color: var(--hl-kw); font-weight: 600; }
+.hl-type { color: var(--hl-type); }
+.hl-ns { color: var(--hl-ns); }
+.hl-str { color: var(--hl-str); }
+.hl-num { color: var(--hl-num); }
+.hl-pre { color: var(--hl-pre); }
+.hl-cmt { color: var(--hl-cmt); font-style: italic; }
+.hl-fn { color: var(--hl-ns); }
+.hl-prompt { color: var(--muted); }
+.hl-cmd { color: var(--accent); font-weight: 600; }

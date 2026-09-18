@@ -153,7 +153,7 @@
   <h3>재는 데 쓴 C++ 코드</h3>
   <p>라이다 한 스캔(값 360개)을 흉내내고, 못 쓰는 값을 걸러 평균을 내는 일을 10만 번 반복한다.</p>
 
-  <pre><code>// 6회 — 왜 아직도 C++인가
+  <pre class="lang-cpp"><code>// 6회 — 왜 아직도 C++인가
 // 라이다 한 스캔(360개)을 받아 유효값만 걸러 평균을 내는 일을
 // 10만 번(= 라이다 5Hz로 약 5.5시간 분량) 반복하고 걸린 시간을 잰다.
 #include &lt;chrono&gt;
@@ -199,7 +199,7 @@ int main()
 
   <p>다음이 실제로 시간을 재는 부분이다.</p>
 
-  <pre><code>  const auto t0 = std::chrono::steady_clock::now();
+  <pre class="lang-cpp"><code>  const auto t0 = std::chrono::steady_clock::now();
 
   double sink = 0.0;                       // 최적화로 계산이 통째로 날아가는 것을 막는다
   for (int k = 0; k &lt; LOOPS; ++k) {
@@ -251,7 +251,7 @@ int main()
 
   <h3>재는 데 쓴 파이썬 코드 — 한 줄 한 줄이 같은 일을 한다</h3>
 
-  <pre><code># 6회 — 같은 계산의 파이썬 판. scan_filter.cpp 와 한 글자도 다르지 않은 일을 한다.
+  <pre class="lang-py"><code># 6회 — 같은 계산의 파이썬 판. scan_filter.cpp 와 한 글자도 다르지 않은 일을 한다.
 import math
 import time
 
@@ -298,7 +298,7 @@ print("        평균 거리 %.4f m" % (sink / LOOPS))</code></pre>
 
   <h3>돌리는 명령과 실제로 나온 출력</h3>
 
-  <pre><code>$ g++ -std=c++17 -O2 -o scan_filter scan_filter.cpp
+  <pre class="lang-sh"><code>$ g++ -std=c++17 -O2 -o scan_filter scan_filter.cpp
 $ ./scan_filter
 $ python3 scan_filter.py</code></pre>
 
@@ -921,7 +921,7 @@ $ python3 scan_filter.py</code></pre>
 
   <h3>안 깔린 채로 치면 어떻게 나오나</h3>
   <p>아무것도 안 깐 우분투 24.04에서 두 명령을 치면 이렇게 나온다. 우분투가 무엇을 깔면 되는지 알려 준다.</p>
-  <pre><code>$ g++ --version
+  <pre class="lang-sh"><code>$ g++ --version
 Command 'g++' not found, but can be installed with:
 apt install g++
 $ cmake --version
@@ -941,7 +941,7 @@ apt install cmake</code></pre>
   </p>
   <div class="box trap">
     <div class="boxtitle">⚠️ 이 오류는 CMake가 아니라 컴파일러가 없는 것이다</div>
-    <pre><code>$ cmake ..
+    <pre class="lang-sh"><code>$ cmake ..
 -- The CXX compiler identification is unknown
 CMake Error at CMakeLists.txt:2 (project):
   No CMAKE_CXX_COMPILER could be found.
@@ -992,7 +992,7 @@ CMake Error at CMakeLists.txt:2 (project):
       그런데 깔았다고 생각했는데 없는 일이 생긴다. 가장 흔한 원인은 <strong>첫 줄 <code>sudo apt update</code>를 건너뛴 것</strong>이다.
       막 설치한 우분투는 패키지 목록이 비어 있어서, 갱신 없이 설치하면 이렇게 끝난다.
     </p>
-    <pre><code>$ sudo apt install -y build-essential cmake gdb clangd
+    <pre class="lang-sh"><code>$ sudo apt install -y build-essential cmake gdb clangd
 Reading state information...
 E: Unable to locate package build-essential</code></pre>
     <p>
@@ -1000,7 +1000,7 @@ E: Unable to locate package build-essential</code></pre>
       <code>sudo apt update</code>를 치고 설치 줄을 다시 친다.
       깔렸는지는 우분투에 직접 물어보면 확실하다 — 두 줄 다 <code>ii</code>로 시작해야 한다.
     </p>
-    <pre><code>$ dpkg -l g++ build-essential | tail -2
+    <pre class="lang-sh"><code>$ dpkg -l g++ build-essential | tail -2
 ii  build-essential 12.10ubuntu1      amd64        Informational list of build-essential packages
 ii  g++             4:13.2.0-7ubuntu1 amd64        GNU C++ compiler</code></pre>
   </div>
@@ -1024,7 +1024,7 @@ ii  g++             4:13.2.0-7ubuntu1 amd64        GNU C++ compiler</code></pre>
   <p>
     <code>build-essential</code>이 정말 묶음인지는 우분투에 물어보면 나온다.
   </p>
-  <pre><code>$ dpkg -s build-essential | grep Depends
+  <pre class="lang-sh"><code>$ dpkg -s build-essential | grep Depends
 Depends: libc6-dev | libc-dev, gcc (>= 4:12.3), g++ (>= 4:12.3), make, dpkg-dev (>= 1.17.11)</code></pre>
   <div class="interp">
     <strong>해석:</strong> <code>build-essential</code> 자체는 아무것도 아니다. <strong>다섯 개를 한 번에 끌어오는 이름</strong>이다.
