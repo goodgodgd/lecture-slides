@@ -30,6 +30,7 @@
   <div class="toc-title">이 회차 목차</div>
   <a href="#summary">한 장 요약</a>
   <a href="#story">📖 STL은 어디서 왔나</a>
+  <a href="#program">⓪ 오늘의 프로그램</a>
   <a href="#block1">① 가장 가까운 것 찾기</a>
   <a href="#block2">② 쓸 만한 값 세기</a>
   <a href="#block3">③ 골라 담기</a>
@@ -141,13 +142,13 @@
     <div class="tablewrap">
     <table>
       <tr><th>무엇으로</th><th>걸린 시간</th><th>비</th></tr>
-      <tr><td>직접 짠 선택 정렬</td><td>364.5 ms</td><td>1배</td></tr>
-      <tr><td><code>std::sort</code></td><td>21.2 ms</td><td><strong>17.2배 빠름</strong></td></tr>
-      <tr><td><code>std::nth_element</code></td><td>5.2 ms</td><td><strong>69.8배 빠름</strong></td></tr>
+      <tr><td>직접 짠 선택 정렬</td><td>364.9 ms</td><td>1배</td></tr>
+      <tr><td><code>std::sort</code></td><td>20.8 ms</td><td><strong>17.6배 빠름</strong></td></tr>
+      <tr><td><code>std::nth_element</code></td><td>5.1 ms</td><td><strong>72.2배 빠름</strong></td></tr>
     </table>
     </div>
     <p>
-      잰 곳: 컨테이너(우분투 24.04.4, g++ 13.3.0 <code>-O2</code>). 소스는 <code>examples/l13_stl/sort_speed.cpp</code>다.
+      잰 곳: 컨테이너(우분투 24.04.4, g++ 13.3.0 <code>-O2</code>). 소스는 오늘 프로그램 ⑤절의 <code>measure_speed()</code>다.
       <strong>같은 입력에 같은 결과다.</strong> 다른 것은 누가 짰느냐뿐이다.
     </p>
 
@@ -157,6 +158,96 @@
     </ul>
   </details>
 
+  <!-- ── ⓪ 오늘의 프로그램 ── -->
+  <h2 id="program">⓪ 오늘은 프로그램 하나에 알고리즘을 하나씩 더해 간다 <span class="badge b-green">🟢 맡긴다</span></h2>
+
+  <p>
+    함수 이름을 하나씩 따로 보면 남지 않는다. 그래서 <strong>라이다 스캔 하나를 놓고 실제로 돌아가는 파일 하나</strong>를 준비했다.
+    <code>scan_algo.cpp</code>다. 처음에는 값 10개를 찍기만 하는 스무 줄이 안 되는 프로그램이고,
+    <strong>절이 하나 넘어갈 때마다 for문 하나가 표준 알고리즘으로 바뀌거나 알고리즘이 하나씩 더해진다.</strong>
+    ⚠️ 함정 절이 끝나면 완성본이 된다.
+  </p>
+  <p>읽는 법은 7회와 같다.</p>
+  <ul>
+    <li>본문에는 <strong>그 절에서 새로 넣거나 고친 줄만</strong> 보인다. 초록 바탕이 새 줄, 붉은 바탕이 지운 줄이다.</li>
+    <li>그 아래 <strong>📄 「전체 코드」 상자</strong>를 누르면 그 단계까지의 파일 전체가 나온다.
+        <strong>어느 단계를 펼쳐도 그대로 빌드되고 돌아간다.</strong> 오른쪽 위 「복사」로 통째로 가져갈 수 있다.</li>
+    <li>「실제로 나온 출력」에는 그 절이 새로 찍는 줄만 보인다. 전체 출력은 실습 「성공 화면」에 있다.</li>
+  </ul>
+
+  <h3>1단계 — 라이다 스캔 하나를 만들고 찍어 본다</h3>
+  <p>
+    터틀봇3 라이다는 한 바퀴에 값 <strong>360개</strong>를 주는데, 눈으로 따라가기에는 많다.
+    그래서 <strong>10개</strong>만 흉내냈다. 대신 실제 스캔에 섞여 오는 것들 —
+    측정 실패(<code>inf</code>·<code>nan</code>)와 잴 수 있는 거리 밖의 값 — 을 일부러 넣어 두었다.
+  </p>
+
+  <pre><code>// 13회 — STL 알고리즘: 라이다 스캔 하나를 놓고 for 문을 표준 알고리즘으로 바꿔 간다
+#include &lt;cmath&gt;       // INFINITY · std::nanf · std::isfinite
+#include &lt;cstdio&gt;      // std::printf
+#include &lt;vector&gt;
+
+int main()
+{
+  // 라이다 한 스캔을 흉내낸 값 10개. 측정 실패(inf · nan)와 범위 밖 값이 섞여 있다
+  const std::vector&lt;float&gt; raw{0.10f, 0.83f, INFINITY, 1.24f, 9.90f,
+                               std::nanf(""), 2.05f, 0.42f, 3.30f, 0.55f};
+  const float lo = 0.16f, hi = 8.0f;   // 이 라이다(LDS-02)가 잴 수 있는 거리
+
+  std::printf("원본 %d개 = ", static_cast&lt;int&gt;(raw.size()));
+  for (float r : raw) { std::printf("%.2f ", r); }
+  std::printf("\n잴 수 있는 거리 = %.2f ~ %.2f m\n", lo, hi);
+  return 0;
+}</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>std::nanf("")</dt>
+      <dd><code>NaN</code>(숫자가 아님) 값을 하나 만들어 준다. 라이다가 측정에 실패했을 때 보내는 것과 같은 값이다.
+          여기서는 함정을 재현하려고 일부러 섞었다. <code>INFINITY</code>는 6회에서 본 그 값이다.</dd>
+
+      <dt>std::printf("%.2f", r) 가 inf · nan 을 만나면</dt>
+      <dd>오류가 나지 않고 <strong>글자 그대로 <code>inf</code>·<code>nan</code>이 찍힌다.</strong>
+          여기서는 그 덕에 어느 칸이 측정 실패값인지 출력에서 바로 보인다.</dd>
+    </dl>
+  </div>
+
+  <h3>실제로 나온 출력</h3>
+  <pre><code>원본 10개 = 0.10 0.83 inf 1.24 9.90 nan 2.05 0.42 3.30 0.55
+잴 수 있는 거리 = 0.16 ~ 8.00 m</code></pre>
+
+  <!-- fullcode "전체 코드 — scan_algo.cpp (1단계 · 이대로 빌드된다)" build="g++ -std=c++17 -O2 -o scan_algo scan_algo.cpp && ./scan_algo"
+       l13_stl/steps/step1.cpp as scan_algo.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — scan_algo.cpp (1단계 · 이대로 빌드된다)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o scan_algo scan_algo.cpp &amp;&amp; ./scan_algo</code></p>
+  <div class="codefile"><div class="fname">scan_algo.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 13회 — STL 알고리즘: 라이다 스캔 하나를 놓고 for 문을 표준 알고리즘으로 바꿔 간다
+#include &lt;cmath&gt;       // INFINITY · std::nanf · std::isfinite
+#include &lt;cstdio&gt;      // std::printf
+#include &lt;vector&gt;
+
+int main()
+{
+  // 라이다 한 스캔을 흉내낸 값 10개. 측정 실패(inf · nan)와 범위 밖 값이 섞여 있다
+  const std::vector&lt;float&gt; raw{0.10f, 0.83f, INFINITY, 1.24f, 9.90f,
+                               std::nanf(&quot;&quot;), 2.05f, 0.42f, 3.30f, 0.55f};
+  const float lo = 0.16f, hi = 8.0f;   // 이 라이다(LDS-02)가 잴 수 있는 거리
+
+  std::printf(&quot;원본 %d개 = &quot;, static_cast&lt;int&gt;(raw.size()));
+  for (float r : raw) { std::printf(&quot;%.2f &quot;, r); }
+  std::printf(&quot;\n잴 수 있는 거리 = %.2f ~ %.2f m\n&quot;, lo, hi);
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <p>
+    <strong>여기까지가 출발점이다.</strong> 앞으로 더하는 줄은 전부 <code>main</code> 중괄호 안, <code>return 0;</code> 위에 들어간다.
+    함수를 하나 더 만들 때는 <code>main</code> 위에 둔다.
+  </p>
+
   <!-- ── 💻 코딩 블록 1 ── -->
   <h2 id="block1">① 가장 가까운 장애물을 찾는 코드 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
@@ -164,16 +255,54 @@
   <p>
     라이다가 준 거리 배열에서 <strong>가장 가까운 값</strong>을 찾으려고 한다.
     앞에 뭔가 있는지 판단하려면 이게 첫 단계다.
-    터틀봇3 라이다는 한 바퀴에 값 <strong>360개</strong>를 준다. 1도에 하나씩이다.
+    배열은 <strong>0번이 정면</strong>이고 반시계 방향으로 돌아가므로, 몇 번째 칸인지가 곧 방향이다.
   </p>
 
-  <div class="codelabel bad">AI가 보통 주는 코드 🔴</div>
-  <pre class="before"><code>float min_range = 999.0f;
-for (size_t i = 0; i &lt; ranges.size(); i++) {
-  if (ranges[i] &lt; min_range) {
-    min_range = ranges[i];
+  <div class="codelabel bad">AI가 보통 주는 코드 🔴 — <code>main</code>의 출력 줄 아래에 이렇게 넣는다</div>
+  <pre class="before"><code>  // … 1단계까지의 줄은 그대로 …
+  // ① 가장 가까운 값 — AI가 보통 주는 모양
+  float min_range = 999.0f;
+  for (size_t i = 0; i &lt; raw.size(); i++) {
+    if (raw[i] &lt; min_range) { min_range = raw[i]; }
   }
-}</code></pre>
+  std::printf("for 문      가장 가까운 값        = %.2f\n", min_range);
+  return 0;</code></pre>
+
+  <h3>실제로 나온 출력</h3>
+  <pre><code>for 문      가장 가까운 값        = 0.10</code></pre>
+
+  <!-- fullcode "전체 코드 — scan_algo.cpp 변형 (AI가 준 for문을 그대로 넣은 판)" build="g++ -std=c++17 -O2 -o scan_algo scan_algo.cpp && ./scan_algo"
+       l13_stl/steps/step2_for.cpp as scan_algo.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — scan_algo.cpp 변형 (AI가 준 for문을 그대로 넣은 판)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o scan_algo scan_algo.cpp &amp;&amp; ./scan_algo</code></p>
+  <div class="codefile"><div class="fname">scan_algo.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 13회 — STL 알고리즘: 라이다 스캔 하나를 놓고 for 문을 표준 알고리즘으로 바꿔 간다
+#include &lt;cmath&gt;       // INFINITY · std::nanf · std::isfinite
+#include &lt;cstdio&gt;      // std::printf
+#include &lt;vector&gt;
+
+int main()
+{
+  // 라이다 한 스캔을 흉내낸 값 10개. 측정 실패(inf · nan)와 범위 밖 값이 섞여 있다
+  const std::vector&lt;float&gt; raw{0.10f, 0.83f, INFINITY, 1.24f, 9.90f,
+                               std::nanf(&quot;&quot;), 2.05f, 0.42f, 3.30f, 0.55f};
+  const float lo = 0.16f, hi = 8.0f;   // 이 라이다(LDS-02)가 잴 수 있는 거리
+
+  std::printf(&quot;원본 %d개 = &quot;, static_cast&lt;int&gt;(raw.size()));
+  for (float r : raw) { std::printf(&quot;%.2f &quot;, r); }
+  std::printf(&quot;\n잴 수 있는 거리 = %.2f ~ %.2f m\n&quot;, lo, hi);
+
+  // ① 가장 가까운 값 — AI가 보통 주는 모양
+  float min_range = 999.0f;
+  for (size_t i = 0; i &lt; raw.size(); i++) {
+    if (raw[i] &lt; min_range) { min_range = raw[i]; }
+  }
+  std::printf(&quot;for 문      가장 가까운 값        = %.2f\n&quot;, min_range);
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
 
   <h3>무엇이 문제인가</h3>
   <p>이 코드는 <strong>컴파일되고, 실행되고, 대체로 맞는 값을 낸다.</strong> 그래서 문제를 알아채기 어렵다.</p>
@@ -181,24 +310,41 @@ for (size_t i = 0; i &lt; ranges.size(); i++) {
   <table>
     <tr><th>자리</th><th>무엇이 걸리나</th></tr>
     <tr><td><code>999.0f</code></td><td><strong>왜 999인가?</strong> 근거 없는 값이다. 라이다 최대 거리가 8 m인데 999가 나오면 그건 "못 찾았다"는 뜻인지 "999 m"인지 알 수 없다</td></tr>
-    <tr><td><code>i &lt; ranges.size()</code></td><td>인덱스를 직접 다루면 <strong>범위 실수가 들어갈 자리</strong>가 생긴다. <code>&lt;=</code>로 한 글자만 틀려도 배열 밖을 읽는다</td></tr>
+    <tr><td><code>i &lt; raw.size()</code></td><td>인덱스를 직접 다루면 <strong>범위 실수가 들어갈 자리</strong>가 생긴다. <code>&lt;=</code>로 한 글자만 틀려도 배열 밖을 읽는다</td></tr>
     <tr><td>배열이 비었을 때</td><td>999가 그대로 남는다. <strong>"장애물이 999 m 앞에 있다"</strong>는 답이 나간다</td></tr>
     <tr><td>루프 전체</td><td><strong>읽어 봐야 무슨 일을 하는지 안다.</strong> 이름이 없다</td></tr>
   </table>
   </div>
+  <p>
+    출력에도 걸리는 것이 하나 있다. 답이 <strong>0.10 m</strong>인데, 바로 윗줄에 이 라이다는 <strong>0.16 m 아래를 못 잰다</strong>고 찍혀 있다.
+    측정 실패값을 「가장 가까운 장애물」로 잡은 것이다.
+    다만 이것은 for문의 잘못이 아니라 <strong>걸러 내지 않은 잘못</strong>이다. ②·③에서 고친다.
+    먼저 for문부터 바꾼다.
+  </p>
 
   <h3>이렇게 말하면 된다</h3>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
-    최솟값 찾는 for문을 <code>std::min_element</code>로 바꿔 줘. 초깃값을 임의로 두지 말고, 배열이 비었을 때도 안전하게 처리해 줘.
+    최솟값 찾는 for문을 <code>std::min_element</code>로 바꿔 줘. 초깃값을 임의로 두지 말고, 배열이 비었을 때도 안전하게 처리해 줘. 가장 가까운 값이 앞에서 몇 번째인지도 같이 찍어 줘.
   </div>
 
-  <div class="codelabel good">받은 코드</div>
-  <pre class="after"><code>#include &lt;algorithm&gt;
-
-const auto it = std::min_element(ranges.begin(), ranges.end());
-if (it == ranges.end()) { return; }        // 배열이 비었다
-const float min_range = *it;</code></pre>
+  <div class="codelabel good">받은 코드 — for문 다섯 줄이 이 네 줄로 바뀐다. 맨 위에 헤더 둘이 더 붙는다</div>
+  <pre class="after"><code><span class="ln-add">#include &lt;algorithm&gt;   // min_element · count_if · copy_if · find_if · transform · any_of · all_of · sort</span>
+#include &lt;cmath&gt;       // INFINITY · std::nanf · std::isfinite
+#include &lt;cstdio&gt;      // std::printf
+<span class="ln-add">#include &lt;iterator&gt;    // std::distance · std::back_inserter</span>
+#include &lt;vector&gt;
+  // …
+<span class="ln-del">  float min_range = 999.0f;</span>
+<span class="ln-del">  for (size_t i = 0; i &lt; raw.size(); i++) {</span>
+<span class="ln-del">    if (raw[i] &lt; min_range) { min_range = raw[i]; }</span>
+<span class="ln-del">  }</span>
+<span class="ln-add">  // ① 가장 가까운 값 — min_element 는 값이 아니라 「자리」를 돌려준다</span>
+<span class="ln-add">  const auto it = std::min_element(raw.begin(), raw.end());</span>
+<span class="ln-add">  if (it == raw.end()) { return 1; }    // 배열이 비었다 — 여기서 끝낸다</span>
+<span class="ln-add">  std::printf("min_element 가장 가까운 값        = %.2f (앞에서 %d번째)\n",</span>
+<span class="ln-add">              *it, static_cast&lt;int&gt;(std::distance(raw.begin(), it)));</span>
+  return 0;</code></pre>
 
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
@@ -208,7 +354,7 @@ const float min_range = *it;</code></pre>
           <code>accumulate</code>만 <code>&lt;numeric&gt;</code>에 따로 들어 있다.
           여기서는 <code>min_element</code>를 쓰려고 넣었다.</dd>
 
-      <dt>ranges.begin() / ranges.end()</dt>
+      <dt>raw.begin() / raw.end()</dt>
       <dd>배열의 <strong>첫 칸</strong>과 <strong>마지막 칸 다음</strong>을 가리키는 위치표다.
           <code>end()</code>는 마지막 값이 아니라 <strong>끝을 지나간 자리</strong>라는 것이 중요하다.
           여기서는 "이 구간 전체를 봐 달라"고 알려 주는 데 썼다.</dd>
@@ -221,40 +367,75 @@ const float min_range = *it;</code></pre>
       <dd>위치표 앞에 별표를 붙이면 <strong>그 자리에 있는 값</strong>이 나온다.
           여기서는 <code>min_element</code>가 가리킨 자리의 거리 값을 꺼내는 데 썼다.</dd>
 
-      <dt>it == ranges.end()</dt>
+      <dt>it == raw.end()</dt>
       <dd>"찾지 못했다"는 뜻이다. 배열이 비어 있으면 <code>min_element</code>가 <code>end()</code>를 돌려준다.
-          여기서는 그 경우에 그냥 빠져나가게 했다 — <code>999.0f</code>가 필요 없어진 이유가 이것이다.</dd>
+          여기서는 그 경우 <code>return 1;</code>로 프로그램을 끝냈다 — <code>main</code>이 0이 아닌 값을 돌려주면 「실패로 끝났다」는 뜻이다.
+          <code>999.0f</code>가 필요 없어진 이유가 이것이다.</dd>
     </dl>
   </div>
 
   <h3>가장 가까운 것이 「몇 번 방향」인지도 알아야 한다</h3>
   <p>
     거리만으로는 부족하다. <strong>어느 쪽에 있는지</strong>를 알아야 피할 수 있다.
-    라이다 배열은 <strong>0번이 정면</strong>이고 반시계 방향으로 돌아가므로,
-    배열에서 몇 번째 칸인지가 곧 각도다.
+    받은 코드의 마지막 줄이 그 일을 한다 — <code>min_element</code>가 돌려준 자리가 <strong>앞에서 몇 번째인지</strong>를 센다.
+    360개짜리 진짜 스캔이라면 그 번호가 곧 각도(도)다. 0 = 정면, 90 = 왼쪽, 270 = 오른쪽.
   </p>
-
-  <div class="codelabel good">받은 코드</div>
-  <pre class="after"><code>#include &lt;iterator&gt;
-
-const auto it  = std::min_element(ranges.begin(), ranges.end());
-const float d  = *it;
-const auto idx = std::distance(ranges.begin(), it);   // 앞에서 몇 번째인가
-// idx 가 곧 각도(도)다. 0 = 정면, 90 = 왼쪽, 270 = 오른쪽</code></pre>
 
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
     <dl>
       <dt>#include &lt;iterator&gt;</dt>
-      <dd>위치표를 다루는 도구가 들어 있는 헤더다. 여기서는 <code>std::distance</code> 하나 때문에 넣었다.</dd>
+      <dd>위치표를 다루는 도구가 들어 있는 헤더다. 여기서는 <code>std::distance</code> 때문에 넣었다. ③에서 하나 더 쓴다.</dd>
 
       <dt>std::distance(first, last)</dt>
       <dd>두 위치 사이에 값이 몇 개 있는지 세어 준다.
           여기서는 <code>min_element</code>가 돌려준 위치가
-          <strong>앞에서 몇 번째인지</strong>를 알아내는 데 썼다.</dd>
+          <strong>앞에서 몇 번째인지</strong>를 알아내는 데 썼다.
+          <code>%d</code>로 찍으려고 <code>static_cast&lt;int&gt;</code>를 씌웠다.</dd>
     </dl>
     <p class="later">제대로 다루는 곳: 24회(LaserScan 데이터 다루기 — 인덱스와 각도의 관계)</p>
   </div>
+
+  <h3>실제로 나온 출력</h3>
+  <pre><code>min_element 가장 가까운 값        = 0.10 (앞에서 0번째)</code></pre>
+  <p>
+    답은 for문과 같은 <strong>0.10</strong>이다. 바뀐 것은 답이 아니라 <strong>틀릴 자리가 사라졌다</strong>는 것이다 —
+    근거 없는 초깃값도, 인덱스도, 빈 배열일 때의 엉뚱한 답도 없다.
+  </p>
+
+  <!-- fullcode "전체 코드 — scan_algo.cpp (2단계 · min_element 까지)" build="g++ -std=c++17 -O2 -o scan_algo scan_algo.cpp && ./scan_algo"
+       l13_stl/steps/step2.cpp as scan_algo.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — scan_algo.cpp (2단계 · min_element 까지)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o scan_algo scan_algo.cpp &amp;&amp; ./scan_algo</code></p>
+  <div class="codefile"><div class="fname">scan_algo.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 13회 — STL 알고리즘: 라이다 스캔 하나를 놓고 for 문을 표준 알고리즘으로 바꿔 간다
+#include &lt;algorithm&gt;   // min_element · count_if · copy_if · find_if · transform · any_of · all_of · sort
+#include &lt;cmath&gt;       // INFINITY · std::nanf · std::isfinite
+#include &lt;cstdio&gt;      // std::printf
+#include &lt;iterator&gt;    // std::distance · std::back_inserter
+#include &lt;vector&gt;
+
+int main()
+{
+  // 라이다 한 스캔을 흉내낸 값 10개. 측정 실패(inf · nan)와 범위 밖 값이 섞여 있다
+  const std::vector&lt;float&gt; raw{0.10f, 0.83f, INFINITY, 1.24f, 9.90f,
+                               std::nanf(&quot;&quot;), 2.05f, 0.42f, 3.30f, 0.55f};
+  const float lo = 0.16f, hi = 8.0f;   // 이 라이다(LDS-02)가 잴 수 있는 거리
+
+  std::printf(&quot;원본 %d개 = &quot;, static_cast&lt;int&gt;(raw.size()));
+  for (float r : raw) { std::printf(&quot;%.2f &quot;, r); }
+  std::printf(&quot;\n잴 수 있는 거리 = %.2f ~ %.2f m\n&quot;, lo, hi);
+
+  // ① 가장 가까운 값 — min_element 는 값이 아니라 「자리」를 돌려준다
+  const auto it = std::min_element(raw.begin(), raw.end());
+  if (it == raw.end()) { return 1; }    // 배열이 비었다 — 여기서 끝낸다
+  std::printf(&quot;min_element 가장 가까운 값        = %.2f (앞에서 %d번째)\n&quot;,
+              *it, static_cast&lt;int&gt;(std::distance(raw.begin(), it)));
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
 
   <h3>쓸 때 / 안 쓸 때</h3>
   <div class="tablewrap">
@@ -274,15 +455,16 @@ const auto idx = std::distance(ranges.begin(), it);   // 앞에서 몇 번째인
 
   <h3>언제 이게 필요해지나</h3>
   <p>
-    라이다 값 중에는 <strong>측정에 실패한 것</strong>이 섞여 있다.
+    ①의 답 0.10 m는 이 라이다가 잴 수 없는 값이었다.
+    라이다 값 중에는 이렇게 <strong>측정에 실패한 것</strong>이 섞여 있다.
     너무 멀거나, 너무 가깝거나, 검은 물체라 빛이 안 돌아온 방향이다.
     "이 방향을 믿어도 되나"를 판단하려면 <strong>쓸 만한 값이 몇 개나 되는지</strong>부터 세야 한다.
   </p>
 
   <div class="codelabel bad">AI가 보통 주는 코드 🔴</div>
   <pre class="before"><code>int valid = 0;
-for (size_t i = 0; i &lt; ranges.size(); i++) {
-  if (ranges[i] &gt; 0.16 &amp;&amp; ranges[i] &lt; 8.0) {
+for (size_t i = 0; i &lt; raw.size(); i++) {
+  if (raw[i] &gt; 0.16 &amp;&amp; raw[i] &lt; 8.0) {
     valid++;
   }
 }</code></pre>
@@ -294,6 +476,7 @@ for (size_t i = 0; i &lt; ranges.size(); i++) {
     <code>range_min</code>, <code>range_max</code>라는 칸이다.
     구형 라이다(LDS-01)는 0.12~3.5 m, 신형(LDS-02)은 0.16~8.0 m이다.
     <strong>로봇을 바꾸면 이 코드는 조용히 틀린 답을 낸다.</strong>
+    우리 프로그램에는 그 값이 1단계부터 <code>lo</code>·<code>hi</code>라는 이름으로 있다.
   </p>
 
   <h3>이렇게 말하면 된다</h3>
@@ -302,10 +485,13 @@ for (size_t i = 0; i &lt; ranges.size(); i++) {
     개수를 세는 for문을 <code>std::count_if</code>로 바꿔 줘. 거리 범위는 코드에 숫자를 박지 말고 바깥에서 받은 <code>lo</code>·<code>hi</code>를 써 줘.
   </div>
 
-  <div class="codelabel good">받은 코드</div>
-  <pre class="after"><code>const auto valid = std::count_if(
-    ranges.begin(), ranges.end(),
-    [lo, hi](float r) { return r &gt;= lo &amp;&amp; r &lt;= hi; });</code></pre>
+  <div class="codelabel good">받은 코드 — ①의 출력 줄 아래에 넣는다</div>
+  <pre class="after"><code>  // … ① 까지의 줄은 그대로 …
+<span class="ln-add">  // ② 쓸 만한 값이 몇 개인가</span>
+<span class="ln-add">  const auto n_valid = std::count_if(raw.begin(), raw.end(),</span>
+<span class="ln-add">                                     [lo, hi](float r) { return r &gt;= lo &amp;&amp; r &lt;= hi; });</span>
+<span class="ln-add">  std::printf("count_if    유효값 개수           = %d\n", static_cast&lt;int&gt;(n_valid));</span>
+  return 0;</code></pre>
 
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
@@ -324,8 +510,51 @@ for (size_t i = 0; i &lt; ranges.size(); i++) {
     <p class="later">제대로 다루는 곳: 14회(람다 문법과 캡처 <code>[this]</code>·<code>[&amp;]</code>·<code>[=]</code>)</p>
   </div>
 
+  <h3>실제로 나온 출력</h3>
+  <pre><code>count_if    유효값 개수           = 6</code></pre>
+
+  <!-- fullcode "전체 코드 — scan_algo.cpp (3단계 · count_if 까지)" build="g++ -std=c++17 -O2 -o scan_algo scan_algo.cpp && ./scan_algo"
+       l13_stl/steps/step3.cpp as scan_algo.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — scan_algo.cpp (3단계 · count_if 까지)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o scan_algo scan_algo.cpp &amp;&amp; ./scan_algo</code></p>
+  <div class="codefile"><div class="fname">scan_algo.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 13회 — STL 알고리즘: 라이다 스캔 하나를 놓고 for 문을 표준 알고리즘으로 바꿔 간다
+#include &lt;algorithm&gt;   // min_element · count_if · copy_if · find_if · transform · any_of · all_of · sort
+#include &lt;cmath&gt;       // INFINITY · std::nanf · std::isfinite
+#include &lt;cstdio&gt;      // std::printf
+#include &lt;iterator&gt;    // std::distance · std::back_inserter
+#include &lt;vector&gt;
+
+int main()
+{
+  // 라이다 한 스캔을 흉내낸 값 10개. 측정 실패(inf · nan)와 범위 밖 값이 섞여 있다
+  const std::vector&lt;float&gt; raw{0.10f, 0.83f, INFINITY, 1.24f, 9.90f,
+                               std::nanf(&quot;&quot;), 2.05f, 0.42f, 3.30f, 0.55f};
+  const float lo = 0.16f, hi = 8.0f;   // 이 라이다(LDS-02)가 잴 수 있는 거리
+
+  std::printf(&quot;원본 %d개 = &quot;, static_cast&lt;int&gt;(raw.size()));
+  for (float r : raw) { std::printf(&quot;%.2f &quot;, r); }
+  std::printf(&quot;\n잴 수 있는 거리 = %.2f ~ %.2f m\n&quot;, lo, hi);
+
+  // ① 가장 가까운 값 — min_element 는 값이 아니라 「자리」를 돌려준다
+  const auto it = std::min_element(raw.begin(), raw.end());
+  if (it == raw.end()) { return 1; }    // 배열이 비었다 — 여기서 끝낸다
+  std::printf(&quot;min_element 가장 가까운 값        = %.2f (앞에서 %d번째)\n&quot;,
+              *it, static_cast&lt;int&gt;(std::distance(raw.begin(), it)));
+
+  // ② 쓸 만한 값이 몇 개인가
+  const auto n_valid = std::count_if(raw.begin(), raw.end(),
+                                     [lo, hi](float r) { return r &gt;= lo &amp;&amp; r &lt;= hi; });
+  std::printf(&quot;count_if    유효값 개수           = %d\n&quot;, static_cast&lt;int&gt;(n_valid));
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+
   <div class="interp">
-    <strong>해석:</strong> 줄 수는 비슷하다. 달라진 것은 <strong>숫자가 사라졌다</strong>는 점이다.
+    <strong>해석:</strong> 10개 중 <strong>4개가 버려졌다</strong> — <code>0.10</code>(너무 가까움)·<code>inf</code>·<code>9.90</code>(너무 멂)·<code>nan</code>이다.
+    줄 수는 for문과 비슷하다. 달라진 것은 <strong>숫자가 사라졌다</strong>는 점이다.
     로봇을 바꿔도 이 코드는 그대로 맞는다.
     <strong>성능이 아니라 "틀릴 자리를 없앤 것"이 이 변경의 이득이다.</strong>
     이 회차의 여덟 개 중 절반은 이런 종류의 이득이다.
@@ -337,40 +566,61 @@ for (size_t i = 0; i &lt; ranges.size(); i++) {
   <h3>언제 이게 필요해지나</h3>
   <p>
     세는 것으로는 부족하다. <strong>쓸 만한 값만 따로 모아야</strong>
-    그다음 계산(평균, 중앙값, 좌표 변환)을 할 수 있다.
+    그다음 계산(가장 가까운 것, 평균, 중앙값, 좌표 변환)을 할 수 있다.
+    ①에서 못 고친 「0.10 m가 가장 가깝다」는 답도 여기서 바로잡힌다.
   </p>
 
   <div class="codelabel bad">AI가 보통 주는 코드 🔴</div>
   <pre class="before"><code>std::vector&lt;float&gt; good;
-for (size_t i = 0; i &lt; ranges.size(); i++) {
-  if (ranges[i] &gt; 0.16 &amp;&amp; ranges[i] &lt; 8.0) {
-    good.push_back(ranges[i]);
+for (size_t i = 0; i &lt; raw.size(); i++) {
+  if (raw[i] &gt; 0.16 &amp;&amp; raw[i] &lt; 8.0) {
+    good.push_back(raw[i]);
   }
 }</code></pre>
   <p>
     이 코드에는 문제가 <strong>둘</strong> 있다. 하나는 아까와 같은 것(숫자가 박혔다)이고,
     다른 하나는 <code>good</code>이 <strong>자리를 미리 잡아 두지 않았다</strong>는 것이다.
-    360개를 담는 동안 자리가 모자라 <strong>10번</strong> 더 큰 자리로 옮겨 간다.
+    360개를 담는 동안 자리가 모자라 <strong>10번</strong> 더 큰 자리로 옮겨 간다 (12회에서 세어 본 그것이다).
   </p>
 
   <h3>이렇게 말하면 된다</h3>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
-    조건에 맞는 것만 담는 for문을 <code>std::copy_if</code>로 바꿔 줘. 몇 개 들어올지 아니까 <code>reserve</code>로 미리 잡아 주고, <code>inf</code>와 <code>NaN</code>도 같이 걸러 줘.
+    조건에 맞는 것만 담는 for문을 <code>std::copy_if</code>로 바꿔 줘. 몇 개 들어올지 아니까 <code>reserve</code>로 미리 잡아 주고, <code>inf</code>와 <code>NaN</code>도 같이 걸러 줘. ②의 <code>count_if</code>와 같은 조건이니까 조건은 한 번만 적고 두 곳에서 같이 써 줘.
   </div>
 
-  <div class="codelabel good">받은 코드</div>
-  <pre class="after"><code>#include &lt;cmath&gt;
+  <div class="codelabel good">받은 코드 — ②의 조건에 이름이 붙고, 그 아래에 담는 코드가 온다</div>
+  <pre class="after"><code>  // … ① 까지의 줄은 그대로 …
+<span class="ln-add">  // ②③ 「쓸 만한 값인가」를 한 번만 적어 두고 두 곳에서 쓴다</span>
+<span class="ln-add">  auto valid = [lo, hi](float r) { return std::isfinite(r) &amp;&amp; r &gt;= lo &amp;&amp; r &lt;= hi; };</span>
 
-std::vector&lt;float&gt; good;
-good.reserve(ranges.size());          // 미리 자리를 잡아 둔다
+  // ② 쓸 만한 값이 몇 개인가
+<span class="ln-del">  const auto n_valid = std::count_if(raw.begin(), raw.end(),</span>
+<span class="ln-del">                                     [lo, hi](float r) { return r &gt;= lo &amp;&amp; r &lt;= hi; });</span>
+<span class="ln-add">  const auto n_valid = std::count_if(raw.begin(), raw.end(), valid);</span>
+  std::printf("count_if    유효값 개수           = %d\n", static_cast&lt;int&gt;(n_valid));
 
-std::copy_if(ranges.begin(), ranges.end(), std::back_inserter(good),
-             [lo, hi](float r) { return std::isfinite(r) &amp;&amp; r &gt;= lo &amp;&amp; r &lt;= hi; });</code></pre>
+<span class="ln-add">  // ③ 쓸 만한 값만 골라 담는다</span>
+<span class="ln-add">  std::vector&lt;float&gt; good;</span>
+<span class="ln-add">  good.reserve(raw.size());             // 미리 자리를 잡아 둔다</span>
+<span class="ln-add">  std::copy_if(raw.begin(), raw.end(), std::back_inserter(good), valid);</span>
+<span class="ln-add">  std::printf("copy_if     골라 담은 것          = ");</span>
+<span class="ln-add">  for (float r : good) { std::printf("%.2f ", r); }</span>
+<span class="ln-add">  std::printf("\n");</span>
+
+<span class="ln-add">  const auto it2 = std::min_element(good.begin(), good.end());</span>
+<span class="ln-add">  std::printf("min_element 걸러낸 뒤 가장 가까운 = %.2f (앞에서 %d번째)\n",</span>
+<span class="ln-add">              *it2, static_cast&lt;int&gt;(std::distance(good.begin(), it2)));</span>
+  return 0;</code></pre>
 
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
     <dl>
+      <dt>auto valid = [lo, hi](float r) { ... };</dt>
+      <dd>람다에 <strong>이름을 붙여 둔 것</strong>이다. 이름이 있으면 여러 곳에서 같은 조건을 다시 쓸 수 있다.
+          여기서는 <code>count_if</code>와 <code>copy_if</code>가 같은 <code>valid</code>를 받는다 —
+          조건을 고칠 일이 생기면 <strong>한 곳만 고치면 된다.</strong></dd>
+
       <dt>std::copy_if(first, last, 받는 곳, 조건)</dt>
       <dd>구간에서 조건에 맞는 것만 골라 다른 곳으로 옮겨 담는다.
           여기서는 쓸 만한 거리 값만 <code>good</code>에 모으는 데 썼다.</dd>
@@ -387,6 +637,68 @@ std::copy_if(ranges.begin(), ranges.end(), std::back_inserter(good),
           <strong>이 한 조각이 이 회차에서 가장 중요하다.</strong> 아래 함정 상자에서 설명한다.</dd>
     </dl>
   </div>
+
+  <h3>실제로 나온 출력</h3>
+  <pre><code>copy_if     골라 담은 것          = 0.83 1.24 2.05 0.42 3.30 0.55
+min_element 걸러낸 뒤 가장 가까운 = 0.42 (앞에서 3번째)</code></pre>
+  <p>
+    ①에서 0.10이었던 답이 <strong>0.42</strong>로 바뀌었다. 이것이 진짜 가장 가까운 장애물이다.
+    「앞에서 3번째」는 <strong>걸러낸 뒤</strong> 배열에서의 자리다.
+    원본에서의 자리(= 각도)가 필요하면 따로 챙겨야 한다 — 24회에서 그 방법을 다룬다.
+  </p>
+
+  <!-- fullcode "전체 코드 — scan_algo.cpp (4단계 · copy_if 까지)" build="g++ -std=c++17 -O2 -o scan_algo scan_algo.cpp && ./scan_algo"
+       l13_stl/steps/step4.cpp as scan_algo.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — scan_algo.cpp (4단계 · copy_if 까지)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o scan_algo scan_algo.cpp &amp;&amp; ./scan_algo</code></p>
+  <div class="codefile"><div class="fname">scan_algo.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 13회 — STL 알고리즘: 라이다 스캔 하나를 놓고 for 문을 표준 알고리즘으로 바꿔 간다
+#include &lt;algorithm&gt;   // min_element · count_if · copy_if · find_if · transform · any_of · all_of · sort
+#include &lt;cmath&gt;       // INFINITY · std::nanf · std::isfinite
+#include &lt;cstdio&gt;      // std::printf
+#include &lt;iterator&gt;    // std::distance · std::back_inserter
+#include &lt;vector&gt;
+
+int main()
+{
+  // 라이다 한 스캔을 흉내낸 값 10개. 측정 실패(inf · nan)와 범위 밖 값이 섞여 있다
+  const std::vector&lt;float&gt; raw{0.10f, 0.83f, INFINITY, 1.24f, 9.90f,
+                               std::nanf(&quot;&quot;), 2.05f, 0.42f, 3.30f, 0.55f};
+  const float lo = 0.16f, hi = 8.0f;   // 이 라이다(LDS-02)가 잴 수 있는 거리
+
+  std::printf(&quot;원본 %d개 = &quot;, static_cast&lt;int&gt;(raw.size()));
+  for (float r : raw) { std::printf(&quot;%.2f &quot;, r); }
+  std::printf(&quot;\n잴 수 있는 거리 = %.2f ~ %.2f m\n&quot;, lo, hi);
+
+  // ① 가장 가까운 값 — min_element 는 값이 아니라 「자리」를 돌려준다
+  const auto it = std::min_element(raw.begin(), raw.end());
+  if (it == raw.end()) { return 1; }    // 배열이 비었다 — 여기서 끝낸다
+  std::printf(&quot;min_element 가장 가까운 값        = %.2f (앞에서 %d번째)\n&quot;,
+              *it, static_cast&lt;int&gt;(std::distance(raw.begin(), it)));
+
+  // ②③ 「쓸 만한 값인가」를 한 번만 적어 두고 두 곳에서 쓴다
+  auto valid = [lo, hi](float r) { return std::isfinite(r) &amp;&amp; r &gt;= lo &amp;&amp; r &lt;= hi; };
+
+  // ② 쓸 만한 값이 몇 개인가
+  const auto n_valid = std::count_if(raw.begin(), raw.end(), valid);
+  std::printf(&quot;count_if    유효값 개수           = %d\n&quot;, static_cast&lt;int&gt;(n_valid));
+
+  // ③ 쓸 만한 값만 골라 담는다
+  std::vector&lt;float&gt; good;
+  good.reserve(raw.size());             // 미리 자리를 잡아 둔다
+  std::copy_if(raw.begin(), raw.end(), std::back_inserter(good), valid);
+  std::printf(&quot;copy_if     골라 담은 것          = &quot;);
+  for (float r : good) { std::printf(&quot;%.2f &quot;, r); }
+  std::printf(&quot;\n&quot;);
+
+  const auto it2 = std::min_element(good.begin(), good.end());
+  std::printf(&quot;min_element 걸러낸 뒤 가장 가까운 = %.2f (앞에서 %d번째)\n&quot;,
+              *it2, static_cast&lt;int&gt;(std::distance(good.begin(), it2)));
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
 
   <div class="tablewrap">
   <table>
@@ -405,48 +717,37 @@ std::copy_if(ranges.begin(), ranges.end(), std::back_inserter(good),
 
   <p>
     나머지도 모양은 같다. <strong>구간을 주고, 필요하면 조건을 준다.</strong>
-    아래 프로그램은 그 여섯 개를 한 번에 돌려 본 것이다.
-    입력은 라이다 값 10개인데 그중 <code>inf</code> 하나와 <code>NaN</code> 하나, 범위 밖 값 둘이 섞여 있다.
+    ③에서 만든 <code>good</code>(쓸 만한 값 6개)을 그대로 재료로 쓴다.
+    이번 단계에서는 for문을 고치는 것이 아니라 여섯 개를 한 번에 <strong>더한다.</strong>
+    헤더 하나가 더 붙는다.
   </p>
 
-  <pre><code>#include &lt;algorithm&gt;
-#include &lt;cmath&gt;
-#include &lt;cstdio&gt;
-#include &lt;iterator&gt;
-#include &lt;numeric&gt;
+  <pre><code>#include &lt;iterator&gt;    // std::distance · std::back_inserter
+<span class="ln-add">#include &lt;numeric&gt;     // std::accumulate</span>
 #include &lt;vector&gt;
+  // … ③ 까지의 줄은 그대로 …
+<span class="ln-add">  // ④ 나머지 여섯 개 — 전부 「구간을 주고, 필요하면 조건을 준다」는 같은 모양이다</span>
+<span class="ln-add">  const auto f = std::find_if(good.begin(), good.end(), [](float r) { return r &lt; 0.5f; });</span>
+<span class="ln-add">  std::printf("find_if     0.5m 보다 가까운 첫 값 = %.2f\n", *f);</span>
 
-int main()
-{
-  const std::vector&lt;float&gt; raw{0.10f, 0.83f, INFINITY, 1.24f, 9.90f,
-                               std::nanf(""), 2.05f, 0.42f, 3.30f, 0.55f};
-  const float lo = 0.16f, hi = 8.0f;
-  auto valid = [lo, hi](float r) { return std::isfinite(r) &amp;&amp; r &gt;= lo &amp;&amp; r &lt;= hi; };
+<span class="ln-add">  const float sum = std::accumulate(good.begin(), good.end(), 0.0f);</span>
+<span class="ln-add">  std::printf("accumulate  합 %.2f → 평균 %.3f m\n", sum, sum / good.size());</span>
 
-  const auto n_valid = std::count_if(raw.begin(), raw.end(), valid);
+<span class="ln-add">  std::vector&lt;float&gt; cm(good.size());   // 받는 그릇은 미리 같은 크기로</span>
+<span class="ln-add">  std::transform(good.begin(), good.end(), cm.begin(), [](float m) { return m * 100.0f; });</span>
+<span class="ln-add">  std::printf("transform   cm 로 바꾼 것         = ");</span>
+<span class="ln-add">  for (float c : cm) { std::printf("%.0f ", c); }</span>
+<span class="ln-add">  std::printf("\n");</span>
 
-  std::vector&lt;float&gt; good;
-  good.reserve(raw.size());
-  std::copy_if(raw.begin(), raw.end(), std::back_inserter(good), valid);
+<span class="ln-add">  const bool near_any = std::any_of(good.begin(), good.end(), [](float r) { return r &lt; 0.3f; });</span>
+<span class="ln-add">  const bool all_far  = std::all_of(good.begin(), good.end(), [](float r) { return r &gt; 1.0f; });</span>
+<span class="ln-add">  std::printf("any_of      0.3m 안쪽에 뭐가 있나   = %s\n", near_any ? "있다" : "없다");</span>
+<span class="ln-add">  std::printf("all_of      전부 1m 밖인가          = %s\n", all_far ? "그렇다" : "아니다");</span>
 
-  const auto it = std::min_element(good.begin(), good.end());
-  const auto f  = std::find_if(good.begin(), good.end(),
-                               [](float r) { return r &lt; 0.5f; });
-  const float sum = std::accumulate(good.begin(), good.end(), 0.0f);
-
-  std::vector&lt;float&gt; cm(good.size());
-  std::transform(good.begin(), good.end(), cm.begin(),
-                 [](float m) { return m * 100.0f; });
-
-  const bool near_any = std::any_of(good.begin(), good.end(),
-                                    [](float r) { return r &lt; 0.3f; });
-  const bool all_far  = std::all_of(good.begin(), good.end(),
-                                    [](float r) { return r &gt; 1.0f; });
-
-  std::vector&lt;float&gt; sorted = good;
-  std::sort(sorted.begin(), sorted.end());
-  // ... 아래 출력으로 이어진다
-}</code></pre>
+<span class="ln-add">  std::vector&lt;float&gt; sorted = good;     // 원본은 두고 사본을 정렬한다</span>
+<span class="ln-add">  std::sort(sorted.begin(), sorted.end());</span>
+<span class="ln-add">  std::printf("sort        정렬 후 중앙값         = %.2f\n", sorted.at(sorted.size() / 2));</span>
+  return 0;</code></pre>
 
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
@@ -466,30 +767,101 @@ int main()
           여기서는 미터를 센티미터로 바꾸는 데 썼다.
           받는 그릇은 <strong>미리 같은 크기로 만들어 둬야 한다.</strong></dd>
 
-      <dt>std::nanf("")</dt>
-      <dd><code>NaN</code> 값을 하나 만들어 준다. 라이다가 측정에 실패했을 때 보내는 것과 같은 값이다.
-          여기서는 함정을 재현하려고 일부러 섞었다.</dd>
+      <dt>[](float r) { ... }</dt>
+      <dd>대괄호가 <strong>비어 있는</strong> 람다다. 바깥 변수를 하나도 안 가져다 쓴다는 뜻이다.
+          여기서는 <code>0.5f</code>·<code>0.3f</code>·<code>1.0f</code>처럼 조건 안에 숫자를 그대로 적었기 때문에 가져올 것이 없었다.</dd>
     </dl>
   </div>
 
-  <p>실제로 컨테이너에서 돌린 출력이다.</p>
-  <pre><code>원본 10개
-count_if   유효값 개수        = 6
-copy_if    골라 담은 것       = 0.83 1.24 2.05 0.42 3.30 0.55
-min_element 가장 가까운 값    = 0.42 (앞에서 3번째)
-find_if    0.5m 보다 가까운 첫 값 = 0.42
-accumulate 합 8.39 → 평균 1.398 m
-transform  cm 로 바꾼 것      = 83 124 205 42 330 55
-any_of     0.3m 안쪽에 뭐가 있나 = 없다
-all_of     전부 1m 밖인가        = 아니다
-sort       정렬 후 중앙값     = 1.24</code></pre>
+  <h3>실제로 나온 출력</h3>
+  <pre><code>find_if     0.5m 보다 가까운 첫 값 = 0.42
+accumulate  합 8.39 → 평균 1.398 m
+transform   cm 로 바꾼 것         = 83 124 205 42 330 55
+any_of      0.3m 안쪽에 뭐가 있나   = 없다
+all_of      전부 1m 밖인가          = 아니다
+sort        정렬 후 중앙값         = 1.24</code></pre>
 
-  <p class="readme-first">무엇을 먼저 볼지: <strong>두 번째 줄</strong>이다. 10개 중 6개만 살아남았다.</p>
+  <!-- fullcode "전체 코드 — scan_algo.cpp (5단계 · 알고리즘 아홉 개 전부)" build="g++ -std=c++17 -O2 -o scan_algo scan_algo.cpp && ./scan_algo"
+       l13_stl/steps/step5.cpp as scan_algo.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — scan_algo.cpp (5단계 · 알고리즘 아홉 개 전부)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o scan_algo scan_algo.cpp &amp;&amp; ./scan_algo</code></p>
+  <div class="codefile"><div class="fname">scan_algo.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 13회 — STL 알고리즘: 라이다 스캔 하나를 놓고 for 문을 표준 알고리즘으로 바꿔 간다
+#include &lt;algorithm&gt;   // min_element · count_if · copy_if · find_if · transform · any_of · all_of · sort
+#include &lt;cmath&gt;       // INFINITY · std::nanf · std::isfinite
+#include &lt;cstdio&gt;      // std::printf
+#include &lt;iterator&gt;    // std::distance · std::back_inserter
+#include &lt;numeric&gt;     // std::accumulate
+#include &lt;vector&gt;
+
+int main()
+{
+  // 라이다 한 스캔을 흉내낸 값 10개. 측정 실패(inf · nan)와 범위 밖 값이 섞여 있다
+  const std::vector&lt;float&gt; raw{0.10f, 0.83f, INFINITY, 1.24f, 9.90f,
+                               std::nanf(&quot;&quot;), 2.05f, 0.42f, 3.30f, 0.55f};
+  const float lo = 0.16f, hi = 8.0f;   // 이 라이다(LDS-02)가 잴 수 있는 거리
+
+  std::printf(&quot;원본 %d개 = &quot;, static_cast&lt;int&gt;(raw.size()));
+  for (float r : raw) { std::printf(&quot;%.2f &quot;, r); }
+  std::printf(&quot;\n잴 수 있는 거리 = %.2f ~ %.2f m\n&quot;, lo, hi);
+
+  // ① 가장 가까운 값 — min_element 는 값이 아니라 「자리」를 돌려준다
+  const auto it = std::min_element(raw.begin(), raw.end());
+  if (it == raw.end()) { return 1; }    // 배열이 비었다 — 여기서 끝낸다
+  std::printf(&quot;min_element 가장 가까운 값        = %.2f (앞에서 %d번째)\n&quot;,
+              *it, static_cast&lt;int&gt;(std::distance(raw.begin(), it)));
+
+  // ②③ 「쓸 만한 값인가」를 한 번만 적어 두고 두 곳에서 쓴다
+  auto valid = [lo, hi](float r) { return std::isfinite(r) &amp;&amp; r &gt;= lo &amp;&amp; r &lt;= hi; };
+
+  // ② 쓸 만한 값이 몇 개인가
+  const auto n_valid = std::count_if(raw.begin(), raw.end(), valid);
+  std::printf(&quot;count_if    유효값 개수           = %d\n&quot;, static_cast&lt;int&gt;(n_valid));
+
+  // ③ 쓸 만한 값만 골라 담는다
+  std::vector&lt;float&gt; good;
+  good.reserve(raw.size());             // 미리 자리를 잡아 둔다
+  std::copy_if(raw.begin(), raw.end(), std::back_inserter(good), valid);
+  std::printf(&quot;copy_if     골라 담은 것          = &quot;);
+  for (float r : good) { std::printf(&quot;%.2f &quot;, r); }
+  std::printf(&quot;\n&quot;);
+
+  const auto it2 = std::min_element(good.begin(), good.end());
+  std::printf(&quot;min_element 걸러낸 뒤 가장 가까운 = %.2f (앞에서 %d번째)\n&quot;,
+              *it2, static_cast&lt;int&gt;(std::distance(good.begin(), it2)));
+
+  // ④ 나머지 여섯 개 — 전부 「구간을 주고, 필요하면 조건을 준다」는 같은 모양이다
+  const auto f = std::find_if(good.begin(), good.end(), [](float r) { return r &lt; 0.5f; });
+  std::printf(&quot;find_if     0.5m 보다 가까운 첫 값 = %.2f\n&quot;, *f);
+
+  const float sum = std::accumulate(good.begin(), good.end(), 0.0f);
+  std::printf(&quot;accumulate  합 %.2f → 평균 %.3f m\n&quot;, sum, sum / good.size());
+
+  std::vector&lt;float&gt; cm(good.size());   // 받는 그릇은 미리 같은 크기로
+  std::transform(good.begin(), good.end(), cm.begin(), [](float m) { return m * 100.0f; });
+  std::printf(&quot;transform   cm 로 바꾼 것         = &quot;);
+  for (float c : cm) { std::printf(&quot;%.0f &quot;, c); }
+  std::printf(&quot;\n&quot;);
+
+  const bool near_any = std::any_of(good.begin(), good.end(), [](float r) { return r &lt; 0.3f; });
+  const bool all_far  = std::all_of(good.begin(), good.end(), [](float r) { return r &gt; 1.0f; });
+  std::printf(&quot;any_of      0.3m 안쪽에 뭐가 있나   = %s\n&quot;, near_any ? &quot;있다&quot; : &quot;없다&quot;);
+  std::printf(&quot;all_of      전부 1m 밖인가          = %s\n&quot;, all_far ? &quot;그렇다&quot; : &quot;아니다&quot;);
+
+  std::vector&lt;float&gt; sorted = good;     // 원본은 두고 사본을 정렬한다
+  std::sort(sorted.begin(), sorted.end());
+  std::printf(&quot;sort        정렬 후 중앙값         = %.2f\n&quot;, sorted.at(sorted.size() / 2));
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <p class="readme-first">무엇을 먼저 볼지: <strong>마지막 두 줄</strong>이다. 같은 6개를 놓고 묻는 말이 다르면 답이 다르다.</p>
   <div class="tablewrap">
   <table>
     <tr><th>출력 줄</th><th>어디를 보나</th></tr>
-    <tr><td><code>count_if … = 6</code></td><td>10개 중 <strong>4개가 버려졌다.</strong> <code>0.10</code>(너무 가까움)·<code>INFINITY</code>·<code>9.90</code>(너무 멂)·<code>NaN</code>이다</td></tr>
-    <tr><td><code>min_element … 앞에서 3번째</code></td><td>원본이 아니라 <strong>걸러낸 뒤</strong> 배열에서 3번째다. 원본 인덱스가 필요하면 따로 챙겨야 한다</td></tr>
+    <tr><td><code>find_if … = 0.42</code></td><td>조건에 맞는 <strong>첫 번째</strong>다. 여기서는 0.5보다 작은 것이 0.42 하나뿐이지만, 여럿이면 <strong>앞에 있는 것</strong>이 나온다</td></tr>
     <tr><td><code>all_of … 아니다</code></td><td>0.42가 1 m보다 가깝다. <strong>하나만 어겨도 <code>all_of</code>는 거짓이다</strong></td></tr>
     <tr><td><code>sort … 중앙값 1.24</code></td><td>6개를 정렬해 3번 칸을 읽은 것이다. 짝수 개일 때 중앙값을 어떻게 볼지는 정하기 나름이다</td></tr>
   </table>
@@ -505,28 +877,247 @@ sort       정렬 후 중앙값     = 1.24</code></pre>
 
   <p>
     "표준이 더 빠르다"는 말은 흔하지만 <strong>얼마나</strong>인지는 잘 안 나온다.
-    두 가지를 재 봤다. <strong>답이 경우마다 다르다.</strong>
+    그래서 같은 프로그램에 <strong>재는 함수 하나</strong>를 더했다.
+    값 10개로는 시간이 안 나오므로 이 함수 안에서만 <strong>진짜 스캔 크기(360개)</strong>를 만들어 쓴다.
+    두 가지를 쟀고, <strong>답이 경우마다 다르다.</strong>
   </p>
 
-  <h3>최솟값 찾기 — 두 배쯤 빨랐다</h3>
-  <p>360개 배열에서 최솟값을 찾는 일을 10만 번 시켰다.</p>
-  <pre><code>직접 짠 for문   :    16.3 ms
-min_element     :     8.4 ms
-비  (for ÷ STL) : 1.94배   (360개 배열 × 100000회)</code></pre>
+  <h3>6단계 — <code>main</code> 위에 함수 둘, <code>main</code> 끝에 한 줄</h3>
   <p>
-    <strong>1.94배다.</strong> 하는 일이 똑같은데 차이가 나는 이유는
-    표준 구현이 컴파일러가 최적화하기 좋은 모양으로 쓰여 있기 때문이다.
-    다만 이 숫자는 <strong>컴파일러와 옵션에 따라 달라진다.</strong>
-    최적화를 끄면 표준 쪽이 오히려 느릴 수도 있다.
-    <strong>속도는 이 회차의 주된 이유가 아니다.</strong>
+    시계를 켜고 끄는 줄은 6회에서 본 것과 같아서 여기서는 <strong>비교하는 알맹이만</strong> 보인다.
+    시계 부분까지 전부는 아래 📄 상자에 있다.
+  </p>
+  <pre><code><span class="ln-add">#include &lt;chrono&gt;      // 시간 재기</span>
+  // …
+<span class="ln-add">// AI에게 "정렬을 직접 짜 줘"라고 하면 흔히 나오는 모양 (선택 정렬)</span>
+<span class="ln-add">void hand_sort(std::vector&lt;float&gt; &amp; v)</span>
+<span class="ln-add">{</span>
+<span class="ln-add">  for (size_t i = 0; i &lt; v.size(); ++i) {</span>
+<span class="ln-add">    size_t m = i;</span>
+<span class="ln-add">    for (size_t j = i + 1; j &lt; v.size(); ++j) { if (v[j] &lt; v[m]) { m = j; } }</span>
+<span class="ln-add">    const float t = v[i]; v[i] = v[m]; v[m] = t;</span>
+<span class="ln-add">  }</span>
+<span class="ln-add">}</span>
+
+<span class="ln-add">// ⑤ 속도 — 진짜 스캔 크기(360개)로 직접 짠 루프와 표준을 같은 입력에 돌려 재 본다</span>
+<span class="ln-add">void measure_speed()</span>
+<span class="ln-add">{</span>
+<span class="ln-add">  const int N = 360;</span>
+<span class="ln-add">  std::vector&lt;float&gt; scan(N);</span>
+<span class="ln-add">  for (int i = 0; i &lt; N; ++i) { scan[i] = 0.2f + 0.02f * static_cast&lt;float&gt;((i * 37) % 300); }</span>
+<span class="ln-add">  double sink = 0.0;   // 결과를 어딘가에 써야 컴파일러가 계산을 통째로 지우지 않는다</span>
+
+<span class="ln-add">  // 최솟값 찾기 10만 번 — for문 vs min_element     (시계 켜고 끄는 줄은 생략)</span>
+<span class="ln-add">    float m = 999.0f;</span>
+<span class="ln-add">    for (size_t i = 0; i &lt; scan.size(); ++i) { if (scan[i] &lt; m) { m = scan[i]; } }</span>
+<span class="ln-add">    sink += m;</span>
+<span class="ln-add">  // …</span>
+<span class="ln-add">    sink += *std::min_element(scan.begin(), scan.end());</span>
+
+<span class="ln-add">  // 정렬해서 중앙값 얻기 1만 번 — 선택 정렬 vs std::sort vs nth_element</span>
+<span class="ln-add">    std::vector&lt;float&gt; v = scan;</span>
+<span class="ln-add">    hand_sort(v);</span>
+<span class="ln-add">    sink += v.at(N / 2);</span>
+<span class="ln-add">  // …</span>
+<span class="ln-add">    std::sort(v.begin(), v.end());</span>
+<span class="ln-add">  // … 중앙값만 필요하면 전부 정렬할 필요도 없다</span>
+<span class="ln-add">    std::nth_element(v.begin(), v.begin() + N / 2, v.end());</span>
+<span class="ln-add">}</span>
+
+int main()
+{
+  // … ④ 까지의 줄은 그대로 …
+<span class="ln-add">  measure_speed();</span>
+  return 0;
+}</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>std::nth_element(first, nth, last)</dt>
+      <dd>「<code>nth</code> 자리에 올 값」만 제자리에 놓고 나머지는 대충 둔다. 정렬을 다 하지 않는다.
+          여기서는 가운데 칸(<code>N / 2</code>)만 맞춰 <strong>중앙값</strong>을 얻는 데 썼다.</dd>
+
+      <dt>double sink</dt>
+      <dd>재는 동안 나온 답을 계속 더해 두는 변수다. 답을 아무 데도 안 쓰면 컴파일러가
+          <strong>「어차피 안 쓰는 계산」이라며 통째로 지워 버릴 수 있다.</strong>
+          여기서는 그걸 막으려고 마지막에 찍는다. 시간을 잴 때 늘 붙는 버릇이다.</dd>
+    </dl>
+  </div>
+
+  <h3>최솟값 찾기 — 빌드할 때마다 순위가 뒤집혔다</h3>
+  <p>360개 배열에서 최솟값을 찾는 일을 10만 번 시켰다. 그런데 <strong>같은 소스에 줄 몇 개를 더해 다시 빌드했더니 결과가 뒤집혔다.</strong></p>
+  <pre><code>6단계 빌드      직접 짠 for문   :     8.4 ms
+                min_element     :    16.3 ms   (0.52배 빠르다)
+7단계(완성본)   직접 짠 for문   :    16.3 ms
+                min_element     :     8.5 ms   (1.93배 빠르다)</code></pre>
+  <p>
+    두 빌드 모두 여러 번 돌려도 같은 숫자가 나온다. 즉 <strong>한쪽이 8 ms, 다른 쪽이 16 ms</strong>인데
+    어느 쪽이 8인지는 <strong>코드가 메모리 어디에 놓이느냐</strong>에 따라 갈렸다.
+    하는 일이 똑같아서 컴파일러가 둘을 거의 같은 기계어로 만들기 때문이다.
+    <strong>최솟값 찾기에서는 속도 차이가 없다고 보는 것이 맞다.</strong>
+    그런데도 <code>min_element</code>로 바꾸는 이유는 ①에서 본 대로 <strong>틀릴 자리가 사라지기 때문</strong>이다.
   </p>
 
   <h3>정렬 — 여기서는 이야기가 다르다</h3>
+  <pre><code>⑤ 정렬 — 360개 배열 × 10000회
+  직접 짠 선택 정렬 :    364.9 ms
+  std::sort         :     20.8 ms   (17.6배 빠르다)
+  std::nth_element  :      5.1 ms   (72.2배 빠르다)</code></pre>
+  <p>이쪽은 빌드를 바꿔도 여러 번 돌려도 364~367 / 18~21 / 4.5~5.1 ms 안에서 움직인다. <strong>순위가 뒤집히지 않는다.</strong></p>
 
-<pre><code>직접 짠 선택 정렬 :    364.5 ms
-std::sort         :     21.2 ms   (17.2배 빠르다)
-std::nth_element  :      5.2 ms   (69.8배 빠르다)
-360개 배열 × 10000회</code></pre>
+  <!-- fullcode "전체 코드 — scan_algo.cpp (6단계 · 속도 측정까지)" build="g++ -std=c++17 -O2 -o scan_algo scan_algo.cpp && ./scan_algo"
+       l13_stl/steps/step6.cpp as scan_algo.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — scan_algo.cpp (6단계 · 속도 측정까지)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o scan_algo scan_algo.cpp &amp;&amp; ./scan_algo</code></p>
+  <div class="codefile"><div class="fname">scan_algo.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 13회 — STL 알고리즘: 라이다 스캔 하나를 놓고 for 문을 표준 알고리즘으로 바꿔 간다
+#include &lt;algorithm&gt;   // min_element · count_if · copy_if · find_if · transform · any_of · all_of · sort
+#include &lt;chrono&gt;      // 시간 재기
+#include &lt;cmath&gt;       // INFINITY · std::nanf · std::isfinite
+#include &lt;cstdio&gt;      // std::printf
+#include &lt;iterator&gt;    // std::distance · std::back_inserter
+#include &lt;numeric&gt;     // std::accumulate
+#include &lt;vector&gt;
+
+// AI에게 &quot;정렬을 직접 짜 줘&quot;라고 하면 흔히 나오는 모양 (선택 정렬)
+void hand_sort(std::vector&lt;float&gt; &amp; v)
+{
+  for (size_t i = 0; i &lt; v.size(); ++i) {
+    size_t m = i;
+    for (size_t j = i + 1; j &lt; v.size(); ++j) { if (v[j] &lt; v[m]) { m = j; } }
+    const float t = v[i]; v[i] = v[m]; v[m] = t;
+  }
+}
+
+// ⑤ 속도 — 진짜 스캔 크기(360개)로 직접 짠 루프와 표준을 같은 입력에 돌려 재 본다
+void measure_speed()
+{
+  const int N = 360;
+  std::vector&lt;float&gt; scan(N);
+  for (int i = 0; i &lt; N; ++i) { scan[i] = 0.2f + 0.02f * static_cast&lt;float&gt;((i * 37) % 300); }
+  double sink = 0.0;   // 결과를 어딘가에 써야 컴파일러가 계산을 통째로 지우지 않는다
+
+  // 최솟값 찾기 10만 번
+  const int LOOPS_MIN = 100000;
+  auto t0 = std::chrono::steady_clock::now();
+  for (int k = 0; k &lt; LOOPS_MIN; ++k) {
+    float m = 999.0f;
+    for (size_t i = 0; i &lt; scan.size(); ++i) { if (scan[i] &lt; m) { m = scan[i]; } }
+    sink += m;
+  }
+  auto t1 = std::chrono::steady_clock::now();
+  const double loop_ms = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+
+  t0 = std::chrono::steady_clock::now();
+  for (int k = 0; k &lt; LOOPS_MIN; ++k) { sink += *std::min_element(scan.begin(), scan.end()); }
+  t1 = std::chrono::steady_clock::now();
+  const double stl_ms = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+
+  std::printf(&quot;\n⑤ 속도 — 360개 배열 × %d회\n&quot;, LOOPS_MIN);
+  std::printf(&quot;  직접 짠 for문   : %7.1f ms\n&quot;, loop_ms);
+  std::printf(&quot;  min_element     : %7.1f ms   (%.2f배 빠르다)\n&quot;, stl_ms, loop_ms / stl_ms);
+
+  // 정렬해서 중앙값 얻기 1만 번
+  const int LOOPS_SORT = 10000;
+  t0 = std::chrono::steady_clock::now();
+  for (int k = 0; k &lt; LOOPS_SORT; ++k) {
+    std::vector&lt;float&gt; v = scan;
+    hand_sort(v);
+    sink += v.at(N / 2);
+  }
+  t1 = std::chrono::steady_clock::now();
+  const double hand = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+
+  t0 = std::chrono::steady_clock::now();
+  for (int k = 0; k &lt; LOOPS_SORT; ++k) {
+    std::vector&lt;float&gt; v = scan;
+    std::sort(v.begin(), v.end());
+    sink += v.at(N / 2);
+  }
+  t1 = std::chrono::steady_clock::now();
+  const double stl = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+
+  // 중앙값만 필요하면 전부 정렬할 필요도 없다
+  t0 = std::chrono::steady_clock::now();
+  for (int k = 0; k &lt; LOOPS_SORT; ++k) {
+    std::vector&lt;float&gt; v = scan;
+    std::nth_element(v.begin(), v.begin() + N / 2, v.end());
+    sink += v.at(N / 2);
+  }
+  t1 = std::chrono::steady_clock::now();
+  const double nth = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+
+  std::printf(&quot;⑤ 정렬 — 360개 배열 × %d회 (sink=%.0f)\n&quot;, LOOPS_SORT, sink);
+  std::printf(&quot;  직접 짠 선택 정렬 : %8.1f ms\n&quot;, hand);
+  std::printf(&quot;  std::sort         : %8.1f ms   (%.1f배 빠르다)\n&quot;, stl, hand / stl);
+  std::printf(&quot;  std::nth_element  : %8.1f ms   (%.1f배 빠르다)\n&quot;, nth, hand / nth);
+}
+
+int main()
+{
+  // 라이다 한 스캔을 흉내낸 값 10개. 측정 실패(inf · nan)와 범위 밖 값이 섞여 있다
+  const std::vector&lt;float&gt; raw{0.10f, 0.83f, INFINITY, 1.24f, 9.90f,
+                               std::nanf(&quot;&quot;), 2.05f, 0.42f, 3.30f, 0.55f};
+  const float lo = 0.16f, hi = 8.0f;   // 이 라이다(LDS-02)가 잴 수 있는 거리
+
+  std::printf(&quot;원본 %d개 = &quot;, static_cast&lt;int&gt;(raw.size()));
+  for (float r : raw) { std::printf(&quot;%.2f &quot;, r); }
+  std::printf(&quot;\n잴 수 있는 거리 = %.2f ~ %.2f m\n&quot;, lo, hi);
+
+  // ① 가장 가까운 값 — min_element 는 값이 아니라 「자리」를 돌려준다
+  const auto it = std::min_element(raw.begin(), raw.end());
+  if (it == raw.end()) { return 1; }    // 배열이 비었다 — 여기서 끝낸다
+  std::printf(&quot;min_element 가장 가까운 값        = %.2f (앞에서 %d번째)\n&quot;,
+              *it, static_cast&lt;int&gt;(std::distance(raw.begin(), it)));
+
+  // ②③ 「쓸 만한 값인가」를 한 번만 적어 두고 두 곳에서 쓴다
+  auto valid = [lo, hi](float r) { return std::isfinite(r) &amp;&amp; r &gt;= lo &amp;&amp; r &lt;= hi; };
+
+  // ② 쓸 만한 값이 몇 개인가
+  const auto n_valid = std::count_if(raw.begin(), raw.end(), valid);
+  std::printf(&quot;count_if    유효값 개수           = %d\n&quot;, static_cast&lt;int&gt;(n_valid));
+
+  // ③ 쓸 만한 값만 골라 담는다
+  std::vector&lt;float&gt; good;
+  good.reserve(raw.size());             // 미리 자리를 잡아 둔다
+  std::copy_if(raw.begin(), raw.end(), std::back_inserter(good), valid);
+  std::printf(&quot;copy_if     골라 담은 것          = &quot;);
+  for (float r : good) { std::printf(&quot;%.2f &quot;, r); }
+  std::printf(&quot;\n&quot;);
+
+  const auto it2 = std::min_element(good.begin(), good.end());
+  std::printf(&quot;min_element 걸러낸 뒤 가장 가까운 = %.2f (앞에서 %d번째)\n&quot;,
+              *it2, static_cast&lt;int&gt;(std::distance(good.begin(), it2)));
+
+  // ④ 나머지 여섯 개 — 전부 「구간을 주고, 필요하면 조건을 준다」는 같은 모양이다
+  const auto f = std::find_if(good.begin(), good.end(), [](float r) { return r &lt; 0.5f; });
+  std::printf(&quot;find_if     0.5m 보다 가까운 첫 값 = %.2f\n&quot;, *f);
+
+  const float sum = std::accumulate(good.begin(), good.end(), 0.0f);
+  std::printf(&quot;accumulate  합 %.2f → 평균 %.3f m\n&quot;, sum, sum / good.size());
+
+  std::vector&lt;float&gt; cm(good.size());   // 받는 그릇은 미리 같은 크기로
+  std::transform(good.begin(), good.end(), cm.begin(), [](float m) { return m * 100.0f; });
+  std::printf(&quot;transform   cm 로 바꾼 것         = &quot;);
+  for (float c : cm) { std::printf(&quot;%.0f &quot;, c); }
+  std::printf(&quot;\n&quot;);
+
+  const bool near_any = std::any_of(good.begin(), good.end(), [](float r) { return r &lt; 0.3f; });
+  const bool all_far  = std::all_of(good.begin(), good.end(), [](float r) { return r &gt; 1.0f; });
+  std::printf(&quot;any_of      0.3m 안쪽에 뭐가 있나   = %s\n&quot;, near_any ? &quot;있다&quot; : &quot;없다&quot;);
+  std::printf(&quot;all_of      전부 1m 밖인가          = %s\n&quot;, all_far ? &quot;그렇다&quot; : &quot;아니다&quot;);
+
+  std::vector&lt;float&gt; sorted = good;     // 원본은 두고 사본을 정렬한다
+  std::sort(sorted.begin(), sorted.end());
+  std::printf(&quot;sort        정렬 후 중앙값         = %.2f\n&quot;, sorted.at(sorted.size() / 2));
+
+  measure_speed();
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
 
   <p class="readme-first">무엇을 먼저 볼지: <strong>세 번째 줄</strong>이다. 정렬을 아예 안 했는데 답은 같다.</p>
   <div class="tablewrap">
@@ -542,46 +1133,299 @@ std::nth_element  :      5.2 ms   (69.8배 빠르다)
     <strong>표준으로 바꾸는 이유는 세 가지이고, 속도는 그중 하나일 뿐이다.</strong>
     ① 이름이 곧 설명이다 ② 인덱스 실수가 사라진다 ③ 때때로 훨씬 빠르다.
     <code>min_element</code>는 ①②가 이유이고 <code>sort</code>는 ①②③ 전부가 이유다.
+    <strong>「표준이라서 빠르다」가 아니라 「직접 짠 것이 표준보다 빠를 일은 거의 없다」</strong>가 정확한 말이다.
   </div>
 
   <!-- ── ⚠️ 함정 상자 ── -->
   <div class="box trap" id="trap">
     <div class="boxtitle">⚠️ 실제 로봇에서만 틀리는 코드 — 이 회차의 백미</div>
-    <p>다음 코드는 <strong>문법도 맞고 논리도 맞다. 시뮬레이션에서도 잘 돈다.</strong></p>
-    <pre><code>const float min = *std::min_element(ranges.begin(), ranges.end());</code></pre>
-    <p><strong>그런데 실제 라이다에서는 엉뚱한 값이 나온다.</strong></p>
+    <p>다음 코드는 <strong>문법도 맞고 논리도 맞다. 시뮬레이션에서도 잘 돈다.</strong> ①에서 우리가 쓴 줄 그대로다.</p>
+    <pre><code>const auto it = std::min_element(raw.begin(), raw.end());</code></pre>
+    <p><strong>그런데 실제 라이다에서는 엉뚱한 값이 나올 수 있다.</strong></p>
     <p>
       라이다는 측정에 실패한 방향을 <code>inf</code>나 <code>NaN</code>으로 채워 보낸다.
       너무 멀거나, 너무 가깝거나, 검은 물체라 빛이 안 돌아온 경우다.
+      우리 <code>raw</code>에도 6번째 칸에 <code>nan</code>이 있었는데 ①의 답은 멀쩡했다. <strong>운이 좋았을 뿐이다.</strong>
     </p>
     <p>
       문제는 <code>NaN</code>의 성질이다. <strong><code>NaN</code>은 어떤 비교에도 거짓을 낸다.</strong>
-      실제로 확인해 봤다.
+      마지막 단계로 그것을 확인하는 줄을 더한다.
     </p>
-    <pre><code>NaN &lt; 5.0 : 거짓
-NaN &gt; 5.0 : 거짓
-NaN == NaN: 거짓</code></pre>
+
+    <h3>7단계 — <code>main</code> 위에 함수 하나, <code>main</code> 끝에 확인하는 줄들</h3>
+    <pre><code><span class="ln-add">// ⚠️ 작은 묶음을 받아 min_element 가 무엇을 고르는지 찍는다</span>
+<span class="ln-add">void show_min(const char * label, const std::vector&lt;float&gt; &amp; v)</span>
+<span class="ln-add">{</span>
+<span class="ln-add">  const auto it = std::min_element(v.begin(), v.end());</span>
+<span class="ln-add">  std::printf("  %s min_element → %5.2f  (앞에서 %d번째)\n",</span>
+<span class="ln-add">              label, *it, static_cast&lt;int&gt;(std::distance(v.begin(), it)));</span>
+<span class="ln-add">}</span>
+
+int main()
+{
+  // … ⑤ 까지의 줄은 그대로 …
+<span class="ln-add">  // ⚠️ NaN 은 어떤 비교에도 거짓이다 — 그래서 어디 있느냐에 따라 답이 달라진다</span>
+<span class="ln-add">  const float N = std::nanf("");</span>
+<span class="ln-add">  std::printf("\n⚠️ NaN 비교\n");</span>
+<span class="ln-add">  std::printf("  NaN &lt; 5.0 : %s\n", (N &lt; 5.0f) ? "참" : "거짓");</span>
+<span class="ln-add">  std::printf("  NaN &gt; 5.0 : %s\n", (N &gt; 5.0f) ? "참" : "거짓");</span>
+<span class="ln-add">  std::printf("  NaN == NaN: %s\n", (N == N) ? "참" : "거짓");</span>
+
+<span class="ln-add">  std::printf("⚠️ 같은 값 묶음인데 NaN 의 자리만 다르다\n");</span>
+<span class="ln-add">  show_min("NaN 이 앞에  :", {N, 3.0f, 0.5f, 2.0f});</span>
+<span class="ln-add">  show_min("NaN 이 가운데:", {3.0f, N, 0.5f, 2.0f});</span>
+<span class="ln-add">  show_min("NaN 이 없음  :", {3.0f, 0.5f, 2.0f});</span>
+  return 0;
+}</code></pre>
+
+    <div class="box firstseen">
+      <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+      <dl>
+        <dt>const char * label</dt>
+        <dd>따옴표로 적은 글자("NaN 이 앞에  :")를 받는 인자다. <code>std::printf</code>의 첫 인자와 같은 종류다.
+            여기서는 출력 줄 앞에 붙일 이름표를 받는 데 썼다.</dd>
+
+        <dt>show_min("…", {N, 3.0f, 0.5f, 2.0f})</dt>
+        <dd>중괄호로 값을 나열하면 <strong>그 자리에서 <code>std::vector&lt;float&gt;</code>가 만들어져</strong> 넘어간다.
+            여기서는 같은 값 넷의 순서만 바꿔 세 번 부르는 데 썼다.</dd>
+      </dl>
+    </div>
+
+    <p>실제로 나온 출력이다.</p>
+    <pre><code>⚠️ NaN 비교
+  NaN &lt; 5.0 : 거짓
+  NaN &gt; 5.0 : 거짓
+  NaN == NaN: 거짓
+⚠️ 같은 값 묶음인데 NaN 의 자리만 다르다
+  NaN 이 앞에  : min_element →   nan  (앞에서 0번째)
+  NaN 이 가운데: min_element →  0.50  (앞에서 2번째)
+  NaN 이 없음  : min_element →  0.50  (앞에서 1번째)</code></pre>
     <p>
       <code>min_element</code>는 "이게 저것보다 작은가"를 반복해서 묻는 함수인데,
       그 질문에 계속 거짓이 돌아오면 <strong>비교가 무의미해진다.</strong>
       결과는 <strong><code>NaN</code>이 배열의 어디에 있느냐에 따라 달라진다.</strong>
-    </p>
-
-<pre><code>NaN 이 앞에  : min_element →    nan  (앞에서 0번째)
-NaN 이 가운데: min_element →   0.50  (앞에서 2번째)
-NaN 이 없음  : min_element →   0.50  (앞에서 1번째)</code></pre>
-
-    <p>
       <strong>맨 윗줄이 무서운 이유는 크래시가 안 나기 때문이다.</strong>
       로봇은 <code>nan</code>을 거리로 받아 그대로 판단하고, 그다음에 무슨 일이 일어날지는 아무도 모른다.
+    </p>
+
+    <h3>「걸렀는데도」 뚫리는 모양이 있다</h3>
+    <p>
+      "그러니까 범위 밖은 거르면 되지 않나" — 맞다. 그런데 <strong>거르는 조건을 어느 쪽으로 쓰느냐</strong>에 따라 결과가 갈린다.
+      AI는 「범위 밖이면 건너뛴다」는 <strong>빼는 조건</strong>을 자주 준다. 마지막으로 그 모양을 우리 <code>valid</code>(고르는 조건)와 나란히 놓아 본다.
+    </p>
+    <pre><code>  // … 7단계 앞부분은 그대로 …
+<span class="ln-add">  std::printf("⚠️ 「빼는 조건」으로 거르면 NaN 이 통과한다\n");</span>
+<span class="ln-add">  const std::vector&lt;float&gt; tricky{N, 3.0f, 0.5f, 2.0f, INFINITY};</span>
+<span class="ln-add">  std::vector&lt;float&gt; leaky;             // AI가 자주 주는 모양: 범위 밖이면 건너뛴다</span>
+<span class="ln-add">  for (float r : tricky) {</span>
+<span class="ln-add">    if (r &lt; lo || r &gt; hi) { continue; } // NaN 은 둘 다 거짓 → 안 걸러진다</span>
+<span class="ln-add">    leaky.push_back(r);</span>
+<span class="ln-add">  }</span>
+<span class="ln-add">  show_min("빼는 조건   :", leaky);</span>
+<span class="ln-add">  std::vector&lt;float&gt; kept;              // ③ 과 같은 「고르는 조건」 + isfinite</span>
+<span class="ln-add">  std::copy_if(tricky.begin(), tricky.end(), std::back_inserter(kept), valid);</span>
+<span class="ln-add">  show_min("고르는 조건 :", kept);</span>
+  return 0;</code></pre>
+    <pre><code>⚠️ 「빼는 조건」으로 거르면 NaN 이 통과한다
+  빼는 조건   : min_element →   nan  (앞에서 0번째)
+  고르는 조건 : min_element →  0.50  (앞에서 1번째)</code></pre>
+    <p>
+      <code>r &lt; lo || r &gt; hi</code>는 <code>NaN</code>에게 두 번 다 「거짓」이라 <code>continue</code>에 걸리지 않는다.
+      <code>inf</code>는 <code>&gt; hi</code>에 걸려 빠지지만 <strong><code>NaN</code>만 살아남는다.</strong>
+      반대로 「고르는 조건」은 <code>NaN</code>에게 「거짓」이라 안 담긴다.
+      <strong>그래도 <code>std::isfinite</code>를 앞에 붙이는 이유는, 조건을 누가 어느 쪽으로 고치든 뚫리지 않게 하려는 것이다.</strong>
     </p>
     <p><strong>그래서 이렇게 요구해야 한다:</strong></p>
     <div class="prompt">
       <button onclick="copyPrompt(this)">복사</button>
-      <code>ranges</code>에 <code>inf</code>와 <code>NaN</code>이 섞여 있어. 유효한 값만 골라서 최솟값을 찾아 줘. <code>lo</code>~<code>hi</code> 범위 안에 있고 <code>std::isfinite</code>인 값만 써 줘.
+      <code>ranges</code>에 <code>inf</code>와 <code>NaN</code>이 섞여 있어. 유효한 값만 골라서 최솟값을 찾아 줘. <code>lo</code>~<code>hi</code> 범위 안에 있고 <code>std::isfinite</code>인 값만 「고르는」 조건으로 써 줘. 범위 밖을 빼는 식으로 쓰지 말아 줘.
     </div>
-    <p>걸러 낸 뒤에는 <code>NaN</code>이 어디 있었든 답이 같다.</p>
-    <pre><code>걸러낸 뒤 3개 → 최솟값 0.50</code></pre>
+
+    <!-- fullcode "전체 코드 — scan_algo.cpp (7단계 · 완성본)" build="g++ -std=c++17 -O2 -o scan_algo scan_algo.cpp && ./scan_algo"
+         l13_stl/steps/step7.cpp as scan_algo.cpp
+    -->
+<details class="fullcode">
+  <summary>전체 코드 — scan_algo.cpp (7단계 · 완성본)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o scan_algo scan_algo.cpp &amp;&amp; ./scan_algo</code></p>
+  <div class="codefile"><div class="fname">scan_algo.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 13회 — STL 알고리즘: 라이다 스캔 하나를 놓고 for 문을 표준 알고리즘으로 바꿔 간다
+#include &lt;algorithm&gt;   // min_element · count_if · copy_if · find_if · transform · any_of · all_of · sort
+#include &lt;chrono&gt;      // 시간 재기
+#include &lt;cmath&gt;       // INFINITY · std::nanf · std::isfinite
+#include &lt;cstdio&gt;      // std::printf
+#include &lt;iterator&gt;    // std::distance · std::back_inserter
+#include &lt;numeric&gt;     // std::accumulate
+#include &lt;vector&gt;
+
+// AI에게 &quot;정렬을 직접 짜 줘&quot;라고 하면 흔히 나오는 모양 (선택 정렬)
+void hand_sort(std::vector&lt;float&gt; &amp; v)
+{
+  for (size_t i = 0; i &lt; v.size(); ++i) {
+    size_t m = i;
+    for (size_t j = i + 1; j &lt; v.size(); ++j) { if (v[j] &lt; v[m]) { m = j; } }
+    const float t = v[i]; v[i] = v[m]; v[m] = t;
+  }
+}
+
+// ⑤ 속도 — 진짜 스캔 크기(360개)로 직접 짠 루프와 표준을 같은 입력에 돌려 재 본다
+void measure_speed()
+{
+  const int N = 360;
+  std::vector&lt;float&gt; scan(N);
+  for (int i = 0; i &lt; N; ++i) { scan[i] = 0.2f + 0.02f * static_cast&lt;float&gt;((i * 37) % 300); }
+  double sink = 0.0;   // 결과를 어딘가에 써야 컴파일러가 계산을 통째로 지우지 않는다
+
+  // 최솟값 찾기 10만 번
+  const int LOOPS_MIN = 100000;
+  auto t0 = std::chrono::steady_clock::now();
+  for (int k = 0; k &lt; LOOPS_MIN; ++k) {
+    float m = 999.0f;
+    for (size_t i = 0; i &lt; scan.size(); ++i) { if (scan[i] &lt; m) { m = scan[i]; } }
+    sink += m;
+  }
+  auto t1 = std::chrono::steady_clock::now();
+  const double loop_ms = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+
+  t0 = std::chrono::steady_clock::now();
+  for (int k = 0; k &lt; LOOPS_MIN; ++k) { sink += *std::min_element(scan.begin(), scan.end()); }
+  t1 = std::chrono::steady_clock::now();
+  const double stl_ms = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+
+  std::printf(&quot;\n⑤ 속도 — 360개 배열 × %d회\n&quot;, LOOPS_MIN);
+  std::printf(&quot;  직접 짠 for문   : %7.1f ms\n&quot;, loop_ms);
+  std::printf(&quot;  min_element     : %7.1f ms   (%.2f배 빠르다)\n&quot;, stl_ms, loop_ms / stl_ms);
+
+  // 정렬해서 중앙값 얻기 1만 번
+  const int LOOPS_SORT = 10000;
+  t0 = std::chrono::steady_clock::now();
+  for (int k = 0; k &lt; LOOPS_SORT; ++k) {
+    std::vector&lt;float&gt; v = scan;
+    hand_sort(v);
+    sink += v.at(N / 2);
+  }
+  t1 = std::chrono::steady_clock::now();
+  const double hand = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+
+  t0 = std::chrono::steady_clock::now();
+  for (int k = 0; k &lt; LOOPS_SORT; ++k) {
+    std::vector&lt;float&gt; v = scan;
+    std::sort(v.begin(), v.end());
+    sink += v.at(N / 2);
+  }
+  t1 = std::chrono::steady_clock::now();
+  const double stl = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+
+  // 중앙값만 필요하면 전부 정렬할 필요도 없다
+  t0 = std::chrono::steady_clock::now();
+  for (int k = 0; k &lt; LOOPS_SORT; ++k) {
+    std::vector&lt;float&gt; v = scan;
+    std::nth_element(v.begin(), v.begin() + N / 2, v.end());
+    sink += v.at(N / 2);
+  }
+  t1 = std::chrono::steady_clock::now();
+  const double nth = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+
+  std::printf(&quot;⑤ 정렬 — 360개 배열 × %d회 (sink=%.0f)\n&quot;, LOOPS_SORT, sink);
+  std::printf(&quot;  직접 짠 선택 정렬 : %8.1f ms\n&quot;, hand);
+  std::printf(&quot;  std::sort         : %8.1f ms   (%.1f배 빠르다)\n&quot;, stl, hand / stl);
+  std::printf(&quot;  std::nth_element  : %8.1f ms   (%.1f배 빠르다)\n&quot;, nth, hand / nth);
+}
+
+// ⚠️ 작은 묶음을 받아 min_element 가 무엇을 고르는지 찍는다
+void show_min(const char * label, const std::vector&lt;float&gt; &amp; v)
+{
+  const auto it = std::min_element(v.begin(), v.end());
+  std::printf(&quot;  %s min_element → %5.2f  (앞에서 %d번째)\n&quot;,
+              label, *it, static_cast&lt;int&gt;(std::distance(v.begin(), it)));
+}
+
+int main()
+{
+  // 라이다 한 스캔을 흉내낸 값 10개. 측정 실패(inf · nan)와 범위 밖 값이 섞여 있다
+  const std::vector&lt;float&gt; raw{0.10f, 0.83f, INFINITY, 1.24f, 9.90f,
+                               std::nanf(&quot;&quot;), 2.05f, 0.42f, 3.30f, 0.55f};
+  const float lo = 0.16f, hi = 8.0f;   // 이 라이다(LDS-02)가 잴 수 있는 거리
+
+  std::printf(&quot;원본 %d개 = &quot;, static_cast&lt;int&gt;(raw.size()));
+  for (float r : raw) { std::printf(&quot;%.2f &quot;, r); }
+  std::printf(&quot;\n잴 수 있는 거리 = %.2f ~ %.2f m\n&quot;, lo, hi);
+
+  // ① 가장 가까운 값 — min_element 는 값이 아니라 「자리」를 돌려준다
+  const auto it = std::min_element(raw.begin(), raw.end());
+  if (it == raw.end()) { return 1; }    // 배열이 비었다 — 여기서 끝낸다
+  std::printf(&quot;min_element 가장 가까운 값        = %.2f (앞에서 %d번째)\n&quot;,
+              *it, static_cast&lt;int&gt;(std::distance(raw.begin(), it)));
+
+  // ②③ 「쓸 만한 값인가」를 한 번만 적어 두고 두 곳에서 쓴다
+  auto valid = [lo, hi](float r) { return std::isfinite(r) &amp;&amp; r &gt;= lo &amp;&amp; r &lt;= hi; };
+
+  // ② 쓸 만한 값이 몇 개인가
+  const auto n_valid = std::count_if(raw.begin(), raw.end(), valid);
+  std::printf(&quot;count_if    유효값 개수           = %d\n&quot;, static_cast&lt;int&gt;(n_valid));
+
+  // ③ 쓸 만한 값만 골라 담는다
+  std::vector&lt;float&gt; good;
+  good.reserve(raw.size());             // 미리 자리를 잡아 둔다
+  std::copy_if(raw.begin(), raw.end(), std::back_inserter(good), valid);
+  std::printf(&quot;copy_if     골라 담은 것          = &quot;);
+  for (float r : good) { std::printf(&quot;%.2f &quot;, r); }
+  std::printf(&quot;\n&quot;);
+
+  const auto it2 = std::min_element(good.begin(), good.end());
+  std::printf(&quot;min_element 걸러낸 뒤 가장 가까운 = %.2f (앞에서 %d번째)\n&quot;,
+              *it2, static_cast&lt;int&gt;(std::distance(good.begin(), it2)));
+
+  // ④ 나머지 여섯 개 — 전부 「구간을 주고, 필요하면 조건을 준다」는 같은 모양이다
+  const auto f = std::find_if(good.begin(), good.end(), [](float r) { return r &lt; 0.5f; });
+  std::printf(&quot;find_if     0.5m 보다 가까운 첫 값 = %.2f\n&quot;, *f);
+
+  const float sum = std::accumulate(good.begin(), good.end(), 0.0f);
+  std::printf(&quot;accumulate  합 %.2f → 평균 %.3f m\n&quot;, sum, sum / good.size());
+
+  std::vector&lt;float&gt; cm(good.size());   // 받는 그릇은 미리 같은 크기로
+  std::transform(good.begin(), good.end(), cm.begin(), [](float m) { return m * 100.0f; });
+  std::printf(&quot;transform   cm 로 바꾼 것         = &quot;);
+  for (float c : cm) { std::printf(&quot;%.0f &quot;, c); }
+  std::printf(&quot;\n&quot;);
+
+  const bool near_any = std::any_of(good.begin(), good.end(), [](float r) { return r &lt; 0.3f; });
+  const bool all_far  = std::all_of(good.begin(), good.end(), [](float r) { return r &gt; 1.0f; });
+  std::printf(&quot;any_of      0.3m 안쪽에 뭐가 있나   = %s\n&quot;, near_any ? &quot;있다&quot; : &quot;없다&quot;);
+  std::printf(&quot;all_of      전부 1m 밖인가          = %s\n&quot;, all_far ? &quot;그렇다&quot; : &quot;아니다&quot;);
+
+  std::vector&lt;float&gt; sorted = good;     // 원본은 두고 사본을 정렬한다
+  std::sort(sorted.begin(), sorted.end());
+  std::printf(&quot;sort        정렬 후 중앙값         = %.2f\n&quot;, sorted.at(sorted.size() / 2));
+
+  measure_speed();
+
+  // ⚠️ NaN 은 어떤 비교에도 거짓이다 — 그래서 어디 있느냐에 따라 답이 달라진다
+  const float N = std::nanf(&quot;&quot;);
+  std::printf(&quot;\n⚠️ NaN 비교\n&quot;);
+  std::printf(&quot;  NaN &lt; 5.0 : %s\n&quot;, (N &lt; 5.0f) ? &quot;참&quot; : &quot;거짓&quot;);
+  std::printf(&quot;  NaN &gt; 5.0 : %s\n&quot;, (N &gt; 5.0f) ? &quot;참&quot; : &quot;거짓&quot;);
+  std::printf(&quot;  NaN == NaN: %s\n&quot;, (N == N) ? &quot;참&quot; : &quot;거짓&quot;);
+
+  std::printf(&quot;⚠️ 같은 값 묶음인데 NaN 의 자리만 다르다\n&quot;);
+  show_min(&quot;NaN 이 앞에  :&quot;, {N, 3.0f, 0.5f, 2.0f});
+  show_min(&quot;NaN 이 가운데:&quot;, {3.0f, N, 0.5f, 2.0f});
+  show_min(&quot;NaN 이 없음  :&quot;, {3.0f, 0.5f, 2.0f});
+
+  std::printf(&quot;⚠️ 「빼는 조건」으로 거르면 NaN 이 통과한다\n&quot;);
+  const std::vector&lt;float&gt; tricky{N, 3.0f, 0.5f, 2.0f, INFINITY};
+  std::vector&lt;float&gt; leaky;             // AI가 자주 주는 모양: 범위 밖이면 건너뛴다
+  for (float r : tricky) {
+    if (r &lt; lo || r &gt; hi) { continue; } // NaN 은 둘 다 거짓 → 안 걸러진다
+    leaky.push_back(r);
+  }
+  show_min(&quot;빼는 조건   :&quot;, leaky);
+  std::vector&lt;float&gt; kept;              // ③ 과 같은 「고르는 조건」 + isfinite
+  std::copy_if(tricky.begin(), tricky.end(), std::back_inserter(kept), valid);
+  show_min(&quot;고르는 조건 :&quot;, kept);
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+
     <p>
       <strong>AI는 처음 코드를 자신 있게 내놓는다. 문법도 맞고 논리도 맞기 때문이다.</strong><br>
       <strong>라이다에 <code>NaN</code>이 들어온다는 사실은 로봇 앞에 서 본 사람만 안다.</strong>
@@ -598,39 +1442,273 @@ NaN 이 없음  : min_element →   0.50  (앞에서 1번째)</code></pre>
     <p>
       <strong>같은 코드가 입력에 따라 다른 답을 낸다는 것</strong>을 자기 화면에서 본다.
       글로 읽는 것과 자기 터미널에서 <code>nan</code>이 찍히는 것을 보는 것은 다르다.
+      그리고 <strong>조건 한 줄을 뒤집으면 여덟 개 중 몇 개가 무너지는지</strong> 센다.
     </p>
 
     <p class="boxtitle">준비물</p>
     <ul>
-      <li>WSL 터미널 하나</li>
-      <li><code>examples/l13_stl/nan_trap.cpp</code> (수업 자료로 배포)</li>
+      <li>WSL 터미널 하나와 VS Code</li>
+      <li>위 ⚠️ 상자 끝의 📄 「전체 코드 — 7단계 · 완성본」 (복사 버튼으로 가져온다)</li>
       <li>로봇도 ROS도 필요 없다. 콘솔 프로그램 하나다</li>
     </ul>
 
     <p class="boxtitle">절차</p>
     <ol>
-      <li><strong>(2분)</strong> 파일을 받아 빌드한다.
-        <pre><code>g++ -std=c++17 -O2 -o nan_trap nan_trap.cpp
-./nan_trap</code></pre></li>
-      <li><strong>(3분)</strong> ①번 출력에서 <code>NaN &lt; 5.0</code>과 <code>NaN &gt; 5.0</code>이
+      <li><strong>(2분)</strong> 완성본을 <code>scan_algo.cpp</code>로 저장하고 빌드해서 돌린다.
+        <pre><code>g++ -std=c++17 -O2 -o scan_algo scan_algo.cpp
+./scan_algo</code></pre></li>
+      <li><strong>(3분)</strong> 「⚠️ NaN 비교」의 <code>NaN &lt; 5.0</code>과 <code>NaN &gt; 5.0</code>이
         <strong>둘 다 거짓</strong>인 것을 확인한다. 보통 숫자라면 둘 중 하나는 참이어야 한다.</li>
-      <li><strong>(5분)</strong> ②번의 세 줄을 비교한다.
+      <li><strong>(3분)</strong> 「자리만 다르다」의 세 줄을 비교한다.
         <strong><code>NaN</code>을 맨 앞에 뒀을 때만 답이 <code>nan</code></strong>인 것을 확인한다.</li>
-      <li><strong>(5분)</strong> 소스에서 <code>show()</code> 호출을 하나 더 만들어
-        <code>NaN</code>을 <strong>맨 뒤</strong>에 놓아 본다. 답이 어떻게 나오나?
-        (<code>{3.0f, 0.5f, 2.0f, N}</code>)</li>
-      <li><strong>(5분)</strong> ③번의 <code>copy_if</code> 조건에서 <code>std::isfinite(r) &amp;&amp;</code>를 지우고
-        다시 빌드해 돌린다. <strong>걸러 냈는데도 답이 무너지는 것</strong>을 확인한다.</li>
-      <li><strong>(5분)</strong> 지운 것을 되돌리고, AI에게 이렇게 물어본다 —
-        "이 코드에서 <code>isfinite</code>를 빼면 왜 답이 달라지지?" 받은 설명이 위 내용과 맞는지 본다.</li>
+      <li><strong>(5분)</strong> <code>show_min</code> 호출을 하나 더 만들어
+        <code>NaN</code>을 <strong>맨 뒤</strong>에 놓아 본다 — <code>{3.0f, 0.5f, 2.0f, N}</code>. 답이 어떻게 나오나?</li>
+      <li><strong>(5분)</strong> ③의 <code>valid</code> 한 줄을 「빼는 조건」으로 뒤집어 쓴다.
+        <pre><code>// 고치기 전
+auto valid = [lo, hi](float r) { return std::isfinite(r) &amp;&amp; r &gt;= lo &amp;&amp; r &lt;= hi; };
+// 고친 뒤 — 뜻은 같아 보인다
+auto valid = [lo, hi](float r) { return !(r &lt; lo || r &gt; hi); };</code></pre>
+        다시 빌드해 돌리고, <strong>출력 중 어느 줄이 무너졌는지 센다.</strong></li>
+      <li><strong>(5분)</strong> 되돌린 뒤 AI에게 이렇게 물어본다 —
+        "<code>!(r &lt; lo || r &gt; hi)</code>와 <code>r &gt;= lo &amp;&amp; r &lt;= hi</code>는 왜 <code>NaN</code>에서 답이 다르지?"
+        받은 설명이 위 함정 상자와 맞는지 본다.</li>
     </ol>
 
     <p class="boxtitle">이렇게 되면 성공이다</p>
-    <p>
-      화면에 <strong><code>min_element → nan</code>이라는 줄이 최소 한 번 찍힌다.</strong>
-      그리고 ④번에서 <code>NaN</code>을 맨 뒤에 놓았을 때 답이 <code>0.50</code>으로 나오는 것을 봤다면,
-      <strong>"자리에 따라 다르다"</strong>는 말의 뜻을 이해한 것이다.
-    </p>
+    <p>고치기 전 완성본을 돌리면 아래가 그대로 나온다. 속도 줄의 숫자만 컴퓨터마다 다르다.</p>
+    <pre><code>원본 10개 = 0.10 0.83 inf 1.24 9.90 nan 2.05 0.42 3.30 0.55
+잴 수 있는 거리 = 0.16 ~ 8.00 m
+min_element 가장 가까운 값        = 0.10 (앞에서 0번째)
+count_if    유효값 개수           = 6
+copy_if     골라 담은 것          = 0.83 1.24 2.05 0.42 3.30 0.55
+min_element 걸러낸 뒤 가장 가까운 = 0.42 (앞에서 3번째)
+find_if     0.5m 보다 가까운 첫 값 = 0.42
+accumulate  합 8.39 → 평균 1.398 m
+transform   cm 로 바꾼 것         = 83 124 205 42 330 55
+any_of      0.3m 안쪽에 뭐가 있나   = 없다
+all_of      전부 1m 밖인가          = 아니다
+sort        정렬 후 중앙값         = 1.24
+
+⑤ 속도 — 360개 배열 × 100000회
+  직접 짠 for문   :    16.3 ms
+  min_element     :     8.5 ms   (1.93배 빠르다)
+⑤ 정렬 — 360개 배열 × 10000회 (sink=134800)
+  직접 짠 선택 정렬 :    364.9 ms
+  std::sort         :     20.8 ms   (17.6배 빠르다)
+  std::nth_element  :      5.1 ms   (72.2배 빠르다)
+
+⚠️ NaN 비교
+  NaN &lt; 5.0 : 거짓
+  NaN &gt; 5.0 : 거짓
+  NaN == NaN: 거짓
+⚠️ 같은 값 묶음인데 NaN 의 자리만 다르다
+  NaN 이 앞에  : min_element →   nan  (앞에서 0번째)
+  NaN 이 가운데: min_element →  0.50  (앞에서 2번째)
+  NaN 이 없음  : min_element →  0.50  (앞에서 1번째)
+⚠️ 「빼는 조건」으로 거르면 NaN 이 통과한다
+  빼는 조건   : min_element →   nan  (앞에서 0번째)
+  고르는 조건 : min_element →  0.50  (앞에서 1번째)</code></pre>
+
+    <p class="boxtitle">5단계에서 무엇이 무너지나 — 우리가 돌려 본 결과</p>
+    <pre><code>count_if    유효값 개수           = 7
+copy_if     골라 담은 것          = 0.83 1.24 nan 2.05 0.42 3.30 0.55
+min_element 걸러낸 뒤 가장 가까운 = 0.42 (앞에서 4번째)
+accumulate  합 nan → 평균 nan m
+transform   cm 로 바꾼 것         = 83 124 nan 205 42 330 55
+sort        정렬 후 중앙값         = nan
+  고르는 조건 : min_element →   nan  (앞에서 0번째)</code></pre>
+    <div class="interp">
+      <strong>해석:</strong> 조건 한 줄을 뒤집었을 뿐인데 <strong>일곱 줄이 달라졌다.</strong>
+      <code>nan</code>이 <code>good</code>에 들어온 순간, 합·평균·중앙값이 전부 <code>nan</code>이 되고
+      「걸러낸 뒤 가장 가까운」은 답은 같아도 자리(3→4번째)가 밀린다.
+      <strong><code>min_element</code>만 운 좋게 살아남았다</strong> — <code>nan</code>이 가운데 있었기 때문이다.
+      <span style="color:var(--muted)">확인한 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0 <code>-O2</code>)</span>
+    </div>
+
+    <!-- fullcode "전체 코드 — scan_algo.cpp 변형 (실습 5단계 · valid 를 뒤집은 판)" build="g++ -std=c++17 -O2 -o scan_algo scan_algo.cpp && ./scan_algo"
+         l13_stl/steps/lab_flipped.cpp as scan_algo.cpp
+    -->
+<details class="fullcode">
+  <summary>전체 코드 — scan_algo.cpp 변형 (실습 5단계 · valid 를 뒤집은 판)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o scan_algo scan_algo.cpp &amp;&amp; ./scan_algo</code></p>
+  <div class="codefile"><div class="fname">scan_algo.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 13회 — STL 알고리즘: 라이다 스캔 하나를 놓고 for 문을 표준 알고리즘으로 바꿔 간다
+#include &lt;algorithm&gt;   // min_element · count_if · copy_if · find_if · transform · any_of · all_of · sort
+#include &lt;chrono&gt;      // 시간 재기
+#include &lt;cmath&gt;       // INFINITY · std::nanf · std::isfinite
+#include &lt;cstdio&gt;      // std::printf
+#include &lt;iterator&gt;    // std::distance · std::back_inserter
+#include &lt;numeric&gt;     // std::accumulate
+#include &lt;vector&gt;
+
+// AI에게 &quot;정렬을 직접 짜 줘&quot;라고 하면 흔히 나오는 모양 (선택 정렬)
+void hand_sort(std::vector&lt;float&gt; &amp; v)
+{
+  for (size_t i = 0; i &lt; v.size(); ++i) {
+    size_t m = i;
+    for (size_t j = i + 1; j &lt; v.size(); ++j) { if (v[j] &lt; v[m]) { m = j; } }
+    const float t = v[i]; v[i] = v[m]; v[m] = t;
+  }
+}
+
+// ⑤ 속도 — 진짜 스캔 크기(360개)로 직접 짠 루프와 표준을 같은 입력에 돌려 재 본다
+void measure_speed()
+{
+  const int N = 360;
+  std::vector&lt;float&gt; scan(N);
+  for (int i = 0; i &lt; N; ++i) { scan[i] = 0.2f + 0.02f * static_cast&lt;float&gt;((i * 37) % 300); }
+  double sink = 0.0;   // 결과를 어딘가에 써야 컴파일러가 계산을 통째로 지우지 않는다
+
+  // 최솟값 찾기 10만 번
+  const int LOOPS_MIN = 100000;
+  auto t0 = std::chrono::steady_clock::now();
+  for (int k = 0; k &lt; LOOPS_MIN; ++k) {
+    float m = 999.0f;
+    for (size_t i = 0; i &lt; scan.size(); ++i) { if (scan[i] &lt; m) { m = scan[i]; } }
+    sink += m;
+  }
+  auto t1 = std::chrono::steady_clock::now();
+  const double loop_ms = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+
+  t0 = std::chrono::steady_clock::now();
+  for (int k = 0; k &lt; LOOPS_MIN; ++k) { sink += *std::min_element(scan.begin(), scan.end()); }
+  t1 = std::chrono::steady_clock::now();
+  const double stl_ms = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+
+  std::printf(&quot;\n⑤ 속도 — 360개 배열 × %d회\n&quot;, LOOPS_MIN);
+  std::printf(&quot;  직접 짠 for문   : %7.1f ms\n&quot;, loop_ms);
+  std::printf(&quot;  min_element     : %7.1f ms   (%.2f배 빠르다)\n&quot;, stl_ms, loop_ms / stl_ms);
+
+  // 정렬해서 중앙값 얻기 1만 번
+  const int LOOPS_SORT = 10000;
+  t0 = std::chrono::steady_clock::now();
+  for (int k = 0; k &lt; LOOPS_SORT; ++k) {
+    std::vector&lt;float&gt; v = scan;
+    hand_sort(v);
+    sink += v.at(N / 2);
+  }
+  t1 = std::chrono::steady_clock::now();
+  const double hand = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+
+  t0 = std::chrono::steady_clock::now();
+  for (int k = 0; k &lt; LOOPS_SORT; ++k) {
+    std::vector&lt;float&gt; v = scan;
+    std::sort(v.begin(), v.end());
+    sink += v.at(N / 2);
+  }
+  t1 = std::chrono::steady_clock::now();
+  const double stl = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+
+  // 중앙값만 필요하면 전부 정렬할 필요도 없다
+  t0 = std::chrono::steady_clock::now();
+  for (int k = 0; k &lt; LOOPS_SORT; ++k) {
+    std::vector&lt;float&gt; v = scan;
+    std::nth_element(v.begin(), v.begin() + N / 2, v.end());
+    sink += v.at(N / 2);
+  }
+  t1 = std::chrono::steady_clock::now();
+  const double nth = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+
+  std::printf(&quot;⑤ 정렬 — 360개 배열 × %d회 (sink=%.0f)\n&quot;, LOOPS_SORT, sink);
+  std::printf(&quot;  직접 짠 선택 정렬 : %8.1f ms\n&quot;, hand);
+  std::printf(&quot;  std::sort         : %8.1f ms   (%.1f배 빠르다)\n&quot;, stl, hand / stl);
+  std::printf(&quot;  std::nth_element  : %8.1f ms   (%.1f배 빠르다)\n&quot;, nth, hand / nth);
+}
+
+// ⚠️ 작은 묶음을 받아 min_element 가 무엇을 고르는지 찍는다
+void show_min(const char * label, const std::vector&lt;float&gt; &amp; v)
+{
+  const auto it = std::min_element(v.begin(), v.end());
+  std::printf(&quot;  %s min_element → %5.2f  (앞에서 %d번째)\n&quot;,
+              label, *it, static_cast&lt;int&gt;(std::distance(v.begin(), it)));
+}
+
+int main()
+{
+  // 라이다 한 스캔을 흉내낸 값 10개. 측정 실패(inf · nan)와 범위 밖 값이 섞여 있다
+  const std::vector&lt;float&gt; raw{0.10f, 0.83f, INFINITY, 1.24f, 9.90f,
+                               std::nanf(&quot;&quot;), 2.05f, 0.42f, 3.30f, 0.55f};
+  const float lo = 0.16f, hi = 8.0f;   // 이 라이다(LDS-02)가 잴 수 있는 거리
+
+  std::printf(&quot;원본 %d개 = &quot;, static_cast&lt;int&gt;(raw.size()));
+  for (float r : raw) { std::printf(&quot;%.2f &quot;, r); }
+  std::printf(&quot;\n잴 수 있는 거리 = %.2f ~ %.2f m\n&quot;, lo, hi);
+
+  // ① 가장 가까운 값 — min_element 는 값이 아니라 「자리」를 돌려준다
+  const auto it = std::min_element(raw.begin(), raw.end());
+  if (it == raw.end()) { return 1; }    // 배열이 비었다 — 여기서 끝낸다
+  std::printf(&quot;min_element 가장 가까운 값        = %.2f (앞에서 %d번째)\n&quot;,
+              *it, static_cast&lt;int&gt;(std::distance(raw.begin(), it)));
+
+  // ②③ 「쓸 만한 값인가」를 한 번만 적어 두고 두 곳에서 쓴다
+  auto valid = [lo, hi](float r) { return !(r &lt; lo || r &gt; hi); };   // 실습: 빼는 조건을 뒤집어 썼다
+
+  // ② 쓸 만한 값이 몇 개인가
+  const auto n_valid = std::count_if(raw.begin(), raw.end(), valid);
+  std::printf(&quot;count_if    유효값 개수           = %d\n&quot;, static_cast&lt;int&gt;(n_valid));
+
+  // ③ 쓸 만한 값만 골라 담는다
+  std::vector&lt;float&gt; good;
+  good.reserve(raw.size());             // 미리 자리를 잡아 둔다
+  std::copy_if(raw.begin(), raw.end(), std::back_inserter(good), valid);
+  std::printf(&quot;copy_if     골라 담은 것          = &quot;);
+  for (float r : good) { std::printf(&quot;%.2f &quot;, r); }
+  std::printf(&quot;\n&quot;);
+
+  const auto it2 = std::min_element(good.begin(), good.end());
+  std::printf(&quot;min_element 걸러낸 뒤 가장 가까운 = %.2f (앞에서 %d번째)\n&quot;,
+              *it2, static_cast&lt;int&gt;(std::distance(good.begin(), it2)));
+
+  // ④ 나머지 여섯 개 — 전부 「구간을 주고, 필요하면 조건을 준다」는 같은 모양이다
+  const auto f = std::find_if(good.begin(), good.end(), [](float r) { return r &lt; 0.5f; });
+  std::printf(&quot;find_if     0.5m 보다 가까운 첫 값 = %.2f\n&quot;, *f);
+
+  const float sum = std::accumulate(good.begin(), good.end(), 0.0f);
+  std::printf(&quot;accumulate  합 %.2f → 평균 %.3f m\n&quot;, sum, sum / good.size());
+
+  std::vector&lt;float&gt; cm(good.size());   // 받는 그릇은 미리 같은 크기로
+  std::transform(good.begin(), good.end(), cm.begin(), [](float m) { return m * 100.0f; });
+  std::printf(&quot;transform   cm 로 바꾼 것         = &quot;);
+  for (float c : cm) { std::printf(&quot;%.0f &quot;, c); }
+  std::printf(&quot;\n&quot;);
+
+  const bool near_any = std::any_of(good.begin(), good.end(), [](float r) { return r &lt; 0.3f; });
+  const bool all_far  = std::all_of(good.begin(), good.end(), [](float r) { return r &gt; 1.0f; });
+  std::printf(&quot;any_of      0.3m 안쪽에 뭐가 있나   = %s\n&quot;, near_any ? &quot;있다&quot; : &quot;없다&quot;);
+  std::printf(&quot;all_of      전부 1m 밖인가          = %s\n&quot;, all_far ? &quot;그렇다&quot; : &quot;아니다&quot;);
+
+  std::vector&lt;float&gt; sorted = good;     // 원본은 두고 사본을 정렬한다
+  std::sort(sorted.begin(), sorted.end());
+  std::printf(&quot;sort        정렬 후 중앙값         = %.2f\n&quot;, sorted.at(sorted.size() / 2));
+
+  measure_speed();
+
+  // ⚠️ NaN 은 어떤 비교에도 거짓이다 — 그래서 어디 있느냐에 따라 답이 달라진다
+  const float N = std::nanf(&quot;&quot;);
+  std::printf(&quot;\n⚠️ NaN 비교\n&quot;);
+  std::printf(&quot;  NaN &lt; 5.0 : %s\n&quot;, (N &lt; 5.0f) ? &quot;참&quot; : &quot;거짓&quot;);
+  std::printf(&quot;  NaN &gt; 5.0 : %s\n&quot;, (N &gt; 5.0f) ? &quot;참&quot; : &quot;거짓&quot;);
+  std::printf(&quot;  NaN == NaN: %s\n&quot;, (N == N) ? &quot;참&quot; : &quot;거짓&quot;);
+
+  std::printf(&quot;⚠️ 같은 값 묶음인데 NaN 의 자리만 다르다\n&quot;);
+  show_min(&quot;NaN 이 앞에  :&quot;, {N, 3.0f, 0.5f, 2.0f});
+  show_min(&quot;NaN 이 가운데:&quot;, {3.0f, N, 0.5f, 2.0f});
+  show_min(&quot;NaN 이 없음  :&quot;, {3.0f, 0.5f, 2.0f});
+
+  std::printf(&quot;⚠️ 「빼는 조건」으로 거르면 NaN 이 통과한다\n&quot;);
+  const std::vector&lt;float&gt; tricky{N, 3.0f, 0.5f, 2.0f, INFINITY};
+  std::vector&lt;float&gt; leaky;             // AI가 자주 주는 모양: 범위 밖이면 건너뛴다
+  for (float r : tricky) {
+    if (r &lt; lo || r &gt; hi) { continue; } // NaN 은 둘 다 거짓 → 안 걸러진다
+    leaky.push_back(r);
+  }
+  show_min(&quot;빼는 조건   :&quot;, leaky);
+  std::vector&lt;float&gt; kept;              // ③ 과 같은 「고르는 조건」 + isfinite
+  std::copy_if(tricky.begin(), tricky.end(), std::back_inserter(kept), valid);
+  show_min(&quot;고르는 조건 :&quot;, kept);
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
   </div>
 
   <!-- ── 프롬프트 모음 ── -->
@@ -719,7 +1797,7 @@ const auto it = std::min_element(ranges.begin(), ranges.begin() + 30);</code></p
       또 다른 방법으로 갈아탄다. 세 가지를 상황에 따라 섞어 쓰는 것이다.
       <strong>이 내부 동작을 알 필요는 없다.</strong> 알아야 할 것은 하나다 —
       <strong>직접 짠 정렬이 이것보다 나을 확률은 거의 없다.</strong>
-      위에서 잰 17.2배가 그 답이다.
+      위에서 잰 17.6배가 그 답이다.
     </p>
     <p>
       다만 <code>std::sort</code>는 <strong>같은 값의 원래 순서를 지켜 주지 않는다.</strong>

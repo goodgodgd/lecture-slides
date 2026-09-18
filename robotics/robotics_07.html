@@ -30,15 +30,17 @@
   <div class="toc-title">이 회차 목차</div>
   <a href="#summary">한 장 요약 — 기호 여덟 개</a>
   <a href="#screen">① 화면 한 장에 다 있다</a>
-  <a href="#file">② 오늘 읽을 파일</a>
-  <a href="#auto">③ <code>auto</code></a>
-  <a href="#ref">④ <code>&amp;</code></a>
-  <a href="#const">⑤ <code>const</code></a>
-  <a href="#name">⑥ <code>::</code> 와 <code>&lt;&gt;</code></a>
-  <a href="#arrow">⑦ <code>.</code> · <code>-&gt;</code> · <code>nullptr</code></a>
-  <a href="#include">⑧ <code>#include</code> 와 헤더</a>
-  <a href="#aimistake">⑨ AI가 헤더에서 하는 실수</a>
+  <a href="#start">② 오늘 만들 것 — 옛날 방식으로 먼저</a>
+  <a href="#include">③ <code>#include</code> 와 <code>::</code></a>
+  <a href="#vector">④ <code>&lt;&gt;</code></a>
+  <a href="#auto">⑤ <code>auto</code></a>
+  <a href="#ref">⑥ <code>&amp;</code></a>
+  <a href="#const">⑦ <code>const</code></a>
+  <a href="#struct">⑧ <code>struct</code> · <code>namespace</code> · <code>.</code></a>
+  <a href="#arrow">⑨ <code>-&gt;</code> · <code>nullptr</code></a>
+  <a href="#header">⑩ 헤더와 AI의 실수</a>
   <a href="#lab">🧪 실습</a>
+  <a href="#exercise">📝 연습문제</a>
   <a href="#prompts">🤖 프롬프트 모음</a>
   <a href="#check">✅ 점검</a>
   <a href="#more">조금 더 알아두면</a>
@@ -53,8 +55,8 @@
     <span class="lab">오늘 답할 질문</span>
     <ol>
       <li>ROS 2 예제를 열면 보이는 <code>::</code>, <code>-&gt;</code>, <code>&amp;</code>, <code>&lt;&gt;</code>는 각각 무엇인가?</li>
-      <li>타입을 안 적고 <code>auto</code>라고만 써도 되는 이유는 무엇인가?</li>
-      <li>왜 파일이 <code>.hpp</code>와 <code>.cpp</code> 두 개로 나뉘어 있나?</li>
+      <li>옛날 방식으로 짠 C++ 코드와 요즘 코드는 무엇이 다르고, 왜 바꾸나?</li>
+      <li>함수에 값을 넘겼는데 고친 것이 원본에 반영되지 않는다면 무엇을 빠뜨린 것인가?</li>
       <li>AI가 준 C++ 코드를 보고 "여기가 이상하다"고 말하려면 최소한 무엇을 알아야 하나?</li>
     </ol>
   </div>
@@ -71,39 +73,27 @@
     멈추면 그 아래 스무 줄이 통째로 안 읽힌다.
   </p>
   <p>
-    그래서 오늘은 <strong>기호 여덟 개</strong>만 다룬다.
-    각각을 완전히 이해하는 것이 목표가 아니다.
-    <strong>"이건 무슨 기호구나"라고 알아보는 것</strong>까지가 오늘의 목표다.
-    깊은 이야기는 그 기호가 실제로 문제를 일으키는 회차에서 다시 한다.
+    그래서 오늘은 <strong>기호 여덟 개</strong>만 다룬다. 다만 하나씩 늘어놓지는 않는다.
+    <strong>라이다 값으로 「멈출까 갈까」를 정하는 작은 프로그램 하나</strong>를 옛날 방식으로 먼저 짜 놓고,
+    기호를 하나씩 적용해 고쳐 간다. 기호마다 <strong>「이걸 안 쓰면 무엇이 불편한가」</strong>가 먼저 나오고
+    그다음에 기호가 나온다. 깊은 이야기는 그 기호가 실제로 문제를 일으키는 회차에서 다시 한다.
   </p>
 
   <!-- ── 한 장 요약표 ── -->
   <h2 id="summary">한 장 요약 — 학기가 끝나도 이 표만 남으면 된다</h2>
-  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 「이것만 알면 된다」 열</strong>만 읽어도 오늘 수업은 끝난다. 가운데 열은 그것을 코드에서 알아보는 법이다.</p>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 「이것만 알면 된다」 열</strong>만 읽어도 오늘 수업은 끝난다. 순서는 오늘 프로그램에 적용하는 순서다.</p>
   <div class="tablewrap">
   <table class="summary-table">
     <tr><th>기호</th><th>코드에서 이렇게 보인다</th><th>이것만 알면 된다</th><th>수준</th></tr>
     <tr>
-      <td><code>auto</code></td>
-      <td><code>auto n = scan.ranges.size();</code></td>
-      <td>타입을 <strong>컴파일러가 대신 채운다.</strong> 오른쪽을 보면 무엇인지 안다</td>
-      <td><span class="badge b-lv">[알아보기]</span></td>
-    </tr>
-    <tr>
-      <td><code>&amp;</code> (참조)</td>
-      <td><code>void f(const Scan &amp; s)</code></td>
-      <td><strong>원본을 가리킨다. 복사가 아니다.</strong> 이 한 글자가 있고 없고가 속도를 가른다</td>
-      <td><span class="badge b-lv">[알아보기]</span></td>
-    </tr>
-    <tr>
-      <td><code>const</code></td>
-      <td><code>const float f = ...;</code></td>
-      <td><strong>못 바꾼다는 약속.</strong> 어기면 컴파일이 안 된다</td>
+      <td><code>#include</code></td>
+      <td><code>#include &lt;vector&gt;</code></td>
+      <td>남이 쓴 <strong>선언을 그 자리에 붙인다.</strong> 없으면 이름을 못 알아본다</td>
       <td><span class="badge b-lv">[알아보기]</span></td>
     </tr>
     <tr>
       <td><code>::</code></td>
-      <td><code>std::vector</code>, <code>lidar::Scan</code></td>
+      <td><code>std::cout</code>, <code>lidar::Scan</code></td>
       <td>앞에 붙은 것이 <strong>소속</strong>이다. <code>std</code>는 표준, 나머지는 누가 만든 것</td>
       <td><span class="badge b-lv">[알아보기]</span></td>
     </tr>
@@ -111,6 +101,24 @@
       <td><code>&lt;&gt;</code></td>
       <td><code>std::vector&lt;float&gt;</code></td>
       <td>꺾쇠 안은 <strong>"무슨 타입으로"</strong>다. 그릇은 같고 담는 것이 다르다</td>
+      <td><span class="badge b-lv">[알아보기]</span></td>
+    </tr>
+    <tr>
+      <td><code>auto</code></td>
+      <td><code>auto n = ranges.size();</code></td>
+      <td>타입을 <strong>컴파일러가 대신 채운다.</strong> 오른쪽을 보면 무엇인지 안다</td>
+      <td><span class="badge b-lv">[알아보기]</span></td>
+    </tr>
+    <tr>
+      <td><code>&amp;</code> (참조)</td>
+      <td><code>void f(std::vector&lt;float&gt; &amp; r)</code></td>
+      <td><strong>원본을 가리킨다. 복사가 아니다.</strong> 이 한 글자가 없으면 고친 것이 원본에 안 남는다</td>
+      <td><span class="badge b-lv">[알아보기]</span></td>
+    </tr>
+    <tr>
+      <td><code>const</code></td>
+      <td><code>float g(const Scan &amp; s)</code></td>
+      <td><strong>못 바꾼다는 약속.</strong> 어기면 컴파일이 안 된다</td>
       <td><span class="badge b-lv">[알아보기]</span></td>
     </tr>
     <tr>
@@ -125,19 +133,13 @@
       <td><strong>아무것도 안 가리킴.</strong> 이 상태에서 <code>-&gt;</code>를 쓰면 프로그램이 죽는다</td>
       <td><span class="badge b-lv">[알아보기]</span></td>
     </tr>
-    <tr>
-      <td><code>#include</code></td>
-      <td><code>#include &lt;vector&gt;</code></td>
-      <td>남이 쓴 <strong>선언을 그 자리에 붙인다.</strong> 없으면 이름을 못 알아본다</td>
-      <td><span class="badge b-lv">[알아보기]</span></td>
-    </tr>
   </table>
   </div>
   <div class="interp">
-    <strong>해석:</strong> 여덟 개 중 <strong>둘째 줄(<code>&amp;</code>)만 색이 다르다고 생각하면 된다.</strong>
+    <strong>해석:</strong> 여덟 개 중 <strong>다섯째 줄(<code>&amp;</code>)만 색이 다르다고 생각하면 된다.</strong>
     나머지 일곱은 "알아보면 끝"이지만, <code>&amp;</code>는 있고 없고에 따라 <strong>프로그램이 실제로 하는 일이 달라진다.</strong>
-    이 강의에서 AI 코드를 고치는 일의 절반이 이 한 글자를 넣는 일이다.
-    깊은 이야기는 11회에서 실제 시간을 재면서 한다.
+    오늘 ⑥절에서 그 차이가 출력에 그대로 찍힌다.
+    이 강의에서 AI 코드를 고치는 일의 절반이 이 한 글자를 넣는 일이다. 깊은 이야기는 11회에서 실제 시간을 재면서 한다.
   </div>
 
   <!-- ── ① 화면 ── -->
@@ -173,261 +175,370 @@
     <strong>조각으로 끊어 읽는 법을 익히면 그 줄이 읽힌다.</strong> 오늘 하는 일이 그것이다.
   </p>
 
-  <!-- ── ② 오늘 읽을 파일 ── -->
-  <h2 id="file">② 오늘은 파일 하나를 여덟 조각으로 끊어 읽는다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+  <!-- ── ② 시작 ── -->
+  <h2 id="start">② 오늘 만들 것 — 정면 장애물 판정기, 옛날 방식으로 먼저 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
+  <h3>무엇을 만드나</h3>
   <p>
-    기호를 설명만 하면 남지 않는다. 그래서 <strong>여덟 개가 전부 들어 있고 실제로 돌아가는 파일 하나</strong>를 준비했다.
-    <code>read_kit.cpp</code>다. 이 파일을 절마다 잘라 읽고, 각 절 끝에 <strong>그 부분이 실제로 찍은 출력</strong>을 붙인다.
+    라이다가 잰 정면 거리 값 몇 개를 받아 <strong>가장 가까운 장애물까지의 거리</strong>를 찾고,
+    그것이 정지 거리보다 가까우면 <code>STOP</code>, 아니면 <code>GO</code>를 찍는 프로그램이다.
+    27회의 콘 트랙 주행에서 로봇이 실제로 하는 판단을 가장 작게 줄인 것이다.
+    라이다는 벽이 너무 멀거나 빛이 안 돌아오면 <strong>「측정 실패」</strong>를 보내는데, 그 값이 <code>INFINITY</code>(무한대)다.
+    6회 측정 코드에도 이 값이 있었다. 이것을 건너뛰는 것까지가 오늘 프로그램의 전부다.
   </p>
-  <p>먼저 파일 맨 위, 데이터를 담는 그릇을 만드는 부분이다.</p>
 
-  <pre><code>// 7회 — 코드를 읽기 위한 최소 장비
-#include &lt;iostream&gt;      // std::cout  — 화면에 찍는 도구
-#include &lt;string&gt;        // std::string
-#include &lt;vector&gt;        // std::vector
+  <h3>읽는 법</h3>
+  <ul>
+    <li>먼저 이 프로그램을 <strong>오늘 배울 기호를 하나도 안 쓰고, 옛날 C 방식 그대로</strong> 짠다. 이대로도 돌아간다.</li>
+    <li>절이 하나 넘어갈 때마다 <strong>「이 방식의 무엇이 불편한가」</strong>가 먼저 나오고, 기호 하나로 그 자리를 고친다.
+        본문에는 <strong>새로 넣는 줄</strong>(초록 바탕)과 <strong>지우는 줄</strong>(붉은 취소선)만 보인다.</li>
+    <li>그 아래 <strong>📄 「전체 코드」 상자</strong>를 누르면 그 단계까지의 파일 전체가 나온다.
+        <strong>어느 단계를 펼쳐도 그대로 빌드되고 돌아간다.</strong> 오른쪽 위 「복사」로 통째로 가져갈 수 있다.</li>
+    <li>「실제로 나온 출력」은 그 단계의 프로그램이 찍은 것 전부다. 출력이 <strong>안 변하는 단계</strong>가 많은데, 그것도 배울 점이다.</li>
+  </ul>
 
-namespace lidar {                       // ::  이름을 담는 상자를 만든다
-  struct Scan {                         // 거리 값 묶음 하나
-    std::string frame;                  // 이 값이 어느 좌표계에서 잰 것인가
-    std::vector&lt;float&gt; ranges;          // &lt;&gt;  "무슨 타입을 담는 vector인지"
-    float front() const { return ranges.at(0); }   // const  이 함수는 상태를 안 바꾼다
-  };
+  <h3>1단계 — 옛날 방식 그대로</h3>
+  <p>
+    C에서 하던 대로 짰다. 값은 배열에, 화면 출력은 <code>printf</code>로, 무한대 판정은 <code>isfinite</code>로.
+    <strong>오늘 배울 기호는 하나도 없다.</strong> 그런데도 멀쩡히 돌아간다는 것을 먼저 본다.
+  </p>
+
+  <pre><code>// 7회 — 정면 장애물 판정기. 1단계: 옛날 방식 그대로
+#include &lt;stdio.h&gt;     // printf
+#include &lt;math.h&gt;      // isfinite, INFINITY
+
+int main()
+{
+  // 라이다가 잰 정면 8방향 거리 (m). INFINITY 는 측정 실패
+  float ranges[8] = {1.20f, 0.83f, INFINITY, 0.65f, 0.71f, INFINITY, 2.40f, 3.10f};
+  float stop_dist = 0.7f;                  // 이보다 가까우면 멈춘다
+
+  float best = 1e9f;                       // 아직 아무것도 못 봤다는 뜻으로 큰 값
+  for (int i = 0; i &lt; 8; i++) {
+    if (!isfinite(ranges[i])) continue;    // 측정 실패는 건너뛴다
+    if (ranges[i] &lt; best) best = ranges[i];
+  }
+  printf("가장 가까운 장애물 %.2f m\n", best);
+  if (best &lt; stop_dist) printf("STOP\n");
+  else                  printf("GO\n");
+  return 0;
 }</code></pre>
 
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
     <dl>
-      <dt>struct Scan { ... };</dt>
-      <dd>값 여러 개를 <strong>하나로 묶은 덩어리</strong>를 만든다.
-          여기서는 좌표계 이름과 거리 배열을 묶어 "스캔 한 번"으로 만들었다.
-          <strong>맨 뒤 세미콜론을 빠뜨리면 컴파일이 안 된다.</strong></dd>
+      <dt>float ranges[8] = { ... };</dt>
+      <dd>실수 <strong>8칸짜리 배열</strong>이다. 칸 수를 코드에 박아 넣는다.
+          여기서는 라이다 정면 8방향의 거리를 담았다. <code>ranges[i]</code>가 <code>i</code>번째 칸이고 첫 칸은 0번이다.</dd>
 
-      <dt>std::string</dt>
-      <dd>글자를 담는 표준 그릇이다. 여기서는 좌표계 이름 <code>"base_scan"</code>을 담았다.</dd>
+      <dt>1e9f</dt>
+      <dd>10억을 실수로 적은 것이다(<code>1×10⁹</code>).
+          여기서는 "아직 아무 값도 못 봤다"는 뜻의 출발값으로 썼다. 어떤 실제 거리든 이것보다는 작다.</dd>
 
-      <dt>std::vector&lt;float&gt; ranges</dt>
-      <dd>실수를 <strong>여러 개 담고 개수가 늘었다 줄었다 하는 그릇</strong>이다.
-          여기서는 라이다가 잰 거리 값들을 담았다.</dd>
-
-      <dt>ranges.at(0)</dt>
-      <dd>그릇의 <strong>0번째 값</strong>을 꺼낸다. C++은 첫 칸이 0번이다.
-          <code>ranges[0]</code>으로도 꺼낼 수 있는데, <code>.at()</code>은 <strong>없는 칸을 꺼내려 하면 그 자리에서 오류를 낸다.</strong>
-          <code>[]</code>는 아무 말 없이 엉뚱한 값을 준다.</dd>
+      <dt>continue;</dt>
+      <dd>반복문에서 <strong>이번 바퀴의 나머지를 건너뛰고 다음 바퀴로</strong> 간다.
+          여기서는 측정 실패 값을 최솟값 후보에서 빼는 데 썼다.</dd>
     </dl>
-    <p class="later">제대로 다루는 곳: 8회(클래스) · 12회(<code>std::vector</code>와 컨테이너)</p>
   </div>
 
-  <!-- ── ③ auto ── -->
-  <h2 id="auto">③ <code>auto</code>는 타입을 안 적어도 되는 자리다 <span class="badge b-green">🟢 맡긴다</span></h2>
-
-  <h3>언제 이게 필요해지나</h3>
+  <h3>빌드는 CMake 로 한다 — 네 줄이면 된다</h3>
   <p>
-    C++은 변수를 만들 때 타입을 적어야 하는 언어다. <code>int n = 3;</code>처럼.
-    그런데 <strong>적어야 할 타입 이름이 감당이 안 되게 길어지는 일이 자주 생긴다.</strong>
-    그릇의 크기를 물었을 때 돌아오는 값의 타입 이름이 <code>std::vector&lt;float&gt;::size_type</code>이다.
+    6회에서 <code>g++</code> 한 줄로 빌드했다. 오늘부터는 <strong>같은 폴더에 <code>CMakeLists.txt</code>를 하나 두고</strong> 빌드한다.
+    파일이 하나뿐인 지금은 <code>g++</code>과 차이가 없지만, 8회에서 파일이 둘이 되는 순간 이 네 줄이 일을 대신한다.
+    <strong>지금은 내용을 이해하지 않아도 된다.</strong> 그대로 복사해 두고, 9회에서 한 줄씩 읽는다.
   </p>
 
-  <pre><code>  std::cout &lt;&lt; "① auto — 타입을 컴파일러가 채운다\n";
-  auto n = scan.ranges.size();          // auto 가 없으면 std::vector&lt;float&gt;::size_type
-  std::cout &lt;&lt; "  ranges 개수 = " &lt;&lt; n &lt;&lt; "\n";</code></pre>
+  <pre><code>cmake_minimum_required(VERSION 3.16)
+project(scan_guard CXX)
+set(CMAKE_CXX_STANDARD 17)
+add_executable(scan_guard main.cpp)</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 파일에서 처음 나오는 것</p>
+    <dl>
+      <dt>CMakeLists.txt</dt>
+      <dd>「무엇을 어떻게 빌드하나」를 적어 두는 파일이다. 이름은 이 철자 그대로여야 한다.
+          여기서는 <code>main.cpp</code> 하나로 <code>scan_guard</code>라는 실행 파일을 만들라고 적었다.</dd>
+
+      <dt>add_executable(scan_guard main.cpp)</dt>
+      <dd>네 줄 중 <strong>실제로 일하는 줄</strong>이다. 앞은 실행 파일 이름, 뒤는 소스 파일. 소스가 늘면 뒤에 이어 적는다.</dd>
+
+      <dt>cmake -S . -B build</dt>
+      <dd>이 폴더(<code>.</code>)의 <code>CMakeLists.txt</code>를 읽어 <code>build/</code> 폴더에 빌드 준비를 한다. <strong>처음 한 번만</strong> 친다.</dd>
+
+      <dt>cmake --build build</dt>
+      <dd>준비된 <code>build/</code>에서 실제로 컴파일한다. <strong>코드를 고칠 때마다</strong> 이것만 다시 친다.</dd>
+    </dl>
+    <p class="later">제대로 다루는 곳: 9회(빌드 시스템 — 이 네 줄이 무엇을 하는지, 파일이 여럿일 때)</p>
+  </div>
+
+  <h3>실제로 나온 출력</h3>
+  <pre><code>$ cmake -S . -B build
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done (0.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/user/robotics/l07/build
+$ cmake --build build
+[ 50%] Building CXX object CMakeFiles/scan_guard.dir/main.cpp.o
+[100%] Linking CXX executable scan_guard
+[100%] Built target scan_guard
+$ ./build/scan_guard
+가장 가까운 장애물 0.65 m
+STOP</code></pre>
+
+  <!-- fullcode "전체 코드 — 1단계 · 옛날 방식 (main.cpp + CMakeLists.txt, 이대로 빌드된다)" build="cmake -S . -B build && cmake --build build && ./build/scan_guard"
+       l07_reading_kit/steps/step1.cpp as main.cpp
+       l07_reading_kit/steps/CMakeLists.txt as CMakeLists.txt
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — 1단계 · 옛날 방식 (main.cpp + CMakeLists.txt, 이대로 빌드된다)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake -S . -B build &amp;&amp; cmake --build build &amp;&amp; ./build/scan_guard</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 7회 — 정면 장애물 판정기. 1단계: 옛날 방식 그대로
+#include &lt;stdio.h&gt;     // printf
+#include &lt;math.h&gt;      // isfinite, INFINITY
+
+int main()
+{
+  // 라이다가 잰 정면 8방향 거리 (m). INFINITY 는 측정 실패
+  float ranges[8] = {1.20f, 0.83f, INFINITY, 0.65f, 0.71f, INFINITY, 2.40f, 3.10f};
+  float stop_dist = 0.7f;                  // 이보다 가까우면 멈춘다
+
+  float best = 1e9f;                       // 아직 아무것도 못 봤다는 뜻으로 큰 값
+  for (int i = 0; i &lt; 8; i++) {
+    if (!isfinite(ranges[i])) continue;    // 측정 실패는 건너뛴다
+    if (ranges[i] &lt; best) best = ranges[i];
+  }
+  printf(&quot;가장 가까운 장애물 %.2f m\n&quot;, best);
+  if (best &lt; stop_dist) printf(&quot;STOP\n&quot;);
+  else                  printf(&quot;GO\n&quot;);
+  return 0;
+}</code></pre></div>
+  <div class="codefile"><div class="fname">CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre><code>cmake_minimum_required(VERSION 3.16)
+project(scan_guard CXX)
+set(CMAKE_CXX_STANDARD 17)
+add_executable(scan_guard main.cpp)</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <div class="interp">
+    <strong>해석:</strong> 답은 맞다. 0.65 m가 정지 거리 0.7 m보다 가까우니 <code>STOP</code>이다.
+    <strong>이 코드는 틀린 코드가 아니다.</strong> 다만 값이 8개가 아니라 360개가 되고, 판정이 한 번이 아니라 초당 다섯 번이 되고,
+    이 일을 하는 함수가 열 개가 되면 <strong>이 방식으로는 고칠 때마다 빠뜨리는 자리가 생긴다.</strong>
+    그 자리를 하나씩 찾아가며 고친다. <code>CMakeLists.txt</code>는 이제 끝까지 안 바뀐다 — 아래 상자에는 <code>main.cpp</code>만 나온다.
+  </div>
+
+  <!-- ── ③ #include 와 :: ── -->
+  <h2 id="include">③ <code>#include</code>는 선언을 붙이고, <code>::</code>는 소속을 밝힌다 <span class="badge b-green">🟢 맡긴다</span></h2>
+
+  <h3>무엇이 불편한가 — <code>%.2f</code> 한 글자를 잘못 적으면</h3>
+  <p>
+    <code>printf</code>는 값의 타입마다 <code>%d</code>·<code>%f</code> 같은 서식을 <strong>사람이 골라 적어야</strong> 한다.
+    실수를 <code>%d</code>(정수용)로 찍으면 어떻게 될까. 1단계 코드에서 그 한 글자만 바꿔 돌려 봤다.
+  </p>
+  <pre><code>$ g++ -std=c++17 -O2 -o scan_guard main.cpp
+main.cpp:16:31: warning: format ‘%d’ expects argument of type ‘int’, but argument 2 has type ‘double’ [-Wformat=]
+   16 |   printf("가장 가까운 장애물 %d m\n", best);   // %d 는 정수용이다
+$ ./scan_guard
+가장 가까운 장애물 1557695728 m
+STOP</code></pre>
+  <div class="interp">
+    <strong>해석:</strong> 경고만 내고 <strong>컴파일은 되고, 실행도 되고, 엉뚱한 숫자가 찍힌다.</strong>
+    로봇이 15억 미터 앞에 장애물이 있다고 믿는 셈이다. 다행히 판정은 <code>best</code>로 하니 <code>STOP</code>은 맞게 나왔지만,
+    이런 종류의 실수는 <strong>실행해 봐야 안다.</strong>
+  </div>
+
+  <h3>2단계 — <code>printf</code>를 <code>std::cout</code>으로</h3>
+  <p>
+    C++에는 <strong>타입을 보고 알아서 찍는</strong> 출력 도구가 따로 있다. <code>std::cout</code>이다.
+    서식 글자가 없으니 잘못 적을 자리도 없다. 이것을 쓰려면 파일 맨 위에서 <strong>그 도구의 선언을 가져다 붙여야</strong> 한다.
+    그 줄이 <code>#include</code>다. 무한대 판정도 C++ 쪽 이름 <code>std::isfinite</code>로 바꾼다.
+  </p>
+
+  <pre><code><span class="ln-del">#include &lt;stdio.h&gt;     // printf</span>
+<span class="ln-del">#include &lt;math.h&gt;      // isfinite, INFINITY</span>
+<span class="ln-add">#include &lt;cmath&gt;       // std::isfinite, INFINITY</span>
+<span class="ln-add">#include &lt;iostream&gt;    // std::cout</span>
+  // … 배열과 반복문은 그대로 …
+<span class="ln-del">    if (!isfinite(ranges[i])) continue;    // 측정 실패는 건너뛴다</span>
+<span class="ln-add">    if (!std::isfinite(ranges[i])) continue;    // 측정 실패는 건너뛴다</span>
+  // …
+<span class="ln-del">  printf("가장 가까운 장애물 %.2f m\n", best);</span>
+<span class="ln-del">  if (best &lt; stop_dist) printf("STOP\n");</span>
+<span class="ln-del">  else                  printf("GO\n");</span>
+<span class="ln-add">  std::cout &lt;&lt; "가장 가까운 장애물 " &lt;&lt; best &lt;&lt; " m\n";</span>
+<span class="ln-add">  if (best &lt; stop_dist) std::cout &lt;&lt; "STOP\n";</span>
+<span class="ln-add">  else                  std::cout &lt;&lt; "GO\n";</span></code></pre>
 
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
     <dl>
+      <dt>#include &lt;iostream&gt;</dt>
+      <dd>꺾쇠 안의 이름을 가진 파일(헤더)을 <strong>이 자리에 통째로 붙여 넣으라</strong>는 지시다.
+          그 안에 <code>std::cout</code>의 선언이 있다. 이 줄이 없으면 컴파일러는 <code>cout</code>이라는 이름을 모른다.
+          <code>&lt;stdio.h&gt;</code>·<code>&lt;math.h&gt;</code>는 C 시절의 이름이고, C++에서는 <code>&lt;cmath&gt;</code>처럼 <strong>앞에 c를 붙이고 .h를 뗀 이름</strong>을 쓴다.</dd>
+
       <dt>std::cout &lt;&lt; 값 &lt;&lt; 값;</dt>
-      <dd>화면에 찍는다. 화살표 두 개(<code>&lt;&lt;</code>)를 계속 이어 붙이면
-          <strong>왼쪽부터 순서대로</strong> 찍힌다.
-          여기서는 설명 문장과 숫자를 한 줄에 이어 찍는 데 썼다.</dd>
+      <dd>화면에 찍는다. 화살표 두 개(<code>&lt;&lt;</code>)를 계속 이어 붙이면 <strong>왼쪽부터 순서대로</strong> 찍힌다.
+          <code>best</code>가 실수라는 것을 컴파일러가 알고 있으니 <strong>서식을 적지 않는다.</strong>
+          <code>"\n"</code>은 줄바꿈이다.</dd>
 
-      <dt>"\n"</dt>
-      <dd>줄바꿈이다. 역슬래시와 <code>n</code> 두 글자가 합쳐서 <strong>엔터 한 번</strong>을 뜻한다.</dd>
-
-      <dt>scan.ranges.size()</dt>
-      <dd>그릇에 값이 <strong>몇 개 들어 있는지</strong> 묻는다.
-          여기서는 스캔 하나에 거리 값이 몇 개인지 세는 데 썼다.</dd>
+      <dt>std::</dt>
+      <dd>앞에 붙은 <code>std</code>가 <strong>소속</strong>이다 — "C++ 표준 라이브러리에 있는 그것".
+          <code>cout</code>도 <code>isfinite</code>도 표준이 준 것이라 <code>std::</code>를 붙여 부른다.</dd>
     </dl>
   </div>
 
   <h3>실제로 나온 출력</h3>
-  <pre><code>① auto — 타입을 컴파일러가 채운다
-  ranges 개수 = 3</code></pre>
+  <pre><code>가장 가까운 장애물 0.65 m
+STOP</code></pre>
+
+  <!-- fullcode "전체 코드 — 2단계 · #include 와 std:: (main.cpp)" build="cmake --build build && ./build/scan_guard"
+       l07_reading_kit/steps/step2.cpp as main.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — 2단계 · #include 와 std:: (main.cpp)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/scan_guard</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 7회 — 정면 장애물 판정기. 2단계: #include 와 std::
+#include &lt;cmath&gt;       // std::isfinite, INFINITY
+#include &lt;iostream&gt;    // std::cout
+
+int main()
+{
+  // 라이다가 잰 정면 8방향 거리 (m). INFINITY 는 측정 실패
+  float ranges[8] = {1.20f, 0.83f, INFINITY, 0.65f, 0.71f, INFINITY, 2.40f, 3.10f};
+  float stop_dist = 0.7f;                  // 이보다 가까우면 멈춘다
+
+  float best = 1e9f;                       // 아직 아무것도 못 봤다는 뜻으로 큰 값
+  for (int i = 0; i &lt; 8; i++) {
+    if (!std::isfinite(ranges[i])) continue;    // 측정 실패는 건너뛴다
+    if (ranges[i] &lt; best) best = ranges[i];
+  }
+  std::cout &lt;&lt; &quot;가장 가까운 장애물 &quot; &lt;&lt; best &lt;&lt; &quot; m\n&quot;;
+  if (best &lt; stop_dist) std::cout &lt;&lt; &quot;STOP\n&quot;;
+  else                  std::cout &lt;&lt; &quot;GO\n&quot;;
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
 
   <h3>이것만 알면 된다</h3>
-  <p>
-    <strong><code>auto</code>는 "타입을 여기에 안 적겠다"는 뜻이고, 컴파일러가 오른쪽을 보고 채운다.</strong>
-    파이썬처럼 실행 중에 타입이 바뀌는 것이 <strong>아니다.</strong>
-    타입은 컴파일할 때 정해지고, 그 뒤로는 절대 안 바뀐다.
-    <strong>적는 사람이 컴파일러로 바뀐 것뿐이다.</strong>
-  </p>
-
-  <p class="readme-first">무엇을 먼저 볼지: <strong>가운데 열</strong>이 판단 기준이다.</p>
-  <div class="tablewrap">
-  <table>
-    <tr><th>이럴 때</th><th><code>auto</code>를 쓰나</th><th>왜</th></tr>
-    <tr><td>타입 이름이 길거나 외우기 어려울 때</td><td><strong>쓴다</strong></td><td>사람이 적으면 틀린다. 컴파일러는 안 틀린다</td></tr>
-    <tr><td>오른쪽만 봐도 무엇인지 뻔할 때</td><td><strong>쓴다</strong></td><td><code>auto it = ranges.begin();</code> — 두 번 쓸 이유가 없다</td></tr>
-    <tr><td>읽는 사람이 타입을 꼭 알아야 할 때</td><td>안 쓴다</td><td><code>auto x = f();</code>만 있으면 <code>x</code>가 무엇인지 알 길이 없다</td></tr>
-    <tr><td><code>float</code>인지 <code>double</code>인지가 중요할 때</td><td>안 쓴다</td><td>라이다 거리처럼 정밀도가 걸린 값은 명시하는 편이 안전하다</td></tr>
-  </table>
-  </div>
-  <div class="interp">
-    <strong>해석:</strong> <code>auto</code>는 <strong>타이핑을 줄이려고 쓰는 것이 아니다.</strong>
-    사람이 타입을 손으로 적다가 <strong>조금 다른 타입을 적으면 그 자리에서 조용히 복사가 한 번 일어난다.</strong>
-    <code>auto</code>는 그 실수를 원천적으로 없앤다. 11회에서 그 복사가 얼마짜리인지 재 본다.
-  </div>
-
-  <!-- ── ④ & ── -->
-  <h2 id="ref">④ <code>&amp;</code> 한 글자가 복사 한 번을 없앤다 <span class="badge b-red">🔴 사람이 한다</span></h2>
-
-  <h3>언제 이게 필요해지나</h3>
-  <p>
-    함수에 값을 넘길 때 C++은 <strong>기본적으로 통째로 복사해서 넘긴다.</strong>
-    <code>int</code> 하나면 아무 문제가 없다. 그런데 넘기는 것이 <strong>거리 값 360개가 든 스캔</strong>이면 이야기가 달라진다.
-    함수를 부를 때마다 360개가 새로 만들어진다.
-  </p>
-
-  <p>아래 두 함수는 하는 일이 똑같다. <strong>다른 것은 인자 앞의 <code>const</code>와 <code>&amp;</code>뿐이다.</strong></p>
-
-  <div class="codelabel bad">복사가 일어나는 쪽</div>
-  <pre class="before"><code>// &amp; 없이 받는다 → 통째로 복사된다
-void print_copy(lidar::Scan s) { std::cout &lt;&lt; "  값으로 받음  : " &lt;&lt; s.frame &lt;&lt; "\n"; }</code></pre>
-
-  <div class="codelabel good">복사가 없는 쪽</div>
-  <pre class="after"><code>// const &amp; 로 받는다 → 원본을 보기만 한다. 복사가 없다
-void print_ref(const lidar::Scan &amp; s) { std::cout &lt;&lt; "  참조로 받음  : " &lt;&lt; s.frame &lt;&lt; "\n"; }</code></pre>
-
-  <pre><code>  std::cout &lt;&lt; "② &amp; — 원본을 가리킨다. 복사가 아니다\n";
-  print_copy(scan);
-  print_ref(scan);</code></pre>
-
-  <h3>실제로 나온 출력</h3>
-  <pre><code>② &amp; — 원본을 가리킨다. 복사가 아니다
-  값으로 받음  : base_scan
-  참조로 받음  : base_scan</code></pre>
-
-  <div class="box trap">
-    <div class="boxtitle">⚠️ 출력이 같다는 것이 이 절에서 가장 중요한 대목이다</div>
-    <p>
-      두 함수의 출력이 <strong>글자 하나 다르지 않다.</strong>
-      <code>&amp;</code>를 빼도 프로그램은 잘 돌고, 답도 맞고, 컴파일러도 아무 말을 안 한다.
-    </p>
-    <p>
-      <strong>다른 것은 눈에 안 보이는 곳에서 일어난다.</strong>
-      위쪽 함수는 부를 때마다 스캔을 통째로 하나 더 만들고, 함수가 끝나면 버린다.
-      아래쪽은 아무것도 안 만든다.
-    </p>
-    <p>
-      <strong>그래서 이 실수는 테스트로 안 잡힌다.</strong>
-      사람이 코드를 읽어야만 잡힌다. 6회에서 본 「AI 코드의 복사 오버헤드 1.39배」가 바로 이 자리다.
-      실습에서 <strong><code>&amp;</code>를 직접 지워 보고 출력이 같은 것을 눈으로 확인</strong>한다.
-    </p>
-  </div>
-
-  <p class="readme-first">무엇을 먼저 볼지: <strong>첫 줄이 기본값</strong>이다. 고민되면 첫 줄을 고른다.</p>
-  <div class="tablewrap">
-  <table>
-    <tr><th>이렇게 받는다</th><th>무슨 뜻인가</th><th>언제</th></tr>
-    <tr><td><code>const T &amp; x</code></td><td>원본을 보되 <strong>안 바꾼다</strong></td><td><strong>기본값.</strong> 읽기만 할 때</td></tr>
-    <tr><td><code>T &amp; x</code></td><td>원본을 보고 <strong>바꾼다</strong></td><td>함수가 원본을 고쳐야 할 때</td></tr>
-    <tr><td><code>T x</code></td><td>사본을 받는다</td><td><code>int</code>·<code>float</code>처럼 작은 값일 때. 또는 어차피 사본이 필요할 때</td></tr>
-  </table>
-  </div>
-  <div class="interp">
-    <strong>해석:</strong> 대략 <strong>8바이트(포인터 하나 크기)보다 크면</strong> 첫 줄을 생각한다.
-    <code>std::string</code>·<code>std::vector</code>·메시지 타입은 전부 여기 해당한다.
-    반대로 <strong><code>int</code>를 <code>const int &amp;</code>로 받는 것은 오히려 손해다.</strong>
-    자세한 것은 11회에서 시간을 재면서 다룬다. 지금은 <strong>모양을 알아보는 것</strong>까지면 된다.
-  </div>
-
-  <!-- ── ⑤ const ── -->
-  <h2 id="const">⑤ <code>const</code>는 컴파일러에게 하는 약속이다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
-
-  <h3>언제 이게 필요해지나</h3>
-  <p>
-    큰 프로그램에서 가장 찾기 어려운 버그는 <strong>"어디선가 이 값이 바뀌었다"</strong>는 종류다.
-    값이 바뀐 자리를 찾으려면 코드 전체를 뒤져야 한다.
-    <strong><code>const</code>는 그 뒤짐을 컴파일러에게 넘기는 장치다.</strong>
-  </p>
-
-  <pre><code>  std::cout &lt;&lt; "③ const — 못 바꾼다는 약속\n";
-  const float f = scan.front();
-  std::cout &lt;&lt; "  정면 거리 = " &lt;&lt; f &lt;&lt; " m  (f 에는 이제 대입할 수 없다)\n";</code></pre>
-
-  <h3>실제로 나온 출력</h3>
-  <pre><code>③ const — 못 바꾼다는 약속
-  정면 거리 = 0.83 m  (f 에는 이제 대입할 수 없다)</code></pre>
-
-  <h3>이것만 알면 된다</h3>
-  <p>
-    <strong><code>const</code>가 붙은 것은 바꿀 수 없다.</strong> 바꾸려고 하면 <strong>실행 전에</strong> 컴파일러가 막는다.
-    실행해 봐야 아는 버그가 <strong>컴파일 단계의 오류로 앞당겨지는 것</strong>이 이 키워드의 값어치다.
-  </p>
-  <p>
-    <code>const</code>는 <strong>붙는 자리가 세 군데</strong>다. 오늘은 세 군데 모두 "알아보는 것"까지만 한다.
-  </p>
-
-  <p class="readme-first">무엇을 먼저 볼지: <strong>가운데 열의 위치</strong>가 뜻을 정한다.</p>
-  <div class="tablewrap">
-  <table>
-    <tr><th>어디에 붙었나</th><th>모양</th><th>무슨 뜻인가</th></tr>
-    <tr><td>변수 앞</td><td><code>const float f = ...;</code></td><td>이 변수는 <strong>다시 대입할 수 없다</strong></td></tr>
-    <tr><td>함수 인자 앞</td><td><code>void g(const Scan &amp; s)</code></td><td>이 함수는 <strong>넘겨받은 것을 안 바꾼다</strong></td></tr>
-    <tr><td>함수 이름 <strong>뒤</strong></td><td><code>float front() const</code></td><td>이 함수는 <strong>자기가 속한 덩어리의 값을 안 바꾼다</strong></td></tr>
-  </table>
-  </div>
-  <div class="interp">
-    <strong>해석:</strong> 세 번째 줄이 헷갈리는 자리다. <strong>같은 <code>const</code>인데 뒤에 붙었다.</strong>
-    <code>read_kit.cpp</code>의 <code>float front() const</code>가 그것이고,
-    "이 함수를 불러도 스캔의 내용은 안 변한다"는 약속이다.
-    이 약속 덕분에 <strong>바꾸면 안 되는 스캔에서도 이 함수는 부를 수 있다.</strong>
-    <strong>깊은 이야기는 14회에서 한다.</strong> 오늘은 <strong>"함수 뒤에 붙은 <code>const</code>도 있다"</strong>는 것만 알면 된다.
-  </div>
-
-  <!-- ── ⑥ :: 와 <> ── -->
-  <h2 id="name">⑥ <code>std::vector&lt;float&gt;</code> 한 조각에 기호가 둘 들어 있다 <span class="badge b-green">🟢 맡긴다</span></h2>
-
-  <h3>언제 이게 필요해지나</h3>
-  <p>
-    프로그램이 커지면 이름이 겹친다. 표준 라이브러리에도 <code>Node</code>가 있고 ROS 2에도 <code>Node</code>가 있고 내 코드에도 <code>Node</code>가 있을 수 있다.
-    <strong>어느 <code>Node</code>인지를 밝히는 장치가 <code>::</code>다.</strong>
-  </p>
-
-  <pre><code>  std::cout &lt;&lt; "④ :: — 이름이 어느 소속인가\n";
-  std::cout &lt;&lt; "  lidar::Scan 은 우리가 만든 것, std::vector 는 표준 것\n";</code></pre>
-
-  <pre><code>④ :: — 이름이 어느 소속인가
-  lidar::Scan 은 우리가 만든 것, std::vector 는 표준 것</code></pre>
-
-  <p>
-    앞에서 본 <code>namespace lidar { ... }</code>가 <strong>이름을 담는 상자를 만드는 문장</strong>이다.
-    그 상자 안에 만든 것은 밖에서 <code>lidar::Scan</code>이라고 불러야 한다.
-  </p>
-
   <p class="readme-first">무엇을 먼저 볼지: <strong>왼쪽 열의 앞부분</strong>만 보면 그것이 누구 것인지 안다.</p>
   <div class="tablewrap">
   <table>
     <tr><th>이렇게 보이면</th><th>소속</th><th>알아두면 좋은 것</th></tr>
     <tr><td><code>std::vector</code>, <code>std::string</code>, <code>std::cout</code></td><td>C++ 표준</td><td>가장 많이 보게 된다. 믿고 써도 되는 것들이다</td></tr>
     <tr><td><code>rclcpp::Node</code>, <code>sensor_msgs::msg::LaserScan</code></td><td>ROS 2</td><td>3부에서 계속 만난다. <code>::</code>가 두 번 나오기도 한다</td></tr>
-    <tr><td><code>lidar::Scan</code>, <code>cone_track::ScanFilter</code></td><td><strong>우리가 만든 것</strong></td><td>이름이 낯설면 대개 이쪽이다. 프로젝트 안에서 찾으면 나온다</td></tr>
-    <tr><td>앞에 아무것도 없음 — <code>main</code>, <code>print_ref</code></td><td>어디에도 안 넣은 것</td><td>작은 프로그램은 이래도 된다. 커지면 이름이 부딪친다</td></tr>
+    <tr><td><code>lidar::Scan</code>, <code>cone_track::ScanFilter</code></td><td><strong>우리가 만든 것</strong></td><td>이름이 낯설면 대개 이쪽이다. ⑧절에서 직접 만든다</td></tr>
+    <tr><td>앞에 아무것도 없음 — <code>main</code>, <code>nearest</code></td><td>어디에도 안 넣은 것</td><td>작은 프로그램은 이래도 된다. 커지면 이름이 부딪친다</td></tr>
   </table>
   </div>
+  <div class="interp">
+    <strong>해석:</strong> <code>printf</code>가 나쁜 도구라는 뜻은 아니다. 6회의 측정 코드는 <code>printf</code>로 썼고 잘 돌았다.
+    다만 <strong>AI가 준 코드에 <code>printf</code>와 <code>std::cout</code>이 섞여 있으면 옛날 코드와 요즘 코드를 이어 붙인 것</strong>이라는 신호다.
+    한쪽으로 맞춰 달라고 하면 된다.
+  </div>
 
-  <h3>꺾쇠 안은 "무슨 타입으로"다</h3>
+  <!-- ── ④ <> ── -->
+  <h2 id="vector">④ 꺾쇠 안은 "무슨 타입으로"다 — 배열을 그릇으로 <span class="badge b-green">🟢 맡긴다</span></h2>
+
+  <h3>무엇이 불편한가 — 8이 두 번 적혀 있다</h3>
   <p>
-    <code>std::vector</code>는 <strong>"여러 개 담는 그릇"이라는 설계도</strong>이지 그릇 자체가 아니다.
-    무엇을 담을지를 정해 줘야 실제 그릇이 된다. <strong>그 자리가 꺾쇠 안이다.</strong>
+    2단계 코드에서 <code>8</code>이 두 군데 있다. 배열을 만드는 자리와 반복문 조건이다.
+    라이다를 바꿔 값이 360개가 되면 <strong>둘 다 고쳐야 하고, 하나만 고치면 조용히 틀린다.</strong>
+    반복문의 8을 안 고치면 처음 8개만 보고 판정한다. 컴파일러는 아무 말도 안 한다.
+    배열은 <strong>자기 칸이 몇 개인지 모르기</strong> 때문이다.
   </p>
 
-  <pre><code>  std::cout &lt;&lt; "⑥ &lt;&gt; — 꺾쇠 안은 \"무슨 타입으로\"\n";
-  std::vector&lt;std::string&gt; names{"base_link", "base_scan"};
-  std::cout &lt;&lt; "  vector&lt;string&gt; 첫 칸 = " &lt;&lt; names.at(0) &lt;&lt; "\n";</code></pre>
+  <h3>3단계 — <code>float[8]</code>을 <code>std::vector&lt;float&gt;</code>로</h3>
+  <p>
+    C++ 표준에는 <strong>자기 크기를 아는 그릇</strong>이 있다. <code>std::vector</code>다.
+    그런데 이 이름만으로는 그릇이 안 된다. <strong>무엇을 담을지</strong>를 꺾쇠 안에 적어야 실제 그릇이 된다.
+    실수를 담으니 <code>std::vector&lt;float&gt;</code>다.
+  </p>
 
-  <pre><code>⑥ &lt;&gt; — 꺾쇠 안은 "무슨 타입으로"
-  vector&lt;string&gt; 첫 칸 = base_link</code></pre>
+  <pre><code><span class="ln-add">#include &lt;vector&gt;      // std::vector</span>
+  // …
+<span class="ln-del">  float ranges[8] = {1.20f, 0.83f, INFINITY, 0.65f, 0.71f, INFINITY, 2.40f, 3.10f};</span>
+<span class="ln-add">  std::vector&lt;float&gt; ranges{1.20f, 0.83f, INFINITY, 0.65f, 0.71f, INFINITY, 2.40f, 3.10f};</span>
+  float stop_dist = 0.7f;                  // 이보다 가까우면 멈춘다
 
+<span class="ln-add">  std::vector&lt;float&gt;::size_type n = ranges.size();   // 값이 몇 개인지 그릇에 묻는다</span>
+<span class="ln-add">  std::cout &lt;&lt; "값 " &lt;&lt; n &lt;&lt; "개\n";</span>
+
+  float best = 1e9f;
+<span class="ln-del">  for (int i = 0; i &lt; 8; i++) {</span>
+<span class="ln-del">    if (!std::isfinite(ranges[i])) continue;</span>
+<span class="ln-del">    if (ranges[i] &lt; best) best = ranges[i];</span>
+<span class="ln-add">  for (std::vector&lt;float&gt;::size_type i = 0; i &lt; n; i++) {</span>
+<span class="ln-add">    if (!std::isfinite(ranges.at(i))) continue;</span>
+<span class="ln-add">    if (ranges.at(i) &lt; best) best = ranges.at(i);</span>
+  }</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>std::vector&lt;float&gt; ranges{ ... };</dt>
+      <dd>실수를 <strong>여러 개 담고 개수가 늘었다 줄었다 하는 그릇</strong>이다.
+          중괄호 안의 값이 순서대로 들어간다. 6회에서는 <code>ranges(N)</code>으로 빈 칸 N개를 만들었고, 오늘은 값을 직접 채웠다.</dd>
+
+      <dt>ranges.size()</dt>
+      <dd>그릇에 값이 <strong>몇 개 들어 있는지</strong> 묻는다. 칸 수를 코드에 박지 않아도 되는 이유가 이것이다.</dd>
+
+      <dt>ranges.at(i)</dt>
+      <dd>그릇의 <strong><code>i</code>번째 값</strong>을 꺼낸다. <code>ranges[i]</code>로도 꺼낼 수 있는데,
+          <code>.at()</code>은 <strong>없는 칸을 꺼내려 하면 그 자리에서 오류를 낸다.</strong> <code>[]</code>는 아무 말 없이 엉뚱한 값을 준다.</dd>
+
+      <dt>std::vector&lt;float&gt;::size_type</dt>
+      <dd><code>size()</code>가 돌려주는 값의 <strong>타입 이름</strong>이다. "float 그릇의 크기를 세는 정수".
+          정확히 적으면 이렇게 길다. <strong>다음 절에서 이 줄을 없앤다.</strong></dd>
+    </dl>
+    <p class="later">제대로 다루는 곳: 12회(<code>std::vector</code>와 컨테이너)</p>
+  </div>
+
+  <h3>실제로 나온 출력</h3>
+  <pre><code>값 8개
+가장 가까운 장애물 0.65 m
+STOP</code></pre>
+
+  <!-- fullcode "전체 코드 — 3단계 · std::vector<float> (main.cpp)" build="cmake --build build && ./build/scan_guard"
+       l07_reading_kit/steps/step3.cpp as main.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — 3단계 · std::vector&lt;float&gt; (main.cpp)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/scan_guard</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 7회 — 정면 장애물 판정기. 3단계: std::vector&lt;float&gt;
+#include &lt;cmath&gt;       // std::isfinite, INFINITY
+#include &lt;iostream&gt;    // std::cout
+#include &lt;vector&gt;      // std::vector
+
+int main()
+{
+  // 라이다가 잰 정면 거리 (m). INFINITY 는 측정 실패. 개수는 그릇이 안다
+  std::vector&lt;float&gt; ranges{1.20f, 0.83f, INFINITY, 0.65f, 0.71f, INFINITY, 2.40f, 3.10f};
+  float stop_dist = 0.7f;                  // 이보다 가까우면 멈춘다
+
+  std::vector&lt;float&gt;::size_type n = ranges.size();   // 값이 몇 개인지 그릇에 묻는다
+  std::cout &lt;&lt; &quot;값 &quot; &lt;&lt; n &lt;&lt; &quot;개\n&quot;;
+
+  float best = 1e9f;                       // 아직 아무것도 못 봤다는 뜻으로 큰 값
+  for (std::vector&lt;float&gt;::size_type i = 0; i &lt; n; i++) {
+    if (!std::isfinite(ranges.at(i))) continue;    // 측정 실패는 건너뛴다
+    if (ranges.at(i) &lt; best) best = ranges.at(i);
+  }
+  std::cout &lt;&lt; &quot;가장 가까운 장애물 &quot; &lt;&lt; best &lt;&lt; &quot; m\n&quot;;
+  if (best &lt; stop_dist) std::cout &lt;&lt; &quot;STOP\n&quot;;
+  else                  std::cout &lt;&lt; &quot;GO\n&quot;;
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <h3>이것만 알면 된다</h3>
   <div class="tablewrap">
   <table>
     <tr><th>이렇게 쓰면</th><th>무엇이 되나</th></tr>
@@ -439,130 +550,820 @@ void print_ref(const lidar::Scan &amp; s) { std::cout &lt;&lt; "  참조로 받�
   <div class="interp">
     <strong>해석:</strong> 꺾쇠를 보면 <strong>"이 그릇은 무엇을 담는가"</strong>만 읽으면 된다.
     이런 문법을 <strong>템플릿</strong>이라고 부르는데, <strong>이 강의에서 템플릿을 직접 만들 일은 거의 없다.</strong>
-    쓰는 일은 매일 있다. 그래서 오늘은 <strong>읽는 법만</strong> 한다.
-    만드는 법은 14회에 읽을거리로 둔다.
+    쓰는 일은 매일 있다. 그래서 오늘은 <strong>읽는 법만</strong> 한다. 만드는 법은 14회에 읽을거리로 둔다.
   </div>
 
-  <!-- ── ⑦ . -> nullptr ── -->
-  <h2 id="arrow">⑦ 점과 화살표는 같은 것을 다르게 쓴 것이다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+  <!-- ── ⑤ auto ── -->
+  <h2 id="auto">⑤ <code>auto</code>는 타입을 안 적어도 되는 자리다 <span class="badge b-green">🟢 맡긴다</span></h2>
 
-  <h3>언제 이게 필요해지나</h3>
+  <h3>무엇이 불편한가 — 타입 이름이 감당이 안 된다</h3>
   <p>
-    ROS 2 코드를 열면 <code>msg-&gt;ranges</code>처럼 <strong>화살표</strong>가 계속 나온다.
-    그런데 어떤 자리에서는 <code>scan.ranges</code>처럼 <strong>점</strong>이다.
-    둘의 차이를 모르면 코드를 고칠 때마다 컴파일 오류를 만난다.
+    3단계에서 <code>std::vector&lt;float&gt;::size_type</code>을 두 번 적었다.
+    <strong>사람이 이 이름을 매번 정확히 적는 것은 무리다.</strong> 조금 다른 타입을 적으면 컴파일은 되는데
+    그 자리에서 조용히 값이 바뀌거나 복사가 한 번 일어난다. 그리고 반복문의 번호 <code>i</code>는 사실 쓸모가 없다 —
+    <strong>값을 하나씩 보고 싶을 뿐</strong>, 몇 번째인지는 관심이 없다.
   </p>
 
-  <pre><code>  std::cout &lt;&lt; "⑤ . 과 -&gt; — 점은 객체, 화살표는 포인터\n";
-  lidar::Scan * p = &amp;scan;              // p 는 scan 이 있는 자리를 가리킨다
-  std::cout &lt;&lt; "  scan.frame  = " &lt;&lt; scan.frame &lt;&lt; "\n";
-  std::cout &lt;&lt; "  p-&gt;frame    = " &lt;&lt; p-&gt;frame &lt;&lt; "   (같은 것을 다르게 쓴 것)\n";</code></pre>
+  <h3>4단계 — 타입은 컴파일러가 채우고, 번호 없이 값을 꺼낸다</h3>
+
+  <pre><code><span class="ln-del">  std::vector&lt;float&gt;::size_type n = ranges.size();   // 값이 몇 개인지 그릇에 묻는다</span>
+<span class="ln-add">  auto n = ranges.size();                  // 타입 이름은 컴파일러가 채운다</span>
+  std::cout &lt;&lt; "값 " &lt;&lt; n &lt;&lt; "개\n";
+
+  float best = 1e9f;
+<span class="ln-del">  for (std::vector&lt;float&gt;::size_type i = 0; i &lt; n; i++) {</span>
+<span class="ln-del">    if (!std::isfinite(ranges.at(i))) continue;</span>
+<span class="ln-del">    if (ranges.at(i) &lt; best) best = ranges.at(i);</span>
+<span class="ln-add">  for (auto r : ranges) {                  // 번호 없이 값을 하나씩 꺼낸다</span>
+<span class="ln-add">    if (!std::isfinite(r)) continue;       // 측정 실패는 건너뛴다</span>
+<span class="ln-add">    if (r &lt; best) best = r;</span>
+  }</code></pre>
 
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
     <dl>
-      <dt>lidar::Scan * p</dt>
+      <dt>auto n = ranges.size();</dt>
+      <dd>"타입을 여기에 안 적겠다"는 뜻이다. 컴파일러가 <strong>오른쪽을 보고</strong> <code>std::vector&lt;float&gt;::size_type</code>을 채운다.
+          <strong>적는 사람이 컴파일러로 바뀐 것뿐</strong>이고, 타입은 컴파일할 때 정해져 그 뒤로는 안 바뀐다.</dd>
+
+      <dt>for (auto r : ranges) { ... }</dt>
+      <dd>그릇 안의 값을 <strong>처음부터 끝까지 하나씩 <code>r</code>에 담아</strong> 몸통을 돌린다(범위 <code>for</code>).
+          번호도 조건도 안 적으니 <code>8</code>이나 <code>n</code>을 잘못 적을 자리가 없다. 여기서 <code>auto</code>는 <code>float</code>이 된다.</dd>
+    </dl>
+    <p class="later">제대로 다루는 곳: 12회(범위 <code>for</code>에서 값을 복사하지 않는 법)</p>
+  </div>
+
+  <h3>실제로 나온 출력</h3>
+  <pre><code>값 8개
+가장 가까운 장애물 0.65 m
+STOP</code></pre>
+
+  <!-- fullcode "전체 코드 — 4단계 · auto 와 범위 for (main.cpp)" build="cmake --build build && ./build/scan_guard"
+       l07_reading_kit/steps/step4.cpp as main.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — 4단계 · auto 와 범위 for (main.cpp)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/scan_guard</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 7회 — 정면 장애물 판정기. 4단계: auto
+#include &lt;cmath&gt;       // std::isfinite, INFINITY
+#include &lt;iostream&gt;    // std::cout
+#include &lt;vector&gt;      // std::vector
+
+int main()
+{
+  // 라이다가 잰 정면 거리 (m). INFINITY 는 측정 실패. 개수는 그릇이 안다
+  std::vector&lt;float&gt; ranges{1.20f, 0.83f, INFINITY, 0.65f, 0.71f, INFINITY, 2.40f, 3.10f};
+  float stop_dist = 0.7f;                  // 이보다 가까우면 멈춘다
+
+  auto n = ranges.size();                  // 타입 이름은 컴파일러가 채운다
+  std::cout &lt;&lt; &quot;값 &quot; &lt;&lt; n &lt;&lt; &quot;개\n&quot;;
+
+  float best = 1e9f;                       // 아직 아무것도 못 봤다는 뜻으로 큰 값
+  for (auto r : ranges) {                  // 번호 없이 값을 하나씩 꺼낸다
+    if (!std::isfinite(r)) continue;       // 측정 실패는 건너뛴다
+    if (r &lt; best) best = r;
+  }
+  std::cout &lt;&lt; &quot;가장 가까운 장애물 &quot; &lt;&lt; best &lt;&lt; &quot; m\n&quot;;
+  if (best &lt; stop_dist) std::cout &lt;&lt; &quot;STOP\n&quot;;
+  else                  std::cout &lt;&lt; &quot;GO\n&quot;;
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <h3>이것만 알면 된다</h3>
+  <p>
+    <strong><code>auto</code>는 파이썬처럼 실행 중에 타입이 바뀌는 것이 아니다.</strong>
+    타입은 컴파일할 때 정해지고, 그 뒤로는 절대 안 바뀐다.
+  </p>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>가운데 열</strong>이 판단 기준이다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>이럴 때</th><th><code>auto</code>를 쓰나</th><th>왜</th></tr>
+    <tr><td>타입 이름이 길거나 외우기 어려울 때</td><td><strong>쓴다</strong></td><td>사람이 적으면 틀린다. 컴파일러는 안 틀린다</td></tr>
+    <tr><td>오른쪽만 봐도 무엇인지 뻔할 때</td><td><strong>쓴다</strong></td><td><code>for (auto r : ranges)</code> — 실수 그릇에서 꺼냈으니 실수다</td></tr>
+    <tr><td>읽는 사람이 타입을 꼭 알아야 할 때</td><td>안 쓴다</td><td><code>auto x = f();</code>만 있으면 <code>x</code>가 무엇인지 알 길이 없다</td></tr>
+    <tr><td><code>float</code>인지 <code>double</code>인지가 중요할 때</td><td>안 쓴다</td><td><code>best</code>처럼 정밀도가 걸린 값은 명시하는 편이 안전하다</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> <code>auto</code>는 <strong>타이핑을 줄이려고 쓰는 것이 아니다.</strong>
+    사람이 타입을 손으로 적다가 <strong>조금 다른 타입을 적으면 그 자리에서 조용히 복사가 한 번 일어난다.</strong>
+    <code>auto</code>는 그 실수를 원천적으로 없앤다. 11회에서 그 복사가 얼마짜리인지 재 본다.
+  </div>
+
+  <!-- ── ⑥ & ── -->
+  <h2 id="ref">⑥ <code>&amp;</code> 한 글자가 없으면 고친 것이 원본에 안 남는다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <h3>무엇이 불편한가 — 측정 실패를 건너뛰는 줄이 여기저기 생긴다</h3>
+  <p>
+    지금은 최솟값을 찾는 반복문 안에서 <code>INFINITY</code>를 건너뛴다.
+    그런데 27회에서는 이 값으로 최솟값만 찾는 것이 아니라 평균도 내고 콘도 찾는다.
+    <strong>반복문마다 같은 건너뛰기 줄을 넣어야 하고, 하나 빠뜨리면 무한대가 평균에 들어간다.</strong>
+    그래서 <strong>한 번만 손질해 두는 함수</strong>를 만든다 — 측정 실패를 센서 최대 사거리 8 m로 바꿔 넣는 <code>fill_missing</code>이다.
+    그러면 뒤의 모든 반복문에서 건너뛰기 줄이 사라진다.
+  </p>
+
+  <h3>5단계 (고치기 전) — 함수로 뺐는데 안 고쳐진다</h3>
+  <p>AI에게 "측정 실패를 8 m로 바꾸는 함수를 만들어 줘"라고 하면 흔히 이렇게 돌아온다.</p>
+
+  <div class="codelabel bad">AI가 보통 주는 코드 🔴</div>
+  <pre class="before"><code>// 측정 실패(inf)를 센서 최대 사거리 8 m 로 바꿔 넣는다
+void fill_missing(std::vector&lt;float&gt; r)
+{
+  for (auto &amp; x : r) {
+    if (!std::isfinite(x)) x = 8.0f;
+  }
+}</code></pre>
+  <p><code>main</code>에서는 이 함수를 먼저 부르고, <strong>정말 고쳐졌는지 세어 본 뒤</strong>, 건너뛰기 줄을 뺀 반복문으로 최솟값을 찾는다.</p>
+  <pre><code>  fill_missing(ranges);
+  int missing = 0;
+  for (auto r : ranges) {
+    if (!std::isfinite(r)) missing++;
+  }
+  std::cout &lt;&lt; "채우고 남은 측정 실패 " &lt;&lt; missing &lt;&lt; "개\n";
+
+  float best = 1e9f;
+  for (auto r : ranges) {
+    if (r &lt; best) best = r;                // 이제 건너뛸 값이 없다
+  }</code></pre>
+
+  <h3>실제로 나온 출력</h3>
+  <pre><code>채우고 남은 측정 실패 2개
+가장 가까운 장애물 0.65 m
+STOP</code></pre>
+
+  <!-- fullcode "전체 코드 — 5단계 고치기 전 · 값으로 받은 함수 (main.cpp)" build="cmake --build build && ./build/scan_guard"
+       l07_reading_kit/steps/step5_copy.cpp as main.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — 5단계 고치기 전 · 값으로 받은 함수 (main.cpp)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/scan_guard</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 7회 — 정면 장애물 판정기. 5단계(고치기 전): 함수로 뺐는데 값으로 받았다
+#include &lt;cmath&gt;       // std::isfinite, INFINITY
+#include &lt;iostream&gt;    // std::cout
+#include &lt;vector&gt;      // std::vector
+
+// 측정 실패(inf)를 센서 최대 사거리 8 m 로 바꿔 넣는다
+void fill_missing(std::vector&lt;float&gt; r)
+{
+  for (auto &amp; x : r) {
+    if (!std::isfinite(x)) x = 8.0f;
+  }
+}
+
+int main()
+{
+  std::vector&lt;float&gt; ranges{1.20f, 0.83f, INFINITY, 0.65f, 0.71f, INFINITY, 2.40f, 3.10f};
+  float stop_dist = 0.7f;                  // 이보다 가까우면 멈춘다
+
+  fill_missing(ranges);
+  int missing = 0;
+  for (auto r : ranges) {
+    if (!std::isfinite(r)) missing++;
+  }
+  std::cout &lt;&lt; &quot;채우고 남은 측정 실패 &quot; &lt;&lt; missing &lt;&lt; &quot;개\n&quot;;
+
+  float best = 1e9f;
+  for (auto r : ranges) {
+    if (r &lt; best) best = r;                // 이제 건너뛸 값이 없다
+  }
+  std::cout &lt;&lt; &quot;가장 가까운 장애물 &quot; &lt;&lt; best &lt;&lt; &quot; m\n&quot;;
+  if (best &lt; stop_dist) std::cout &lt;&lt; &quot;STOP\n&quot;;
+  else                  std::cout &lt;&lt; &quot;GO\n&quot;;
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <h3>무엇이 문제인가</h3>
+  <p>
+    <strong>2개가 그대로 남았다.</strong> 함수는 분명히 <code>x = 8.0f</code>를 했는데 <code>main</code>의 <code>ranges</code>는 안 바뀌었다.
+    C++은 함수에 값을 넘길 때 <strong>기본적으로 통째로 복사해서 넘긴다.</strong>
+    <code>fill_missing</code>이 고친 것은 <strong>사본</strong>이고, 함수가 끝나는 순간 그 사본은 버려진다.
+    그래서 최솟값은 우연히 맞았지만(0.65는 무한대보다 작으니), 무한대가 그릇에 그대로 들어 있다.
+    <strong>이 코드는 컴파일도 되고 경고도 없다.</strong>
+  </p>
+
+  <h3>이렇게 말하면 된다</h3>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    <code>fill_missing</code>이 원본을 고쳐야 하니까 인자를 값이 아니라 참조(<code>&amp;</code>)로 받아 줘.
+  </div>
+
+  <h3>5단계 — 받은 코드: <code>&amp;</code> 한 글자</h3>
+  <div class="codelabel good">받은 코드</div>
+  <pre class="after"><code><span class="ln-del">void fill_missing(std::vector&lt;float&gt; r)</span>
+<span class="ln-add">void fill_missing(std::vector&lt;float&gt; &amp; r)      // &amp; — 원본을 받는다</span>
+{
+  for (auto &amp; x : r) {
+    if (!std::isfinite(x)) x = 8.0f;
+  }
+}</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>std::vector&lt;float&gt; &amp; r</dt>
+      <dd>타입 뒤의 <code>&amp;</code>는 <strong>"사본이 아니라 원본을 이 이름으로 부르겠다"</strong>는 뜻이다(참조).
+          여기서는 <code>main</code>의 <code>ranges</code>를 <code>r</code>이라는 이름으로 직접 고치는 데 썼다.</dd>
+
+      <dt>for (auto &amp; x : r)</dt>
+      <dd>같은 <code>&amp;</code>다. 그릇에서 값을 <strong>복사해 꺼내지 않고 그 칸 자체를 <code>x</code>라고 부른다.</strong>
+          그래서 <code>x = 8.0f</code>가 그릇의 칸을 바꾼다. 이 <code>&amp;</code>가 없으면 함수 안에서도 사본만 고친다.</dd>
+    </dl>
+  </div>
+
+  <h3>실제로 나온 출력</h3>
+  <pre><code>채우고 남은 측정 실패 0개
+가장 가까운 장애물 0.65 m
+STOP</code></pre>
+
+  <!-- fullcode "전체 코드 — 5단계 · & 로 원본을 받는다 (main.cpp)" build="cmake --build build && ./build/scan_guard"
+       l07_reading_kit/steps/step5.cpp as main.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — 5단계 · &amp; 로 원본을 받는다 (main.cpp)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/scan_guard</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 7회 — 정면 장애물 판정기. 5단계: &amp; 로 원본을 받는다
+#include &lt;cmath&gt;       // std::isfinite, INFINITY
+#include &lt;iostream&gt;    // std::cout
+#include &lt;vector&gt;      // std::vector
+
+// 측정 실패(inf)를 센서 최대 사거리 8 m 로 바꿔 넣는다
+void fill_missing(std::vector&lt;float&gt; &amp; r)      // &amp; — 원본을 받는다
+{
+  for (auto &amp; x : r) {
+    if (!std::isfinite(x)) x = 8.0f;
+  }
+}
+
+int main()
+{
+  std::vector&lt;float&gt; ranges{1.20f, 0.83f, INFINITY, 0.65f, 0.71f, INFINITY, 2.40f, 3.10f};
+  float stop_dist = 0.7f;                  // 이보다 가까우면 멈춘다
+
+  fill_missing(ranges);
+  int missing = 0;
+  for (auto r : ranges) {
+    if (!std::isfinite(r)) missing++;
+  }
+  std::cout &lt;&lt; &quot;채우고 남은 측정 실패 &quot; &lt;&lt; missing &lt;&lt; &quot;개\n&quot;;
+
+  float best = 1e9f;
+  for (auto r : ranges) {
+    if (r &lt; best) best = r;                // 이제 건너뛸 값이 없다
+  }
+  std::cout &lt;&lt; &quot;가장 가까운 장애물 &quot; &lt;&lt; best &lt;&lt; &quot; m\n&quot;;
+  if (best &lt; stop_dist) std::cout &lt;&lt; &quot;STOP\n&quot;;
+  else                  std::cout &lt;&lt; &quot;GO\n&quot;;
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 고쳐야 할 때만 티가 난다 — 읽기만 하는 함수에서는 티가 안 난다</div>
+    <p>
+      <code>fill_missing</code>은 원본을 <strong>고쳐야 하는</strong> 함수라 <code>&amp;</code>가 빠진 것이 출력에 드러났다.
+      그런데 다음 절의 <code>nearest</code>처럼 <strong>읽기만 하는</strong> 함수는 <code>&amp;</code>가 있든 없든 <strong>출력이 글자 하나 안 다르다.</strong>
+    </p>
+    <p>
+      다른 것은 눈에 안 보이는 곳에서 일어난다. <code>&amp;</code>가 없으면 부를 때마다 값 360개를 통째로 하나 더 만들고, 다 쓰면 버린다.
+      <strong>그래서 이 실수는 테스트로 안 잡힌다.</strong> 사람이 코드를 읽어야만 잡힌다.
+      6회에서 본 「AI 코드의 복사 오버헤드 1.39배」가 바로 이 자리다. 11회에서 시간을 재면서 다시 본다.
+    </p>
+  </div>
+
+  <p class="readme-first">무엇을 먼저 볼지: <strong>첫 줄이 기본값</strong>이다. 고민되면 첫 줄을 고른다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>이렇게 받는다</th><th>무슨 뜻인가</th><th>언제</th></tr>
+    <tr><td><code>const T &amp; x</code></td><td>원본을 보되 <strong>안 바꾼다</strong></td><td><strong>기본값.</strong> 읽기만 할 때 — 다음 절</td></tr>
+    <tr><td><code>T &amp; x</code></td><td>원본을 보고 <strong>바꾼다</strong></td><td>함수가 원본을 고쳐야 할 때 — <code>fill_missing</code></td></tr>
+    <tr><td><code>T x</code></td><td>사본을 받는다</td><td><code>int</code>·<code>float</code>처럼 작은 값일 때. 또는 어차피 사본이 필요할 때</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 대략 <strong>8바이트(포인터 하나 크기)보다 크면</strong> 위 두 줄 중 하나를 생각한다.
+    <code>std::string</code>·<code>std::vector</code>·메시지 타입은 전부 여기 해당한다.
+    반대로 <strong><code>stop_dist</code> 같은 <code>float</code> 하나를 <code>const float &amp;</code>로 받는 것은 오히려 손해다.</strong>
+  </div>
+
+  <!-- ── ⑦ const ── -->
+  <h2 id="const">⑦ <code>const</code>는 컴파일러에게 하는 약속이다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <h3>무엇이 불편한가 — 어디선가 값이 바뀌었다</h3>
+  <p>
+    <code>&amp;</code>로 원본을 넘기기 시작하면 새 걱정이 생긴다. <strong>넘긴 함수가 원본을 건드리지 않았다고 어떻게 믿나.</strong>
+    큰 프로그램에서 가장 찾기 어려운 버그가 "어디선가 이 값이 바뀌었다"는 종류다. 바뀐 자리를 찾으려면 코드 전체를 뒤져야 한다.
+    <strong><code>const</code>는 그 뒤짐을 컴파일러에게 넘기는 장치다.</strong>
+  </p>
+
+  <h3>6단계 — 읽기만 하는 함수는 <code>const &amp;</code>로 받는다</h3>
+  <p>
+    최솟값을 찾는 반복문도 함수로 뺀다. <code>nearest</code>다. 이 함수는 <strong>원본을 볼 뿐 고치지 않으니</strong>
+    <code>&amp;</code> 앞에 <code>const</code>를 붙인다. 정지 거리와 결과처럼 <strong>한 번 정하면 안 바뀌어야 하는 값</strong>에도 붙인다.
+  </p>
+
+  <pre><code><span class="ln-add">// 가장 가까운 거리를 찾는다. 읽기만 한다</span>
+<span class="ln-add">float nearest(const std::vector&lt;float&gt; &amp; r)    // const &amp; — 원본을 보되 안 바꾼다</span>
+<span class="ln-add">{</span>
+<span class="ln-add">  float best = 1e9f;</span>
+<span class="ln-add">  for (auto x : r) {</span>
+<span class="ln-add">    if (x &lt; best) best = x;</span>
+<span class="ln-add">  }</span>
+<span class="ln-add">  return best;</span>
+<span class="ln-add">}</span>
+
+int main()
+{
+  std::vector&lt;float&gt; ranges{1.20f, 0.83f, INFINITY, 0.65f, 0.71f, INFINITY, 2.40f, 3.10f};
+<span class="ln-del">  float stop_dist = 0.7f;                  // 이보다 가까우면 멈춘다</span>
+<span class="ln-add">  const float stop_dist = 0.7f;            // 프로그램 도중에 바뀌면 안 되는 값</span>
+
+  fill_missing(ranges);
+<span class="ln-del">  int missing = 0;</span>
+<span class="ln-del">  for (auto r : ranges) { … }              // 세는 줄은 확인이 끝났으니 뺀다</span>
+<span class="ln-del">  float best = 1e9f;</span>
+<span class="ln-del">  for (auto r : ranges) { … }</span>
+<span class="ln-add">  const float best = nearest(ranges);</span>
+  std::cout &lt;&lt; "가장 가까운 장애물 " &lt;&lt; best &lt;&lt; " m\n";</code></pre>
+
+  <h3>실제로 나온 출력</h3>
+  <pre><code>가장 가까운 장애물 0.65 m
+STOP</code></pre>
+
+  <!-- fullcode "전체 코드 — 6단계 · const 로 약속한다 (main.cpp)" build="cmake --build build && ./build/scan_guard"
+       l07_reading_kit/steps/step6.cpp as main.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — 6단계 · const 로 약속한다 (main.cpp)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/scan_guard</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 7회 — 정면 장애물 판정기. 6단계: const 로 약속한다
+#include &lt;cmath&gt;       // std::isfinite, INFINITY
+#include &lt;iostream&gt;    // std::cout
+#include &lt;vector&gt;      // std::vector
+
+// 측정 실패(inf)를 센서 최대 사거리 8 m 로 바꿔 넣는다
+void fill_missing(std::vector&lt;float&gt; &amp; r)      // &amp; — 원본을 받는다. 고쳐야 하니까
+{
+  for (auto &amp; x : r) {
+    if (!std::isfinite(x)) x = 8.0f;
+  }
+}
+
+// 가장 가까운 거리를 찾는다. 읽기만 한다
+float nearest(const std::vector&lt;float&gt; &amp; r)    // const &amp; — 원본을 보되 안 바꾼다
+{
+  float best = 1e9f;
+  for (auto x : r) {
+    if (x &lt; best) best = x;
+  }
+  return best;
+}
+
+int main()
+{
+  std::vector&lt;float&gt; ranges{1.20f, 0.83f, INFINITY, 0.65f, 0.71f, INFINITY, 2.40f, 3.10f};
+  const float stop_dist = 0.7f;            // 프로그램 도중에 바뀌면 안 되는 값
+
+  fill_missing(ranges);
+  const float best = nearest(ranges);
+  std::cout &lt;&lt; &quot;가장 가까운 장애물 &quot; &lt;&lt; best &lt;&lt; &quot; m\n&quot;;
+  if (best &lt; stop_dist) std::cout &lt;&lt; &quot;STOP\n&quot;;
+  else                  std::cout &lt;&lt; &quot;GO\n&quot;;
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <h3>약속을 어기면 — 실행 전에 막힌다</h3>
+  <p><code>nearest</code> 안에 실수로 원본을 덮어쓰는 줄이 하나 들어갔다고 하자. 그대로 빌드하면 이렇게 된다.</p>
+  <pre><code>$ cmake --build build
+main.cpp: In function ‘float nearest(const std::vector&lt;float&gt;&amp;)’:
+main.cpp:17:11: error: assignment of read-only location ‘(&amp; r)-&gt;std::vector&lt;float&gt;::at(0)’
+   17 |   r.at(0) = 0.0f;                              // 실수로 원본을 덮어쓰는 줄
+      |   ~~~~~~~~^~~~~~</code></pre>
+
+  <!-- fullcode "전체 코드 — 6단계 변형 · const 인자를 고치려 든 판 (빌드가 막힌다)" build="cmake --build build   # error 가 난다"
+       l07_reading_kit/steps/step6_mutate.cpp as main.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — 6단계 변형 · const 인자를 고치려 든 판 (빌드가 막힌다)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build   # error 가 난다</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 7회 — 정면 장애물 판정기. 6단계: const 로 약속한다
+#include &lt;cmath&gt;       // std::isfinite, INFINITY
+#include &lt;iostream&gt;    // std::cout
+#include &lt;vector&gt;      // std::vector
+
+// 측정 실패(inf)를 센서 최대 사거리 8 m 로 바꿔 넣는다
+void fill_missing(std::vector&lt;float&gt; &amp; r)      // &amp; — 원본을 받는다. 고쳐야 하니까
+{
+  for (auto &amp; x : r) {
+    if (!std::isfinite(x)) x = 8.0f;
+  }
+}
+
+// 가장 가까운 거리를 찾는다. 읽기만 한다
+float nearest(const std::vector&lt;float&gt; &amp; r)    // const &amp; — 원본을 보되 안 바꾼다
+{
+  r.at(0) = 0.0f;                              // 실수로 원본을 덮어쓰는 줄
+  float best = 1e9f;
+  for (auto x : r) {
+    if (x &lt; best) best = x;
+  }
+  return best;
+}
+
+int main()
+{
+  std::vector&lt;float&gt; ranges{1.20f, 0.83f, INFINITY, 0.65f, 0.71f, INFINITY, 2.40f, 3.10f};
+  const float stop_dist = 0.7f;            // 프로그램 도중에 바뀌면 안 되는 값
+
+  fill_missing(ranges);
+  const float best = nearest(ranges);
+  std::cout &lt;&lt; &quot;가장 가까운 장애물 &quot; &lt;&lt; best &lt;&lt; &quot; m\n&quot;;
+  if (best &lt; stop_dist) std::cout &lt;&lt; &quot;STOP\n&quot;;
+  else                  std::cout &lt;&lt; &quot;GO\n&quot;;
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <div class="interp">
+    <strong>해석:</strong> <code>read-only location</code>은 <strong>"읽기만 하기로 한 자리에 대입했다"</strong>는 말이다.
+    실행해 봐야 아는 버그가 <strong>컴파일 단계의 오류로 앞당겨진 것</strong>이 이 키워드의 값어치다.
+    ③절의 <code>%d</code> 실수는 경고만 내고 실행됐지만, 이것은 <strong>실행 파일 자체가 안 만들어진다.</strong>
+  </div>
+
+  <h3>이것만 알면 된다</h3>
+  <p><code>const</code>는 <strong>붙는 자리가 세 군데</strong>다. 오늘은 앞의 둘을 썼다.</p>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>가운데 열의 위치</strong>가 뜻을 정한다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>어디에 붙었나</th><th>모양</th><th>무슨 뜻인가</th></tr>
+    <tr><td>변수 앞</td><td><code>const float stop_dist = 0.7f;</code></td><td>이 변수는 <strong>다시 대입할 수 없다</strong></td></tr>
+    <tr><td>함수 인자 앞</td><td><code>float nearest(const std::vector&lt;float&gt; &amp; r)</code></td><td>이 함수는 <strong>넘겨받은 것을 안 바꾼다</strong></td></tr>
+    <tr><td>함수 이름 <strong>뒤</strong></td><td><code>float front() const</code></td><td>이 함수는 <strong>자기가 속한 덩어리의 값을 안 바꾼다</strong> — 오늘 코드에는 없고 8회 클래스에서 만난다</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 세 번째 줄이 헷갈리는 자리다. <strong>같은 <code>const</code>인데 뒤에 붙었다.</strong>
+    오늘은 <strong>"함수 뒤에 붙은 <code>const</code>도 있다"</strong>는 것만 알면 된다. 깊은 이야기는 14회에서 한다.
+  </div>
+
+  <!-- ── ⑧ struct · namespace · . ── -->
+  <h2 id="struct">⑧ 짝을 이루는 값은 <code>struct</code>로 묶고, 이름은 <code>namespace</code>에 넣는다 <span class="badge b-green">🟢 맡긴다</span></h2>
+
+  <h3>무엇이 불편한가 — 거리 값에는 짝이 있다</h3>
+  <p>
+    라이다가 보내는 것은 거리 값만이 아니다. <strong>어느 좌표계에서 잰 것인지</strong>(<code>base_scan</code>), 언제 잰 것인지가 같이 온다.
+    지금은 <code>ranges</code>만 있으니 좌표계 이름을 따로 변수로 두어야 하는데, 그러면 함수에 넘길 때마다 <strong>둘을 따로 넘기게 되고
+    짝이 어긋나도 아무도 모른다.</strong> 스캔 A의 거리에 스캔 B의 좌표계를 붙이는 식이다.
+  </p>
+
+  <h3>7단계 — 좌표계 이름과 거리 값을 「스캔 하나」로 묶는다</h3>
+
+  <pre><code><span class="ln-add">#include &lt;string&gt;      // std::string</span>
+#include &lt;vector&gt;      // std::vector
+
+<span class="ln-add">namespace lidar {                          // 우리가 만드는 이름들의 소속</span>
+<span class="ln-add">  struct Scan {                            // 스캔 한 번 = 좌표계 이름 + 거리 값들</span>
+<span class="ln-add">    std::string frame;</span>
+<span class="ln-add">    std::vector&lt;float&gt; ranges;</span>
+<span class="ln-add">  };</span>
+<span class="ln-add">}</span>
+  // … fill_missing 과 nearest 는 그대로 …
+int main()
+{
+<span class="ln-del">  std::vector&lt;float&gt; ranges{1.20f, 0.83f, INFINITY, 0.65f, 0.71f, INFINITY, 2.40f, 3.10f};</span>
+<span class="ln-add">  lidar::Scan scan{"base_scan", {1.20f, 0.83f, INFINITY, 0.65f, 0.71f, INFINITY, 2.40f, 3.10f}};</span>
+  const float stop_dist = 0.7f;
+
+<span class="ln-del">  fill_missing(ranges);</span>
+<span class="ln-del">  const float best = nearest(ranges);</span>
+<span class="ln-del">  std::cout &lt;&lt; "가장 가까운 장애물 " &lt;&lt; best &lt;&lt; " m\n";</span>
+<span class="ln-add">  fill_missing(scan.ranges);               // . — 물건 안의 칸을 꺼낸다</span>
+<span class="ln-add">  const float best = nearest(scan.ranges);</span>
+<span class="ln-add">  std::cout &lt;&lt; "[" &lt;&lt; scan.frame &lt;&lt; "] 가장 가까운 장애물 " &lt;&lt; best &lt;&lt; " m\n";</span></code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>struct Scan { ... };</dt>
+      <dd>값 여러 개를 <strong>하나로 묶은 덩어리</strong>를 만든다. 여기서는 좌표계 이름과 거리 그릇을 묶어 "스캔 한 번"으로 만들었다.
+          <strong>맨 뒤 세미콜론을 빠뜨리면 컴파일이 안 된다.</strong> 8회에서 이것이 클래스가 된다.</dd>
+
+      <dt>std::string frame;</dt>
+      <dd>글자를 담는 표준 그릇이다. 여기서는 좌표계 이름 <code>"base_scan"</code>을 담았다.</dd>
+
+      <dt>namespace lidar { ... }</dt>
+      <dd><strong>이름을 담는 상자</strong>를 만든다. 안에서 만든 <code>Scan</code>은 밖에서 <code>lidar::Scan</code>이라고 부른다.
+          ③절의 <code>std::</code>와 같은 기호다 — <code>std</code>는 표준이 만든 상자, <code>lidar</code>는 우리가 만든 상자.</dd>
+
+      <dt>scan.ranges · scan.frame</dt>
+      <dd><strong>물건 안의 칸을 꺼내는 점</strong>이다. <code>ranges.size()</code>의 점과 같다 — 왼쪽에 물건이 있으면 점이다.</dd>
+
+      <dt>lidar::Scan scan{"base_scan", { ... }};</dt>
+      <dd>중괄호 안에 <strong>칸 순서대로</strong> 값을 나열하면 그대로 채워진다. 바깥 중괄호가 <code>Scan</code>을, 안쪽이 <code>ranges</code>를 채운다.</dd>
+    </dl>
+    <p class="later">제대로 다루는 곳: 8회(클래스 — <code>struct</code>에 함수와 <code>private</code>가 붙으면)</p>
+  </div>
+
+  <h3>실제로 나온 출력</h3>
+  <pre><code>[base_scan] 가장 가까운 장애물 0.65 m
+STOP</code></pre>
+
+  <!-- fullcode "전체 코드 — 7단계 · struct 와 namespace (main.cpp)" build="cmake --build build && ./build/scan_guard"
+       l07_reading_kit/steps/step7.cpp as main.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — 7단계 · struct 와 namespace (main.cpp)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/scan_guard</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 7회 — 정면 장애물 판정기. 7단계: 값들을 struct 로 묶고 namespace 에 넣는다
+#include &lt;cmath&gt;       // std::isfinite, INFINITY
+#include &lt;iostream&gt;    // std::cout
+#include &lt;string&gt;      // std::string
+#include &lt;vector&gt;      // std::vector
+
+namespace lidar {                          // 우리가 만드는 이름들의 소속
+  struct Scan {                            // 스캔 한 번 = 좌표계 이름 + 거리 값들
+    std::string frame;
+    std::vector&lt;float&gt; ranges;
+  };
+}
+
+// 측정 실패(inf)를 센서 최대 사거리 8 m 로 바꿔 넣는다
+void fill_missing(std::vector&lt;float&gt; &amp; r)      // &amp; — 원본을 받는다. 고쳐야 하니까
+{
+  for (auto &amp; x : r) {
+    if (!std::isfinite(x)) x = 8.0f;
+  }
+}
+
+// 가장 가까운 거리를 찾는다. 읽기만 한다
+float nearest(const std::vector&lt;float&gt; &amp; r)    // const &amp; — 원본을 보되 안 바꾼다
+{
+  float best = 1e9f;
+  for (auto x : r) {
+    if (x &lt; best) best = x;
+  }
+  return best;
+}
+
+int main()
+{
+  lidar::Scan scan{&quot;base_scan&quot;, {1.20f, 0.83f, INFINITY, 0.65f, 0.71f, INFINITY, 2.40f, 3.10f}};
+  const float stop_dist = 0.7f;            // 프로그램 도중에 바뀌면 안 되는 값
+
+  fill_missing(scan.ranges);               // . — 물건 안의 칸을 꺼낸다
+  const float best = nearest(scan.ranges);
+  std::cout &lt;&lt; &quot;[&quot; &lt;&lt; scan.frame &lt;&lt; &quot;] 가장 가까운 장애물 &quot; &lt;&lt; best &lt;&lt; &quot; m\n&quot;;
+  if (best &lt; stop_dist) std::cout &lt;&lt; &quot;STOP\n&quot;;
+  else                  std::cout &lt;&lt; &quot;GO\n&quot;;
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <div class="interp">
+    <strong>해석:</strong> 여기서 <code>::</code>가 <strong>두 가지 자리</strong>에 나온다는 것을 본다.
+    <code>std::vector</code>의 <code>::</code>와 <code>lidar::Scan</code>의 <code>::</code>는 같은 기호이고 같은 뜻이다 — "저 상자 안의 그것".
+    다른 것은 <strong>상자를 누가 만들었나</strong>뿐이다. ROS 2의 <code>sensor_msgs::msg::LaserScan</code>은 상자가 두 겹인 것이다.
+    그리고 <code>fill_missing</code>과 <code>nearest</code>는 <strong>한 줄도 안 고쳤다.</strong> 넘기는 것이 <code>scan.ranges</code>로 바뀌었을 뿐이다.
+  </div>
+
+  <!-- ── ⑨ -> nullptr ── -->
+  <h2 id="arrow">⑨ 아직 스캔이 없을 수도 있다 — <code>-&gt;</code> 와 <code>nullptr</code> <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <h3>무엇이 불편한가 — 스캔이 오기 전에 판정을 부르면</h3>
+  <p>
+    실제 로봇에서 판정 함수는 스캔이 <strong>들어올 때마다</strong> 불리고, 프로그램이 켜진 직후에는 <strong>아직 스캔이 하나도 없다.</strong>
+    지금 코드는 <code>scan</code>이 항상 있다고 가정한다. "없음"을 나타낼 방법이 없다.
+    ROS 2 코드가 메시지를 <strong>물건 자체가 아니라 물건이 있는 자리(포인터)</strong>로 넘기는 이유가 이것이다 —
+    자리는 <strong>비어 있을 수 있다.</strong>
+  </p>
+
+  <h3>8단계 (완성본) — 판정을 함수로 빼고, 비었는지 먼저 본다</h3>
+
+  <pre><code><span class="ln-add">// 판정을 찍는다. 스캔이 아직 없으면(nullptr) 그렇다고만 말한다</span>
+<span class="ln-add">void report(const lidar::Scan * s, float stop_dist)</span>
+<span class="ln-add">{</span>
+<span class="ln-add">  if (s == nullptr) {</span>
+<span class="ln-add">    std::cout &lt;&lt; "아직 스캔이 없다\n";</span>
+<span class="ln-add">    return;</span>
+<span class="ln-add">  }</span>
+<span class="ln-add">  const float best = nearest(s-&gt;ranges);   // -&gt; — 가리키는 곳에 가서 칸을 꺼낸다</span>
+<span class="ln-add">  std::cout &lt;&lt; "[" &lt;&lt; s-&gt;frame &lt;&lt; "] 가장 가까운 장애물 " &lt;&lt; best &lt;&lt; " m\n";</span>
+<span class="ln-add">  if (best &lt; stop_dist) std::cout &lt;&lt; "STOP\n";</span>
+<span class="ln-add">  else                  std::cout &lt;&lt; "GO\n";</span>
+<span class="ln-add">}</span>
+
+int main()
+{
+  const float stop_dist = 0.7f;
+<span class="ln-add">  const lidar::Scan * latest = nullptr;    // 아직 아무 스캔도 안 가리킨다</span>
+<span class="ln-add">  report(latest, stop_dist);               // 스캔이 오기 전</span>
+
+  lidar::Scan scan{"base_scan", {1.20f, 0.83f, INFINITY, 0.65f, 0.71f, INFINITY, 2.40f, 3.10f}};
+  fill_missing(scan.ranges);
+<span class="ln-del">  const float best = nearest(scan.ranges);</span>
+<span class="ln-del">  std::cout &lt;&lt; "[" &lt;&lt; scan.frame &lt;&lt; "] 가장 가까운 장애물 " &lt;&lt; best &lt;&lt; " m\n";</span>
+<span class="ln-del">  if (best &lt; stop_dist) std::cout &lt;&lt; "STOP\n";</span>
+<span class="ln-del">  else                  std::cout &lt;&lt; "GO\n";</span>
+<span class="ln-add">  latest = &amp;scan;                          // 이제 scan 이 있는 자리를 가리킨다</span>
+<span class="ln-add">  report(latest, stop_dist);               // 스캔이 온 뒤</span>
+  return 0;
+}</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>const lidar::Scan * s</dt>
       <dd>타입 뒤의 <code>*</code>는 <strong>"그 물건이 있는 자리를 담는 변수"</strong>라는 뜻이다(포인터).
-          물건 자체가 아니라 <strong>주소</strong>를 담는다.
-          여기서는 <code>scan</code>이 어디 있는지를 <code>p</code>에 담았다.</dd>
+          물건 자체가 아니라 <strong>주소</strong>를 담는다. 앞의 <code>const</code>는 ⑦절과 같다 — 가리키는 스캔을 안 바꾼다.</dd>
+
+      <dt>nullptr</dt>
+      <dd>"아직 아무 자리도 안 정했다"는 값이다. 자리를 담는 변수는 이 상태가 될 수 있고, 그래서 쓰기 전에 <code>== nullptr</code>로 먼저 본다.
+          <code>return;</code>은 <strong>함수를 그 자리에서 끝낸다</strong> — 돌려줄 값이 없는 함수라 뒤에 아무것도 안 적는다.</dd>
+
+      <dt>s-&gt;ranges · s-&gt;frame</dt>
+      <dd><strong>"그 자리에 가서 칸을 꺼내라"</strong>는 뜻이다. ⑧절의 <code>scan.ranges</code>와 하는 일이 같다.
+          왼쪽에 물건이 있으면 점, 물건이 있는 자리가 있으면 화살표다.</dd>
 
       <dt>&amp;scan</dt>
-      <dd><strong>여기서의 <code>&amp;</code>는 앞 절의 <code>&amp;</code>와 다른 뜻이다.</strong>
-          변수 앞에 붙으면 <strong>"그 변수가 있는 자리(주소)를 달라"</strong>는 뜻이다.
-          타입 옆에 붙었을 때만 「참조」다. <strong>붙은 자리를 봐야 뜻이 갈린다.</strong></dd>
-
-      <dt>p-&gt;frame</dt>
-      <dd><strong>"그 자리에 가서 <code>frame</code>을 꺼내라"</strong>는 뜻이다.
-          <code>(*p).frame</code>이라고 써도 같은데, 너무 자주 쓰다 보니 짧은 표기가 생겼다.</dd>
+      <dd><strong>⑥절의 <code>&amp;</code>와 다른 뜻이다.</strong> 변수 <strong>앞</strong>에 붙으면 "그 변수가 있는 자리(주소)를 달라"는 뜻이다.
+          타입 뒤에 붙었을 때만 「참조」다. <strong>붙은 자리를 봐야 뜻이 갈린다.</strong></dd>
     </dl>
     <p class="later">제대로 다루는 곳: 12회(스마트 포인터 — ROS 2 콜백 인자가 전부 이것이다)</p>
   </div>
 
   <h3>실제로 나온 출력</h3>
-  <pre><code>⑤ . 과 -&gt; — 점은 객체, 화살표는 포인터
-  scan.frame  = base_scan
-  p-&gt;frame    = base_scan   (같은 것을 다르게 쓴 것)</code></pre>
+  <pre><code>아직 스캔이 없다
+[base_scan] 가장 가까운 장애물 0.65 m
+STOP</code></pre>
 
-  <p>
-    <strong>두 줄의 값이 같다.</strong> 같은 스캔을 두 가지 방법으로 읽은 것이기 때문이다.
-    <strong>점이냐 화살표냐는 "무엇을 손에 들고 있느냐"에 따라 정해진다</strong> —
-    물건을 들고 있으면 점, 물건이 있는 자리를 들고 있으면 화살표다.
-  </p>
+  <!-- fullcode "전체 코드 — 8단계 · 완성본 (main.cpp)" build="cmake --build build && ./build/scan_guard"
+       l07_reading_kit/steps/step8.cpp as main.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — 8단계 · 완성본 (main.cpp)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/scan_guard</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 7회 — 정면 장애물 판정기. 8단계(완성본): 아직 스캔이 없을 수도 있다 — 포인터와 nullptr
+#include &lt;cmath&gt;       // std::isfinite, INFINITY
+#include &lt;iostream&gt;    // std::cout
+#include &lt;string&gt;      // std::string
+#include &lt;vector&gt;      // std::vector
 
-  <h3>아무것도 안 가리키는 상태 — <code>nullptr</code></h3>
-  <p>
-    자리를 담는 변수는 <strong>"아직 아무 자리도 안 정했다"</strong>는 상태가 될 수 있다.
-    그 상태를 나타내는 값이 <code>nullptr</code>이다.
-  </p>
+namespace lidar {                          // 우리가 만드는 이름들의 소속
+  struct Scan {                            // 스캔 한 번 = 좌표계 이름 + 거리 값들
+    std::string frame;
+    std::vector&lt;float&gt; ranges;
+  };
+}
 
-  <pre><code>  std::cout &lt;&lt; "⑦ nullptr — 아무것도 안 가리킴\n";
-  lidar::Scan * empty = nullptr;
-  std::cout &lt;&lt; "  empty 가 비었나? " &lt;&lt; (empty == nullptr ? "그렇다" : "아니다") &lt;&lt; "\n";</code></pre>
+// 측정 실패(inf)를 센서 최대 사거리 8 m 로 바꿔 넣는다
+void fill_missing(std::vector&lt;float&gt; &amp; r)      // &amp; — 원본을 받는다. 고쳐야 하니까
+{
+  for (auto &amp; x : r) {
+    if (!std::isfinite(x)) x = 8.0f;
+  }
+}
 
-  <pre><code>⑦ nullptr — 아무것도 안 가리킴
-  empty 가 비었나? 그렇다</code></pre>
+// 가장 가까운 거리를 찾는다. 읽기만 한다
+float nearest(const std::vector&lt;float&gt; &amp; r)    // const &amp; — 원본을 보되 안 바꾼다
+{
+  float best = 1e9f;
+  for (auto x : r) {
+    if (x &lt; best) best = x;
+  }
+  return best;
+}
+
+// 판정을 찍는다. 스캔이 아직 없으면(nullptr) 그렇다고만 말한다
+void report(const lidar::Scan * s, float stop_dist)
+{
+  if (s == nullptr) {
+    std::cout &lt;&lt; &quot;아직 스캔이 없다\n&quot;;
+    return;
+  }
+  const float best = nearest(s-&gt;ranges);   // -&gt; — 가리키는 곳에 가서 칸을 꺼낸다
+  std::cout &lt;&lt; &quot;[&quot; &lt;&lt; s-&gt;frame &lt;&lt; &quot;] 가장 가까운 장애물 &quot; &lt;&lt; best &lt;&lt; &quot; m\n&quot;;
+  if (best &lt; stop_dist) std::cout &lt;&lt; &quot;STOP\n&quot;;
+  else                  std::cout &lt;&lt; &quot;GO\n&quot;;
+}
+
+int main()
+{
+  const float stop_dist = 0.7f;            // 프로그램 도중에 바뀌면 안 되는 값
+  const lidar::Scan * latest = nullptr;    // 아직 아무 스캔도 안 가리킨다
+
+  report(latest, stop_dist);               // 스캔이 오기 전
+
+  lidar::Scan scan{&quot;base_scan&quot;, {1.20f, 0.83f, INFINITY, 0.65f, 0.71f, INFINITY, 2.40f, 3.10f}};
+  fill_missing(scan.ranges);               // . — 물건 안의 칸을 꺼낸다
+  latest = &amp;scan;                          // 이제 scan 이 있는 자리를 가리킨다
+  report(latest, stop_dist);               // 스캔이 온 뒤
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
 
   <div class="box trap">
-    <div class="boxtitle">⚠️ <code>nullptr</code>에 화살표를 쓰면 프로그램이 그 자리에서 죽는다</div>
+    <div class="boxtitle">⚠️ <code>nullptr</code> 검사를 빼면 프로그램이 그 자리에서 죽는다</div>
     <p>
-      <code>empty-&gt;frame</code>이라고 쓰면 <strong>"아무 데도 아닌 자리에 가서 값을 꺼내라"</strong>는 말이 된다.
-      컴파일은 된다. <strong>실행 중에 죽는다.</strong>
+      <code>report</code>에서 <code>if (s == nullptr) { ... }</code> 네 줄만 지우고 빌드했다. 컴파일은 된다. 실행하면 이렇다.
     </p>
+    <pre><code>$ ./build/scan_guard
+Segmentation fault (core dumped)</code></pre>
     <p>
-      그래서 자리를 담는 변수를 쓰기 전에는 <strong>비었는지 먼저 확인하는 것이 습관</strong>이다.
-      ROS 2 코드에서 <code>if (!msg) { return; }</code> 같은 줄이 콜백 맨 위에 있는 것이 그 이유다.
+      "아무 데도 아닌 자리에 가서 값을 꺼내라"는 말이 되기 때문이다. 첫 번째 <code>report</code>에서 죽으니 <strong>스캔이 온 뒤의 판정은 찍히지도 않는다.</strong>
+      ROS 2 코드에서 <code>if (!msg) { return; }</code> 같은 줄이 콜백 맨 위에 있는 이유가 이것이다.
     </p>
     <p>
       <strong>옛날 코드에서는 <code>0</code>이나 <code>NULL</code>을 썼다.</strong> 지금도 컴파일된다.
       그런데 <code>0</code>은 숫자인지 빈 자리인지 코드만 봐서는 알 수 없다.
-      <strong>AI가 준 코드에 <code>NULL</code>이 보이면 오래된 코드를 흉내낸 것이다.</strong>
-      <code>nullptr</code>로 바꿔 달라고 하면 된다.
+      <strong>AI가 준 코드에 <code>NULL</code>이 보이면 오래된 코드를 흉내낸 것이다.</strong> <code>nullptr</code>로 바꿔 달라고 하면 된다.
     </p>
   </div>
 
-  <!-- ── ⑧ include ── -->
-  <h2 id="include">⑧ <code>#include</code>는 남이 쓴 선언을 그 자리에 붙인다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+  <!-- fullcode "전체 코드 — 8단계 변형 · nullptr 검사를 뺀 판 (실행하면 죽는다)" build="cmake --build build && ./build/scan_guard   # Segmentation fault"
+       l07_reading_kit/steps/step8_nocheck.cpp as main.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — 8단계 변형 · nullptr 검사를 뺀 판 (실행하면 죽는다)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/scan_guard   # Segmentation fault</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 7회 — 정면 장애물 판정기. 8단계(완성본): 아직 스캔이 없을 수도 있다 — 포인터와 nullptr
+#include &lt;cmath&gt;       // std::isfinite, INFINITY
+#include &lt;iostream&gt;    // std::cout
+#include &lt;string&gt;      // std::string
+#include &lt;vector&gt;      // std::vector
 
-  <h3>언제 이게 필요해지나</h3>
-  <p>
-    <code>std::vector</code>라는 이름을 쓰려면 컴파일러가 그 이름을 알아야 한다.
-    <strong>C++은 파일 하나를 위에서 아래로 읽으면서 컴파일한다.</strong>
-    읽는 도중에 모르는 이름이 나오면 그 자리에서 오류를 낸다.
-  </p>
+namespace lidar {                          // 우리가 만드는 이름들의 소속
+  struct Scan {                            // 스캔 한 번 = 좌표계 이름 + 거리 값들
+    std::string frame;
+    std::vector&lt;float&gt; ranges;
+  };
+}
 
-  <pre><code>#include &lt;iostream&gt;      // std::cout  — 화면에 찍는 도구
-#include &lt;string&gt;        // std::string
-#include &lt;vector&gt;        // std::vector</code></pre>
+// 측정 실패(inf)를 센서 최대 사거리 8 m 로 바꿔 넣는다
+void fill_missing(std::vector&lt;float&gt; &amp; r)      // &amp; — 원본을 받는다. 고쳐야 하니까
+{
+  for (auto &amp; x : r) {
+    if (!std::isfinite(x)) x = 8.0f;
+  }
+}
 
-  <pre><code>⑧ #include — 선언을 가져다 붙인다
-  이 파일 맨 위 세 줄이 없으면 위 코드는 한 줄도 컴파일되지 않는다</code></pre>
+// 가장 가까운 거리를 찾는다. 읽기만 한다
+float nearest(const std::vector&lt;float&gt; &amp; r)    // const &amp; — 원본을 보되 안 바꾼다
+{
+  float best = 1e9f;
+  for (auto x : r) {
+    if (x &lt; best) best = x;
+  }
+  return best;
+}
 
-  <div class="box firstseen">
-    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
-    <dl>
-      <dt>#include &lt;이름&gt;</dt>
-      <dd>꺾쇠로 감싸면 <strong>시스템에 깔린 것</strong>을 찾는다.
-          표준 라이브러리와 남의 라이브러리가 여기 해당한다.</dd>
+// 판정을 찍는다. 스캔이 아직 없으면(nullptr) 그렇다고만 말한다
+void report(const lidar::Scan * s, float stop_dist)
+{
+  const float best = nearest(s-&gt;ranges);   // -&gt; — 가리키는 곳에 가서 칸을 꺼낸다
+  std::cout &lt;&lt; &quot;[&quot; &lt;&lt; s-&gt;frame &lt;&lt; &quot;] 가장 가까운 장애물 &quot; &lt;&lt; best &lt;&lt; &quot; m\n&quot;;
+  if (best &lt; stop_dist) std::cout &lt;&lt; &quot;STOP\n&quot;;
+  else                  std::cout &lt;&lt; &quot;GO\n&quot;;
+}
 
-      <dt>#include "이름.hpp"</dt>
-      <dd>따옴표로 감싸면 <strong>내 프로젝트 안에서 먼저</strong> 찾는다.
-          내가 만든 헤더를 가져올 때 이 모양을 쓴다. 8회의 예제가 이것이다.</dd>
+int main()
+{
+  const float stop_dist = 0.7f;            // 프로그램 도중에 바뀌면 안 되는 값
+  const lidar::Scan * latest = nullptr;    // 아직 아무 스캔도 안 가리킨다
 
-      <dt>맨 앞의 <code>#</code></dt>
-      <dd><strong>컴파일 전에 처리되는 줄</strong>이라는 표시다.
-          <code>#include</code>는 실행되는 명령이 아니라 <strong>그 자리에 파일 내용을 통째로 복사해 넣으라</strong>는 지시다.</dd>
+  report(latest, stop_dist);               // 스캔이 오기 전
 
-      <dt>#ifndef / #define / #endif</dt>
-      <dd>헤더 파일 맨 위아래를 감싸는 세 줄이다. 아래 ⑨절의 코드에도 나온다.
-          <strong>"같은 헤더가 두 번 들어와도 한 번만 읽히게"</strong> 만드는 장치다.
-          지금은 <strong>헤더 파일에 늘 붙어 다니는 세 줄</strong>이라는 것만 알아 두면 된다.</dd>
-    </dl>
-    <p class="later">제대로 다루는 곳: 8회(헤더와 소스 나누기 — 포함 보호)</p>
+  lidar::Scan scan{&quot;base_scan&quot;, {1.20f, 0.83f, INFINITY, 0.65f, 0.71f, INFINITY, 2.40f, 3.10f}};
+  fill_missing(scan.ranges);               // . — 물건 안의 칸을 꺼낸다
+  latest = &amp;scan;                          // 이제 scan 이 있는 자리를 가리킨다
+  report(latest, stop_dist);               // 스캔이 온 뒤
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <div class="interp">
+    <strong>해석 — 여기까지가 오늘 프로그램이다.</strong> 1단계와 8단계는 <strong>같은 판정을 한다.</strong>
+    달라진 것은 값이 몇 개든 되고(④), 타입을 손으로 안 적고(⑤), 고친 것이 원본에 남고(⑥), 안 고칠 것은 컴파일러가 지켜 주고(⑦),
+    짝이 어긋나지 않고(⑧), 스캔이 없어도 안 죽는다(⑨)는 것이다. <strong>기호 여덟 개는 전부 이 여섯 가지 불편에서 나왔다.</strong>
   </div>
+
+  <!-- ── ⑩ 헤더 ── -->
+  <h2 id="header">⑩ <code>#include</code>가 파일을 둘로 나눈다 — 그리고 AI가 거기서 하는 실수 <span class="badge b-red">🔴 사람이 한다</span></h2>
 
   <h3>그래서 파일이 두 개로 나뉜다</h3>
   <p>
-    여기서 <strong>C++이 파이썬과 크게 다른 점</strong>이 하나 나온다.
+    ③절에서 <code>#include</code>는 <strong>다른 파일의 내용을 그 자리에 붙여 넣는 것</strong>이라고 했다.
+    표준 라이브러리만 그렇게 가져오는 것이 아니다. <strong>우리가 만든 것도 그렇게 가져온다.</strong>
+    여기서 <strong>C++이 파이썬과 크게 다른 점</strong>이 하나 나온다 —
     <strong>"무엇이 있는지"(선언)와 "어떻게 하는지"(정의)를 다른 파일에 나눠 적는다.</strong>
   </p>
 
@@ -576,6 +1377,21 @@ void print_ref(const lidar::Scan &amp; s) { std::cout &lt;&lt; "  참조로 받�
       <strong>서로 다른 단계에서 일어나는 일이다.</strong> 9회에서 이 두 단계를 나눠 본다.
     </figcaption>
   </figure>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 여기서 처음 나오는 것</p>
+    <dl>
+      <dt>#include "이름.hpp"</dt>
+      <dd>따옴표로 감싸면 <strong>내 프로젝트 안에서 먼저</strong> 찾는다. 꺾쇠 <code>&lt;&gt;</code>는 시스템에 깔린 것을 찾는다.
+          내가 만든 헤더를 가져올 때 이 모양을 쓴다. 8회의 예제가 이것이다.</dd>
+
+      <dt>#ifndef / #define / #endif</dt>
+      <dd>헤더 파일 맨 위아래를 감싸는 세 줄이다. 아래 코드에 나온다.
+          <strong>"같은 헤더가 두 번 들어와도 한 번만 읽히게"</strong> 만드는 장치다.
+          지금은 <strong>헤더 파일에 늘 붙어 다니는 세 줄</strong>이라는 것만 알아 두면 된다.</dd>
+    </dl>
+    <p class="later">제대로 다루는 곳: 8회(헤더와 소스 나누기 — 포함 보호)</p>
+  </div>
 
   <p class="readme-first">무엇을 먼저 볼지: <strong>왼쪽 열이 헤더</strong>, 오른쪽이 소스다. 헤더 쪽이 짧아야 정상이다.</p>
   <div class="tablewrap">
@@ -591,11 +1407,8 @@ void print_ref(const lidar::Scan &amp; s) { std::cout &lt;&lt; "  참조로 받�
     <strong>해석:</strong> 마지막 줄이 나누는 진짜 이유다.
     파이썬은 파일을 고치면 그 파일만 다시 읽으면 되지만,
     C++은 <strong>헤더 하나를 고치면 그것을 읽는 파일 전부를 다시 컴파일해야 한다.</strong>
-    그래서 <strong>헤더는 가볍게 유지한다.</strong> 다음 절의 AI 실수가 정확히 이 지점을 어긴다.
+    그래서 <strong>헤더는 가볍게 유지한다.</strong> 아래 AI 실수가 정확히 이 지점을 어긴다.
   </div>
-
-  <!-- ── ⑨ AI 실수 ── -->
-  <h2 id="aimistake">⑨ AI가 헤더에서 하는 실수 두 가지 <span class="badge b-red">🔴 사람이 한다</span></h2>
 
   <h3>실수 1 — 헤더에 함수의 내용까지 적는다</h3>
   <p>
@@ -650,11 +1463,13 @@ float front(const float * r) { return r[0]; }</code></pre>
   <h3>실수 2 — 안 쓰는 <code>#include</code>를 남긴다</h3>
   <p>
     코드를 여러 번 고치다 보면 <strong>더 이상 안 쓰는 헤더가 맨 위에 그대로 남는다.</strong>
+    오늘 프로그램도 2단계에서 <code>&lt;stdio.h&gt;</code>를 지우지 않았다면 그 뒤로 계속 남아 있었을 것이다.
     AI는 이것을 잘 지우지 않는다. 지워도 되는지 확신이 없기 때문이다.
   </p>
 
   <div class="codelabel bad">AI가 보통 주는 코드 🔴</div>
   <pre class="before"><code>#include &lt;algorithm&gt;    // 안 쓴다
+#include &lt;cmath&gt;        // 쓴다
 #include &lt;iostream&gt;     // 쓴다
 #include &lt;map&gt;          // 안 쓴다
 #include &lt;memory&gt;       // 안 쓴다
@@ -682,106 +1497,239 @@ float front(const float * r) { return r[0]; }</code></pre>
   </p>
 
   <!-- ── 실습 ── -->
-  <h2 id="lab">🧪 실습 — <code>&amp;</code>를 지우면 출력이 달라질까 <span class="badge b-green">🟢 맡긴다</span></h2>
+  <h2 id="lab">🧪 실습 — <code>&amp;</code> 한 글자와 <code>nullptr</code> 검사 네 줄을 지워 본다 <span class="badge b-green">🟢 맡긴다</span></h2>
 
   <div class="lab-block">
     <p class="boxtitle">① 이걸 해 보면 무엇을 알게 되나</p>
     <p>
-      <strong>기호 여덟 개가 실제로 찍는 출력을 눈으로 본다.</strong>
-      그리고 <code>&amp;</code> 한 글자를 지웠을 때 <strong>출력이 어떻게 달라지는지</strong> 확인한다.
-      이 실습의 결론은 <strong>"안 달라진다"</strong>이고, <strong>그게 핵심이다.</strong>
+      완성본을 CMake로 직접 빌드해 보고, <strong>오늘 가장 중요한 두 자리를 일부러 망가뜨려</strong> 무엇이 어떻게 달라지는지 눈으로 본다.
+      하나는 출력에 <strong>티가 나고</strong>(⑥), 하나는 프로그램이 <strong>죽는다</strong>(⑨).
     </p>
 
     <p class="boxtitle">② 준비물</p>
     <ul>
       <li>WSL 우분투 터미널 하나</li>
-      <li>VS Code (WSL에 연결된 상태)</li>
-      <li><code>g++</code> — 6회에서 이미 깔았다면 그대로 쓴다</li>
+      <li>VS Code 또는 Antigravity (WSL에 연결된 상태)</li>
+      <li><code>g++</code>과 <code>cmake</code> — 6회 세팅 블록에서 깔았다</li>
     </ul>
 
     <p class="boxtitle">③ 절차</p>
     <ol>
       <li>
-        <strong>(2분) 작업 폴더를 만들고 파일을 만든다.</strong>
+        <strong>(2분) 작업 폴더를 만들고 연다.</strong>
         <pre><code>mkdir -p ~/robot_ws/l07
 cd ~/robot_ws/l07
 code .</code></pre>
-        VS Code에서 <code>read_kit.cpp</code>를 새로 만든다.
       </li>
       <li>
-        <strong>(3분) 이 자료의 코드 조각을 순서대로 붙여 넣는다.</strong>
-        ②절부터 ⑧절까지의 코드 블록을 위에서부터 이어 붙이면 한 파일이 된다.
-        <strong>타이핑하지 않는다.</strong> 전체 파일이 필요하면 아래 프롬프트를 쓴다.
-        <div class="prompt">
-          <button onclick="copyPrompt(this)">복사</button>
-          C++ 파일을 하나 만들어 줘. <code>namespace lidar</code> 안에 <code>Scan</code> 구조체(<code>std::string frame</code>, <code>std::vector&lt;float&gt; ranges</code>, <code>float front() const</code>)를 두고, <code>main</code>에서 <code>auto</code>·참조·<code>const</code>·<code>::</code>·<code>-&gt;</code>·<code>&lt;&gt;</code>·<code>nullptr</code>을 하나씩 쓰면서 각각이 무엇인지 화면에 찍게 해 줘. C++17로 써 줘.
-        </div>
+        <strong>(2분) 파일 두 개를 만든다.</strong>
+        ⑨절의 📄 「전체 코드 — 8단계 · 완성본」 상자를 펼쳐 「복사」를 누르고 <code>main.cpp</code>에 붙여 넣는다.
+        ②절 1단계 상자의 <code>CMakeLists.txt</code>도 같은 방법으로 만든다. <strong>타이핑하지 않는다.</strong>
       </li>
       <li>
-        <strong>(1분) 컴파일해서 돌린다.</strong>
-        <pre><code>g++ -std=c++17 -O2 -o read_kit read_kit.cpp
-./read_kit</code></pre>
+        <strong>(2분) 빌드해서 돌린다.</strong>
+        <pre><code>cmake -S . -B build
+cmake --build build
+./build/scan_guard</code></pre>
+        출력이 아래 「④ 성공 화면」과 같으면 된 것이다.
       </li>
       <li>
-        <strong>(2분) 출력이 아래 「④ 성공 화면」과 같은지 확인한다.</strong>
-        여덟 줄의 번호(①~⑧)가 다 나오면 된 것이다.
-      </li>
-      <li>
-        <strong>(3분) <code>print_ref</code>에서 <code>&amp;</code> 한 글자를 지운다.</strong>
+        <strong>(3분) <code>fill_missing</code>에서 <code>&amp;</code> 한 글자를 지운다.</strong>
         <pre><code>// 고치기 전
-void print_ref(const lidar::Scan &amp; s) { ... }
+void fill_missing(std::vector&lt;float&gt; &amp; r)
 // 고친 뒤 — &amp; 만 지웠다
-void print_ref(const lidar::Scan s) { ... }</code></pre>
-        저장하고 3단계를 다시 한다.
+void fill_missing(std::vector&lt;float&gt; r)</code></pre>
+        저장하고 <code>cmake --build build &amp;&amp; ./build/scan_guard</code>를 다시 한다.
+        <strong>가장 가까운 장애물이 몇 m로 나오는지</strong> 아래 표에 적는다. 그다음 <code>&amp;</code>를 되돌린다.
       </li>
       <li>
-        <strong>(3분) 무엇이 달라졌는지 적는다.</strong> 아래 표의 빈칸을 채운다.
+        <strong>(3분) <code>report</code>에서 <code>if (s == nullptr) { ... }</code> 네 줄을 지운다.</strong>
+        저장하고 다시 빌드해서 돌린다. 무엇이 찍히는지 적는다. 그다음 네 줄을 되돌린다.
       </li>
       <li>
-        <strong>(2분) 다시 <code>&amp;</code>를 넣어 원래대로 되돌린다.</strong>
-        되돌린 뒤 한 번 더 컴파일해서 되는지 확인한다.
+        <strong>(2분) 되돌린 뒤 한 번 더 빌드해서 ④ 성공 화면이 다시 나오는지 확인한다.</strong>
       </li>
     </ol>
 
     <p class="boxtitle">④ 이렇게 되면 성공이다</p>
-    <p><code>&amp;</code>가 있는 원래 파일을 돌리면 아래가 그대로 나온다.</p>
-    <pre><code>① auto — 타입을 컴파일러가 채운다
-  ranges 개수 = 3
-② &amp; — 원본을 가리킨다. 복사가 아니다
-  값으로 받음  : base_scan
-  참조로 받음  : base_scan
-③ const — 못 바꾼다는 약속
-  정면 거리 = 0.83 m  (f 에는 이제 대입할 수 없다)
-④ :: — 이름이 어느 소속인가
-  lidar::Scan 은 우리가 만든 것, std::vector 는 표준 것
-⑤ . 과 -&gt; — 점은 객체, 화살표는 포인터
-  scan.frame  = base_scan
-  p-&gt;frame    = base_scan   (같은 것을 다르게 쓴 것)
-⑥ &lt;&gt; — 꺾쇠 안은 "무슨 타입으로"
-  vector&lt;string&gt; 첫 칸 = base_link
-⑦ nullptr — 아무것도 안 가리킴
-  empty 가 비었나? 그렇다
-⑧ #include — 선언을 가져다 붙인다
-  이 파일 맨 위 세 줄이 없으면 위 코드는 한 줄도 컴파일되지 않는다</code></pre>
+    <pre><code>아직 스캔이 없다
+[base_scan] 가장 가까운 장애물 0.65 m
+STOP</code></pre>
 
-    <p class="boxtitle">⑤ 5단계에서 무엇이 달라졌나</p>
+    <p class="boxtitle">⑤ 4·5단계에서 무엇이 달라졌나</p>
     <div class="tablewrap">
     <table>
       <tr><th>확인할 것</th><th>내가 본 것</th></tr>
-      <tr><td>컴파일이 됐나</td><td>됐다 / 안 됐다</td></tr>
-      <tr><td>「참조로 받음」 줄의 글자가 달라졌나</td><td>________</td></tr>
-      <tr><td>다른 줄이 달라졌나</td><td>________</td></tr>
-      <tr><td>컴파일러가 경고를 냈나</td><td>________</td></tr>
+      <tr><td>4단계: 컴파일이 됐나 · 경고가 있었나</td><td>________</td></tr>
+      <tr><td>4단계: 가장 가까운 장애물은 몇 m인가</td><td>________ m</td></tr>
+      <tr><td>5단계: 컴파일이 됐나</td><td>________</td></tr>
+      <tr><td>5단계: 실행하면 무엇이 찍히나</td><td>________</td></tr>
     </table>
     </div>
     <div class="interp">
-      <strong>해석:</strong> 우리가 확인해 보니 <strong>출력은 한 글자도 안 달라졌다.</strong>
-      컴파일도 되고 경고도 없다. <strong>달라진 것은 「참조로 받음」이 이제 참조가 아니라는 사실뿐이다.</strong>
-      함수는 스캔을 통째로 하나 더 만들어 받고, 다 쓰면 버린다.
-      <strong>눈으로도 안 보이고 컴파일러도 안 잡아 준다.</strong> 사람이 코드를 읽어야만 잡힌다.
-      <span style="color:var(--muted)">확인한 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0 <code>-O2</code>)</span>
+      <strong>해석:</strong> 우리가 확인해 보니 4단계는 <strong>컴파일도 되고 경고도 없는데 0.65 m가 그대로 나온다.</strong>
+      <code>fill_missing</code>이 사본만 고쳤고, 무한대는 최솟값 후보에서 어차피 지므로 <strong>답이 우연히 맞는다.</strong>
+      이 코드로 평균을 냈다면 무한대가 나왔을 것이다 — <strong>눈으로도 안 보이고 컴파일러도 안 잡아 준다.</strong>
+      5단계는 컴파일은 되지만 첫 줄부터 <code>Segmentation fault</code>로 죽는다.
+      <span style="color:var(--muted)">확인한 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0, cmake 3.28.3)</span>
     </div>
   </div>
+
+  <!-- ── 연습문제 ── -->
+  <h2 id="exercise">📝 연습문제 — 옛날 방식 코드를 오늘 배운 것으로 고쳐 본다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <p>
+    아래는 <strong>「왼쪽과 오른쪽 중 어느 쪽이 더 비어 있나」</strong>를 정하는 프로그램이다. 값 8개 중 앞의 넷이 왼쪽, 뒤의 넷이 오른쪽 방향의 거리다.
+    오늘 프로그램의 1단계처럼 <strong>옛날 방식으로만</strong> 짰다. 이대로도 돌아간다.
+  </p>
+
+  <pre><code>// 7회 연습문제 — 어느 쪽으로 돌까. 옛날 방식으로 짠 코드
+#include &lt;stdio.h&gt;
+#include &lt;math.h&gt;
+
+// 앞의 절반은 왼쪽, 뒤의 절반은 오른쪽 방향의 거리다
+float side_min(float r[], int from, int to)
+{
+  float best = 1e9f;
+  for (int i = from; i &lt; to; i++) {
+    if (!isfinite(r[i])) continue;
+    if (r[i] &lt; best) best = r[i];
+  }
+  return best;
+}
+
+int main()
+{
+  float ranges[8] = {0.42f, 0.55f, INFINITY, 0.90f, 1.80f, 2.10f, INFINITY, 1.65f};
+  float left  = side_min(ranges, 0, 4);
+  float right = side_min(ranges, 4, 8);
+  printf("왼쪽 %.2f m, 오른쪽 %.2f m\n", left, right);
+  if (left &gt; right) printf("LEFT\n");
+  else              printf("RIGHT\n");
+  return 0;
+}</code></pre>
+
+  <pre><code>왼쪽 0.42 m, 오른쪽 1.65 m
+RIGHT</code></pre>
+
+  <!-- fullcode "연습문제 — 옛날 방식 원본 (main.cpp · CMakeLists.txt 는 ②절 것을 그대로 쓴다)" build="cmake -S . -B build && cmake --build build && ./build/scan_guard"
+       l07_reading_kit/steps/exercise_old.cpp as main.cpp
+  -->
+<details class="fullcode">
+  <summary>연습문제 — 옛날 방식 원본 (main.cpp · CMakeLists.txt 는 ②절 것을 그대로 쓴다)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake -S . -B build &amp;&amp; cmake --build build &amp;&amp; ./build/scan_guard</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 7회 연습문제 — 어느 쪽으로 돌까. 옛날 방식으로 짠 코드
+#include &lt;stdio.h&gt;
+#include &lt;math.h&gt;
+
+// 앞의 절반은 왼쪽, 뒤의 절반은 오른쪽 방향의 거리다
+float side_min(float r[], int from, int to)
+{
+  float best = 1e9f;
+  for (int i = from; i &lt; to; i++) {
+    if (!isfinite(r[i])) continue;
+    if (r[i] &lt; best) best = r[i];
+  }
+  return best;
+}
+
+int main()
+{
+  float ranges[8] = {0.42f, 0.55f, INFINITY, 0.90f, 1.80f, 2.10f, INFINITY, 1.65f};
+  float left  = side_min(ranges, 0, 4);
+  float right = side_min(ranges, 4, 8);
+  printf(&quot;왼쪽 %.2f m, 오른쪽 %.2f m\n&quot;, left, right);
+  if (left &gt; right) printf(&quot;LEFT\n&quot;);
+  else              printf(&quot;RIGHT\n&quot;);
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <h3>할 일</h3>
+  <p>
+    이 코드를 <strong>오늘 프로그램이 1단계에서 8단계로 간 것과 같은 길</strong>로 고친다.
+    <strong>출력은 끝까지 같아야 한다</strong>(좌표계 이름이 앞에 붙는 것은 괜찮다). 한 번에 다 고치지 말고, 한 항목을 고칠 때마다 빌드해서 돌려 본다.
+    직접 쳐도 되고 에이전트에게 시켜도 된다 — 단, <strong>받은 코드에서 아래 항목이 전부 됐는지는 사람이 확인한다.</strong>
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>고칠 것</th><th>오늘 어디서 했나</th><th>확인하는 법</th></tr>
+    <tr><td><code>printf</code> → <code>std::cout</code>, <code>&lt;stdio.h&gt;</code>·<code>&lt;math.h&gt;</code> → C++ 이름</td><td>③</td><td>파일에 <code>printf</code>·<code>.h</code>가 남아 있지 않다</td></tr>
+    <tr><td><code>float[8]</code> → <code>std::vector&lt;float&gt;</code>. <code>4</code>와 <code>8</code>을 코드에 박지 않는다</td><td>④</td><td>값을 하나 더 넣어도 절반 계산이 저절로 맞는다 (<code>size() / 2</code>)</td></tr>
+    <tr><td>타입 이름이 긴 자리는 <code>auto</code></td><td>⑤</td><td><code>size_type</code>이라는 글자가 없다</td></tr>
+    <tr><td>측정 실패를 한 번만 손질하는 <code>fill_missing(… &amp; r)</code>을 두고, <code>side_min</code>에서 <code>isfinite</code>를 뺀다</td><td>⑥</td><td><code>side_min</code> 안에 <code>continue</code>가 없다. <code>fill_missing</code> 인자에 <code>&amp;</code>가 있다</td></tr>
+    <tr><td>읽기만 하는 <code>side_min</code>은 <code>const &amp;</code>로 받는다. 결과도 <code>const</code></td><td>⑦</td><td><code>side_min</code> 안에서 <code>r</code>에 대입하는 줄을 넣으면 <strong>컴파일이 막힌다</strong></td></tr>
+    <tr><td>좌표계 이름과 거리 값을 <code>lidar::Scan</code>으로 묶는다</td><td>⑧</td><td>출력 앞에 <code>[base_scan]</code>이 붙는다</td></tr>
+  </table>
+  </div>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    이 C 스타일 코드를 C++17로 고쳐 줘. 배열은 <code>std::vector&lt;float&gt;</code>로, <code>printf</code>는 <code>std::cout</code>으로,
+    측정 실패(inf)는 <code>fill_missing</code> 함수가 참조로 받아 8 m로 채우게 하고, <code>side_min</code>은 <code>const</code> 참조로 받게 해 줘.
+    좌표계 이름과 거리 값은 <code>lidar::Scan</code> 구조체로 묶어 줘. 출력은 지금과 같아야 하고, 한 항목 고칠 때마다 빌드가 되는지 확인해 줘.
+  </div>
+
+  <p>
+    다 했으면 아래 상자와 견줘 본다. <strong>같을 필요는 없다.</strong> 위 표의 「확인하는 법」이 전부 통과하면 된 것이다.
+  </p>
+
+  <!-- fullcode "연습문제 — 고친 한 가지 답 (다 해 본 뒤에 연다)" build="cmake --build build && ./build/scan_guard"
+       l07_reading_kit/steps/exercise_answer.cpp as main.cpp
+  -->
+<details class="fullcode">
+  <summary>연습문제 — 고친 한 가지 답 (다 해 본 뒤에 연다)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/scan_guard</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 7회 연습문제 — 어느 쪽으로 돌까. 오늘 배운 것으로 고친 한 가지 답
+#include &lt;cmath&gt;
+#include &lt;iostream&gt;
+#include &lt;string&gt;
+#include &lt;vector&gt;
+
+namespace lidar {
+  struct Scan {
+    std::string frame;
+    std::vector&lt;float&gt; ranges;
+  };
+}
+
+// 측정 실패(inf)를 센서 최대 사거리 8 m 로 바꿔 넣는다
+void fill_missing(std::vector&lt;float&gt; &amp; r)
+{
+  for (auto &amp; x : r) {
+    if (!std::isfinite(x)) x = 8.0f;
+  }
+}
+
+// from 번째부터 to 번째 앞까지의 최솟값. 읽기만 한다
+float side_min(const std::vector&lt;float&gt; &amp; r, std::size_t from, std::size_t to)
+{
+  float best = 1e9f;
+  for (auto i = from; i &lt; to; ++i) {
+    if (r.at(i) &lt; best) best = r.at(i);
+  }
+  return best;
+}
+
+int main()
+{
+  lidar::Scan scan{&quot;base_scan&quot;, {0.42f, 0.55f, INFINITY, 0.90f, 1.80f, 2.10f, INFINITY, 1.65f}};
+  fill_missing(scan.ranges);
+
+  const auto half = scan.ranges.size() / 2;
+  const float left  = side_min(scan.ranges, 0, half);
+  const float right = side_min(scan.ranges, half, scan.ranges.size());
+  std::cout &lt;&lt; &quot;[&quot; &lt;&lt; scan.frame &lt;&lt; &quot;] 왼쪽 &quot; &lt;&lt; left &lt;&lt; &quot; m, 오른쪽 &quot; &lt;&lt; right &lt;&lt; &quot; m\n&quot;;
+  if (left &gt; right) std::cout &lt;&lt; &quot;LEFT\n&quot;;
+  else              std::cout &lt;&lt; &quot;RIGHT\n&quot;;
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <pre><code>[base_scan] 왼쪽 0.42 m, 오른쪽 1.65 m
+RIGHT</code></pre>
 
   <!-- ── 프롬프트 모음 ── -->
   <h2 id="prompts">🤖 오늘 나온 프롬프트 모음 <span class="badge b-green">🟢 맡긴다</span></h2>
@@ -789,10 +1737,11 @@ void print_ref(const lidar::Scan s) { ... }</code></pre>
   <table>
     <tr><th>이럴 때</th><th>이렇게 말한다</th></tr>
     <tr><td>모르는 기호를 만났을 때</td><td>"이 줄을 조각으로 끊어서, 각 조각이 무슨 뜻인지 한 줄씩 설명해 줘. 문법 이름 말고 하는 일로 설명해 줘."</td></tr>
+    <tr><td>함수가 고친 것이 원본에 안 남을 때</td><td>"이 함수가 원본을 고쳐야 하니까 인자를 값이 아니라 참조(<code>&amp;</code>)로 받아 줘."</td></tr>
+    <tr><td>복사가 의심될 때</td><td>"함수 인자 중에 값으로 받는 것이 있으면 <code>const</code> 참조로 바꿔 줘. 다만 <code>int</code>·<code>float</code> 같은 작은 값은 그대로 둬."</td></tr>
+    <tr><td>옛날 코드가 섞여 있을 때</td><td>"이 코드에 <code>printf</code>·<code>NULL</code>·<code>.h</code> 헤더·C 배열이 있으면 C++17 방식(<code>std::cout</code>·<code>nullptr</code>·<code>&lt;cmath&gt;</code>·<code>std::vector</code>)으로 바꿔 줘. 출력은 같아야 해."</td></tr>
     <tr><td>헤더가 이상할 때</td><td>"헤더에는 선언만 남기고 함수 본문은 <code>.cpp</code>로 옮겨 줘. 헤더에 남는 줄은 세미콜론으로 끝나야 해."</td></tr>
     <tr><td><code>#include</code>가 많을 때</td><td>"이 파일에서 실제로 쓰는 <code>#include</code>만 남기고 나머지는 지워 줘. 지운 뒤 컴파일이 되는지 확인해 줘."</td></tr>
-    <tr><td>복사가 의심될 때</td><td>"함수 인자 중에 값으로 받는 것이 있으면 <code>const</code> 참조로 바꿔 줘. 다만 <code>int</code>·<code>float</code> 같은 작은 값은 그대로 둬."</td></tr>
-    <tr><td>옛날 문법이 보일 때</td><td>"이 코드에 <code>NULL</code>이나 <code>0</code>으로 포인터를 비운 자리가 있으면 <code>nullptr</code>로 바꿔 줘."</td></tr>
     <tr><td>타입이 안 보일 때</td><td>"<code>auto</code>로 쓴 변수들이 실제로 무슨 타입인지 주석으로 적어 줘. 코드는 그대로 둬."</td></tr>
   </table>
   </div>
@@ -801,12 +1750,13 @@ void print_ref(const lidar::Scan s) { ... }</code></pre>
   <h2 id="check">✅ 오늘의 점검</h2>
   <ul class="check">
     <li><input type="checkbox" id="c1"><label for="c1"><code>const std::vector&lt;float&gt; &amp; ranges</code>를 <strong>네 조각으로 끊어</strong> 각각을 설명할 수 있나?</label></li>
-    <li><input type="checkbox" id="c2"><label for="c2"><code>&amp;</code>가 <strong>두 가지 뜻</strong>으로 쓰인다는 것과, 무엇으로 구별하는지 말할 수 있나?</label></li>
-    <li><input type="checkbox" id="c3"><label for="c3">받은 코드에서 <code>.</code>과 <code>-&gt;</code> 중 무엇을 써야 하는지 판단할 수 있나?</label></li>
-    <li><input type="checkbox" id="c4"><label for="c4">헤더(<code>.hpp</code>)에 들어가야 할 것과 소스(<code>.cpp</code>)에 들어가야 할 것을 구분했나?</label></li>
-    <li><input type="checkbox" id="c5"><label for="c5"><code>multiple definition</code> 오류를 봤을 때 <strong>어느 파일을 열어야 하는지</strong> 아나?</label></li>
-    <li><input type="checkbox" id="c6"><label for="c6">실습에서 <code>&amp;</code>를 지운 뒤 출력이 <strong>같았다는 것</strong>을 직접 확인했나?</label></li>
-    <li><input type="checkbox" id="c7"><label for="c7"><code>auto</code>가 파이썬의 동적 타입과 <strong>어떻게 다른지</strong> 한 문장으로 말할 수 있나?</label></li>
+    <li><input type="checkbox" id="c2"><label for="c2">1단계(옛날 방식)와 8단계(완성본)가 <strong>같은 판정을 하는데 무엇이 달라졌는지</strong> 세 가지 이상 말할 수 있나?</label></li>
+    <li><input type="checkbox" id="c3"><label for="c3"><code>fill_missing</code>에서 <code>&amp;</code>를 지우면 <strong>왜 측정 실패가 2개 남는지</strong> 설명할 수 있나?</label></li>
+    <li><input type="checkbox" id="c4"><label for="c4"><code>&amp;</code>가 <strong>두 가지 뜻</strong>으로 쓰인다는 것과, 무엇으로 구별하는지 말할 수 있나?</label></li>
+    <li><input type="checkbox" id="c5"><label for="c5">받은 코드에서 <code>.</code>과 <code>-&gt;</code> 중 무엇을 써야 하는지 판단할 수 있나?</label></li>
+    <li><input type="checkbox" id="c6"><label for="c6"><code>CMakeLists.txt</code> 네 줄을 만들고 <code>cmake -S . -B build</code>·<code>cmake --build build</code>로 빌드했나?</label></li>
+    <li><input type="checkbox" id="c7"><label for="c7"><code>multiple definition</code> 오류를 봤을 때 <strong>어느 파일을 열어야 하는지</strong> 아나?</label></li>
+    <li><input type="checkbox" id="c8"><label for="c8">연습문제의 「확인하는 법」 여섯 줄을 전부 통과했나?</label></li>
   </ul>
 
   <!-- ── 조금 더 ── -->
@@ -838,13 +1788,12 @@ using namespace std;      // ② std 안의 이름을 전부 std:: 없이 쓰겠
   </details>
 
   <details>
-    <summary>중괄호로 초기화하는 모양 — <code>Scan scan{"base_scan", {0.83f, 0.85f, 1.20f}}</code></summary>
+    <summary>중괄호로 초기화하는 모양 — <code>Scan scan{"base_scan", {0.83f, 0.85f}}</code></summary>
     <p>
-      <code>read_kit.cpp</code>의 <code>main</code> 첫 줄이 이 모양이다.
+      ⑧절의 <code>lidar::Scan scan{...}</code>이 이 모양이다.
       <strong>중괄호 안에 값을 순서대로 나열</strong>하면 그대로 채워진다.
       바깥 중괄호가 <code>Scan</code>을 채우고, 안쪽 중괄호가 <code>ranges</code>를 채운다.
     </p>
-    <pre><code>lidar::Scan scan{"base_scan", {0.83f, 0.85f, 1.20f}};</code></pre>
     <p>
       옛날에는 소괄호 <code>()</code>만 있었는데 C++11부터 중괄호도 쓸 수 있게 됐다.
       <strong>중괄호 쪽에 이득이 하나 있다 — 값이 잘려 나가는 변환을 막아 준다.</strong>
@@ -854,7 +1803,7 @@ using namespace std;      // ② std 안의 이름을 전부 std:: 없이 쓰겠
     <p>
       <strong>그래서 값을 채울 때는 중괄호가 조금 더 안전하다.</strong>
       다만 <code>std::vector</code>에서는 <code>v(5)</code>(칸 5개)와 <code>v{5}</code>(값 5 하나)가 다른 뜻이 되니
-      그릇을 만들 때는 소괄호와 중괄호를 헷갈리지 않게 쓴다.
+      그릇을 만들 때는 소괄호와 중괄호를 헷갈리지 않게 쓴다. 6회의 <code>ranges(N)</code>과 오늘의 <code>ranges{1.20f, ...}</code>가 그 둘이다.
     </p>
   </details>
 
@@ -863,6 +1812,7 @@ using namespace std;      // ② std 안의 이름을 전부 std:: 없이 쓰겠
     <p>
       <code>auto</code>는 오른쪽의 타입을 그대로 가져오지 않는다.
       <strong><code>const</code>와 <code>&amp;</code>는 떼어 버리고 알맹이만 가져온다.</strong>
+      ⑥절의 <code>for (auto &amp; x : r)</code>에서 <code>&amp;</code>를 직접 적어야 했던 이유가 이것이다.
     </p>
     <pre><code>const std::vector&lt;float&gt; &amp; r = scan.ranges;
 
@@ -885,6 +1835,7 @@ const auto &amp; b = r;   // 복사가 없다      (직접 적어 줘야 한다)
     <div class="tablewrap">
     <table>
       <tr><th>안 다룬 것</th><th>왜</th><th>언제 다루나</th></tr>
+      <tr><td><code>CMakeLists.txt</code> 네 줄의 뜻</td><td>파일이 하나일 때는 몰라도 된다</td><td>9회</td></tr>
       <tr><td><code>const</code>가 <code>*</code> 앞뒤 어디에 붙느냐에 따른 네 가지</td><td>포인터를 직접 다룰 일이 거의 없다</td><td>다루지 않는다</td></tr>
       <tr><td><code>auto</code>의 형식 연역 규칙 표</td><td>규칙을 외워도 판단이 안 는다</td><td>다루지 않는다 (위 접이 상자로 충분)</td></tr>
       <tr><td>템플릿 <strong>만드는</strong> 법</td><td>읽을 일은 매일 있고 만들 일은 거의 없다</td><td>14회에 읽을거리로</td></tr>

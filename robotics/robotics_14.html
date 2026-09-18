@@ -76,6 +76,19 @@
     <strong>AI에게 잘 시키는 법은 결국 명세를 잘 쓰는 법이다.</strong>
     "효율적으로 짜 줘"는 명세가 아니다. "실패할 수 있는 함수는 <code>std::optional</code>로 반환해 줘"는 명세다.
   </p>
+  <p>
+    오늘도 <strong>프로그램 하나</strong>를 들고 간다. <code>driver.cpp</code> — 라이다 값 다섯 개를 받아
+    가까운 것을 세고 가장 가까운 것을 찾는 <code>Driver</code>다.
+    처음에는 AI가 준 그대로의 스무 줄짜리이고, <strong>절이 넘어갈 때마다 한 군데를 고치거나 몇 줄을 더한다.</strong>
+    ⑦절이 끝나면 오늘 배운 여덟 가지가 전부 들어 있는 완성본이 된다.
+  </p>
+  <ul>
+    <li>본문에는 <strong>그 절에서 새로 넣거나 고친 줄만</strong> 보인다. 초록 바탕이 새 줄, 붉은 취소선이 지운 줄이다.</li>
+    <li>그 아래 <strong>📄 「전체 코드」 상자</strong>를 누르면 그 단계까지의 파일 전체가 나온다.
+        <strong>어느 단계를 펼쳐도 그대로 빌드되고 돌아간다.</strong> 오른쪽 위 「복사」로 통째로 가져갈 수 있다.</li>
+    <li>컴파일 오류나 이상한 값을 보여 주는 자리는 <strong>한 글자만 바꾼 「변형」 파일</strong>을 따로 접어 뒀다. 그것도 전체 파일이다.</li>
+    <li>「실제로 나온 출력」에는 그 절이 새로 찍는 줄만 보인다. 전체 출력은 실습 「성공 화면」에 있다.</li>
+  </ul>
 
   <!-- ── 한 장 요약표 ── -->
   <h2 id="summary">한 장 요약 — 학기가 끝나도 이 표만 남으면 된다</h2>
@@ -109,25 +122,79 @@
     함수를 하나 따로 만들 수도 있다.
   </p>
 
+  <h3>1단계 — AI가 준 그대로의 출발점</h3>
+  <p>"라이다 값 중 쓸 만한 것이 몇 개인지 세어 줘"라고 하면 흔히 이런 모양이 온다.</p>
   <div class="codelabel bad">함수를 따로 만들면 이렇게 된다 🔴</div>
   <pre class="before"><code>float g_lo = 0.16f;                 // 함수 밖에 값을 꺼내 놔야 한다
 float g_hi = 8.0f;
 
 bool is_valid(float r) { return r &gt;= g_lo &amp;&amp; r &lt;= g_hi; }
 
-// ... 한참 아래에서
-const auto n = std::count_if(ranges.begin(), ranges.end(), is_valid);</code></pre>
+int main()
+{
+  const std::vector&lt;float&gt; ranges{0.83f, 0.42f, 1.24f, 0.31f, 2.05f};   // 라이다 값 다섯 개
+
+  std::printf("① 람다 — 조건을 그 자리에서 적는다\n");
+  const int n = static_cast&lt;int&gt;(std::count_if(ranges.begin(), ranges.end(), is_valid));
+  std::printf("   쓸 만한 값: %d개\n", n);
+  return 0;
+}</code></pre>
   <p>
     조건 하나 때문에 <strong>함수 하나와 전역 변수 둘</strong>이 생겼다.
     조건을 확인하려면 위로 스크롤해서 <code>is_valid</code>를 찾아야 한다.
     그리고 <code>g_lo</code>는 <strong>아무나 고칠 수 있다.</strong>
   </p>
 
-  <div class="codelabel good">람다로 쓰면</div>
-  <pre class="after"><code>const float lo = 0.16f, hi = 8.0f;
+  <!-- fullcode "전체 코드 — driver.cpp (1단계 · AI가 준 그대로. 이대로 빌드된다)" build="g++ -std=c++17 -O2 -o driver driver.cpp && ./driver"
+       l14_lambda/steps/step1.cpp as driver.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — driver.cpp (1단계 · AI가 준 그대로. 이대로 빌드된다)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o driver driver.cpp &amp;&amp; ./driver</code></p>
+  <div class="codefile"><div class="fname">driver.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 14회 — 람다·const·C++17: 라이다 값을 거르는 Driver 를 단계별로 키운다
+#include &lt;algorithm&gt;
+#include &lt;cstdio&gt;
+#include &lt;vector&gt;
 
-const auto n = std::count_if(ranges.begin(), ranges.end(),
-                             [lo, hi](float r) { return r &gt;= lo &amp;&amp; r &lt;= hi; });</code></pre>
+float g_lo = 0.16f;                 // 함수 밖에 값을 꺼내 놔야 한다
+float g_hi = 8.0f;
+
+bool is_valid(float r) { return r &gt;= g_lo &amp;&amp; r &lt;= g_hi; }
+
+int main()
+{
+  const std::vector&lt;float&gt; ranges{0.83f, 0.42f, 1.24f, 0.31f, 2.05f};   // 라이다 값 다섯 개
+
+  std::printf(&quot;① 람다 — 조건을 그 자리에서 적는다\n&quot;);
+  const int n = static_cast&lt;int&gt;(std::count_if(ranges.begin(), ranges.end(), is_valid));
+  std::printf(&quot;   쓸 만한 값: %d개\n&quot;, n);
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <h3>2단계 — 전역 변수와 함수를 지우고 조건을 그 자리에 적는다</h3>
+  <div class="codelabel good">람다로 쓰면</div>
+  <pre class="after"><code><span class="ln-del">float g_lo = 0.16f;                 // 함수 밖에 값을 꺼내 놔야 한다</span>
+<span class="ln-del">float g_hi = 8.0f;</span>
+<span class="ln-del">bool is_valid(float r) { return r &gt;= g_lo &amp;&amp; r &lt;= g_hi; }</span>
+
+int main()
+{
+  const std::vector&lt;float&gt; ranges{0.83f, 0.42f, 1.24f, 0.31f, 2.05f};   // 라이다 값 다섯 개
+
+  std::printf("① 람다 — 조건을 그 자리에서 적는다\n");
+<span class="ln-add">  const float lo = 0.16f, hi = 8.0f;</span>
+<span class="ln-add">  const int n = static_cast&lt;int&gt;(</span>
+<span class="ln-add">    std::count_if(ranges.begin(), ranges.end(),</span>
+<span class="ln-add">                  [lo, hi](float r) { return r &gt;= lo &amp;&amp; r &lt;= hi; }));</span>
+  std::printf("   쓸 만한 값: %d개\n", n);
+
+<span class="ln-add">  auto is_close = [](float r) { return r &lt; 0.5f; };   // 이름을 붙여 둔 람다</span>
+<span class="ln-add">  std::printf("   is_close(0.42) = %s,  is_close(1.24) = %s\n\n",</span>
+<span class="ln-add">              is_close(0.42f) ? "참" : "거짓", is_close(1.24f) ? "참" : "거짓");</span>
+  return 0;
+}</code></pre>
 
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
@@ -144,9 +211,41 @@ const auto n = std::count_if(ranges.begin(), ranges.end(),
     </dl>
   </div>
 
-  <p>실제로 돌려 보면 이렇게 된다.</p>
-  <pre><code>① 이름 없는 함수를 그 자리에서 만든다
+  <h3>실제로 나온 출력</h3>
+  <pre><code>① 람다 — 조건을 그 자리에서 적는다
+   쓸 만한 값: 5개
    is_close(0.42) = 참,  is_close(1.24) = 거짓</code></pre>
+  <p>첫 줄은 1단계와 같다. <strong>하는 일은 그대로인데 파일 맨 위의 세 줄이 사라졌다.</strong></p>
+
+  <!-- fullcode "전체 코드 — driver.cpp (2단계 · 람다까지)" build="g++ -std=c++17 -O2 -o driver driver.cpp && ./driver"
+       l14_lambda/steps/step2.cpp as driver.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — driver.cpp (2단계 · 람다까지)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o driver driver.cpp &amp;&amp; ./driver</code></p>
+  <div class="codefile"><div class="fname">driver.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 14회 — 람다·const·C++17: 라이다 값을 거르는 Driver 를 단계별로 키운다
+#include &lt;algorithm&gt;
+#include &lt;cstdio&gt;
+#include &lt;vector&gt;
+
+int main()
+{
+  const std::vector&lt;float&gt; ranges{0.83f, 0.42f, 1.24f, 0.31f, 2.05f};   // 라이다 값 다섯 개
+
+  std::printf(&quot;① 람다 — 조건을 그 자리에서 적는다\n&quot;);
+  const float lo = 0.16f, hi = 8.0f;
+  const int n = static_cast&lt;int&gt;(
+    std::count_if(ranges.begin(), ranges.end(),
+                  [lo, hi](float r) { return r &gt;= lo &amp;&amp; r &lt;= hi; }));
+  std::printf(&quot;   쓸 만한 값: %d개\n&quot;, n);
+
+  auto is_close = [](float r) { return r &lt; 0.5f; };   // 이름을 붙여 둔 람다
+  std::printf(&quot;   is_close(0.42) = %s,  is_close(1.24) = %s\n\n&quot;,
+              is_close(0.42f) ? &quot;참&quot; : &quot;거짓&quot;, is_close(1.24f) ? &quot;참&quot; : &quot;거짓&quot;);
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
 
   <h3>쓸 때 / 안 쓸 때</h3>
   <div class="tablewrap">
@@ -186,30 +285,44 @@ const auto n = std::count_if(ranges.begin(), ranges.end(),
   </table>
   </div>
 
-  <pre><code>class Driver {
-public:
-  Driver() : limit_(0.5f), ranges_{0.83f, 0.42f, 1.24f, 0.31f, 2.05f} {}
-
-  // [this] — 이 객체의 멤버를 쓰겠다
-  int close_count_this()
-  {
-    return static_cast&lt;int&gt;(
-      std::count_if(ranges_.begin(), ranges_.end(),
-                    [this](float r) { return r &lt; limit_; }));
-  }
-
-  // [&amp;] — 바깥의 모든 것을 참조로 가져다 쓰겠다
-  int close_count_amp()
-  {
-    return static_cast&lt;int&gt;(
-      std::count_if(ranges_.begin(), ranges_.end(),
-                    [&amp;](float r) { return r &lt; limit_; }));
-  }
-
-private:
-  float limit_;
-  std::vector&lt;float&gt; ranges_;
-};</code></pre>
+  <h3>3단계 — 값과 문턱을 클래스로 옮긴다. 람다가 멤버를 쓰게 된다</h3>
+  <p>
+    ROS 2 노드는 클래스다(8회). 문턱값 <code>limit_</code>도 거리 값 <code>ranges_</code>도 멤버가 된다.
+    그러면 람다는 <strong>바깥 변수가 아니라 멤버</strong>를 써야 하고, 그 자리에 <code>[this]</code>가 온다.
+    <code>main</code> 위에 클래스를 하나 넣는다.
+  </p>
+  <pre><code><span class="ln-add">class Driver {</span>
+<span class="ln-add">public:</span>
+<span class="ln-add">  Driver(const std::vector&lt;float&gt; &amp; ranges) : limit_(0.5f), ranges_(ranges) {}</span>
+<span class="ln-add"></span>
+<span class="ln-add">  // [this] — 이 객체의 멤버를 쓰겠다</span>
+<span class="ln-add">  int close_count_this()</span>
+<span class="ln-add">  {</span>
+<span class="ln-add">    return static_cast&lt;int&gt;(</span>
+<span class="ln-add">      std::count_if(ranges_.begin(), ranges_.end(),</span>
+<span class="ln-add">                    [this](float r) { return r &lt; limit_; }));</span>
+<span class="ln-add">  }</span>
+<span class="ln-add"></span>
+<span class="ln-add">  // [&amp;] — 바깥의 모든 것을 참조로 가져다 쓰겠다 (편하지만 무엇을 쓰는지 안 보인다)</span>
+<span class="ln-add">  int close_count_amp()</span>
+<span class="ln-add">  {</span>
+<span class="ln-add">    return static_cast&lt;int&gt;(</span>
+<span class="ln-add">      std::count_if(ranges_.begin(), ranges_.end(),</span>
+<span class="ln-add">                    [&amp;](float r) { return r &lt; limit_; }));</span>
+<span class="ln-add">  }</span>
+<span class="ln-add"></span>
+<span class="ln-add">private:</span>
+<span class="ln-add">  float limit_;                  // 「가깝다」의 문턱</span>
+<span class="ln-add">  std::vector&lt;float&gt; ranges_;</span>
+<span class="ln-add">};</span></code></pre>
+  <p>그리고 <code>main</code>에서 2단계의 <code>ranges</code>를 넘겨 하나 만들고 두 함수를 부른다.</p>
+  <pre><code>  // … 2단계까지의 줄은 그대로 …
+<span class="ln-add">  std::printf("② 캡처 — 바깥 변수를 무엇으로 가져오나\n");</span>
+<span class="ln-add">  Driver d(ranges);</span>
+<span class="ln-add">  std::printf("   [this] 로 센 것: %d개\n", d.close_count_this());</span>
+<span class="ln-add">  std::printf("   [&amp;]    로 센 것: %d개   (결과는 같지만 무엇을 쓰는지 안 보인다)\n\n",</span>
+<span class="ln-add">              d.close_count_amp());</span>
+  return 0;</code></pre>
 
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
@@ -219,19 +332,74 @@ private:
           멤버 이름을 그냥 쓸 수 있다.
           여기서는 <code>limit_</code> 하나를 쓰려고 넣었다.
           <strong>ROS 2 노드의 콜백에서 가장 많이 보게 될 모양이다.</strong></dd>
-
-      <dt>static_cast&lt;int&gt;(...)</dt>
-      <dd>한 타입의 값을 다른 타입으로 <strong>대놓고</strong> 바꾼다.
-          <code>count_if</code>가 돌려주는 것은 <code>int</code>보다 큰 타입이라
-          여기서는 그것을 <code>int</code>로 줄이는 데 썼다.
-          그냥 대입하면 컴파일러가 "값이 잘릴 수 있다"고 경고한다.</dd>
     </dl>
   </div>
 
-  <p>둘 다 돌려 보면 결과는 같다.</p>
+  <h3>실제로 나온 출력</h3>
   <pre><code>② 캡처 — 바깥 변수를 무엇으로 가져오나
    [this] 로 센 것: 2개
    [&amp;]    로 센 것: 2개   (결과는 같지만 무엇을 쓰는지 안 보인다)</code></pre>
+
+  <!-- fullcode "전체 코드 — driver.cpp (3단계 · Driver 클래스와 [this] 까지)" build="g++ -std=c++17 -O2 -o driver driver.cpp && ./driver"
+       l14_lambda/steps/step3.cpp as driver.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — driver.cpp (3단계 · Driver 클래스와 [this] 까지)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o driver driver.cpp &amp;&amp; ./driver</code></p>
+  <div class="codefile"><div class="fname">driver.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 14회 — 람다·const·C++17: 라이다 값을 거르는 Driver 를 단계별로 키운다
+#include &lt;algorithm&gt;
+#include &lt;cstdio&gt;
+#include &lt;vector&gt;
+
+class Driver {
+public:
+  Driver(const std::vector&lt;float&gt; &amp; ranges) : limit_(0.5f), ranges_(ranges) {}
+
+  // [this] — 이 객체의 멤버를 쓰겠다
+  int close_count_this()
+  {
+    return static_cast&lt;int&gt;(
+      std::count_if(ranges_.begin(), ranges_.end(),
+                    [this](float r) { return r &lt; limit_; }));
+  }
+
+  // [&amp;] — 바깥의 모든 것을 참조로 가져다 쓰겠다 (편하지만 무엇을 쓰는지 안 보인다)
+  int close_count_amp()
+  {
+    return static_cast&lt;int&gt;(
+      std::count_if(ranges_.begin(), ranges_.end(),
+                    [&amp;](float r) { return r &lt; limit_; }));
+  }
+
+private:
+  float limit_;                  // 「가깝다」의 문턱
+  std::vector&lt;float&gt; ranges_;
+};
+
+int main()
+{
+  const std::vector&lt;float&gt; ranges{0.83f, 0.42f, 1.24f, 0.31f, 2.05f};   // 라이다 값 다섯 개
+
+  std::printf(&quot;① 람다 — 조건을 그 자리에서 적는다\n&quot;);
+  const float lo = 0.16f, hi = 8.0f;
+  const int n = static_cast&lt;int&gt;(
+    std::count_if(ranges.begin(), ranges.end(),
+                  [lo, hi](float r) { return r &gt;= lo &amp;&amp; r &lt;= hi; }));
+  std::printf(&quot;   쓸 만한 값: %d개\n&quot;, n);
+
+  auto is_close = [](float r) { return r &lt; 0.5f; };   // 이름을 붙여 둔 람다
+  std::printf(&quot;   is_close(0.42) = %s,  is_close(1.24) = %s\n\n&quot;,
+              is_close(0.42f) ? &quot;참&quot; : &quot;거짓&quot;, is_close(1.24f) ? &quot;참&quot; : &quot;거짓&quot;);
+
+  std::printf(&quot;② 캡처 — 바깥 변수를 무엇으로 가져오나\n&quot;);
+  Driver d(ranges);
+  std::printf(&quot;   [this] 로 센 것: %d개\n&quot;, d.close_count_this());
+  std::printf(&quot;   [&amp;]    로 센 것: %d개   (결과는 같지만 무엇을 쓰는지 안 보인다)\n\n&quot;,
+              d.close_count_amp());
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
   <div class="interp">
     <strong>해석:</strong> <strong>결과가 같은데도 <code>[this]</code>가 나은 이유는 읽는 사람 때문이다.</strong>
     <code>[&amp;]</code>는 "뭔가 바깥 것을 쓴다"까지만 알려 주고, 무엇을 쓰는지는 중괄호 안을 다 읽어야 안다.
@@ -242,48 +410,141 @@ private:
   <p>
     <code>[=]</code>는 "바깥의 모든 것을 <strong>값으로</strong> 가져온다"는 뜻이다.
     <strong>값으로 가져온다는 것은 복사한다는 뜻이다.</strong>
-    복사 생성자에 세는 코드를 넣고 실제로 세어 봤다.
+    <code>Driver</code>에 복사 생성자를 넣고 그 안에서 세어 봤다 — 11회에서 복사 횟수를 세던 방법 그대로다.
   </p>
-  <pre><code>int g_copies = 0;
-struct Big {
-  std::vector&lt;float&gt; buf = std::vector&lt;float&gt;(360, 1.0f);
-  Big() = default;
-  Big(const Big &amp; o) : buf(o.buf) { ++g_copies; }
-};
+  <h3>4단계 — 복사를 세는 생성자와 <code>size()</code>를 넣고, 두 가지로 캡처해 본다</h3>
+  <pre><code><span class="ln-add">int g_copies = 0;                   // Driver 가 복사된 횟수</span>
 
-Big big;
-g_copies = 0;
-auto by_copy = [=]()     { return big.buf.size(); };   // 여기서 Big 이 복사된다
-g_copies = 0;
-auto by_ref  = [&amp;big]()  { return big.buf.size(); };   // 복사가 없다</code></pre>
-  <pre><code>③ [=] 는 값으로 복사한다 — 큰 것이 통째로 복사된다
-   [=] 로 캡처한 순간 Big 복사 1회 (buf 360칸)
-   [&amp;big] 로 캡처하면 복사 0회 (buf 360칸)</code></pre>
+class Driver {
+public:
+  Driver(const std::vector&lt;float&gt; &amp; ranges) : limit_(0.5f), ranges_(ranges) {}
+<span class="ln-add">  Driver(const Driver &amp; o) : limit_(o.limit_), ranges_(o.ranges_) { ++g_copies; }   // 복사될 때마다 센다</span>
+  // … close_count_this · close_count_amp 는 그대로 …
+<span class="ln-add">  int size() const { return static_cast&lt;int&gt;(ranges_.size()); }</span>
+  // …
+};</code></pre>
+  <pre><code>  // … 3단계까지의 줄은 그대로 …
+<span class="ln-add">  std::printf("② [=] 는 값으로 복사한다 — 큰 것이 통째로 복사된다\n");</span>
+<span class="ln-add">  g_copies = 0;</span>
+<span class="ln-add">  auto by_copy = [=]() { return d.size(); };      // 여기서 Driver 가 통째로 복사된다</span>
+<span class="ln-add">  std::printf("   [=]  로 캡처한 순간 Driver 복사 %d회 (ranges %d칸)\n", g_copies, by_copy());</span>
+<span class="ln-add">  g_copies = 0;</span>
+<span class="ln-add">  auto by_ref = [&amp;d]() { return d.size(); };</span>
+<span class="ln-add">  std::printf("   [&amp;d] 로 캡처하면 복사 %d회 (ranges %d칸)\n\n", g_copies, by_ref());</span>
+  return 0;</code></pre>
+
+  <h3>실제로 나온 출력</h3>
+  <pre><code>② [=] 는 값으로 복사한다 — 큰 것이 통째로 복사된다
+   [=]  로 캡처한 순간 Driver 복사 1회 (ranges 5칸)
+   [&amp;d] 로 캡처하면 복사 0회 (ranges 5칸)</code></pre>
   <p class="readme-first">무엇을 먼저 볼지: <strong>"캡처한 순간"</strong>이라는 말이다. 람다를 <em>부를 때</em>가 아니라 <em>만들 때</em> 복사된다.</p>
   <div class="interp">
     <strong>해석:</strong> 잰 곳은 컨테이너(우분투 24.04.4, g++ 13.3.0 <code>-O2</code>)다.
-    <code>float</code> 360개짜리 객체 하나에 복사 1회다. 이것이 라이다 콜백 안이라면
+    <code>[=]</code>라고 적는 순간 <code>Driver</code>가 <strong>멤버 <code>ranges_</code>까지 통째로</strong> 한 벌 더 생겼다.
+    지금은 값 5개라 싸지만, 이것이 라이다 콜백 안이고 <code>ranges_</code>가 360칸이라면
     <strong>초당 5번씩 360개를 아무 이득 없이 새로 만드는 것</strong>이다.
     그런데도 <code>[=]</code>를 써야 하는 경우가 있다. 바로 아래 함정이 그 경우다.
   </div>
+
+  <!-- fullcode "전체 코드 — driver.cpp (4단계 · [=] 복사 세기까지)" build="g++ -std=c++17 -O2 -o driver driver.cpp && ./driver"
+       l14_lambda/steps/step4.cpp as driver.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — driver.cpp (4단계 · [=] 복사 세기까지)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o driver driver.cpp &amp;&amp; ./driver</code></p>
+  <div class="codefile"><div class="fname">driver.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 14회 — 람다·const·C++17: 라이다 값을 거르는 Driver 를 단계별로 키운다
+#include &lt;algorithm&gt;
+#include &lt;cstdio&gt;
+#include &lt;vector&gt;
+
+int g_copies = 0;                   // Driver 가 복사된 횟수. 11회에서 복사를 세던 방법 그대로다
+
+class Driver {
+public:
+  Driver(const std::vector&lt;float&gt; &amp; ranges) : limit_(0.5f), ranges_(ranges) {}
+  Driver(const Driver &amp; o) : limit_(o.limit_), ranges_(o.ranges_) { ++g_copies; }   // 복사될 때마다 센다
+
+  // [this] — 이 객체의 멤버를 쓰겠다
+  int close_count_this()
+  {
+    return static_cast&lt;int&gt;(
+      std::count_if(ranges_.begin(), ranges_.end(),
+                    [this](float r) { return r &lt; limit_; }));
+  }
+
+  // [&amp;] — 바깥의 모든 것을 참조로 가져다 쓰겠다 (편하지만 무엇을 쓰는지 안 보인다)
+  int close_count_amp()
+  {
+    return static_cast&lt;int&gt;(
+      std::count_if(ranges_.begin(), ranges_.end(),
+                    [&amp;](float r) { return r &lt; limit_; }));
+  }
+
+  int size() const { return static_cast&lt;int&gt;(ranges_.size()); }
+
+private:
+  float limit_;                  // 「가깝다」의 문턱
+  std::vector&lt;float&gt; ranges_;
+};
+
+int main()
+{
+  const std::vector&lt;float&gt; ranges{0.83f, 0.42f, 1.24f, 0.31f, 2.05f};   // 라이다 값 다섯 개
+
+  std::printf(&quot;① 람다 — 조건을 그 자리에서 적는다\n&quot;);
+  const float lo = 0.16f, hi = 8.0f;
+  const int n = static_cast&lt;int&gt;(
+    std::count_if(ranges.begin(), ranges.end(),
+                  [lo, hi](float r) { return r &gt;= lo &amp;&amp; r &lt;= hi; }));
+  std::printf(&quot;   쓸 만한 값: %d개\n&quot;, n);
+
+  auto is_close = [](float r) { return r &lt; 0.5f; };   // 이름을 붙여 둔 람다
+  std::printf(&quot;   is_close(0.42) = %s,  is_close(1.24) = %s\n\n&quot;,
+              is_close(0.42f) ? &quot;참&quot; : &quot;거짓&quot;, is_close(1.24f) ? &quot;참&quot; : &quot;거짓&quot;);
+
+  std::printf(&quot;② 캡처 — 바깥 변수를 무엇으로 가져오나\n&quot;);
+  Driver d(ranges);
+  std::printf(&quot;   [this] 로 센 것: %d개\n&quot;, d.close_count_this());
+  std::printf(&quot;   [&amp;]    로 센 것: %d개   (결과는 같지만 무엇을 쓰는지 안 보인다)\n\n&quot;,
+              d.close_count_amp());
+
+  std::printf(&quot;② [=] 는 값으로 복사한다 — 큰 것이 통째로 복사된다\n&quot;);
+  g_copies = 0;
+  auto by_copy = [=]() { return d.size(); };      // 여기서 Driver 가 통째로 복사된다
+  std::printf(&quot;   [=]  로 캡처한 순간 Driver 복사 %d회 (ranges %d칸)\n&quot;, g_copies, by_copy());
+  g_copies = 0;
+  auto by_ref = [&amp;d]() { return d.size(); };
+  std::printf(&quot;   [&amp;d] 로 캡처하면 복사 %d회 (ranges %d칸)\n\n&quot;, g_copies, by_ref());
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
 
   <!-- ── ⚠️ 함정 ── -->
   <div class="box trap" id="trap">
     <div class="boxtitle">⚠️ 가리키던 것이 먼저 사라지면 — 이 회차의 백미</div>
     <p>
-      아래 코드는 <strong>컴파일 경고도 없고 크래시도 안 난다.</strong>
+      5단계에서는 <strong>「나중에 부를 함수」를 만들어 돌려주는 자리</strong>를 넣는다.
+      먼저 AI가 흔히 주는 모양이다. <strong>컴파일 경고도 없고 크래시도 안 난다.</strong>
       그런데 돌릴 때마다 다른 답이 나온다.
     </p>
-    <pre><code>std::function&lt;float()&gt; make_reader()
-{
-  std::vector&lt;float&gt; ranges{0.83f, 0.42f, 1.24f};   // 이 함수 안에서만 사는 값
-  return [&amp;ranges]() { return ranges.at(0); };      // 그 값을 「가리키는」 함수를 돌려준다
-}
+    <div class="codelabel bad">변형 — 참조로 캡처한 판 🔴</div>
+    <pre class="before"><code><span class="ln-add">#include &lt;functional&gt;</span>
+  // …
+<span class="ln-add">// 「나중에 부를 함수」를 돌려준다</span>
+<span class="ln-add">std::function&lt;float()&gt; make_reader()</span>
+<span class="ln-add">{</span>
+<span class="ln-add">  std::vector&lt;float&gt; ranges{0.83f, 0.42f, 1.24f};   // 이 함수 안에서만 사는 값</span>
+<span class="ln-add">  return [&amp;ranges]() { return ranges.at(0); };      // 그 값을 「가리키는」 함수를 돌려준다</span>
+<span class="ln-add">}</span>
 
 int main()
 {
-  auto read = make_reader();      // make_reader 가 끝나는 순간 ranges 는 사라졌다
-  std::printf("읽은 값: %.2f\n", read());   // 사라진 것을 읽는다
+  // … 4단계까지의 줄은 그대로 …
+<span class="ln-add">  std::printf("⚠️ 저장해 뒀다 나중에 부르는 람다\n");</span>
+<span class="ln-add">  auto read = make_reader();      // make_reader 는 이미 끝났다. 그 안의 ranges 도 사라졌다</span>
+<span class="ln-add">  std::printf("   읽은 값: %.2f\n\n", read());</span>
+  return 0;
 }</code></pre>
 
     <div class="box firstseen">
@@ -297,33 +558,218 @@ int main()
       </dl>
     </div>
 
-    <p><strong>그냥 빌드해서 두 번 돌린 결과다.</strong></p>
-    <pre><code>$ g++ -std=c++17 -O2 -o dangling_plain dangling_capture.cpp
-$ ./dangling_plain
-읽은 값: -0.00
-$ ./dangling_plain
-읽은 값: -18523820.00</code></pre>
+    <!-- fullcode "전체 코드 — driver_dangling.cpp (5단계 변형 · [&ranges] 로 캡처한 판. 빌드는 되지만 답이 틀린다)" build="g++ -std=c++17 -O2 -o driver_dangling driver_dangling.cpp && ./driver_dangling"
+         l14_lambda/steps/step5_dangling.cpp as driver_dangling.cpp
+    -->
+<details class="fullcode">
+  <summary>전체 코드 — driver_dangling.cpp (5단계 변형 · [&amp;ranges] 로 캡처한 판. 빌드는 되지만 답이 틀린다)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o driver_dangling driver_dangling.cpp &amp;&amp; ./driver_dangling</code></p>
+  <div class="codefile"><div class="fname">driver_dangling.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 14회 — 람다·const·C++17: 라이다 값을 거르는 Driver 를 단계별로 키운다
+#include &lt;algorithm&gt;
+#include &lt;cstdio&gt;
+#include &lt;functional&gt;
+#include &lt;vector&gt;
+
+int g_copies = 0;                   // Driver 가 복사된 횟수. 11회에서 복사를 세던 방법 그대로다
+
+class Driver {
+public:
+  Driver(const std::vector&lt;float&gt; &amp; ranges) : limit_(0.5f), ranges_(ranges) {}
+  Driver(const Driver &amp; o) : limit_(o.limit_), ranges_(o.ranges_) { ++g_copies; }   // 복사될 때마다 센다
+
+  // [this] — 이 객체의 멤버를 쓰겠다
+  int close_count_this()
+  {
+    return static_cast&lt;int&gt;(
+      std::count_if(ranges_.begin(), ranges_.end(),
+                    [this](float r) { return r &lt; limit_; }));
+  }
+
+  // [&amp;] — 바깥의 모든 것을 참조로 가져다 쓰겠다 (편하지만 무엇을 쓰는지 안 보인다)
+  int close_count_amp()
+  {
+    return static_cast&lt;int&gt;(
+      std::count_if(ranges_.begin(), ranges_.end(),
+                    [&amp;](float r) { return r &lt; limit_; }));
+  }
+
+  int size() const { return static_cast&lt;int&gt;(ranges_.size()); }
+
+private:
+  float limit_;                  // 「가깝다」의 문턱
+  std::vector&lt;float&gt; ranges_;
+};
+
+// 「나중에 부를 함수」를 돌려준다
+std::function&lt;float()&gt; make_reader()
+{
+  std::vector&lt;float&gt; ranges{0.83f, 0.42f, 1.24f};   // 이 함수 안에서만 사는 값
+  return [&amp;ranges]() { return ranges.at(0); };      // 그 값을 「가리키는」 함수를 돌려준다
+}
+
+int main()
+{
+  const std::vector&lt;float&gt; ranges{0.83f, 0.42f, 1.24f, 0.31f, 2.05f};   // 라이다 값 다섯 개
+
+  std::printf(&quot;① 람다 — 조건을 그 자리에서 적는다\n&quot;);
+  const float lo = 0.16f, hi = 8.0f;
+  const int n = static_cast&lt;int&gt;(
+    std::count_if(ranges.begin(), ranges.end(),
+                  [lo, hi](float r) { return r &gt;= lo &amp;&amp; r &lt;= hi; }));
+  std::printf(&quot;   쓸 만한 값: %d개\n&quot;, n);
+
+  auto is_close = [](float r) { return r &lt; 0.5f; };   // 이름을 붙여 둔 람다
+  std::printf(&quot;   is_close(0.42) = %s,  is_close(1.24) = %s\n\n&quot;,
+              is_close(0.42f) ? &quot;참&quot; : &quot;거짓&quot;, is_close(1.24f) ? &quot;참&quot; : &quot;거짓&quot;);
+
+  std::printf(&quot;② 캡처 — 바깥 변수를 무엇으로 가져오나\n&quot;);
+  Driver d(ranges);
+  std::printf(&quot;   [this] 로 센 것: %d개\n&quot;, d.close_count_this());
+  std::printf(&quot;   [&amp;]    로 센 것: %d개   (결과는 같지만 무엇을 쓰는지 안 보인다)\n\n&quot;,
+              d.close_count_amp());
+
+  std::printf(&quot;② [=] 는 값으로 복사한다 — 큰 것이 통째로 복사된다\n&quot;);
+  g_copies = 0;
+  auto by_copy = [=]() { return d.size(); };      // 여기서 Driver 가 통째로 복사된다
+  std::printf(&quot;   [=]  로 캡처한 순간 Driver 복사 %d회 (ranges %d칸)\n&quot;, g_copies, by_copy());
+  g_copies = 0;
+  auto by_ref = [&amp;d]() { return d.size(); };
+  std::printf(&quot;   [&amp;d] 로 캡처하면 복사 %d회 (ranges %d칸)\n\n&quot;, g_copies, by_ref());
+
+  std::printf(&quot;⚠️ 저장해 뒀다 나중에 부르는 람다\n&quot;);
+  auto read = make_reader();      // make_reader 는 이미 끝났다. 그 안의 ranges 도 사라졌다
+  std::printf(&quot;   읽은 값: %.2f\n\n&quot;, read());
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+    <p><strong>그냥 빌드해서 세 번 돌린 결과다.</strong> 앞 단계 출력은 같으므로 새로 찍힌 줄만 적는다.</p>
+    <pre><code>$ g++ -std=c++17 -O2 -o driver_dangling driver_dangling.cpp
+$ ./driver_dangling
+⚠️ 저장해 뒀다 나중에 부르는 람다
+   읽은 값: -60062344.00
+$ ./driver_dangling
+⚠️ 저장해 뒀다 나중에 부르는 람다
+   읽은 값: 20158984944342794240.00
+$ ./driver_dangling
+⚠️ 저장해 뒀다 나중에 부르는 람다
+   읽은 값: -0.00</code></pre>
     <p>
       <strong>종료 코드는 0이다.</strong> 프로그램은 자기가 성공했다고 생각한다.
-      로봇이라면 <code>-18523820</code> m를 거리로 받아 판단한다.
+      로봇이라면 <code>-60062344</code> m를 거리로 받아 판단한다.
     </p>
 
-    <p><strong>주소 검사기를 켜면 무엇이 잘못됐는지 알려 준다.</strong></p>
-    <pre><code>$ g++ -std=c++17 -g -fsanitize=address -o dangling dangling_capture.cpp
-$ ./dangling
-==12==ERROR: AddressSanitizer: stack-use-after-return on address 0x7b5014f00068 ...
-READ of size 8 at 0x7b5014f00068 thread T0
-    #3 0x64dac351f48a in operator() /work/l14_lambda/dangling_capture.cpp:10
-    #8 0x64dac351f91c in main /work/l14_lambda/dangling_capture.cpp:16
-Address 0x7b5014f00068 is located in stack of thread T0 at offset 104 in frame
-    #0 0x64dac351f4da in make_reader() /work/l14_lambda/dangling_capture.cpp:8</code></pre>
+    <p><strong>주소 검사기를 켜면 무엇이 잘못됐는지 알려 준다.</strong> 줄 번호는 위 변형 파일 기준이다.</p>
+    <pre><code>$ g++ -std=c++17 -g -fsanitize=address -o driver_dangling driver_dangling.cpp
+$ ./driver_dangling
+==77==ERROR: AddressSanitizer: stack-use-after-return on address 0x7bced9900068 ...
+READ of size 8 at 0x7bced9900068 thread T0
+    #3 0x62294f3494ea in operator() driver_dangling.cpp:41
+    #8 0x62294f349ff3 in main driver_dangling.cpp:75
+Address 0x7bced9900068 is located in stack of thread T0 at offset 104 in frame
+    #0 0x62294f34953a in make_reader() driver_dangling.cpp:39
+  This frame has 4 object(s):
+    [96, 120) 'ranges' (line 40) &lt;== Memory access at offset 104 is inside this variable</code></pre>
     <p class="readme-first">무엇을 먼저 볼지: 첫 줄의 <strong><code>stack-use-after-return</code></strong>이다.
-      "함수가 끝난 뒤에 그 함수의 값을 읽었다"는 뜻이다.</p>
+      "함수가 끝난 뒤에 그 함수의 값을 읽었다"는 뜻이다. 마지막 줄은 <strong>그 값의 이름이 <code>ranges</code>였다</strong>고까지 알려 준다.</p>
 
-    <p><strong>고치는 방법은 대괄호 안을 <code>[&amp;ranges]</code>에서 <code>[ranges]</code>로 한 글자 바꾸는 것이다.</strong></p>
-    <pre><code>$ sed 's/\[&amp;ranges\]/[ranges]/' dangling_capture.cpp &gt; fixed.cpp
-$ g++ -std=c++17 -O2 -o fixed fixed.cpp &amp;&amp; ./fixed
-읽은 값: 0.83</code></pre>
+    <h3>5단계 — 대괄호 안을 <code>[&amp;ranges]</code>에서 <code>[ranges]</code>로 한 글자 바꾼다</h3>
+    <div class="codelabel good">고친 것 — 이것이 5단계 본 파일이다</div>
+    <pre class="after"><code>std::function&lt;float()&gt; make_reader()
+{
+  std::vector&lt;float&gt; ranges{0.83f, 0.42f, 1.24f};   // 이 함수 안에서만 사는 값
+<span class="ln-del">  return [&amp;ranges]() { return ranges.at(0); };      // 그 값을 「가리키는」 함수를 돌려준다</span>
+<span class="ln-add">  return [ranges]() { return ranges.at(0); };       // 복사해서 들고 나간다</span>
+}</code></pre>
+    <pre><code>⚠️ 저장해 뒀다 나중에 부르는 람다
+   읽은 값: 0.83</code></pre>
+
+    <!-- fullcode "전체 코드 — driver.cpp (5단계 · 저장해 두는 람다까지)" build="g++ -std=c++17 -O2 -o driver driver.cpp && ./driver"
+         l14_lambda/steps/step5.cpp as driver.cpp
+    -->
+<details class="fullcode">
+  <summary>전체 코드 — driver.cpp (5단계 · 저장해 두는 람다까지)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o driver driver.cpp &amp;&amp; ./driver</code></p>
+  <div class="codefile"><div class="fname">driver.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 14회 — 람다·const·C++17: 라이다 값을 거르는 Driver 를 단계별로 키운다
+#include &lt;algorithm&gt;
+#include &lt;cstdio&gt;
+#include &lt;functional&gt;
+#include &lt;vector&gt;
+
+int g_copies = 0;                   // Driver 가 복사된 횟수. 11회에서 복사를 세던 방법 그대로다
+
+class Driver {
+public:
+  Driver(const std::vector&lt;float&gt; &amp; ranges) : limit_(0.5f), ranges_(ranges) {}
+  Driver(const Driver &amp; o) : limit_(o.limit_), ranges_(o.ranges_) { ++g_copies; }   // 복사될 때마다 센다
+
+  // [this] — 이 객체의 멤버를 쓰겠다
+  int close_count_this()
+  {
+    return static_cast&lt;int&gt;(
+      std::count_if(ranges_.begin(), ranges_.end(),
+                    [this](float r) { return r &lt; limit_; }));
+  }
+
+  // [&amp;] — 바깥의 모든 것을 참조로 가져다 쓰겠다 (편하지만 무엇을 쓰는지 안 보인다)
+  int close_count_amp()
+  {
+    return static_cast&lt;int&gt;(
+      std::count_if(ranges_.begin(), ranges_.end(),
+                    [&amp;](float r) { return r &lt; limit_; }));
+  }
+
+  int size() const { return static_cast&lt;int&gt;(ranges_.size()); }
+
+private:
+  float limit_;                  // 「가깝다」의 문턱
+  std::vector&lt;float&gt; ranges_;
+};
+
+// 「나중에 부를 함수」를 돌려준다
+std::function&lt;float()&gt; make_reader()
+{
+  std::vector&lt;float&gt; ranges{0.83f, 0.42f, 1.24f};   // 이 함수 안에서만 사는 값
+  return [ranges]() { return ranges.at(0); };      // 복사해서 들고 나간다
+}
+
+int main()
+{
+  const std::vector&lt;float&gt; ranges{0.83f, 0.42f, 1.24f, 0.31f, 2.05f};   // 라이다 값 다섯 개
+
+  std::printf(&quot;① 람다 — 조건을 그 자리에서 적는다\n&quot;);
+  const float lo = 0.16f, hi = 8.0f;
+  const int n = static_cast&lt;int&gt;(
+    std::count_if(ranges.begin(), ranges.end(),
+                  [lo, hi](float r) { return r &gt;= lo &amp;&amp; r &lt;= hi; }));
+  std::printf(&quot;   쓸 만한 값: %d개\n&quot;, n);
+
+  auto is_close = [](float r) { return r &lt; 0.5f; };   // 이름을 붙여 둔 람다
+  std::printf(&quot;   is_close(0.42) = %s,  is_close(1.24) = %s\n\n&quot;,
+              is_close(0.42f) ? &quot;참&quot; : &quot;거짓&quot;, is_close(1.24f) ? &quot;참&quot; : &quot;거짓&quot;);
+
+  std::printf(&quot;② 캡처 — 바깥 변수를 무엇으로 가져오나\n&quot;);
+  Driver d(ranges);
+  std::printf(&quot;   [this] 로 센 것: %d개\n&quot;, d.close_count_this());
+  std::printf(&quot;   [&amp;]    로 센 것: %d개   (결과는 같지만 무엇을 쓰는지 안 보인다)\n\n&quot;,
+              d.close_count_amp());
+
+  std::printf(&quot;② [=] 는 값으로 복사한다 — 큰 것이 통째로 복사된다\n&quot;);
+  g_copies = 0;
+  auto by_copy = [=]() { return d.size(); };      // 여기서 Driver 가 통째로 복사된다
+  std::printf(&quot;   [=]  로 캡처한 순간 Driver 복사 %d회 (ranges %d칸)\n&quot;, g_copies, by_copy());
+  g_copies = 0;
+  auto by_ref = [&amp;d]() { return d.size(); };
+  std::printf(&quot;   [&amp;d] 로 캡처하면 복사 %d회 (ranges %d칸)\n\n&quot;, g_copies, by_ref());
+
+  std::printf(&quot;⚠️ 저장해 뒀다 나중에 부르는 람다\n&quot;);
+  auto read = make_reader();      // make_reader 는 이미 끝났다. 그 안의 ranges 도 사라졌다
+  std::printf(&quot;   읽은 값: %.2f\n\n&quot;, read());
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
     <p>
       <strong>여기서는 복사가 정답이다.</strong> 값을 들고 나가야 하니까 복사해야 한다.
       앞 절에서 <code>[=]</code>가 비싸다고 했는데 여기서는 복사가 유일한 답이다.
@@ -354,12 +800,18 @@ $ g++ -std=c++17 -O2 -o fixed fixed.cpp &amp;&amp; ./fixed
     숫자 뒤에 글자가 붙은 이 모양은 C++의 보통 문법이 아니라 <strong><code>std::chrono</code>가 준 것</strong>이다.
   </p>
 
-  <pre><code>#include &lt;chrono&gt;
-using namespace std::chrono_literals;   // 이 줄이 있어야 500ms 라고 쓸 수 있다
-
-const auto period = 500ms;
-std::printf("500ms 는 %ld 밀리초짜리 시간 값이다\n",
-            std::chrono::duration_cast&lt;std::chrono::milliseconds&gt;(period).count());</code></pre>
+  <h3>6단계 — 파일 맨 위에 두 줄, <code>main</code>에 네 줄</h3>
+  <p><code>Driver</code>가 스캔을 얼마나 자주 받는지를 적어 둔다고 하자. 3부에서 타이머를 만들 때 이 값이 그대로 들어간다.</p>
+  <pre><code><span class="ln-add">#include &lt;chrono&gt;</span>
+  // … 다른 #include 들 …
+<span class="ln-add">using namespace std::chrono_literals;   // 이 줄이 있어야 500ms 라고 쓸 수 있다</span></code></pre>
+  <pre><code>  // … 5단계까지의 줄은 그대로 …
+<span class="ln-add">  std::printf("③ 500ms — 단위가 코드에 적혀 있다\n");</span>
+<span class="ln-add">  const auto period = 500ms;      // 스캔 하나를 이만큼마다 받는다고 하자</span>
+<span class="ln-add">  std::printf("   500ms 는 %ld 밀리초짜리 시간 값이다\n",</span>
+<span class="ln-add">              std::chrono::duration_cast&lt;std::chrono::milliseconds&gt;(period).count());</span>
+<span class="ln-add">  std::printf("   0.5 라고 쓰면 초인지 밀리초인지 코드만 봐서는 알 수 없다\n\n");</span>
+  return 0;</code></pre>
 
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
@@ -379,9 +831,105 @@ std::printf("500ms 는 %ld 밀리초짜리 시간 값이다\n",
     <p class="later">제대로 다루는 곳: 22회(콜백 시간을 <code>std::chrono</code>로 재기)</p>
   </div>
 
-  <pre><code>④ 500ms 표기 — std::chrono 가 준 것이다
+  <h3>실제로 나온 출력</h3>
+  <pre><code>③ 500ms — 단위가 코드에 적혀 있다
    500ms 는 500 밀리초짜리 시간 값이다
    0.5 라고 쓰면 초인지 밀리초인지 코드만 봐서는 알 수 없다</code></pre>
+
+  <!-- fullcode "전체 코드 — driver.cpp (6단계 · 500ms 까지)" build="g++ -std=c++17 -O2 -o driver driver.cpp && ./driver"
+       l14_lambda/steps/step6.cpp as driver.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — driver.cpp (6단계 · 500ms 까지)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o driver driver.cpp &amp;&amp; ./driver</code></p>
+  <div class="codefile"><div class="fname">driver.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 14회 — 람다·const·C++17: 라이다 값을 거르는 Driver 를 단계별로 키운다
+#include &lt;algorithm&gt;
+#include &lt;chrono&gt;
+#include &lt;cstdio&gt;
+#include &lt;functional&gt;
+#include &lt;vector&gt;
+
+using namespace std::chrono_literals;   // 500ms 같은 표기를 쓰게 해 준다
+
+int g_copies = 0;                   // Driver 가 복사된 횟수. 11회에서 복사를 세던 방법 그대로다
+
+class Driver {
+public:
+  Driver(const std::vector&lt;float&gt; &amp; ranges) : limit_(0.5f), ranges_(ranges) {}
+  Driver(const Driver &amp; o) : limit_(o.limit_), ranges_(o.ranges_) { ++g_copies; }   // 복사될 때마다 센다
+
+  // [this] — 이 객체의 멤버를 쓰겠다
+  int close_count_this()
+  {
+    return static_cast&lt;int&gt;(
+      std::count_if(ranges_.begin(), ranges_.end(),
+                    [this](float r) { return r &lt; limit_; }));
+  }
+
+  // [&amp;] — 바깥의 모든 것을 참조로 가져다 쓰겠다 (편하지만 무엇을 쓰는지 안 보인다)
+  int close_count_amp()
+  {
+    return static_cast&lt;int&gt;(
+      std::count_if(ranges_.begin(), ranges_.end(),
+                    [&amp;](float r) { return r &lt; limit_; }));
+  }
+
+  int size() const { return static_cast&lt;int&gt;(ranges_.size()); }
+
+private:
+  float limit_;                  // 「가깝다」의 문턱
+  std::vector&lt;float&gt; ranges_;
+};
+
+// 「나중에 부를 함수」를 돌려준다
+std::function&lt;float()&gt; make_reader()
+{
+  std::vector&lt;float&gt; ranges{0.83f, 0.42f, 1.24f};   // 이 함수 안에서만 사는 값
+  return [ranges]() { return ranges.at(0); };      // 복사해서 들고 나간다
+}
+
+int main()
+{
+  const std::vector&lt;float&gt; ranges{0.83f, 0.42f, 1.24f, 0.31f, 2.05f};   // 라이다 값 다섯 개
+
+  std::printf(&quot;① 람다 — 조건을 그 자리에서 적는다\n&quot;);
+  const float lo = 0.16f, hi = 8.0f;
+  const int n = static_cast&lt;int&gt;(
+    std::count_if(ranges.begin(), ranges.end(),
+                  [lo, hi](float r) { return r &gt;= lo &amp;&amp; r &lt;= hi; }));
+  std::printf(&quot;   쓸 만한 값: %d개\n&quot;, n);
+
+  auto is_close = [](float r) { return r &lt; 0.5f; };   // 이름을 붙여 둔 람다
+  std::printf(&quot;   is_close(0.42) = %s,  is_close(1.24) = %s\n\n&quot;,
+              is_close(0.42f) ? &quot;참&quot; : &quot;거짓&quot;, is_close(1.24f) ? &quot;참&quot; : &quot;거짓&quot;);
+
+  std::printf(&quot;② 캡처 — 바깥 변수를 무엇으로 가져오나\n&quot;);
+  Driver d(ranges);
+  std::printf(&quot;   [this] 로 센 것: %d개\n&quot;, d.close_count_this());
+  std::printf(&quot;   [&amp;]    로 센 것: %d개   (결과는 같지만 무엇을 쓰는지 안 보인다)\n\n&quot;,
+              d.close_count_amp());
+
+  std::printf(&quot;② [=] 는 값으로 복사한다 — 큰 것이 통째로 복사된다\n&quot;);
+  g_copies = 0;
+  auto by_copy = [=]() { return d.size(); };      // 여기서 Driver 가 통째로 복사된다
+  std::printf(&quot;   [=]  로 캡처한 순간 Driver 복사 %d회 (ranges %d칸)\n&quot;, g_copies, by_copy());
+  g_copies = 0;
+  auto by_ref = [&amp;d]() { return d.size(); };
+  std::printf(&quot;   [&amp;d] 로 캡처하면 복사 %d회 (ranges %d칸)\n\n&quot;, g_copies, by_ref());
+
+  std::printf(&quot;⚠️ 저장해 뒀다 나중에 부르는 람다\n&quot;);
+  auto read = make_reader();      // make_reader 는 이미 끝났다. 그 안의 ranges 도 사라졌다
+  std::printf(&quot;   읽은 값: %.2f\n\n&quot;, read());
+
+  std::printf(&quot;③ 500ms — 단위가 코드에 적혀 있다\n&quot;);
+  const auto period = 500ms;      // 스캔 하나를 이만큼마다 받는다고 하자
+  std::printf(&quot;   500ms 는 %ld 밀리초짜리 시간 값이다\n&quot;,
+              std::chrono::duration_cast&lt;std::chrono::milliseconds&gt;(period).count());
+  std::printf(&quot;   0.5 라고 쓰면 초인지 밀리초인지 코드만 봐서는 알 수 없다\n\n&quot;);
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
 
   <div class="tablewrap">
   <table>
@@ -405,41 +953,397 @@ std::printf("500ms 는 %ld 밀리초짜리 시간 값이다\n",
     주석과 다른 점은 <strong>컴파일러가 그 약속을 검사한다</strong>는 것이다.
   </p>
 
-  <pre><code>class Tracker {
+  <h3>7단계 — 읽기만 하는 함수에 <code>const</code>를 붙이고, 상태를 바꾸는 함수를 하나 넣는다</h3>
+  <p>
+    3단계의 <code>close_count_this</code>와 <code>close_count_amp</code>는 <strong>세기만 하고 아무것도 안 바꾼다.</strong>
+    그런데 AI가 준 그대로라 <code>const</code>가 없다. 붙인다.
+    그리고 비교하려고 <strong>상태를 바꾸는 함수</strong> <code>record()</code>와 그것이 쌓는 멤버 <code>hits_</code>를 넣는다.
+  </p>
+  <pre><code>class Driver {
 public:
-  Tracker() : hits_(0), ranges_{1.0f, 0.4f, 2.2f} {}
+<span class="ln-del">  Driver(const std::vector&lt;float&gt; &amp; ranges) : limit_(0.5f), ranges_(ranges) {}</span>
+<span class="ln-add">  Driver(const std::vector&lt;float&gt; &amp; ranges) : limit_(0.5f), hits_(0), ranges_(ranges) {}</span>
+<span class="ln-del">  Driver(const Driver &amp; o) : limit_(o.limit_), ranges_(o.ranges_) { ++g_copies; }</span>
+<span class="ln-add">  Driver(const Driver &amp; o) : limit_(o.limit_), hits_(o.hits_), ranges_(o.ranges_) { ++g_copies; }</span>
 
-  // const 가 붙었다 = "이 함수는 객체의 상태를 바꾸지 않는다"
-  int count_close(float limit) const
+  // [this] — 이 객체의 멤버를 쓰겠다
+<span class="ln-del">  int close_count_this()</span>
+<span class="ln-add">  int close_count_this() const</span>
+  { … }
+<span class="ln-del">  int close_count_amp()</span>
+<span class="ln-add">  int close_count_amp() const</span>
+  { … }
+
+  int size() const { return static_cast&lt;int&gt;(ranges_.size()); }
+
+<span class="ln-add">  void record() { hits_ += close_count_this(); }   // 상태를 바꾸는 함수 — const 가 없다</span>
+<span class="ln-add">  int hits() const { return hits_; }</span>
+
+private:
+  float limit_;                  // 「가깝다」의 문턱
+<span class="ln-add">  int hits_;                     // record() 가 불린 만큼 쌓인다</span>
+  std::vector&lt;float&gt; ranges_;
+};</code></pre>
+  <pre><code>  // … 6단계까지의 줄은 그대로 …
+<span class="ln-add">  std::printf("④ const — 이 함수는 상태를 바꾸지 않는다\n");</span>
+<span class="ln-add">  std::printf("   close_count_this() = %d  (상태는 그대로, hits = %d)\n", d.close_count_this(), d.hits());</span>
+<span class="ln-add">  d.record();</span>
+<span class="ln-add">  std::printf("   record() 한 뒤 hits = %d\n", d.hits());</span>
+<span class="ln-add">  const Driver frozen(ranges);</span>
+<span class="ln-add">  std::printf("   const 객체에서도 close_count_this 는 부를 수 있다: %d\n", frozen.close_count_this());</span>
+<span class="ln-add">  std::printf("   frozen.record() 는 컴파일이 안 된다 — 상태를 바꾸는 함수이기 때문이다\n\n");</span>
+  return 0;</code></pre>
+
+  <h3>실제로 나온 출력</h3>
+  <pre><code>④ const — 이 함수는 상태를 바꾸지 않는다
+   close_count_this() = 2  (상태는 그대로, hits = 0)
+   record() 한 뒤 hits = 2
+   const 객체에서도 close_count_this 는 부를 수 있다: 2
+   frozen.record() 는 컴파일이 안 된다 — 상태를 바꾸는 함수이기 때문이다</code></pre>
+
+  <!-- fullcode "전체 코드 — driver.cpp (7단계 · const 멤버 함수까지)" build="g++ -std=c++17 -O2 -o driver driver.cpp && ./driver"
+       l14_lambda/steps/step7.cpp as driver.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — driver.cpp (7단계 · const 멤버 함수까지)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o driver driver.cpp &amp;&amp; ./driver</code></p>
+  <div class="codefile"><div class="fname">driver.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 14회 — 람다·const·C++17: 라이다 값을 거르는 Driver 를 단계별로 키운다
+#include &lt;algorithm&gt;
+#include &lt;chrono&gt;
+#include &lt;cstdio&gt;
+#include &lt;functional&gt;
+#include &lt;vector&gt;
+
+using namespace std::chrono_literals;   // 500ms 같은 표기를 쓰게 해 준다
+
+int g_copies = 0;                   // Driver 가 복사된 횟수. 11회에서 복사를 세던 방법 그대로다
+
+class Driver {
+public:
+  Driver(const std::vector&lt;float&gt; &amp; ranges) : limit_(0.5f), hits_(0), ranges_(ranges) {}
+  Driver(const Driver &amp; o) : limit_(o.limit_), hits_(o.hits_), ranges_(o.ranges_) { ++g_copies; }   // 복사될 때마다 센다
+
+  // [this] — 이 객체의 멤버를 쓰겠다
+  int close_count_this() const
   {
-    int n = 0;
-    for (float r : ranges_) { if (r &lt; limit) { ++n; } }
-    // ++hits_;   // ← 이 줄의 주석을 풀면 컴파일이 안 된다. const 가 막아 준다
-    return n;
+    return static_cast&lt;int&gt;(
+      std::count_if(ranges_.begin(), ranges_.end(),
+                    [this](float r) { return r &lt; limit_; }));
   }
 
-  void record(float limit) { hits_ += count_close(limit); }   // 상태를 바꾸는 함수
+  // [&amp;] — 바깥의 모든 것을 참조로 가져다 쓰겠다 (편하지만 무엇을 쓰는지 안 보인다)
+  int close_count_amp() const
+  {
+    return static_cast&lt;int&gt;(
+      std::count_if(ranges_.begin(), ranges_.end(),
+                    [&amp;](float r) { return r &lt; limit_; }));
+  }
+
+  int size() const { return static_cast&lt;int&gt;(ranges_.size()); }
+
+  void record() { hits_ += close_count_this(); }   // 상태를 바꾸는 함수 — const 가 없다
   int hits() const { return hits_; }
 
 private:
-  int hits_;
+  float limit_;                  // 「가깝다」의 문턱
+  int hits_;                     // record() 가 불린 만큼 쌓인다
   std::vector&lt;float&gt; ranges_;
-};</code></pre>
+};
 
-  <pre><code>count_close(0.5) = 1  (상태는 그대로)
-hits = 0
-record 한 뒤 hits = 1
-const 객체에서도 count_close 는 부를 수 있다: 1
-frozen.record(0.5f) 는 컴파일이 안 된다 — 상태를 바꾸는 함수이기 때문이다</code></pre>
+// 「나중에 부를 함수」를 돌려준다
+std::function&lt;float()&gt; make_reader()
+{
+  std::vector&lt;float&gt; ranges{0.83f, 0.42f, 1.24f};   // 이 함수 안에서만 사는 값
+  return [ranges]() { return ranges.at(0); };      // 복사해서 들고 나간다
+}
+
+int main()
+{
+  const std::vector&lt;float&gt; ranges{0.83f, 0.42f, 1.24f, 0.31f, 2.05f};   // 라이다 값 다섯 개
+
+  std::printf(&quot;① 람다 — 조건을 그 자리에서 적는다\n&quot;);
+  const float lo = 0.16f, hi = 8.0f;
+  const int n = static_cast&lt;int&gt;(
+    std::count_if(ranges.begin(), ranges.end(),
+                  [lo, hi](float r) { return r &gt;= lo &amp;&amp; r &lt;= hi; }));
+  std::printf(&quot;   쓸 만한 값: %d개\n&quot;, n);
+
+  auto is_close = [](float r) { return r &lt; 0.5f; };   // 이름을 붙여 둔 람다
+  std::printf(&quot;   is_close(0.42) = %s,  is_close(1.24) = %s\n\n&quot;,
+              is_close(0.42f) ? &quot;참&quot; : &quot;거짓&quot;, is_close(1.24f) ? &quot;참&quot; : &quot;거짓&quot;);
+
+  std::printf(&quot;② 캡처 — 바깥 변수를 무엇으로 가져오나\n&quot;);
+  Driver d(ranges);
+  std::printf(&quot;   [this] 로 센 것: %d개\n&quot;, d.close_count_this());
+  std::printf(&quot;   [&amp;]    로 센 것: %d개   (결과는 같지만 무엇을 쓰는지 안 보인다)\n\n&quot;,
+              d.close_count_amp());
+
+  std::printf(&quot;② [=] 는 값으로 복사한다 — 큰 것이 통째로 복사된다\n&quot;);
+  g_copies = 0;
+  auto by_copy = [=]() { return d.size(); };      // 여기서 Driver 가 통째로 복사된다
+  std::printf(&quot;   [=]  로 캡처한 순간 Driver 복사 %d회 (ranges %d칸)\n&quot;, g_copies, by_copy());
+  g_copies = 0;
+  auto by_ref = [&amp;d]() { return d.size(); };
+  std::printf(&quot;   [&amp;d] 로 캡처하면 복사 %d회 (ranges %d칸)\n\n&quot;, g_copies, by_ref());
+
+  std::printf(&quot;⚠️ 저장해 뒀다 나중에 부르는 람다\n&quot;);
+  auto read = make_reader();      // make_reader 는 이미 끝났다. 그 안의 ranges 도 사라졌다
+  std::printf(&quot;   읽은 값: %.2f\n\n&quot;, read());
+
+  std::printf(&quot;③ 500ms — 단위가 코드에 적혀 있다\n&quot;);
+  const auto period = 500ms;      // 스캔 하나를 이만큼마다 받는다고 하자
+  std::printf(&quot;   500ms 는 %ld 밀리초짜리 시간 값이다\n&quot;,
+              std::chrono::duration_cast&lt;std::chrono::milliseconds&gt;(period).count());
+  std::printf(&quot;   0.5 라고 쓰면 초인지 밀리초인지 코드만 봐서는 알 수 없다\n\n&quot;);
+
+  std::printf(&quot;④ const — 이 함수는 상태를 바꾸지 않는다\n&quot;);
+  std::printf(&quot;   close_count_this() = %d  (상태는 그대로, hits = %d)\n&quot;, d.close_count_this(), d.hits());
+  d.record();
+  std::printf(&quot;   record() 한 뒤 hits = %d\n&quot;, d.hits());
+  const Driver frozen(ranges);
+  std::printf(&quot;   const 객체에서도 close_count_this 는 부를 수 있다: %d\n&quot;, frozen.close_count_this());
+  std::printf(&quot;   frozen.record() 는 컴파일이 안 된다 — 상태를 바꾸는 함수이기 때문이다\n\n&quot;);
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
 
   <h3>마지막 줄을 실제로 시켜 보면 이런 오류가 난다</h3>
-  <pre><code>const Tracker frozen;
-frozen.record(0.5f);   // ← 이 줄을 넣고 빌드하면</code></pre>
-  <pre><code>error: passing ‘const Tracker’ as ‘this’ argument discards qualifiers [-fpermissive]
-   36 |   frozen.record(0.5f);
-      |   ~~~~~~~~~~~~~^~~~~~
-note:   in call to ‘void Tracker::record(float)’
-   18 |   void record(float limit) { hits_ += count_close(limit); }</code></pre>
+  <p>7단계 파일에 한 줄만 넣은 변형이다.</p>
+  <pre class="before"><code>  const Driver frozen(ranges);
+<span class="ln-add">  frozen.record();                // ← 이 줄을 넣고 빌드하면</span></code></pre>
+  <pre><code>$ g++ -std=c++17 -O2 -o driver_frozen driver_frozen.cpp
+driver_frozen.cpp:96:16: error: passing ‘const Driver’ as ‘this’ argument discards qualifiers [-fpermissive]
+   96 |   frozen.record();                // ← 이 줄을 넣고 빌드하면
+      |   ~~~~~~~~~~~~~^~
+driver_frozen.cpp:35:8: note:   in call to ‘void Driver::record()’
+   35 |   void record() { hits_ += close_count_this(); }   // 상태를 바꾸는 함수 — const 가 없다</code></pre>
+
+  <!-- fullcode "전체 코드 — driver_frozen.cpp (7단계 변형 · const 객체로 record() 를 부른 판. 컴파일이 안 된다)" build="g++ -std=c++17 -O2 -o driver_frozen driver_frozen.cpp"
+       l14_lambda/steps/step7_frozen.cpp as driver_frozen.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — driver_frozen.cpp (7단계 변형 · const 객체로 record() 를 부른 판. 컴파일이 안 된다)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o driver_frozen driver_frozen.cpp</code></p>
+  <div class="codefile"><div class="fname">driver_frozen.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 14회 — 람다·const·C++17: 라이다 값을 거르는 Driver 를 단계별로 키운다
+#include &lt;algorithm&gt;
+#include &lt;chrono&gt;
+#include &lt;cstdio&gt;
+#include &lt;functional&gt;
+#include &lt;vector&gt;
+
+using namespace std::chrono_literals;   // 500ms 같은 표기를 쓰게 해 준다
+
+int g_copies = 0;                   // Driver 가 복사된 횟수. 11회에서 복사를 세던 방법 그대로다
+
+class Driver {
+public:
+  Driver(const std::vector&lt;float&gt; &amp; ranges) : limit_(0.5f), hits_(0), ranges_(ranges) {}
+  Driver(const Driver &amp; o) : limit_(o.limit_), hits_(o.hits_), ranges_(o.ranges_) { ++g_copies; }   // 복사될 때마다 센다
+
+  // [this] — 이 객체의 멤버를 쓰겠다
+  int close_count_this() const
+  {
+    return static_cast&lt;int&gt;(
+      std::count_if(ranges_.begin(), ranges_.end(),
+                    [this](float r) { return r &lt; limit_; }));
+  }
+
+  // [&amp;] — 바깥의 모든 것을 참조로 가져다 쓰겠다 (편하지만 무엇을 쓰는지 안 보인다)
+  int close_count_amp() const
+  {
+    return static_cast&lt;int&gt;(
+      std::count_if(ranges_.begin(), ranges_.end(),
+                    [&amp;](float r) { return r &lt; limit_; }));
+  }
+
+  int size() const { return static_cast&lt;int&gt;(ranges_.size()); }
+
+  void record() { hits_ += close_count_this(); }   // 상태를 바꾸는 함수 — const 가 없다
+  int hits() const { return hits_; }
+
+private:
+  float limit_;                  // 「가깝다」의 문턱
+  int hits_;                     // record() 가 불린 만큼 쌓인다
+  std::vector&lt;float&gt; ranges_;
+};
+
+// 「나중에 부를 함수」를 돌려준다
+std::function&lt;float()&gt; make_reader()
+{
+  std::vector&lt;float&gt; ranges{0.83f, 0.42f, 1.24f};   // 이 함수 안에서만 사는 값
+  return [ranges]() { return ranges.at(0); };      // 복사해서 들고 나간다
+}
+
+int main()
+{
+  const std::vector&lt;float&gt; ranges{0.83f, 0.42f, 1.24f, 0.31f, 2.05f};   // 라이다 값 다섯 개
+
+  std::printf(&quot;① 람다 — 조건을 그 자리에서 적는다\n&quot;);
+  const float lo = 0.16f, hi = 8.0f;
+  const int n = static_cast&lt;int&gt;(
+    std::count_if(ranges.begin(), ranges.end(),
+                  [lo, hi](float r) { return r &gt;= lo &amp;&amp; r &lt;= hi; }));
+  std::printf(&quot;   쓸 만한 값: %d개\n&quot;, n);
+
+  auto is_close = [](float r) { return r &lt; 0.5f; };   // 이름을 붙여 둔 람다
+  std::printf(&quot;   is_close(0.42) = %s,  is_close(1.24) = %s\n\n&quot;,
+              is_close(0.42f) ? &quot;참&quot; : &quot;거짓&quot;, is_close(1.24f) ? &quot;참&quot; : &quot;거짓&quot;);
+
+  std::printf(&quot;② 캡처 — 바깥 변수를 무엇으로 가져오나\n&quot;);
+  Driver d(ranges);
+  std::printf(&quot;   [this] 로 센 것: %d개\n&quot;, d.close_count_this());
+  std::printf(&quot;   [&amp;]    로 센 것: %d개   (결과는 같지만 무엇을 쓰는지 안 보인다)\n\n&quot;,
+              d.close_count_amp());
+
+  std::printf(&quot;② [=] 는 값으로 복사한다 — 큰 것이 통째로 복사된다\n&quot;);
+  g_copies = 0;
+  auto by_copy = [=]() { return d.size(); };      // 여기서 Driver 가 통째로 복사된다
+  std::printf(&quot;   [=]  로 캡처한 순간 Driver 복사 %d회 (ranges %d칸)\n&quot;, g_copies, by_copy());
+  g_copies = 0;
+  auto by_ref = [&amp;d]() { return d.size(); };
+  std::printf(&quot;   [&amp;d] 로 캡처하면 복사 %d회 (ranges %d칸)\n\n&quot;, g_copies, by_ref());
+
+  std::printf(&quot;⚠️ 저장해 뒀다 나중에 부르는 람다\n&quot;);
+  auto read = make_reader();      // make_reader 는 이미 끝났다. 그 안의 ranges 도 사라졌다
+  std::printf(&quot;   읽은 값: %.2f\n\n&quot;, read());
+
+  std::printf(&quot;③ 500ms — 단위가 코드에 적혀 있다\n&quot;);
+  const auto period = 500ms;      // 스캔 하나를 이만큼마다 받는다고 하자
+  std::printf(&quot;   500ms 는 %ld 밀리초짜리 시간 값이다\n&quot;,
+              std::chrono::duration_cast&lt;std::chrono::milliseconds&gt;(period).count());
+  std::printf(&quot;   0.5 라고 쓰면 초인지 밀리초인지 코드만 봐서는 알 수 없다\n\n&quot;);
+
+  std::printf(&quot;④ const — 이 함수는 상태를 바꾸지 않는다\n&quot;);
+  std::printf(&quot;   close_count_this() = %d  (상태는 그대로, hits = %d)\n&quot;, d.close_count_this(), d.hits());
+  d.record();
+  std::printf(&quot;   record() 한 뒤 hits = %d\n&quot;, d.hits());
+  const Driver frozen(ranges);
+  std::printf(&quot;   const 객체에서도 close_count_this 는 부를 수 있다: %d\n&quot;, frozen.close_count_this());
+  frozen.record();                // ← 이 줄을 넣고 빌드하면
+  std::printf(&quot;   frozen.record() 는 컴파일이 안 된다 — 상태를 바꾸는 함수이기 때문이다\n\n&quot;);
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <p>
+    반대쪽도 있다. <strong><code>const</code>가 붙은 함수 안에서 멤버를 고치려 하면</strong> 같은 방식으로 막힌다.
+    <code>close_count_this() const</code> 첫 줄에 <code>++hits_;</code>를 넣은 변형이다.
+  </p>
+  <pre><code>$ g++ -std=c++17 -O2 -o driver_mutate driver_mutate.cpp
+driver_mutate.cpp: In member function ‘int Driver::close_count_this() const’:
+driver_mutate.cpp:20:7: error: increment of member ‘Driver::hits_’ in read-only object
+   20 |     ++hits_;                    // ← 읽기만 하는 함수에서 상태를 바꾸려 한다
+      |       ^~~~~</code></pre>
+
+  <!-- fullcode "전체 코드 — driver_mutate.cpp (7단계 변형 · const 함수 안에서 멤버를 고친 판. 컴파일이 안 된다)" build="g++ -std=c++17 -O2 -o driver_mutate driver_mutate.cpp"
+       l14_lambda/steps/step7_mutate.cpp as driver_mutate.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — driver_mutate.cpp (7단계 변형 · const 함수 안에서 멤버를 고친 판. 컴파일이 안 된다)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o driver_mutate driver_mutate.cpp</code></p>
+  <div class="codefile"><div class="fname">driver_mutate.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 14회 — 람다·const·C++17: 라이다 값을 거르는 Driver 를 단계별로 키운다
+#include &lt;algorithm&gt;
+#include &lt;chrono&gt;
+#include &lt;cstdio&gt;
+#include &lt;functional&gt;
+#include &lt;vector&gt;
+
+using namespace std::chrono_literals;   // 500ms 같은 표기를 쓰게 해 준다
+
+int g_copies = 0;                   // Driver 가 복사된 횟수. 11회에서 복사를 세던 방법 그대로다
+
+class Driver {
+public:
+  Driver(const std::vector&lt;float&gt; &amp; ranges) : limit_(0.5f), hits_(0), ranges_(ranges) {}
+  Driver(const Driver &amp; o) : limit_(o.limit_), hits_(o.hits_), ranges_(o.ranges_) { ++g_copies; }   // 복사될 때마다 센다
+
+  // [this] — 이 객체의 멤버를 쓰겠다
+  int close_count_this() const
+  {
+    ++hits_;                    // ← 읽기만 하는 함수에서 상태를 바꾸려 한다
+    return static_cast&lt;int&gt;(
+      std::count_if(ranges_.begin(), ranges_.end(),
+                    [this](float r) { return r &lt; limit_; }));
+  }
+
+  // [&amp;] — 바깥의 모든 것을 참조로 가져다 쓰겠다 (편하지만 무엇을 쓰는지 안 보인다)
+  int close_count_amp() const
+  {
+    return static_cast&lt;int&gt;(
+      std::count_if(ranges_.begin(), ranges_.end(),
+                    [&amp;](float r) { return r &lt; limit_; }));
+  }
+
+  int size() const { return static_cast&lt;int&gt;(ranges_.size()); }
+
+  void record() { hits_ += close_count_this(); }   // 상태를 바꾸는 함수 — const 가 없다
+  int hits() const { return hits_; }
+
+private:
+  float limit_;                  // 「가깝다」의 문턱
+  int hits_;                     // record() 가 불린 만큼 쌓인다
+  std::vector&lt;float&gt; ranges_;
+};
+
+// 「나중에 부를 함수」를 돌려준다
+std::function&lt;float()&gt; make_reader()
+{
+  std::vector&lt;float&gt; ranges{0.83f, 0.42f, 1.24f};   // 이 함수 안에서만 사는 값
+  return [ranges]() { return ranges.at(0); };      // 복사해서 들고 나간다
+}
+
+int main()
+{
+  const std::vector&lt;float&gt; ranges{0.83f, 0.42f, 1.24f, 0.31f, 2.05f};   // 라이다 값 다섯 개
+
+  std::printf(&quot;① 람다 — 조건을 그 자리에서 적는다\n&quot;);
+  const float lo = 0.16f, hi = 8.0f;
+  const int n = static_cast&lt;int&gt;(
+    std::count_if(ranges.begin(), ranges.end(),
+                  [lo, hi](float r) { return r &gt;= lo &amp;&amp; r &lt;= hi; }));
+  std::printf(&quot;   쓸 만한 값: %d개\n&quot;, n);
+
+  auto is_close = [](float r) { return r &lt; 0.5f; };   // 이름을 붙여 둔 람다
+  std::printf(&quot;   is_close(0.42) = %s,  is_close(1.24) = %s\n\n&quot;,
+              is_close(0.42f) ? &quot;참&quot; : &quot;거짓&quot;, is_close(1.24f) ? &quot;참&quot; : &quot;거짓&quot;);
+
+  std::printf(&quot;② 캡처 — 바깥 변수를 무엇으로 가져오나\n&quot;);
+  Driver d(ranges);
+  std::printf(&quot;   [this] 로 센 것: %d개\n&quot;, d.close_count_this());
+  std::printf(&quot;   [&amp;]    로 센 것: %d개   (결과는 같지만 무엇을 쓰는지 안 보인다)\n\n&quot;,
+              d.close_count_amp());
+
+  std::printf(&quot;② [=] 는 값으로 복사한다 — 큰 것이 통째로 복사된다\n&quot;);
+  g_copies = 0;
+  auto by_copy = [=]() { return d.size(); };      // 여기서 Driver 가 통째로 복사된다
+  std::printf(&quot;   [=]  로 캡처한 순간 Driver 복사 %d회 (ranges %d칸)\n&quot;, g_copies, by_copy());
+  g_copies = 0;
+  auto by_ref = [&amp;d]() { return d.size(); };
+  std::printf(&quot;   [&amp;d] 로 캡처하면 복사 %d회 (ranges %d칸)\n\n&quot;, g_copies, by_ref());
+
+  std::printf(&quot;⚠️ 저장해 뒀다 나중에 부르는 람다\n&quot;);
+  auto read = make_reader();      // make_reader 는 이미 끝났다. 그 안의 ranges 도 사라졌다
+  std::printf(&quot;   읽은 값: %.2f\n\n&quot;, read());
+
+  std::printf(&quot;③ 500ms — 단위가 코드에 적혀 있다\n&quot;);
+  const auto period = 500ms;      // 스캔 하나를 이만큼마다 받는다고 하자
+  std::printf(&quot;   500ms 는 %ld 밀리초짜리 시간 값이다\n&quot;,
+              std::chrono::duration_cast&lt;std::chrono::milliseconds&gt;(period).count());
+  std::printf(&quot;   0.5 라고 쓰면 초인지 밀리초인지 코드만 봐서는 알 수 없다\n\n&quot;);
+
+  std::printf(&quot;④ const — 이 함수는 상태를 바꾸지 않는다\n&quot;);
+  std::printf(&quot;   close_count_this() = %d  (상태는 그대로, hits = %d)\n&quot;, d.close_count_this(), d.hits());
+  d.record();
+  std::printf(&quot;   record() 한 뒤 hits = %d\n&quot;, d.hits());
+  const Driver frozen(ranges);
+  std::printf(&quot;   const 객체에서도 close_count_this 는 부를 수 있다: %d\n&quot;, frozen.close_count_this());
+  std::printf(&quot;   frozen.record() 는 컴파일이 안 된다 — 상태를 바꾸는 함수이기 때문이다\n\n&quot;);
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
   <p class="readme-first">무엇을 먼저 볼지: <strong><code>discards qualifiers</code></strong>라는 말이다.
     "<code>const</code>라는 자격을 버리려 한다"는 뜻이고, 실전에서 이 메시지를 꽤 자주 보게 된다.</p>
   <div class="interp">
@@ -467,22 +1371,181 @@ note:   in call to ‘void Tracker::record(float)’
     아래 두 코드는 문법이 똑같이 맞지만 <strong>나중에 원인을 찾을 수 있느냐가 갈린다.</strong>
   </p>
 
-<pre><code>// ① 조용히 넘어간다 — 나중에 아무것도 알 수 없다
-float nearest(const std::vector&lt;float&gt; &amp; ranges)
+  <h3>8단계 — 가장 가까운 값을 찾는 <code>nearest()</code>를 넣는다</h3>
+  <p>
+    <code>Driver</code>에 "쓸 만한 값 중 가장 가까운 것"을 돌려주는 함수를 넣는다.
+    거르는 조건은 ①절의 람다 그대로이고, 거른 것을 담는 데는 13회의 <code>copy_if</code>·<code>back_inserter</code>를 쓴다.
+    <strong>쓸 만한 값이 하나도 없을 때</strong>가 이 절의 주제다.
+  </p>
+  <div class="codelabel bad">조용히 넘어간다 — 나중에 아무것도 알 수 없다 🔴</div>
+  <pre class="before"><code>  float nearest() const
+  {
+    const float lo = 0.16f, hi = 8.0f;
+    std::vector&lt;float&gt; good;
+    std::copy_if(ranges_.begin(), ranges_.end(), std::back_inserter(good),
+                 [lo, hi](float r) { return std::isfinite(r) &amp;&amp; r &gt;= lo &amp;&amp; r &lt;= hi; });
+    if (good.empty()) { return -1.0f; }        // 왜 -1 인지 아무 데도 없다
+    return *std::min_element(good.begin(), good.end());
+  }</code></pre>
+  <div class="codelabel good">무슨 일이 있었는지 남긴다 — 이것이 8단계 본 파일이다</div>
+  <pre class="after"><code><span class="ln-add">#include &lt;cmath&gt;       // std::isfinite · std::nanf</span>
+<span class="ln-add">#include &lt;iterator&gt;    // std::back_inserter</span>
+  // …
+<span class="ln-add">  // 쓸 만한 값 중 가장 가까운 것. 하나도 없으면 -1 을 돌려주고 기록을 남긴다</span>
+<span class="ln-add">  float nearest() const</span>
+<span class="ln-add">  {</span>
+<span class="ln-add">    const float lo = 0.16f, hi = 8.0f;</span>
+<span class="ln-add">    std::vector&lt;float&gt; good;</span>
+<span class="ln-add">    std::copy_if(ranges_.begin(), ranges_.end(), std::back_inserter(good),</span>
+<span class="ln-add">                 [lo, hi](float r) { return std::isfinite(r) &amp;&amp; r &gt;= lo &amp;&amp; r &lt;= hi; });</span>
+<span class="ln-add">    if (good.empty()) {</span>
+<span class="ln-add">      std::fprintf(stderr, "[warn] Driver::nearest: 쓸 만한 거리 값이 하나도 없다\n");</span>
+<span class="ln-add">      return -1.0f;</span>
+<span class="ln-add">    }</span>
+<span class="ln-add">    return *std::min_element(good.begin(), good.end());</span>
+<span class="ln-add">  }</span></code></pre>
+  <p><code>main</code>에서는 <strong>못 쓰는 값만 든 두 번째 <code>Driver</code></strong>를 만들어 둘 다 불러 본다. 로봇이 아무것도 없는 방향을 향한 순간이다.</p>
+  <pre><code>  // … 7단계까지의 줄은 그대로 …
+<span class="ln-add">  std::printf("⑤ 기록 — 값이 없으면 조용히 넘어가지 않는다\n");</span>
+<span class="ln-add">  const Driver blind({INFINITY, std::nanf(""), 99.0f});   // 전부 못 쓰는 값 — 아무것도 없는 방향</span>
+<span class="ln-add">  std::printf("   d.nearest()     = %.2f\n", d.nearest());</span>
+<span class="ln-add">  std::printf("   blind.nearest() = %.2f   ← 이게 거리인지 실패인지 코드만 봐서는 모른다\n\n", blind.nearest());</span>
+  return 0;</code></pre>
+
+  <h3>실제로 나온 출력</h3>
+  <pre><code>⑤ 기록 — 값이 없으면 조용히 넘어가지 않는다
+   d.nearest()     = 0.31
+[warn] Driver::nearest: 쓸 만한 거리 값이 하나도 없다
+   blind.nearest() = -1.00   ← 이게 거리인지 실패인지 코드만 봐서는 모른다</code></pre>
+  <p>셋째 줄이 <strong>표준 오류로 나온 기록</strong>이다. 화면에서는 섞여 보이지만 <code>2&gt;</code>로 따로 담을 수 있다.</p>
+
+  <!-- fullcode "전체 코드 — driver.cpp (8단계 · nearest() 와 기록까지)" build="g++ -std=c++17 -O2 -o driver driver.cpp && ./driver"
+       l14_lambda/steps/step8.cpp as driver.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — driver.cpp (8단계 · nearest() 와 기록까지)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o driver driver.cpp &amp;&amp; ./driver</code></p>
+  <div class="codefile"><div class="fname">driver.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 14회 — 람다·const·C++17: 라이다 값을 거르는 Driver 를 단계별로 키운다
+#include &lt;algorithm&gt;
+#include &lt;chrono&gt;
+#include &lt;cmath&gt;
+#include &lt;cstdio&gt;
+#include &lt;functional&gt;
+#include &lt;iterator&gt;
+#include &lt;vector&gt;
+
+using namespace std::chrono_literals;   // 500ms 같은 표기를 쓰게 해 준다
+
+int g_copies = 0;                   // Driver 가 복사된 횟수. 11회에서 복사를 세던 방법 그대로다
+
+class Driver {
+public:
+  Driver(const std::vector&lt;float&gt; &amp; ranges) : limit_(0.5f), hits_(0), ranges_(ranges) {}
+  Driver(const Driver &amp; o) : limit_(o.limit_), hits_(o.hits_), ranges_(o.ranges_) { ++g_copies; }   // 복사될 때마다 센다
+
+  // [this] — 이 객체의 멤버를 쓰겠다
+  int close_count_this() const
+  {
+    return static_cast&lt;int&gt;(
+      std::count_if(ranges_.begin(), ranges_.end(),
+                    [this](float r) { return r &lt; limit_; }));
+  }
+
+  // [&amp;] — 바깥의 모든 것을 참조로 가져다 쓰겠다 (편하지만 무엇을 쓰는지 안 보인다)
+  int close_count_amp() const
+  {
+    return static_cast&lt;int&gt;(
+      std::count_if(ranges_.begin(), ranges_.end(),
+                    [&amp;](float r) { return r &lt; limit_; }));
+  }
+
+  int size() const { return static_cast&lt;int&gt;(ranges_.size()); }
+
+  void record() { hits_ += close_count_this(); }   // 상태를 바꾸는 함수 — const 가 없다
+  int hits() const { return hits_; }
+
+  // 쓸 만한 값 중 가장 가까운 것. 하나도 없으면 -1 을 돌려주고 기록을 남긴다
+  float nearest() const
+  {
+    const float lo = 0.16f, hi = 8.0f;
+    std::vector&lt;float&gt; good;
+    std::copy_if(ranges_.begin(), ranges_.end(), std::back_inserter(good),
+                 [lo, hi](float r) { return std::isfinite(r) &amp;&amp; r &gt;= lo &amp;&amp; r &lt;= hi; });
+    if (good.empty()) {
+      std::fprintf(stderr, &quot;[warn] Driver::nearest: 쓸 만한 거리 값이 하나도 없다\n&quot;);
+      return -1.0f;
+    }
+    return *std::min_element(good.begin(), good.end());
+  }
+
+private:
+  float limit_;                  // 「가깝다」의 문턱
+  int hits_;                     // record() 가 불린 만큼 쌓인다
+  std::vector&lt;float&gt; ranges_;
+};
+
+// 「나중에 부를 함수」를 돌려준다
+std::function&lt;float()&gt; make_reader()
 {
-  if (ranges.empty()) { return -1.0f; }        // 왜 -1 인지 아무 데도 없다
-  return *std::min_element(ranges.begin(), ranges.end());
+  std::vector&lt;float&gt; ranges{0.83f, 0.42f, 1.24f};   // 이 함수 안에서만 사는 값
+  return [ranges]() { return ranges.at(0); };      // 복사해서 들고 나간다
 }
 
-// ② 무슨 일이 있었는지 남긴다
-float nearest(const std::vector&lt;float&gt; &amp; ranges)
+int main()
 {
-  if (ranges.empty()) {
-    std::fprintf(stderr, "[warn] nearest: 거리 값이 하나도 없다\n");
-    return -1.0f;
-  }
-  return *std::min_element(ranges.begin(), ranges.end());
-}</code></pre>
+  const std::vector&lt;float&gt; ranges{0.83f, 0.42f, 1.24f, 0.31f, 2.05f};   // 라이다 값 다섯 개
+
+  std::printf(&quot;① 람다 — 조건을 그 자리에서 적는다\n&quot;);
+  const float lo = 0.16f, hi = 8.0f;
+  const int n = static_cast&lt;int&gt;(
+    std::count_if(ranges.begin(), ranges.end(),
+                  [lo, hi](float r) { return r &gt;= lo &amp;&amp; r &lt;= hi; }));
+  std::printf(&quot;   쓸 만한 값: %d개\n&quot;, n);
+
+  auto is_close = [](float r) { return r &lt; 0.5f; };   // 이름을 붙여 둔 람다
+  std::printf(&quot;   is_close(0.42) = %s,  is_close(1.24) = %s\n\n&quot;,
+              is_close(0.42f) ? &quot;참&quot; : &quot;거짓&quot;, is_close(1.24f) ? &quot;참&quot; : &quot;거짓&quot;);
+
+  std::printf(&quot;② 캡처 — 바깥 변수를 무엇으로 가져오나\n&quot;);
+  Driver d(ranges);
+  std::printf(&quot;   [this] 로 센 것: %d개\n&quot;, d.close_count_this());
+  std::printf(&quot;   [&amp;]    로 센 것: %d개   (결과는 같지만 무엇을 쓰는지 안 보인다)\n\n&quot;,
+              d.close_count_amp());
+
+  std::printf(&quot;② [=] 는 값으로 복사한다 — 큰 것이 통째로 복사된다\n&quot;);
+  g_copies = 0;
+  auto by_copy = [=]() { return d.size(); };      // 여기서 Driver 가 통째로 복사된다
+  std::printf(&quot;   [=]  로 캡처한 순간 Driver 복사 %d회 (ranges %d칸)\n&quot;, g_copies, by_copy());
+  g_copies = 0;
+  auto by_ref = [&amp;d]() { return d.size(); };
+  std::printf(&quot;   [&amp;d] 로 캡처하면 복사 %d회 (ranges %d칸)\n\n&quot;, g_copies, by_ref());
+
+  std::printf(&quot;⚠️ 저장해 뒀다 나중에 부르는 람다\n&quot;);
+  auto read = make_reader();      // make_reader 는 이미 끝났다. 그 안의 ranges 도 사라졌다
+  std::printf(&quot;   읽은 값: %.2f\n\n&quot;, read());
+
+  std::printf(&quot;③ 500ms — 단위가 코드에 적혀 있다\n&quot;);
+  const auto period = 500ms;      // 스캔 하나를 이만큼마다 받는다고 하자
+  std::printf(&quot;   500ms 는 %ld 밀리초짜리 시간 값이다\n&quot;,
+              std::chrono::duration_cast&lt;std::chrono::milliseconds&gt;(period).count());
+  std::printf(&quot;   0.5 라고 쓰면 초인지 밀리초인지 코드만 봐서는 알 수 없다\n\n&quot;);
+
+  std::printf(&quot;④ const — 이 함수는 상태를 바꾸지 않는다\n&quot;);
+  std::printf(&quot;   close_count_this() = %d  (상태는 그대로, hits = %d)\n&quot;, d.close_count_this(), d.hits());
+  d.record();
+  std::printf(&quot;   record() 한 뒤 hits = %d\n&quot;, d.hits());
+  const Driver frozen(ranges);
+  std::printf(&quot;   const 객체에서도 close_count_this 는 부를 수 있다: %d\n&quot;, frozen.close_count_this());
+  std::printf(&quot;   frozen.record() 는 컴파일이 안 된다 — 상태를 바꾸는 함수이기 때문이다\n\n&quot;);
+
+  std::printf(&quot;⑤ 기록 — 값이 없으면 조용히 넘어가지 않는다\n&quot;);
+  const Driver blind({INFINITY, std::nanf(&quot;&quot;), 99.0f});   // 전부 못 쓰는 값 — 아무것도 없는 방향
+  std::printf(&quot;   d.nearest()     = %.2f\n&quot;, d.nearest());
+  std::printf(&quot;   blind.nearest() = %.2f   ← 이게 거리인지 실패인지 코드만 봐서는 모른다\n\n&quot;, blind.nearest());
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
 
   <div class="tablewrap">
   <table class="summary-table">
@@ -500,6 +1563,10 @@ float nearest(const std::vector&lt;float&gt; &amp; ranges)
       <dd>글자를 <strong>표준 오류(2번 관)로</strong> 찍는다.
           <strong>4회 ⑦절에서 관이 두 개라고 한 그 2번</strong>이다.
           정상 결과와 섞이지 않아서 <strong><code>2&gt;</code>로 따로 파일에 담을 수 있다.</strong></dd>
+
+      <dt><code>std::nanf("")</code></dt>
+      <dd>"숫자가 아님"(NaN)이라는 <code>float</code> 값을 만든다. 13회에서 본 그 <code>NaN</code>이다.
+          여기서는 라이다가 측정에 실패한 칸을 흉내내는 데 썼다. <code>&lt;cmath&gt;</code>에 들어 있다.</dd>
     </dl>
   </div>
 
@@ -529,15 +1596,16 @@ float nearest(const std::vector&lt;float&gt; &amp; ranges)
       빠뜨리고 싶어도 빠뜨리기 어렵다.</figcaption>
   </figure>
 
-  <div class="codelabel bad">AI가 보통 주는 코드 🔴</div>
-  <pre class="before"><code>// 실패하면 -1 을 돌려준다
-float nearest(const std::vector&lt;float&gt; &amp; r)
-{
-  std::vector&lt;float&gt; good;
-  for (float x : r) { if (std::isfinite(x) &amp;&amp; x &gt;= 0.16f &amp;&amp; x &lt;= 8.0f) { good.push_back(x); } }
-  if (good.empty()) { return -1.0f; }
-  return *std::min_element(good.begin(), good.end());
-}</code></pre>
+  <div class="codelabel bad">AI가 보통 주는 코드 🔴 — 8단계의 <code>nearest()</code>가 바로 이 모양이다</div>
+  <pre class="before"><code>  float nearest() const                       // 실패하면 -1 을 돌려준다
+  {
+    // … 거르는 부분은 같다 …
+    if (good.empty()) {
+      std::fprintf(stderr, "[warn] Driver::nearest: 쓸 만한 거리 값이 하나도 없다\n");
+      return -1.0f;
+    }
+    return *std::min_element(good.begin(), good.end());
+  }</code></pre>
 
   <h3>무엇이 문제인가</h3>
   <p>
@@ -552,16 +1620,39 @@ float nearest(const std::vector&lt;float&gt; &amp; r)
     C++17로 짜 줘. 실패할 수 있는 함수는 <code>-1</code> 대신 <code>std::optional</code>로 반환해 줘.
   </div>
 
+  <h3>9단계 — 반환 타입을 바꾼다. 고치는 줄은 셋이다</h3>
   <div class="codelabel good">받은 코드</div>
-  <pre class="after"><code>#include &lt;optional&gt;
-
-std::optional&lt;float&gt; nearest(const std::vector&lt;float&gt; &amp; r)
-{
-  std::vector&lt;float&gt; good;
-  for (float x : r) { if (std::isfinite(x) &amp;&amp; x &gt;= 0.16f &amp;&amp; x &lt;= 8.0f) { good.push_back(x); } }
-  if (good.empty()) { return std::nullopt; }
-  return *std::min_element(good.begin(), good.end());
-}</code></pre>
+  <pre class="after"><code><span class="ln-add">#include &lt;optional&gt;</span>
+  // …
+<span class="ln-del">  // 쓸 만한 값 중 가장 가까운 것. 하나도 없으면 -1 을 돌려주고 기록을 남긴다</span>
+<span class="ln-del">  float nearest() const</span>
+<span class="ln-add">  // 쓸 만한 값 중 가장 가까운 것. 하나도 없으면 「값 없음」을 돌려주고 기록을 남긴다</span>
+<span class="ln-add">  std::optional&lt;float&gt; nearest() const</span>
+  {
+    // … 거르는 부분은 같다 …
+    if (good.empty()) {
+      std::fprintf(stderr, "[warn] Driver::nearest: 쓸 만한 거리 값이 하나도 없다\n");
+<span class="ln-del">      return -1.0f;</span>
+<span class="ln-add">      return std::nullopt;</span>
+    }
+    return *std::min_element(good.begin(), good.end());
+  }</code></pre>
+  <p>
+    반환 타입이 바뀌었으니 <strong><code>main</code>에서 <code>%.2f</code>로 찍던 두 줄은 이제 컴파일이 안 된다.</strong>
+    그것이 이 타입의 값어치다 — 검사 없이 값을 쓰던 자리가 <strong>컴파일러에게 잡힌다.</strong> 받는 쪽을 이렇게 고친다.
+  </p>
+  <pre><code><span class="ln-del">  std::printf("⑤ 기록 — 값이 없으면 조용히 넘어가지 않는다\n");</span>
+<span class="ln-add">  std::printf("⑥ optional — \"값이 없음\"을 -1 로 표현하지 않는다\n");</span>
+  const Driver blind({INFINITY, std::nanf(""), 99.0f});   // 전부 못 쓰는 값 — 아무것도 없는 방향
+<span class="ln-del">  std::printf("   d.nearest()     = %.2f\n", d.nearest());</span>
+<span class="ln-del">  std::printf("   blind.nearest() = %.2f   ← 이게 거리인지 실패인지 코드만 봐서는 모른다\n\n", blind.nearest());</span>
+<span class="ln-add">  const auto near = d.nearest();</span>
+<span class="ln-add">  const auto none = blind.nearest();</span>
+<span class="ln-add">  std::printf("   d.nearest()     : %s\n", near.has_value() ? "값 있음" : "값 없음(nullopt)");</span>
+<span class="ln-add">  std::printf("   blind.nearest() : %s\n", none.has_value() ? "값 있음" : "값 없음(nullopt)");</span>
+<span class="ln-add">  if (!none) { std::printf("   → if (!v) 한 줄로 걸러진다. 검사를 빠뜨리기 어렵다\n"); }</span>
+<span class="ln-add">  if (near)  { std::printf("   → 값이 있을 때만 꺼낸다: *near = %.2f\n\n", *near); }</span>
+  return 0;</code></pre>
 
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
@@ -582,11 +1673,147 @@ std::optional&lt;float&gt; nearest(const std::vector&lt;float&gt; &amp; r)
     </dl>
   </div>
 
-  <p>둘을 나란히 돌려 본 결과다. 입력은 전부 못 쓰는 값(<code>inf</code>·<code>NaN</code>·범위 밖)만 넣었다.</p>
-  <pre><code>① std::optional — "값이 없음"을 -1 로 표현하지 않는다
-   옛날 방식 반환값: -1.0   ← 이게 거리인지 실패인지 코드만 봐서는 모른다
-   optional 반환값 : 값 없음(nullopt)
-   → if (!v) 한 줄로 걸러진다. 검사를 빠뜨리기 어렵다</code></pre>
+  <h3>실제로 나온 출력</h3>
+  <p><code>blind</code>는 전부 못 쓰는 값(<code>inf</code>·<code>NaN</code>·범위 밖)만 들고 있다. 둘째 줄의 <code>[warn]</code>은 8단계와 같은 기록이다.</p>
+  <pre><code>⑥ optional — "값이 없음"을 -1 로 표현하지 않는다
+[warn] Driver::nearest: 쓸 만한 거리 값이 하나도 없다
+   d.nearest()     : 값 있음
+   blind.nearest() : 값 없음(nullopt)
+   → if (!v) 한 줄로 걸러진다. 검사를 빠뜨리기 어렵다
+   → 값이 있을 때만 꺼낸다: *near = 0.31</code></pre>
+
+  <!-- fullcode "전체 코드 — driver.cpp (9단계 · std::optional 까지)" build="g++ -std=c++17 -O2 -o driver driver.cpp && ./driver"
+       l14_lambda/steps/step9.cpp as driver.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — driver.cpp (9단계 · std::optional 까지)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o driver driver.cpp &amp;&amp; ./driver</code></p>
+  <div class="codefile"><div class="fname">driver.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 14회 — 람다·const·C++17: 라이다 값을 거르는 Driver 를 단계별로 키운다
+#include &lt;algorithm&gt;
+#include &lt;chrono&gt;
+#include &lt;cmath&gt;
+#include &lt;cstdio&gt;
+#include &lt;functional&gt;
+#include &lt;iterator&gt;
+#include &lt;optional&gt;
+#include &lt;vector&gt;
+
+using namespace std::chrono_literals;   // 500ms 같은 표기를 쓰게 해 준다
+
+int g_copies = 0;                   // Driver 가 복사된 횟수. 11회에서 복사를 세던 방법 그대로다
+
+class Driver {
+public:
+  Driver(const std::vector&lt;float&gt; &amp; ranges) : limit_(0.5f), hits_(0), ranges_(ranges) {}
+  Driver(const Driver &amp; o) : limit_(o.limit_), hits_(o.hits_), ranges_(o.ranges_) { ++g_copies; }   // 복사될 때마다 센다
+
+  // [this] — 이 객체의 멤버를 쓰겠다
+  int close_count_this() const
+  {
+    return static_cast&lt;int&gt;(
+      std::count_if(ranges_.begin(), ranges_.end(),
+                    [this](float r) { return r &lt; limit_; }));
+  }
+
+  // [&amp;] — 바깥의 모든 것을 참조로 가져다 쓰겠다 (편하지만 무엇을 쓰는지 안 보인다)
+  int close_count_amp() const
+  {
+    return static_cast&lt;int&gt;(
+      std::count_if(ranges_.begin(), ranges_.end(),
+                    [&amp;](float r) { return r &lt; limit_; }));
+  }
+
+  int size() const { return static_cast&lt;int&gt;(ranges_.size()); }
+
+  void record() { hits_ += close_count_this(); }   // 상태를 바꾸는 함수 — const 가 없다
+  int hits() const { return hits_; }
+
+  // 쓸 만한 값 중 가장 가까운 것. 하나도 없으면 「값 없음」을 돌려주고 기록을 남긴다
+  std::optional&lt;float&gt; nearest() const
+  {
+    const float lo = 0.16f, hi = 8.0f;
+    std::vector&lt;float&gt; good;
+    std::copy_if(ranges_.begin(), ranges_.end(), std::back_inserter(good),
+                 [lo, hi](float r) { return std::isfinite(r) &amp;&amp; r &gt;= lo &amp;&amp; r &lt;= hi; });
+    if (good.empty()) {
+      std::fprintf(stderr, &quot;[warn] Driver::nearest: 쓸 만한 거리 값이 하나도 없다\n&quot;);
+      return std::nullopt;
+    }
+    return *std::min_element(good.begin(), good.end());
+  }
+
+private:
+  float limit_;                  // 「가깝다」의 문턱
+  int hits_;                     // record() 가 불린 만큼 쌓인다
+  std::vector&lt;float&gt; ranges_;
+};
+
+// 「나중에 부를 함수」를 돌려준다
+std::function&lt;float()&gt; make_reader()
+{
+  std::vector&lt;float&gt; ranges{0.83f, 0.42f, 1.24f};   // 이 함수 안에서만 사는 값
+  return [ranges]() { return ranges.at(0); };      // 복사해서 들고 나간다
+}
+
+int main()
+{
+  const std::vector&lt;float&gt; ranges{0.83f, 0.42f, 1.24f, 0.31f, 2.05f};   // 라이다 값 다섯 개
+
+  std::printf(&quot;① 람다 — 조건을 그 자리에서 적는다\n&quot;);
+  const float lo = 0.16f, hi = 8.0f;
+  const int n = static_cast&lt;int&gt;(
+    std::count_if(ranges.begin(), ranges.end(),
+                  [lo, hi](float r) { return r &gt;= lo &amp;&amp; r &lt;= hi; }));
+  std::printf(&quot;   쓸 만한 값: %d개\n&quot;, n);
+
+  auto is_close = [](float r) { return r &lt; 0.5f; };   // 이름을 붙여 둔 람다
+  std::printf(&quot;   is_close(0.42) = %s,  is_close(1.24) = %s\n\n&quot;,
+              is_close(0.42f) ? &quot;참&quot; : &quot;거짓&quot;, is_close(1.24f) ? &quot;참&quot; : &quot;거짓&quot;);
+
+  std::printf(&quot;② 캡처 — 바깥 변수를 무엇으로 가져오나\n&quot;);
+  Driver d(ranges);
+  std::printf(&quot;   [this] 로 센 것: %d개\n&quot;, d.close_count_this());
+  std::printf(&quot;   [&amp;]    로 센 것: %d개   (결과는 같지만 무엇을 쓰는지 안 보인다)\n\n&quot;,
+              d.close_count_amp());
+
+  std::printf(&quot;② [=] 는 값으로 복사한다 — 큰 것이 통째로 복사된다\n&quot;);
+  g_copies = 0;
+  auto by_copy = [=]() { return d.size(); };      // 여기서 Driver 가 통째로 복사된다
+  std::printf(&quot;   [=]  로 캡처한 순간 Driver 복사 %d회 (ranges %d칸)\n&quot;, g_copies, by_copy());
+  g_copies = 0;
+  auto by_ref = [&amp;d]() { return d.size(); };
+  std::printf(&quot;   [&amp;d] 로 캡처하면 복사 %d회 (ranges %d칸)\n\n&quot;, g_copies, by_ref());
+
+  std::printf(&quot;⚠️ 저장해 뒀다 나중에 부르는 람다\n&quot;);
+  auto read = make_reader();      // make_reader 는 이미 끝났다. 그 안의 ranges 도 사라졌다
+  std::printf(&quot;   읽은 값: %.2f\n\n&quot;, read());
+
+  std::printf(&quot;③ 500ms — 단위가 코드에 적혀 있다\n&quot;);
+  const auto period = 500ms;      // 스캔 하나를 이만큼마다 받는다고 하자
+  std::printf(&quot;   500ms 는 %ld 밀리초짜리 시간 값이다\n&quot;,
+              std::chrono::duration_cast&lt;std::chrono::milliseconds&gt;(period).count());
+  std::printf(&quot;   0.5 라고 쓰면 초인지 밀리초인지 코드만 봐서는 알 수 없다\n\n&quot;);
+
+  std::printf(&quot;④ const — 이 함수는 상태를 바꾸지 않는다\n&quot;);
+  std::printf(&quot;   close_count_this() = %d  (상태는 그대로, hits = %d)\n&quot;, d.close_count_this(), d.hits());
+  d.record();
+  std::printf(&quot;   record() 한 뒤 hits = %d\n&quot;, d.hits());
+  const Driver frozen(ranges);
+  std::printf(&quot;   const 객체에서도 close_count_this 는 부를 수 있다: %d\n&quot;, frozen.close_count_this());
+  std::printf(&quot;   frozen.record() 는 컴파일이 안 된다 — 상태를 바꾸는 함수이기 때문이다\n\n&quot;);
+
+  std::printf(&quot;⑥ optional — \&quot;값이 없음\&quot;을 -1 로 표현하지 않는다\n&quot;);
+  const Driver blind({INFINITY, std::nanf(&quot;&quot;), 99.0f});   // 전부 못 쓰는 값 — 아무것도 없는 방향
+  const auto near = d.nearest();
+  const auto none = blind.nearest();
+  std::printf(&quot;   d.nearest()     : %s\n&quot;, near.has_value() ? &quot;값 있음&quot; : &quot;값 없음(nullopt)&quot;);
+  std::printf(&quot;   blind.nearest() : %s\n&quot;, none.has_value() ? &quot;값 있음&quot; : &quot;값 없음(nullopt)&quot;);
+  if (!none) { std::printf(&quot;   → if (!v) 한 줄로 걸러진다. 검사를 빠뜨리기 어렵다\n&quot;); }
+  if (near)  { std::printf(&quot;   → 값이 있을 때만 꺼낸다: *near = %.2f\n\n&quot;, *near); }
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
 
   <h3>쓸 때 / 안 쓸 때</h3>
   <div class="tablewrap">
@@ -605,20 +1832,24 @@ std::optional&lt;float&gt; nearest(const std::vector&lt;float&gt; &amp; r)
     함수가 값을 <strong>두 개</strong> 돌려줘야 할 때가 있다. 극좌표를 직교좌표로 펴면 <code>x</code>와 <code>y</code>가 나온다.
   </p>
 
-  <pre><code>#include &lt;utility&gt;
-
-std::pair&lt;float, float&gt; to_xy(float r, float th)
-{
-  return {r * std::cos(th), r * std::sin(th)};
-}
-
-// 옛날 방식 — 무엇이 x 이고 무엇이 y 인지 이름이 없다
-const auto p = to_xy(1.5f, 0.5236f);
+  <h3>10단계 — 마지막. <code>to_xy()</code>를 넣고 <code>main</code>에 두 묶음을 더한다</h3>
+  <p>9단계에서 찾은 가장 가까운 값이 30° 방향에 있다고 하고, 그것을 <code>x</code>·<code>y</code>로 편다.</p>
+  <pre><code><span class="ln-add">#include &lt;utility&gt;</span>
+  // …
+<span class="ln-add">// 극좌표(거리 r, 각도 th) → 직교좌표(x, y). 값 두 개를 묶어서 돌려준다</span>
+<span class="ln-add">std::pair&lt;float, float&gt; to_xy(float r, float th) { return {r * std::cos(th), r * std::sin(th)}; }</span></code></pre>
+  <p>받는 쪽은 두 가지로 쓸 수 있다. 위가 옛날 방식, 아래가 C++17이고 <strong>본 파일에는 아래만 들어간다.</strong></p>
+  <pre><code>// 옛날 방식 — 무엇이 x 이고 무엇이 y 인지 이름이 없다
+const auto p = to_xy(*near, 0.5236f);
 const float x1 = p.first;
 const float y1 = p.second;
 
 // C++17 — 받는 자리에서 이름을 붙인다
-const auto [x, y] = to_xy(1.5f, 0.5236f);</code></pre>
+const auto [x, y] = to_xy(*near, 0.5236f);</code></pre>
+  <pre><code>  // … 9단계까지의 줄은 그대로 …
+<span class="ln-add">  std::printf("⑦ 구조적 바인딩 — 묶여 온 값을 한 줄로 푼다\n");</span>
+<span class="ln-add">  const auto [x, y] = to_xy(*near, 0.5236f);          // 가장 가까운 값이 30° 방향에 있다고 하자</span>
+<span class="ln-add">  std::printf("   r=%.2f m, θ=30° → x=%.3f, y=%.3f\n\n", *near, x, y);</span></code></pre>
 
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
@@ -638,25 +1869,180 @@ const auto [x, y] = to_xy(1.5f, 0.5236f);</code></pre>
     <p class="later">제대로 다루는 곳: 25회(좌표계와 변환 — 극좌표를 펴다)</p>
   </div>
 
-  <pre><code>② 구조적 바인딩 — 묶여 온 값을 한 줄로 푼다
-   r=1.50 m, θ=30° → x=1.299, y=0.750</code></pre>
+  <pre><code>⑦ 구조적 바인딩 — 묶여 온 값을 한 줄로 푼다
+   r=0.31 m, θ=30° → x=0.268, y=0.155</code></pre>
 
   <h3><code>if</code> 안에서 변수를 선언하면 그 이름이 밖으로 새지 않는다</h3>
-  <pre><code>if (auto it = std::find_if(mixed.begin(), mixed.end(),
-                           [](float r) { return r &lt; 0.5f; });
-    it != mixed.end())
-{
-  std::printf("   0.5m 안쪽 값 %.2f 를 찾았다\n", *it);
-}
-// 여기서는 it 를 쓸 수 없다</code></pre>
-  <pre><code>③ if 안에서 변수를 선언한다 — 그 변수는 if 밖으로 새지 않는다
-   0.5m 안쪽 값 0.42 를 찾았다
+  <p>2단계에서 이름을 붙여 둔 <code>is_close</code>를 여기서 다시 쓴다. <code>ranges</code>에서 0.5 m 안쪽 값을 처음 만나는 자리를 찾는다.</p>
+  <pre><code><span class="ln-add">  std::printf("⑦ if 안 선언 — 그 변수는 if 밖으로 새지 않는다\n");</span>
+<span class="ln-add">  if (auto it = std::find_if(ranges.begin(), ranges.end(), is_close);</span>
+<span class="ln-add">      it != ranges.end())</span>
+<span class="ln-add">  {</span>
+<span class="ln-add">    std::printf("   0.5m 안쪽 값 %.2f 를 먼저 찾았다\n", *it);</span>
+<span class="ln-add">  }</span>
+<span class="ln-add">  std::printf("   여기서는 it 를 쓸 수 없다 — 이름이 새지 않으니 다음 if 에서 또 쓸 수 있다\n");</span>
+  return 0;</code></pre>
+  <pre><code>⑦ if 안 선언 — 그 변수는 if 밖으로 새지 않는다
+   0.5m 안쪽 값 0.42 를 먼저 찾았다
    여기서는 it 를 쓸 수 없다 — 이름이 새지 않으니 다음 if 에서 또 쓸 수 있다</code></pre>
   <div class="interp">
     <strong>해석:</strong> 이득은 <strong>같은 이름을 여러 번 쓸 수 있다</strong>는 것이다.
     찾는 코드가 세 번 나오면 <code>it1</code>·<code>it2</code>·<code>it3</code>를 만들 필요가 없다.
     번호가 붙은 변수 이름은 그 자체로 실수의 씨앗이다.
   </div>
+
+  <!-- fullcode "전체 코드 — driver.cpp (10단계 · 완성본)" build="g++ -std=c++17 -O2 -o driver driver.cpp && ./driver"
+       l14_lambda/steps/step10.cpp as driver.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — driver.cpp (10단계 · 완성본)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o driver driver.cpp &amp;&amp; ./driver</code></p>
+  <div class="codefile"><div class="fname">driver.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 14회 — 람다·const·C++17: 라이다 값을 거르는 Driver 를 단계별로 키운다
+#include &lt;algorithm&gt;
+#include &lt;chrono&gt;
+#include &lt;cmath&gt;
+#include &lt;cstdio&gt;
+#include &lt;functional&gt;
+#include &lt;iterator&gt;
+#include &lt;optional&gt;
+#include &lt;utility&gt;
+#include &lt;vector&gt;
+
+using namespace std::chrono_literals;   // 500ms 같은 표기를 쓰게 해 준다
+
+int g_copies = 0;                   // Driver 가 복사된 횟수. 11회에서 복사를 세던 방법 그대로다
+
+class Driver {
+public:
+  Driver(const std::vector&lt;float&gt; &amp; ranges) : limit_(0.5f), hits_(0), ranges_(ranges) {}
+  Driver(const Driver &amp; o) : limit_(o.limit_), hits_(o.hits_), ranges_(o.ranges_) { ++g_copies; }   // 복사될 때마다 센다
+
+  // [this] — 이 객체의 멤버를 쓰겠다
+  int close_count_this() const
+  {
+    return static_cast&lt;int&gt;(
+      std::count_if(ranges_.begin(), ranges_.end(),
+                    [this](float r) { return r &lt; limit_; }));
+  }
+
+  // [&amp;] — 바깥의 모든 것을 참조로 가져다 쓰겠다 (편하지만 무엇을 쓰는지 안 보인다)
+  int close_count_amp() const
+  {
+    return static_cast&lt;int&gt;(
+      std::count_if(ranges_.begin(), ranges_.end(),
+                    [&amp;](float r) { return r &lt; limit_; }));
+  }
+
+  int size() const { return static_cast&lt;int&gt;(ranges_.size()); }
+
+  void record() { hits_ += close_count_this(); }   // 상태를 바꾸는 함수 — const 가 없다
+  int hits() const { return hits_; }
+
+  // 쓸 만한 값 중 가장 가까운 것. 하나도 없으면 「값 없음」을 돌려주고 기록을 남긴다
+  std::optional&lt;float&gt; nearest() const
+  {
+    const float lo = 0.16f, hi = 8.0f;
+    std::vector&lt;float&gt; good;
+    std::copy_if(ranges_.begin(), ranges_.end(), std::back_inserter(good),
+                 [lo, hi](float r) { return std::isfinite(r) &amp;&amp; r &gt;= lo &amp;&amp; r &lt;= hi; });
+    if (good.empty()) {
+      std::fprintf(stderr, &quot;[warn] Driver::nearest: 쓸 만한 거리 값이 하나도 없다\n&quot;);
+      return std::nullopt;
+    }
+    return *std::min_element(good.begin(), good.end());
+  }
+
+private:
+  float limit_;                  // 「가깝다」의 문턱
+  int hits_;                     // record() 가 불린 만큼 쌓인다
+  std::vector&lt;float&gt; ranges_;
+};
+
+// 「나중에 부를 함수」를 돌려준다
+std::function&lt;float()&gt; make_reader()
+{
+  std::vector&lt;float&gt; ranges{0.83f, 0.42f, 1.24f};   // 이 함수 안에서만 사는 값
+  return [ranges]() { return ranges.at(0); };      // 복사해서 들고 나간다
+}
+
+// 극좌표(거리 r, 각도 th) → 직교좌표(x, y). 값 두 개를 묶어서 돌려준다
+std::pair&lt;float, float&gt; to_xy(float r, float th) { return {r * std::cos(th), r * std::sin(th)}; }
+
+int main()
+{
+  const std::vector&lt;float&gt; ranges{0.83f, 0.42f, 1.24f, 0.31f, 2.05f};   // 라이다 값 다섯 개
+
+  std::printf(&quot;① 람다 — 조건을 그 자리에서 적는다\n&quot;);
+  const float lo = 0.16f, hi = 8.0f;
+  const int n = static_cast&lt;int&gt;(
+    std::count_if(ranges.begin(), ranges.end(),
+                  [lo, hi](float r) { return r &gt;= lo &amp;&amp; r &lt;= hi; }));
+  std::printf(&quot;   쓸 만한 값: %d개\n&quot;, n);
+
+  auto is_close = [](float r) { return r &lt; 0.5f; };   // 이름을 붙여 둔 람다
+  std::printf(&quot;   is_close(0.42) = %s,  is_close(1.24) = %s\n\n&quot;,
+              is_close(0.42f) ? &quot;참&quot; : &quot;거짓&quot;, is_close(1.24f) ? &quot;참&quot; : &quot;거짓&quot;);
+
+  std::printf(&quot;② 캡처 — 바깥 변수를 무엇으로 가져오나\n&quot;);
+  Driver d(ranges);
+  std::printf(&quot;   [this] 로 센 것: %d개\n&quot;, d.close_count_this());
+  std::printf(&quot;   [&amp;]    로 센 것: %d개   (결과는 같지만 무엇을 쓰는지 안 보인다)\n\n&quot;,
+              d.close_count_amp());
+
+  std::printf(&quot;② [=] 는 값으로 복사한다 — 큰 것이 통째로 복사된다\n&quot;);
+  g_copies = 0;
+  auto by_copy = [=]() { return d.size(); };      // 여기서 Driver 가 통째로 복사된다
+  std::printf(&quot;   [=]  로 캡처한 순간 Driver 복사 %d회 (ranges %d칸)\n&quot;, g_copies, by_copy());
+  g_copies = 0;
+  auto by_ref = [&amp;d]() { return d.size(); };
+  std::printf(&quot;   [&amp;d] 로 캡처하면 복사 %d회 (ranges %d칸)\n\n&quot;, g_copies, by_ref());
+
+  std::printf(&quot;⚠️ 저장해 뒀다 나중에 부르는 람다\n&quot;);
+  auto read = make_reader();      // make_reader 는 이미 끝났다. 그 안의 ranges 도 사라졌다
+  std::printf(&quot;   읽은 값: %.2f\n\n&quot;, read());
+
+  std::printf(&quot;③ 500ms — 단위가 코드에 적혀 있다\n&quot;);
+  const auto period = 500ms;      // 스캔 하나를 이만큼마다 받는다고 하자
+  std::printf(&quot;   500ms 는 %ld 밀리초짜리 시간 값이다\n&quot;,
+              std::chrono::duration_cast&lt;std::chrono::milliseconds&gt;(period).count());
+  std::printf(&quot;   0.5 라고 쓰면 초인지 밀리초인지 코드만 봐서는 알 수 없다\n\n&quot;);
+
+  std::printf(&quot;④ const — 이 함수는 상태를 바꾸지 않는다\n&quot;);
+  std::printf(&quot;   close_count_this() = %d  (상태는 그대로, hits = %d)\n&quot;, d.close_count_this(), d.hits());
+  d.record();
+  std::printf(&quot;   record() 한 뒤 hits = %d\n&quot;, d.hits());
+  const Driver frozen(ranges);
+  std::printf(&quot;   const 객체에서도 close_count_this 는 부를 수 있다: %d\n&quot;, frozen.close_count_this());
+  std::printf(&quot;   frozen.record() 는 컴파일이 안 된다 — 상태를 바꾸는 함수이기 때문이다\n\n&quot;);
+
+  std::printf(&quot;⑥ optional — \&quot;값이 없음\&quot;을 -1 로 표현하지 않는다\n&quot;);
+  const Driver blind({INFINITY, std::nanf(&quot;&quot;), 99.0f});   // 전부 못 쓰는 값 — 아무것도 없는 방향
+  const auto near = d.nearest();
+  const auto none = blind.nearest();
+  std::printf(&quot;   d.nearest()     : %s\n&quot;, near.has_value() ? &quot;값 있음&quot; : &quot;값 없음(nullopt)&quot;);
+  std::printf(&quot;   blind.nearest() : %s\n&quot;, none.has_value() ? &quot;값 있음&quot; : &quot;값 없음(nullopt)&quot;);
+  if (!none) { std::printf(&quot;   → if (!v) 한 줄로 걸러진다. 검사를 빠뜨리기 어렵다\n&quot;); }
+  if (near)  { std::printf(&quot;   → 값이 있을 때만 꺼낸다: *near = %.2f\n\n&quot;, *near); }
+
+  std::printf(&quot;⑦ 구조적 바인딩 — 묶여 온 값을 한 줄로 푼다\n&quot;);
+  const auto [x, y] = to_xy(*near, 0.5236f);          // 가장 가까운 값이 30° 방향에 있다고 하자
+  std::printf(&quot;   r=%.2f m, θ=30° → x=%.3f, y=%.3f\n\n&quot;, *near, x, y);
+
+  std::printf(&quot;⑦ if 안 선언 — 그 변수는 if 밖으로 새지 않는다\n&quot;);
+  if (auto it = std::find_if(ranges.begin(), ranges.end(), is_close);
+      it != ranges.end())
+  {
+    std::printf(&quot;   0.5m 안쪽 값 %.2f 를 먼저 찾았다\n&quot;, *it);
+  }
+  std::printf(&quot;   여기서는 it 를 쓸 수 없다 — 이름이 새지 않으니 다음 if 에서 또 쓸 수 있다\n&quot;);
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+  <p>
+    <strong>여기까지가 완성본이다.</strong> 1단계의 스무 줄이 140줄이 됐고,
+    오늘 배운 여덟 가지가 전부 이 한 파일 안에 있다. 실습에서 이 파일을 그대로 쓴다.
+  </p>
 
   <!-- ── 🧪 실습 ── -->
   <h2 id="lab">🧪 실습 — 캡처 한 글자를 바꿔 답이 무너지는 것을 본다 <span class="badge b-red">🔴 사람이 판단</span></h2>
@@ -670,41 +2056,87 @@ const auto [x, y] = to_xy(1.5f, 0.5236f);</code></pre>
 
     <p class="boxtitle">준비물</p>
     <ul>
-      <li>WSL 터미널 하나</li>
-      <li><code>examples/l14_lambda/dangling_capture.cpp</code>와 <code>lambda_basics.cpp</code> (수업 자료로 배포)</li>
+      <li>WSL 터미널 하나와 VS Code</li>
+      <li>이 자료의 📄 「전체 코드」 상자 두 개 — ⑦절 끝의 <strong>완성본</strong>과 ②절 함정의 <strong><code>driver_dangling.cpp</code> 변형</strong></li>
       <li>로봇도 ROS도 필요 없다</li>
     </ul>
 
     <p class="boxtitle">절차</p>
     <ol>
-      <li><strong>(2분)</strong> <code>dangling_capture.cpp</code>를 그냥 빌드해서 <strong>세 번</strong> 돌린다.
-        <pre><code>g++ -std=c++17 -O2 -o dangling_plain dangling_capture.cpp
-./dangling_plain ; ./dangling_plain ; ./dangling_plain</code></pre>
-        <strong>세 번의 답이 같은가?</strong> 종료 코드는 무엇인가(<code>echo $?</code>)?</li>
+      <li><strong>(2분)</strong> 작업 폴더를 만들고, ⑦절 끝의 📄 「10단계 · 완성본」 상자를 펼쳐 「복사」를 누른 뒤 <code>driver.cpp</code>에 붙여 넣는다.
+        <strong>타이핑하지 않는다.</strong>
+        <pre><code>mkdir -p ~/robot_ws/l14 &amp;&amp; cd ~/robot_ws/l14 &amp;&amp; code .</code></pre></li>
+      <li><strong>(2분)</strong> 빌드해서 돌린다. 아래 「성공 화면」과 같은지 본다.
+        <pre><code>g++ -std=c++17 -O2 -o driver driver.cpp
+./driver</code></pre></li>
+      <li><strong>(2분)</strong> 같은 방법으로 ②절 함정의 📄 <code>driver_dangling.cpp</code> 상자를 복사해 파일로 만들고, 그냥 빌드해서 <strong>세 번</strong> 돌린다.
+        <pre><code>g++ -std=c++17 -O2 -o driver_dangling driver_dangling.cpp
+./driver_dangling ; ./driver_dangling ; ./driver_dangling</code></pre>
+        「⚠️ 저장해 뒀다…」 아래 줄의 <strong>세 번의 답이 같은가?</strong> 종료 코드는 무엇인가(<code>echo $?</code>)?</li>
       <li><strong>(5분)</strong> 주소 검사기를 켜고 다시 빌드해 돌린다.
-        <pre><code>g++ -std=c++17 -g -fsanitize=address -o dangling dangling_capture.cpp
-./dangling</code></pre>
-        첫 줄에 <code>stack-use-after-return</code>이 나오는지 확인한다.
-        그리고 <strong>몇 번째 줄에서 났다고 알려 주는지</strong> 찾아본다.</li>
-      <li><strong>(3분)</strong> <code>[&amp;ranges]</code>를 <code>[ranges]</code>로 고치고 두 번 다 다시 돌린다.
-        검사기가 조용해지고 <code>0.83</code>이 나오는지 본다.</li>
-      <li><strong>(5분)</strong> <code>lambda_basics.cpp</code>에서 <code>[&amp;big]</code>을 <code>[=]</code>로 바꾸고
-        빌드해 돌린다. <strong>복사 횟수가 몇으로 바뀌나?</strong></li>
-      <li><strong>(5분)</strong> <code>const_correct.cpp</code>에서 <code>count_close</code> 안의
-        <code>// ++hits_;</code> 주석을 풀고 빌드한다. <strong>어떤 오류가 나나?</strong>
-        그 메시지에 <code>const</code>라는 말이 들어 있는지 확인한다.</li>
-      <li><strong>(5분)</strong> AI에게 <code>dangling_capture.cpp</code>를 통째로 주고
+        <pre><code>g++ -std=c++17 -g -fsanitize=address -o driver_dangling driver_dangling.cpp
+./driver_dangling</code></pre>
+        <code>stack-use-after-return</code>이 나오는지 확인한다.
+        그리고 <strong>몇 번째 줄에서 났다고 알려 주는지</strong>, <strong>그 자리의 변수 이름</strong>이 무엇이라고 하는지 찾아본다.</li>
+      <li><strong>(3분)</strong> <code>driver_dangling.cpp</code>의 <code>[&amp;ranges]</code>를 <code>[ranges]</code>로 고치고 두 번 다 다시 돌린다.
+        검사기가 조용해지고 <code>0.83</code>이 나오는지 본다. 이제 이 파일은 <code>driver.cpp</code>의 5단계와 같다.</li>
+      <li><strong>(5분)</strong> <code>driver.cpp</code>에서 <code>[&amp;d]</code>를 <code>[=]</code>로 바꾸고
+        빌드해 돌린다. <strong>「[&amp;d] 로 캡처하면」 줄의 복사 횟수가 몇으로 바뀌나?</strong> 확인했으면 되돌린다.</li>
+      <li><strong>(5분)</strong> <code>driver.cpp</code>의 <code>close_count_this() const</code> 첫 줄에
+        <code>++hits_;</code>를 넣고 빌드한다. <strong>어떤 오류가 나나?</strong>
+        그 메시지에 <code>read-only</code>라는 말이 들어 있는지 확인한다. 확인했으면 지운다.</li>
+      <li><strong>(5분)</strong> AI에게 <code>driver_dangling.cpp</code>를 통째로 주고
         <strong>"이 코드에 문제가 있나?"</strong>라고만 물어본다.
         문제를 찾아내는가? 못 찾으면 <strong>"람다가 저장돼서 나중에 불리는데 캡처가 안전한가?"</strong>라고 다시 묻는다.
         <strong>두 답이 어떻게 달랐는지 적어 둔다</strong> — 그것이 HW4의 재료다.</li>
     </ol>
 
     <p class="boxtitle">이렇게 되면 성공이다</p>
+    <p>2번에서 완성본을 돌리면 아래가 그대로 나온다. <code>[warn]</code> 줄은 표준 오류라 터미널에서는 이 자리에 섞여 보인다.</p>
+    <pre><code>① 람다 — 조건을 그 자리에서 적는다
+   쓸 만한 값: 5개
+   is_close(0.42) = 참,  is_close(1.24) = 거짓
+
+② 캡처 — 바깥 변수를 무엇으로 가져오나
+   [this] 로 센 것: 2개
+   [&amp;]    로 센 것: 2개   (결과는 같지만 무엇을 쓰는지 안 보인다)
+
+② [=] 는 값으로 복사한다 — 큰 것이 통째로 복사된다
+   [=]  로 캡처한 순간 Driver 복사 1회 (ranges 5칸)
+   [&amp;d] 로 캡처하면 복사 0회 (ranges 5칸)
+
+⚠️ 저장해 뒀다 나중에 부르는 람다
+   읽은 값: 0.83
+
+③ 500ms — 단위가 코드에 적혀 있다
+   500ms 는 500 밀리초짜리 시간 값이다
+   0.5 라고 쓰면 초인지 밀리초인지 코드만 봐서는 알 수 없다
+
+④ const — 이 함수는 상태를 바꾸지 않는다
+   close_count_this() = 2  (상태는 그대로, hits = 0)
+   record() 한 뒤 hits = 2
+   const 객체에서도 close_count_this 는 부를 수 있다: 2
+   frozen.record() 는 컴파일이 안 된다 — 상태를 바꾸는 함수이기 때문이다
+
+⑥ optional — "값이 없음"을 -1 로 표현하지 않는다
+[warn] Driver::nearest: 쓸 만한 거리 값이 하나도 없다
+   d.nearest()     : 값 있음
+   blind.nearest() : 값 없음(nullopt)
+   → if (!v) 한 줄로 걸러진다. 검사를 빠뜨리기 어렵다
+   → 값이 있을 때만 꺼낸다: *near = 0.31
+
+⑦ 구조적 바인딩 — 묶여 온 값을 한 줄로 푼다
+   r=0.31 m, θ=30° → x=0.268, y=0.155
+
+⑦ if 안 선언 — 그 변수는 if 밖으로 새지 않는다
+   0.5m 안쪽 값 0.42 를 먼저 찾았다
+   여기서는 it 를 쓸 수 없다 — 이름이 새지 않으니 다음 if 에서 또 쓸 수 있다</code></pre>
     <p>
-      1번에서 <strong>세 번의 답이 서로 다르거나 이상한 숫자가 나왔고</strong>,
-      2번에서 <strong><code>stack-use-after-return</code>이라는 줄을 봤고</strong>,
-      3번에서 <strong>한 글자를 고쳤더니 <code>0.83</code>이 나왔다</strong>면 성공이다.
-      6번에서 AI가 처음에는 못 찾았다면 그것도 성공이다 — <strong>그게 오늘의 요점이다.</strong>
+      3번에서 <strong>세 번의 답이 서로 다르거나 이상한 숫자가 나왔고</strong>,
+      4번에서 <strong><code>stack-use-after-return</code>이라는 줄을 봤고</strong>,
+      5번에서 <strong>한 글자를 고쳤더니 <code>0.83</code>이 나왔다</strong>면 성공이다.
+      8번에서 AI가 처음에는 못 찾았다면 그것도 성공이다 — <strong>그게 오늘의 요점이다.</strong>
+      <span style="color:var(--muted)">확인한 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0 <code>-O2</code>)</span>
     </p>
   </div>
 
@@ -881,6 +2313,7 @@ const auto [x, y] = to_xy(1.5f, 0.5236f);</code></pre>
     <p>
       <code>std::vector&lt;float&gt;</code>처럼 꺾쇠를 <strong>쓰는</strong> 일은 매일 있지만,
       꺾쇠를 <strong>만드는</strong> 일은 이 과목에 없다. 그래도 모양은 알아 두면 코드를 읽을 때 덜 놀란다.
+      아래는 <strong>읽기용 조각</strong>이다 — <code>driver.cpp</code>에 들어가지 않고, 빌드해 볼 필요도 없다.
     </p>
     <pre><code>// "어떤 타입이든 받아서 그 타입 그대로 돌려주는" 함수를 만든다
 template&lt;typename T&gt;

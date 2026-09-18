@@ -31,7 +31,7 @@
   <a href="#summary">한 장 요약</a>
   <a href="#block1">① 콜백 한 번에 720개</a>
   <a href="#count">② 복사를 세어 본다</a>
-  <a href="#cost">③ 22배가 났다</a>
+  <a href="#cost">③ 40배가 났다</a>
   <a href="#move">④ std::move</a>
   <a href="#trap">⚠️ 가져간 뒤의 원본</a>
   <a href="#rvo">⑤ 반환에는 붙이지 않아도 된다</a>
@@ -75,6 +75,13 @@
     오늘은 그 「둔함」이 어디서 생기는지 딱 하나만 판다.
     <strong>값을 넘길 때 사본이 만들어진다는 것</strong>, 그리고 그 사본이 <strong>대부분 아무 이득이 없다</strong>는 것이다.
     말로 하면 뻔해 보이므로 <strong>두 가지 방법으로 실제로 잰다</strong> — 복사 <strong>횟수</strong>와 <strong>시간</strong>이다.
+  </p>
+  <p>
+    오늘 쓰는 코드는 <strong>파일 하나</strong>다. <code>scan_copy.cpp</code>.
+    AI가 준 스무 줄짜리 콜백에서 시작해서, 절이 넘어갈 때마다 <strong>한 곳을 고치거나 재는 장치를 몇 줄 더한다.</strong>
+    본문에는 그 절에서 고치거나 더한 줄만 보이고(초록 바탕이 새 줄, 붉은 취소선이 지운 줄),
+    그 아래 <strong>📄 「전체 코드」 상자</strong>를 누르면 그 단계의 파일 전체가 나온다.
+    <strong>어느 단계를 펼쳐도 그대로 빌드되고 돌아간다.</strong> 「실제로 나온 출력」에는 그 절이 새로 찍는 줄만 보인다.
   </p>
 
   <!-- ── 한 장 요약표 ── -->
@@ -130,8 +137,13 @@
     고치지도 않고, 따로 보관하지도 않는다. 읽고 판단하고 버린다.
   </p>
 
+  <h3>1단계 — AI가 준 콜백을 그대로 돌려 본다</h3>
   <p>오늘 쓸 그릇의 이름부터 정해 둔다. 라이다 메시지를 흉내 낸 것이다.</p>
-  <pre><code>struct ScanMsg {
+  <pre><code>// 11회 — 복사와 이동: 값을 넘길 때 무슨 일이 일어나나
+#include &lt;cstdio&gt;
+#include &lt;vector&gt;
+
+struct ScanMsg {
   std::vector&lt;float&gt; ranges;   // 거리 값 360개가 들어 있다
 };</code></pre>
   <p>
@@ -139,13 +151,73 @@
     <strong>모양과 성질은 같다.</strong> 오늘은 이름이 짧은 <code>ScanMsg</code>로 쓴다.
   </p>
 
+  <p>그 아래가 "정면 거리를 꺼내 달라"고 AI에게 시켜서 받은 콜백이다.</p>
   <div class="codelabel bad">AI가 보통 주는 코드 🔴</div>
-  <pre class="before"><code>void scan_callback(ScanMsg msg)                   // ① 값으로 받음
+  <pre class="before"><code>// AI가 보통 주는 모양 — 값으로 받고, 안에서 또 복사한다
+float scan_callback(ScanMsg msg)                       // ① 값으로 받음
 {
-  std::vector&lt;float&gt; ranges = msg.ranges;         // ② 또 복사
-  float front = ranges.at(0);                     // 정면 거리
-  // ... 앞이 막혔는지 판단한다
+  std::vector&lt;float&gt; ranges = msg.ranges;              // ② 또 복사
+  return ranges.at(0);                                 // 정면 거리
 }</code></pre>
+
+  <p>돌려 보려면 부르는 쪽이 있어야 한다. <code>main</code>에서 라이다 한 바퀴를 흉내낸 메시지를 만들어 넘긴다.</p>
+  <pre><code>int main()
+{
+  ScanMsg msg;
+  msg.ranges = std::vector&lt;float&gt;(360, 1.0f);          // 라이다 한 바퀴를 흉내낸다. 전부 1.0 m
+  std::printf("정면 거리 = %.1f m\n", scan_callback(msg));
+  return 0;
+}</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>std::vector&lt;float&gt;(360, 1.0f)</dt>
+      <dd>칸이 360개이고 <strong>전부 1.0으로 채워진</strong> 그릇을 만든다.
+          6회에서 <code>ranges(N)</code>으로 칸만 잡았던 것에 <strong>채울 값</strong>을 하나 더 준 모양이다.
+          여기서는 라이다 한 바퀴의 거리 값이 전부 1.0 m라고 치고 메시지를 채우는 데 썼다.</dd>
+
+      <dt>ranges.at(0)</dt>
+      <dd>몇 번째 값인지를 주고 꺼낸다. 여기서는 <strong>정면 방향의 거리</strong>를 꺼냈다.
+          범위를 벗어난 번호를 주면 <strong>그 자리에서 오류를 낸다</strong> — 조용히 이상한 값을 주지 않는다.
+          오늘 뒤에서 <strong>그 오류가 실제로 나는 장면</strong>을 보게 된다.</dd>
+    </dl>
+    <p class="later">제대로 다루는 곳: 12회(컨테이너 — <code>vector</code>·<code>array</code>·<code>reserve</code>)</p>
+  </div>
+
+  <h3>실제로 나온 출력</h3>
+  <pre><code>정면 거리 = 1.0 m</code></pre>
+
+  <!-- fullcode "전체 코드 — scan_copy.cpp (1단계 · AI가 준 그대로)" build="g++ -std=c++17 -O2 -Wall -o scan_copy scan_copy.cpp && ./scan_copy"
+       l11_copy_move/steps/step1.cpp as scan_copy.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — scan_copy.cpp (1단계 · AI가 준 그대로)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -Wall -o scan_copy scan_copy.cpp &amp;&amp; ./scan_copy</code></p>
+  <div class="codefile"><div class="fname">scan_copy.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 11회 — 복사와 이동: 값을 넘길 때 무슨 일이 일어나나
+#include &lt;cstdio&gt;
+#include &lt;vector&gt;
+
+struct ScanMsg {
+  std::vector&lt;float&gt; ranges;   // 거리 값 360개가 들어 있다
+};
+
+// AI가 보통 주는 모양 — 값으로 받고, 안에서 또 복사한다
+float scan_callback(ScanMsg msg)                       // ① 값으로 받음
+{
+  std::vector&lt;float&gt; ranges = msg.ranges;              // ② 또 복사
+  return ranges.at(0);                                 // 정면 거리
+}
+
+int main()
+{
+  ScanMsg msg;
+  msg.ranges = std::vector&lt;float&gt;(360, 1.0f);          // 라이다 한 바퀴를 흉내낸다. 전부 1.0 m
+  std::printf(&quot;정면 거리 = %.1f m\n&quot;, scan_callback(msg));
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
 
   <h3>무엇이 문제인가</h3>
   <p>
@@ -184,33 +256,56 @@
     콜백에서 메시지를 값으로 받지 말고 <code>const</code> 참조로 받아 줘. 안에서 <code>ranges</code>도 새 변수에 복사하지 말고 <code>const</code> 참조로 별칭만 잡아 줘.
   </div>
 
+  <h3>2단계 — 함수 한 곳을 고친다</h3>
+  <p>바뀌는 것은 <strong>함수 머리 한 줄과 안쪽 한 줄</strong>이다. 나머지는 1단계 그대로다.</p>
   <div class="codelabel good">받은 코드</div>
-  <pre class="after"><code>void scan_callback(const ScanMsg &amp; msg)           // ① 참조로 받음 — 사본이 없다
+  <pre class="after"><code>// 고친 모양 — 참조로 받고, 별명만 잡는다
+<span class="ln-del">float scan_callback(ScanMsg msg)                       // ① 값으로 받음</span>
+<span class="ln-add">float scan_callback(const ScanMsg &amp; msg)               // ① 참조로 받음 — 사본이 없다</span>
 {
-  const std::vector&lt;float&gt; &amp; ranges = msg.ranges; // ② 이름표만 하나 더 붙였다
-  float front = ranges.at(0);                     // 정면 거리
-  // ... 앞이 막혔는지 판단한다
+<span class="ln-del">  std::vector&lt;float&gt; ranges = msg.ranges;              // ② 또 복사</span>
+<span class="ln-add">  const std::vector&lt;float&gt; &amp; ranges = msg.ranges;      // ② 이름표만 하나 더 붙였다</span>
+  return ranges.at(0);                                 // 정면 거리
 }</code></pre>
 
-  <div class="box firstseen">
-    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
-    <dl>
-      <dt>std::vector&lt;float&gt;</dt>
-      <dd>같은 종류의 값을 <strong>여러 개 담는 표준 그릇</strong>이다.
-          여기서는 <strong>거리 값 360개</strong>가 이 안에 들어 있다.
-          오늘은 "값이 잔뜩 든 상자"로만 보면 된다. 그릇 자체를 다루는 법은 따로 있다.</dd>
-
-      <dt>ranges.at(0)</dt>
-      <dd>몇 번째 값인지를 주고 꺼낸다. 여기서는 <strong>정면 방향의 거리</strong>를 꺼냈다.
-          범위를 벗어난 번호를 주면 <strong>그 자리에서 오류를 낸다</strong> — 조용히 이상한 값을 주지 않는다.
-          검사 없이 빠르게 꺼내는 <code>ranges[0]</code>도 있다.</dd>
-
-      <dt>ranges.size()</dt>
-      <dd>지금 그 안에 값이 <strong>몇 개 들어 있는지</strong> 알려 준다.
-          오늘은 이 숫자가 <strong>360에서 0으로 바뀌는 장면</strong>을 보게 된다 — 그것이 이 회차의 함정이다.</dd>
-    </dl>
-    <p class="later">제대로 다루는 곳: 12회(컨테이너 — <code>vector</code>·<code>array</code>·<code>reserve</code>)</p>
+  <h3>실제로 나온 출력</h3>
+  <pre><code>정면 거리 = 1.0 m</code></pre>
+  <div class="interp">
+    <strong>해석:</strong> <strong>출력이 1단계와 글자 하나 다르지 않다.</strong>
+    7회의 <code>fill_missing</code>은 원본을 <strong>고치는</strong> 함수라 <code>&amp;</code>가 빠진 것이 출력에 드러났지만, 읽기만 하는 함수는 그렇지 않다. 고친 것이 맞는지 <strong>출력으로는 확인할 수 없다.</strong>
+    그래서 이 회차의 나머지는 전부 <strong>눈에 안 보이는 차이를 보이게 만드는 장치</strong>를 이 파일에 하나씩 붙이는 일이다.
   </div>
+
+  <!-- fullcode "전체 코드 — scan_copy.cpp (2단계 · const & 로 고친 뒤)" build="g++ -std=c++17 -O2 -Wall -o scan_copy scan_copy.cpp && ./scan_copy"
+       l11_copy_move/steps/step2.cpp as scan_copy.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — scan_copy.cpp (2단계 · const &amp; 로 고친 뒤)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -Wall -o scan_copy scan_copy.cpp &amp;&amp; ./scan_copy</code></p>
+  <div class="codefile"><div class="fname">scan_copy.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 11회 — 복사와 이동: 값을 넘길 때 무슨 일이 일어나나
+#include &lt;cstdio&gt;
+#include &lt;vector&gt;
+
+struct ScanMsg {
+  std::vector&lt;float&gt; ranges;   // 거리 값 360개가 들어 있다
+};
+
+// 고친 모양 — 참조로 받고, 별명만 잡는다
+float scan_callback(const ScanMsg &amp; msg)               // ① 참조로 받음 — 사본이 없다
+{
+  const std::vector&lt;float&gt; &amp; ranges = msg.ranges;      // ② 이름표만 하나 더 붙였다
+  return ranges.at(0);                                 // 정면 거리
+}
+
+int main()
+{
+  ScanMsg msg;
+  msg.ranges = std::vector&lt;float&gt;(360, 1.0f);          // 라이다 한 바퀴를 흉내낸다. 전부 1.0 m
+  std::printf(&quot;정면 거리 = %.1f m\n&quot;, scan_callback(msg));
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
 
   <figure>
     <img src="assets/img/11_value_vs_ref.png"
@@ -250,14 +345,84 @@
     말로만 하면 감이 안 오므로 실제로 재 봤다.
   </p>
 
-  <pre><code>$ g++ -std=c++17 -O2 -o type_size type_size.cpp &amp;&amp; ./type_size
-포인터 하나            :  8 바이트
+  <h3>3단계 — 크기를 찍는 줄을 <code>main</code>에 더한다</h3>
+  <p>맨 위에 <code>#include &lt;string&gt;</code> 한 줄을 더하고(<code>std::string</code>의 크기도 재려고), <code>main</code>의 정면 거리 줄 아래에 일곱 줄을 넣는다.</p>
+  <pre><code>  std::printf("정면 거리 = %.1f m\n", scan_callback(msg));
+
+<span class="ln-add">  std::printf("\n포인터 하나            : %2zu 바이트\n", sizeof(void *));</span>
+<span class="ln-add">  std::printf("int                    : %2zu 바이트\n", sizeof(int));</span>
+<span class="ln-add">  std::printf("float                  : %2zu 바이트\n", sizeof(float));</span>
+<span class="ln-add">  std::printf("double                 : %2zu 바이트\n", sizeof(double));</span>
+<span class="ln-add">  std::printf("std::string            : %2zu 바이트 (+ 글자는 따로)\n", sizeof(std::string));</span>
+<span class="ln-add">  std::printf("std::vector&lt;float&gt;     : %2zu 바이트 (+ 값 360개는 따로 %zu 바이트)\n",</span>
+<span class="ln-add">              sizeof(std::vector&lt;float&gt;), 360 * sizeof(float));</span>
+<span class="ln-add">  std::printf("ScanMsg                : %2zu 바이트 (+ 값 360개는 따로)\n", sizeof(ScanMsg));</span>
+  return 0;</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>sizeof(int) · sizeof(void *)</dt>
+      <dd>그 타입 하나가 <strong>메모리를 몇 바이트 차지하는지</strong> 알려 준다. 실행 전에 컴파일러가 정하는 값이다.
+          여기서는 「8바이트보다 크면 참조」라는 기준선을 <strong>실제 숫자로</strong> 보려고 썼다.
+          <code>void *</code>는 "무엇이든 가리키는 주소"라는 뜻으로, <strong>포인터 하나의 크기</strong>를 재는 데 쓴다.</dd>
+
+      <dt>%2zu</dt>
+      <dd><code>sizeof</code>가 돌려주는 값을 찍는 자리다. <code>%d</code>가 아니라 <code>%zu</code>를 써야 하고,
+          가운데 <code>2</code>는 <strong>두 칸에 맞춰</strong> 찍으라는 뜻이다. 여기서는 숫자를 세로로 맞추려고 썼다.</dd>
+    </dl>
+  </div>
+
+  <h3>실제로 나온 출력</h3>
+  <pre><code>포인터 하나            :  8 바이트
 int                    :  4 바이트
 float                  :  4 바이트
 double                 :  8 바이트
 std::string            : 32 바이트 (+ 글자는 따로)
 std::vector&lt;float&gt;     : 24 바이트 (+ 값 360개는 따로 1440 바이트)
 ScanMsg                : 24 바이트 (+ 값 360개는 따로)</code></pre>
+
+  <!-- fullcode "전체 코드 — scan_copy.cpp (3단계 · 크기 재기까지)" build="g++ -std=c++17 -O2 -Wall -o scan_copy scan_copy.cpp && ./scan_copy"
+       l11_copy_move/steps/step3.cpp as scan_copy.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — scan_copy.cpp (3단계 · 크기 재기까지)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -Wall -o scan_copy scan_copy.cpp &amp;&amp; ./scan_copy</code></p>
+  <div class="codefile"><div class="fname">scan_copy.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 11회 — 복사와 이동: 값을 넘길 때 무슨 일이 일어나나
+#include &lt;cstdio&gt;
+#include &lt;vector&gt;
+#include &lt;string&gt;
+
+struct ScanMsg {
+  std::vector&lt;float&gt; ranges;   // 거리 값 360개가 들어 있다
+};
+
+// 고친 모양 — 참조로 받고, 별명만 잡는다
+float scan_callback(const ScanMsg &amp; msg)               // ① 참조로 받음 — 사본이 없다
+{
+  const std::vector&lt;float&gt; &amp; ranges = msg.ranges;      // ② 이름표만 하나 더 붙였다
+  return ranges.at(0);                                 // 정면 거리
+}
+
+int main()
+{
+  ScanMsg msg;
+  msg.ranges = std::vector&lt;float&gt;(360, 1.0f);          // 라이다 한 바퀴를 흉내낸다. 전부 1.0 m
+  std::printf(&quot;정면 거리 = %.1f m\n&quot;, scan_callback(msg));
+
+  std::printf(&quot;\n포인터 하나            : %2zu 바이트\n&quot;, sizeof(void *));
+  std::printf(&quot;int                    : %2zu 바이트\n&quot;, sizeof(int));
+  std::printf(&quot;float                  : %2zu 바이트\n&quot;, sizeof(float));
+  std::printf(&quot;double                 : %2zu 바이트\n&quot;, sizeof(double));
+  std::printf(&quot;std::string            : %2zu 바이트 (+ 글자는 따로)\n&quot;, sizeof(std::string));
+  std::printf(&quot;std::vector&lt;float&gt;     : %2zu 바이트 (+ 값 360개는 따로 %zu 바이트)\n&quot;,
+              sizeof(std::vector&lt;float&gt;), 360 * sizeof(float));
+  std::printf(&quot;ScanMsg                : %2zu 바이트 (+ 값 360개는 따로)\n&quot;, sizeof(ScanMsg));
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+
   <div class="interp">
     <strong>해석:</strong> <code>std::vector&lt;float&gt;</code>가 24바이트라는 것에 속으면 안 된다.
     <strong>이 24바이트는 「값이 어디 있는지 적어 둔 쪽지」의 크기</strong>이고,
@@ -279,78 +444,33 @@ ScanMsg                : 24 바이트 (+ 값 360개는 따로)</code></pre>
   </p>
   <p>
     C++에는 <strong>"이 객체가 복사될 때 실행되는 함수"</strong>가 있다. 거기에 세는 코드를 한 줄 넣으면 된다.
-    아래가 그 코드다. 오늘 나오는 두 프로그램 중 첫 번째다.
+    그 장치를 <code>scan_copy.cpp</code>의 <code>ScanMsg</code>에 붙인다.
   </p>
 
-  <div class="codelabel good">count_copies.cpp — 복사가 몇 번 일어나는지 센다</div>
-  <pre><code>#include &lt;iostream&gt;
-#include &lt;vector&gt;
-
-int g_copy = 0;
-int g_move = 0;
+  <h3>4단계 — <code>ScanMsg</code>에 세는 장치를 붙이고, 고치기 전 판을 옆에 되살린다</h3>
+  <p>먼저 그릇이다. 세는 변수 하나와 함수 세 줄이 들어간다.</p>
+  <pre><code><span class="ln-add">int g_copy = 0;   // ScanMsg 가 복사된 횟수</span>
 
 struct ScanMsg {
-  std::vector&lt;float&gt; ranges;
+  std::vector&lt;float&gt; ranges;   // 거리 값 360개가 들어 있다
 
-  ScanMsg() : ranges(360, 1.0f) {}
-  ScanMsg(const ScanMsg &amp; o) : ranges(o.ranges) { ++g_copy; }                 // 복사
-  ScanMsg(ScanMsg &amp;&amp; o) noexcept : ranges(std::move(o.ranges)) { ++g_move; }  // 이동
-  ScanMsg &amp; operator=(const ScanMsg &amp;) = delete;
-};
-
-// AI가 흔히 주는 모양 — 값으로 받고, 안에서 또 복사한다
-float callback_by_value(ScanMsg msg)
-{
-  std::vector&lt;float&gt; ranges = msg.ranges;      // 여기서 float 360개가 또 복사된다
-  return ranges.at(0);
-}
-
-// 고친 모양 — 참조로 받고, 별명만 잡는다
-float callback_by_ref(const ScanMsg &amp; msg)
-{
-  const std::vector&lt;float&gt; &amp; ranges = msg.ranges;
-  return ranges.at(0);
-}
-
-int main()
-{
-  ScanMsg msg;
-
-  g_copy = g_move = 0;
-  callback_by_value(msg);
-  std::cout &lt;&lt; "값으로 받기      : ScanMsg 복사 " &lt;&lt; g_copy &lt;&lt; "회\n";
-  std::cout &lt;&lt; "                   (안쪽 vector 복사는 세지 않았는데도 이만큼이다)\n";
-
-  g_copy = g_move = 0;
-  callback_by_ref(msg);
-  std::cout &lt;&lt; "const 참조로 받기: ScanMsg 복사 " &lt;&lt; g_copy &lt;&lt; "회\n";
-
-  std::cout &lt;&lt; "\nstd::move 로 넘기면\n";
-  g_copy = g_move = 0;
-  ScanMsg tmp;
-  ScanMsg taken(std::move(tmp));
-  std::cout &lt;&lt; "  복사 " &lt;&lt; g_copy &lt;&lt; "회, 이동 " &lt;&lt; g_move &lt;&lt; "회\n";
-  std::cout &lt;&lt; "  넘겨준 쪽 tmp.ranges.size() = " &lt;&lt; tmp.ranges.size()
-            &lt;&lt; "  ← 껍데기만 남았다. 이제 tmp 를 읽으면 안 된다\n";
-  std::cout &lt;&lt; "  받은 쪽 taken.ranges.size() = " &lt;&lt; taken.ranges.size() &lt;&lt; "\n";
-  return 0;
-}</code></pre>
+<span class="ln-add">  ScanMsg() : ranges(360, 1.0f) {}                               // 만들 때 360칸을 1.0 m 로 채운다</span>
+<span class="ln-add">  ScanMsg(const ScanMsg &amp; o) : ranges(o.ranges) { ++g_copy; }    // 복사될 때 불린다 — 세기만 한다</span>
+<span class="ln-add">  ScanMsg &amp; operator=(const ScanMsg &amp;) = delete;                 // 대입은 오늘 안 센다. 막아 둔다</span>
+};</code></pre>
 
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
     <dl>
       <dt>ScanMsg(const ScanMsg &amp; o)</dt>
       <dd><strong>복사 생성자</strong>다. 이 객체가 복사될 때 <strong>자동으로 불린다.</strong>
-          평소에는 안 써도 컴파일러가 만들어 준다. 여기서는 <strong>몇 번 불리는지 세려고</strong> 손으로 썼다.</dd>
+          평소에는 안 써도 컴파일러가 만들어 준다. 여기서는 <strong>몇 번 불리는지 세려고</strong> 손으로 썼다.
+          8회의 초기화 리스트(<code>: ranges(o.ranges)</code>)로 상대의 값을 그대로 받아 온다.</dd>
 
-      <dt>ScanMsg(ScanMsg &amp;&amp; o)</dt>
-      <dd><strong>이동 생성자</strong>다. 꺾쇠 두 개(<code>&amp;&amp;</code>)가 <strong>"이건 곧 버려질 임시 값이다"</strong>라는 표시다.
-          복사 생성자와 달리 <strong>알맹이를 새로 만들지 않고 가져온다.</strong></dd>
-
-      <dt>noexcept</dt>
-      <dd>"이 함수는 예외를 던지지 않는다"는 약속이다.
-          <strong>이동 생성자에는 거의 항상 붙인다</strong> — 이 약속이 없으면 표준 라이브러리가
-          안전을 위해 <strong>이동 대신 복사를 골라 버린다.</strong></dd>
+      <dt>ScanMsg() : ranges(360, 1.0f) {}</dt>
+      <dd>복사 생성자를 손으로 쓰는 순간 <strong>컴파일러가 만들어 주던 기본 생성자가 사라진다.</strong>
+          그래서 <code>ScanMsg msg;</code>가 되게 하려면 이것도 같이 써야 한다.
+          여기서는 그 김에 <strong>360칸을 채우는 일까지 생성자에 넣어</strong> <code>main</code>의 한 줄을 줄였다.</dd>
 
       <dt>operator=(const ScanMsg &amp;) = delete;</dt>
       <dd><code>= delete</code>는 <strong>"이 동작은 아예 못 쓰게 막는다"</strong>는 뜻이다.
@@ -359,19 +479,106 @@ int main()
     </dl>
   </div>
 
-  <p>컨테이너에서 빌드해 돌린 결과다.</p>
-  <pre><code>$ g++ -std=c++17 -O2 -o count_copies count_copies.cpp &amp;&amp; ./count_copies
-값으로 받기      : ScanMsg 복사 1회
-                   (안쪽 vector 복사는 세지 않았는데도 이만큼이다)
-const 참조로 받기: ScanMsg 복사 0회
+  <p>
+    세려면 <strong>비교 대상이 있어야 한다.</strong> 2단계에서 고쳐 버린 값 전달 판을
+    <code>scan_callback_by_value</code>라는 이름으로 <code>scan_callback</code> 위에 되살린다. 내용은 1단계의 그것 그대로다.
+  </p>
+  <pre><code><span class="ln-add">// 비교하려고 남겨 둔 고치기 전 판 — 값으로 받고, 안에서 또 복사한다</span>
+<span class="ln-add">float scan_callback_by_value(ScanMsg msg)              // ① 값으로 받음</span>
+<span class="ln-add">{</span>
+<span class="ln-add">  std::vector&lt;float&gt; ranges = msg.ranges;              // ② 또 복사</span>
+<span class="ln-add">  return ranges.at(0);</span>
+<span class="ln-add">}</span>
 
-std::move 로 넘기면
-  복사 0회, 이동 1회
-  넘겨준 쪽 tmp.ranges.size() = 0  ← 껍데기만 남았다. 이제 tmp 를 읽으면 안 된다
-  받은 쪽 taken.ranges.size() = 360</code></pre>
+// 고친 모양 — 참조로 받고, 별명만 잡는다
+float scan_callback(const ScanMsg &amp; msg)               // ① 참조로 받음 — 사본이 없다
+  // … 2단계 그대로 …</code></pre>
+
+  <p>마지막으로 <code>main</code>이다. 생성자가 채워 주니 대입 줄이 빠지고, 크기 찍는 줄 아래에 두 판을 한 번씩 불러 세는 줄이 들어간다.</p>
+  <pre><code>int main()
+{
+  ScanMsg msg;                                         // 생성자가 360칸을 1.0 m 로 채운다
+<span class="ln-del">  msg.ranges = std::vector&lt;float&gt;(360, 1.0f);          // 라이다 한 바퀴를 흉내낸다. 전부 1.0 m</span>
+  std::printf("정면 거리 = %.1f m\n", scan_callback(msg));
+  // … 3단계의 크기 찍는 줄들은 그대로 …
+
+<span class="ln-add">  g_copy = 0;</span>
+<span class="ln-add">  scan_callback_by_value(msg);</span>
+<span class="ln-add">  std::printf("\n값으로 받기      : ScanMsg 복사 %d회  (안쪽 vector 복사는 세지 않았는데도 이만큼이다)\n", g_copy);</span>
+
+<span class="ln-add">  g_copy = 0;</span>
+<span class="ln-add">  scan_callback(msg);</span>
+<span class="ln-add">  std::printf("const 참조로 받기: ScanMsg 복사 %d회\n", g_copy);</span>
+  return 0;
+}</code></pre>
+
+  <h3>실제로 나온 출력</h3>
+  <pre><code>값으로 받기      : ScanMsg 복사 1회  (안쪽 vector 복사는 세지 않았는데도 이만큼이다)
+const 참조로 받기: ScanMsg 복사 0회</code></pre>
+
+  <!-- fullcode "전체 코드 — scan_copy.cpp (4단계 · 복사 횟수 세기까지)" build="g++ -std=c++17 -O2 -Wall -o scan_copy scan_copy.cpp && ./scan_copy"
+       l11_copy_move/steps/step4.cpp as scan_copy.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — scan_copy.cpp (4단계 · 복사 횟수 세기까지)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -Wall -o scan_copy scan_copy.cpp &amp;&amp; ./scan_copy</code></p>
+  <div class="codefile"><div class="fname">scan_copy.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 11회 — 복사와 이동: 값을 넘길 때 무슨 일이 일어나나
+#include &lt;cstdio&gt;
+#include &lt;vector&gt;
+#include &lt;string&gt;
+
+int g_copy = 0;   // ScanMsg 가 복사된 횟수
+
+struct ScanMsg {
+  std::vector&lt;float&gt; ranges;   // 거리 값 360개가 들어 있다
+
+  ScanMsg() : ranges(360, 1.0f) {}                               // 만들 때 360칸을 1.0 m 로 채운다
+  ScanMsg(const ScanMsg &amp; o) : ranges(o.ranges) { ++g_copy; }    // 복사될 때 불린다 — 세기만 한다
+  ScanMsg &amp; operator=(const ScanMsg &amp;) = delete;                 // 대입은 오늘 안 센다. 막아 둔다
+};
+
+// 비교하려고 남겨 둔 고치기 전 판 — 값으로 받고, 안에서 또 복사한다
+float scan_callback_by_value(ScanMsg msg)              // ① 값으로 받음
+{
+  std::vector&lt;float&gt; ranges = msg.ranges;              // ② 또 복사
+  return ranges.at(0);
+}
+
+// 고친 모양 — 참조로 받고, 별명만 잡는다
+float scan_callback(const ScanMsg &amp; msg)               // ① 참조로 받음 — 사본이 없다
+{
+  const std::vector&lt;float&gt; &amp; ranges = msg.ranges;      // ② 이름표만 하나 더 붙였다
+  return ranges.at(0);                                 // 정면 거리
+}
+
+int main()
+{
+  ScanMsg msg;                                         // 생성자가 360칸을 1.0 m 로 채운다
+  std::printf(&quot;정면 거리 = %.1f m\n&quot;, scan_callback(msg));
+
+  std::printf(&quot;\n포인터 하나            : %2zu 바이트\n&quot;, sizeof(void *));
+  std::printf(&quot;int                    : %2zu 바이트\n&quot;, sizeof(int));
+  std::printf(&quot;float                  : %2zu 바이트\n&quot;, sizeof(float));
+  std::printf(&quot;double                 : %2zu 바이트\n&quot;, sizeof(double));
+  std::printf(&quot;std::string            : %2zu 바이트 (+ 글자는 따로)\n&quot;, sizeof(std::string));
+  std::printf(&quot;std::vector&lt;float&gt;     : %2zu 바이트 (+ 값 360개는 따로 %zu 바이트)\n&quot;,
+              sizeof(std::vector&lt;float&gt;), 360 * sizeof(float));
+  std::printf(&quot;ScanMsg                : %2zu 바이트 (+ 값 360개는 따로)\n&quot;, sizeof(ScanMsg));
+
+  g_copy = 0;
+  scan_callback_by_value(msg);
+  std::printf(&quot;\n값으로 받기      : ScanMsg 복사 %d회  (안쪽 vector 복사는 세지 않았는데도 이만큼이다)\n&quot;, g_copy);
+
+  g_copy = 0;
+  scan_callback(msg);
+  std::printf(&quot;const 참조로 받기: ScanMsg 복사 %d회\n&quot;, g_copy);
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
 
   <div class="interp">
-    <strong>해석:</strong> 첫 줄과 셋째 줄을 나란히 본다. <strong>1회와 0회</strong>다.
+    <strong>해석:</strong> 두 줄을 나란히 본다. <strong>1회와 0회</strong>다.
     그리고 이 <strong>1회</strong>는 <code>ScanMsg</code> 껍데기를 센 것이고,
     그 안에서 일어난 <strong>float 360개 복사는 세지도 않았다.</strong>
     <code>const &amp;</code> 두 글자가 그 전부를 없앤다.
@@ -379,45 +586,39 @@ std::move 로 넘기면
   </div>
 
   <!-- ══════════ ③ 복사 시간 ══════════ -->
-  <h2 id="cost">③ 하는 일이 같은데 22배가 났다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+  <h2 id="cost">③ 하는 일이 같은데 40배가 났다 <span class="badge b-red">🔴 사람이 한다</span></h2>
 
   <p>
     횟수를 셌으니 이번에는 <strong>시간</strong>이다. 횟수만으로는 "그래서 얼마나 손해인가"에 답할 수 없다.
-    <strong>두 코드가 하는 일을 완전히 똑같이 맞추고</strong>, 인자를 받는 방식만 다르게 해서 잰다.
-    비교 대상이 없으면 숫자 하나는 아무 뜻이 없기 때문이다.
+    <strong>두 함수가 하는 일은 이미 똑같이 맞춰져 있다.</strong> 인자를 받는 방식만 다르다.
+    한 번으로는 너무 짧아 잴 수 없으니 <strong>각각 10만 번씩</strong> 부르고 시간을 잰다.
   </p>
 
-  <div class="codelabel good">copy_cost.cpp — 같은 일을 10만 번 시키고 시간을 잰다</div>
-  <pre><code>#include &lt;chrono&gt;
-#include &lt;cstdio&gt;
-#include &lt;vector&gt;
+  <h3>5단계 — 시계를 넣고 10만 번 돌린다</h3>
+  <p>맨 위에 <code>#include &lt;chrono&gt;</code>를 더하고, <code>main</code>의 세는 줄 아래에 재는 줄을 넣는다.</p>
+  <pre><code>  // … 4단계의 세는 줄들은 그대로 …
 
-struct ScanMsg { std::vector&lt;float&gt; ranges = std::vector&lt;float&gt;(360, 1.0f); };
+<span class="ln-add">  const int LOOPS = 100000;</span>
+<span class="ln-add">  double sink = 0.0;                                   // 결과를 버리면 컴파일러가 계산을 지운다</span>
 
-float by_value(ScanMsg msg)             { return msg.ranges.at(0); }
-float by_ref(const ScanMsg &amp; msg)       { return msg.ranges.at(0); }
+<span class="ln-add">  g_copy = 0;</span>
+<span class="ln-add">  auto t0 = std::chrono::steady_clock::now();</span>
+<span class="ln-add">  for (int i = 0; i &lt; LOOPS; ++i) { sink += scan_callback_by_value(msg); }</span>
+<span class="ln-add">  auto t1 = std::chrono::steady_clock::now();</span>
+<span class="ln-add">  const double v = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();</span>
+<span class="ln-add">  const int copies_v = g_copy;</span>
 
-int main()
-{
-  const int LOOPS = 100000;
-  ScanMsg msg;
-  double sink = 0.0;
+<span class="ln-add">  g_copy = 0;</span>
+<span class="ln-add">  t0 = std::chrono::steady_clock::now();</span>
+<span class="ln-add">  for (int i = 0; i &lt; LOOPS; ++i) { sink += scan_callback(msg); }</span>
+<span class="ln-add">  t1 = std::chrono::steady_clock::now();</span>
+<span class="ln-add">  const double r = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();</span>
 
-  auto t0 = std::chrono::steady_clock::now();
-  for (int i = 0; i &lt; LOOPS; ++i) { sink += by_value(msg); }
-  auto t1 = std::chrono::steady_clock::now();
-  const double v = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
-
-  t0 = std::chrono::steady_clock::now();
-  for (int i = 0; i &lt; LOOPS; ++i) { sink += by_ref(msg); }
-  t1 = std::chrono::steady_clock::now();
-  const double r = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
-
-  std::printf("값으로 받기      : %8.2f ms\n", v);
-  std::printf("const 참조로 받기: %8.2f ms\n", r);
-  std::printf("차이             : %.0f배  (%d회 기준, sink=%.0f)\n", v / r, LOOPS, sink);
-  return 0;
-}</code></pre>
+<span class="ln-add">  std::printf("\n%d회 반복\n", LOOPS);</span>
+<span class="ln-add">  std::printf("값으로 받기      : %8.2f ms  (복사 %d회)\n", v, copies_v);</span>
+<span class="ln-add">  std::printf("const 참조로 받기: %8.2f ms  (복사 %d회)\n", r, g_copy);</span>
+<span class="ln-add">  std::printf("차이             : %.0f배  (sink=%.0f)\n", v / r, sink);</span>
+  return 0;</code></pre>
 
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
@@ -441,15 +642,100 @@ int main()
     </dl>
   </div>
 
-  <pre><code>$ g++ -std=c++17 -O2 -o copy_cost copy_cost.cpp &amp;&amp; ./copy_cost
-값으로 받기      :     3.66 ms
-const 참조로 받기:     0.17 ms
-차이             : 22배  (100000회 기준, sink=200000)</code></pre>
+  <h3>실제로 나온 출력</h3>
+  <pre><code>100000회 반복
+값으로 받기      :     6.55 ms  (복사 100000회)
+const 참조로 받기:     0.17 ms  (복사 0회)
+차이             : 40배  (sink=200000)</code></pre>
+
+  <!-- fullcode "전체 코드 — scan_copy.cpp (5단계 · 시간 재기까지)" build="g++ -std=c++17 -O2 -Wall -o scan_copy scan_copy.cpp && ./scan_copy"
+       l11_copy_move/steps/step5.cpp as scan_copy.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — scan_copy.cpp (5단계 · 시간 재기까지)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -Wall -o scan_copy scan_copy.cpp &amp;&amp; ./scan_copy</code></p>
+  <div class="codefile"><div class="fname">scan_copy.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 11회 — 복사와 이동: 값을 넘길 때 무슨 일이 일어나나
+#include &lt;cstdio&gt;
+#include &lt;vector&gt;
+#include &lt;string&gt;
+#include &lt;chrono&gt;
+
+int g_copy = 0;   // ScanMsg 가 복사된 횟수
+
+struct ScanMsg {
+  std::vector&lt;float&gt; ranges;   // 거리 값 360개가 들어 있다
+
+  ScanMsg() : ranges(360, 1.0f) {}                               // 만들 때 360칸을 1.0 m 로 채운다
+  ScanMsg(const ScanMsg &amp; o) : ranges(o.ranges) { ++g_copy; }    // 복사될 때 불린다 — 세기만 한다
+  ScanMsg &amp; operator=(const ScanMsg &amp;) = delete;                 // 대입은 오늘 안 센다. 막아 둔다
+};
+
+// 비교하려고 남겨 둔 고치기 전 판 — 값으로 받고, 안에서 또 복사한다
+float scan_callback_by_value(ScanMsg msg)              // ① 값으로 받음
+{
+  std::vector&lt;float&gt; ranges = msg.ranges;              // ② 또 복사
+  return ranges.at(0);
+}
+
+// 고친 모양 — 참조로 받고, 별명만 잡는다
+float scan_callback(const ScanMsg &amp; msg)               // ① 참조로 받음 — 사본이 없다
+{
+  const std::vector&lt;float&gt; &amp; ranges = msg.ranges;      // ② 이름표만 하나 더 붙였다
+  return ranges.at(0);                                 // 정면 거리
+}
+
+int main()
+{
+  ScanMsg msg;                                         // 생성자가 360칸을 1.0 m 로 채운다
+  std::printf(&quot;정면 거리 = %.1f m\n&quot;, scan_callback(msg));
+
+  std::printf(&quot;\n포인터 하나            : %2zu 바이트\n&quot;, sizeof(void *));
+  std::printf(&quot;int                    : %2zu 바이트\n&quot;, sizeof(int));
+  std::printf(&quot;float                  : %2zu 바이트\n&quot;, sizeof(float));
+  std::printf(&quot;double                 : %2zu 바이트\n&quot;, sizeof(double));
+  std::printf(&quot;std::string            : %2zu 바이트 (+ 글자는 따로)\n&quot;, sizeof(std::string));
+  std::printf(&quot;std::vector&lt;float&gt;     : %2zu 바이트 (+ 값 360개는 따로 %zu 바이트)\n&quot;,
+              sizeof(std::vector&lt;float&gt;), 360 * sizeof(float));
+  std::printf(&quot;ScanMsg                : %2zu 바이트 (+ 값 360개는 따로)\n&quot;, sizeof(ScanMsg));
+
+  g_copy = 0;
+  scan_callback_by_value(msg);
+  std::printf(&quot;\n값으로 받기      : ScanMsg 복사 %d회  (안쪽 vector 복사는 세지 않았는데도 이만큼이다)\n&quot;, g_copy);
+
+  g_copy = 0;
+  scan_callback(msg);
+  std::printf(&quot;const 참조로 받기: ScanMsg 복사 %d회\n&quot;, g_copy);
+
+  const int LOOPS = 100000;
+  double sink = 0.0;                                   // 결과를 버리면 컴파일러가 계산을 지운다
+
+  g_copy = 0;
+  auto t0 = std::chrono::steady_clock::now();
+  for (int i = 0; i &lt; LOOPS; ++i) { sink += scan_callback_by_value(msg); }
+  auto t1 = std::chrono::steady_clock::now();
+  const double v = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+  const int copies_v = g_copy;
+
+  g_copy = 0;
+  t0 = std::chrono::steady_clock::now();
+  for (int i = 0; i &lt; LOOPS; ++i) { sink += scan_callback(msg); }
+  t1 = std::chrono::steady_clock::now();
+  const double r = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+
+  std::printf(&quot;\n%d회 반복\n&quot;, LOOPS);
+  std::printf(&quot;값으로 받기      : %8.2f ms  (복사 %d회)\n&quot;, v, copies_v);
+  std::printf(&quot;const 참조로 받기: %8.2f ms  (복사 %d회)\n&quot;, r, g_copy);
+  std::printf(&quot;차이             : %.0f배  (sink=%.0f)\n&quot;, v / r, sink);
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
 
 <div class="interp">
-    <strong>해석:</strong> 22배라는 배수에만 눈이 가지만, <strong>한 번당으로 나눠 보는 것</strong>이 더 정직하다.
-    3.66밀리초를 10만 번으로 나누면 <strong>한 번에 0.037마이크로초</strong>다.
+    <strong>해석:</strong> 40배라는 배수에만 눈이 가지만, <strong>한 번당으로 나눠 보는 것</strong>이 더 정직하다.
+    6.55밀리초를 10만 번으로 나누면 <strong>한 번에 0.066마이크로초</strong>다.
     <strong>콜백 한 번만 보면 아무도 못 느낀다.</strong>
+    괄호 안의 <strong>복사 10만 회</strong>는 4단계의 장치가 그대로 세어 준 것이다 — 한 번 부를 때마다 하나씩, 정확히 부른 횟수만큼이다.
     문제는 이런 자리가 <strong>코드 곳곳에 흩어져 있다</strong>는 것이고,
     앞에서 본 연구의 <strong>1.39배</strong>가 바로 그 흩어진 것들을 합친 숫자다.
     잰 곳: 컨테이너(우분투 24.04.4, g++ 13.3.0 <code>-O2</code>).
@@ -474,8 +760,34 @@ const 참조로 받기:     0.17 ms
     <strong>있는 알맹이의 주인만 바꾸면 된다.</strong> 그 요청이 <code>std::move</code>다.
   </p>
 
-  <pre><code>ScanMsg tmp;                        // ranges 에 360개가 들어 있다
-ScanMsg taken(std::move(tmp));      // "가져가라" — 알맹이의 주인이 taken 으로 바뀐다</code></pre>
+  <h3>6단계 — 이동을 세는 장치를 붙이고 실제로 넘겨 본다</h3>
+  <p>
+    복사를 세는 함수가 있었듯 <strong>이동될 때 불리는 함수</strong>도 있다. 그것을 <code>ScanMsg</code>에 더한다.
+    맨 위에는 <code>#include &lt;utility&gt;</code>(<code>std::move</code>가 사는 헤더)가 한 줄 들어간다.
+  </p>
+  <pre><code>int g_copy = 0;   // ScanMsg 가 복사된 횟수
+<span class="ln-add">int g_move = 0;   // ScanMsg 가 이동된 횟수</span>
+
+struct ScanMsg {
+  std::vector&lt;float&gt; ranges;   // 거리 값 360개가 들어 있다
+
+  ScanMsg() : ranges(360, 1.0f) {}                               // 만들 때 360칸을 1.0 m 로 채운다
+  ScanMsg(const ScanMsg &amp; o) : ranges(o.ranges) { ++g_copy; }    // 복사될 때 불린다 — 세기만 한다
+<span class="ln-add">  ScanMsg(ScanMsg &amp;&amp; o) noexcept : ranges(std::move(o.ranges)) { ++g_move; }  // 이동될 때 불린다</span>
+  ScanMsg &amp; operator=(const ScanMsg &amp;) = delete;                 // 대입은 오늘 안 센다. 막아 둔다
+};</code></pre>
+
+  <p>그리고 <code>main</code>의 시간 재는 줄 아래에서 실제로 넘겨 본다.</p>
+  <pre><code>  // … 5단계의 재는 줄들은 그대로 …
+
+<span class="ln-add">  std::printf("\nstd::move 로 넘기면\n");</span>
+<span class="ln-add">  g_copy = g_move = 0;</span>
+<span class="ln-add">  ScanMsg tmp;</span>
+<span class="ln-add">  ScanMsg taken(std::move(tmp));                       // "가져가라" — 알맹이의 주인이 taken 으로 바뀐다</span>
+<span class="ln-add">  std::printf("  복사 %d회, 이동 %d회\n", g_copy, g_move);</span>
+<span class="ln-add">  std::printf("  넘겨준 쪽 tmp.ranges.size()   = %zu  ← 껍데기만 남았다. 이제 tmp 를 읽으면 안 된다\n", tmp.ranges.size());</span>
+<span class="ln-add">  std::printf("  받은 쪽   taken.ranges.size() = %zu\n", taken.ranges.size());</span>
+  return 0;</code></pre>
 
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
@@ -485,14 +797,122 @@ ScanMsg taken(std::move(tmp));      // "가져가라" — 알맹이의 주인이
           <strong>"이 값은 이제 안 쓸 거니 가져가도 된다"고 표시만</strong> 해 준다.
           실제로 알맹이를 가져가는 일은 <strong>이동 생성자</strong>가 한다.
           여기서는 <code>taken</code>이 <code>tmp</code>의 360개를 <strong>새로 만들지 않고 넘겨받게</strong> 하는 데 썼다.</dd>
+
+      <dt>ScanMsg(ScanMsg &amp;&amp; o)</dt>
+      <dd><strong>이동 생성자</strong>다. 꺾쇠 두 개(<code>&amp;&amp;</code>)가 <strong>"이건 곧 버려질 임시 값이다"</strong>라는 표시다.
+          복사 생성자와 달리 <strong>알맹이를 새로 만들지 않고 가져온다.</strong>
+          안쪽의 <code>std::move(o.ranges)</code>가 그릇의 알맹이를 넘겨받는 자리다.</dd>
+
+      <dt>noexcept</dt>
+      <dd>"이 함수는 예외를 던지지 않는다"는 약속이다.
+          <strong>이동 생성자에는 거의 항상 붙인다</strong> — 이 약속이 없으면 표준 라이브러리가
+          안전을 위해 <strong>이동 대신 복사를 골라 버린다.</strong></dd>
+
+      <dt>ranges.size()</dt>
+      <dd>지금 그 안에 값이 <strong>몇 개 들어 있는지</strong> 알려 준다.
+          여기서는 이 숫자가 <strong>360에서 0으로 바뀌는 장면</strong>을 보려고 썼다 — 그것이 이 회차의 함정이다.</dd>
     </dl>
   </div>
 
-  <p>앞에서 돌린 <code>count_copies</code>의 마지막 부분이 이것을 그대로 보여 준다.</p>
+  <h3>실제로 나온 출력</h3>
   <pre><code>std::move 로 넘기면
   복사 0회, 이동 1회
-  넘겨준 쪽 tmp.ranges.size() = 0  ← 껍데기만 남았다. 이제 tmp 를 읽으면 안 된다
-  받은 쪽 taken.ranges.size() = 360</code></pre>
+  넘겨준 쪽 tmp.ranges.size()   = 0  ← 껍데기만 남았다. 이제 tmp 를 읽으면 안 된다
+  받은 쪽   taken.ranges.size() = 360</code></pre>
+
+  <!-- fullcode "전체 코드 — scan_copy.cpp (6단계 · std::move 까지)" build="g++ -std=c++17 -O2 -Wall -o scan_copy scan_copy.cpp && ./scan_copy"
+       l11_copy_move/steps/step6.cpp as scan_copy.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — scan_copy.cpp (6단계 · std::move 까지)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -Wall -o scan_copy scan_copy.cpp &amp;&amp; ./scan_copy</code></p>
+  <div class="codefile"><div class="fname">scan_copy.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 11회 — 복사와 이동: 값을 넘길 때 무슨 일이 일어나나
+#include &lt;cstdio&gt;
+#include &lt;vector&gt;
+#include &lt;string&gt;
+#include &lt;chrono&gt;
+#include &lt;utility&gt;       // std::move
+
+int g_copy = 0;   // ScanMsg 가 복사된 횟수
+int g_move = 0;   // ScanMsg 가 이동된 횟수
+
+struct ScanMsg {
+  std::vector&lt;float&gt; ranges;   // 거리 값 360개가 들어 있다
+
+  ScanMsg() : ranges(360, 1.0f) {}                               // 만들 때 360칸을 1.0 m 로 채운다
+  ScanMsg(const ScanMsg &amp; o) : ranges(o.ranges) { ++g_copy; }    // 복사될 때 불린다 — 세기만 한다
+  ScanMsg(ScanMsg &amp;&amp; o) noexcept : ranges(std::move(o.ranges)) { ++g_move; }  // 이동될 때 불린다
+  ScanMsg &amp; operator=(const ScanMsg &amp;) = delete;                 // 대입은 오늘 안 센다. 막아 둔다
+};
+
+// 비교하려고 남겨 둔 고치기 전 판 — 값으로 받고, 안에서 또 복사한다
+float scan_callback_by_value(ScanMsg msg)              // ① 값으로 받음
+{
+  std::vector&lt;float&gt; ranges = msg.ranges;              // ② 또 복사
+  return ranges.at(0);
+}
+
+// 고친 모양 — 참조로 받고, 별명만 잡는다
+float scan_callback(const ScanMsg &amp; msg)               // ① 참조로 받음 — 사본이 없다
+{
+  const std::vector&lt;float&gt; &amp; ranges = msg.ranges;      // ② 이름표만 하나 더 붙였다
+  return ranges.at(0);                                 // 정면 거리
+}
+
+int main()
+{
+  ScanMsg msg;                                         // 생성자가 360칸을 1.0 m 로 채운다
+  std::printf(&quot;정면 거리 = %.1f m\n&quot;, scan_callback(msg));
+
+  std::printf(&quot;\n포인터 하나            : %2zu 바이트\n&quot;, sizeof(void *));
+  std::printf(&quot;int                    : %2zu 바이트\n&quot;, sizeof(int));
+  std::printf(&quot;float                  : %2zu 바이트\n&quot;, sizeof(float));
+  std::printf(&quot;double                 : %2zu 바이트\n&quot;, sizeof(double));
+  std::printf(&quot;std::string            : %2zu 바이트 (+ 글자는 따로)\n&quot;, sizeof(std::string));
+  std::printf(&quot;std::vector&lt;float&gt;     : %2zu 바이트 (+ 값 360개는 따로 %zu 바이트)\n&quot;,
+              sizeof(std::vector&lt;float&gt;), 360 * sizeof(float));
+  std::printf(&quot;ScanMsg                : %2zu 바이트 (+ 값 360개는 따로)\n&quot;, sizeof(ScanMsg));
+
+  g_copy = 0;
+  scan_callback_by_value(msg);
+  std::printf(&quot;\n값으로 받기      : ScanMsg 복사 %d회  (안쪽 vector 복사는 세지 않았는데도 이만큼이다)\n&quot;, g_copy);
+
+  g_copy = 0;
+  scan_callback(msg);
+  std::printf(&quot;const 참조로 받기: ScanMsg 복사 %d회\n&quot;, g_copy);
+
+  const int LOOPS = 100000;
+  double sink = 0.0;                                   // 결과를 버리면 컴파일러가 계산을 지운다
+
+  g_copy = 0;
+  auto t0 = std::chrono::steady_clock::now();
+  for (int i = 0; i &lt; LOOPS; ++i) { sink += scan_callback_by_value(msg); }
+  auto t1 = std::chrono::steady_clock::now();
+  const double v = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+  const int copies_v = g_copy;
+
+  g_copy = 0;
+  t0 = std::chrono::steady_clock::now();
+  for (int i = 0; i &lt; LOOPS; ++i) { sink += scan_callback(msg); }
+  t1 = std::chrono::steady_clock::now();
+  const double r = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+
+  std::printf(&quot;\n%d회 반복\n&quot;, LOOPS);
+  std::printf(&quot;값으로 받기      : %8.2f ms  (복사 %d회)\n&quot;, v, copies_v);
+  std::printf(&quot;const 참조로 받기: %8.2f ms  (복사 %d회)\n&quot;, r, g_copy);
+  std::printf(&quot;차이             : %.0f배  (sink=%.0f)\n&quot;, v / r, sink);
+
+  std::printf(&quot;\nstd::move 로 넘기면\n&quot;);
+  g_copy = g_move = 0;
+  ScanMsg tmp;
+  ScanMsg taken(std::move(tmp));                       // &quot;가져가라&quot; — 알맹이의 주인이 taken 으로 바뀐다
+  std::printf(&quot;  복사 %d회, 이동 %d회\n&quot;, g_copy, g_move);
+  std::printf(&quot;  넘겨준 쪽 tmp.ranges.size()   = %zu  ← 껍데기만 남았다. 이제 tmp 를 읽으면 안 된다\n&quot;, tmp.ranges.size());
+  std::printf(&quot;  받은 쪽   taken.ranges.size() = %zu\n&quot;, taken.ranges.size());
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
 
   <figure>
     <img src="assets/img/11_move.png"
@@ -530,31 +950,133 @@ ScanMsg taken(std::move(tmp));      // "가져가라" — 알맹이의 주인이
     <p>
       <code>std::move</code>로 넘긴 뒤의 원본은 <strong>「비어 있지만 멀쩡한 물건」</strong>이 된다.
       부서진 것이 아니다. 그래서 <strong>컴파일러도 막지 않고 실행도 멈추지 않는다.</strong>
-      다음 코드는 <strong>문법도 맞고 실행도 끝까지 된다.</strong>
+      6단계 파일의 <code>taken</code> 줄 아래에 다음 다섯 줄을 넣어 봤다. <strong>문법도 맞고 컴파일러는 경고 하나 내지 않는다.</strong>
     </p>
-    <pre><code>ScanMsg taken(std::move(tmp));       // 알맹이를 가져갔다
+    <pre><code>  std::printf("  받은 쪽   taken.ranges.size() = %zu\n", taken.ranges.size());
 
-float sum = 0.0f;
-for (size_t i = 0; i &lt; tmp.ranges.size(); ++i) {     // 0바퀴 돈다
-  sum += tmp.ranges[i];
-}
-float avg = sum / tmp.ranges.size();                  // 0으로 나눈다</code></pre>
-    <p>실제로 돌려 본 결과다.</p>
-    <pre><code>$ g++ -std=c++17 -O2 -Wall -o moved_from moved_from.cpp &amp;&amp; ./moved_from
-넘기기 전 tmp.ranges.size() = 360
-넘긴 뒤   tmp.ranges.size() = 0
-① 빈 것을 그대로 계산: 합 0.0, 평균 -nan  ← 크래시가 아니라 틀린 답이다
-② tmp.ranges.at(0) 은 예외를 냈다: vector::_M_range_check: __n (which is 0) &gt;= this-&gt;size() (which is 0)
-가져간 쪽 taken.ranges.size() = 360  ← 값은 여기 있다</code></pre>
+<span class="ln-add">  // ⚠️ 가져간 다음 원본을 읽으면 — 문법도 맞고 실행도 된다</span>
+<span class="ln-add">  float sum = 0.0f;</span>
+<span class="ln-add">  for (size_t i = 0; i &lt; tmp.ranges.size(); ++i) { sum += tmp.ranges[i]; }   // 0바퀴 돈다</span>
+<span class="ln-add">  std::printf("  빈 것을 그대로 계산: 합 %.1f, 평균 %.1f  ← 크래시가 아니라 틀린 답이다\n",</span>
+<span class="ln-add">              sum, sum / tmp.ranges.size());                                 // 0으로 나눈다</span>
+<span class="ln-add">  std::printf("  tmp.ranges.at(0) = %.1f\n", tmp.ranges.at(0));              // at() 은 여기서 멈춘다</span>
+  return 0;</code></pre>
+    <p>실제로 돌려 본 결과다. 6단계까지의 출력 뒤에 이렇게 이어진다.</p>
+    <pre><code>  받은 쪽   taken.ranges.size() = 360
+  빈 것을 그대로 계산: 합 0.0, 평균 -nan  ← 크래시가 아니라 틀린 답이다
+terminate called after throwing an instance of 'std::out_of_range'
+  what():  vector::_M_range_check: __n (which is 0) &gt;= this-&gt;size() (which is 0)
+Aborted (core dumped)</code></pre>
     <p>
-      ①이 무서운 쪽이다. <strong>프로그램은 아무 일 없다는 듯 끝났고, 결과만 틀렸다.</strong>
+      첫 줄(<code>[]</code>로 읽은 쪽)이 무서운 쪽이다. <strong>아무 일 없다는 듯 지나갔고, 결과만 틀렸다.</strong>
       평균이 <code>-nan</code>으로 나왔는데 이 값을 그대로 조향 각도로 쓰면
       <strong>로봇은 이유를 알 수 없게 이상하게 움직인다.</strong>
     </p>
     <p>
-      ②는 <strong>운이 좋은 쪽</strong>이다. <code>at()</code>은 범위를 검사하므로 그 자리에서 오류를 낸다.
+      그 아래(<code>at()</code>으로 읽은 쪽)는 <strong>운이 좋은 쪽</strong>이다. <code>at()</code>은 범위를 검사하므로 그 자리에서 프로그램을 세운다.
+      <code>which is 0) &gt;= this-&gt;size() (which is 0</code> — 「0번 칸을 달라는데 칸이 0개다」라는 말이다.
       <strong>틀린 답이 조용히 흘러가는 것보다, 그 줄에서 멈추는 편이 낫다.</strong>
     </p>
+    <!-- fullcode "전체 코드 — 함정을 일부러 넣은 판 (6단계 + 다섯 줄 · 실행하면 마지막에 멈춘다)" build="g++ -std=c++17 -O2 -Wall -o scan_trap scan_trap.cpp && ./scan_trap"
+         l11_copy_move/steps/step6_trap.cpp as scan_trap.cpp
+    -->
+<details class="fullcode">
+  <summary>전체 코드 — 함정을 일부러 넣은 판 (6단계 + 다섯 줄 · 실행하면 마지막에 멈춘다)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -Wall -o scan_trap scan_trap.cpp &amp;&amp; ./scan_trap</code></p>
+  <div class="codefile"><div class="fname">scan_trap.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 11회 — 복사와 이동: 값을 넘길 때 무슨 일이 일어나나
+#include &lt;cstdio&gt;
+#include &lt;vector&gt;
+#include &lt;string&gt;
+#include &lt;chrono&gt;
+#include &lt;utility&gt;       // std::move
+
+int g_copy = 0;   // ScanMsg 가 복사된 횟수
+int g_move = 0;   // ScanMsg 가 이동된 횟수
+
+struct ScanMsg {
+  std::vector&lt;float&gt; ranges;   // 거리 값 360개가 들어 있다
+
+  ScanMsg() : ranges(360, 1.0f) {}                               // 만들 때 360칸을 1.0 m 로 채운다
+  ScanMsg(const ScanMsg &amp; o) : ranges(o.ranges) { ++g_copy; }    // 복사될 때 불린다 — 세기만 한다
+  ScanMsg(ScanMsg &amp;&amp; o) noexcept : ranges(std::move(o.ranges)) { ++g_move; }  // 이동될 때 불린다
+  ScanMsg &amp; operator=(const ScanMsg &amp;) = delete;                 // 대입은 오늘 안 센다. 막아 둔다
+};
+
+// 비교하려고 남겨 둔 고치기 전 판 — 값으로 받고, 안에서 또 복사한다
+float scan_callback_by_value(ScanMsg msg)              // ① 값으로 받음
+{
+  std::vector&lt;float&gt; ranges = msg.ranges;              // ② 또 복사
+  return ranges.at(0);
+}
+
+// 고친 모양 — 참조로 받고, 별명만 잡는다
+float scan_callback(const ScanMsg &amp; msg)               // ① 참조로 받음 — 사본이 없다
+{
+  const std::vector&lt;float&gt; &amp; ranges = msg.ranges;      // ② 이름표만 하나 더 붙였다
+  return ranges.at(0);                                 // 정면 거리
+}
+
+int main()
+{
+  ScanMsg msg;                                         // 생성자가 360칸을 1.0 m 로 채운다
+  std::printf(&quot;정면 거리 = %.1f m\n&quot;, scan_callback(msg));
+
+  std::printf(&quot;\n포인터 하나            : %2zu 바이트\n&quot;, sizeof(void *));
+  std::printf(&quot;int                    : %2zu 바이트\n&quot;, sizeof(int));
+  std::printf(&quot;float                  : %2zu 바이트\n&quot;, sizeof(float));
+  std::printf(&quot;double                 : %2zu 바이트\n&quot;, sizeof(double));
+  std::printf(&quot;std::string            : %2zu 바이트 (+ 글자는 따로)\n&quot;, sizeof(std::string));
+  std::printf(&quot;std::vector&lt;float&gt;     : %2zu 바이트 (+ 값 360개는 따로 %zu 바이트)\n&quot;,
+              sizeof(std::vector&lt;float&gt;), 360 * sizeof(float));
+  std::printf(&quot;ScanMsg                : %2zu 바이트 (+ 값 360개는 따로)\n&quot;, sizeof(ScanMsg));
+
+  g_copy = 0;
+  scan_callback_by_value(msg);
+  std::printf(&quot;\n값으로 받기      : ScanMsg 복사 %d회  (안쪽 vector 복사는 세지 않았는데도 이만큼이다)\n&quot;, g_copy);
+
+  g_copy = 0;
+  scan_callback(msg);
+  std::printf(&quot;const 참조로 받기: ScanMsg 복사 %d회\n&quot;, g_copy);
+
+  const int LOOPS = 100000;
+  double sink = 0.0;                                   // 결과를 버리면 컴파일러가 계산을 지운다
+
+  g_copy = 0;
+  auto t0 = std::chrono::steady_clock::now();
+  for (int i = 0; i &lt; LOOPS; ++i) { sink += scan_callback_by_value(msg); }
+  auto t1 = std::chrono::steady_clock::now();
+  const double v = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+  const int copies_v = g_copy;
+
+  g_copy = 0;
+  t0 = std::chrono::steady_clock::now();
+  for (int i = 0; i &lt; LOOPS; ++i) { sink += scan_callback(msg); }
+  t1 = std::chrono::steady_clock::now();
+  const double r = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+
+  std::printf(&quot;\n%d회 반복\n&quot;, LOOPS);
+  std::printf(&quot;값으로 받기      : %8.2f ms  (복사 %d회)\n&quot;, v, copies_v);
+  std::printf(&quot;const 참조로 받기: %8.2f ms  (복사 %d회)\n&quot;, r, g_copy);
+  std::printf(&quot;차이             : %.0f배  (sink=%.0f)\n&quot;, v / r, sink);
+
+  std::printf(&quot;\nstd::move 로 넘기면\n&quot;);
+  g_copy = g_move = 0;
+  ScanMsg tmp;
+  ScanMsg taken(std::move(tmp));                       // &quot;가져가라&quot; — 알맹이의 주인이 taken 으로 바뀐다
+  std::printf(&quot;  복사 %d회, 이동 %d회\n&quot;, g_copy, g_move);
+  std::printf(&quot;  넘겨준 쪽 tmp.ranges.size()   = %zu  ← 껍데기만 남았다. 이제 tmp 를 읽으면 안 된다\n&quot;, tmp.ranges.size());
+  std::printf(&quot;  받은 쪽   taken.ranges.size() = %zu\n&quot;, taken.ranges.size());
+
+  // ⚠️ 가져간 다음 원본을 읽으면 — 문법도 맞고 실행도 된다
+  float sum = 0.0f;
+  for (size_t i = 0; i &lt; tmp.ranges.size(); ++i) { sum += tmp.ranges[i]; }   // 0바퀴 돈다
+  std::printf(&quot;  빈 것을 그대로 계산: 합 %.1f, 평균 %.1f  ← 크래시가 아니라 틀린 답이다\n&quot;,
+              sum, sum / tmp.ranges.size());                                 // 0으로 나눈다
+  std::printf(&quot;  tmp.ranges.at(0) = %.1f\n&quot;, tmp.ranges.at(0));              // at() 은 여기서 멈춘다
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
     <p>
       <strong>규칙은 한 줄이다. <code>std::move</code>로 넘긴 변수는 그 줄 이후로 읽지 않는다.</strong>
       다시 쓸 생각이면 애초에 <code>move</code>를 붙이지 않는다.
@@ -574,21 +1096,37 @@ float avg = sum / tmp.ranges.size();                  // 0으로 나눈다</code
     그런데 이 자리에서는 반대다.
   </p>
 
+  <h3>7단계 — 돌려주는 함수 둘을 넣고 세어 본다</h3>
+  <p><code>scan_callback</code> 아래, <code>main</code> 위에 함수 두 개를 둔다. 둘 다 <code>ScanMsg</code>를 하나 만들어 돌려주고, <strong>다른 것은 <code>return</code> 줄 하나뿐이다.</strong></p>
+
   <div class="codelabel bad">AI가 보통 주는 코드 🔴</div>
-  <pre class="before"><code>ScanMsg make_moved()
+  <pre class="before"><code>// move 를 붙여 돌려준다 — 위의 최적화가 막힌다 (AI가 자주 이렇게 준다)
+ScanMsg make_moved()
 {
   ScanMsg s;
-  // ... s 를 채운다
   return std::move(s);      // "복사를 피하려고" 붙였다
 }</code></pre>
 
   <div class="codelabel good">이게 맞다</div>
-  <pre class="after"><code>ScanMsg make_plain()
+  <pre class="after"><code>// 그냥 돌려준다 — 컴파일러가 부를 쪽 자리에 바로 만들어 준다
+ScanMsg make_plain()
 {
   ScanMsg s;
-  // ... s 를 채운다
   return s;                 // 그냥 돌려준다
 }</code></pre>
+
+  <p><code>main</code> 맨 아래에서 둘을 한 번씩 부르고, 6단계의 장치로 센다.</p>
+  <pre><code>  // … 6단계의 std::move 줄들은 그대로 …
+
+<span class="ln-add">  std::printf("\n함수에서 만들어 돌려주면\n");</span>
+<span class="ln-add">  g_copy = g_move = 0;</span>
+<span class="ln-add">  ScanMsg a = make_plain();</span>
+<span class="ln-add">  std::printf("  return s;            : 복사 %d회, 이동 %d회  (ranges %zu개)\n", g_copy, g_move, a.ranges.size());</span>
+
+<span class="ln-add">  g_copy = g_move = 0;</span>
+<span class="ln-add">  ScanMsg b = make_moved();</span>
+<span class="ln-add">  std::printf("  return std::move(s); : 복사 %d회, 이동 %d회  (ranges %zu개)\n", g_copy, g_move, b.ranges.size());</span>
+  return 0;</code></pre>
 
   <h3>무엇이 문제인가</h3>
   <p>
@@ -598,10 +1136,11 @@ float avg = sum / tmp.ranges.size();                  // 0으로 나눈다</code
     복사가 이동으로 바뀌는 것이 아니라, <strong>없어도 될 이동이 하나 생긴다.</strong>
   </p>
 
+  <h3>실제로 나온 출력</h3>
   <p>말로 하면 믿기 어려우므로 세어 봤다.</p>
-  <pre><code>$ g++ -std=c++17 -O2 -Wall -o return_move return_move.cpp &amp;&amp; ./return_move
-return s;            : 복사 0회, 이동 0회  (ranges 360개)
-return std::move(s); : 복사 0회, 이동 1회  (ranges 360개)</code></pre>
+  <pre><code>함수에서 만들어 돌려주면
+  return s;            : 복사 0회, 이동 0회  (ranges 360개)
+  return std::move(s); : 복사 0회, 이동 1회  (ranges 360개)</code></pre>
 
   <div class="interp">
     <strong>해석:</strong> 위쪽은 <strong>복사도 이동도 0회</strong>다. 아무 일도 안 일어났다.
@@ -609,16 +1148,137 @@ return std::move(s); : 복사 0회, 이동 1회  (ranges 360개)</code></pre>
     잰 곳: 컨테이너(우분투 24.04.4, g++ 13.3.0 <code>-O2</code>).
   </div>
 
+  <!-- fullcode "전체 코드 — scan_copy.cpp (7단계 · 완성본)" build="g++ -std=c++17 -O2 -Wall -o scan_copy scan_copy.cpp && ./scan_copy"
+       l11_copy_move/steps/step7.cpp as scan_copy.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — scan_copy.cpp (7단계 · 완성본)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -Wall -o scan_copy scan_copy.cpp &amp;&amp; ./scan_copy</code></p>
+  <div class="codefile"><div class="fname">scan_copy.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 11회 — 복사와 이동: 값을 넘길 때 무슨 일이 일어나나
+#include &lt;cstdio&gt;
+#include &lt;vector&gt;
+#include &lt;string&gt;
+#include &lt;chrono&gt;
+#include &lt;utility&gt;       // std::move
+
+int g_copy = 0;   // ScanMsg 가 복사된 횟수
+int g_move = 0;   // ScanMsg 가 이동된 횟수
+
+struct ScanMsg {
+  std::vector&lt;float&gt; ranges;   // 거리 값 360개가 들어 있다
+
+  ScanMsg() : ranges(360, 1.0f) {}                               // 만들 때 360칸을 1.0 m 로 채운다
+  ScanMsg(const ScanMsg &amp; o) : ranges(o.ranges) { ++g_copy; }    // 복사될 때 불린다 — 세기만 한다
+  ScanMsg(ScanMsg &amp;&amp; o) noexcept : ranges(std::move(o.ranges)) { ++g_move; }  // 이동될 때 불린다
+  ScanMsg &amp; operator=(const ScanMsg &amp;) = delete;                 // 대입은 오늘 안 센다. 막아 둔다
+};
+
+// 비교하려고 남겨 둔 고치기 전 판 — 값으로 받고, 안에서 또 복사한다
+float scan_callback_by_value(ScanMsg msg)              // ① 값으로 받음
+{
+  std::vector&lt;float&gt; ranges = msg.ranges;              // ② 또 복사
+  return ranges.at(0);
+}
+
+// 고친 모양 — 참조로 받고, 별명만 잡는다
+float scan_callback(const ScanMsg &amp; msg)               // ① 참조로 받음 — 사본이 없다
+{
+  const std::vector&lt;float&gt; &amp; ranges = msg.ranges;      // ② 이름표만 하나 더 붙였다
+  return ranges.at(0);                                 // 정면 거리
+}
+
+// 그냥 돌려준다 — 컴파일러가 부를 쪽 자리에 바로 만들어 준다
+ScanMsg make_plain()
+{
+  ScanMsg s;
+  return s;
+}
+
+// move 를 붙여 돌려준다 — 위의 최적화가 막힌다 (AI가 자주 이렇게 준다)
+ScanMsg make_moved()
+{
+  ScanMsg s;
+  return std::move(s);
+}
+
+int main()
+{
+  ScanMsg msg;                                         // 생성자가 360칸을 1.0 m 로 채운다
+  std::printf(&quot;정면 거리 = %.1f m\n&quot;, scan_callback(msg));
+
+  std::printf(&quot;\n포인터 하나            : %2zu 바이트\n&quot;, sizeof(void *));
+  std::printf(&quot;int                    : %2zu 바이트\n&quot;, sizeof(int));
+  std::printf(&quot;float                  : %2zu 바이트\n&quot;, sizeof(float));
+  std::printf(&quot;double                 : %2zu 바이트\n&quot;, sizeof(double));
+  std::printf(&quot;std::string            : %2zu 바이트 (+ 글자는 따로)\n&quot;, sizeof(std::string));
+  std::printf(&quot;std::vector&lt;float&gt;     : %2zu 바이트 (+ 값 360개는 따로 %zu 바이트)\n&quot;,
+              sizeof(std::vector&lt;float&gt;), 360 * sizeof(float));
+  std::printf(&quot;ScanMsg                : %2zu 바이트 (+ 값 360개는 따로)\n&quot;, sizeof(ScanMsg));
+
+  g_copy = 0;
+  scan_callback_by_value(msg);
+  std::printf(&quot;\n값으로 받기      : ScanMsg 복사 %d회  (안쪽 vector 복사는 세지 않았는데도 이만큼이다)\n&quot;, g_copy);
+
+  g_copy = 0;
+  scan_callback(msg);
+  std::printf(&quot;const 참조로 받기: ScanMsg 복사 %d회\n&quot;, g_copy);
+
+  const int LOOPS = 100000;
+  double sink = 0.0;                                   // 결과를 버리면 컴파일러가 계산을 지운다
+
+  g_copy = 0;
+  auto t0 = std::chrono::steady_clock::now();
+  for (int i = 0; i &lt; LOOPS; ++i) { sink += scan_callback_by_value(msg); }
+  auto t1 = std::chrono::steady_clock::now();
+  const double v = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+  const int copies_v = g_copy;
+
+  g_copy = 0;
+  t0 = std::chrono::steady_clock::now();
+  for (int i = 0; i &lt; LOOPS; ++i) { sink += scan_callback(msg); }
+  t1 = std::chrono::steady_clock::now();
+  const double r = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+
+  std::printf(&quot;\n%d회 반복\n&quot;, LOOPS);
+  std::printf(&quot;값으로 받기      : %8.2f ms  (복사 %d회)\n&quot;, v, copies_v);
+  std::printf(&quot;const 참조로 받기: %8.2f ms  (복사 %d회)\n&quot;, r, g_copy);
+  std::printf(&quot;차이             : %.0f배  (sink=%.0f)\n&quot;, v / r, sink);
+
+  std::printf(&quot;\nstd::move 로 넘기면\n&quot;);
+  g_copy = g_move = 0;
+  ScanMsg tmp;
+  ScanMsg taken(std::move(tmp));                       // &quot;가져가라&quot; — 알맹이의 주인이 taken 으로 바뀐다
+  std::printf(&quot;  복사 %d회, 이동 %d회\n&quot;, g_copy, g_move);
+  std::printf(&quot;  넘겨준 쪽 tmp.ranges.size()   = %zu  ← 껍데기만 남았다. 이제 tmp 를 읽으면 안 된다\n&quot;, tmp.ranges.size());
+  std::printf(&quot;  받은 쪽   taken.ranges.size() = %zu\n&quot;, taken.ranges.size());
+
+  std::printf(&quot;\n함수에서 만들어 돌려주면\n&quot;);
+  g_copy = g_move = 0;
+  ScanMsg a = make_plain();
+  std::printf(&quot;  return s;            : 복사 %d회, 이동 %d회  (ranges %zu개)\n&quot;, g_copy, g_move, a.ranges.size());
+
+  g_copy = g_move = 0;
+  ScanMsg b = make_moved();
+  std::printf(&quot;  return std::move(s); : 복사 %d회, 이동 %d회  (ranges %zu개)\n&quot;, g_copy, g_move, b.ranges.size());
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+
   <p>
     다행히 이 실수는 <strong>컴파일러가 직접 잡아 준다.</strong>
-    경고를 켜고 빌드하면 아래 메시지가 뜬다.
+    완성본을 경고를 켜고 빌드하면 — 이 자료의 빌드 명령에는 처음부터 켜져 있다 — 실행 결과 앞에 아래 메시지가 먼저 뜬다.
   </p>
-  <pre><code>$ g++ -std=c++17 -O2 -Wall -c return_move.cpp
-return_move.cpp: In function ‘ScanMsg make_moved()’:
-return_move.cpp:28:19: warning: moving a local object in a return statement prevents copy elision [-Wpessimizing-move]
-   28 |   return std::move(s);
+  <pre><code>$ g++ -std=c++17 -O2 -Wall -o scan_copy scan_copy.cpp
+scan_copy.cpp: In function ‘ScanMsg make_moved()’:
+scan_copy.cpp:45:19: warning: moving a local object in a return statement prevents copy elision [-Wpessimizing-move]
+   45 |   return std::move(s);
       |          ~~~~~~~~~^~~
-return_move.cpp:28:19: note: remove ‘std::move’ call</code></pre>
+scan_copy.cpp:45:19: note: remove ‘std::move’ call</code></pre>
+  <p>
+    완성본에 <code>make_moved</code>를 일부러 남겨 둔 것은 <strong>이 경고를 눈으로 보기 위해서</strong>다.
+    평소 코드라면 컴파일러가 시키는 대로 <code>std::move</code>를 지우면 된다.
+  </p>
 
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 출력에서 처음 나오는 것</p>
@@ -657,7 +1317,7 @@ return_move.cpp:28:19: note: remove ‘std::move’ call</code></pre>
 
   <p>
     지금까지 잰 숫자는 전부 <strong>노트북급 컴퓨터</strong>에서 나온 것이다.
-    거기서는 22배가 나도 실제로는 3.66밀리초와 0.17밀리초의 차이다. 사람은 못 느낀다.
+    거기서는 40배가 나도 실제로는 6.55밀리초와 0.17밀리초의 차이다. 사람은 못 느낀다.
     <strong>그래서 서버 프로그램에서는 이 이야기가 비용 문제로 끝난다.</strong>
     전기를 조금 더 쓰고, 서버를 한 대 더 사면 되는 문제다.
   </p>
@@ -684,34 +1344,308 @@ return_move.cpp:28:19: note: remove ‘std::move’ call</code></pre>
     <p><strong>이걸 해 보면 무엇을 알게 되나:</strong>
       숫자가 <strong>내 컴퓨터에서도 나온다</strong>는 것, 그리고 <strong>두 글자를 고치면 그 차이가 사라진다</strong>는 것.</p>
     <p><strong>준비물:</strong> WSL 터미널 한 칸, <code>g++</code>.
-      코드 두 개는 이 자료의 ②·③절에 전문이 있다. <strong>복사해서 파일로 저장하면 된다.</strong>
+      코드는 ⑤절 끝의 📄 「전체 코드 — 7단계 · 완성본」 상자에 있다. <strong>펼쳐서 「복사」를 누르고 파일로 저장하면 된다.</strong>
       (타이핑하지 않는다)</p>
     <p><strong>절차</strong></p>
     <ol>
-      <li><code>count_copies.cpp</code>와 <code>copy_cost.cpp</code>를 같은 폴더에 저장한다. (3분)</li>
-      <li>복사 횟수를 센다. <strong>「1회」와 「0회」가 보이면 성공이다.</strong> (5분)
-        <pre><code>g++ -std=c++17 -O2 -o count_copies count_copies.cpp
-./count_copies</code></pre>
+      <li>완성본을 <code>scan_copy.cpp</code>로 저장하고 빌드해 돌린다. (3분)
+        <pre><code>mkdir -p ~/robot_ws/l11 &amp;&amp; cd ~/robot_ws/l11
+g++ -std=c++17 -O2 -Wall -o scan_copy scan_copy.cpp
+./scan_copy</code></pre>
+        <strong>빌드할 때 <code>-Wpessimizing-move</code> 경고 한 개가 먼저 뜨고</strong>, 이어서 아래 「성공 화면」이 나오면 된 것이다.
       </li>
-      <li>시간을 잰다. 마지막 줄의 <strong>「차이」 배수</strong>를 적어 둔다. (5분)
-        <pre><code>g++ -std=c++17 -O2 -o copy_cost copy_cost.cpp
-./copy_cost</code></pre>
-      </li>
-      <li><code>copy_cost.cpp</code>에서 <strong>딱 한 줄만</strong> 고친다.
-        <code>by_value</code>의 인자를 <code>ScanMsg msg</code>에서 <code>const ScanMsg &amp; msg</code>로 바꾼다.
-        <strong>함수 이름은 그대로 둔다.</strong> 다시 빌드해서 배수를 적는다. (10분)</li>
-      <li>3번과 4번의 배수를 나란히 적고, <strong>왜 그렇게 됐는지 한 줄</strong>로 쓴다. (7분)</li>
+      <li>「10만 회 반복」 세 줄에서 <strong>「차이」 배수</strong>를 적어 둔다. (2분)</li>
+      <li><code>scan_callback_by_value</code>에서 <strong>딱 한 줄만</strong> 고친다.
+        인자를 <code>ScanMsg msg</code>에서 <code>const ScanMsg &amp; msg</code>로 바꾼다. <strong>함수 이름과 안쪽은 그대로 둔다.</strong>
+        다시 빌드해서 「값으로 받기」 줄의 <strong>복사 횟수와 배수</strong>를 적는다. (7분)</li>
+      <li>이번에는 같은 함수 <strong>안쪽 한 줄</strong>을 고친다.
+        <code>std::vector&lt;float&gt; ranges = msg.ranges;</code>를 <code>const std::vector&lt;float&gt; &amp; ranges = msg.ranges;</code>로 바꾼다.
+        다시 빌드해서 배수를 적는다. (7분)</li>
+      <li>2·3·4번의 배수를 나란히 적고, <strong>3번에서 복사 횟수는 0인데 배수가 왜 1이 아니었는지 한 줄</strong>로 쓴다. (8분)</li>
     </ol>
     <p>
-      <strong>이렇게 되면 성공:</strong> 4번에서 두 줄의 시간이 <strong>거의 같아지고</strong>
-      마지막 줄이 <strong>「차이 : 1배」</strong>로 찍힌다.
-      3번의 22배가 <strong>1배로 사라지는 것</strong>이 이 실습에서 볼 것이다.
+      <strong>이렇게 되면 성공:</strong> 3번에서 「복사 0회」가 되는데도 배수는 <strong>절반쯤만</strong> 내려오고,
+      4번에서야 두 줄의 시간이 <strong>거의 같아져</strong> 마지막 줄이 <strong>「차이 : 1배」</strong>로 찍힌다.
+      우리가 해 본 결과는 이렇다.
     </p>
+    <div class="tablewrap">
+    <table>
+      <tr><th>단계</th><th>값으로 받기</th><th>복사 횟수</th><th>차이</th></tr>
+      <tr><td>2번 (완성본 그대로)</td><td>5.36 ms</td><td>100000회</td><td>32배</td></tr>
+      <tr><td>3번 (인자만 <code>const &amp;</code>)</td><td>2.98 ms</td><td><strong>0회</strong></td><td><strong>18배</strong></td></tr>
+      <tr><td>4번 (안쪽 복사도 별명으로)</td><td>0.16 ms</td><td>0회</td><td><strong>1배</strong></td></tr>
+    </table>
+    </div>
+    <div class="interp">
+      <strong>해석:</strong> 3번이 이 실습의 알맹이다. <strong>세는 장치는 <code>ScanMsg</code>의 복사만 센다.</strong>
+      안쪽의 <code>std::vector&lt;float&gt; ranges = msg.ranges;</code>는 <code>ScanMsg</code>가 아니라 그릇을 복사하므로
+      <strong>횟수에는 안 잡히고 시간에만 잡힌다.</strong> 「복사 0회」라는 숫자만 믿으면 놓친다.
+      ①절의 표에서 ②번 자리라고 짚어 둔 것이 이것이다.
+    </div>
+    <!-- fullcode "맞춰 보기 — 3번까지 고친 판 (인자만 const &)" build="g++ -std=c++17 -O2 -Wall -o scan_copy scan_copy.cpp && ./scan_copy"
+         l11_copy_move/steps/lab_fix1.cpp as scan_copy.cpp
+    -->
+<details class="fullcode">
+  <summary>맞춰 보기 — 3번까지 고친 판 (인자만 const &amp;)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -Wall -o scan_copy scan_copy.cpp &amp;&amp; ./scan_copy</code></p>
+  <div class="codefile"><div class="fname">scan_copy.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 11회 — 복사와 이동: 값을 넘길 때 무슨 일이 일어나나
+#include &lt;cstdio&gt;
+#include &lt;vector&gt;
+#include &lt;string&gt;
+#include &lt;chrono&gt;
+#include &lt;utility&gt;       // std::move
+
+int g_copy = 0;   // ScanMsg 가 복사된 횟수
+int g_move = 0;   // ScanMsg 가 이동된 횟수
+
+struct ScanMsg {
+  std::vector&lt;float&gt; ranges;   // 거리 값 360개가 들어 있다
+
+  ScanMsg() : ranges(360, 1.0f) {}                               // 만들 때 360칸을 1.0 m 로 채운다
+  ScanMsg(const ScanMsg &amp; o) : ranges(o.ranges) { ++g_copy; }    // 복사될 때 불린다 — 세기만 한다
+  ScanMsg(ScanMsg &amp;&amp; o) noexcept : ranges(std::move(o.ranges)) { ++g_move; }  // 이동될 때 불린다
+  ScanMsg &amp; operator=(const ScanMsg &amp;) = delete;                 // 대입은 오늘 안 센다. 막아 둔다
+};
+
+// 비교하려고 남겨 둔 고치기 전 판 — 값으로 받고, 안에서 또 복사한다
+float scan_callback_by_value(const ScanMsg &amp; msg)      // ① 참조로 고쳤다
+{
+  std::vector&lt;float&gt; ranges = msg.ranges;              // ② 또 복사
+  return ranges.at(0);
+}
+
+// 고친 모양 — 참조로 받고, 별명만 잡는다
+float scan_callback(const ScanMsg &amp; msg)               // ① 참조로 받음 — 사본이 없다
+{
+  const std::vector&lt;float&gt; &amp; ranges = msg.ranges;      // ② 이름표만 하나 더 붙였다
+  return ranges.at(0);                                 // 정면 거리
+}
+
+// 그냥 돌려준다 — 컴파일러가 부를 쪽 자리에 바로 만들어 준다
+ScanMsg make_plain()
+{
+  ScanMsg s;
+  return s;
+}
+
+// move 를 붙여 돌려준다 — 위의 최적화가 막힌다 (AI가 자주 이렇게 준다)
+ScanMsg make_moved()
+{
+  ScanMsg s;
+  return std::move(s);
+}
+
+int main()
+{
+  ScanMsg msg;                                         // 생성자가 360칸을 1.0 m 로 채운다
+  std::printf(&quot;정면 거리 = %.1f m\n&quot;, scan_callback(msg));
+
+  std::printf(&quot;\n포인터 하나            : %2zu 바이트\n&quot;, sizeof(void *));
+  std::printf(&quot;int                    : %2zu 바이트\n&quot;, sizeof(int));
+  std::printf(&quot;float                  : %2zu 바이트\n&quot;, sizeof(float));
+  std::printf(&quot;double                 : %2zu 바이트\n&quot;, sizeof(double));
+  std::printf(&quot;std::string            : %2zu 바이트 (+ 글자는 따로)\n&quot;, sizeof(std::string));
+  std::printf(&quot;std::vector&lt;float&gt;     : %2zu 바이트 (+ 값 360개는 따로 %zu 바이트)\n&quot;,
+              sizeof(std::vector&lt;float&gt;), 360 * sizeof(float));
+  std::printf(&quot;ScanMsg                : %2zu 바이트 (+ 값 360개는 따로)\n&quot;, sizeof(ScanMsg));
+
+  g_copy = 0;
+  scan_callback_by_value(msg);
+  std::printf(&quot;\n값으로 받기      : ScanMsg 복사 %d회  (안쪽 vector 복사는 세지 않았는데도 이만큼이다)\n&quot;, g_copy);
+
+  g_copy = 0;
+  scan_callback(msg);
+  std::printf(&quot;const 참조로 받기: ScanMsg 복사 %d회\n&quot;, g_copy);
+
+  const int LOOPS = 100000;
+  double sink = 0.0;                                   // 결과를 버리면 컴파일러가 계산을 지운다
+
+  g_copy = 0;
+  auto t0 = std::chrono::steady_clock::now();
+  for (int i = 0; i &lt; LOOPS; ++i) { sink += scan_callback_by_value(msg); }
+  auto t1 = std::chrono::steady_clock::now();
+  const double v = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+  const int copies_v = g_copy;
+
+  g_copy = 0;
+  t0 = std::chrono::steady_clock::now();
+  for (int i = 0; i &lt; LOOPS; ++i) { sink += scan_callback(msg); }
+  t1 = std::chrono::steady_clock::now();
+  const double r = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+
+  std::printf(&quot;\n%d회 반복\n&quot;, LOOPS);
+  std::printf(&quot;값으로 받기      : %8.2f ms  (복사 %d회)\n&quot;, v, copies_v);
+  std::printf(&quot;const 참조로 받기: %8.2f ms  (복사 %d회)\n&quot;, r, g_copy);
+  std::printf(&quot;차이             : %.0f배  (sink=%.0f)\n&quot;, v / r, sink);
+
+  std::printf(&quot;\nstd::move 로 넘기면\n&quot;);
+  g_copy = g_move = 0;
+  ScanMsg tmp;
+  ScanMsg taken(std::move(tmp));                       // &quot;가져가라&quot; — 알맹이의 주인이 taken 으로 바뀐다
+  std::printf(&quot;  복사 %d회, 이동 %d회\n&quot;, g_copy, g_move);
+  std::printf(&quot;  넘겨준 쪽 tmp.ranges.size()   = %zu  ← 껍데기만 남았다. 이제 tmp 를 읽으면 안 된다\n&quot;, tmp.ranges.size());
+  std::printf(&quot;  받은 쪽   taken.ranges.size() = %zu\n&quot;, taken.ranges.size());
+
+  std::printf(&quot;\n함수에서 만들어 돌려주면\n&quot;);
+  g_copy = g_move = 0;
+  ScanMsg a = make_plain();
+  std::printf(&quot;  return s;            : 복사 %d회, 이동 %d회  (ranges %zu개)\n&quot;, g_copy, g_move, a.ranges.size());
+
+  g_copy = g_move = 0;
+  ScanMsg b = make_moved();
+  std::printf(&quot;  return std::move(s); : 복사 %d회, 이동 %d회  (ranges %zu개)\n&quot;, g_copy, g_move, b.ranges.size());
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+    <!-- fullcode "맞춰 보기 — 4번까지 고친 판 (안쪽 복사까지 별명으로)" build="g++ -std=c++17 -O2 -Wall -o scan_copy scan_copy.cpp && ./scan_copy"
+         l11_copy_move/steps/lab_fix2.cpp as scan_copy.cpp
+    -->
+<details class="fullcode">
+  <summary>맞춰 보기 — 4번까지 고친 판 (안쪽 복사까지 별명으로)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -Wall -o scan_copy scan_copy.cpp &amp;&amp; ./scan_copy</code></p>
+  <div class="codefile"><div class="fname">scan_copy.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>// 11회 — 복사와 이동: 값을 넘길 때 무슨 일이 일어나나
+#include &lt;cstdio&gt;
+#include &lt;vector&gt;
+#include &lt;string&gt;
+#include &lt;chrono&gt;
+#include &lt;utility&gt;       // std::move
+
+int g_copy = 0;   // ScanMsg 가 복사된 횟수
+int g_move = 0;   // ScanMsg 가 이동된 횟수
+
+struct ScanMsg {
+  std::vector&lt;float&gt; ranges;   // 거리 값 360개가 들어 있다
+
+  ScanMsg() : ranges(360, 1.0f) {}                               // 만들 때 360칸을 1.0 m 로 채운다
+  ScanMsg(const ScanMsg &amp; o) : ranges(o.ranges) { ++g_copy; }    // 복사될 때 불린다 — 세기만 한다
+  ScanMsg(ScanMsg &amp;&amp; o) noexcept : ranges(std::move(o.ranges)) { ++g_move; }  // 이동될 때 불린다
+  ScanMsg &amp; operator=(const ScanMsg &amp;) = delete;                 // 대입은 오늘 안 센다. 막아 둔다
+};
+
+// 비교하려고 남겨 둔 고치기 전 판 — 값으로 받고, 안에서 또 복사한다
+float scan_callback_by_value(const ScanMsg &amp; msg)      // ① 참조로 고쳤다
+{
+  const std::vector&lt;float&gt; &amp; ranges = msg.ranges;      // ② 이름표만 붙이게 고쳤다
+  return ranges.at(0);
+}
+
+// 고친 모양 — 참조로 받고, 별명만 잡는다
+float scan_callback(const ScanMsg &amp; msg)               // ① 참조로 받음 — 사본이 없다
+{
+  const std::vector&lt;float&gt; &amp; ranges = msg.ranges;      // ② 이름표만 하나 더 붙였다
+  return ranges.at(0);                                 // 정면 거리
+}
+
+// 그냥 돌려준다 — 컴파일러가 부를 쪽 자리에 바로 만들어 준다
+ScanMsg make_plain()
+{
+  ScanMsg s;
+  return s;
+}
+
+// move 를 붙여 돌려준다 — 위의 최적화가 막힌다 (AI가 자주 이렇게 준다)
+ScanMsg make_moved()
+{
+  ScanMsg s;
+  return std::move(s);
+}
+
+int main()
+{
+  ScanMsg msg;                                         // 생성자가 360칸을 1.0 m 로 채운다
+  std::printf(&quot;정면 거리 = %.1f m\n&quot;, scan_callback(msg));
+
+  std::printf(&quot;\n포인터 하나            : %2zu 바이트\n&quot;, sizeof(void *));
+  std::printf(&quot;int                    : %2zu 바이트\n&quot;, sizeof(int));
+  std::printf(&quot;float                  : %2zu 바이트\n&quot;, sizeof(float));
+  std::printf(&quot;double                 : %2zu 바이트\n&quot;, sizeof(double));
+  std::printf(&quot;std::string            : %2zu 바이트 (+ 글자는 따로)\n&quot;, sizeof(std::string));
+  std::printf(&quot;std::vector&lt;float&gt;     : %2zu 바이트 (+ 값 360개는 따로 %zu 바이트)\n&quot;,
+              sizeof(std::vector&lt;float&gt;), 360 * sizeof(float));
+  std::printf(&quot;ScanMsg                : %2zu 바이트 (+ 값 360개는 따로)\n&quot;, sizeof(ScanMsg));
+
+  g_copy = 0;
+  scan_callback_by_value(msg);
+  std::printf(&quot;\n값으로 받기      : ScanMsg 복사 %d회  (안쪽 vector 복사는 세지 않았는데도 이만큼이다)\n&quot;, g_copy);
+
+  g_copy = 0;
+  scan_callback(msg);
+  std::printf(&quot;const 참조로 받기: ScanMsg 복사 %d회\n&quot;, g_copy);
+
+  const int LOOPS = 100000;
+  double sink = 0.0;                                   // 결과를 버리면 컴파일러가 계산을 지운다
+
+  g_copy = 0;
+  auto t0 = std::chrono::steady_clock::now();
+  for (int i = 0; i &lt; LOOPS; ++i) { sink += scan_callback_by_value(msg); }
+  auto t1 = std::chrono::steady_clock::now();
+  const double v = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+  const int copies_v = g_copy;
+
+  g_copy = 0;
+  t0 = std::chrono::steady_clock::now();
+  for (int i = 0; i &lt; LOOPS; ++i) { sink += scan_callback(msg); }
+  t1 = std::chrono::steady_clock::now();
+  const double r = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+
+  std::printf(&quot;\n%d회 반복\n&quot;, LOOPS);
+  std::printf(&quot;값으로 받기      : %8.2f ms  (복사 %d회)\n&quot;, v, copies_v);
+  std::printf(&quot;const 참조로 받기: %8.2f ms  (복사 %d회)\n&quot;, r, g_copy);
+  std::printf(&quot;차이             : %.0f배  (sink=%.0f)\n&quot;, v / r, sink);
+
+  std::printf(&quot;\nstd::move 로 넘기면\n&quot;);
+  g_copy = g_move = 0;
+  ScanMsg tmp;
+  ScanMsg taken(std::move(tmp));                       // &quot;가져가라&quot; — 알맹이의 주인이 taken 으로 바뀐다
+  std::printf(&quot;  복사 %d회, 이동 %d회\n&quot;, g_copy, g_move);
+  std::printf(&quot;  넘겨준 쪽 tmp.ranges.size()   = %zu  ← 껍데기만 남았다. 이제 tmp 를 읽으면 안 된다\n&quot;, tmp.ranges.size());
+  std::printf(&quot;  받은 쪽   taken.ranges.size() = %zu\n&quot;, taken.ranges.size());
+
+  std::printf(&quot;\n함수에서 만들어 돌려주면\n&quot;);
+  g_copy = g_move = 0;
+  ScanMsg a = make_plain();
+  std::printf(&quot;  return s;            : 복사 %d회, 이동 %d회  (ranges %zu개)\n&quot;, g_copy, g_move, a.ranges.size());
+
+  g_copy = g_move = 0;
+  ScanMsg b = make_moved();
+  std::printf(&quot;  return std::move(s); : 복사 %d회, 이동 %d회  (ranges %zu개)\n&quot;, g_copy, g_move, b.ranges.size());
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+    <p><strong>성공 화면</strong> — 1번에서 완성본을 돌리면 이렇게 나온다 (경고 다섯 줄은 앞에 따로 뜬다).</p>
+    <pre><code>정면 거리 = 1.0 m
+
+포인터 하나            :  8 바이트
+int                    :  4 바이트
+float                  :  4 바이트
+double                 :  8 바이트
+std::string            : 32 바이트 (+ 글자는 따로)
+std::vector&lt;float&gt;     : 24 바이트 (+ 값 360개는 따로 1440 바이트)
+ScanMsg                : 24 바이트 (+ 값 360개는 따로)
+
+값으로 받기      : ScanMsg 복사 1회  (안쪽 vector 복사는 세지 않았는데도 이만큼이다)
+const 참조로 받기: ScanMsg 복사 0회
+
+100000회 반복
+값으로 받기      :     5.36 ms  (복사 100000회)
+const 참조로 받기:     0.17 ms  (복사 0회)
+차이             : 32배  (sink=200000)
+
+std::move 로 넘기면
+  복사 0회, 이동 1회
+  넘겨준 쪽 tmp.ranges.size()   = 0  ← 껍데기만 남았다. 이제 tmp 를 읽으면 안 된다
+  받은 쪽   taken.ranges.size() = 360
+
+함수에서 만들어 돌려주면
+  return s;            : 복사 0회, 이동 0회  (ranges 360개)
+  return std::move(s); : 복사 0회, 이동 1회  (ranges 360개)</code></pre>
     <div class="box trap" style="margin-top:1rem">
       <div class="boxtitle">숫자가 다르게 나와도 정상이다</div>
       <p>
-        <strong>밀리초 값은 컴퓨터마다 다르다.</strong> 자료의 3.66과 0.17이 그대로 나오지 않는다.
-        같은 컴퓨터에서도 다시 돌리면 조금씩 바뀐다.
+        <strong>밀리초 값은 컴퓨터마다 다르다.</strong> 자료의 6.55와 0.17이 그대로 나오지 않는다.
+        같은 컨테이너에서도 5단계 파일은 6.5 ms, 완성본은 5.4 ms가 나왔다 — 파일이 조금 달라지면 컴파일러가 만드는 기계어도 달라져서다.
         <strong>보는 것은 두 줄의 비, 즉 배수다.</strong> 그리고 4번을 하고 나면 그 배수가 1 근처로 내려온다.
       </p>
     </div>
@@ -810,7 +1744,7 @@ return_move.cpp:28:19: note: remove ‘std::move’ call</code></pre>
       <strong>더 좋은 방법은 다섯 개 전부 안 쓰는 것</strong>이다.
       값을 <code>std::vector</code>·<code>std::string</code> 같은 표준 그릇에 담아 두면
       복사·이동·정리를 <strong>그릇이 알아서 한다.</strong>
-      <strong>우리 예제가 다섯 개를 손으로 쓴 것은 횟수를 세기 위해서일 뿐</strong>이고,
+      <strong>우리 예제가 그중 셋을 손으로 쓴 것은 횟수를 세기 위해서일 뿐</strong>이고,
       평소 코드에서는 하나도 쓸 일이 없다.
     </p>
   </details>

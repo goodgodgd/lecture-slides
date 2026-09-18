@@ -40,3 +40,14 @@ function copyPrompt(btn) {
     setTimeout(function () { btn.textContent = old; }, 1200);
   });
 }
+
+// 📄 전체 코드 상자의 「복사」 버튼. 같은 .codefile 안의 <pre> 내용만 복사한다.
+function copyCode(btn) {
+  var pre = btn.parentElement.querySelector('pre');
+  if (!pre) return;
+  navigator.clipboard.writeText(pre.textContent.replace(/\s+$/, '') + '\n').then(function () {
+    var old = btn.textContent;
+    btn.textContent = '복사됨';
+    setTimeout(function () { btn.textContent = old; }, 1200);
+  });
+}

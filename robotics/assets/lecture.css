@@ -158,3 +158,28 @@ footer { margin-top: 4rem; padding-top: 1.2rem; border-top: 1px solid var(--line
 footer a { color: var(--accent); }
 .backlink { display: inline-block; margin-bottom: 1.5rem; font-size: .85rem; color: var(--muted); text-decoration: none; }
 .backlink:hover { color: var(--accent); }
+
+/* ── 📄 전체 코드 상자 — 본문에는 바뀐 부분만 보이고, 빌드되는 전체 파일은 여기 접어 둔다 ──
+   _notes/강의자료_제작지침.md 4-3-1절. 색은 전부 토큰이라 다크 모드가 따라온다. */
+details.fullcode { background: var(--card); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+  border-radius: 8px; padding: .15rem 1rem; margin: .5rem 0 1.5rem; }
+details.fullcode > summary { cursor: pointer; font-weight: 600; font-size: .88rem; color: var(--accent);
+  padding: .55rem 0; list-style: none; }
+details.fullcode > summary::-webkit-details-marker { display: none; }
+details.fullcode > summary::before { content: "📄 "; }
+details.fullcode > summary::after { content: " ▸ 펼치기"; font-size: .78rem; font-weight: 400; color: var(--muted); }
+details.fullcode[open] > summary::after { content: " ▾ 접기"; }
+details.fullcode[open] > summary { border-bottom: 1px solid var(--line); }
+details.fullcode[open] { padding-bottom: .9rem; }
+details.fullcode .how { font-size: .84rem; color: var(--muted); margin: .7rem 0 .2rem; }
+details.fullcode .codefile { position: relative; margin: .7rem 0 0; }
+details.fullcode .codefile .fname { font-family: var(--mono); font-size: .8rem; font-weight: 700; color: var(--fg);
+  margin: 0 0 .25rem; }
+details.fullcode .codefile pre { margin: 0; border-left: 0; background: var(--code-bg); }
+details.fullcode .codefile button { position: absolute; top: 1.7rem; right: .5rem; font: inherit; font-size: .74rem;
+  padding: .18rem .55rem; border: 1px solid var(--accent); background: var(--bg); color: var(--accent);
+  border-radius: 6px; cursor: pointer; }
+details.fullcode .codefile button:hover { background: var(--accent); color: #fff; }
+/* 본문 조각에서 「이번 단계에 새로 넣은 줄」을 표시한다 — 줄 전체를 <span class="ln-add"> 로 감싼다 */
+pre code .ln-add { display: inline-block; width: 100%; background: var(--good-soft); box-shadow: -1rem 0 0 var(--good-soft); }
+pre code .ln-del { display: inline-block; width: 100%; background: var(--bad-soft); box-shadow: -1rem 0 0 var(--bad-soft); text-decoration: line-through; opacity: .8; }

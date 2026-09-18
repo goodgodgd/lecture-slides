@@ -85,7 +85,7 @@
   <div class="tablewrap">
   <table class="summary-table">
     <tr><th>화면에 이게 보이면</th><th>어느 단계에서 난 것</th><th>그러면 어디를 고치나</th></tr>
-    <tr><td><code>CMake Error at CMakeLists.txt:7</code></td><td>① cmake 설정</td><td><strong><code>CMakeLists.txt</code>의 7번째 줄</strong> — 줄 번호를 알려 준다</td></tr>
+    <tr><td><code>CMake Error at CMakeLists.txt:12</code></td><td>① cmake 설정</td><td><strong><code>CMakeLists.txt</code>의 12번째 줄</strong> — 줄 번호를 알려 준다</td></tr>
     <tr><td><code>error: expected ‘;’ before …</code></td><td>② 컴파일</td><td><strong>소스 파일</strong> — 경로와 줄:칸 번호를 알려 준다</td></tr>
     <tr><td><code>undefined reference to …</code></td><td>③ 링크</td><td><strong><code>CMakeLists.txt</code>의 <code>target_link_libraries</code></strong> — 소스가 아니다</td></tr>
     <tr><td><code>gmake[2]: *** … Error 1</code></td><td>—</td><td><strong>읽지 않는다.</strong> 위쪽 첫 <code>error:</code> 줄로 올라간다</td></tr>
@@ -102,33 +102,108 @@
   <!-- ── 📐 이론 블록 ── -->
   <h2 id="stages">① 파일이 둘이 되면 한 줄로는 안 된다 <span class="badge b-red">🔴 사람이 한다</span></h2>
 
-  <h3>지금 있는 파일 세 개</h3>
+  <h3>1단계 — 지금 있는 파일 세 개</h3>
   <p>
     라이다가 준 거리 값 중 <strong>쓸 만한 것만 골라 평균을 내는 함수</strong> 하나를 만들었다고 하자.
-    선언은 헤더에, 정의는 소스에, 그것을 쓰는 쪽은 <code>main.cpp</code>에 있다.
+    8회에서 한 대로 선언은 헤더에, 정의는 소스에, 그것을 쓰는 쪽은 <code>main.cpp</code>에 있다.
+    <strong>이 프로젝트 하나를 이 회차 끝까지 계속 쓴다.</strong> 절이 넘어갈 때마다 파일이 하나 더해지거나 한 줄이 바뀐다.
+    본문에는 바뀌는 자리만 보이고, 그 아래 📄 「전체 코드」 상자를 펼치면 <strong>그 단계의 파일 전부</strong>가 나온다.
+    어느 상자를 펼쳐도 그대로 빌드된다.
   </p>
   <pre><code>scan_tools/
-├── CMakeLists.txt
 ├── include/
 │   └── scan_math.hpp     ← 선언: "이런 함수가 있다"
 └── src/
     ├── scan_math.cpp     ← 정의: "그 함수는 이렇게 동작한다"
     └── main.cpp          ← 쓰는 쪽</code></pre>
 
+  <div class="codelabel good">include/scan_math.hpp — 선언만 있다</div>
+  <pre class="after"><code>#ifndef SCAN_MATH_HPP_
+#define SCAN_MATH_HPP_
+#include &lt;vector&gt;
+// 유효한 거리 값들의 평균을 낸다. 하나도 없으면 -1 을 돌려준다.
+float mean_range(const std::vector&lt;float&gt; &amp; ranges, float lo, float hi);
+#endif</code></pre>
+
+  <div class="codelabel good">src/scan_math.cpp — 정의가 여기 있다</div>
+  <pre class="after"><code>#include "scan_math.hpp"
+#include &lt;cmath&gt;
+float mean_range(const std::vector&lt;float&gt; &amp; ranges, float lo, float hi)
+{
+  double sum = 0.0; int cnt = 0;
+  for (const float r : ranges) {
+    if (std::isfinite(r) &amp;&amp; r &gt;= lo &amp;&amp; r &lt;= hi) { sum += r; ++cnt; }
+  }
+  return (cnt &gt; 0) ? static_cast&lt;float&gt;(sum / cnt) : -1.0f;
+}</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>for (const float r : ranges)</dt>
+      <dd>배열을 <strong>처음부터 끝까지 하나씩</strong> 도는 문법이다(범위 for).
+          인덱스 <code>i</code>를 직접 다루지 않으므로 범위를 벗어날 자리가 없다.
+          여기서는 거리 값 일곱 개를 차례로 <code>r</code>에 받아 검사하는 데 썼다.</dd>
+
+      <dt>std::isfinite(r)</dt>
+      <dd>그 값이 <strong>보통 숫자인지</strong> 묻는다. 무한대(<code>inf</code>)나 「숫자가 아님」(<code>NaN</code>)이면 거짓이다.
+          라이다는 측정에 실패한 방향을 그런 값으로 채워 보내므로, 여기서는 그것부터 걸러 냈다.</dd>
+
+      <dt>static_cast&lt;float&gt;(sum / cnt)</dt>
+      <dd>값의 타입을 <strong>일부러 바꾼다</strong>는 표시다.
+          여기서는 <code>double</code>로 더한 합을 함수가 돌려줄 <code>float</code>으로 줄이는 데 썼다.
+          이렇게 적어 두면 "실수로 줄어든 것이 아니라 내가 줄인 것"이 코드에 남는다.</dd>
+    </dl>
+    <p class="later">제대로 다루는 곳: 12회(컨테이너와 범위 for) · 13회(<code>isfinite</code>와 라이다의 NaN)</p>
+  </div>
+
+  <div class="codelabel good">src/main.cpp — 쓰는 쪽</div>
+  <pre class="after"><code>#include "scan_math.hpp"
+#include &lt;cmath&gt;
+#include &lt;cstdio&gt;
+int main()
+{
+  const std::vector&lt;float&gt; raw{0.10f, 0.83f, INFINITY, 1.24f, 9.90f, NAN, 2.05f};
+  std::printf("유효값 평균 = %.3f m\n", mean_range(raw, 0.16f, 8.0f));
+  return 0;
+}</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>std::vector&lt;float&gt; raw{0.10f, 0.83f, …}</dt>
+      <dd>중괄호 안에 <strong>초깃값을 그대로 나열</strong>해서 만드는 방식이다.
+          여기서는 라이다가 준 거리 일곱 개를 흉내 내는 데 썼다. 값 일곱 개짜리 배열이 그 자리에서 만들어진다.</dd>
+
+      <dt>INFINITY / NAN</dt>
+      <dd>각각 <strong>무한대</strong>와 <strong>「숫자가 아님」</strong>을 뜻하는 이름이다(<code>&lt;cmath&gt;</code>에 들어 있다).
+          여기서는 <strong>라이다가 실패한 방향을 일부러 섞어 넣는 데</strong> 썼다.
+          위 <code>std::isfinite</code>가 이 둘을 걸러 낸다.</dd>
+
+      <dt>std::printf("… %.3f m\n", …)</dt>
+      <dd>서식을 정해 화면에 찍는다. <code>%.3f</code>가 <strong>소수점 아래 셋까지</strong>라는 뜻이라
+          출력이 <code>1.373</code>으로 나온다.</dd>
+    </dl>
+  </div>
+
   <h3>기존 방법으로 해 보면 — 두 번 막힌다</h3>
-  <p>여태 쓰던 대로 <code>main.cpp</code> 하나만 넘겨 본다. <strong>첫 번째 벽</strong>은 헤더를 못 찾는 것이다.</p>
+  <p>여태 쓰던 대로 <code>scan_tools/</code> 안에서 <code>g++</code>에 소스 둘을 넘겨 본다. <strong>첫 번째 벽</strong>은 헤더를 못 찾는 것이다.</p>
   <pre><code>$ g++ -std=c++17 src/main.cpp src/scan_math.cpp -o scan_app
 src/main.cpp:1:10: fatal error: scan_math.hpp: No such file or directory
     1 | #include "scan_math.hpp"
       |          ^~~~~~~~~~~~~~~
+compilation terminated.
+src/scan_math.cpp:1:10: fatal error: scan_math.hpp: No such file or directory
+    1 | #include "scan_math.hpp"
+      |          ^~~~~~~~~~~~~~~
 compilation terminated.</code></pre>
   <p>
-    <code>include/</code> 폴더를 어디서 찾을지 아무도 알려 주지 않았다.
+    <code>include/</code> 폴더를 어디서 찾을지 아무도 알려 주지 않았다. 두 소스가 <strong>각각</strong> 같은 이유로 막혔다.
     <code>-Iinclude</code>를 붙여 그 자리를 알려 주고, 이번엔 <code>main.cpp</code> 하나만 넘겨 본다.
     <strong>두 번째 벽</strong>이 나온다.
   </p>
   <pre><code>$ g++ -std=c++17 -Iinclude src/main.cpp -o scan_app
-/usr/bin/ld: /tmp/ccEpSK90.o: in function `main':
+/usr/bin/ld: /tmp/cc8r9RSt.o: in function `main':
 main.cpp:(.text+0xca): undefined reference to `mean_range(std::vector&lt;float, std::allocator&lt;float&gt; &gt; const&amp;, float, float)'
 collect2: error: ld returned 1 exit status</code></pre>
   <p>
@@ -151,7 +226,7 @@ $ ./scan_app
 
       <dt>.o (목적 파일, object file)</dt>
       <dd>소스 파일 하나를 기계어로 바꿔 놓은 <strong>중간 결과물</strong>이다.
-          아직 실행 파일이 아니다. 위 메시지의 <code>/tmp/ccEpSK90.o</code>가 그것이고,
+          아직 실행 파일이 아니다. 위 메시지의 <code>/tmp/cc8r9RSt.o</code>가 그것이고,
           컴파일러가 임시로 만들었다가 지운다.</dd>
 
       <dt>undefined reference to `…'</dt>
@@ -160,6 +235,48 @@ $ ./scan_app
           여기서는 <code>scan_math.cpp</code>를 안 넘겨서 났다.</dd>
     </dl>
   </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 값 일곱 개 중 <code>0.10</code>(너무 가까움)·<code>INFINITY</code>·<code>9.90</code>(너무 멂)·<code>NAN</code> 넷이 버려지고
+    <code>0.83</code>·<code>1.24</code>·<code>2.05</code> 셋이 남는다. 셋의 평균이 <strong>1.373 m</strong>다.
+    <strong>이 숫자를 기억해 두면 뒤에서 「제대로 고쳐졌는지」를 눈으로 판단할 수 있다.</strong>
+  </div>
+
+  <!-- fullcode "전체 코드 — scan_tools/ (1단계 · 파일 세 개, g++ 한 줄로 빌드된다)" build="g++ -std=c++17 -Iinclude src/main.cpp src/scan_math.cpp -o scan_app && ./scan_app"
+       l09_cmake/steps/step1/include/scan_math.hpp as scan_tools/include/scan_math.hpp
+       l09_cmake/steps/step1/src/scan_math.cpp as scan_tools/src/scan_math.cpp
+       l09_cmake/steps/step1/src/main.cpp as scan_tools/src/main.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — scan_tools/ (1단계 · 파일 세 개, g++ 한 줄로 빌드된다)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -Iinclude src/main.cpp src/scan_math.cpp -o scan_app &amp;&amp; ./scan_app</code></p>
+  <div class="codefile"><div class="fname">scan_tools/include/scan_math.hpp</div><button onclick="copyCode(this)">복사</button><pre><code>#ifndef SCAN_MATH_HPP_
+#define SCAN_MATH_HPP_
+#include &lt;vector&gt;
+// 유효한 거리 값들의 평균을 낸다. 하나도 없으면 -1 을 돌려준다.
+float mean_range(const std::vector&lt;float&gt; &amp; ranges, float lo, float hi);
+#endif</code></pre></div>
+  <div class="codefile"><div class="fname">scan_tools/src/scan_math.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>#include &quot;scan_math.hpp&quot;
+#include &lt;cmath&gt;
+float mean_range(const std::vector&lt;float&gt; &amp; ranges, float lo, float hi)
+{
+  double sum = 0.0; int cnt = 0;
+  for (const float r : ranges) {
+    if (std::isfinite(r) &amp;&amp; r &gt;= lo &amp;&amp; r &lt;= hi) { sum += r; ++cnt; }
+  }
+  return (cnt &gt; 0) ? static_cast&lt;float&gt;(sum / cnt) : -1.0f;
+}</code></pre></div>
+  <div class="codefile"><div class="fname">scan_tools/src/main.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>#include &quot;scan_math.hpp&quot;
+#include &lt;cmath&gt;
+#include &lt;cstdio&gt;
+int main()
+{
+  const std::vector&lt;float&gt; raw{0.10f, 0.83f, INFINITY, 1.24f, 9.90f, NAN, 2.05f};
+  std::printf(&quot;유효값 평균 = %.3f m\n&quot;, mean_range(raw, 0.16f, 8.0f));
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
 
   <h3>그래서 빌드는 세 단계다</h3>
   <p>
@@ -176,7 +293,7 @@ $ ./scan_app
   <div class="tablewrap">
   <table>
     <tr><th>단계</th><th>무슨 일을 하나</th><th>여기서 나는 대표 메시지</th></tr>
-    <tr><td>① 설정 (cmake)</td><td>무엇을 무엇으로 만들지 계획표를 짠다</td><td><code>CMake Error at CMakeLists.txt:7</code></td></tr>
+    <tr><td>① 설정 (cmake)</td><td>무엇을 무엇으로 만들지 계획표를 짠다</td><td><code>CMake Error at CMakeLists.txt:12</code></td></tr>
     <tr><td>② 컴파일</td><td>소스 <strong>한 개씩</strong> <code>.o</code>로 바꾼다. 문법을 여기서 본다</td><td><code>error: expected ‘;’ …</code></td></tr>
     <tr><td>③ 링크</td><td><code>.o</code>들을 <strong>이어 붙여</strong> 실행 파일 하나로 만든다</td><td><code>undefined reference to …</code></td></tr>
   </table>
@@ -256,7 +373,7 @@ $ ./scan_app
         <code>[ 25%]</code> → <code>[ 50%]</code> → <code>[ 75%]</code> → <code>[100%]</code>로
         네 단계가 지나간다. 손으로 치면 명령 네 줄에 해당한다.</li>
     </ul>
-    <p class="src">잰 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0, CMake 3.28.3). 줄 수는 <code>examples/l09_cmake/good/CMakeLists.txt</code>를 센 것이다.</p>
+    <p class="src">잰 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0, CMake 3.28.3). 줄 수는 ②절의 <code>CMakeLists.txt</code>를 센 것이다.</p>
 
     <ul class="src">
       <li>출처: Wikipedia — Make (software), Stuart Feldman</li>
@@ -267,13 +384,21 @@ $ ./scan_app
   <!-- ── 💻 코딩 블록: 정상 프로젝트 ── -->
   <h2 id="project">② 여덟 줄이 그 일을 대신한다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
+  <h3>2단계 — 파일 하나를 더한다: <code>CMakeLists.txt</code></h3>
   <p>
     위에서 손으로 하던 일 — <em>"헤더는 여기 있고, 이 소스와 저 소스를 이어 붙여라"</em> —
     을 그대로 적어 놓은 파일이 <code>CMakeLists.txt</code>다.
-    <strong>아래가 이 회차에서 계속 쓸 프로젝트 전체다.</strong>
+    1단계의 소스 세 개는 <strong>한 글자도 안 바뀐다.</strong> 프로젝트 맨 위에 이 파일 하나만 새로 놓는다.
   </p>
+  <pre><code>scan_tools/
+<span class="ln-add">├── CMakeLists.txt        ← 새로 만든다</span>
+├── include/
+│   └── scan_math.hpp
+└── src/
+    ├── scan_math.cpp
+    └── main.cpp</code></pre>
 
-  <div class="codelabel good">CMakeLists.txt — 전체 13줄</div>
+  <div class="codelabel good">CMakeLists.txt — 전체 13줄 (새 파일)</div>
   <pre class="after"><code>cmake_minimum_required(VERSION 3.16)
 project(scan_tools CXX)
 
@@ -329,18 +454,35 @@ target_link_libraries(scan_app PRIVATE scan_math)</code></pre>
     </dl>
   </div>
 
-  <h3>소스 세 개 — 이 코드가 실제로 도는 것이다</h3>
+  <!-- fullcode "전체 코드 — scan_tools/ (2단계 · CMakeLists.txt 가 더해진 완성본)" build="cmake -S . -B build && cmake --build build && ./build/scan_app"
+       l09_cmake/steps/step2/CMakeLists.txt as scan_tools/CMakeLists.txt
+       l09_cmake/steps/step2/include/scan_math.hpp as scan_tools/include/scan_math.hpp
+       l09_cmake/steps/step2/src/scan_math.cpp as scan_tools/src/scan_math.cpp
+       l09_cmake/steps/step2/src/main.cpp as scan_tools/src/main.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — scan_tools/ (2단계 · CMakeLists.txt 가 더해진 완성본)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake -S . -B build &amp;&amp; cmake --build build &amp;&amp; ./build/scan_app</code></p>
+  <div class="codefile"><div class="fname">scan_tools/CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre><code>cmake_minimum_required(VERSION 3.16)
+project(scan_tools CXX)
 
-  <div class="codelabel good">include/scan_math.hpp — 선언만 있다</div>
-  <pre class="after"><code>#ifndef SCAN_MATH_HPP_
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# ① 라이브러리를 하나 만든다
+add_library(scan_math src/scan_math.cpp)
+target_include_directories(scan_math PUBLIC include)
+
+# ② 실행 파일을 만들고 ①을 붙인다
+add_executable(scan_app src/main.cpp)
+target_link_libraries(scan_app PRIVATE scan_math)</code></pre></div>
+  <div class="codefile"><div class="fname">scan_tools/include/scan_math.hpp</div><button onclick="copyCode(this)">복사</button><pre><code>#ifndef SCAN_MATH_HPP_
 #define SCAN_MATH_HPP_
 #include &lt;vector&gt;
 // 유효한 거리 값들의 평균을 낸다. 하나도 없으면 -1 을 돌려준다.
 float mean_range(const std::vector&lt;float&gt; &amp; ranges, float lo, float hi);
-#endif</code></pre>
-
-  <div class="codelabel good">src/scan_math.cpp — 정의가 여기 있다</div>
-  <pre class="after"><code>#include "scan_math.hpp"
+#endif</code></pre></div>
+  <div class="codefile"><div class="fname">scan_tools/src/scan_math.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>#include &quot;scan_math.hpp&quot;
 #include &lt;cmath&gt;
 float mean_range(const std::vector&lt;float&gt; &amp; ranges, float lo, float hi)
 {
@@ -349,68 +491,33 @@ float mean_range(const std::vector&lt;float&gt; &amp; ranges, float lo, float hi
     if (std::isfinite(r) &amp;&amp; r &gt;= lo &amp;&amp; r &lt;= hi) { sum += r; ++cnt; }
   }
   return (cnt &gt; 0) ? static_cast&lt;float&gt;(sum / cnt) : -1.0f;
-}</code></pre>
-
-  <div class="box firstseen">
-    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
-    <dl>
-      <dt>for (const float r : ranges)</dt>
-      <dd>배열을 <strong>처음부터 끝까지 하나씩</strong> 도는 문법이다(범위 for).
-          인덱스 <code>i</code>를 직접 다루지 않으므로 범위를 벗어날 자리가 없다.
-          여기서는 거리 값 일곱 개를 차례로 <code>r</code>에 받아 검사하는 데 썼다.</dd>
-
-      <dt>std::isfinite(r)</dt>
-      <dd>그 값이 <strong>보통 숫자인지</strong> 묻는다. 무한대(<code>inf</code>)나 「숫자가 아님」(<code>NaN</code>)이면 거짓이다.
-          라이다는 측정에 실패한 방향을 그런 값으로 채워 보내므로, 여기서는 그것부터 걸러 냈다.</dd>
-
-      <dt>static_cast&lt;float&gt;(sum / cnt)</dt>
-      <dd>값의 타입을 <strong>일부러 바꾼다</strong>는 표시다.
-          여기서는 <code>double</code>로 더한 합을 함수가 돌려줄 <code>float</code>으로 줄이는 데 썼다.
-          이렇게 적어 두면 "실수로 줄어든 것이 아니라 내가 줄인 것"이 코드에 남는다.</dd>
-    </dl>
-    <p class="later">제대로 다루는 곳: 12회(컨테이너와 범위 for) · 13회(<code>isfinite</code>와 라이다의 NaN)</p>
-  </div>
-
-  <div class="codelabel good">src/main.cpp — 쓰는 쪽</div>
-  <pre class="after"><code>#include "scan_math.hpp"
+}</code></pre></div>
+  <div class="codefile"><div class="fname">scan_tools/src/main.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>#include &quot;scan_math.hpp&quot;
 #include &lt;cmath&gt;
 #include &lt;cstdio&gt;
 int main()
 {
   const std::vector&lt;float&gt; raw{0.10f, 0.83f, INFINITY, 1.24f, 9.90f, NAN, 2.05f};
-  std::printf("유효값 평균 = %.3f m\n", mean_range(raw, 0.16f, 8.0f));
+  std::printf(&quot;유효값 평균 = %.3f m\n&quot;, mean_range(raw, 0.16f, 8.0f));
   return 0;
-}</code></pre>
-
-  <div class="box firstseen">
-    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
-    <dl>
-      <dt>std::vector&lt;float&gt; raw{0.10f, 0.83f, …}</dt>
-      <dd>중괄호 안에 <strong>초깃값을 그대로 나열</strong>해서 만드는 방식이다.
-          여기서는 라이다가 준 거리 일곱 개를 흉내 내는 데 썼다. 값 일곱 개짜리 배열이 그 자리에서 만들어진다.</dd>
-
-      <dt>INFINITY / NAN</dt>
-      <dd>각각 <strong>무한대</strong>와 <strong>「숫자가 아님」</strong>을 뜻하는 이름이다(<code>&lt;cmath&gt;</code>에 들어 있다).
-          여기서는 <strong>라이다가 실패한 방향을 일부러 섞어 넣는 데</strong> 썼다.
-          위 <code>std::isfinite</code>가 이 둘을 걸러 낸다.</dd>
-
-      <dt>std::printf("… %.3f m\n", …)</dt>
-      <dd>서식을 정해 화면에 찍는다. <code>%.3f</code>가 <strong>소수점 아래 셋까지</strong>라는 뜻이라
-          출력이 <code>1.373</code>으로 나온다.</dd>
-    </dl>
-  </div>
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
 
   <div class="interp">
-    <strong>해석:</strong> 값 일곱 개 중 <code>0.10</code>(너무 가까움)·<code>INFINITY</code>·<code>9.90</code>(너무 멂)·<code>NAN</code> 넷이 버려지고
-    <code>0.83</code>·<code>1.24</code>·<code>2.05</code> 셋이 남는다. 셋의 평균이 <strong>1.373 m</strong>다.
-    <strong>이 숫자를 기억해 두면 실습에서 「제대로 고쳐졌는지」를 눈으로 판단할 수 있다.</strong>
+    <strong>해석:</strong> 이 상자 안의 네 파일이 <strong>이 회차의 완성본</strong>이다.
+    ④절부터는 이 완성본에서 <strong>한 줄씩만 바꿔 가며</strong> 무엇이 달라지는지 본다.
+    낡은 방식으로 되돌려 보고, <code>PUBLIC</code>을 <code>PRIVATE</code>로 바꿔 보고, 세 군데를 일부러 망가뜨려 본다.
+    바꾼 자리는 본문에 보이고, 바꾼 뒤의 전체 파일은 각각의 📄 상자에 있다.
   </div>
 
   <!-- ── ⌨ 명령어 블록: 빌드 ── -->
   <h2 id="run">③ 빌드는 명령 두 줄이다 <span class="badge b-green">🟢 맡긴다</span></h2>
 
+  <p>명령은 <code>scan_tools/</code> 안에서 친다. <code>.</code>이 지금 폴더(소스 폴더)이고, 결과물은 <code>build/</code>에 따로 쌓인다.</p>
+
   <h3>그때 이걸 친다 — ① 설정</h3>
-  <pre><code>$ cmake -S good -B good/build
+  <pre><code>$ cmake -S . -B build
 -- The CXX compiler identification is GNU 13.3.0
 -- Detecting CXX compiler ABI info
 -- Detecting CXX compiler ABI info - done
@@ -419,7 +526,7 @@ int main()
 -- Detecting CXX compile features - done
 -- Configuring done (0.2s)
 -- Generating done (0.0s)
--- Build files have been written to: /work/l09_cmake/good/build</code></pre>
+-- Build files have been written to: /work/l09_cmake/steps/step2/build</code></pre>
   <p>
     <strong>출력을 이렇게 읽는다:</strong> 마지막 두 줄만 본다.
     <code>Generating done</code>이 나오면 계획표가 만들어진 것이고,
@@ -428,7 +535,7 @@ int main()
   </p>
 
   <h3>그때 이걸 친다 — ② 빌드</h3>
-  <pre><code>$ cmake --build good/build
+  <pre><code>$ cmake --build build
 [ 25%] Building CXX object CMakeFiles/scan_math.dir/src/scan_math.cpp.o
 [ 50%] Linking CXX static library libscan_math.a
 [ 50%] Built target scan_math
@@ -455,9 +562,9 @@ int main()
   </div>
 
   <h3>그때 이걸 친다 — ③ 실행</h3>
-  <pre><code>$ ./good/build/scan_app
+  <pre><code>$ ./build/scan_app
 유효값 평균 = 1.373 m
-$ ls good/build
+$ ls build
 CMakeCache.txt  CMakeFiles  cmake_install.cmake  libscan_math.a  Makefile  scan_app</code></pre>
   <p>
     <code>build/</code> 안에 <code>libscan_math.a</code>와 <code>scan_app</code>이 실제로 생겼다.
@@ -470,7 +577,7 @@ CMakeCache.txt  CMakeFiles  cmake_install.cmake  libscan_math.a  Makefile  scan_
       <dt>cmake -S &lt;소스 폴더&gt; -B &lt;빌드 폴더&gt;</dt>
       <dd><strong>설정 단계</strong>다. <code>-S</code>가 <code>CMakeLists.txt</code>가 있는 곳,
           <code>-B</code>가 결과물을 쏟아 놓을 곳이다.
-          여기서는 <code>good/build</code>로 따로 뺐다 — <strong>소스 폴더를 부산물로 더럽히지 않기 위해서다.</strong></dd>
+          여기서는 <code>build</code>로 따로 뺐다 — <strong>소스 폴더를 부산물로 더럽히지 않기 위해서다.</strong></dd>
 
       <dt>cmake --build &lt;빌드 폴더&gt;</dt>
       <dd><strong>실제로 만드는 단계</strong>다. 설정 때 정해진 계획표대로 컴파일과 링크를 돌린다.
@@ -493,11 +600,74 @@ CMakeCache.txt  CMakeFiles  cmake_install.cmake  libscan_math.a  Makefile  scan_
     문제는 그 파일이 <strong>2014년 이전 방식</strong>일 때가 많다는 것이다.
   </p>
 
-  <div class="codelabel bad">AI가 보통 주는 코드 🔴</div>
-  <pre class="before"><code>include_directories(include)              # ← 여기가 문제다
-link_directories(lib)                     # ← 같은 종류의 문제다
-add_executable(robot main.cpp)
-target_link_libraries(robot mylib)</code></pre>
+  <p>
+    우리 <code>scan_tools/</code>에 <em>"CMakeLists.txt 만들어 줘"</em>라고만 해서 받은 파일이 아래다.
+    2단계 완성본과 <strong>다른 줄은 셋</strong>이다.
+  </p>
+  <div class="codelabel bad">AI가 보통 주는 코드 🔴 — CMakeLists.txt 의 아랫부분</div>
+  <pre class="before"><code>set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+<span class="ln-add">include_directories(include)              # ← 여기가 문제다. 누구에게 거는지가 없다</span>
+
+add_library(scan_math src/scan_math.cpp)
+
+add_executable(scan_app src/main.cpp)
+<span class="ln-add">target_link_libraries(scan_app scan_math)  # ← PRIVATE / PUBLIC 이 없다</span></code></pre>
+
+  <p><strong>이 파일은 그대로 빌드되고 <code>1.373 m</code>도 맞게 찍는다.</strong> 직접 돌려 봤다. 그래서 그냥 쓰게 된다.</p>
+  <pre><code>$ cmake -S . -B build &amp;&amp; cmake --build build &amp;&amp; ./build/scan_app
+[100%] Built target scan_app
+유효값 평균 = 1.373 m</code></pre>
+
+  <!-- fullcode "전체 코드 — scan_tools/ (낡은 방식 판 · 빌드는 된다)" build="cmake -S . -B build && cmake --build build && ./build/scan_app"
+       l09_cmake/steps/step3_old/CMakeLists.txt as scan_tools/CMakeLists.txt
+       l09_cmake/steps/step3_old/include/scan_math.hpp as scan_tools/include/scan_math.hpp
+       l09_cmake/steps/step3_old/src/scan_math.cpp as scan_tools/src/scan_math.cpp
+       l09_cmake/steps/step3_old/src/main.cpp as scan_tools/src/main.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — scan_tools/ (낡은 방식 판 · 빌드는 된다)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake -S . -B build &amp;&amp; cmake --build build &amp;&amp; ./build/scan_app</code></p>
+  <div class="codefile"><div class="fname">scan_tools/CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre><code>cmake_minimum_required(VERSION 3.16)
+project(scan_tools CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+include_directories(include)              # ← 여기가 문제다. 누구에게 거는지가 없다
+
+add_library(scan_math src/scan_math.cpp)
+
+add_executable(scan_app src/main.cpp)
+target_link_libraries(scan_app scan_math)  # ← PRIVATE / PUBLIC 이 없다</code></pre></div>
+  <div class="codefile"><div class="fname">scan_tools/include/scan_math.hpp</div><button onclick="copyCode(this)">복사</button><pre><code>#ifndef SCAN_MATH_HPP_
+#define SCAN_MATH_HPP_
+#include &lt;vector&gt;
+// 유효한 거리 값들의 평균을 낸다. 하나도 없으면 -1 을 돌려준다.
+float mean_range(const std::vector&lt;float&gt; &amp; ranges, float lo, float hi);
+#endif</code></pre></div>
+  <div class="codefile"><div class="fname">scan_tools/src/scan_math.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>#include &quot;scan_math.hpp&quot;
+#include &lt;cmath&gt;
+float mean_range(const std::vector&lt;float&gt; &amp; ranges, float lo, float hi)
+{
+  double sum = 0.0; int cnt = 0;
+  for (const float r : ranges) {
+    if (std::isfinite(r) &amp;&amp; r &gt;= lo &amp;&amp; r &lt;= hi) { sum += r; ++cnt; }
+  }
+  return (cnt &gt; 0) ? static_cast&lt;float&gt;(sum / cnt) : -1.0f;
+}</code></pre></div>
+  <div class="codefile"><div class="fname">scan_tools/src/main.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>#include &quot;scan_math.hpp&quot;
+#include &lt;cmath&gt;
+#include &lt;cstdio&gt;
+int main()
+{
+  const std::vector&lt;float&gt; raw{0.10f, 0.83f, INFINITY, 1.24f, 9.90f, NAN, 2.05f};
+  std::printf(&quot;유효값 평균 = %.3f m\n&quot;, mean_range(raw, 0.16f, 8.0f));
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
 
   <h3>무엇이 문제인가</h3>
   <p>
@@ -510,7 +680,7 @@ target_link_libraries(robot mylib)</code></pre>
     <tr><td>거는 대상이 안 적혀 있다</td><td><strong>누구에게 거는지가 코드에 없다.</strong> 타깃이 열 개면 열 개 전부에 걸린다</td></tr>
     <tr><td>지울 수가 없다</td><td>한 타깃만 빼고 싶어도 뺄 방법이 없다. 폴더 전체에 이미 걸렸다</td></tr>
     <tr><td>이름이 겹친다</td><td>붙이는 라이브러리가 늘어날수록 <strong>같은 이름의 헤더</strong>를 엉뚱한 폴더에서 집어 온다</td></tr>
-    <tr><td><code>target_link_libraries(robot mylib)</code>에 키워드가 없다</td><td><code>PRIVATE</code>·<code>PUBLIC</code>을 안 적었다. 옛 문법이라 통과는 되지만 <strong>전파 범위가 정해지지 않는다</strong></td></tr>
+    <tr><td><code>target_link_libraries(scan_app scan_math)</code>에 키워드가 없다</td><td><code>PRIVATE</code>·<code>PUBLIC</code>을 안 적었다. 옛 문법이라 통과는 되지만 <strong>전파 범위가 정해지지 않는다</strong></td></tr>
   </table>
   </div>
 
@@ -520,10 +690,16 @@ target_link_libraries(robot mylib)</code></pre>
     이 CMakeLists.txt 에 include_directories 나 link_directories 가 있으면 전부 target_include_directories 와 target_link_libraries 로 바꿔 줘. target_link_libraries 에는 PRIVATE / PUBLIC 을 반드시 붙이고, 왜 그 쪽을 골랐는지 한 줄로 알려 줘.
   </div>
 
-  <div class="codelabel good">받은 코드</div>
-  <pre class="after"><code>add_executable(robot main.cpp)
-target_include_directories(robot PRIVATE include)   # ← 대상마다 따로
-target_link_libraries(robot PRIVATE mylib)          # ← 전파 범위를 밝힌다</code></pre>
+  <div class="codelabel good">받은 코드 — 2단계 완성본으로 돌아온다</div>
+  <pre class="after"><code><span class="ln-del">include_directories(include)</span>
+
+add_library(scan_math src/scan_math.cpp)
+<span class="ln-add">target_include_directories(scan_math PUBLIC include)   # ← 대상(scan_math)에만 건다</span>
+
+add_executable(scan_app src/main.cpp)
+<span class="ln-del">target_link_libraries(scan_app scan_math)</span>
+<span class="ln-add">target_link_libraries(scan_app PRIVATE scan_math)      # ← 전파 범위를 밝힌다</span></code></pre>
+  <p>이 결과가 ②절에서 본 완성본 그대로다. <strong>바뀐 것은 「누구에게」가 붙었다는 것뿐</strong>이고, 빌드 결과도 출력도 같다.</p>
 
   <div class="box trap">
     <div class="boxtitle">⚠️ 한 줄 판별법 — 오늘 가져갈 것이 이것 하나여도 된다</div>
@@ -592,9 +768,80 @@ target_link_libraries(robot PRIVATE mylib)          # ← 전파 범위를 밝�
     </dl>
   </div>
 
+  <h3>정말 그런가 — 완성본에서 한 단어만 바꿔 봤다</h3>
+  <p><code>PUBLIC</code>을 <code>PRIVATE</code>로 바꾸면 <code>main.cpp</code>가 헤더를 못 찾는다고 했다. 실제로 그런지 2단계 완성본의 9번째 줄만 바꿔 빌드했다.</p>
+  <pre class="before"><code>add_library(scan_math src/scan_math.cpp)
+<span class="ln-del">target_include_directories(scan_math PUBLIC include)</span>
+<span class="ln-add">target_include_directories(scan_math PRIVATE include)   # PUBLIC 을 PRIVATE 로 바꿔 봤다</span></code></pre>
+  <pre><code>$ cmake --build build
+[ 25%] Building CXX object CMakeFiles/scan_math.dir/src/scan_math.cpp.o
+[ 50%] Linking CXX static library libscan_math.a
+[ 50%] Built target scan_math
+[ 75%] Building CXX object CMakeFiles/scan_app.dir/src/main.cpp.o
+/work/l09_cmake/steps/step4_private/src/main.cpp:1:10: fatal error: scan_math.hpp: No such file or directory
+    1 | #include "scan_math.hpp"
+      |          ^~~~~~~~~~~~~~~
+compilation terminated.
+gmake[2]: *** [CMakeFiles/scan_app.dir/build.make:76: CMakeFiles/scan_app.dir/src/main.cpp.o] Error 1</code></pre>
+  <p>
+    <code>scan_math</code> 자신은 <code>[ 50%] Built target scan_math</code>까지 멀쩡히 만들어졌다.
+    <code>include</code> 폴더를 <strong>자기만 쓰고 물려주지 않았으니</strong> <code>scan_app</code> 쪽 <code>main.cpp</code>가 헤더를 못 찾은 것이다.
+    ①절에서 <code>-Iinclude</code>를 빠뜨렸을 때와 <strong>같은 메시지</strong>다.
+  </p>
+
+  <!-- fullcode "전체 코드 — scan_tools/ (PUBLIC 을 PRIVATE 로 바꾼 판 · 빌드가 안 된다)" build="cmake -S . -B build && cmake --build build"
+       l09_cmake/steps/step4_private/CMakeLists.txt as scan_tools/CMakeLists.txt
+       l09_cmake/steps/step4_private/include/scan_math.hpp as scan_tools/include/scan_math.hpp
+       l09_cmake/steps/step4_private/src/scan_math.cpp as scan_tools/src/scan_math.cpp
+       l09_cmake/steps/step4_private/src/main.cpp as scan_tools/src/main.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — scan_tools/ (PUBLIC 을 PRIVATE 로 바꾼 판 · 빌드가 안 된다)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake -S . -B build &amp;&amp; cmake --build build</code></p>
+  <div class="codefile"><div class="fname">scan_tools/CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre><code>cmake_minimum_required(VERSION 3.16)
+project(scan_tools CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# ① 라이브러리를 하나 만든다
+add_library(scan_math src/scan_math.cpp)
+target_include_directories(scan_math PRIVATE include)   # PUBLIC 을 PRIVATE 로 바꿔 봤다
+
+# ② 실행 파일을 만들고 ①을 붙인다
+add_executable(scan_app src/main.cpp)
+target_link_libraries(scan_app PRIVATE scan_math)</code></pre></div>
+  <div class="codefile"><div class="fname">scan_tools/include/scan_math.hpp</div><button onclick="copyCode(this)">복사</button><pre><code>#ifndef SCAN_MATH_HPP_
+#define SCAN_MATH_HPP_
+#include &lt;vector&gt;
+// 유효한 거리 값들의 평균을 낸다. 하나도 없으면 -1 을 돌려준다.
+float mean_range(const std::vector&lt;float&gt; &amp; ranges, float lo, float hi);
+#endif</code></pre></div>
+  <div class="codefile"><div class="fname">scan_tools/src/scan_math.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>#include &quot;scan_math.hpp&quot;
+#include &lt;cmath&gt;
+float mean_range(const std::vector&lt;float&gt; &amp; ranges, float lo, float hi)
+{
+  double sum = 0.0; int cnt = 0;
+  for (const float r : ranges) {
+    if (std::isfinite(r) &amp;&amp; r &gt;= lo &amp;&amp; r &lt;= hi) { sum += r; ++cnt; }
+  }
+  return (cnt &gt; 0) ? static_cast&lt;float&gt;(sum / cnt) : -1.0f;
+}</code></pre></div>
+  <div class="codefile"><div class="fname">scan_tools/src/main.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>#include &quot;scan_math.hpp&quot;
+#include &lt;cmath&gt;
+#include &lt;cstdio&gt;
+int main()
+{
+  const std::vector&lt;float&gt; raw{0.10f, 0.83f, INFINITY, 1.24f, 9.90f, NAN, 2.05f};
+  std::printf(&quot;유효값 평균 = %.3f m\n&quot;, mean_range(raw, 0.16f, 8.0f));
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+
   <div class="interp">
     <strong>해석:</strong> 셋을 다 외우려 하지 않는다. <strong>규칙은 하나다 — 고민되면 <code>PRIVATE</code>.</strong>
-    그러다 헤더를 못 찾는 오류가 나면 <strong>그 라이브러리의 헤더 줄만</strong> <code>PUBLIC</code>으로 올린다.
+    그러다 위처럼 헤더를 못 찾는 오류가 나면 <strong>그 라이브러리의 헤더 줄만</strong> <code>PUBLIC</code>으로 올린다.
     우리 파일에서 <code>PUBLIC</code>이 딱 한 줄인 이유가 그것이다.
   </div>
 
@@ -643,13 +890,16 @@ gmake: *** [Makefile:91: all] Error 2</code></pre>
   <!-- ── 오류 3종 실제 메시지 ── -->
   <h2 id="err3">⑦ 오류 3종을 직접 재현해 읽어 본다 <span class="badge b-red">🔴 사람이 한다</span></h2>
   <p>
-    아래 셋은 <strong>같은 프로젝트를 한 군데씩만 망가뜨려서 실제로 얻은 화면</strong>이다.
-    한 글자도 고치지 않았다.
+    아래 셋은 <strong>2단계 완성본을 한 군데씩만 망가뜨려서 실제로 얻은 화면</strong>이다.
+    메시지는 한 글자도 고치지 않았다. 망가뜨린 자리는 붉은 줄과 초록 줄로 보이고, 망가진 프로젝트 전체는 각각의 📄 상자에 있다.
     <span class="src">잰 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0, CMake 3.28.3)</span>
   </p>
 
   <h3>① cmake 단계 — 파일 이름을 <code>mian.cpp</code>로 잘못 적었다</h3>
-  <pre><code>$ cmake -S bad_cmake -B bad_cmake/build
+  <pre class="before"><code># CMakeLists.txt 12번째 줄
+<span class="ln-del">add_executable(scan_app src/main.cpp)</span>
+<span class="ln-add">add_executable(scan_app src/mian.cpp)</span></code></pre>
+  <pre><code>$ cmake -S . -B build
 -- The CXX compiler identification is GNU 13.3.0
 -- Detecting CXX compiler ABI info
 -- Detecting CXX compiler ABI info - done
@@ -657,7 +907,7 @@ gmake: *** [Makefile:91: all] Error 2</code></pre>
 -- Detecting CXX compile features
 -- Detecting CXX compile features - done
 -- Configuring done (0.2s)
-CMake Error at CMakeLists.txt:7 (add_executable):
+CMake Error at CMakeLists.txt:12 (add_executable):
   Cannot find source file:
 
     src/mian.cpp
@@ -667,16 +917,65 @@ CMake Error at CMakeLists.txt:7 (add_executable):
   .f95 .f03 .hip .ispc
 
 
-CMake Error at CMakeLists.txt:7 (add_executable):
+CMake Error at CMakeLists.txt:12 (add_executable):
   No SOURCES given to target: scan_app
 
 
 CMake Generate step failed.  Build files cannot be regenerated correctly.</code></pre>
   <p>
-    <strong>어느 줄을 보나:</strong> <code>CMake Error at CMakeLists.txt:7 (add_executable)</code> 한 줄이다.
-    <strong>파일 이름과 줄 번호가 그대로 나온다</strong> — <code>CMakeLists.txt</code>의 7번째 줄, 그중에서도 <code>add_executable</code> 명령이다.
+    <strong>어느 줄을 보나:</strong> <code>CMake Error at CMakeLists.txt:12 (add_executable)</code> 한 줄이다.
+    <strong>파일 이름과 줄 번호가 그대로 나온다</strong> — <code>CMakeLists.txt</code>의 12번째 줄, 그중에서도 <code>add_executable</code> 명령이다.
     그 밑 <code>src/mian.cpp</code>가 못 찾은 파일 이름이다. <code>main</code>이 <code>mian</code>이 됐다.
   </p>
+  <!-- fullcode "전체 코드 — scan_tools/ (① cmake 단계가 터지는 판)" build="cmake -S . -B build"
+       l09_cmake/steps/step5_bad_cmake/CMakeLists.txt as scan_tools/CMakeLists.txt
+       l09_cmake/steps/step5_bad_cmake/include/scan_math.hpp as scan_tools/include/scan_math.hpp
+       l09_cmake/steps/step5_bad_cmake/src/scan_math.cpp as scan_tools/src/scan_math.cpp
+       l09_cmake/steps/step5_bad_cmake/src/main.cpp as scan_tools/src/main.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — scan_tools/ (① cmake 단계가 터지는 판)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake -S . -B build</code></p>
+  <div class="codefile"><div class="fname">scan_tools/CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre><code>cmake_minimum_required(VERSION 3.16)
+project(scan_tools CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# ① 라이브러리를 하나 만든다
+add_library(scan_math src/scan_math.cpp)
+target_include_directories(scan_math PUBLIC include)
+
+# ② 실행 파일을 만들고 ①을 붙인다
+add_executable(scan_app src/mian.cpp)
+target_link_libraries(scan_app PRIVATE scan_math)</code></pre></div>
+  <div class="codefile"><div class="fname">scan_tools/include/scan_math.hpp</div><button onclick="copyCode(this)">복사</button><pre><code>#ifndef SCAN_MATH_HPP_
+#define SCAN_MATH_HPP_
+#include &lt;vector&gt;
+// 유효한 거리 값들의 평균을 낸다. 하나도 없으면 -1 을 돌려준다.
+float mean_range(const std::vector&lt;float&gt; &amp; ranges, float lo, float hi);
+#endif</code></pre></div>
+  <div class="codefile"><div class="fname">scan_tools/src/scan_math.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>#include &quot;scan_math.hpp&quot;
+#include &lt;cmath&gt;
+float mean_range(const std::vector&lt;float&gt; &amp; ranges, float lo, float hi)
+{
+  double sum = 0.0; int cnt = 0;
+  for (const float r : ranges) {
+    if (std::isfinite(r) &amp;&amp; r &gt;= lo &amp;&amp; r &lt;= hi) { sum += r; ++cnt; }
+  }
+  return (cnt &gt; 0) ? static_cast&lt;float&gt;(sum / cnt) : -1.0f;
+}</code></pre></div>
+  <div class="codefile"><div class="fname">scan_tools/src/main.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>#include &quot;scan_math.hpp&quot;
+#include &lt;cmath&gt;
+#include &lt;cstdio&gt;
+int main()
+{
+  const std::vector&lt;float&gt; raw{0.10f, 0.83f, INFINITY, 1.24f, 9.90f, NAN, 2.05f};
+  std::printf(&quot;유효값 평균 = %.3f m\n&quot;, mean_range(raw, 0.16f, 8.0f));
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
   <p>
     <strong>나머지는 안 봐도 된다.</strong> <code>Tried extensions</code> 세 줄은 CMake가 시도해 본 확장자 목록이고,
     두 번째 <code>CMake Error</code>(<code>No SOURCES given</code>)는 첫 번째의 <strong>후속 피해</strong>다.
@@ -684,13 +983,16 @@ CMake Generate step failed.  Build files cannot be regenerated correctly.</code>
   </p>
 
   <h3>② 컴파일 단계 — 세미콜론을 빠뜨렸다</h3>
-  <pre><code>$ cmake --build bad_compile/build
+  <pre class="before"><code>// src/main.cpp 7번째 줄
+<span class="ln-del">  std::printf("유효값 평균 = %.3f m\n", mean_range(raw, 0.16f, 8.0f));</span>
+<span class="ln-add">  std::printf("유효값 평균 = %.3f m\n", mean_range(raw, 0.16f, 8.0f))</span></code></pre>
+  <pre><code>$ cmake --build build
 [ 25%] Building CXX object CMakeFiles/scan_math.dir/src/scan_math.cpp.o
 [ 50%] Linking CXX static library libscan_math.a
 [ 50%] Built target scan_math
 [ 75%] Building CXX object CMakeFiles/scan_app.dir/src/main.cpp.o
-/work/l09_cmake/bad_compile/src/main.cpp: In function ‘int main()’:
-/work/l09_cmake/bad_compile/src/main.cpp:7:70: error: expected ‘;’ before ‘return’
+/work/l09_cmake/steps/step5_bad_compile/src/main.cpp: In function ‘int main()’:
+/work/l09_cmake/steps/step5_bad_compile/src/main.cpp:7:70: error: expected ‘;’ before ‘return’
     7 |   std::printf("유효값 평균 = %.3f m\n", mean_range(raw, 0.16f, 8.0f))
       |                                                                      ^
       |                                                                      ;
@@ -709,9 +1011,62 @@ gmake: *** [Makefile:91: all] Error 2</code></pre>
     라이브러리는 이미 만들어졌고 <code>main.cpp</code> 하나에서만 터진 것이다.
     <strong>성공한 줄과 실패한 줄이 한 화면에 섞여 나온다</strong>는 것을 알아 두면 덜 당황한다.
   </p>
+  <!-- fullcode "전체 코드 — scan_tools/ (② 컴파일 단계가 터지는 판)" build="cmake -S . -B build && cmake --build build"
+       l09_cmake/steps/step5_bad_compile/CMakeLists.txt as scan_tools/CMakeLists.txt
+       l09_cmake/steps/step5_bad_compile/include/scan_math.hpp as scan_tools/include/scan_math.hpp
+       l09_cmake/steps/step5_bad_compile/src/scan_math.cpp as scan_tools/src/scan_math.cpp
+       l09_cmake/steps/step5_bad_compile/src/main.cpp as scan_tools/src/main.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — scan_tools/ (② 컴파일 단계가 터지는 판)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake -S . -B build &amp;&amp; cmake --build build</code></p>
+  <div class="codefile"><div class="fname">scan_tools/CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre><code>cmake_minimum_required(VERSION 3.16)
+project(scan_tools CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# ① 라이브러리를 하나 만든다
+add_library(scan_math src/scan_math.cpp)
+target_include_directories(scan_math PUBLIC include)
+
+# ② 실행 파일을 만들고 ①을 붙인다
+add_executable(scan_app src/main.cpp)
+target_link_libraries(scan_app PRIVATE scan_math)</code></pre></div>
+  <div class="codefile"><div class="fname">scan_tools/include/scan_math.hpp</div><button onclick="copyCode(this)">복사</button><pre><code>#ifndef SCAN_MATH_HPP_
+#define SCAN_MATH_HPP_
+#include &lt;vector&gt;
+// 유효한 거리 값들의 평균을 낸다. 하나도 없으면 -1 을 돌려준다.
+float mean_range(const std::vector&lt;float&gt; &amp; ranges, float lo, float hi);
+#endif</code></pre></div>
+  <div class="codefile"><div class="fname">scan_tools/src/scan_math.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>#include &quot;scan_math.hpp&quot;
+#include &lt;cmath&gt;
+float mean_range(const std::vector&lt;float&gt; &amp; ranges, float lo, float hi)
+{
+  double sum = 0.0; int cnt = 0;
+  for (const float r : ranges) {
+    if (std::isfinite(r) &amp;&amp; r &gt;= lo &amp;&amp; r &lt;= hi) { sum += r; ++cnt; }
+  }
+  return (cnt &gt; 0) ? static_cast&lt;float&gt;(sum / cnt) : -1.0f;
+}</code></pre></div>
+  <div class="codefile"><div class="fname">scan_tools/src/main.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>#include &quot;scan_math.hpp&quot;
+#include &lt;cmath&gt;
+#include &lt;cstdio&gt;
+int main()
+{
+  const std::vector&lt;float&gt; raw{0.10f, 0.83f, INFINITY, 1.24f, 9.90f, NAN, 2.05f};
+  std::printf(&quot;유효값 평균 = %.3f m\n&quot;, mean_range(raw, 0.16f, 8.0f))
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
 
   <h3>③ 링크 단계 — <code>target_link_libraries</code> 줄을 통째로 빠뜨렸다</h3>
-  <pre><code>$ cmake --build bad_link/build
+  <pre class="before"><code># CMakeLists.txt 아랫부분
+add_executable(scan_app src/main.cpp)
+<span class="ln-del">target_link_libraries(scan_app PRIVATE scan_math)</span>
+<span class="ln-add">target_include_directories(scan_app PRIVATE include)   # 헤더는 찾게 해 줬다. 그래서 컴파일은 된다</span></code></pre>
+  <pre><code>$ cmake --build build
 [ 25%] Building CXX object CMakeFiles/scan_math.dir/src/scan_math.cpp.o
 [ 50%] Linking CXX static library libscan_math.a
 [ 50%] Built target scan_math
@@ -735,7 +1090,62 @@ gmake: *** [Makefile:91: all] Error 2</code></pre>
     <strong>고칠 곳은 <code>CMakeLists.txt</code>이고, 넣을 줄은 한 줄이다.</strong>
   </p>
   <div class="codelabel good">이 한 줄을 되살리면 끝난다</div>
-  <pre class="after"><code>target_link_libraries(scan_app PRIVATE scan_math)</code></pre>
+  <pre class="after"><code>add_executable(scan_app src/main.cpp)
+target_include_directories(scan_app PRIVATE include)
+<span class="ln-add">target_link_libraries(scan_app PRIVATE scan_math)</span></code></pre>
+  <pre><code>$ cmake -S . -B build &amp;&amp; cmake --build build &amp;&amp; ./build/scan_app
+[ 75%] Linking CXX executable scan_app
+[100%] Built target scan_app
+유효값 평균 = 1.373 m</code></pre>
+  <!-- fullcode "전체 코드 — scan_tools/ (③ 링크 단계가 터지는 판)" build="cmake -S . -B build && cmake --build build"
+       l09_cmake/steps/step5_bad_link/CMakeLists.txt as scan_tools/CMakeLists.txt
+       l09_cmake/steps/step5_bad_link/include/scan_math.hpp as scan_tools/include/scan_math.hpp
+       l09_cmake/steps/step5_bad_link/src/scan_math.cpp as scan_tools/src/scan_math.cpp
+       l09_cmake/steps/step5_bad_link/src/main.cpp as scan_tools/src/main.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — scan_tools/ (③ 링크 단계가 터지는 판)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake -S . -B build &amp;&amp; cmake --build build</code></p>
+  <div class="codefile"><div class="fname">scan_tools/CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre><code>cmake_minimum_required(VERSION 3.16)
+project(scan_tools CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# ① 라이브러리를 하나 만든다
+add_library(scan_math src/scan_math.cpp)
+target_include_directories(scan_math PUBLIC include)
+
+# ② 실행 파일을 만든다 — ①을 붙이는 줄이 빠졌다
+add_executable(scan_app src/main.cpp)
+target_include_directories(scan_app PRIVATE include)</code></pre></div>
+  <div class="codefile"><div class="fname">scan_tools/include/scan_math.hpp</div><button onclick="copyCode(this)">복사</button><pre><code>#ifndef SCAN_MATH_HPP_
+#define SCAN_MATH_HPP_
+#include &lt;vector&gt;
+// 유효한 거리 값들의 평균을 낸다. 하나도 없으면 -1 을 돌려준다.
+float mean_range(const std::vector&lt;float&gt; &amp; ranges, float lo, float hi);
+#endif</code></pre></div>
+  <div class="codefile"><div class="fname">scan_tools/src/scan_math.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>#include &quot;scan_math.hpp&quot;
+#include &lt;cmath&gt;
+float mean_range(const std::vector&lt;float&gt; &amp; ranges, float lo, float hi)
+{
+  double sum = 0.0; int cnt = 0;
+  for (const float r : ranges) {
+    if (std::isfinite(r) &amp;&amp; r &gt;= lo &amp;&amp; r &lt;= hi) { sum += r; ++cnt; }
+  }
+  return (cnt &gt; 0) ? static_cast&lt;float&gt;(sum / cnt) : -1.0f;
+}</code></pre></div>
+  <div class="codefile"><div class="fname">scan_tools/src/main.cpp</div><button onclick="copyCode(this)">복사</button><pre><code>#include &quot;scan_math.hpp&quot;
+#include &lt;cmath&gt;
+#include &lt;cstdio&gt;
+int main()
+{
+  const std::vector&lt;float&gt; raw{0.10f, 0.83f, INFINITY, 1.24f, 9.90f, NAN, 2.05f};
+  std::printf(&quot;유효값 평균 = %.3f m\n&quot;, mean_range(raw, 0.16f, 8.0f));
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
 
   <div class="box trap">
     <div class="boxtitle">⚠️ 이 셋 중 셋째만 성격이 다르다</div>
@@ -784,29 +1194,34 @@ gmake: *** [Makefile:91: all] Error 2</code></pre>
     <div class="boxtitle">🧪 실습 (약 35분) — HW2로 바로 이어집니다</div>
     <p><strong>알게 되는 것:</strong> 화면만 보고 <strong>어느 단계에서 났는지</strong> 가르는 감각.
       명령어가 아니라 <strong>가르는 순서</strong>가 이 실습의 목표다.</p>
-    <p><strong>준비물:</strong> WSL 터미널 한 칸, 배포된 <code>l09_cmake</code> 폴더(<code>good</code>·<code>bad_cmake</code>·<code>bad_compile</code>·<code>bad_link</code> 네 개),
-      <code>g++</code>와 <code>cmake</code>. 로봇도 ROS도 필요 없다.</p>
+    <p><strong>준비물:</strong> WSL 터미널 한 칸, VS Code, <code>g++</code>와 <code>cmake</code>(6회에서 깔았다). 로봇도 ROS도 필요 없다.
+      코드는 전부 이 자료의 📄 상자에 있다. <strong>타이핑하지 않는다.</strong></p>
     <p><strong>절차</strong></p>
     <ol>
-      <li>폴더를 받아 풀고 <code>good</code>부터 돌린다. <code>cmake -S good -B good/build</code> →
-        <code>cmake --build good/build</code> → <code>./good/build/scan_app</code>.
-        <strong><code>유효값 평균 = 1.373 m</code></strong>가 나오는 것을 눈으로 확인한다. (5분)</li>
-      <li><code>cmake -S bad_cmake -B bad_cmake/build</code>를 친다.
-        화면에서 <strong><code>CMakeLists.txt:</code> 뒤의 숫자</strong>를 찾아 적는다.
-        그 줄을 열어 고친 뒤 다시 설정한다. (7분)</li>
-      <li><code>cmake --build bad_compile/build</code>를 친다.
+      <li><strong>(5분) 완성본을 만든다.</strong> 폴더를 만들고 ②절 끝의 📄 「2단계 · 완성본」 상자를 펼쳐 네 파일을 「복사」로 하나씩 가져온다.
+        <pre><code>mkdir -p ~/robot_ws/l09/scan_tools/include ~/robot_ws/l09/scan_tools/src
+cd ~/robot_ws/l09/scan_tools
+code .</code></pre>
+        <code>cmake -S . -B build</code> → <code>cmake --build build</code> → <code>./build/scan_app</code>.
+        <strong><code>유효값 평균 = 1.373 m</code></strong>가 나오는 것을 눈으로 확인한다.</li>
+      <li><strong>(7분) ① cmake 단계를 일부러 낸다.</strong> <code>CMakeLists.txt</code>의 <code>src/main.cpp</code>를 <code>src/mian.cpp</code>로 고치고 <code>cmake -S . -B build</code>를 친다.
+        화면에서 <strong><code>CMakeLists.txt:</code> 뒤의 숫자</strong>를 찾아 적는다. 그 줄을 열어 되돌린 뒤 다시 설정한다.</li>
+      <li><strong>(7분) ② 컴파일 단계를 일부러 낸다.</strong> <code>src/main.cpp</code>의 <code>printf</code> 줄 끝 세미콜론을 지우고 <code>cmake --build build</code>를 친다.
         <strong>맨 아래가 아니라 위로 올라가서</strong> 첫 <code>error:</code> 줄을 찾는다.
-        <code>파일:줄:칸</code>을 적고 그 자리를 고친다. (7분)</li>
-      <li><code>cmake --build bad_link/build</code>를 친다.
-        <strong>소스는 절대 열지 않는다.</strong> <code>CMakeLists.txt</code>만 보고 빠진 한 줄을 넣는다. (10분)</li>
-      <li>넷 다 <code>cmake --build</code> 후 실행해서 <strong>전부 <code>1.373 m</code></strong>가 나오는지 확인한다. (3분)</li>
-      <li>세 오류 각각에 대해 <strong>「어느 단계였나 · 화면의 어느 줄을 보고 알았나」</strong>를 한 줄씩 적는다. (3분)</li>
+        <code>파일:줄:칸</code>을 적고 그 자리를 되돌린다.</li>
+      <li><strong>(10분) ③ 링크 단계를 일부러 낸다.</strong> <code>CMakeLists.txt</code>의 <code>target_link_libraries</code> 줄을 지우고
+        그 자리에 <code>target_include_directories(scan_app PRIVATE include)</code>를 넣은 뒤 <code>cmake -S . -B build</code> → <code>cmake --build build</code>를 친다.
+        <strong>소스는 절대 열지 않는다.</strong> <code>CMakeLists.txt</code>만 보고 빠진 한 줄을 되살린다.</li>
+      <li><strong>(3분)</strong> 다시 빌드해 실행하고 <strong><code>1.373 m</code></strong>가 나오는지 확인한다.
+        <code>diff</code>로 ⑦절 📄 상자의 파일과 비교해 봐도 좋다.</li>
+      <li><strong>(3분)</strong> 세 오류 각각에 대해 <strong>「어느 단계였나 · 화면의 어느 줄을 보고 알았나」</strong>를 한 줄씩 적는다.</li>
     </ol>
     <p>
-      <strong>이렇게 되면 성공:</strong> 네 폴더 전부에서 <code>유효값 평균 = 1.373 m</code>가 찍힌다.
+      <strong>이렇게 되면 성공:</strong> 세 번 망가뜨리고 세 번 되살린 뒤에도 <code>유효값 평균 = 1.373 m</code>가 찍힌다.
       그리고 6번에 적은 세 줄이 <strong>실제로 그 단계와 맞는다.</strong>
     </p>
-    <pre><code>$ ./bad_link/build/scan_app
+    <pre><code>$ cmake --build build &amp;&amp; ./build/scan_app
+[100%] Built target scan_app
 유효값 평균 = 1.373 m</code></pre>
     <div class="box trap" style="margin-top:1rem">
       <div class="boxtitle">4번에서 소스를 열고 싶어질 것이다</div>
