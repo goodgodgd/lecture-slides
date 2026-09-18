@@ -138,7 +138,7 @@
   </p>
 
   <h3>1단계 — AI가 준 콜백을 그대로 돌려 본다</h3>
-  <p>오늘 쓸 그릇의 이름부터 정해 둔다. 라이다 메시지를 흉내 낸 것이다.</p>
+  <p>오늘 쓸 구조체의 이름부터 정해 둔다. 라이다 메시지를 흉내 낸 것이다.</p>
   <pre><code>// 11회 — 복사와 이동: 값을 넘길 때 무슨 일이 일어나나
 #include &lt;cstdio&gt;
 #include &lt;vector&gt;
@@ -173,7 +173,7 @@ float scan_callback(ScanMsg msg)                       // ① 값으로 받음
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
     <dl>
       <dt>std::vector&lt;float&gt;(360, 1.0f)</dt>
-      <dd>칸이 360개이고 <strong>전부 1.0으로 채워진</strong> 그릇을 만든다.
+      <dd>원소가 360개이고 <strong>전부 1.0으로 채워진</strong> <code>vector</code>를 만든다.
           6회에서 <code>ranges(N)</code>으로 칸만 잡았던 것에 <strong>채울 값</strong>을 하나 더 준 모양이다.
           여기서는 라이다 한 바퀴의 거리 값이 전부 1.0 m라고 치고 메시지를 채우는 데 썼다.</dd>
 
@@ -448,7 +448,7 @@ int main()
   </p>
 
   <h3>4단계 — <code>ScanMsg</code>에 세는 장치를 붙이고, 고치기 전 판을 옆에 되살린다</h3>
-  <p>먼저 그릇이다. 세는 변수 하나와 함수 세 줄이 들어간다.</p>
+  <p>먼저 구조체다. 세는 변수 하나와 함수 세 줄이 들어간다.</p>
   <pre><code><span class="ln-add">int g_copy = 0;   // ScanMsg 가 복사된 횟수</span>
 
 struct ScanMsg {
@@ -801,7 +801,7 @@ struct ScanMsg {
       <dt>ScanMsg(ScanMsg &amp;&amp; o)</dt>
       <dd><strong>이동 생성자</strong>다. 꺾쇠 두 개(<code>&amp;&amp;</code>)가 <strong>"이건 곧 버려질 임시 값이다"</strong>라는 표시다.
           복사 생성자와 달리 <strong>알맹이를 새로 만들지 않고 가져온다.</strong>
-          안쪽의 <code>std::move(o.ranges)</code>가 그릇의 알맹이를 넘겨받는 자리다.</dd>
+          안쪽의 <code>std::move(o.ranges)</code>가 <code>vector</code>의 내부 버퍼를 넘겨받는 자리다.</dd>
 
       <dt>noexcept</dt>
       <dd>"이 함수는 예외를 던지지 않는다"는 약속이다.
@@ -948,7 +948,7 @@ int main()
   <div class="box trap" id="trap">
     <div class="boxtitle">⚠️ 가져간 다음 원본을 읽으면 — 크래시가 나면 차라리 낫다</div>
     <p>
-      <code>std::move</code>로 넘긴 뒤의 원본은 <strong>「비어 있지만 멀쩡한 물건」</strong>이 된다.
+      <code>std::move</code>로 넘긴 뒤의 원본은 <strong>「비어 있지만 유효한 객체」</strong>이 된다.
       부서진 것이 아니다. 그래서 <strong>컴파일러도 막지 않고 실행도 멈추지 않는다.</strong>
       6단계 파일의 <code>taken</code> 줄 아래에 다음 다섯 줄을 넣어 봤다. <strong>문법도 맞고 컴파일러는 경고 하나 내지 않는다.</strong>
     </p>
@@ -1378,7 +1378,7 @@ g++ -std=c++17 -O2 -Wall -o scan_copy scan_copy.cpp
     </div>
     <div class="interp">
       <strong>해석:</strong> 3번이 이 실습의 알맹이다. <strong>세는 장치는 <code>ScanMsg</code>의 복사만 센다.</strong>
-      안쪽의 <code>std::vector&lt;float&gt; ranges = msg.ranges;</code>는 <code>ScanMsg</code>가 아니라 그릇을 복사하므로
+      안쪽의 <code>std::vector&lt;float&gt; ranges = msg.ranges;</code>는 <code>ScanMsg</code>가 아니라 <code>vector</code>를 복사하므로
       <strong>횟수에는 안 잡히고 시간에만 잡힌다.</strong> 「복사 0회」라는 숫자만 믿으면 놓친다.
       ①절의 표에서 ②번 자리라고 짚어 둔 것이 이것이다.
     </div>
@@ -1708,7 +1708,7 @@ std::move 로 넘기면
   <details>
     <summary>이동 생성자에 <code>noexcept</code>를 안 붙이면 생기는 일</summary>
     <p>
-      값을 담는 그릇은 자리가 모자라면 <strong>더 큰 자리를 새로 잡아 있던 것들을 옮긴다.</strong>
+      <code>std::vector</code> 같은 컨테이너는 자리가 모자라면 <strong>더 큰 자리를 새로 잡아 있던 것들을 옮긴다.</strong>
       옮기는 도중에 오류가 나면 <strong>원래 것도 새 것도 성치 않은 상태</strong>가 된다.
     </p>
     <p>
@@ -1742,8 +1742,8 @@ std::move 로 넘기면
     </p>
     <p>
       <strong>더 좋은 방법은 다섯 개 전부 안 쓰는 것</strong>이다.
-      값을 <code>std::vector</code>·<code>std::string</code> 같은 표준 그릇에 담아 두면
-      복사·이동·정리를 <strong>그릇이 알아서 한다.</strong>
+      값을 <code>std::vector</code>·<code>std::string</code> 같은 표준 컨테이너에 담아 두면
+      복사·이동·정리를 <strong>컨테이너가 알아서 한다.</strong>
       <strong>우리 예제가 그중 셋을 손으로 쓴 것은 횟수를 세기 위해서일 뿐</strong>이고,
       평소 코드에서는 하나도 쓸 일이 없다.
     </p>

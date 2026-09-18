@@ -33,7 +33,7 @@
   <a href="#own">② 주인이 하나인가 여럿인가</a>
   <a href="#choose">③ AI는 뭐든 shared_ptr 로 만든다</a>
   <a href="#rosptr">④ using — 타입 별명</a>
-  <a href="#container">⑤ 그릇은 vector 하나로 시작한다</a>
+  <a href="#container">⑤ 컨테이너는 vector 하나로 시작한다</a>
   <a href="#reserve">⑥ reserve 한 줄이 1.90배</a>
   <a href="#rangefor">⑦ const auto &amp; 를 빼면 복사가 난다</a>
   <a href="#lab">🧪 실습</a>
@@ -66,13 +66,13 @@
 
   <p>
     <strong>오늘 배우는 스마트 포인터는 그 원리를 「메모리」에 적용한 것</strong>이다.
-    손으로 만든 물건을 손으로 치우는 대신, <strong>치우는 일을 물건 자신에게 맡긴다.</strong>
+    <code>new</code>로 만든 객체를 손으로 <code>delete</code>하는 대신, <strong>치우는 일을 객체를 소유한 스마트 포인터에게 맡긴다.</strong>
     이름이 거창하지만 하는 일은 그것 하나다.
   </p>
 
   <p>
-    뒤쪽 절반은 <strong>값을 담는 그릇</strong>이다.
-    이 과목에서 쓰는 그릇은 사실상 <code>std::vector</code> 하나이고,
+    뒤쪽 절반은 <strong>값을 담는 컨테이너</strong>(container)다.
+    이 과목에서 쓰는 컨테이너는 사실상 <code>std::vector</code> 하나이고,
     <strong>그 하나를 제대로 쓰는 법</strong>이 나머지 전부보다 중요하다.
     오늘도 주장에는 숫자를 붙인다 — <code>reserve()</code> 한 줄이 <strong>몇 배</strong>인지 재서 확인한다.
   </p>
@@ -101,7 +101,7 @@
     <tr><td><code>std::vector&lt;T&gt;</code></td><td><strong>기본값.</strong> 개수가 실행 중에 정해지거나 바뀔 때</td><td><span class="badge b-lv">[요구]</span></td></tr>
     <tr><td><code>std::array&lt;T, N&gt;</code></td><td>개수가 <strong>코드에 이미 적혀 있을</strong> 때 (바퀴 4개, 좌표 3개)</td><td><span class="badge b-lv">[판단]</span></td></tr>
     <tr><td><code>v.reserve(n)</code></td><td><strong>몇 개 들어올지 알 때.</strong> 담기 시작하기 전에 한 줄</td><td><span class="badge b-lv">[요구]</span></td></tr>
-    <tr><td><code>for (const auto &amp; x : v)</code></td><td><strong>기본값.</strong> 그릇을 읽으면서 한 바퀴 돌 때</td><td><span class="badge b-lv">[요구]</span></td></tr>
+    <tr><td><code>for (const auto &amp; x : v)</code></td><td><strong>기본값.</strong> 컨테이너를 읽으면서 한 바퀴 돌 때</td><td><span class="badge b-lv">[요구]</span></td></tr>
   </table>
   </div>
   <div class="interp">
@@ -277,7 +277,7 @@ int main()
 }                                      // 중괄호를 벗어나는 순간 끝. delete 가 없다</code></pre>
 
   <h3>실제로 나온 출력</h3>
-  <pre><code>① 센서를 손잡이에 끼우면 치우는 일이 사라진다
+  <pre><code>① 센서를 unique_ptr 이 소유하면 치우는 일이 사라진다
   [라이다 켜짐]
   라이다 측정 시작
   [라이다 꺼짐]
@@ -322,7 +322,7 @@ void setup(const std::string &amp; name, bool ok)
 
 int main()
 {
-  std::cout &lt;&lt; &quot;① 센서를 손잡이에 끼우면 치우는 일이 사라진다\n&quot;;
+  std::cout &lt;&lt; &quot;① 센서를 unique_ptr 이 소유하면 치우는 일이 사라진다\n&quot;;
   setup(&quot;라이다&quot;, true);
   setup(&quot;카메라&quot;, false);
   return 0;
@@ -334,14 +334,14 @@ int main()
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
     <dl>
       <dt>std::unique_ptr&lt;T&gt;</dt>
-      <dd>물건 하나를 <strong>혼자 책임지는 손잡이</strong>다.
-          이 손잡이가 사라질 때 <strong>물건도 같이 정리된다.</strong>
+      <dd><strong>스마트 포인터</strong>(smart pointer)다 — 객체의 주소를 담는 포인터인데, 자기가 사라질 때 <strong>가리키는 객체를 <code>delete</code>까지 해 준다.</strong>
+          <code>unique_ptr</code>는 객체 하나를 <strong>혼자 소유</strong>한다(소유권, ownership). 소유자가 사라질 때 <strong>객체도 같이 정리된다.</strong>
           여기서는 <code>setup()</code>의 중괄호를 벗어날 때 <code>Sensor</code>가 정리되게 하는 데 썼다.</dd>
 
       <dt>std::make_unique&lt;T&gt;(...)</dt>
       <dd><code>unique_ptr</code>를 만드는 정식 방법이다. 꺾쇠 안이 <strong>무엇을 만들지</strong>,
           괄호 안이 <strong>그것을 만들 때 줄 값</strong>이다.
-          여기서는 <code>Sensor("라이다")</code>를 만들어 손잡이에 끼웠다.
+          여기서는 <code>Sensor("라이다")</code>를 만들어 <code>unique_ptr</code>가 소유하게 했다.
           <strong><code>new</code>라는 단어가 코드에서 사라지는 것</strong>이 요점이다.</dd>
     </dl>
   </div>
@@ -359,7 +359,7 @@ int main()
   <h2 id="own">② 주인이 하나면 <code>unique_ptr</code>, 나눠 가지면 <code>shared_ptr</code> <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
   <p>
-    손잡이는 두 종류다. 고르는 기준은 성능이 아니라 <strong>"이 물건의 주인이 몇인가"</strong>다.
+    스마트 포인터는 두 종류다. 고르는 기준은 성능이 아니라 <strong>"이 객체의 소유자가 몇인가"</strong>다.
     말로만 하면 안 와닿으므로 ①절의 <code>Sensor</code>를 그대로 써서 <strong>켜지고 꺼지는 것을 직접 출력</strong>해 본다.
   </p>
 
@@ -392,20 +392,20 @@ int main()
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
     <dl>
       <dt>std::shared_ptr&lt;T&gt;</dt>
-      <dd>물건 하나를 <strong>여럿이 나눠 가지는 손잡이</strong>다.
-          손잡이가 몇 개 살아 있는지를 <strong>어딘가에 세어 두고</strong>,
-          <strong>마지막 하나가 사라질 때</strong> 물건을 정리한다.</dd>
+      <dd>객체 하나를 <strong>여러 소유자가 나눠 가지는 스마트 포인터</strong>다.
+          <code>shared_ptr</code>가 몇 개 살아 있는지를 <strong>참조 횟수</strong>(reference count)로 세어 두고,
+          <strong>마지막 하나가 사라질 때</strong> 객체를 정리한다.</dd>
 
       <dt>std::make_shared&lt;T&gt;(...)</dt>
       <dd><code>shared_ptr</code>를 만드는 정식 방법이다. 쓰는 모양은 <code>make_unique</code>와 같다.</dd>
 
       <dt>p1.use_count()</dt>
-      <dd>지금 <strong>이 물건을 몇 명이 잡고 있는지</strong> 알려 준다.
+      <dd>지금 <strong>이 객체를 소유한 <code>shared_ptr</code>가 몇 개인지</strong>(참조 횟수) 알려 준다.
           여기서는 <code>p2</code>가 생기고 사라질 때 <strong>이 숫자가 어떻게 변하는지</strong> 보려고 썼다.</dd>
 
       <dt>{ ... } 만 있는 중괄호</dt>
-      <dd><code>if</code>도 <code>for</code>도 아닌 <strong>중괄호만 있는 덩어리</strong>다. 안에서 만든 것은 <strong>닫는 중괄호에서 사라진다.</strong>
-          여기서는 <strong>손잡이가 언제 사라지는지</strong>를 눈에 보이게 하려고 일부러 감쌌다. 10회의 「스코프와 수명」 그대로다.</dd>
+      <dd><code>if</code>도 <code>for</code>도 아닌 <strong>중괄호만 있는 블록</strong>(block)이다. 안에서 만든 것은 <strong>닫는 중괄호에서 사라진다.</strong>
+          여기서는 <strong>스마트 포인터가 언제 사라지는지</strong>를 눈에 보이게 하려고 일부러 감쌌다. 10회의 「스코프와 수명」 그대로다.</dd>
     </dl>
   </div>
 
@@ -462,7 +462,7 @@ void setup(const std::string &amp; name, bool ok)
 
 int main()
 {
-  std::cout &lt;&lt; &quot;① 센서를 손잡이에 끼우면 치우는 일이 사라진다\n&quot;;
+  std::cout &lt;&lt; &quot;① 센서를 unique_ptr 이 소유하면 치우는 일이 사라진다\n&quot;;
   setup(&quot;라이다&quot;, true);
   setup(&quot;카메라&quot;, false);
 
@@ -520,9 +520,9 @@ int main()
     돌아간다. 새지도 않는다. <strong>그런데 대개 필요 없는 선택이다.</strong>
   </p>
   <p>
-    <code>shared_ptr</code>은 <strong>손잡이가 몇 개인지 세는 일</strong>을 계속 한다.
+    <code>shared_ptr</code>은 <strong>소유자가 몇 개인지 세는 일</strong>(참조 횟수)을 계속 한다.
     그 숫자는 <strong>여러 스레드가 동시에 건드려도 안전하게</strong> 세야 하므로,
-    손잡이를 만들고 없앨 때마다 <strong>보통 변수를 더하고 빼는 것보다 비싼 방식</strong>으로 세어진다.
+    <code>shared_ptr</code>를 만들고 없앨 때마다 <strong>보통 변수를 더하고 빼는 것보다 비싼 방식</strong>으로 세어진다.
     <code>unique_ptr</code>에는 그 숫자 자체가 없다.
   </p>
   <p>
@@ -534,8 +534,8 @@ int main()
   <p class="readme-first">무엇을 먼저 볼지: <strong>왼쪽 두 질문에 답하는 순서</strong>가 곧 고르는 순서다.</p>
   <div class="tablewrap">
   <table>
-    <tr><th>주인이 몇인가</th><th>다른 곳에 넘길 일이 있나</th><th>고를 것</th></tr>
-    <tr><td>하나</td><td>없다</td><td><strong>손잡이 자체가 필요 없다.</strong> 그냥 멤버 변수로 갖는다</td></tr>
+    <tr><th>소유자가 몇인가</th><th>다른 곳에 넘길 일이 있나</th><th>고를 것</th></tr>
+    <tr><td>하나</td><td>없다</td><td><strong>스마트 포인터 자체가 필요 없다.</strong> 그냥 멤버 변수로 갖는다</td></tr>
     <tr><td>하나</td><td>있다 (만든 곳과 쓰는 곳이 다르다)</td><td><code>std::unique_ptr</code> — 넘길 때 <code>std::move</code></td></tr>
     <tr><td><strong>여럿</strong></td><td>—</td><td><code>std::shared_ptr</code></td></tr>
     <tr><td>여럿인데 <strong>서로를 가리킨다</strong></td><td>—</td><td><strong>여기서 멈추고 설계를 다시 본다.</strong> 서로 잡고 있으면 아무도 안 꺼진다</td></tr>
@@ -543,7 +543,7 @@ int main()
   </div>
   <div class="interp">
     <strong>해석:</strong> 첫 줄을 빠뜨리기 쉽다.
-    <strong>손잡이가 아예 필요 없는 경우가 생각보다 많다.</strong>
+    <strong>스마트 포인터가 아예 필요 없는 경우가 생각보다 많다.</strong>
     클래스가 자기 것을 하나 갖고 평생 쓴다면 <code>std::unique_ptr&lt;Sensor&gt;</code>가 아니라
     <code>Sensor</code> 자체를 멤버로 두면 된다.
     <strong>"포인터를 안전하게 만드는 법"보다 "포인터를 안 쓰는 법"이 먼저다.</strong>
@@ -651,7 +651,7 @@ void setup(const std::string &amp; name, bool ok)
 
 int main()
 {
-  std::cout &lt;&lt; &quot;① 센서를 손잡이에 끼우면 치우는 일이 사라진다\n&quot;;
+  std::cout &lt;&lt; &quot;① 센서를 unique_ptr 이 소유하면 치우는 일이 사라진다\n&quot;;
   setup(&quot;라이다&quot;, true);
   setup(&quot;카메라&quot;, false);
 
@@ -710,10 +710,10 @@ int main()
   </div>
 
   <!-- ══════════ ⑤ 컨테이너 ══════════ -->
-  <h2 id="container">⑤ 그릇은 <code>vector</code> 하나로 시작한다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+  <h2 id="container">⑤ 컨테이너는 <code>vector</code> 하나로 시작한다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
   <p>
-    C++ 표준에는 값을 담는 그릇이 여러 개 있다. 이름을 다 외울 필요가 없다.
+    C++ 표준에는 값을 담는 <strong>컨테이너</strong>(container)가 여러 개 있다. 이름을 다 외울 필요가 없다.
     <strong>이 과목의 코드는 <code>std::vector</code> 하나로 전부 돌아간다.</strong>
     라이다 값 360개도, 찾아낸 콘 목록도, 지나온 위치도 전부 <code>vector</code>에 담긴다.
   </p>
@@ -741,14 +741,14 @@ int main()
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
     <dl>
       <dt>std::array&lt;T, N&gt;</dt>
-      <dd>크기가 <strong>꺾쇠 안에 숫자로 박혀 있는 그릇</strong>이다.
+      <dd>크기가 <strong>템플릿 인자로 꺾쇠 안에 박혀 있는 컨테이너</strong>다.
           <code>N</code>이 <strong>컴파일할 때</strong> 정해지므로 실행 중에는 못 바꾼다.
           여기서는 <strong>바퀴 4개</strong>처럼 개수가 변할 리 없는 것에 썼다.</dd>
 
       <dt>msg1-&gt;ranges.push_back(2.0f)</dt>
-      <dd>그릇 <strong>맨 뒤에 값을 하나 더 붙인다.</strong>
+      <dd>컨테이너 <strong>맨 뒤에 원소를 하나 더 붙인다.</strong>
           <code>vector</code>에만 있고 <code>array</code>에는 없다 — 크기가 고정이니 붙일 자리가 없기 때문이다.
-          <code>-&gt;</code>는 7회의 화살표 그대로다. <code>msg1</code>이 손잡이라 점이 아니라 화살표로 들어간다.</dd>
+          <code>-&gt;</code>는 7회의 화살표 그대로다. <code>msg1</code>이 스마트 포인터라 점이 아니라 화살표로 들어간다.</dd>
     </dl>
   </div>
 
@@ -805,7 +805,7 @@ void setup(const std::string &amp; name, bool ok)
 
 int main()
 {
-  std::cout &lt;&lt; &quot;① 센서를 손잡이에 끼우면 치우는 일이 사라진다\n&quot;;
+  std::cout &lt;&lt; &quot;① 센서를 unique_ptr 이 소유하면 치우는 일이 사라진다\n&quot;;
   setup(&quot;라이다&quot;, true);
   setup(&quot;카메라&quot;, false);
 
@@ -851,7 +851,7 @@ int main()
   <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 열</strong>이 고르는 기준이다.</p>
   <div class="tablewrap">
   <table>
-    <tr><th>그릇</th><th>크기가 정해지는 때</th><th>이 과목에서 쓰는 자리</th></tr>
+    <tr><th>컨테이너</th><th>크기가 정해지는 때</th><th>이 과목에서 쓰는 자리</th></tr>
     <tr><td><code>std::vector&lt;T&gt;</code></td><td>실행 중. 늘었다 줄었다 한다</td><td><strong>기본값.</strong> 라이다 값 360개, 찾아낸 콘 목록</td></tr>
     <tr><td><code>std::array&lt;T, N&gt;</code></td><td>컴파일할 때. 못 바꾼다</td><td>바퀴 속도 4개, x·y·z 3개</td></tr>
     <tr><td>C 스타일 배열 <code>float a[4]</code></td><td>컴파일할 때</td><td><strong>쓰지 않는다.</strong> 크기를 물어볼 방법이 없어 실수가 난다</td></tr>
@@ -869,9 +869,9 @@ int main()
 
   <h3>언제 이게 필요해지나</h3>
   <p>
-    라이다 값 360개 중 <strong>쓸 만한 것만 골라 다른 그릇에 담는</strong> 코드는 이 과목 어디에나 나온다.
+    라이다 값 360개 중 <strong>쓸 만한 것만 골라 다른 컨테이너에 담는</strong> 코드는 이 과목 어디에나 나온다.
     담을 때는 <code>push_back</code>으로 하나씩 밀어 넣는다.
-    <strong>그런데 그릇은 처음에 비어 있다.</strong> 자리는 어디서 나오나?
+    <strong>그런데 컨테이너는 처음에 비어 있다.</strong> 원소를 둘 자리(용량, capacity)는 어디서 나오나?
   </p>
 
   <figure>
@@ -1044,7 +1044,7 @@ double time_fill(bool use_reserve, int loops, size_t &amp; sink)
 
 int main()
 {
-  std::cout &lt;&lt; &quot;① 센서를 손잡이에 끼우면 치우는 일이 사라진다\n&quot;;
+  std::cout &lt;&lt; &quot;① 센서를 unique_ptr 이 소유하면 치우는 일이 사라진다\n&quot;;
   setup(&quot;라이다&quot;, true);
   setup(&quot;카메라&quot;, false);
 
@@ -1100,16 +1100,16 @@ int main()
 
 <h3>capacity 가 왜 512인가</h3>
   <p>
-    담은 것은 <strong>360개</strong>인데 잡힌 자리는 <strong>512개</strong>다. 152칸이 비어 있다.
+    담은 원소는 <strong>360개</strong>인데 잡힌 용량은 <strong>512</strong>다. 152개 자리가 비어 있다.
     이유는 <strong>자리를 늘리는 방식</strong>에 있다.
     <strong>자리가 모자랄 때마다 대개 지금의 두 배로 늘린다.</strong>
     1 → 2 → 4 → 8 → … 로 가면 <strong>360을 넘기는 첫 숫자가 512</strong>다.
   </p>
   <p>
     <strong>그래서 이사 횟수가 10번</strong>이다.
-    빈 그릇에서 <strong>1칸을 잡는 것이 첫 번째</strong>이고, 거기서 512까지 <strong>두 배씩 아홉 번 더</strong> 늘어나 모두 열 번이다.
+    빈 컨테이너에서 <strong>용량 1을 잡는 것이 첫 번째</strong>이고, 거기서 512까지 <strong>두 배씩 아홉 번 더</strong> 늘어나 모두 열 번이다.
     한 번 늘릴 때마다 <strong>있던 값을 전부 새 자리로 옮긴다.</strong>
-    <strong>왜 한 칸씩 안 늘리는지</strong>도 여기서 나온다 — 한 칸씩 늘리면 360개를 담는 데 359번 이사해야 한다.
+    <strong>왜 용량을 하나씩 안 늘리는지</strong>도 여기서 나온다 — 하나씩 늘리면 360개를 담는 데 359번 이사해야 한다.
   </p>
   <div class="interp">
     <strong>해석:</strong> 배수 1.90배보다 <strong>「10번」이라는 횟수</strong>가 더 중요하다.
@@ -1129,8 +1129,8 @@ int main()
 
   <h3>언제 이게 필요해지나</h3>
   <p>
-    그릇에 담은 것을 <strong>처음부터 끝까지 한 바퀴 도는</strong> 코드다.
-    보관해 둔 스캔들을 훑으면서 첫 칸의 값을 더하는 상황을 생각하자.
+    컨테이너의 원소를 <strong>처음부터 끝까지 한 바퀴 도는</strong> 코드다.
+    보관해 둔 스캔들을 훑으면서 첫 원소의 값을 더하는 상황을 생각하자.
     담아 둔 것은 ④에서 만든 <code>ScanMsg</code>를 100개 넣은 <code>vector</code>다.
   </p>
 
@@ -1276,7 +1276,7 @@ double time_fill(bool use_reserve, int loops, size_t &amp; sink)
 
 int main()
 {
-  std::cout &lt;&lt; &quot;① 센서를 손잡이에 끼우면 치우는 일이 사라진다\n&quot;;
+  std::cout &lt;&lt; &quot;① 센서를 unique_ptr 이 소유하면 치우는 일이 사라진다\n&quot;;
   setup(&quot;라이다&quot;, true);
   setup(&quot;카메라&quot;, false);
 
@@ -1369,11 +1369,11 @@ int main()
   <!-- ══════════ 🧪 실습 ══════════ -->
   <h2 id="lab">🧪 실습 — 자리를 몇 번 다시 잡는지 직접 세어 본다</h2>
   <div class="lab-block">
-    <div class="boxtitle">🧪 실습 — 손잡이와 그릇을 내 노트북에서 돌리기 (30분)</div>
+    <div class="boxtitle">🧪 실습 — 스마트 포인터와 컨테이너를 내 노트북에서 돌리기 (30분)</div>
     <p><strong>이걸 해 보면 무엇을 알게 되나:</strong>
       <code>delete</code> 없이도 정리가 된다는 것을 <strong>눈으로</strong> 보고,
       <strong>담는 개수를 열 배로 늘리면 이사 횟수가 어떻게 되는지</strong>를 확인한다.</p>
-    <p><strong>준비물:</strong> WSL 터미널 한 칸, <code>g++</code>.
+    <p><strong>준비물:</strong> WSL 터미널 하나, <code>g++</code>.
       코드는 파일 하나다. ⑦절 끝의 📄 「전체 코드 — 7단계 · 완성본」 상자에 있다.</p>
     <p><strong>절차</strong></p>
     <ol>
@@ -1390,7 +1390,7 @@ int main()
       <li><code>kScanSize</code>를 360으로 되돌리고 한 번 더 빌드해서 되는지 확인한다. (3분)</li>
     </ol>
     <p><strong>이렇게 되면 성공 — 2번에서 이 화면이 나온다.</strong> 시간(ms)은 노트북마다 다르다.</p>
-    <pre><code>① 센서를 손잡이에 끼우면 치우는 일이 사라진다
+    <pre><code>① 센서를 unique_ptr 이 소유하면 치우는 일이 사라진다
   [라이다 켜짐]
   라이다 측정 시작
   [라이다 꺼짐]
@@ -1679,9 +1679,9 @@ int main()
   <details>
     <summary><code>make_shared</code>가 <code>shared_ptr(new T)</code>보다 나은 이유</summary>
     <p>
-      <code>shared_ptr</code>은 물건 말고 <strong>세는 숫자를 둘 자리</strong>도 따로 필요하다.
+      <code>shared_ptr</code>은 객체 말고 <strong>참조 횟수를 둘 자리</strong>도 따로 필요하다.
       <code>std::shared_ptr&lt;Sensor&gt; p(new Sensor("라이다"));</code>라고 쓰면
-      <strong>자리를 두 번 잡는다</strong> — 물건 한 번, 세는 숫자 한 번.
+      <strong>메모리를 두 번 잡는다</strong> — 객체 한 번, 참조 횟수 한 번.
     </p>
     <p>
       <code>std::make_shared&lt;Sensor&gt;("라이다")</code>는 <strong>둘을 한 번에 잡는다.</strong>
@@ -1693,7 +1693,7 @@ int main()
   <details>
     <summary>서로를 가리키면 아무도 안 꺼진다 (순환 참조)</summary>
     <p>
-      <code>shared_ptr</code>은 <strong>세는 숫자가 0이 될 때</strong> 물건을 정리한다.
+      <code>shared_ptr</code>은 <strong>참조 횟수가 0이 될 때</strong> 객체를 정리한다.
       그런데 A가 B를 잡고 B가 A를 잡으면 <strong>둘 다 영원히 1 이상</strong>이다.
       둘을 쓰던 코드가 다 끝나도 <strong>둘 다 안 꺼진다.</strong>
     </p>
@@ -1708,9 +1708,9 @@ int main()
   <details>
     <summary><code>list</code>와 <code>deque</code>는 왜 안 다루나</summary>
     <p>
-      C++ 표준에는 <code>std::list</code>·<code>std::deque</code> 같은 그릇이 더 있다.
-      <strong>중간에 값을 자주 끼워 넣거나 빼는 경우</strong>에 유리한 그릇들이다.
-      <code>vector</code>는 중간에 끼워 넣으면 <strong>뒤에 있는 값을 전부 한 칸씩 밀어야</strong> 하기 때문이다.
+      C++ 표준에는 <code>std::list</code>·<code>std::deque</code> 같은 컨테이너가 더 있다.
+      <strong>중간에 원소를 자주 끼워 넣거나 빼는 경우</strong>에 유리한 컨테이너들이다.
+      <code>vector</code>는 중간에 끼워 넣으면 <strong>뒤에 있는 원소를 전부 한 자리씩 밀어야</strong> 하기 때문이다.
     </p>
     <p>
       <strong>그런데 이 과목의 코드에는 그런 자리가 없다.</strong>
@@ -1737,7 +1737,7 @@ int main()
     </ul>
     <p>
       <strong>담을 준비를 하는 것이 목적이면 <code>reserve</code></strong>다.
-      <code>resize</code>를 쓰고 <code>push_back</code>까지 하면 <strong>앞쪽 360칸이 0으로 채워진 채 남는다.</strong>
+      <code>resize</code>를 쓰고 <code>push_back</code>까지 하면 <strong>앞쪽 원소 360개가 0으로 채워진 채 남는다.</strong>
       라이다 값 앞에 0이 360개 붙으면 <strong>가장 가까운 장애물이 0m</strong>가 된다.
     </p>
   </details>

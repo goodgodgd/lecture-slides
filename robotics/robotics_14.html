@@ -551,9 +551,9 @@ int main()
       <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
       <dl>
         <dt>std::function&lt;float()&gt;</dt>
-        <dd>"인자 없이 <code>float</code>를 돌려주는 함수"를 <strong>값처럼 담아 두는 그릇</strong>이다.
+        <dd>"인자 없이 <code>float</code>를 돌려주는 함수"를 <strong>값처럼 담아 두는 클래스 템플릿</strong>이다.
             람다는 저마다 타입이 달라서 <code>auto</code>로만 받을 수 있는데,
-            <strong>함수 밖으로 돌려주거나 멤버로 저장하려면</strong> 이런 그릇이 필요하다.
+            <strong>함수 밖으로 돌려주거나 멤버로 저장하려면</strong> 이런 타입이 필요하다.
             <code>&lt;functional&gt;</code>에 들어 있다.</dd>
       </dl>
     </div>
@@ -1855,7 +1855,7 @@ const auto [x, y] = to_xy(*near, 0.5236f);</code></pre>
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
     <dl>
       <dt>std::pair&lt;A, B&gt;</dt>
-      <dd>값 두 개를 하나로 묶어 주는 그릇이다. 꺼낼 때는 <code>.first</code>·<code>.second</code>다.
+      <dd>값 두 개를 하나로 묶어 주는 클래스 템플릿이다. 꺼낼 때는 <code>.first</code>·<code>.second</code>다.
           여기서는 <code>x</code>와 <code>y</code>를 한 번에 돌려주는 데 썼다.</dd>
 
       <dt>const auto [x, y] = ...;</dt>
@@ -2248,7 +2248,7 @@ int main()
 
   <h3>만드는 것도 시킨다</h3>
   <p>
-    파일을 손으로 쓸 필요는 없다. <strong>아래 한 덩어리를 그대로 주면 만들어 준다.</strong>
+    파일을 손으로 쓸 필요는 없다. <strong>아래 프롬프트를 그대로 주면 만들어 준다.</strong>
   </p>
 
   <div class="prompt"><button onclick="copyPrompt(this)">복사</button>
