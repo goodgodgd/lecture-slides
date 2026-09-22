@@ -213,7 +213,7 @@ int main()
   <p>
     6회에서 <code>g++</code> 한 줄로 빌드했다. 오늘부터는 <strong>같은 폴더에 <code>CMakeLists.txt</code>를 하나 두고</strong> 빌드한다.
     파일이 하나뿐인 지금은 <code>g++</code>과 차이가 없지만, ⑩절에서 파일이 넷이 되는 순간 이 네 줄이 일을 대신한다.
-    <strong>지금은 내용을 이해하지 않아도 된다.</strong> 그대로 복사해 두고, 9회에서 한 줄씩 읽는다.
+    <strong>지금은 내용을 이해하지 않아도 된다.</strong> 그대로 복사해 두고, 8회에서 한 줄씩 읽는다.
   </p>
 
   <pre class="lang-cmake"><code>cmake_minimum_required(VERSION 3.16)
@@ -237,7 +237,7 @@ add_executable(scan_guard main.cpp)</code></pre>
       <dt>cmake --build build</dt>
       <dd>준비된 <code>build/</code>에서 실제로 컴파일한다. <strong>코드를 고칠 때마다</strong> 이것만 다시 친다.</dd>
     </dl>
-    <p class="later">제대로 다루는 곳: 9회(빌드 시스템 — 이 네 줄이 무엇을 하는지, 파일이 여럿일 때)</p>
+    <p class="later">제대로 다루는 곳: 8회(빌드 시스템 — 이 네 줄이 무엇을 하는지, 파일이 여럿일 때)</p>
   </div>
 
   <h3>실제로 나온 출력</h3>
@@ -1073,7 +1073,7 @@ int main()
   <p>
     ③절의 <code>ranges.size()</code>도 같은 점이다 — <code>ranges</code>가 <code>std::vector&lt;float&gt;</code> 타입의 객체이고, <code>size</code>가 그 안의 멤버(함수)다.
     표준 라이브러리의 <code>vector</code>도, 우리가 만드는 <code>Scan</code>도 <strong>"값과 함수를 묶은 타입"</strong>이라는 점에서 같은 것이다.
-    구조체에 함수와 <code>private</code>가 붙으면 클래스가 되는데, 그것은 8회에서 한다.
+    구조체에 함수와 <code>private</code>가 붙으면 클래스가 되는데, 그것은 9회에서 한다.
   </p>
 
   <h3>예제에 적용 — 거리 값에는 짝이 있다</h3>
@@ -1125,7 +1125,7 @@ int main()
       <dd>객체를 만들면서 중괄호 안에 <strong>멤버 순서대로</strong> 값을 나열하면 그대로 채워진다(중괄호 초기화).
           바깥 중괄호가 <code>Scan</code>을, 안쪽이 <code>ranges</code>를 채운다.</dd>
     </dl>
-    <p class="later">제대로 다루는 곳: 8회(클래스 — 구조체에 멤버 함수와 <code>private</code>가 붙으면)</p>
+    <p class="later">제대로 다루는 곳: 9회(클래스 — 구조체에 멤버 함수와 <code>private</code>가 붙으면)</p>
   </div>
 
   <h3>실제로 나온 출력</h3>
@@ -1597,7 +1597,7 @@ int main()
       <strong>아래로 향하는 화살표 두 개의 글씨가 다르다</strong>는 것을 본다.
       왼쪽 화살표는 <strong>「<code>#include</code>로 읽는다」</strong>(코드를 쓸 때),
       오른쪽 화살표는 <strong>「빌드할 때 붙인다」</strong>(컴파일이 끝난 뒤, 링크).
-      <strong>서로 다른 단계에서 일어나는 일이다.</strong> 9회에서 이 두 단계를 나눠 본다.
+      <strong>서로 다른 단계에서 일어나는 일이다.</strong> 8회에서 이 두 단계를 나눠 본다.
     </figcaption>
   </figure>
 
@@ -1652,7 +1652,7 @@ float front(const std::vector&lt;float&gt; &amp; ranges)   // 선언이 아니�
           <strong>"같은 헤더가 한 파일에 두 번 들어와도 한 번만 읽히게"</strong> 만드는 장치다.
           지금은 <strong>헤더 파일에 늘 붙어 다니는 세 줄</strong>이라는 것만 알아 두면 된다.</dd>
     </dl>
-    <p class="later">제대로 다루는 곳: 8회(헤더와 소스 나누기 — 포함 보호)</p>
+    <p class="later">제대로 다루는 곳: 9회(헤더와 소스 나누기 — 포함 보호)</p>
   </div>
 
   <h3>무엇이 문제인가</h3>
@@ -1660,7 +1660,7 @@ float front(const std::vector&lt;float&gt; &amp; ranges)   // 선언이 아니�
     <strong>소스가 <code>main.cpp</code> 하나뿐인 지금은 이 헤더로도 빌드가 되고 잘 돈다.</strong> 그래서 알아채기 어렵다.
     문제는 프로젝트가 커져서 <strong>두 번째 소스 파일이 같은 헤더를 <code>#include</code>하는 순간</strong>이다.
     <code>#include</code>는 붙여 넣기이므로 <code>front</code>의 정의가 <strong>두 벌</strong> 만들어지고, 각 파일의 컴파일은 되는데
-    마지막에 둘을 이어 붙이는 링크 단계에서 터진다. 아래는 소스를 하나 더 두고 실제로 그렇게 해서 나온 오류다(8회에서 소스가 둘이 되면 직접 만난다).
+    마지막에 둘을 이어 붙이는 링크 단계에서 터진다. 아래는 소스를 하나 더 두고 실제로 그렇게 해서 나온 오류다(9회에서 소스가 둘이 되면 직접 만난다).
   </p>
 
   <pre class="lang-sh"><code>$ cmake --build build
@@ -1673,7 +1673,7 @@ collect2: error: ld returned 1 exit status</code></pre>
     <strong>해석:</strong> <code>multiple definition</code>은 <strong>"같은 것이 두 번 정의됐다"</strong>는 말이다.
     <strong>오류에 적힌 파일은 소스들인데 고칠 곳은 헤더다.</strong> 그래서 처음 만나면 한참 헤맨다.
     <code>ld</code>라는 이름이 보이면 <strong>「빌드 마지막 단계(링크)에서 났다」</strong>는 신호다.
-    이 오류 읽는 법은 9회에서 세 단계로 나눠 정리한다.
+    이 오류 읽는 법은 8회에서 세 단계로 나눠 정리한다.
   </div>
 
   <h3>이렇게 말하면 된다</h3>
@@ -1778,7 +1778,7 @@ int main()
   <div class="interp">
     <strong>해석:</strong> <code>main.cpp</code>는 <code>front()</code>의 <strong>선언만</strong> 읽고 부른다. 정의는 <code>front.cpp</code>에 한 번뿐이고,
     빌드의 마지막 단계(링크)에서 둘이 이어진다. 파일이 하나 더 늘어 <code>front()</code>를 같이 쓰게 돼도 <strong>헤더를 <code>#include</code>하기만 하면 된다</strong> —
-    정의가 헤더에 없으니 두 벌이 생기지 않는다. 8회에서 클래스 하나를 이 모양으로 나눈다.
+    정의가 헤더에 없으니 두 벌이 생기지 않는다. 9회에서 클래스 하나를 이 모양으로 나눈다.
   </div>
 
   <h3>실수 2 — 안 쓰는 <code>#include</code>를 남긴다</h3>
@@ -2076,7 +2076,7 @@ const auto &amp; b = r;   // 복사가 없다      (직접 적어 줘야 한다)
     <div class="tablewrap">
     <table>
       <tr><th>안 다룬 것</th><th>왜</th><th>언제 다루나</th></tr>
-      <tr><td><code>CMakeLists.txt</code> 네 줄의 뜻</td><td>파일이 하나일 때는 몰라도 된다</td><td>9회</td></tr>
+      <tr><td><code>CMakeLists.txt</code> 네 줄의 뜻</td><td>파일이 하나일 때는 몰라도 된다</td><td>8회</td></tr>
       <tr><td><code>const</code>가 <code>*</code> 앞뒤 어디에 붙느냐에 따른 네 가지</td><td>포인터를 직접 다룰 일이 거의 없다</td><td>다루지 않는다</td></tr>
       <tr><td><code>auto</code>의 형식 연역 규칙 표</td><td>규칙을 외워도 판단이 안 는다</td><td>다루지 않는다 (위 접이 상자로 충분)</td></tr>
       <tr><td>템플릿 <strong>만드는</strong> 법</td><td>읽을 일은 매일 있고 만들 일은 거의 없다</td><td>14회에 읽을거리로</td></tr>
@@ -2092,7 +2092,7 @@ const auto &amp; b = r;   // 복사가 없다      (직접 적어 줘야 한다)
 
   <footer>
     로봇공학 · 순천향대학교 전자정보공학과 ·
-    다음 회차: <a href="robotics_08.html">8회 클래스 — 노드가 상태를 갖는 방식</a>
+    다음 회차: <a href="robotics_08.html">8회 빌드 시스템 — 탭 문자 하나가 40년을 갔다</a>
   </footer>
 </main>
 </div>

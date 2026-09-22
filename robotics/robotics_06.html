@@ -320,7 +320,7 @@ $ python3 scan_filter.py</code></pre>
       <dt>-o scan_filter</dt>
       <dd>만들어진 실행 파일의 <strong>이름</strong>을 정한다. 안 적으면 <code>a.out</code>이라는 이름이 된다.</dd>
     </dl>
-    <p class="later">제대로 다루는 곳: 9회(빌드 시스템 — 파일이 여러 개가 되면 이 한 줄로는 안 된다)</p>
+    <p class="later">제대로 다루는 곳: 8회(빌드 시스템 — 파일이 여러 개가 되면 이 한 줄로는 안 된다)</p>
   </div>
 
   <pre><code>C++   : 100000회 반복에 23.6 ms  (한 스캔당 0.0002 ms)
@@ -1016,7 +1016,7 @@ ii  g++             4:13.2.0-7ubuntu1 amd64        GNU C++ compiler</code></pre>
   <table>
     <tr><th>패키지</th><th>무엇이 들어 있나</th><th>언제 쓰나</th><th>깔린 판</th></tr>
     <tr><td><strong><code>build-essential</code></strong></td><td>C 컴파일러 <code>gcc</code>, C++ 컴파일러 <code>g++</code>, 빌드 도구 <code>make</code>, 표준 라이브러리 헤더 묶음. 이름이 「필수」인 이유 — <strong>이게 없으면 C/C++ 소스를 한 줄도 실행 파일로 못 만든다</strong></td><td><strong>오늘부터</strong></td><td>g++ 13.3.0 · make 4.3</td></tr>
-    <tr><td><code>cmake</code></td><td>파일이 여러 개인 프로젝트의 빌드 순서를 적는 도구. 제대로 배우는 것은 9회지만, Antigravity의 CMake 확장이 폴더를 열자마자 이것을 찾는다</td><td>9회 빌드 시스템</td><td>3.28.3</td></tr>
+    <tr><td><code>cmake</code></td><td>파일이 여러 개인 프로젝트의 빌드 순서를 적는 도구. 제대로 배우는 것은 8회지만, Antigravity의 CMake 확장이 폴더를 열자마자 이것을 찾는다</td><td>9회 빌드 시스템</td><td>3.28.3</td></tr>
     <tr><td><code>gdb</code></td><td>프로그램을 한 줄씩 멈춰 가며 보는 도구(디버거). Antigravity의 C/C++ Debug 확장이 이것을 부른다</td><td>10회 이후</td><td>15.1</td></tr>
     <tr><td><code>clangd</code></td><td>편집기에 코드 색칠·자동완성·정의로 이동을 해 주는 프로그램(언어 서버). 아래 확장이 이것을 찾아 쓴다</td><td><strong>오늘부터</strong></td><td>18.1.3</td></tr>
   </table>
@@ -1043,7 +1043,7 @@ Depends: libc6-dev | libc-dev, gcc (>= 4:12.3), g++ (>= 4:12.3), make, dpkg-dev 
   <table>
     <tr><th>같이 들어오는 것</th><th>무엇을 해 주나</th><th>VS Code에서 쓰던 이름으로는</th></tr>
     <tr><td><strong>Kylin Clangd</strong></td><td>코드 색칠, 이름 자동완성, 정의로 이동. 위에서 깐 <code>clangd</code>를 찾아 쓴다</td><td>C/C++ (Microsoft)</td></tr>
-    <tr><td><strong>Kylin CMake Workflow</strong></td><td><code>CMakeLists.txt</code>를 알아보고 단추로 빌드한다 (9회부터)</td><td>CMake Tools</td></tr>
+    <tr><td><strong>Kylin CMake Workflow</strong></td><td><code>CMakeLists.txt</code>를 알아보고 단추로 빌드한다 (8회부터)</td><td>CMake Tools</td></tr>
     <tr><td><strong>C/C++ Debug</strong></td><td>중단점을 걸고 한 줄씩 실행한다. 위에서 깐 <code>gdb</code>를 부른다 (10회 이후)</td><td>C/C++ (Microsoft)의 디버그 부분</td></tr>
   </table>
   </div>

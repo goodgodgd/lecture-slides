@@ -463,7 +463,7 @@ struct ScanMsg {
       <dt>ScanMsg(const ScanMsg &amp; o)</dt>
       <dd><strong>복사 생성자</strong>다. 이 객체가 복사될 때 <strong>자동으로 불린다.</strong>
           평소에는 안 써도 컴파일러가 만들어 준다. 여기서는 <strong>몇 번 불리는지 세려고</strong> 손으로 썼다.
-          8회의 초기화 리스트(<code>: ranges(o.ranges)</code>)로 상대의 값을 그대로 받아 온다.</dd>
+          9회의 초기화 리스트(<code>: ranges(o.ranges)</code>)로 상대의 값을 그대로 받아 온다.</dd>
 
       <dt>ScanMsg() : ranges(360, 1.0f) {}</dt>
       <dd>복사 생성자를 손으로 쓰는 순간 <strong>컴파일러가 만들어 주던 기본 생성자가 사라진다.</strong>
