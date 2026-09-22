@@ -1592,7 +1592,7 @@ int main()
 
   <figure>
     <img src="assets/img/07_header_source.png"
-         alt="세 상자 그림. 위 왼쪽 front.hpp(헤더)는 '무엇이 있는지'만 적는다, 위 오른쪽 front.cpp(소스)는 '어떻게 하는지'를 적는다, 아래 main.cpp와 report.cpp가 헤더를 include로 읽는다">
+         alt="세 상자 그림. 위 왼쪽 front.hpp(헤더)는 '무엇이 있는지'만 적는다, 위 오른쪽 front.cpp(소스)는 '어떻게 하는지'를 적는다, 아래 main.cpp가 헤더를 include로 읽는다">
     <figcaption>
       <strong>아래로 향하는 화살표 두 개의 글씨가 다르다</strong>는 것을 본다.
       왼쪽 화살표는 <strong>「<code>#include</code>로 읽는다」</strong>(코드를 쓸 때),
@@ -1618,10 +1618,11 @@ int main()
     그래서 <strong>헤더는 가볍게 유지한다.</strong> 아래 AI 실수가 정확히 이 지점을 어긴다.
   </div>
 
-  <h3>예제에 적용 — 정면 거리 함수를 두 파일에서 쓴다</h3>
+  <h3>예제에 적용 — 정면 거리 함수 <code>front()</code>를 따로 뺀다</h3>
   <p>
-    오늘 프로그램과 별개로 작은 프로젝트 하나를 만든다. 거리 값들 중 <strong>가운데 것을 돌려주는 <code>front()</code></strong>를 헤더와 소스로 나누고,
-    <code>main.cpp</code>와 <code>report.cpp</code> <strong>두 소스가 같은 헤더를 <code>#include</code></strong>한다. 파일이 넷이니 <code>CMakeLists.txt</code>의 <code>add_executable</code> 뒤에 소스 셋을 이어 적는다.
+    오늘 프로그램과 별개로 작은 프로젝트 하나를 만든다. 거리 값들 중 <strong>가운데 것을 돌려주는 <code>front()</code></strong> 하나를
+    <strong>헤더(<code>front.hpp</code>)와 소스(<code>front.cpp</code>)로 나누고</strong>, <code>main.cpp</code>가 헤더를 <code>#include</code>해서 쓴다.
+    파일이 셋이니 <code>CMakeLists.txt</code>의 <code>add_executable</code> 뒤에 소스 둘을 이어 적는다.
   </p>
 
   <h3>실수 1 — AI가 헤더에 함수의 내용까지 적는다</h3>
@@ -1656,9 +1657,10 @@ float front(const std::vector&lt;float&gt; &amp; ranges)   // 선언이 아니�
 
   <h3>무엇이 문제인가</h3>
   <p>
-    이 헤더를 <code>main.cpp</code>와 <code>report.cpp</code>가 각각 <code>#include</code>하면
-    <code>front</code>의 정의가 <strong>두 벌</strong> 만들어진다. 컴파일은 각 파일마다 되는데, 마지막에 둘을 이어 붙이는 링크 단계에서 터진다.
-    아래는 실제로 그렇게 해서 나온 오류다.
+    <strong>소스가 <code>main.cpp</code> 하나뿐인 지금은 이 헤더로도 빌드가 되고 잘 돈다.</strong> 그래서 알아채기 어렵다.
+    문제는 프로젝트가 커져서 <strong>두 번째 소스 파일이 같은 헤더를 <code>#include</code>하는 순간</strong>이다.
+    <code>#include</code>는 붙여 넣기이므로 <code>front</code>의 정의가 <strong>두 벌</strong> 만들어지고, 각 파일의 컴파일은 되는데
+    마지막에 둘을 이어 붙이는 링크 단계에서 터진다. 아래는 소스를 하나 더 두고 실제로 그렇게 해서 나온 오류다(8회에서 소스가 둘이 되면 직접 만난다).
   </p>
 
   <pre class="lang-sh"><code>$ cmake --build build
@@ -1666,58 +1668,10 @@ float front(const std::vector&lt;float&gt; &amp; ranges)   // 선언이 아니�
 report.cpp:(.text+0x0): multiple definition of `front(std::vector&lt;float, std::allocator&lt;float&gt; &gt; const&amp;)'; CMakeFiles/header_demo.dir/main.cpp.o:main.cpp:(.text+0x0): first defined here
 collect2: error: ld returned 1 exit status</code></pre>
 
-  <!-- fullcode "전체 코드 — 헤더에 정의가 들어간 프로젝트 (빌드가 링크에서 막힌다)" build="cmake -S . -B build && cmake --build build   # multiple definition"
-       l07_reading_kit/steps/header_bad/CMakeLists.txt as CMakeLists.txt
-       l07_reading_kit/steps/header_bad/front.hpp as front.hpp
-       l07_reading_kit/steps/header_bad/main.cpp as main.cpp
-       l07_reading_kit/steps/header_bad/report.cpp as report.cpp
-  -->
-<details class="fullcode">
-  <summary>전체 코드 — 헤더에 정의가 들어간 프로젝트 (빌드가 링크에서 막힌다)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cmake -S . -B build &amp;&amp; cmake --build build   # multiple definition</code></p>
-  <div class="codefile"><div class="fname">CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre class="lang-cmake"><code>cmake_minimum_required(VERSION 3.16)
-project(header_demo CXX)
-set(CMAKE_CXX_STANDARD 17)
-add_executable(header_demo main.cpp report.cpp)</code></pre></div>
-  <div class="codefile"><div class="fname">front.hpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// front.hpp — 헤더에 함수의 「내용」까지 들어갔다 (AI가 흔히 주는 모양)
-#ifndef FRONT_HPP_
-#define FRONT_HPP_
-#include &lt;vector&gt;
-
-float front(const std::vector&lt;float&gt; &amp; ranges)   // 선언이 아니라 정의다
-{
-  return ranges.at(ranges.size() / 2);
-}
-
-#endif</code></pre></div>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 7회 ⑩절 — 헤더와 소스를 나눈 프로젝트 (main.cpp + front.hpp/front.cpp + report.cpp)
-#include &quot;front.hpp&quot;     // 따옴표 — 내 프로젝트 안에서 찾는다
-#include &lt;iostream&gt;
-#include &lt;vector&gt;
-
-void report(const std::vector&lt;float&gt; &amp; ranges);   // report.cpp 에 있다는 선언
-
-int main()
-{
-  std::vector&lt;float&gt; ranges{1.20f, 0.83f, 0.65f, 0.71f, 2.40f};
-  std::cout &lt;&lt; &quot;front() 직접 부름: &quot; &lt;&lt; front(ranges) &lt;&lt; &quot; m\n&quot;;
-  report(ranges);                                   // report.cpp 의 함수
-  return 0;
-}</code></pre></div>
-  <div class="codefile"><div class="fname">report.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// report.cpp — front() 를 쓰는 두 번째 소스
-#include &quot;front.hpp&quot;
-#include &lt;iostream&gt;
-
-void report(const std::vector&lt;float&gt; &amp; ranges)
-{
-  std::cout &lt;&lt; &quot;정면 거리 &quot; &lt;&lt; front(ranges) &lt;&lt; &quot; m\n&quot;;
-}</code></pre></div>
-</details>
-<!-- /fullcode -->
 
   <div class="interp">
     <strong>해석:</strong> <code>multiple definition</code>은 <strong>"같은 것이 두 번 정의됐다"</strong>는 말이다.
-    <strong>오류가 난 곳은 <code>report.cpp</code>·<code>main.cpp</code>인데 고칠 곳은 헤더다.</strong> 그래서 처음 만나면 한참 헤맨다.
+    <strong>오류에 적힌 파일은 소스들인데 고칠 곳은 헤더다.</strong> 그래서 처음 만나면 한참 헤맨다.
     <code>ld</code>라는 이름이 보이면 <strong>「빌드 마지막 단계(링크)에서 났다」</strong>는 신호다.
     이 오류 읽는 법은 9회에서 세 단계로 나눠 정리한다.
   </div>
@@ -1749,46 +1703,48 @@ float front(const std::vector&lt;float&gt; &amp; ranges)
   return ranges.at(ranges.size() / 2);
 }</code></pre>
 
-  <p>쓰는 쪽 <code>main.cpp</code>는 <strong>헤더만 <code>#include</code></strong>한다. 따옴표 모양이다 — 내 프로젝트 안에서 찾는다.</p>
+  <p>쓰는 쪽 <code>main.cpp</code>는 <strong>헤더만 <code>#include</code></strong>한다. 따옴표 모양이다 — 내 프로젝트 안에서 찾는다. <code>front.cpp</code>는 <code>CMakeLists.txt</code>의 <code>add_executable</code>에 적혀 있어 빌드할 때 붙는다.</p>
   <pre class="lang-cpp"><code>// main.cpp — 헤더와 소스를 나눈 프로젝트
 #include "front.hpp"     // 따옴표 — 내 프로젝트 안에서 찾는다
 #include &lt;iostream&gt;
 #include &lt;vector&gt;
 
-void report(const std::vector&lt;float&gt; &amp; ranges);   // report.cpp 에 있다는 선언
-
 int main()
 {
   std::vector&lt;float&gt; ranges{1.20f, 0.83f, 0.65f, 0.71f, 2.40f};
-  std::cout &lt;&lt; "front() 직접 부름: " &lt;&lt; front(ranges) &lt;&lt; " m\n";
-  report(ranges);                                   // report.cpp 의 함수
+  std::cout &lt;&lt; "정면 거리 " &lt;&lt; front(ranges) &lt;&lt; " m
+";
   return 0;
 }</code></pre>
 
+  <pre class="lang-cmake"><code>cmake_minimum_required(VERSION 3.16)
+project(header_demo CXX)
+set(CMAKE_CXX_STANDARD 17)
+add_executable(header_demo main.cpp front.cpp)</code></pre>
+
   <h3>실제로 나온 출력</h3>
-  <pre class="lang-sh"><code>$ cmake --build build
-[ 50%] Building CXX object CMakeFiles/header_demo.dir/front.cpp.o
-[ 75%] Building CXX object CMakeFiles/header_demo.dir/report.cpp.o
+  <pre class="lang-sh"><code>$ cmake -S . -B build
+$ cmake --build build
+[ 33%] Building CXX object CMakeFiles/header_demo.dir/main.cpp.o
+[ 66%] Building CXX object CMakeFiles/header_demo.dir/front.cpp.o
 [100%] Linking CXX executable header_demo
 [100%] Built target header_demo
 $ ./build/header_demo
-front() 직접 부름: 0.65 m
 정면 거리 0.65 m</code></pre>
 
-  <!-- fullcode "전체 코드 — 헤더와 소스를 나눈 프로젝트 (다섯 파일 · 이대로 빌드된다)" build="cmake -S . -B build && cmake --build build && ./build/header_demo"
+  <!-- fullcode "전체 코드 — 헤더와 소스를 나눈 프로젝트 (네 파일 · 이대로 빌드된다)" build="cmake -S . -B build && cmake --build build && ./build/header_demo"
        l07_reading_kit/steps/header_good/CMakeLists.txt as CMakeLists.txt
        l07_reading_kit/steps/header_good/front.hpp as front.hpp
        l07_reading_kit/steps/header_good/front.cpp as front.cpp
        l07_reading_kit/steps/header_good/main.cpp as main.cpp
-       l07_reading_kit/steps/header_good/report.cpp as report.cpp
   -->
 <details class="fullcode">
-  <summary>전체 코드 — 헤더와 소스를 나눈 프로젝트 (다섯 파일 · 이대로 빌드된다)</summary>
+  <summary>전체 코드 — 헤더와 소스를 나눈 프로젝트 (네 파일 · 이대로 빌드된다)</summary>
   <p class="how">빌드해서 돌리는 법: <code>cmake -S . -B build &amp;&amp; cmake --build build &amp;&amp; ./build/header_demo</code></p>
   <div class="codefile"><div class="fname">CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre class="lang-cmake"><code>cmake_minimum_required(VERSION 3.16)
 project(header_demo CXX)
 set(CMAKE_CXX_STANDARD 17)
-add_executable(header_demo main.cpp front.cpp report.cpp)</code></pre></div>
+add_executable(header_demo main.cpp front.cpp)</code></pre></div>
   <div class="codefile"><div class="fname">front.hpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// front.hpp — 헤더: 「무엇이 있는지」만 적는다 (선언)
 #ifndef FRONT_HPP_
 #define FRONT_HPP_
@@ -1805,35 +1761,24 @@ float front(const std::vector&lt;float&gt; &amp; ranges)
 {
   return ranges.at(ranges.size() / 2);
 }</code></pre></div>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 7회 ⑩절 — 헤더와 소스를 나눈 프로젝트 (main.cpp + front.hpp/front.cpp + report.cpp)
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 7회 ⑩절 — 헤더와 소스를 나눈 프로젝트 (main.cpp + front.hpp + front.cpp)
 #include &quot;front.hpp&quot;     // 따옴표 — 내 프로젝트 안에서 찾는다
 #include &lt;iostream&gt;
 #include &lt;vector&gt;
 
-void report(const std::vector&lt;float&gt; &amp; ranges);   // report.cpp 에 있다는 선언
-
 int main()
 {
   std::vector&lt;float&gt; ranges{1.20f, 0.83f, 0.65f, 0.71f, 2.40f};
-  std::cout &lt;&lt; &quot;front() 직접 부름: &quot; &lt;&lt; front(ranges) &lt;&lt; &quot; m\n&quot;;
-  report(ranges);                                   // report.cpp 의 함수
-  return 0;
-}</code></pre></div>
-  <div class="codefile"><div class="fname">report.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// report.cpp — front() 를 쓰는 두 번째 소스
-#include &quot;front.hpp&quot;
-#include &lt;iostream&gt;
-
-void report(const std::vector&lt;float&gt; &amp; ranges)
-{
   std::cout &lt;&lt; &quot;정면 거리 &quot; &lt;&lt; front(ranges) &lt;&lt; &quot; m\n&quot;;
+  return 0;
 }</code></pre></div>
 </details>
 <!-- /fullcode -->
 
   <div class="interp">
-    <strong>해석:</strong> 같은 <code>front()</code>를 <code>main.cpp</code>와 <code>report.cpp</code>가 나눠 쓰는데, <strong>정의는 <code>front.cpp</code>에 한 번뿐</strong>이다.
-    <code>main.cpp</code>의 <code>void report(...)</code> 한 줄도 선언이다 — "이런 함수가 어딘가에 있다"고만 말하고, 정의는 <code>report.cpp</code>에 있다.
-    이 선언도 헤더로 빼는 것이 정석이고, 8회에서 그렇게 한다.
+    <strong>해석:</strong> <code>main.cpp</code>는 <code>front()</code>의 <strong>선언만</strong> 읽고 부른다. 정의는 <code>front.cpp</code>에 한 번뿐이고,
+    빌드의 마지막 단계(링크)에서 둘이 이어진다. 파일이 하나 더 늘어 <code>front()</code>를 같이 쓰게 돼도 <strong>헤더를 <code>#include</code>하기만 하면 된다</strong> —
+    정의가 헤더에 없으니 두 벌이 생기지 않는다. 8회에서 클래스 하나를 이 모양으로 나눈다.
   </div>
 
   <h3>실수 2 — 안 쓰는 <code>#include</code>를 남긴다</h3>
