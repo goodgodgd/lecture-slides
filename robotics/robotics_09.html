@@ -1138,8 +1138,8 @@ gmake: *** [Makefile:91: all] Error 2</code></pre>
   </p>
 
   <h3>① cmake 단계 — 파일 이름을 <code>mian.cpp</code>로 잘못 적었다</h3>
-  <pre class="lang-cmake before"><code># CMakeLists.txt 12번째 줄
-add_executable(scan_app src/main.cpp)</code></pre>
+  <pre class="lang-cmake before"><code># CMakeLists.txt 12번째 줄 — main 을 mian 으로 잘못 쳤다
+add_executable(scan_app src/mian.cpp)</code></pre>
   <pre class="lang-sh"><code>$ cmake -S . -B build
 -- The CXX compiler identification is GNU 13.3.0
 -- Detecting CXX compiler ABI info
@@ -1224,8 +1224,8 @@ int main()
   </p>
 
   <h3>② 컴파일 단계 — 세미콜론을 빠뜨렸다</h3>
-  <pre class="lang-cpp before"><code>// src/main.cpp 7번째 줄
-  std::printf("유효값 평균 = %.3f m\n", mean_range(raw, 0.16f, 8.0f));</code></pre>
+  <pre class="lang-cpp before"><code>// src/main.cpp 7번째 줄 — 끝의 세미콜론이 빠졌다
+  std::printf("유효값 평균 = %.3f m\n", mean_range(raw, 0.16f, 8.0f))</code></pre>
   <pre class="lang-sh"><code>$ cmake --build build
 [ 25%] Building CXX object CMakeFiles/scan_math.dir/src/scan_math.cpp.o
 [ 50%] Linking CXX static library libscan_math.a
@@ -1302,9 +1302,9 @@ int main()
 <!-- /fullcode -->
 
   <h3>③ 링크 단계 — <code>target_link_libraries</code> 줄을 통째로 빠뜨렸다</h3>
-  <pre class="lang-cmake before"><code># CMakeLists.txt 아랫부분
+  <pre class="lang-cmake before"><code># CMakeLists.txt 아랫부분 — target_link_libraries 줄이 없고 그 자리에 헤더 경로만 걸었다
 add_executable(scan_app src/main.cpp)
-target_link_libraries(scan_app PRIVATE scan_math)</code></pre>
+target_include_directories(scan_app PRIVATE include)</code></pre>
   <pre class="lang-sh"><code>$ cmake --build build
 [ 25%] Building CXX object CMakeFiles/scan_math.dir/src/scan_math.cpp.o
 [ 50%] Linking CXX static library libscan_math.a
