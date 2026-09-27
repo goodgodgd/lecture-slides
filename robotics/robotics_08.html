@@ -224,9 +224,9 @@ $ ./scan_app
   </div>
 
   <!-- fullcode "전체 코드 — scan_tools/ (1단계 · 파일 세 개, g++ 한 줄로 빌드된다)" build="g++ -std=c++17 -Iinclude src/main.cpp src/scan_math.cpp -o scan_app && ./scan_app"
-       l09_cmake/steps/step1/include/scan_math.hpp as scan_tools/include/scan_math.hpp
-       l09_cmake/steps/step1/src/scan_math.cpp as scan_tools/src/scan_math.cpp
-       l09_cmake/steps/step1/src/main.cpp as scan_tools/src/main.cpp
+       l08_cmake/steps/step1/include/scan_math.hpp as scan_tools/include/scan_math.hpp
+       l08_cmake/steps/step1/src/scan_math.cpp as scan_tools/src/scan_math.cpp
+       l08_cmake/steps/step1/src/main.cpp as scan_tools/src/main.cpp
   -->
 <details class="fullcode">
   <summary>전체 코드 — scan_tools/ (1단계 · 파일 세 개, g++ 한 줄로 빌드된다)</summary>
@@ -418,10 +418,10 @@ g++ -o scan_app main.o scan_math.o</code></pre>
   </div>
 
   <!-- fullcode "전체 코드 — scan_tools/ (Makefile 판 · make 한 마디로 빌드된다)" build="make && ./scan_app"
-       l09_cmake/steps/step1_make/Makefile as scan_tools/Makefile
-       l09_cmake/steps/step1_make/include/scan_math.hpp as scan_tools/include/scan_math.hpp
-       l09_cmake/steps/step1_make/src/scan_math.cpp as scan_tools/src/scan_math.cpp
-       l09_cmake/steps/step1_make/src/main.cpp as scan_tools/src/main.cpp
+       l08_cmake/steps/step1_make/Makefile as scan_tools/Makefile
+       l08_cmake/steps/step1_make/include/scan_math.hpp as scan_tools/include/scan_math.hpp
+       l08_cmake/steps/step1_make/src/scan_math.cpp as scan_tools/src/scan_math.cpp
+       l08_cmake/steps/step1_make/src/main.cpp as scan_tools/src/main.cpp
   -->
 <details class="fullcode">
   <summary>전체 코드 — scan_tools/ (Makefile 판 · make 한 마디로 빌드된다)</summary>
@@ -622,10 +622,10 @@ target_link_libraries(scan_app PRIVATE scan_math)</code></pre>
   </dl>
 
   <!-- fullcode "전체 코드 — scan_tools/ (2단계 · CMakeLists.txt 가 더해진 완성본)" build="cmake -S . -B build && cmake --build build && ./build/scan_app"
-       l09_cmake/steps/step2/CMakeLists.txt as scan_tools/CMakeLists.txt
-       l09_cmake/steps/step2/include/scan_math.hpp as scan_tools/include/scan_math.hpp
-       l09_cmake/steps/step2/src/scan_math.cpp as scan_tools/src/scan_math.cpp
-       l09_cmake/steps/step2/src/main.cpp as scan_tools/src/main.cpp
+       l08_cmake/steps/step2/CMakeLists.txt as scan_tools/CMakeLists.txt
+       l08_cmake/steps/step2/include/scan_math.hpp as scan_tools/include/scan_math.hpp
+       l08_cmake/steps/step2/src/scan_math.cpp as scan_tools/src/scan_math.cpp
+       l08_cmake/steps/step2/src/main.cpp as scan_tools/src/main.cpp
   -->
 <details class="fullcode">
   <summary>전체 코드 — scan_tools/ (2단계 · CMakeLists.txt 가 더해진 완성본)</summary>
@@ -849,10 +849,10 @@ target_link_libraries(scan_app scan_math)  # ← PRIVATE / PUBLIC 이 없다</co
 유효값 평균 = 1.373 m</code></pre>
 
   <!-- fullcode "전체 코드 — scan_tools/ (낡은 방식 판 · 빌드는 된다)" build="cmake -S . -B build && cmake --build build && ./build/scan_app"
-       l09_cmake/steps/step3_old/CMakeLists.txt as scan_tools/CMakeLists.txt
-       l09_cmake/steps/step3_old/include/scan_math.hpp as scan_tools/include/scan_math.hpp
-       l09_cmake/steps/step3_old/src/scan_math.cpp as scan_tools/src/scan_math.cpp
-       l09_cmake/steps/step3_old/src/main.cpp as scan_tools/src/main.cpp
+       l08_cmake/steps/step3_old/CMakeLists.txt as scan_tools/CMakeLists.txt
+       l08_cmake/steps/step3_old/include/scan_math.hpp as scan_tools/include/scan_math.hpp
+       l08_cmake/steps/step3_old/src/scan_math.cpp as scan_tools/src/scan_math.cpp
+       l08_cmake/steps/step3_old/src/main.cpp as scan_tools/src/main.cpp
   -->
 <details class="fullcode">
   <summary>전체 코드 — scan_tools/ (낡은 방식 판 · 빌드는 된다)</summary>
@@ -1021,10 +1021,10 @@ gmake[2]: *** [CMakeFiles/scan_app.dir/build.make:76: CMakeFiles/scan_app.dir/sr
   </p>
 
   <!-- fullcode "전체 코드 — scan_tools/ (PUBLIC 을 PRIVATE 로 바꾼 판 · 빌드가 안 된다)" build="cmake -S . -B build && cmake --build build"
-       l09_cmake/steps/step4_private/CMakeLists.txt as scan_tools/CMakeLists.txt
-       l09_cmake/steps/step4_private/include/scan_math.hpp as scan_tools/include/scan_math.hpp
-       l09_cmake/steps/step4_private/src/scan_math.cpp as scan_tools/src/scan_math.cpp
-       l09_cmake/steps/step4_private/src/main.cpp as scan_tools/src/main.cpp
+       l08_cmake/steps/step4_private/CMakeLists.txt as scan_tools/CMakeLists.txt
+       l08_cmake/steps/step4_private/include/scan_math.hpp as scan_tools/include/scan_math.hpp
+       l08_cmake/steps/step4_private/src/scan_math.cpp as scan_tools/src/scan_math.cpp
+       l08_cmake/steps/step4_private/src/main.cpp as scan_tools/src/main.cpp
   -->
 <details class="fullcode">
   <summary>전체 코드 — scan_tools/ (PUBLIC 을 PRIVATE 로 바꾼 판 · 빌드가 안 된다)</summary>
@@ -1168,10 +1168,10 @@ CMake Generate step failed.  Build files cannot be regenerated correctly.</code>
     그 밑 <code>src/mian.cpp</code>가 못 찾은 파일 이름이다. <code>main</code>이 <code>mian</code>이 됐다.
   </p>
   <!-- fullcode "전체 코드 — scan_tools/ (① cmake 단계가 터지는 판)" build="cmake -S . -B build"
-       l09_cmake/steps/step5_bad_cmake/CMakeLists.txt as scan_tools/CMakeLists.txt
-       l09_cmake/steps/step5_bad_cmake/include/scan_math.hpp as scan_tools/include/scan_math.hpp
-       l09_cmake/steps/step5_bad_cmake/src/scan_math.cpp as scan_tools/src/scan_math.cpp
-       l09_cmake/steps/step5_bad_cmake/src/main.cpp as scan_tools/src/main.cpp
+       l08_cmake/steps/step5_bad_cmake/CMakeLists.txt as scan_tools/CMakeLists.txt
+       l08_cmake/steps/step5_bad_cmake/include/scan_math.hpp as scan_tools/include/scan_math.hpp
+       l08_cmake/steps/step5_bad_cmake/src/scan_math.cpp as scan_tools/src/scan_math.cpp
+       l08_cmake/steps/step5_bad_cmake/src/main.cpp as scan_tools/src/main.cpp
   -->
 <details class="fullcode">
   <summary>전체 코드 — scan_tools/ (① cmake 단계가 터지는 판)</summary>
@@ -1251,10 +1251,10 @@ gmake: *** [Makefile:91: all] Error 2</code></pre>
     <strong>성공한 줄과 실패한 줄이 한 화면에 섞여 나온다</strong>는 것을 알아 두면 덜 당황한다.
   </p>
   <!-- fullcode "전체 코드 — scan_tools/ (② 컴파일 단계가 터지는 판)" build="cmake -S . -B build && cmake --build build"
-       l09_cmake/steps/step5_bad_compile/CMakeLists.txt as scan_tools/CMakeLists.txt
-       l09_cmake/steps/step5_bad_compile/include/scan_math.hpp as scan_tools/include/scan_math.hpp
-       l09_cmake/steps/step5_bad_compile/src/scan_math.cpp as scan_tools/src/scan_math.cpp
-       l09_cmake/steps/step5_bad_compile/src/main.cpp as scan_tools/src/main.cpp
+       l08_cmake/steps/step5_bad_compile/CMakeLists.txt as scan_tools/CMakeLists.txt
+       l08_cmake/steps/step5_bad_compile/include/scan_math.hpp as scan_tools/include/scan_math.hpp
+       l08_cmake/steps/step5_bad_compile/src/scan_math.cpp as scan_tools/src/scan_math.cpp
+       l08_cmake/steps/step5_bad_compile/src/main.cpp as scan_tools/src/main.cpp
   -->
 <details class="fullcode">
   <summary>전체 코드 — scan_tools/ (② 컴파일 단계가 터지는 판)</summary>
@@ -1336,10 +1336,10 @@ target_link_libraries(scan_app PRIVATE scan_math)</code></pre>
 [100%] Built target scan_app
 유효값 평균 = 1.373 m</code></pre>
   <!-- fullcode "전체 코드 — scan_tools/ (③ 링크 단계가 터지는 판)" build="cmake -S . -B build && cmake --build build"
-       l09_cmake/steps/step5_bad_link/CMakeLists.txt as scan_tools/CMakeLists.txt
-       l09_cmake/steps/step5_bad_link/include/scan_math.hpp as scan_tools/include/scan_math.hpp
-       l09_cmake/steps/step5_bad_link/src/scan_math.cpp as scan_tools/src/scan_math.cpp
-       l09_cmake/steps/step5_bad_link/src/main.cpp as scan_tools/src/main.cpp
+       l08_cmake/steps/step5_bad_link/CMakeLists.txt as scan_tools/CMakeLists.txt
+       l08_cmake/steps/step5_bad_link/include/scan_math.hpp as scan_tools/include/scan_math.hpp
+       l08_cmake/steps/step5_bad_link/src/scan_math.cpp as scan_tools/src/scan_math.cpp
+       l08_cmake/steps/step5_bad_link/src/main.cpp as scan_tools/src/main.cpp
   -->
 <details class="fullcode">
   <summary>전체 코드 — scan_tools/ (③ 링크 단계가 터지는 판)</summary>
@@ -1436,8 +1436,8 @@ int main()
     <p><strong>절차</strong></p>
     <ol>
       <li><strong>(5분) 완성본을 만든다.</strong> 폴더를 만들고 ③절 끝의 📄 「2단계 · 완성본」 상자를 펼쳐 네 파일을 「복사」로 하나씩 가져온다.
-        <pre><code>mkdir -p ~/robot_ws/l09/scan_tools/include ~/robot_ws/l09/scan_tools/src
-cd ~/robot_ws/l09/scan_tools
+        <pre><code>mkdir -p ~/robot_ws/l08/scan_tools/include ~/robot_ws/l08/scan_tools/src
+cd ~/robot_ws/l08/scan_tools
 code .</code></pre>
         <code>cmake -S . -B build</code> → <code>cmake --build build</code> → <code>./build/scan_app</code>.
         <strong><code>유효값 평균 = 1.373 m</code></strong>가 나오는 것을 눈으로 확인한다.</li>

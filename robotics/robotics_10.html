@@ -28,16 +28,17 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약</a>
-  <a href="#howto">읽는 법 — 프로그램 하나가 자란다</a>
-  <a href="#inherit">① 상속 — 콜론 하나</a>
-  <a href="#virtual">② virtual 은 갈아 끼울 자리</a>
-  <a href="#override">③ override 가 오타를 잡는다</a>
-  <a href="#dtor">④ 🔴 가상 소멸자</a>
-  <a href="#raii">⑤ RAII — 중괄호가 곧 수명</a>
-  <a href="#three">⑥ 파일도 잠금도 같은 원리</a>
-  <a href="#newdelete">⑦ new / delete 를 안 쓰는 이유</a>
+  <a href="#summary">한 장 요약 — 용어 여덟 개</a>
+  <a href="#start">① 오늘 만들 것 — if 문으로 먼저</a>
+  <a href="#inherit">② 상속 · <code>: public</code></a>
+  <a href="#virtual">③ 가상 함수와 다형성 · <code>virtual</code> · <code>= 0</code></a>
+  <a href="#override">④ <code>override</code></a>
+  <a href="#dtor">⑤ 🔴 가상 소멸자</a>
+  <a href="#raii">⑥ RAII — 스코프가 곧 수명</a>
+  <a href="#stdraii">⑦ 파일과 잠금도 같은 원리</a>
+  <a href="#newdelete">⑧ <code>new</code> / <code>delete</code>를 안 쓰는 이유</a>
   <a href="#lab">🧪 실습</a>
+  <a href="#exercise">📝 연습문제</a>
   <a href="#prompts">🤖 프롬프트 모음</a>
   <a href="#check">✅ 점검</a>
   <a href="#more">조금 더 알아두면</a>
@@ -52,81 +53,88 @@
     <span class="lab">오늘 답할 질문</span>
     <ol>
       <li>ROS 2 예제 첫 줄의 <code>class MyNode : public rclcpp::Node</code> — 이 콜론은 무슨 뜻인가?</li>
-      <li><code>override</code>는 안 써도 컴파일이 되는데 왜 붙이라고 하나?</li>
+      <li><code>virtual</code>이 있는 함수와 없는 함수는 <strong>무엇을 보고</strong> 어느 것을 부를지 정하나?</li>
       <li>소멸자에 <code>virtual</code>을 안 붙였을 뿐인데 왜 메모리가 새나? <strong>그런데 왜 아무 오류도 안 나나?</strong></li>
-      <li>C++ 코드에는 왜 <code>delete</code>가 거의 안 보이나?</li>
+      <li>C++ 코드에는 왜 <code>delete</code>도 <code>close()</code>도 거의 안 보이나?</li>
     </ol>
   </div>
 
   <p>
-    오늘 배울 것은 둘이다. 앞의 셋은 <strong>상속과 다형성</strong>이고, 뒤의 하나는 <strong>RAII</strong>다.
+    오늘 배울 것은 둘이다. 앞의 넷은 <strong>상속과 다형성</strong>이고, 뒤의 셋은 <strong>RAII</strong>다.
     성격이 달라 보이지만 한 줄로 이어진다. <strong>둘 다 「객체가 사라질 때 무슨 일이 일어나는가」의 이야기다.</strong>
+    9회에서 소멸자가 자동으로 불린다는 것을 봤다. 오늘은 그것이 <strong>안 불리는 경우</strong>(⑤)와, 그것을 <strong>믿고 뒷정리를 맡기는 방법</strong>(⑥~⑧)을 본다.
   </p>
   <p>
-    그중 세 번째 질문이 이 회차의 핵심이다.
-    <strong>가상 소멸자를 빠뜨린 코드는 크래시도 안 나고 경고 한 줄도 안 뜬다.</strong>
-    그냥 조용히 메모리가 샌다. 그래서 이 버그는 몇 달씩 살아남는다.
-    그리고 <strong>AI가 기반 클래스를 만들어 줄 때 가장 자주 빠뜨리는 자리</strong>가 정확히 여기다.
-  </p>
-  <p>
-    마지막 질문의 답이 RAII다. 한 문장으로 하면
-    <strong>"객체가 사라질 때 뒷정리가 자동으로 된다"</strong>이다.
-    <strong>이 순서에는 이유가 있다 — RAII를 먼저 이해해야 12회의 스마트 포인터가 「왜 있는지」가 설명된다.</strong>
-    스마트 포인터는 새로운 발명이 아니라 오늘 배우는 이 원리를 메모리에 적용한 것뿐이다.
+    오늘은 <strong>용어 여덟 개</strong>를 다룬다. 절마다 <strong>먼저 그 문법이 무엇이고 왜 생겼는지를 설명하고</strong>,
+    그다음에 <strong>센서 둘의 값을 읽는 작은 프로그램</strong>에 그것을 적용한다.
+    프로그램은 <code>if</code> 문으로 먼저 짜 두고, 절이 넘어갈 때마다 문법 하나씩으로 고쳐 간다.
   </p>
 
   <!-- ── 한 장 요약표 ── -->
   <h2 id="summary">한 장 요약 — 학기가 끝나도 이 표만 남으면 된다</h2>
-  <p class="readme-first">무엇을 먼저 볼지: <strong>가운데 「빠뜨리면」 열</strong>만 읽어도 검사 목록이 된다.</p>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 「이것만 알면 된다」 열</strong>만 읽어도 오늘 수업은 끝난다.</p>
   <div class="tablewrap">
   <table class="summary-table">
-    <tr><th>이게 보이면</th><th>빠뜨리면 어떻게 되나</th><th>수준</th></tr>
-    <tr><td><code>class B : public A</code></td><td>—. A가 하던 것을 B가 물려받는다는 뜻이다</td><td><span class="badge b-lv">[알아보기]</span></td></tr>
-    <tr><td><code>virtual float read()</code></td><td><strong>하위 클래스 것이 안 불린다.</strong> 위쪽 것이 그대로 불린다</td><td><span class="badge b-lv">[판단]</span></td></tr>
-    <tr><td><code>float read() override</code></td><td>이름을 오타 내도 <strong>컴파일이 통과한다.</strong> 실행하면 답이 틀린다</td><td><span class="badge b-lv">[요구]</span></td></tr>
-    <tr><td>🔴 <code>virtual ~Sensor()</code></td><td><strong>하위 클래스 소멸자가 아예 안 불린다.</strong> 오류도 크래시도 없다</td><td><span class="badge b-lv">[요구]</span></td></tr>
-    <tr><td><code>{ }</code> 중괄호</td><td>—. 벗어나는 순간 안에서 만든 것의 소멸자가 불린다</td><td><span class="badge b-lv">[판단]</span></td></tr>
-    <tr><td><code>std::ofstream</code> · <code>std::lock_guard</code></td><td><code>close()</code>·<code>unlock()</code>을 안 불러도 된다. <strong>부르면 오히려 실수한다</strong></td><td><span class="badge b-lv">[판단]</span></td></tr>
-    <tr><td><code>new</code> / <code>delete</code>가 보인다</td><td>나가는 길이 늘어날 때마다 <strong>짝 맞추기를 사람이 해야 한다</strong></td><td><span class="badge b-lv">[요구]</span></td></tr>
+    <tr><th>용어</th><th>코드에서 이렇게 보인다</th><th>이것만 알면 된다</th></tr>
+    <tr><td>상속 · 기반 클래스 · 파생 클래스</td><td><code>class Lidar : public Sensor</code></td><td><code>Lidar</code>는 <code>Sensor</code>의 멤버를 <strong>전부 물려받고</strong>, <code>Sensor</code> 자리에 들어갈 수 있다</td></tr>
+    <tr><td>가상 함수 · 다형성</td><td><code>virtual float read();</code></td><td><code>Sensor &amp;</code>로 잡고 불러도 <strong>실제 객체(동적 타입)의 함수</strong>가 불린다. <code>virtual</code>이 없으면 참조 타입(정적 타입)의 것이 불린다</td></tr>
+    <tr><td>순수 가상 함수 · 추상 클래스</td><td><code>virtual float read() = 0;</code></td><td>「내용은 파생 클래스가 채운다」. 하나라도 남아 있는 클래스로는 <strong>객체를 만들 수 없다</strong></td></tr>
+    <tr><td><code>override</code></td><td><code>float read() override</code></td><td>「기반 클래스의 가상 함수를 재정의한다」는 선언. 이름을 오타 내면 <strong>컴파일이 멈춘다</strong></td></tr>
+    <tr><td>🔴 가상 소멸자</td><td><code>virtual ~Sensor()</code></td><td>없으면 기반 클래스 포인터로 지울 때 <strong>파생 클래스 소멸자가 아예 안 불린다.</strong> 오류도 크래시도 없다</td></tr>
+    <tr><td>RAII · 스코프 · 수명</td><td><code>{ Lidar a; ... }</code></td><td>자원은 생성자에서 얻고 소멸자에서 돌려준다. <strong>중괄호를 벗어나는 순간 정리된다</strong></td></tr>
+    <tr><td><code>std::ofstream</code> · <code>std::lock_guard</code></td><td><code>std::ofstream f("...");</code></td><td>파일과 잠금도 같은 원리다. <code>close()</code>·<code>unlock()</code>을 <strong>안 부르는 쪽이 맞다</strong></td></tr>
+    <tr><td><code>new</code> / <code>delete</code> · <code>std::make_unique</code></td><td><code>auto p = std::make_unique&lt;Lidar&gt;();</code></td><td><code>new</code>/<code>delete</code> 짝을 사람이 맞추면 나가는 길이 늘 때마다 샌다. <code>make_unique</code>가 그 짝을 대신 맞춘다</td></tr>
   </table>
   </div>
   <div class="interp">
-    <strong>해석:</strong> 굵게 표시한 네 번째 줄이 오늘의 중심이다.
+    <strong>해석:</strong> 다섯째 줄에만 🔴가 붙어 있다.
     나머지는 빠뜨리면 <strong>컴파일러가 알려 주거나 결과가 눈에 띄게 이상해진다.</strong>
-    가상 소멸자만 다르다. <strong>아무 일도 안 일어난 것처럼 보인다.</strong>
-    그래서 검사 목록에 올려 두지 않으면 영원히 못 찾는다.
+    가상 소멸자만 다르다 — 아무 일도 안 일어난 것처럼 보인다. 그래서 검사 목록에 올려 두지 않으면 영원히 못 찾는다.
   </div>
 
-  <!-- ── 읽는 법 ── -->
-  <h2 id="howto">오늘은 프로그램 하나를 일곱 단계로 키운다</h2>
+  <!-- ── ① 시작 ── -->
+  <h2 id="start">① 오늘 만들 것 — 센서 둘의 값 읽기, <code>if</code> 문으로 먼저 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <h3>무엇을 만드나</h3>
   <p>
-    이 회차의 코드는 <strong><code>main.cpp</code> 파일 하나</strong>다. 빌드하면 <code>sensors</code>라는 실행 파일이 나온다.
-    처음에는 센서 둘의 값을 읽는 스무 줄짜리 프로그램이고,
-    <strong>절이 하나 넘어갈 때마다 줄이 더해지거나 한 곳이 고쳐진다.</strong>
-    ⑦절이 끝나면 오늘 배운 것이 전부 들어 있는 완성본이 된다.
+    센서가 둘이다. 라이다는 거리 360개를 들고 있고 정면(0번) 값을 돌려준다. 초음파는 거리 하나를 돌려준다.
+    밖에서 하고 싶은 일은 하나다 — <strong>「값을 읽어라.」</strong> 센서 종류가 무엇인지는 알고 싶지 않다.
+    이 작은 바람이 오늘 문법 넷을 차례로 끌어낸다.
   </p>
+
+  <h3>읽는 법</h3>
   <ul>
-    <li>본문에는 <strong>그 절에서 새로 넣거나 고친 부분만</strong> 보인다. 고치는 자리는 「고치기 전」(붉은 테두리)과 「고친 뒤」(푸른 테두리)를 따로 놓는다.</li>
-    <li>그 아래 <strong>📄 「전체 코드」 상자</strong>를 누르면 그 단계까지의 파일 전체가 나온다.
-        <strong>어느 단계를 펼쳐도 그대로 빌드되고 돌아간다.</strong> 오른쪽 위 「복사」로 통째로 가져갈 수 있다.</li>
+    <li>먼저 <strong>9회까지 배운 것만으로</strong> 짠다. 센서마다 클래스 하나, 종류는 번호로 따진다. 이대로도 돌아간다.</li>
+    <li>②절부터는 절마다 <strong>「개념」</strong>이 먼저 온다 — 그 문법이 무엇이고 어떤 문제를 풀려고 생겼는지.
+        그다음 <strong>「예제에 적용」</strong>에서 지금 프로그램의 어디가 불편한지를 보고, 그 문법으로 고친다.</li>
+    <li>고치는 자리는 <strong>고치기 전</strong>(붉은 테두리)과 <strong>고친 뒤</strong>(푸른 테두리)를 따로 놓는다. 더하기만 하는 단계는 더한 뒤의 모양만 보인다.</li>
+    <li>그 아래 <strong>📄 「전체 코드」 상자</strong>를 누르면 그 단계의 <code>main.cpp</code> 전체가 나온다. 첫 줄 주석에 <strong>버전(v1, v2, …)</strong>이 있다.
+        <strong>어느 버전을 펼쳐도 그대로 빌드되고 돌아간다.</strong></li>
     <li>컴파일 오류를 보이는 자리는 <strong>한 곳만 일부러 고장 낸 변형 파일</strong>이다. 그것도 전체를 상자에 뒀다.</li>
-    <li>「실제로 나온 출력」에는 그 절이 새로 찍는 줄만 보인다. 전체 출력은 실습 「성공 화면」에 있다.</li>
+    <li>「실제로 나온 출력」에는 그 절이 새로 찍는 줄만 보인다. 전체 출력은 실습 「성공 화면」에 한 번 있다.</li>
+    <li>빌드는 <strong>CMake</strong>다. 파일이 <code>main.cpp</code> 하나라 <code>CMakeLists.txt</code>는 끝까지 안 바뀐다.</li>
   </ul>
 
-  <!-- ── ① 상속 ── -->
-  <h2 id="inherit">① 종류가 늘어날 때마다 if 문을 고치고 싶지 않다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+  <h3>1단계 (v1) — 종류를 번호로 따진다</h3>
+  <pre class="lang-cpp"><code>class Lidar
+{
+public:
+  Lidar() : buf_(360, 0.83f) {}                 // 원소 360개를 전부 0.83 으로 채운다
+  float read() { return buf_.at(0); }           // 0번 = 정면
+private:
+  std::vector&lt;float&gt; buf_;
+};
 
-  <h3>언제 이게 필요해지나</h3>
-  <p>
-    센서가 여럿이다. 라이다도 있고 초음파도 있다.
-    밖에서 하고 싶은 일은 하나다 — <strong>"값을 읽어라."</strong>
-    센서 종류가 무엇인지는 <strong>알고 싶지 않다.</strong>
-  </p>
+class Sonar
+{
+public:
+  Sonar() : dist_(1.2f) {}
+  float read() { return dist_; }
+private:
+  float dist_;
+};
 
-  <h3>1단계 — 배운 것만 가지고 짜면 이렇게 된다</h3>
-  <p>9회에서 배운 클래스 둘을 만들고, 읽는 함수를 하나 두었다. 읽는 함수가 문제다.</p>
-  <div class="codelabel bad">종류를 밖에서 따지는 코드 🔴</div>
-  <pre class="lang-cpp before"><code>// 종류를 밖에서 따진다 — 센서가 늘 때마다 이 함수를 고쳐야 한다
+// 종류를 밖에서 따진다 — 센서가 늘 때마다 이 함수를 고쳐야 한다
 float read_any(int kind, Lidar &amp; l, Sonar &amp; s)
 {
   if (kind == 0) { return l.read(); }
@@ -146,30 +154,47 @@ int main()
   return 0;
 }</code></pre>
 
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>buf_(360, 0.83f)</dt>
+      <dd><code>std::vector</code>를 <strong>원소 360개, 전부 0.83</strong>으로 만드는 초기화다. 9회의 멤버 초기화 리스트 자리에 있다.
+          여기서는 라이다 한 바퀴(360개)를 흉내 냈다.</dd>
+      <dt>buf_.at(0)</dt>
+      <dd><code>buf_[0]</code>과 같은데 <strong>범위를 넘으면 오류를 내 준다.</strong> 여기서는 정면 값 하나를 꺼내는 데 썼다.</dd>
+    </dl>
+  </div>
+
   <h3>실제로 나온 출력</h3>
-  <pre><code>① 종류를 밖에서 따진다
+  <pre class="lang-sh"><code>$ cmake -S . -B build
+$ cmake --build build
+$ ./build/sensors
+① 종류를 밖에서 따진다
   kind 0 → 0.83 m
   kind 1 → 1.2 m</code></pre>
 
-  <!-- fullcode "전체 코드 — main.cpp (1단계 · if 문 방식)" build="g++ -std=c++17 -O2 -o sensors main.cpp && ./sensors"
-       l10_raii/steps/step1.cpp as main.cpp
+  <!-- fullcode "전체 코드 — v1 (1단계 · if 문 방식) main.cpp + CMakeLists.txt — 이대로 빌드된다" build="cmake -S . -B build && cmake --build build && ./build/sensors"
+       l10_raii/steps/step1/main.cpp
+       l10_raii/steps/step1/CMakeLists.txt
   -->
 <details class="fullcode">
-  <summary>전체 코드 — main.cpp (1단계 · if 문 방식)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o sensors main.cpp &amp;&amp; ./sensors</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 — 상속·다형성과 RAII
+  <summary>전체 코드 — v1 (1단계 · if 문 방식) main.cpp + CMakeLists.txt — 이대로 빌드된다</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake -S . -B build &amp;&amp; cmake --build build &amp;&amp; ./build/sensors</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 센서 읽기 — v1 (1단계: 종류를 if 로 따진다)
 #include &lt;iostream&gt;
 #include &lt;vector&gt;
 
-class Lidar {
+class Lidar
+{
 public:
   Lidar() : buf_(360, 0.83f) {}                 // 원소 360개를 전부 0.83 으로 채운다
-  float read() { return buf_.at(0); }
+  float read() { return buf_.at(0); }           // 0번 = 정면
 private:
   std::vector&lt;float&gt; buf_;
 };
 
-class Sonar {
+class Sonar
+{
 public:
   Sonar() : dist_(1.2f) {}
   float read() { return dist_; }
@@ -196,260 +221,115 @@ int main()
   }
   return 0;
 }</code></pre></div>
+  <div class="codefile"><div class="fname">CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre class="lang-cmake"><code>cmake_minimum_required(VERSION 3.16)
+project(sensors CXX)
+set(CMAKE_CXX_STANDARD 17)
+add_executable(sensors main.cpp)</code></pre></div>
 </details>
 <!-- /fullcode -->
 
+  <h3>돌아가는데 무엇이 불편한가</h3>
   <p>
-    돌아가긴 한다. 문제는 <strong>센서를 하나 더 붙이는 순간</strong>이다.
-    이런 <code>if</code>가 프로젝트 여기저기에 열 군데쯤 흩어져 있고,
-    <strong>열 군데를 다 찾아 고쳐야 한다.</strong> 하나를 놓치면 그 자리만 조용히 옛 동작을 한다.
-    <code>kind</code>라는 숫자를 사람이 관리해야 하는 것도 실수의 자리다.
+    센서를 하나 더 붙이는 순간이 문제다. <code>read_any</code>의 인자가 하나 늘고, <code>if</code>가 한 갈래 늘고,
+    이런 <code>if</code>가 프로젝트 여기저기에 열 군데 흩어져 있으면 <strong>열 군데를 다 찾아 고쳐야 한다.</strong> 하나를 놓치면 그 자리만 조용히 옛 동작을 한다.
+    <code>kind</code>라는 번호를 사람이 관리해야 하는 것도 실수의 자리다.
   </p>
 
-  <h3>2단계 — 「모든 센서는 <code>read()</code>를 갖는다」를 클래스 하나로 못 박는다</h3>
+  <!-- ── ② 상속 ── -->
+  <h2 id="inherit">② 상속 — 공통인 것을 위에 두고 물려받는다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <h3>개념 — 기반 클래스와 파생 클래스</h3>
   <p>
-    <strong>"모든 센서는 <code>read()</code>를 갖는다"</strong>를 클래스 하나로 못 박아 놓고,
-    각 센서가 그것을 <strong>물려받게</strong> 한다. 이것이 상속이다.
-    <code>Lidar</code>·<code>Sonar</code> 위에 클래스 하나가 생기고, 두 클래스의 첫 줄에 콜론이 붙는다.
+    <strong>상속</strong>(inheritance)은 <strong>한 클래스가 다른 클래스의 멤버를 전부 물려받아 시작하는 것</strong>이다.
+    물려주는 쪽을 <strong>기반 클래스</strong>(base class), 물려받는 쪽을 <strong>파생 클래스</strong>(derived class)라고 한다.
+    파생 클래스는 물려받은 것에 <strong>자기 멤버를 더하거나, 물려받은 멤버 함수를 자기 것으로 다시 정의</strong>할 수 있다.
   </p>
-  <div class="codelabel good">물려받는 코드</div>
-  <pre class="lang-cpp after"><code>class Sensor {
-public:
-  virtual float read() = 0;      // "읽는 함수는 반드시 있다. 내용은 자식이 채운다"
-};
-
-class Lidar : public Sensor {
-public:
-  Lidar() : buf_(360, 0.83f) {}                 // 원소 360개를 전부 0.83 으로 채운다
-  float read() override { return buf_.at(0); }
-private:
-  std::vector&lt;float&gt; buf_;
-};
-
-class Sonar : public Sensor {
-public:
-  Sonar() : dist_(1.2f) {}
-  float read() override { return dist_; }
-private:
-  float dist_;
-};</code></pre>
-
-  <p>그러면 읽는 함수에서 <code>if</code>가 사라진다. <code>main</code>은 종류 번호 대신 센서를 그대로 넘긴다.</p>
-  <div class="codelabel bad">고치기 전</div>
-  <pre class="lang-cpp before"><code>float read_any(int kind, Lidar &amp; l, Sonar &amp; s) { ... }
-
-int main()
-{
-  std::cout &lt;&lt; "① 종류를 밖에서 따진다\n";
-  {
-    Lidar lidar;
-    Sonar sonar;
-    std::cout &lt;&lt; "  kind 0 → " &lt;&lt; read_any(0, lidar, sonar) &lt;&lt; " m\n";
-    std::cout &lt;&lt; "  kind 1 → " &lt;&lt; read_any(1, lidar, sonar) &lt;&lt; " m\n";
-  }
-  return 0;
-}</code></pre>
-
-  <div class="codelabel good">고친 뒤</div>
-  <pre class="lang-cpp after"><code>float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다
-
-int main()
-{
-  std::cout &lt;&lt; "① 상속 — 종류를 따지지 않는다\n";
-  {
-    Lidar lidar;
-    Sonar sonar;
-    std::cout &lt;&lt; "  lidar → " &lt;&lt; read_any(lidar) &lt;&lt; " m\n";
-    std::cout &lt;&lt; "  sonar → " &lt;&lt; read_any(sonar) &lt;&lt; " m\n";
-  }
-  return 0;
-}</code></pre>
-
-  <div class="box firstseen">
-    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
-    <dl>
-      <dt>class Lidar : public Sensor</dt>
-      <dd>콜론 뒤가 <strong>물려받을 클래스</strong>다.
-          <code>Lidar</code>는 <code>Sensor</code>가 약속한 것을 전부 갖고 시작한다.
-          여기서는 <em>"라이다도 센서다"</em>를 코드로 적은 것이다.</dd>
-
-      <dt>virtual float read()</dt>
-      <dd><strong>"이 함수는 자식이 갈아 끼울 수 있다"</strong>는 표시다.
-          여기서는 밖에서 <code>Sensor</code>로 불러도 실제로는 <code>Lidar</code>의 것이 불리게 만드는 데 썼다.</dd>
-
-      <dt>= 0 (순수 가상)</dt>
-      <dd>뒤에 <code>= 0</code>이 붙으면 <strong>내용이 아예 없다</strong>는 뜻이다.
-          여기서는 <em>"읽는 함수는 반드시 있어야 한다. 다만 어떻게 읽는지는 센서마다 다르다"</em>를
-          강제하는 데 썼다. 하나라도 안 채우면 <strong>그 클래스는 객체를 만들 수 없다.</strong></dd>
-
-      <dt>float read() override</dt>
-      <dd><strong>"위에 있는 <code>read()</code>를 갈아 끼우는 중이다"</strong>라고 컴파일러에게 알린다.
-          안 써도 동작은 같다. <strong>왜 굳이 쓰는지는 ③절에서 실험으로 확인한다.</strong></dd>
-
-      <dt>read_any(Sensor &amp; s)</dt>
-      <dd>7회에서 본 참조 <code>&amp;</code>인데, 타입이 <strong>부모 클래스</strong>다.
-          여기서는 <code>Lidar</code>를 넘겨도 <code>Sonar</code>를 넘겨도 받게 하는 데 썼다.
-          <em>"라이다도 센서다"</em>가 코드에 적혀 있으니 컴파일러가 허락한다.</dd>
-    </dl>
-  </div>
-
-  <h3>실제로 나온 출력</h3>
-  <pre><code>① 상속 — 종류를 따지지 않는다
-  lidar → 0.83 m
-  sonar → 1.2 m</code></pre>
-
-  <!-- fullcode "전체 코드 — main.cpp (2단계 · 상속)" build="g++ -std=c++17 -O2 -o sensors main.cpp && ./sensors"
-       l10_raii/steps/step2.cpp as main.cpp
-  -->
-<details class="fullcode">
-  <summary>전체 코드 — main.cpp (2단계 · 상속)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o sensors main.cpp &amp;&amp; ./sensors</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 — 상속·다형성과 RAII
-#include &lt;iostream&gt;
-#include &lt;vector&gt;
-
-class Sensor {
-public:
-  virtual float read() = 0;      // &quot;읽는 함수는 반드시 있다. 내용은 자식이 채운다&quot;
-};
-
-class Lidar : public Sensor {
-public:
-  Lidar() : buf_(360, 0.83f) {}                 // 원소 360개를 전부 0.83 으로 채운다
-  float read() override { return buf_.at(0); }
-private:
-  std::vector&lt;float&gt; buf_;
-};
-
-class Sonar : public Sensor {
-public:
-  Sonar() : dist_(1.2f) {}
-  float read() override { return dist_; }
-private:
-  float dist_;
-};
-
-float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다
-
-int main()
-{
-  std::cout &lt;&lt; &quot;① 상속 — 종류를 따지지 않는다\n&quot;;
-  {
-    Lidar lidar;
-    Sonar sonar;
-    std::cout &lt;&lt; &quot;  lidar → &quot; &lt;&lt; read_any(lidar) &lt;&lt; &quot; m\n&quot;;
-    std::cout &lt;&lt; &quot;  sonar → &quot; &lt;&lt; read_any(sonar) &lt;&lt; &quot; m\n&quot;;
-  }
-  return 0;
-}</code></pre></div>
-</details>
-<!-- /fullcode -->
-
-  <div class="tablewrap">
-  <table>
-    <tr><th>바뀐 것</th><th>if 문 방식</th><th>상속 방식</th></tr>
-    <tr><td>센서를 하나 더 붙이면</td><td><code>if</code>가 있는 <strong>모든 자리</strong>를 고친다</td><td><strong>새 클래스 하나만</strong> 만든다</td></tr>
-    <tr><td>빠뜨리면</td><td>조용히 옛 동작을 한다</td><td><code>= 0</code>을 안 채우면 <strong>컴파일이 안 된다</strong></td></tr>
-    <tr><td>종류를 나타내는 숫자</td><td>사람이 관리한다 (<code>kind == 0</code>)</td><td><strong>없다</strong></td></tr>
-  </table>
-  </div>
-  <div class="interp">
-    <strong>해석:</strong> 이득은 코드가 짧아진 것이 아니다. <strong>실수할 자리가 컴파일 오류로 바뀐 것</strong>이다.
-    if 문 방식은 빠뜨려도 프로그램이 돈다. 상속 방식은 빠뜨리면 빌드가 멈춘다.
-    <strong>이 강의에서 "좋은 코드"는 대체로 이런 뜻이다 — 틀렸을 때 조용하지 않은 코드.</strong>
-  </div>
-
-  <div class="prompt">
-    <button onclick="copyPrompt(this)">복사</button>
-    센서 종류를 if / else if 로 나눠 처리하는 코드가 있어. 기반 클래스 하나를 만들고 종류마다 상속하는 구조로 바꿔 줘. 기반 클래스의 소멸자는 virtual 로, 자식 쪽 함수에는 override 를 붙여 줘. 바뀌는 부분만 보여 줘.
-  </div>
-
-  <div class="box trap">
-    <div class="boxtitle">📌 ROS 2 에서 이 문법을 만나는 자리 (읽기용 — 오늘 빌드하지 않는다)</div>
-    <pre class="lang-cpp"><code>class MyNode : public rclcpp::Node
-{
-  // ...
-};</code></pre>
-    <p>
-      ROS 2에서 노드를 만드는 코드는 <strong>거의 예외 없이 이 한 줄로 시작한다.</strong>
-      <code>rclcpp::Node</code>가 이미 만들어 놓은 것(이름 짓기, 발행, 구독, 파라미터)을 통째로 물려받고,
-      우리는 우리 것만 얹는다.
-      <strong>지금은 이 콜론이 무슨 뜻인지만 알면 된다. 19회에서 제대로 다룬다.</strong>
-    </p>
-  </div>
-
-  <!-- ── ② virtual ── -->
-  <h2 id="virtual">② <code>virtual</code>은 「여기는 갈아 끼울 수 있다」는 표시다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
-
+  <pre class="lang-cpp"><code>class Sensor { ... };                    // 기반 클래스 — 모든 센서에 공통인 것
+class Lidar : public Sensor { ... };     // 파생 클래스 — 「Lidar 는 Sensor 다」. Sensor 의 멤버를 전부 갖고 시작한다</code></pre>
   <p>
-    <code>virtual</code>이 붙은 함수와 안 붙은 함수는 <strong>불리는 방식이 다르다.</strong>
-    <code>read_any(Sensor &amp; s)</code>처럼 <strong><code>Sensor</code>로 잡아 놓고</strong> <code>read()</code>를 부를 때,
+    클래스 이름 뒤의 <code>: public Sensor</code>가 상속이다. <code>public</code>은 「물려받은 멤버의 접근 권한을 그대로 둔다」는 뜻이고, 이 강의에서는 늘 <code>public</code>이다.
   </p>
-  <div class="tablewrap">
-  <table>
-    <tr><th>기반 클래스의 함수가</th><th>실제로 불리는 것</th><th>언제 정해지나</th></tr>
-    <tr><td><code>virtual</code>이 붙어 있다</td><td><strong>동적 타입</strong>(실제 객체의 타입)의 함수 (<code>Lidar::read</code>)</td><td>실행할 때</td></tr>
-    <tr><td><code>virtual</code>이 없다</td><td><strong>정적 타입</strong>(참조·포인터의 타입)의 함수 (<code>Sensor::read</code>)</td><td>컴파일할 때</td></tr>
-  </table>
-  </div>
-
-  <h3>정말 그런가 — <code>virtual</code>을 떼 봤다</h3>
   <p>
-    2단계 파일에서 <code>Sensor::read()</code>의 <code>virtual</code>을 떼고 기본 동작 <code>-1</code>을 넣었다.
-    <code>virtual</code>이 없으면 <code>override</code>도 붙일 수 없으니 자식 쪽 두 줄도 같이 바뀐다.
-    <strong>그 세 줄만 다른 파일이다.</strong>
+    상속이 주는 것이 하나 더 있다. <strong>파생 클래스 객체는 기반 클래스 타입의 자리에 들어갈 수 있다.</strong>
+    <code>Sensor &amp;</code>로 받는 함수에 <code>Lidar</code> 객체를 넘겨도 되고 <code>Sonar</code> 객체를 넘겨도 된다 — 둘 다 <code>Sensor</code>이기 때문이다.
+    이것이 <strong>「종류를 묻지 않는 함수」를 만드는 열쇠</strong>다.
   </p>
-  <div class="codelabel good">2단계 — 원래 코드</div>
-  <pre class="lang-cpp after"><code>class Sensor {
-public:
-  virtual float read() = 0;
-};
 
-class Lidar : public Sensor {
+  <h3>예제에 적용 — 「모든 센서는 <code>read()</code>를 갖는다」를 클래스 하나로 적는다</h3>
+  <p>
+    <code>Lidar</code>와 <code>Sonar</code> 위에 <code>Sensor</code>를 두고, <code>read()</code>를 거기에도 둔다.
+    그러면 <code>read_any</code>는 <code>Sensor &amp;</code> 하나만 받으면 되고 <code>if</code>가 사라진다. 아직 아무 센서도 아닌 <code>Sensor</code>의 <code>read()</code>는 <code>-1</code>을 돌려주게 했다.
+  </p>
+
+  <h3>2단계 (v2) — 기반 클래스 <code>Sensor</code>를 두고 <code>if</code>를 없앤다</h3>
+  <div class="codelabel bad">고치기 전 (v1)</div>
+  <pre class="lang-cpp before"><code>class Lidar
+{
 public:
   Lidar() : buf_(360, 0.83f) {}
-  float read() override { return buf_.at(0); }
-  ...</code></pre>
-
-  <div class="codelabel bad">변형 — virtual 을 뗀 판</div>
-  <pre class="lang-cpp before"><code>class Sensor {
-public:
-  float read() { return -1.0f; }               // virtual 이 없다 — 정적 타입(참조의 타입)을 보고 정한다
+  float read() { return buf_.at(0); }
+  // …
 };
 
-class Lidar : public Sensor {
+float read_any(int kind, Lidar &amp; l, Sonar &amp; s)
+{
+  if (kind == 0) { return l.read(); }
+  else if (kind == 1) { return s.read(); }
+  return -1.0f;
+}
+  // main 에서
+    std::cout &lt;&lt; "  kind 0 → " &lt;&lt; read_any(0, lidar, sonar) &lt;&lt; " m\n";</code></pre>
+
+  <div class="codelabel good">고친 뒤 (v2)</div>
+  <pre class="lang-cpp after"><code>class Sensor                     // 기반 클래스 — 모든 센서에 공통인 것
+{
+public:
+  float read() { return -1.0f; }   // 아직 아무 센서도 아니니 -1
+};
+
+class Lidar : public Sensor      // 파생 클래스 — Sensor 를 물려받는다
+{
 public:
   Lidar() : buf_(360, 0.83f) {}
-  float read() { return buf_.at(0); }            // override 를 붙일 수 없다 — 위가 virtual 이 아니다
-  ...</code></pre>
+  float read() { return buf_.at(0); }
+  // …
+};
+
+float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다 — 기반 클래스 참조로 받는다
+  // main 에서
+    std::cout &lt;&lt; "  lidar → " &lt;&lt; read_any(lidar) &lt;&lt; " m\n";</code></pre>
+
+  <h3>실제로 나온 출력 — 값이 틀렸다</h3>
   <pre><code>① 상속 — 종류를 따지지 않는다
   lidar → -1 m
   sonar → -1 m</code></pre>
-
-  <!-- fullcode "변형 — virtual 을 뗀 main.cpp (2단계에서 세 줄만 다르다)" build="g++ -std=c++17 -O2 -o sensors main.cpp && ./sensors"
-       l10_raii/steps/step2_novirtual.cpp as main.cpp
+  <!-- fullcode "전체 코드 — v2 (2단계 · 상속) main.cpp" build="cmake --build build && ./build/sensors"
+       l10_raii/steps/step2/main.cpp
   -->
 <details class="fullcode">
-  <summary>변형 — virtual 을 뗀 main.cpp (2단계에서 세 줄만 다르다)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o sensors main.cpp &amp;&amp; ./sensors</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 — 상속·다형성과 RAII
+  <summary>전체 코드 — v2 (2단계 · 상속) main.cpp</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/sensors</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 센서 읽기 — v2 (2단계: 상속. 기반 클래스 Sensor 를 두고 물려받는다)
 #include &lt;iostream&gt;
 #include &lt;vector&gt;
 
-class Sensor {
+class Sensor                     // 기반 클래스 — 모든 센서에 공통인 것
+{
 public:
-  float read() { return -1.0f; }               // virtual 이 없다 — 정적 타입(참조의 타입)을 보고 정한다
+  float read() { return -1.0f; }   // 아직 아무 센서도 아니니 -1
 };
 
-class Lidar : public Sensor {
+class Lidar : public Sensor      // 파생 클래스 — Sensor 를 물려받는다
+{
 public:
-  Lidar() : buf_(360, 0.83f) {}                 // 원소 360개를 전부 0.83 으로 채운다
-  float read() { return buf_.at(0); }            // override 를 붙일 수 없다 — 위가 virtual 이 아니다
+  Lidar() : buf_(360, 0.83f) {}
+  float read() { return buf_.at(0); }
 private:
   std::vector&lt;float&gt; buf_;
 };
 
-class Sonar : public Sensor {
+class Sonar : public Sensor
+{
 public:
   Sonar() : dist_(1.2f) {}
   float read() { return dist_; }
@@ -457,7 +337,7 @@ private:
   float dist_;
 };
 
-float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다
+float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다 — 기반 클래스 참조로 받는다
 
 int main()
 {
@@ -472,56 +352,249 @@ int main()
 }</code></pre></div>
 </details>
 <!-- /fullcode -->
-
   <div class="interp">
-    <strong>해석:</strong> <code>Lidar</code>와 <code>Sonar</code>에 <code>read()</code>가 멀쩡히 있는데 <strong>둘 다 <code>-1</code>이 나왔다.</strong>
-    <code>read_any</code>는 <code>Sensor &amp;</code>라는 <strong>기반 클래스 참조</strong>로 잡고 있다.
-    이때 참조의 타입 <code>Sensor</code>를 <strong>정적 타입</strong>(static type), 실제로 들어 있는 객체의 타입 <code>Lidar</code>를 <strong>동적 타입</strong>(dynamic type)이라고 한다.
-    <code>virtual</code>이 없으니 <strong>정적 타입의 함수</strong>가 불렸다.
-    <strong>정적 타입과 동적 타입이 다를 수 있다</strong>는 것이 요점이다.
-    <code>virtual</code>은 <em>"정적 타입 말고 동적 타입을 보고 정하라"</em>는 뜻이고, 그렇게 정해지는 것을 <strong>다형성</strong>(polymorphism)이라고 한다.
-    <strong>이 한 줄이 ④절의 가상 소멸자 이야기 전체를 미리 설명한다</strong> — 소멸자도 함수이기 때문이다.
+    <strong>해석:</strong> <code>if</code>는 없어졌는데 <strong>둘 다 <code>-1</code>이 나왔다.</strong> <code>Lidar</code>와 <code>Sonar</code>에 <code>read()</code>가 멀쩡히 있는데도 <strong><code>Sensor</code>의 <code>read()</code></strong>가 불렸다.
+    상속만으로는 부족하다. 왜 그런지, 무엇이 더 필요한지가 다음 절이다.
   </div>
 
-  <h3><code>= 0</code>이 붙으면 추상 클래스가 되어 객체를 만들 수 없다</h3>
-  <p>
-    2단계 파일로 돌아가서, <code>main</code>에 <code>Sensor plain;</code> 한 줄을 넣어 봤다.
-    <strong>실제로 나온 오류다.</strong>
-  </p>
-  <pre class="lang-sh"><code>$ g++ -std=c++17 -O2 -o sensors main.cpp
-main.cpp: In function ‘int main()’:
-main.cpp:32:12: error: cannot declare variable ‘plain’ to be of abstract type ‘Sensor’
-   32 |     Sensor plain;                      // 순수 가상 함수가 남은 추상 클래스로 객체를 만들려 했다
-      |            ^~~~~
-main.cpp:5:7: note:   because the following virtual functions are pure within ‘Sensor’:
-    5 | class Sensor {
-      |       ^~~~~~
-main.cpp:7:17: note:     ‘virtual float Sensor::read()’</code></pre>
+  <!-- ── ③ 가상 함수 ── -->
+  <h2 id="virtual">③ 가상 함수와 다형성 — 실제 객체의 함수가 불리게 한다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
-  <!-- fullcode "변형 — Sensor plain; 한 줄을 넣은 main.cpp (컴파일이 안 된다)" build="g++ -std=c++17 -O2 -o sensors main.cpp"
-       l10_raii/steps/step2_abstract.cpp as main.cpp
+  <h3>개념 — 정적 타입과 동적 타입</h3>
+  <p>
+    <code>read_any(Sensor &amp; s)</code> 안에서 <code>s</code>의 타입은 둘로 나뉜다.
+    참조를 선언한 타입 <code>Sensor</code>가 <strong>정적 타입</strong>(static type)이고, 실제로 들어 있는 객체의 타입 <code>Lidar</code>가 <strong>동적 타입</strong>(dynamic type)이다.
+    상속 덕에 <strong>이 둘이 다를 수 있다.</strong>
+  </p>
+  <p>
+    <code>s.read()</code>를 부를 때 <strong>어느 타입의 <code>read()</code>를 부를지</strong>가 문제다.
+    <code>virtual</code>이 없는 멤버 함수는 <strong>정적 타입</strong>을 보고 컴파일할 때 정한다 — 그래서 v2에서 <code>Sensor::read()</code>가 불렸다.
+    기반 클래스에서 함수 앞에 <code>virtual</code>을 붙이면 <strong>가상 함수</strong>(virtual function)가 되고, <strong>동적 타입</strong>을 보고 실행할 때 정한다.
+    기반 클래스 참조 하나로 여러 파생 클래스의 함수를 골라 부르는 이 성질을 <strong>다형성</strong>(polymorphism)이라고 한다.
+  </p>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>가운데 열</strong>이 「무엇을 보고 정하나」다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>기반 클래스의 함수가</th><th>무엇을 보고 정하나</th><th>실제로 불리는 것</th><th>언제 정해지나</th></tr>
+    <tr><td><code>virtual</code>이 없다</td><td><strong>정적 타입</strong> (참조·포인터의 타입)</td><td><code>Sensor::read</code></td><td>컴파일할 때</td></tr>
+    <tr><td><code>virtual</code>이 있다</td><td><strong>동적 타입</strong> (실제 객체의 타입)</td><td><code>Lidar::read</code></td><td>실행할 때</td></tr>
+  </table>
+  </div>
+  <p>
+    가상 함수 뒤에 <code>= 0</code>을 붙이면 <strong>순수 가상 함수</strong>(pure virtual function)다. 「기반 클래스에는 내용이 없고, <strong>파생 클래스가 반드시 채운다</strong>」는 뜻이다.
+    순수 가상 함수가 하나라도 남아 있는 클래스를 <strong>추상 클래스</strong>(abstract class)라고 하고, <strong>추상 클래스로는 객체를 만들 수 없다.</strong>
+    <code>Sensor</code>처럼 「종류가 정해지지 않은 것」은 객체가 있을 이유가 없으니, 이쪽이 <code>-1</code>을 돌려주는 것보다 정확하다.
+  </p>
+
+  <h3>예제에 적용 — <code>Sensor::read()</code>를 순수 가상 함수로</h3>
+  <p><code>-1</code>을 돌려주던 줄 하나를 바꾼다. 파생 클래스의 <code>read()</code>는 그대로다.</p>
+
+  <h3>3단계 (v3) — <code>virtual</code>과 <code>= 0</code></h3>
+  <div class="codelabel bad">고치기 전 (v2)</div>
+  <pre class="lang-cpp before"><code>class Sensor
+{
+public:
+  float read() { return -1.0f; }   // virtual 이 없다 — 정적 타입을 보고 정한다
+};</code></pre>
+  <div class="codelabel good">고친 뒤 (v3)</div>
+  <pre class="lang-cpp after"><code>class Sensor
+{
+public:
+  virtual float read() = 0;      // 가상 함수. = 0 은 「내용은 파생 클래스가 채운다」
+};</code></pre>
+
+  <h3>실제로 나온 출력 — 값이 맞아졌다</h3>
+  <pre><code>① 상속 — 종류를 따지지 않는다
+  lidar → 0.83 m
+  sonar → 1.2 m</code></pre>
+  <!-- fullcode "전체 코드 — v3 (3단계 · 가상 함수) main.cpp" build="cmake --build build && ./build/sensors"
+       l10_raii/steps/step3/main.cpp
   -->
 <details class="fullcode">
-  <summary>변형 — Sensor plain; 한 줄을 넣은 main.cpp (컴파일이 안 된다)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o sensors main.cpp</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 — 상속·다형성과 RAII
+  <summary>전체 코드 — v3 (3단계 · 가상 함수) main.cpp</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/sensors</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 센서 읽기 — v3 (3단계: 가상 함수. 동적 타입의 read() 가 불린다)
 #include &lt;iostream&gt;
 #include &lt;vector&gt;
 
-class Sensor {
+class Sensor                     // 기반 클래스 — 모든 센서에 공통인 것
+{
 public:
-  virtual float read() = 0;      // &quot;읽는 함수는 반드시 있다. 내용은 자식이 채운다&quot;
+  virtual float read() = 0;      // 가상 함수. = 0 은 「내용은 파생 클래스가 채운다」
 };
 
-class Lidar : public Sensor {
+class Lidar : public Sensor      // 파생 클래스 — Sensor 를 물려받는다
+{
 public:
-  Lidar() : buf_(360, 0.83f) {}                 // 원소 360개를 전부 0.83 으로 채운다
+  Lidar() : buf_(360, 0.83f) {}
+  float read() { return buf_.at(0); }
+private:
+  std::vector&lt;float&gt; buf_;
+};
+
+class Sonar : public Sensor
+{
+public:
+  Sonar() : dist_(1.2f) {}
+  float read() { return dist_; }
+private:
+  float dist_;
+};
+
+float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다 — 기반 클래스 참조로 받는다
+
+int main()
+{
+  std::cout &lt;&lt; &quot;① 상속 — 종류를 따지지 않는다\n&quot;;
+  {
+    Lidar lidar;
+    Sonar sonar;
+    std::cout &lt;&lt; &quot;  lidar → &quot; &lt;&lt; read_any(lidar) &lt;&lt; &quot; m\n&quot;;
+    std::cout &lt;&lt; &quot;  sonar → &quot; &lt;&lt; read_any(sonar) &lt;&lt; &quot; m\n&quot;;
+  }
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+  <div class="interp">
+    <strong>해석:</strong> <code>read_any</code>는 한 글자도 안 바뀌었다. <code>virtual</code> 한 단어로 <strong>동적 타입의 함수</strong>가 불리게 됐다.
+    이득은 코드가 짧아진 것이 아니다 — 센서를 하나 더 붙일 때 <strong>새 클래스 하나만 만들면 되고, <code>read()</code>를 안 채우면 빌드가 멈춘다.</strong>
+    v1은 빠뜨려도 프로그램이 돌았다. 이 강의에서 「좋은 코드」는 대체로 이런 뜻이다 — 틀렸을 때 조용하지 않은 코드.
+  </div>
+
+  <h3>추상 클래스로 객체를 만들면 — 컴파일러가 막는다</h3>
+  <p>v3의 <code>main</code>에 <code>Sensor plain;</code> 한 줄을 넣어 봤다.</p>
+  <pre class="lang-sh"><code>$ cmake --build build
+/home/ubuntu/robot_ws/l10/sensors/main.cpp: In function ‘int main()’:
+/home/ubuntu/robot_ws/l10/sensors/main.cpp:37:12: error: cannot declare variable ‘plain’ to be of abstract type ‘Sensor’
+   37 |     Sensor plain;                     // 순수 가상 함수가 남은 추상 클래스로 객체를 만들려 했다
+      |            ^~~~~
+/home/ubuntu/robot_ws/l10/sensors/main.cpp:8:17: note:     ‘virtual float Sensor::read()’</code></pre>
+  <!-- fullcode "전체 코드 — v3 변형 (Sensor plain; 을 넣은 판 · 빌드가 막힌다) main.cpp" build="cmake --build build   # error 가 난다"
+       l10_raii/steps/variants/abstract/main.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — v3 변형 (Sensor plain; 을 넣은 판 · 빌드가 막힌다) main.cpp</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build   # error 가 난다</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 센서 읽기 — v3 변형 (추상 클래스로 객체를 만들려 한 판 · 빌드가 막힌다)
+#include &lt;iostream&gt;
+#include &lt;vector&gt;
+
+class Sensor                     // 기반 클래스 — 모든 센서에 공통인 것
+{
+public:
+  virtual float read() = 0;      // 가상 함수. = 0 은 「내용은 파생 클래스가 채운다」
+};
+
+class Lidar : public Sensor      // 파생 클래스 — Sensor 를 물려받는다
+{
+public:
+  Lidar() : buf_(360, 0.83f) {}
+  float read() { return buf_.at(0); }
+private:
+  std::vector&lt;float&gt; buf_;
+};
+
+class Sonar : public Sensor
+{
+public:
+  Sonar() : dist_(1.2f) {}
+  float read() { return dist_; }
+private:
+  float dist_;
+};
+
+float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다 — 기반 클래스 참조로 받는다
+
+int main()
+{
+  std::cout &lt;&lt; &quot;① 상속 — 종류를 따지지 않는다\n&quot;;
+  {
+    Lidar lidar;
+    Sonar sonar;
+    Sensor plain;                     // 순수 가상 함수가 남은 추상 클래스로 객체를 만들려 했다
+    std::cout &lt;&lt; &quot;  lidar → &quot; &lt;&lt; read_any(lidar) &lt;&lt; &quot; m\n&quot;;
+    std::cout &lt;&lt; &quot;  sonar → &quot; &lt;&lt; read_any(sonar) &lt;&lt; &quot; m\n&quot;;
+  }
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+  <p>
+    <code>abstract type</code>이 추상 클래스라는 뜻이고, <code>note:</code> 줄이 어느 함수가 비어 있는지 짚어 준다.
+    <strong>이 메시지가 파생 클래스 이름으로 뜨면 함수 이름을 잘못 적지 않았는지부터 본다.</strong> 다음 절이 그 이야기다.
+  </p>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    센서 종류를 <code>if</code> / <code>else if</code>로 나눠 처리하는 코드가 있어. 기반 클래스 하나를 만들고 종류마다 상속하는 구조로 바꿔 줘. 공통 함수는 순수 가상 함수로 해 줘. 바뀌는 부분만 보여 줘.
+  </div>
+
+  <div class="box trap">
+    <div class="boxtitle">📌 ROS 2에서 이 문법을 만나는 자리 (읽기용 — 오늘 빌드하지 않는다)</div>
+    <pre class="lang-cpp"><code>class MyNode : public rclcpp::Node
+{
+  // ...
+};</code></pre>
+    <p>
+      ROS 2에서 노드를 만드는 코드는 거의 예외 없이 이 한 줄로 시작한다.
+      <code>rclcpp::Node</code>가 기반 클래스이고, 이름 짓기·발행·구독·파라미터를 통째로 물려받아 우리 것만 얹는다.
+      19회에서 제대로 다룬다.
+    </p>
+  </div>
+
+  <!-- ── ④ override ── -->
+  <h2 id="override">④ <code>override</code> — 재정의하려는 의도를 컴파일러에게 적어 둔다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <h3>개념 — 재정의는 이름·인자·<code>const</code>가 정확히 같아야 성립한다</h3>
+  <p>
+    파생 클래스가 기반 클래스의 가상 함수를 자기 것으로 다시 정의하는 것을 <strong>재정의</strong>(override)라고 한다.
+    재정의가 성립하려면 <strong>이름, 인자 목록, <code>const</code> 여부</strong>가 기반 클래스의 것과 정확히 같아야 한다.
+    하나라도 다르면 재정의가 아니라 <strong>그 이름의 새 함수를 하나 더 만든 것</strong>이 되고, 컴파일러는 그것을 잘못으로 보지 않는다.
+  </p>
+  <p>
+    <code>override</code>는 파생 클래스 쪽 함수의 인자 목록 뒤에 붙이는 <strong>지정자</strong>(specifier)다.
+    「이 함수는 기반 클래스의 가상 함수를 재정의하는 것이다」라고 선언하는 것이고, <strong>동작은 바꾸지 않는다.</strong>
+    하는 일은 하나다 — 그런 가상 함수가 위에 없으면 <strong>컴파일을 멈춘다.</strong>
+  </p>
+  <pre class="lang-cpp"><code>float read() override { ... }   // 「위에 virtual float read() 가 있어야 한다」 — 없으면 컴파일 오류</code></pre>
+
+  <h3>예제에 적용 — 파생 클래스의 <code>read()</code>에 붙인다</h3>
+  <h3>4단계 (v4) — <code>override</code>를 붙인다</h3>
+  <div class="codelabel bad">고치기 전 (v3)</div>
+  <pre class="lang-cpp before"><code>  float read() { return buf_.at(0); }     // Lidar
+  float read() { return dist_; }          // Sonar</code></pre>
+  <div class="codelabel good">고친 뒤 (v4)</div>
+  <pre class="lang-cpp after"><code>  float read() override { return buf_.at(0); }     // Lidar
+  float read() override { return dist_; }          // Sonar</code></pre>
+  <p>출력은 v3과 같다. 무엇이 달라졌는지는 <strong>실수를 냈을 때</strong> 보인다.</p>
+  <!-- fullcode "전체 코드 — v4 (4단계 · override) main.cpp" build="cmake --build build && ./build/sensors"
+       l10_raii/steps/step4/main.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — v4 (4단계 · override) main.cpp</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/sensors</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 센서 읽기 — v4 (4단계: override 지정자)
+#include &lt;iostream&gt;
+#include &lt;vector&gt;
+
+class Sensor                     // 기반 클래스 — 모든 센서에 공통인 것
+{
+public:
+  virtual float read() = 0;      // 가상 함수. = 0 은 「내용은 파생 클래스가 채운다」
+};
+
+class Lidar : public Sensor      // 파생 클래스 — Sensor 를 물려받는다
+{
+public:
+  Lidar() : buf_(360, 0.83f) {}
   float read() override { return buf_.at(0); }
 private:
   std::vector&lt;float&gt; buf_;
 };
 
-class Sonar : public Sensor {
+class Sonar : public Sensor
+{
 public:
   Sonar() : dist_(1.2f) {}
   float read() override { return dist_; }
@@ -529,13 +602,12 @@ private:
   float dist_;
 };
 
-float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다
+float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다 — 기반 클래스 참조로 받는다
 
 int main()
 {
   std::cout &lt;&lt; &quot;① 상속 — 종류를 따지지 않는다\n&quot;;
   {
-    Sensor plain;                      // 순수 가상 함수가 남은 추상 클래스로 객체를 만들려 했다
     Lidar lidar;
     Sonar sonar;
     std::cout &lt;&lt; &quot;  lidar → &quot; &lt;&lt; read_any(lidar) &lt;&lt; &quot; m\n&quot;;
@@ -546,60 +618,43 @@ int main()
 </details>
 <!-- /fullcode -->
 
-  <p>
-    <code>abstract type</code>은 <strong>추상 클래스</strong>(abstract class) — <strong>"순수 가상 함수(<code>= 0</code>)가 남아 있어 객체를 만들 수 없는 클래스"</strong>라는 뜻이다.
-    <code>note:</code> 줄이 어느 함수가 비어 있는지까지 짚어 준다.
-    <code>= 0</code>인 함수를 하나라도 안 채웠다는 신호이므로,
-    <strong>이 메시지가 자식 클래스 이름으로 뜨면 함수 이름을 잘못 적지 않았는지부터 본다.</strong>
-    바로 다음 절이 그 이야기다.
-  </p>
-
-  <!-- ── ③ override ── -->
-  <h2 id="override">③ <code>override</code> 한 단어가 오타를 컴파일 오류로 바꾼다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
-
-  <h3>실험 1 — <code>override</code>가 붙어 있을 때 오타를 내면</h3>
-  <p>
-    2단계 파일에서 <code>Lidar::read()</code>를 <code>raed()</code>로 잘못 쳤다고 하자. 한 글자다.
-    <strong>실제로 그렇게 고쳐서 컴파일해 본 화면이다.</strong>
-  </p>
-  <div class="codelabel good">2단계 — 원래 코드</div>
-  <pre class="lang-cpp after"><code>  float read() override { return buf_.at(0); }</code></pre>
-
-  <div class="codelabel bad">변형 — read 를 raed 로 잘못 친 판</div>
+  <h3>실험 1 — <code>override</code>가 붙어 있을 때 이름을 잘못 치면</h3>
+  <p>v4에서 <code>Lidar::read()</code>를 <code>raed()</code>로 잘못 쳤다고 하자. 한 글자다.</p>
+  <div class="codelabel bad">v4 변형 — read 를 raed 로 잘못 친 판</div>
   <pre class="lang-cpp before"><code>  float raed() override { return buf_.at(0); }   // 오타. override 가 붙어 있다</code></pre>
-  <pre class="lang-sh"><code>$ g++ -std=c++17 -O2 -o sensors main.cpp
-main.cpp:13:9: error: ‘float Lidar::raed()’ marked ‘override’, but does not override
-   13 |   float raed() override { return buf_.at(0); }   // 오타. override 가 붙어 있다
+  <pre class="lang-sh"><code>$ cmake --build build
+/home/ubuntu/robot_ws/l10/sensors/main.cpp:15:9: error: ‘float Lidar::raed()’ marked ‘override’, but does not override
+   15 |   float raed() override { return buf_.at(0); }   // 오타. override 가 붙어 있다
       |         ^~~~
-main.cpp: In function ‘int main()’:
-main.cpp:32:11: error: cannot declare variable ‘lidar’ to be of abstract type ‘Lidar’
-   32 |     Lidar lidar;
-      |           ^~~~~</code></pre>
-
-  <!-- fullcode "변형 — read 를 raed 로 잘못 친 main.cpp (컴파일이 안 된다)" build="g++ -std=c++17 -O2 -o sensors main.cpp"
-       l10_raii/steps/step2_typo_override.cpp as main.cpp
+/home/ubuntu/robot_ws/l10/sensors/main.cpp: In function ‘int main()’:
+/home/ubuntu/robot_ws/l10/sensors/main.cpp:35:11: error: cannot declare variable ‘lidar’ to be of abstract type ‘Lidar’</code></pre>
+  <!-- fullcode "전체 코드 — v4 변형 (raed 오타 · override 가 있어 빌드가 막힌다) main.cpp" build="cmake --build build   # error 가 난다"
+       l10_raii/steps/variants/typo_override/main.cpp
   -->
 <details class="fullcode">
-  <summary>변형 — read 를 raed 로 잘못 친 main.cpp (컴파일이 안 된다)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o sensors main.cpp</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 — 상속·다형성과 RAII
+  <summary>전체 코드 — v4 변형 (raed 오타 · override 가 있어 빌드가 막힌다) main.cpp</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build   # error 가 난다</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 센서 읽기 — v4 변형 (read 를 raed 로 잘못 친 판 · override 가 있어 빌드가 막힌다)
 #include &lt;iostream&gt;
 #include &lt;vector&gt;
 
-class Sensor {
+class Sensor                     // 기반 클래스 — 모든 센서에 공통인 것
+{
 public:
-  virtual float read() = 0;      // &quot;읽는 함수는 반드시 있다. 내용은 자식이 채운다&quot;
+  virtual float read() = 0;      // 가상 함수. = 0 은 「내용은 파생 클래스가 채운다」
 };
 
-class Lidar : public Sensor {
+class Lidar : public Sensor      // 파생 클래스 — Sensor 를 물려받는다
+{
 public:
-  Lidar() : buf_(360, 0.83f) {}                 // 원소 360개를 전부 0.83 으로 채운다
+  Lidar() : buf_(360, 0.83f) {}
   float raed() override { return buf_.at(0); }   // 오타. override 가 붙어 있다
 private:
   std::vector&lt;float&gt; buf_;
 };
 
-class Sonar : public Sensor {
+class Sonar : public Sensor
+{
 public:
   Sonar() : dist_(1.2f) {}
   float read() override { return dist_; }
@@ -607,7 +662,7 @@ private:
   float dist_;
 };
 
-float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다
+float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다 — 기반 클래스 참조로 받는다
 
 int main()
 {
@@ -622,73 +677,52 @@ int main()
 }</code></pre></div>
 </details>
 <!-- /fullcode -->
-
   <p>
-    <strong>어느 줄을 보나:</strong> 첫 오류 <code>marked ‘override’, but does not override</code>가 전부다.
-    <em>"네가 <code>override</code>라고 적었는데, 위에 그런 이름의 함수가 없다"</em>는 뜻이다.
-    <strong>실행하기 전에, 그것도 정확한 줄 번호와 함께 잡혔다.</strong>
-    두 번째 오류는 ②절 끝에서 본 것이다 — <code>read()</code>가 안 채워졌으니 <code>Lidar</code>도 추상 클래스라 객체를 만들 수 없다.
+    첫 오류 <code>marked ‘override’, but does not override</code>가 전부다 — 「<code>override</code>라고 적었는데 위에 그런 이름의 함수가 없다」.
+    <strong>실행하기 전에, 정확한 줄 번호와 함께 잡혔다.</strong> 두 번째 오류는 ③절 끝에서 본 것이다 — <code>read()</code>가 안 채워졌으니 <code>Lidar</code>도 추상 클래스다.
   </p>
 
   <h3>실험 2 — <code>override</code>가 없을 때 같은 오타를 내면</h3>
   <p>
-    같은 오타인데 <code>override</code>만 뗀 파일이다.
-    이번엔 기반 클래스에 기본 동작 <code>-1</code>을 넣어 뒀다 — <strong>AI가 기반 클래스를 만들 때 흔히 이렇게 준다.</strong>
-    2단계 파일에서 <strong>두 줄</strong>이 다르다.
+    같은 오타인데 <code>override</code>만 뗀 판이다. 기반 클래스에는 <code>= 0</code> 대신 기본 동작 <code>-1</code>을 넣어 뒀다 — <strong>AI가 기반 클래스를 만들 때 흔히 이렇게 준다.</strong>
   </p>
-  <div class="codelabel good">2단계 — 원래 코드</div>
-  <pre class="lang-cpp after"><code>class Sensor {
-public:
-  virtual float read() = 0;
-};
-
-class Lidar : public Sensor {
-public:
-  Lidar() : buf_(360, 0.83f) {}
-  float read() override { return buf_.at(0); }
-  ...</code></pre>
-
-  <div class="codelabel bad">변형 — 기본 동작을 넣고 override 없이 raed 로 친 판</div>
-  <pre class="lang-cpp before"><code>class Sensor {
-public:
-  virtual float read() { return -1.0f; }       // 기반 클래스의 기본 동작
-};
-
-class Lidar : public Sensor {
-public:
-  Lidar() : buf_(360, 0.83f) {}
-  float raed() { return buf_.at(0); }            // 오타. override 를 안 붙였다
-  ...</code></pre>
-  <pre class="lang-sh"><code>$ g++ -std=c++17 -O2 -Wall -o sensors main.cpp
-$ ./sensors
+  <div class="codelabel bad">v4 변형 — 기본 동작을 넣고 override 없이 raed 로 친 판</div>
+  <pre class="lang-cpp before"><code>  virtual float read() { return -1.0f; }   // 기반 클래스의 기본 동작 — AI가 흔히 이렇게 준다
+  // …
+  float raed() { return buf_.at(0); }            // 오타. override 를 안 붙였다</code></pre>
+  <pre class="lang-sh"><code>$ cmake --build build
+[100%] Built target sensors
+$ ./build/sensors
 ① 상속 — 종류를 따지지 않는다
   lidar → -1 m
   sonar → 1.2 m</code></pre>
-
-  <!-- fullcode "변형 — override 없이 raed 로 잘못 친 main.cpp (컴파일이 된다)" build="g++ -std=c++17 -O2 -Wall -o sensors main.cpp && ./sensors"
-       l10_raii/steps/step2_typo_plain.cpp as main.cpp
+  <!-- fullcode "전체 코드 — v4 변형 (raed 오타 · override 가 없어 빌드가 된다) main.cpp" build="cmake --build build && ./build/sensors"
+       l10_raii/steps/variants/typo_plain/main.cpp
   -->
 <details class="fullcode">
-  <summary>변형 — override 없이 raed 로 잘못 친 main.cpp (컴파일이 된다)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -Wall -o sensors main.cpp &amp;&amp; ./sensors</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 — 상속·다형성과 RAII
+  <summary>전체 코드 — v4 변형 (raed 오타 · override 가 없어 빌드가 된다) main.cpp</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/sensors</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 센서 읽기 — v4 변형 (기본 동작을 넣고 override 없이 raed 로 친 판 · 빌드가 된다)
 #include &lt;iostream&gt;
 #include &lt;vector&gt;
 
-class Sensor {
+class Sensor                     // 기반 클래스 — 모든 센서에 공통인 것
+{
 public:
-  virtual float read() { return -1.0f; }       // 기반 클래스의 기본 동작
+  virtual float read() { return -1.0f; }   // 기반 클래스의 기본 동작 — AI가 흔히 이렇게 준다
 };
 
-class Lidar : public Sensor {
+class Lidar : public Sensor      // 파생 클래스 — Sensor 를 물려받는다
+{
 public:
-  Lidar() : buf_(360, 0.83f) {}                 // 원소 360개를 전부 0.83 으로 채운다
+  Lidar() : buf_(360, 0.83f) {}
   float raed() { return buf_.at(0); }            // 오타. override 를 안 붙였다
 private:
   std::vector&lt;float&gt; buf_;
 };
 
-class Sonar : public Sensor {
+class Sonar : public Sensor
+{
 public:
   Sonar() : dist_(1.2f) {}
   float read() override { return dist_; }
@@ -696,7 +730,7 @@ private:
   float dist_;
 };
 
-float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다
+float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다 — 기반 클래스 참조로 받는다
 
 int main()
 {
@@ -711,121 +745,101 @@ int main()
 }</code></pre></div>
 </details>
 <!-- /fullcode -->
-
   <div class="box trap">
     <div class="boxtitle">⚠️ 경고 한 줄 없이 통과했다</div>
     <p>
-      <code>-Wall</code>(모든 경고 켜기)을 붙였는데도 <strong>아무 말이 없다.</strong>
       컴파일러 입장에서는 틀린 것이 없다 — <code>raed()</code>라는 <strong>새 함수를 하나 만든 것</strong>일 뿐이니까.
-    </p>
-    <p>
-      결과만 다르다. 실제 거리는 <strong>0.83 m</strong>인데 <code>lidar → -1 m</code>이 나왔다.
-      <strong>기반 클래스의 기본값이 그대로 나온 것이다.</strong> 초음파 쪽은 멀쩡하니 더 헷갈린다.
-      로봇에서 이런 일이 나면 <em>"센서가 고장 났나"</em>부터 의심하게 된다.
+      결과만 다르다. 실제 거리는 <strong>0.83 m</strong>인데 <code>lidar → -1 m</code>이 나왔다. 기반 클래스의 기본값이 그대로 나온 것이다.
+      초음파 쪽은 멀쩡하니 더 헷갈린다. 로봇에서 이런 일이 나면 「센서가 고장 났나」부터 의심하게 된다.
       <strong>원인은 한 글자짜리 오타이고, 그것을 찾는 데 반나절이 든다.</strong>
     </p>
   </div>
-
-  <div class="tablewrap">
-  <table>
-    <tr><th></th><th><code>override</code>가 있을 때</th><th><code>override</code>가 없을 때</th></tr>
-    <tr><td>이름을 잘못 쳤다</td><td><strong>컴파일이 멈춘다</strong> — 줄 번호까지 나온다</td><td>통과한다. 경고도 없다</td></tr>
-    <tr><td>인자 타입을 잘못 썼다</td><td><strong>컴파일이 멈춘다</strong></td><td>통과한다</td></tr>
-    <tr><td>실행하면</td><td>—</td><td><strong>기반 클래스의 값이 나온다.</strong> 그게 답인 줄 안다</td></tr>
-    <tr><td>드는 비용</td><td>한 단어</td><td>없음</td></tr>
-  </table>
-  </div>
   <div class="interp">
-    <strong>해석:</strong> <code>override</code>는 <strong>동작을 바꾸지 않는다.</strong> 하는 일은 하나뿐이다 —
-    <em>"내 의도는 갈아 끼우는 것이었다"</em>를 코드에 적어 두는 것.
-    그 한 줄 덕분에 <strong>의도와 실제가 어긋나는 순간 컴파일러가 멈춰 준다.</strong>
-    <strong>한 단어를 적어서 반나절을 사는 거래다.</strong>
+    <strong>해석:</strong> <code>override</code> 한 단어가 <strong>「조용히 틀리는 실수」를 「컴파일 오류」로 바꾼다.</strong> 비용은 한 단어다.
+    그래서 AI가 준 코드에서 가상 함수를 재정의하는 자리마다 이 단어가 있는지 본다.
+    붙였더니 컴파일이 안 되는 곳이 있으면 <strong>거기가 진짜 버그</strong>다.
   </div>
-
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
-    이 코드에서 기반 클래스의 함수를 갈아 끼우는 함수 전부에 override 를 붙여 줘. 붙였더니 컴파일이 안 되는 곳이 있으면 고치지 말고 먼저 알려 줘 — 거기가 진짜 버그일 수 있어.
+    이 코드에서 기반 클래스의 가상 함수를 재정의하는 함수 전부에 <code>override</code>를 붙여 줘. 붙였더니 컴파일이 안 되는 곳이 있으면 고치지 말고 먼저 알려 줘 — 거기가 진짜 버그일 수 있어.
   </div>
 
-  <!-- ── ④ 가상 소멸자 ── -->
-  <h2 id="dtor">④ 가상 소멸자가 없으면 소멸자가 <strong>아예 안 불린다</strong> <span class="badge b-red">🔴 사람이 한다</span></h2>
+  <!-- ── ⑤ 가상 소멸자 ── -->
+  <h2 id="dtor">⑤ 가상 소멸자 — 없으면 파생 클래스 소멸자가 <strong>아예 안 불린다</strong> <span class="badge b-red">🔴 사람이 한다</span></h2>
 
+  <h3>개념 — 소멸자도 멤버 함수라서 ③절의 규칙이 그대로 적용된다</h3>
   <p>
-    여기가 이 회차의 핵심이다. 실험 파일들은 접어 두고 <strong>2단계 파일로 돌아온다.</strong>
-    소멸자가 언제 불리는지 눈으로 보려면 <strong>생성자와 소멸자가 화면에 한 줄씩 찍게</strong> 만들면 된다.
+    9회에서 소멸자는 <strong>객체가 사라질 때 자동으로 불리는 멤버 함수</strong>라고 했다. 멤버 함수이므로 <strong>③절의 규칙이 그대로 적용된다</strong> —
+    <code>virtual</code>이 없으면 <strong>정적 타입</strong>의 소멸자가, 있으면 <strong>동적 타입</strong>의 소멸자가 불린다.
+  </p>
+  <p>
+    문제가 되는 상황은 하나다. <strong>기반 클래스 포인터(정적 타입 <code>Sensor</code>)가 파생 클래스 객체(동적 타입 <code>Lidar</code>)를 잡고 있다가 지울 때.</strong>
+    소멸자가 <code>virtual</code>이 아니면 <code>Sensor</code>의 소멸자만 불리고 <strong><code>Lidar</code>의 소멸자는 불리지 않는다.</strong>
+    <code>Lidar</code>가 들고 있던 원소 360개는 돌아오지 않는다. 오류도 크래시도 없다.
+  </p>
+  <p>
+    그래서 규칙은 한 줄이다. <strong>가상 함수가 하나라도 있는 클래스의 소멸자는 <code>virtual</code>로 만든다.</strong>
+    가상 함수가 있다는 것은 기반 클래스 참조나 포인터로 다룰 클래스라는 뜻이고, 그러면 언젠가 그 포인터로 지우게 되기 때문이다.
+    파생 클래스의 소멸자는 따로 <code>virtual</code>을 안 적어도 가상 함수가 된다 — 기반 클래스에서 물려받는다.
   </p>
 
-  <h3>3단계 — 생성자·소멸자가 말을 하게 하고, 기반 클래스 포인터로 잡아 본다</h3>
+  <h3>예제에 적용 — 생성자·소멸자가 말을 하게 하고, 기반 클래스 포인터로 잡아 본다</h3>
   <p>
-    세 클래스에 소멸자를 넣고 생성자에 출력을 넣는다. <code>Sensor</code>의 소멸자에는 <strong>일부러 <code>virtual</code>을 안 붙였다</strong> —
-    AI가 기반 클래스를 만들어 줄 때 가장 흔한 모양이 이것이기 때문이다.
+    소멸자가 불리는지 눈으로 보려면 <strong>생성자와 소멸자가 화면에 한 줄씩 찍게</strong> 하면 된다.
+    세 클래스에 소멸자를 넣는데, <code>Sensor</code>의 소멸자에는 <strong>일부러 <code>virtual</code>을 안 붙였다</strong> — AI가 기반 클래스를 만들어 줄 때 가장 흔한 모양이 이것이다.
+    그리고 <code>main</code>에 「정적 타입은 <code>Sensor</code>, 동적 타입은 <code>Lidar</code>」인 블록을 하나 더한다.
   </p>
-  <div class="codelabel bad">고치기 전</div>
-  <pre class="lang-cpp before"><code>#include &lt;iostream&gt;
-#include &lt;vector&gt;
 
-class Sensor {
+  <h3>5단계 (v5) — 소멸자가 말을 한다. <code>virtual</code>은 아직 없다</h3>
+  <div class="codelabel bad">고치기 전 (v4)</div>
+  <pre class="lang-cpp before"><code>class Sensor
+{
 public:
-  virtual float read() = 0;      // "읽는 함수는 반드시 있다. 내용은 자식이 채운다"
+  virtual float read() = 0;
 };
-
-class Lidar : public Sensor {
+class Lidar : public Sensor
+{
 public:
   Lidar() : buf_(360, 0.83f) {}
   float read() override { return buf_.at(0); }
-  ...
-class Sonar : public Sensor {
-public:
-  Sonar() : dist_(1.2f) {}
-  ...</code></pre>
+  // …</code></pre>
+  <div class="codelabel good">고친 뒤 (v5)</div>
+  <pre class="lang-cpp after"><code>#include &lt;memory&gt;         // std::unique_ptr, std::make_unique
 
-  <div class="codelabel good">고친 뒤</div>
-  <pre class="lang-cpp after"><code>#include &lt;iostream&gt;
-#include &lt;vector&gt;
-#include &lt;memory&gt;         // std::unique_ptr, std::make_unique
-
-class Sensor {
+class Sensor
+{
 public:
-  virtual float read() = 0;      // "읽는 함수는 반드시 있다. 내용은 자식이 채운다"
+  virtual float read() = 0;
   ~Sensor() { std::cout &lt;&lt; "  [Sensor 소멸자]\n"; }   // virtual 이 없다
 };
-
-class Lidar : public Sensor {
+class Lidar : public Sensor
+{
 public:
   Lidar() : buf_(360, 0.83f) { std::cout &lt;&lt; "  [Lidar 생성] 원소 360개 확보\n"; }
   ~Lidar() { std::cout &lt;&lt; "  [Lidar 소멸자] 원소 360개 반납\n"; }
   float read() override { return buf_.at(0); }
-  ...
-class Sonar : public Sensor {
-public:
-  Sonar() : dist_(1.2f) { std::cout &lt;&lt; "  [Sonar 생성]\n"; }
-  ~Sonar() { std::cout &lt;&lt; "  [Sonar 소멸자]\n"; }
-  ...</code></pre>
-  <p>
-    그리고 <code>main</code>에 블록 하나를 더한다. ①에서는 <code>Lidar lidar;</code>처럼 <strong>객체를 직접</strong> 들고 있었다.
-    이번에는 <strong>포인터의 정적 타입은 <code>Sensor</code>이고 객체의 동적 타입은 <code>Lidar</code></strong>인 상황을 만든다.
-  </p>
-  <pre class="lang-cpp"><code>  // … ① 블록은 그대로 …
+  // … Sonar 도 같은 모양으로 …
+
+  // main 에 블록 하나를 더한다
   std::cout &lt;&lt; "② 정적 타입은 Sensor, 동적 타입은 Lidar — 중괄호를 나가면\n";
   {
     std::unique_ptr&lt;Sensor&gt; s = std::make_unique&lt;Lidar&gt;();
     s-&gt;read();
-  }
-  return 0;</code></pre>
+  }</code></pre>
 
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
     <dl>
       <dt>std::unique_ptr&lt;Sensor&gt; s = std::make_unique&lt;Lidar&gt;();</dt>
-      <dd><strong>포인터의 정적 타입은 <code>Sensor</code>인데 실제 객체의 동적 타입은 <code>Lidar</code></strong>인 상황을 만드는 줄이다.
-          <code>make_unique</code>가 객체를 만들고, <strong>스마트 포인터</strong>(smart pointer) <code>unique_ptr</code>가 그 주소를 붙잡는다.
-          <strong>중괄호를 벗어나면 붙잡고 있던 것을 알아서 지운다</strong> — 그래서 이 예제에 쓴 것이다.
-          <code>s-&gt;read()</code>의 화살표는 7회에서 본 것이다. 지금은 <strong>모양만 봐 두면 된다.</strong></dd>
+      <dd><code>make_unique&lt;Lidar&gt;()</code>가 <code>Lidar</code> 객체를 만들고, <strong>스마트 포인터</strong>(smart pointer) <code>unique_ptr&lt;Sensor&gt;</code>가 그 주소를 붙잡는다.
+          정적 타입은 <code>Sensor</code>, 동적 타입은 <code>Lidar</code>인 상황이 이 한 줄로 만들어진다.
+          <strong>중괄호를 벗어나면 붙잡고 있던 객체를 알아서 지운다</strong> — 그때 어느 소멸자가 불리는지가 이 절의 관전 대상이다.
+          <code>s-&gt;read()</code>의 화살표는 7회의 것이다.</dd>
     </dl>
     <p class="later">제대로 다루는 곳: 12회(스마트 포인터 — <code>unique_ptr</code>·<code>shared_ptr</code>·소유권)</p>
   </div>
 
-  <h3>실제로 나온 출력 — ①에도 줄이 늘고, ②는 두 줄뿐이다</h3>
+  <h3>실제로 나온 출력 — ②에 줄이 하나 없다</h3>
   <pre><code>① 상속 — 종류를 따지지 않는다
   [Lidar 생성] 원소 360개 확보
   [Sonar 생성]
@@ -838,26 +852,26 @@ public:
 ② 정적 타입은 Sensor, 동적 타입은 Lidar — 중괄호를 나가면
   [Lidar 생성] 원소 360개 확보
   [Sensor 소멸자]</code></pre>
-  <p class="src">잰 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0)</p>
-
-  <!-- fullcode "전체 코드 — main.cpp (3단계 · 소멸자가 말을 한다, virtual 은 아직 없다)" build="g++ -std=c++17 -O2 -o sensors main.cpp && ./sensors"
-       l10_raii/steps/step3.cpp as main.cpp
+  <!-- fullcode "전체 코드 — v5 (5단계 · 소멸자가 말을 한다, virtual 은 아직 없다) main.cpp" build="cmake --build build && ./build/sensors"
+       l10_raii/steps/step5/main.cpp
   -->
 <details class="fullcode">
-  <summary>전체 코드 — main.cpp (3단계 · 소멸자가 말을 한다, virtual 은 아직 없다)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o sensors main.cpp &amp;&amp; ./sensors</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 — 상속·다형성과 RAII
+  <summary>전체 코드 — v5 (5단계 · 소멸자가 말을 한다, virtual 은 아직 없다) main.cpp</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/sensors</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 센서 읽기 — v5 (5단계: 생성자·소멸자가 말을 한다. 기반 클래스 소멸자에 virtual 이 없다)
 #include &lt;iostream&gt;
-#include &lt;vector&gt;
 #include &lt;memory&gt;         // std::unique_ptr, std::make_unique
+#include &lt;vector&gt;
 
-class Sensor {
+class Sensor                     // 기반 클래스 — 모든 센서에 공통인 것
+{
 public:
-  virtual float read() = 0;      // &quot;읽는 함수는 반드시 있다. 내용은 자식이 채운다&quot;
+  virtual float read() = 0;      // 가상 함수. = 0 은 「내용은 파생 클래스가 채운다」
   ~Sensor() { std::cout &lt;&lt; &quot;  [Sensor 소멸자]\n&quot;; }   // virtual 이 없다
 };
 
-class Lidar : public Sensor {
+class Lidar : public Sensor      // 파생 클래스 — Sensor 를 물려받는다
+{
 public:
   Lidar() : buf_(360, 0.83f) { std::cout &lt;&lt; &quot;  [Lidar 생성] 원소 360개 확보\n&quot;; }
   ~Lidar() { std::cout &lt;&lt; &quot;  [Lidar 소멸자] 원소 360개 반납\n&quot;; }
@@ -866,7 +880,8 @@ private:
   std::vector&lt;float&gt; buf_;
 };
 
-class Sonar : public Sensor {
+class Sonar : public Sensor
+{
 public:
   Sonar() : dist_(1.2f) { std::cout &lt;&lt; &quot;  [Sonar 생성]\n&quot;; }
   ~Sonar() { std::cout &lt;&lt; &quot;  [Sonar 소멸자]\n&quot;; }
@@ -875,7 +890,7 @@ private:
   float dist_;
 };
 
-float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다
+float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다 — 기반 클래스 참조로 받는다
 
 int main()
 {
@@ -896,75 +911,52 @@ int main()
 }</code></pre></div>
 </details>
 <!-- /fullcode -->
-
   <div class="box trap">
     <div class="boxtitle">⚠️ ②에서 「Lidar 소멸자」 줄이 아예 안 찍혔다</div>
     <p>
-      ①을 먼저 본다. 객체를 직접 들고 있던 ①에서는 <strong>소멸자가 전부 불렸다</strong> —
-      <code>Sonar</code>가 먼저, <code>Lidar</code>가 나중에, 그리고 각각 뒤에 <code>Sensor</code>가 따라온다.
-      <strong>같은 클래스인데 ②에서는 두 줄이다.</strong>
-      없는 줄은 <code>[Lidar 소멸자] 원소 360개 반납</code>이다. <strong>그 소멸자가 불리지 않았다.</strong>
-      <code>float</code> 원소 360개가 그대로 남았고 프로그램이 끝날 때까지 돌아오지 않았다.
+      ①을 먼저 본다. 객체를 직접 들고 있던 ①(정적 타입 = 동적 타입 = <code>Lidar</code>)에서는 소멸자가 전부 불렸다 —
+      파생 클래스 것이 먼저, 기반 클래스 것이 뒤에.
+      <strong>같은 클래스인데 ②에서는 두 줄이다.</strong> 없는 줄은 <code>[Lidar 소멸자] 원소 360개 반납</code>이다.
+      정적 타입 <code>Sensor</code>의 소멸자만 불렸다. 개념 절에서 말한 그대로다.
     </p>
     <p>
-      그런데 화면 어디에도 <strong>오류 메시지가 없다.</strong> 크래시도 없다.
-      종료 코드도 정상이다. <strong>"동작한다"는 기준으로 보면 이 파일은 통과한 프로그램이다.</strong>
-    </p>
-    <p>
-      <strong>그래서 이 버그는 오래 산다.</strong> 콘솔 프로그램에서는 몇 초 뒤 프로그램이 끝나면서
-      운영체제가 어차피 다 회수하므로 아무도 눈치채지 못한다.
-      <strong>문제는 몇 시간씩 돌아야 하는 로봇 노드에서 터진다.</strong>
-      센서 객체를 만들고 지우기를 반복할수록 안 돌아온 원소 360개가 쌓인다.
+      화면 어디에도 <strong>오류 메시지가 없다.</strong> 크래시도 없고 종료 코드도 정상이다.
+      「동작한다」는 기준으로 보면 통과한 프로그램이다. <strong>그래서 이 버그는 오래 산다.</strong>
+      콘솔 프로그램은 몇 초 뒤 끝나면서 운영체제가 어차피 다 회수하므로 아무도 눈치채지 못한다.
+      문제는 몇 시간씩 돌아야 하는 로봇 노드에서 터진다 — 센서 객체를 만들고 지우기를 반복할수록 안 돌아온 원소 360개가 쌓인다.
     </p>
   </div>
 
-  <h3>왜 그런가 — ②절의 한 줄이 그대로 적용된다</h3>
-  <p>
-    정적 타입은 <code>Sensor</code>이고 동적 타입은 <code>Lidar</code>다.
-    <code>virtual</code>이 없으면 <strong>정적 타입을 보고 정한다.</strong>
-    그래서 <code>Sensor</code>의 소멸자만 불렸다.
-    <strong>소멸자도 함수이기 때문에 규칙이 똑같다.</strong>
-    ①에서 멀쩡했던 이유도 같다 — 거기서는 정적 타입과 동적 타입이 같았다(<code>Lidar lidar;</code>).
-  </p>
-
-  <h3>4단계 — 한 단어만 붙이면 된다</h3>
-  <div class="codelabel bad">AI가 보통 주는 기반 클래스 🔴</div>
-  <pre class="lang-cpp before"><code>class Sensor {
-public:
-  virtual float read() = 0;
-  ~Sensor() { std::cout &lt;&lt; "  [Sensor 소멸자]\n"; }   // ← virtual 이 없다
-};</code></pre>
-  <div class="codelabel good">한 단어만 붙이면 된다</div>
-  <pre class="lang-cpp after"><code>class Sensor {
-public:
-  virtual float read() = 0;
-  virtual ~Sensor() { std::cout &lt;&lt; "  [Sensor 소멸자]\n"; }   // ← 이것 하나
-};</code></pre>
-
-  <h3>실제로 나온 출력 — ②에 한 줄이 생겼다</h3>
+  <h3>6단계 (v6) — 한 단어만 붙이면 된다</h3>
+  <div class="codelabel bad">고치기 전 (v5) — AI가 보통 주는 기반 클래스 🔴</div>
+  <pre class="lang-cpp before"><code>  ~Sensor() { std::cout &lt;&lt; "  [Sensor 소멸자]\n"; }   // virtual 이 없다</code></pre>
+  <div class="codelabel good">고친 뒤 (v6)</div>
+  <pre class="lang-cpp after"><code>  virtual ~Sensor() { std::cout &lt;&lt; "  [Sensor 소멸자]\n"; }   // 가상 소멸자</code></pre>
+  <h3>실제로 나온 출력 — ②에 한 줄이 돌아왔다</h3>
   <pre><code>② 정적 타입은 Sensor, 동적 타입은 Lidar — 중괄호를 나가면
   [Lidar 생성] 원소 360개 확보
   [Lidar 소멸자] 원소 360개 반납
   [Sensor 소멸자]</code></pre>
-
-  <!-- fullcode "전체 코드 — main.cpp (4단계 · virtual 소멸자)" build="g++ -std=c++17 -O2 -o sensors main.cpp && ./sensors"
-       l10_raii/steps/step4.cpp as main.cpp
+  <!-- fullcode "전체 코드 — v6 (6단계 · 가상 소멸자) main.cpp" build="cmake --build build && ./build/sensors"
+       l10_raii/steps/step6/main.cpp
   -->
 <details class="fullcode">
-  <summary>전체 코드 — main.cpp (4단계 · virtual 소멸자)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o sensors main.cpp &amp;&amp; ./sensors</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 — 상속·다형성과 RAII
+  <summary>전체 코드 — v6 (6단계 · 가상 소멸자) main.cpp</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/sensors</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 센서 읽기 — v6 (6단계: 가상 소멸자)
 #include &lt;iostream&gt;
-#include &lt;vector&gt;
 #include &lt;memory&gt;         // std::unique_ptr, std::make_unique
+#include &lt;vector&gt;
 
-class Sensor {
+class Sensor                     // 기반 클래스 — 모든 센서에 공통인 것
+{
 public:
-  virtual float read() = 0;      // &quot;읽는 함수는 반드시 있다. 내용은 자식이 채운다&quot;
-  virtual ~Sensor() { std::cout &lt;&lt; &quot;  [Sensor 소멸자]\n&quot;; }
+  virtual float read() = 0;      // 가상 함수. = 0 은 「내용은 파생 클래스가 채운다」
+  virtual ~Sensor() { std::cout &lt;&lt; &quot;  [Sensor 소멸자]\n&quot;; }   // 가상 소멸자
 };
 
-class Lidar : public Sensor {
+class Lidar : public Sensor      // 파생 클래스 — Sensor 를 물려받는다
+{
 public:
   Lidar() : buf_(360, 0.83f) { std::cout &lt;&lt; &quot;  [Lidar 생성] 원소 360개 확보\n&quot;; }
   ~Lidar() { std::cout &lt;&lt; &quot;  [Lidar 소멸자] 원소 360개 반납\n&quot;; }
@@ -973,7 +965,8 @@ private:
   std::vector&lt;float&gt; buf_;
 };
 
-class Sonar : public Sensor {
+class Sonar : public Sensor
+{
 public:
   Sonar() : dist_(1.2f) { std::cout &lt;&lt; &quot;  [Sonar 생성]\n&quot;; }
   ~Sonar() { std::cout &lt;&lt; &quot;  [Sonar 소멸자]\n&quot;; }
@@ -982,7 +975,7 @@ private:
   float dist_;
 };
 
-float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다
+float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다 — 기반 클래스 참조로 받는다
 
 int main()
 {
@@ -1003,126 +996,50 @@ int main()
 }</code></pre></div>
 </details>
 <!-- /fullcode -->
-
   <figure>
     <img src="assets/img/10_virtual_dtor.png"
          alt="두 경우를 비교한 흐름도. 왼쪽 virtual 이 없을 때는 Sensor 소멸자만 불리고 Lidar 소멸자는 안 불린다. 오른쪽 virtual 을 붙였을 때는 Lidar 소멸자가 먼저 불리고 이어서 Sensor 소멸자가 불린다">
-    <figcaption>왼쪽이 3단계, 오른쪽이 4단계다. 왼쪽 아래 상자를 본다. <strong>「Lidar 소멸자는 안 불린다」</strong>가 이 회차의 한 줄이다.
-      오른쪽에서는 <strong>자식 → 부모 순서</strong>로 둘 다 불린다.</figcaption>
+    <figcaption>왼쪽이 v5, 오른쪽이 v6이다. 왼쪽 아래 상자를 본다. <strong>「Lidar 소멸자는 안 불린다」</strong>가 이 회차의 한 줄이다.
+      오른쪽에서는 <strong>파생 → 기반 순서</strong>로 둘 다 불린다.</figcaption>
   </figure>
-
   <div class="box trap">
     <div class="boxtitle">🔴 AI가 하는 실수 — 기반 클래스에 가상 소멸자를 안 붙인다</div>
     <p>
       <code>read()</code>에는 <code>virtual</code>을 잘 붙인다. <strong>소멸자에서만 빠뜨린다.</strong>
-      이유는 짐작할 만하다. 인터넷의 짧은 예제들은 대부분 상속을 <strong>동작</strong>을 설명하려고 쓰지
-      <strong>수명</strong>을 설명하려고 쓰지 않는다. 그런 예제에는 소멸자 자체가 없다.
-      <strong>AI는 그 흔한 모양을 재현한다.</strong>
-    </p>
-    <p>
-      <strong>그리고 이 실수는 검사로 안 걸린다.</strong> 빌드가 되고, 테스트가 통과하고, 로봇도 돈다.
+      인터넷의 짧은 예제들은 대부분 상속을 <strong>동작</strong>을 설명하려고 쓰지 <strong>수명</strong>을 설명하려고 쓰지 않아서, 그런 예제에는 소멸자 자체가 없다.
+      AI는 그 흔한 모양을 재현한다. 그리고 이 실수는 빌드도 테스트도 통과한다.
       <strong>그래서 사람이 눈으로 볼 항목 목록에 넣어 두는 수밖에 없다.</strong>
     </p>
     <div class="prompt">
       <button onclick="copyPrompt(this)">복사</button>
-      이 코드에 다른 클래스가 상속하는 기반 클래스가 있으면 소멸자에 virtual 이 붙어 있는지 확인해 줘. 안 붙은 곳이 있으면 어느 클래스인지 알려 주고 붙여 줘. 상속을 안 당하는 클래스에는 붙이지 마.
+      이 코드에 다른 클래스가 상속하는 기반 클래스가 있으면 소멸자에 <code>virtual</code>이 붙어 있는지 확인해 줘. 안 붙은 곳이 있으면 어느 클래스인지 알려 주고 붙여 줘. 상속을 안 당하는 클래스에는 붙이지 마.
     </div>
   </div>
 
-  <div class="box firstseen">
-    <p class="boxtitle">🆕 소멸자 옆에서 보게 되는 것 하나 더</p>
-    <dl>
-      <dt>~Lidar() noexcept { … }</dt>
-      <dd><strong>"이 함수는 오류를 위로 던지지 않는다"</strong>는 약속이다.
-          소멸자에는 <strong>적어 주지 않아도 이미 붙어 있다.</strong>
-          4단계 파일의 <code>Lidar</code> 소멸자에 이 단어를 붙여 돌려 봤더니 <strong>출력이 한 글자도 안 달라졌다.</strong>
-          여기서는 <strong>ROS 2 코드에서 이 단어를 봤을 때 놀라지 않게</strong> 모양만 보여 주는 것이다.</dd>
-    </dl>
-  </div>
-  <div class="codelabel">4단계</div>
-  <pre class="lang-cpp"><code>  ~Lidar() { std::cout &lt;&lt; "  [Lidar 소멸자] 원소 360개 반납\n"; }</code></pre>
+  <!-- ── ⑥ RAII ── -->
+  <h2 id="raii">⑥ RAII — 자원의 수명을 객체의 수명에 묶는다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
-  <div class="codelabel">변형 — noexcept 를 적은 판 (출력이 같다)</div>
-  <pre class="lang-cpp"><code>  ~Lidar() noexcept { std::cout &lt;&lt; "  [Lidar 소멸자] 원소 360개 반납\n"; }</code></pre>
-
-  <!-- fullcode "변형 — noexcept 를 적은 main.cpp (4단계와 출력이 같다)" build="g++ -std=c++17 -O2 -o sensors main.cpp && ./sensors"
-       l10_raii/steps/step4_noexcept.cpp as main.cpp
-  -->
-<details class="fullcode">
-  <summary>변형 — noexcept 를 적은 main.cpp (4단계와 출력이 같다)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o sensors main.cpp &amp;&amp; ./sensors</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 — 상속·다형성과 RAII
-#include &lt;iostream&gt;
-#include &lt;vector&gt;
-#include &lt;memory&gt;         // std::unique_ptr, std::make_unique
-
-class Sensor {
-public:
-  virtual float read() = 0;      // &quot;읽는 함수는 반드시 있다. 내용은 자식이 채운다&quot;
-  virtual ~Sensor() { std::cout &lt;&lt; &quot;  [Sensor 소멸자]\n&quot;; }
-};
-
-class Lidar : public Sensor {
-public:
-  Lidar() : buf_(360, 0.83f) { std::cout &lt;&lt; &quot;  [Lidar 생성] 원소 360개 확보\n&quot;; }
-  ~Lidar() noexcept { std::cout &lt;&lt; &quot;  [Lidar 소멸자] 원소 360개 반납\n&quot;; }
-  float read() override { return buf_.at(0); }
-private:
-  std::vector&lt;float&gt; buf_;
-};
-
-class Sonar : public Sensor {
-public:
-  Sonar() : dist_(1.2f) { std::cout &lt;&lt; &quot;  [Sonar 생성]\n&quot;; }
-  ~Sonar() { std::cout &lt;&lt; &quot;  [Sonar 소멸자]\n&quot;; }
-  float read() override { return dist_; }
-private:
-  float dist_;
-};
-
-float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다
-
-int main()
-{
-  std::cout &lt;&lt; &quot;① 상속 — 종류를 따지지 않는다\n&quot;;
-  {
-    Lidar lidar;
-    Sonar sonar;
-    std::cout &lt;&lt; &quot;  lidar → &quot; &lt;&lt; read_any(lidar) &lt;&lt; &quot; m\n&quot;;
-    std::cout &lt;&lt; &quot;  sonar → &quot; &lt;&lt; read_any(sonar) &lt;&lt; &quot; m\n&quot;;
-  }
-
-  std::cout &lt;&lt; &quot;② 정적 타입은 Sensor, 동적 타입은 Lidar — 중괄호를 나가면\n&quot;;
-  {
-    std::unique_ptr&lt;Sensor&gt; s = std::make_unique&lt;Lidar&gt;();
-    s-&gt;read();
-  }
-  return 0;
-}</code></pre></div>
-</details>
-<!-- /fullcode -->
-
-  <!-- ── ⑤ RAII ── -->
-  <h2 id="raii">⑤ RAII — 객체가 사라질 때 뒷정리가 자동으로 된다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
-
+  <h3>개념 — 얻은 것은 소멸자가 돌려준다</h3>
   <p>
-    앞 절에서 계속 본 것이 있다. <strong>중괄호를 벗어나는 순간 소멸자가 불렸다.</strong>
-    아무도 부르라고 시키지 않았는데 불렸다.
-    <strong>이 성질 하나에 이름을 붙인 것이 RAII다.</strong>
+    메모리, 열어 둔 파일, 잠근 자물쇠처럼 <strong>쓰고 나면 반드시 돌려줘야 하는 것</strong>을 <strong>자원</strong>(resource)이라고 한다.
+    자원의 어려움은 얻는 쪽이 아니라 돌려주는 쪽에 있다 — 돌려주는 줄을 빠뜨리면 새고, 함수를 빠져나가는 길이 여럿이면 길마다 챙겨야 한다.
   </p>
-  <div class="interp">
-    <strong>한 문장:</strong> <strong>객체가 사라질 때 뒷정리가 자동으로 된다.</strong><br>
-    원래 이름은 Resource Acquisition Is Initialization인데 <strong>이 이름은 잊어도 된다.</strong>
-    기억할 것은 <strong>「중괄호가 곧 수명이다」</strong> 한 줄이다.
-  </div>
-
-  <h3>5단계 — 중괄호를 겹쳐 본다</h3>
   <p>
-    이번에는 새 문법이 없다. 4단계 파일의 <code>Lidar</code>와 <code>Sonar</code>를 <strong>중괄호 두 겹 안에</strong> 만들어 볼 뿐이다.
-    소멸자가 이미 말을 하니 <strong>언제 사라지는지가 그대로 찍힌다.</strong>
+    C++의 답은 <strong>자원을 객체 안에 넣는 것</strong>이다. <strong>생성자에서 자원을 얻고, 소멸자에서 돌려준다.</strong>
+    9회 ③절에서 본 대로 소멸자는 객체가 스코프를 벗어날 때 자동으로 불리므로 — <code>return</code>으로 나가든 오류로 튀어나가든 —
+    <strong>자원은 객체가 사라지는 순간 반드시 돌아온다.</strong> 이 설계 방식을 <strong>RAII</strong>라고 한다.
+    Resource Acquisition Is Initialization(자원 획득이 곧 초기화)의 약자인데 이름은 잊어도 된다. 기억할 것은 <strong>「스코프가 곧 수명이다」</strong> 한 줄이다.
   </p>
-  <pre class="lang-cpp"><code>  // … ② 블록은 그대로 …
-  std::cout &lt;&lt; "③ 중괄호 하나가 곧 수명이다\n";
+  <p>
+    앞 절까지 계속 본 것이 이미 RAII다. <code>Lidar</code>는 생성자에서 원소 360개를 얻고 소멸자에서 반납했고, 아무도 반납하라고 시키지 않았다.
+    <code>std::vector</code>와 <code>std::string</code>도 같은 방식으로 만들어져 있다.
+  </p>
+
+  <h3>예제에 적용 — 중괄호를 겹쳐서 수명을 눈으로 본다</h3>
+  <p>새 문법은 없다. v6의 <code>Lidar</code>와 <code>Sonar</code>를 <strong>중괄호 두 겹 안에</strong> 만들어 볼 뿐이다. 소멸자가 이미 말을 하니 언제 사라지는지가 그대로 찍힌다.</p>
+
+  <h3>7단계 (v7) — 블록 하나를 더한다</h3>
+  <pre class="lang-cpp"><code>  std::cout &lt;&lt; "③ 중괄호 하나가 곧 수명이다\n";
   {
     Lidar a;
     {
@@ -1130,10 +1047,8 @@ int main()
       std::cout &lt;&lt; "  안쪽 중괄호 안이다\n";
     }
     std::cout &lt;&lt; "  안쪽을 빠져나왔다\n";
-  }
-  return 0;</code></pre>
-
-  <h3>실제로 나온 출력 — 중괄호가 곧 수명이다</h3>
+  }</code></pre>
+  <h3>실제로 나온 출력</h3>
   <pre><code>③ 중괄호 하나가 곧 수명이다
   [Lidar 생성] 원소 360개 확보
   [Sonar 생성]
@@ -1143,25 +1058,26 @@ int main()
   안쪽을 빠져나왔다
   [Lidar 소멸자] 원소 360개 반납
   [Sensor 소멸자]</code></pre>
-
-  <!-- fullcode "전체 코드 — main.cpp (5단계 · 중괄호가 곧 수명)" build="g++ -std=c++17 -O2 -o sensors main.cpp && ./sensors"
-       l10_raii/steps/step5.cpp as main.cpp
+  <!-- fullcode "전체 코드 — v7 (7단계 · 스코프가 곧 수명) main.cpp" build="cmake --build build && ./build/sensors"
+       l10_raii/steps/step7/main.cpp
   -->
 <details class="fullcode">
-  <summary>전체 코드 — main.cpp (5단계 · 중괄호가 곧 수명)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o sensors main.cpp &amp;&amp; ./sensors</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 — 상속·다형성과 RAII
+  <summary>전체 코드 — v7 (7단계 · 스코프가 곧 수명) main.cpp</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/sensors</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 센서 읽기 — v7 (7단계: 스코프가 곧 수명이다)
 #include &lt;iostream&gt;
-#include &lt;vector&gt;
 #include &lt;memory&gt;         // std::unique_ptr, std::make_unique
+#include &lt;vector&gt;
 
-class Sensor {
+class Sensor                     // 기반 클래스 — 모든 센서에 공통인 것
+{
 public:
-  virtual float read() = 0;      // &quot;읽는 함수는 반드시 있다. 내용은 자식이 채운다&quot;
-  virtual ~Sensor() { std::cout &lt;&lt; &quot;  [Sensor 소멸자]\n&quot;; }
+  virtual float read() = 0;      // 가상 함수. = 0 은 「내용은 파생 클래스가 채운다」
+  virtual ~Sensor() { std::cout &lt;&lt; &quot;  [Sensor 소멸자]\n&quot;; }   // 가상 소멸자
 };
 
-class Lidar : public Sensor {
+class Lidar : public Sensor      // 파생 클래스 — Sensor 를 물려받는다
+{
 public:
   Lidar() : buf_(360, 0.83f) { std::cout &lt;&lt; &quot;  [Lidar 생성] 원소 360개 확보\n&quot;; }
   ~Lidar() { std::cout &lt;&lt; &quot;  [Lidar 소멸자] 원소 360개 반납\n&quot;; }
@@ -1170,7 +1086,8 @@ private:
   std::vector&lt;float&gt; buf_;
 };
 
-class Sonar : public Sensor {
+class Sonar : public Sensor
+{
 public:
   Sonar() : dist_(1.2f) { std::cout &lt;&lt; &quot;  [Sonar 생성]\n&quot;; }
   ~Sonar() { std::cout &lt;&lt; &quot;  [Sonar 소멸자]\n&quot;; }
@@ -1179,7 +1096,7 @@ private:
   float dist_;
 };
 
-float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다
+float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다 — 기반 클래스 참조로 받는다
 
 int main()
 {
@@ -1210,39 +1127,39 @@ int main()
 }</code></pre></div>
 </details>
 <!-- /fullcode -->
+  <div class="interp">
+    <strong>해석:</strong> <code>[Sonar 소멸자]</code>가 <code>안쪽을 빠져나왔다</code>보다 <strong>먼저</strong> 찍혔다. 닫는 중괄호를 지나는 순간에 이미 소멸자가 끝났다는 뜻이다.
+    <code>[Lidar 소멸자]</code>는 맨 마지막이다 — 나중에 만든 것이 먼저 사라진다(9회 ③절).
+  </div>
 
+  <!-- ── ⑦ 표준 라이브러리의 RAII ── -->
+  <h2 id="stdraii">⑦ 파일도 잠금도 같은 원리다 — <code>std::ofstream</code> · <code>std::lock_guard</code> <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <h3>개념 — 표준 라이브러리의 자원 객체는 이미 RAII로 만들어져 있다</h3>
   <p>
-    <strong>어디를 보나:</strong> <code>[Sonar 소멸자]</code>가 <code>안쪽을 빠져나왔다</code>보다 <strong>먼저</strong> 찍혔다.
-    닫는 중괄호를 지나는 순간에 이미 소멸자가 끝났다는 뜻이다.
-    그리고 <code>[Lidar 소멸자]</code>는 맨 마지막이다 — <strong>나중에 만든 것이 먼저 사라진다.</strong>
+    우리가 만든 <code>Lidar</code>만 그런 것이 아니다. 표준 라이브러리에서 자원을 다루는 클래스는 <strong>전부 RAII로 만들어져 있다.</strong>
+    파일을 쓰는 <code>std::ofstream</code>은 생성자에서 파일을 열고 소멸자에서 닫는다.
+    자물쇠를 잠그는 <code>std::lock_guard</code>는 생성자에서 잠그고 소멸자에서 푼다.
+    그래서 <strong><code>close()</code>나 <code>unlock()</code>을 직접 부르는 줄이 없는 것이 정상</strong>이다.
   </p>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>가운데 「사람이 부르면」 열</strong>을 본다. 셋 다 부를 필요가 없다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>무엇을 잡나</th><th>사람이 부르면</th><th>안 부르면</th></tr>
+    <tr><td>메모리 (<code>std::vector</code>·<code>unique_ptr</code>)</td><td><code>delete</code> — <strong>빠뜨리면 샌다</strong></td><td>중괄호를 나갈 때 반납된다</td></tr>
+    <tr><td>파일 (<code>std::ofstream</code>)</td><td><code>close()</code> — 빠뜨리면 <strong>내용이 저장 안 될 수 있다</strong></td><td>중괄호를 나갈 때 닫힌다</td></tr>
+    <tr><td>잠금 (<code>std::lock_guard</code>)</td><td><code>unlock()</code> — 빠뜨리면 <strong>프로그램이 멈춘다</strong></td><td>중괄호를 나갈 때 풀린다</td></tr>
+  </table>
+  </div>
 
-  <figure>
-    <img src="assets/img/10_raii_scope.png"
-         alt="중괄호 블록 그림. 여는 중괄호에서 std::ofstream 이 열리고, 한 줄 쓴 뒤, 닫는 중괄호에서 자동으로 닫힌다는 화살표 설명이 붙어 있다">
-    <figcaption>오른쪽 화살표의 마지막 줄을 본다 — <strong>「닫는 중괄호 — 여기서 자동으로 닫힌다」.</strong>
-      이 그림에 <code>close()</code>라는 줄이 한 군데도 없다는 것이 요점이다. 다음 절에서 이 파일을 실제로 만든다.</figcaption>
-  </figure>
-
-  <!-- ── ⑥ 세 가지가 같은 원리 ── -->
-  <h2 id="three">⑥ 파일도 잠금도 메모리도 전부 같은 원리다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
-
-  <p>
-    우리가 만든 <code>Lidar</code>만 그런 것이 아니다. <strong>표준 라이브러리의 파일과 잠금도 똑같이 만들어져 있다.</strong>
-    하는 일은 전혀 다른데 정리되는 방식이 똑같다.
-  </p>
-
-  <h3>6단계 — 파일 하나를 쓰고, 자물쇠 하나를 잠근다</h3>
-  <p>맨 위에 헤더 셋과 자물쇠 하나가 늘고, <code>main</code>에 블록 둘이 늘어난다.</p>
-  <pre class="lang-cpp"><code>#include &lt;memory&gt;         // std::unique_ptr, std::make_unique
-#include &lt;fstream&gt;        // std::ofstream, std::ifstream
+  <h3>예제에 적용 — 파일 하나를 쓰고, 자물쇠 하나를 잠근다</h3>
+  <h3>8단계 (v8) — 헤더 셋과 블록 둘이 는다</h3>
+  <pre class="lang-cpp"><code>#include &lt;fstream&gt;        // std::ofstream, std::ifstream
 #include &lt;mutex&gt;          // std::mutex, std::lock_guard
 #include &lt;string&gt;
-  ...
-float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다
-
-std::mutex m;                  // 한 번에 한 사람만 들어가게 하는 자물쇠</code></pre>
-  <pre class="lang-cpp"><code>  // … ③ 블록은 그대로 …
+  // …
+std::mutex m;                  // 한 번에 한 갈래만 들어가게 하는 자물쇠
+  // …
   std::cout &lt;&lt; "④ 파일도 같은 원리다 — close() 를 부르지 않았다\n";
   {
     Lidar lidar;
@@ -1259,34 +1176,20 @@ std::mutex m;                  // 한 번에 한 사람만 들어가게 하는 �
     std::lock_guard&lt;std::mutex&gt; g(m);
     std::cout &lt;&lt; "  잠근 채로 일하는 중\n";
   }
-  std::cout &lt;&lt; "  중괄호를 나오면서 자동으로 풀렸다\n";
-  return 0;</code></pre>
-
+  std::cout &lt;&lt; "  중괄호를 나오면서 자동으로 풀렸다\n";</code></pre>
   <div class="box firstseen">
-    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것 — 자원을 잡는 세 가지</p>
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
     <dl>
       <dt>std::ofstream f("scan_log.txt")</dt>
-      <dd>파일을 <strong>쓰기용으로 연다</strong>. 이 줄에서 열리고, 중괄호를 나갈 때 닫힌다.
-          여기서는 <strong><code>close()</code>를 한 번도 부르지 않았는데도 내용이 저장됐다</strong>는 것을 보이려고 썼다.
-          <code>f &lt;&lt; …</code>는 <code>std::cout</code>과 같은 모양인데 화면 대신 파일로 간다.
-          읽기용은 <code>std::ifstream</code>이고 아래 줄에 나온다.</dd>
-
-      <dt>std::getline(in, line)</dt>
-      <dd>파일에서 <strong>한 줄</strong>을 읽어 <code>line</code>에 담는다.
-          여기서는 방금 쓴 내용이 실제로 저장됐는지 확인하는 데 썼다.</dd>
-
-      <dt>std::mutex m</dt>
-      <dd><strong>한 번에 한 사람만 들어가게 하는 자물쇠</strong>다.
-          여러 갈래가 동시에 같은 값을 건드리면 깨지므로, 그 자리를 잠그는 데 쓴다.
-          여기서는 잠금이 자동으로 풀리는 것을 보여 주기 위한 재료로만 썼다.</dd>
-
-      <dt>std::lock_guard&lt;std::mutex&gt; g(m)</dt>
-      <dd><strong>이 줄에서 잠그고 중괄호를 나갈 때 자동으로 푼다.</strong>
-          여기서는 <code>unlock()</code>을 부르지 않았는데도 풀리는 것을 보이려고 썼다.
-          <strong>자물쇠는 안 푸는 실수가 특히 무섭다</strong> — 프로그램이 그 자리에서 영원히 멈춘다.</dd>
+      <dd>파일을 <strong>쓰기용으로 연다.</strong> <code>f &lt;&lt; …</code>는 <code>std::cout</code>과 같은 모양인데 화면 대신 파일로 간다.
+          읽기용은 <code>std::ifstream</code>이고, <code>std::getline(in, line)</code>이 거기서 한 줄을 읽어 <code>line</code>에 담는다.
+          여기서는 <code>close()</code>를 한 번도 안 불렀는데 내용이 저장됐다는 것을 보이려고 썼다.</dd>
+      <dt>std::mutex m / std::lock_guard&lt;std::mutex&gt; g(m)</dt>
+      <dd><code>mutex</code>는 <strong>한 번에 한 갈래만 들어가게 하는 자물쇠</strong>다. 여러 갈래가 동시에 같은 값을 건드리면 깨지므로 그 자리를 잠그는 데 쓴다.
+          <code>lock_guard</code>는 <strong>이 줄에서 잠그고 중괄호를 나갈 때 자동으로 푼다.</strong>
+          여기서는 잠금이 자동으로 풀리는 것을 보여 주는 재료로만 썼다.</dd>
     </dl>
   </div>
-
   <h3>실제로 나온 출력</h3>
   <pre><code>④ 파일도 같은 원리다 — close() 를 부르지 않았다
   [Lidar 생성] 원소 360개 확보
@@ -1297,29 +1200,29 @@ std::mutex m;                  // 한 번에 한 사람만 들어가게 하는 �
 ⑤ 잠금(lock)도 같은 원리다 — unlock() 을 부르지 않았다
   잠근 채로 일하는 중
   중괄호를 나오면서 자동으로 풀렸다</code></pre>
-  <p class="src">잰 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0)</p>
-
-  <!-- fullcode "전체 코드 — main.cpp (6단계 · 파일과 잠금)" build="g++ -std=c++17 -O2 -o sensors main.cpp && ./sensors"
-       l10_raii/steps/step6.cpp as main.cpp
+  <!-- fullcode "전체 코드 — v8 (8단계 · 파일과 잠금) main.cpp" build="cmake --build build && ./build/sensors"
+       l10_raii/steps/step8/main.cpp
   -->
 <details class="fullcode">
-  <summary>전체 코드 — main.cpp (6단계 · 파일과 잠금)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o sensors main.cpp &amp;&amp; ./sensors</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 — 상속·다형성과 RAII
-#include &lt;iostream&gt;
-#include &lt;vector&gt;
-#include &lt;memory&gt;         // std::unique_ptr, std::make_unique
+  <summary>전체 코드 — v8 (8단계 · 파일과 잠금) main.cpp</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/sensors</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 센서 읽기 — v8 (8단계: 파일과 잠금도 같은 원리다)
 #include &lt;fstream&gt;        // std::ofstream, std::ifstream
+#include &lt;iostream&gt;
+#include &lt;memory&gt;         // std::unique_ptr, std::make_unique
 #include &lt;mutex&gt;          // std::mutex, std::lock_guard
 #include &lt;string&gt;
+#include &lt;vector&gt;
 
-class Sensor {
+class Sensor                     // 기반 클래스 — 모든 센서에 공통인 것
+{
 public:
-  virtual float read() = 0;      // &quot;읽는 함수는 반드시 있다. 내용은 자식이 채운다&quot;
-  virtual ~Sensor() { std::cout &lt;&lt; &quot;  [Sensor 소멸자]\n&quot;; }
+  virtual float read() = 0;      // 가상 함수. = 0 은 「내용은 파생 클래스가 채운다」
+  virtual ~Sensor() { std::cout &lt;&lt; &quot;  [Sensor 소멸자]\n&quot;; }   // 가상 소멸자
 };
 
-class Lidar : public Sensor {
+class Lidar : public Sensor      // 파생 클래스 — Sensor 를 물려받는다
+{
 public:
   Lidar() : buf_(360, 0.83f) { std::cout &lt;&lt; &quot;  [Lidar 생성] 원소 360개 확보\n&quot;; }
   ~Lidar() { std::cout &lt;&lt; &quot;  [Lidar 소멸자] 원소 360개 반납\n&quot;; }
@@ -1328,7 +1231,8 @@ private:
   std::vector&lt;float&gt; buf_;
 };
 
-class Sonar : public Sensor {
+class Sonar : public Sensor
+{
 public:
   Sonar() : dist_(1.2f) { std::cout &lt;&lt; &quot;  [Sonar 생성]\n&quot;; }
   ~Sonar() { std::cout &lt;&lt; &quot;  [Sonar 소멸자]\n&quot;; }
@@ -1337,9 +1241,9 @@ private:
   float dist_;
 };
 
-float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다
+float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다 — 기반 클래스 참조로 받는다
 
-std::mutex m;                  // 한 번에 한 사람만 들어가게 하는 자물쇠
+std::mutex m;                  // 한 번에 한 갈래만 들어가게 하는 자물쇠
 
 int main()
 {
@@ -1388,60 +1292,38 @@ int main()
 }</code></pre></div>
 </details>
 <!-- /fullcode -->
-
-  <p>
-    ④를 눈여겨본다. <strong><code>f.close()</code>를 부른 줄이 코드에 없다.</strong>
-    그런데 중괄호를 나온 뒤 파일을 다시 열어 읽었더니 <code>라이다 값 0.83</code>이 그대로 들어 있었다.
-    <strong>중괄호를 나가면서 <code>ofstream</code>의 소멸자가 파일을 닫고 내용을 밀어 넣은 것이다.</strong>
-    같은 중괄호 안에 있던 <code>Lidar</code>도 그 순간 같이 사라졌다 — 우리가 만든 클래스와 표준 라이브러리가 같은 규칙을 따른다.
-  </p>
-  <p>
-    ⑤도 마찬가지다. <strong><code>unlock()</code>을 부른 줄이 없는데</strong> 잠금이 풀렸다.
-    <code>lock_guard</code>의 소멸자가 대신 풀어 줬다.
-  </p>
-
-  <p class="readme-first">무엇을 먼저 볼지: <strong>가운데 「사람이 부르면」 열</strong>을 본다. 셋 다 부를 필요가 없다.</p>
-  <div class="tablewrap">
-  <table>
-    <tr><th>무엇을 잡나</th><th>사람이 부르면</th><th>안 부르면</th></tr>
-    <tr><td>메모리 (<code>std::vector</code>·<code>unique_ptr</code>)</td><td><code>delete</code> — <strong>빠뜨리면 샌다</strong></td><td>중괄호를 나갈 때 반납된다</td></tr>
-    <tr><td>파일 (<code>std::ofstream</code>)</td><td><code>close()</code> — 빠뜨리면 <strong>내용이 저장 안 될 수 있다</strong></td><td>중괄호를 나갈 때 닫힌다</td></tr>
-    <tr><td>잠금 (<code>std::lock_guard</code>)</td><td><code>unlock()</code> — 빠뜨리면 <strong>프로그램이 멈춘다</strong></td><td>중괄호를 나갈 때 풀린다</td></tr>
-  </table>
-  </div>
   <div class="interp">
-    <strong>해석:</strong> 세 줄이 전부 <strong>"안 부르는 쪽이 안전하다"</strong>로 끝난다.
-    이것이 다른 언어를 쓰다 온 사람에게 가장 낯선 대목이다.
-    <strong>C++에서는 뒷정리 코드를 안 쓰는 것이 잘 쓴 것이다.</strong>
-    반대로 <code>close()</code>나 <code>unlock()</code>이 코드에 보이면
-    <strong>"왜 직접 부르지?"부터 묻는다.</strong> 대개는 필요 없는 줄이다.
+    <strong>해석:</strong> <code>f.close()</code>를 부른 줄이 코드에 없는데 중괄호를 나온 뒤 다시 읽었더니 <code>라이다 값 0.83</code>이 들어 있었다.
+    <code>ofstream</code>의 소멸자가 파일을 닫고 내용을 밀어 넣은 것이다. 같은 중괄호 안의 <code>Lidar</code>도 그 순간 같이 사라졌다.
+    <strong>C++에서는 뒷정리 코드를 안 쓰는 것이 잘 쓴 것이다.</strong> 반대로 <code>close()</code>나 <code>unlock()</code>이 코드에 보이면 「왜 직접 부르지?」부터 묻는다.
   </div>
-
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
-    이 코드에 close() 나 unlock() 을 직접 부르는 줄이 있으면 알려 줘. 소멸자가 어차피 해 주는 것이면 그 줄을 지우고, 꼭 그 자리에서 불러야 하는 이유가 있으면 지우지 말고 이유를 한 줄로 적어 줘.
+    이 코드에 <code>close()</code>나 <code>unlock()</code>을 직접 부르는 줄이 있으면 알려 줘. 소멸자가 어차피 해 주는 것이면 그 줄을 지우고, 꼭 그 자리에서 불러야 하는 이유가 있으면 지우지 말고 이유를 한 줄로 적어 줘.
   </div>
 
-  <!-- ── ⑦ new / delete ── -->
-  <h2 id="newdelete">⑦ <code>new</code>와 <code>delete</code>의 짝을 사람이 맞추다 보면 언젠가 어긋난다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+  <!-- ── ⑧ new / delete ── -->
+  <h2 id="newdelete">⑧ <code>new</code>와 <code>delete</code>의 짝을 사람이 맞추다 보면 언젠가 어긋난다 <span class="badge b-red">🔴 사람이 한다</span></h2>
 
-  <h3>언제 이게 문제가 되나</h3>
+  <h3>개념 — 동적 할당과 그 짝</h3>
   <p>
-    <code>new</code>로 잡은 것은 <code>delete</code>로 지워야 한다. 규칙은 한 줄이라 쉬워 보인다.
-    <strong>문제는 함수를 빠져나가는 길이 하나가 아니라는 것이다.</strong>
-    6단계 파일에 함수 하나를 더해서 <strong>실제로 새는지 봤다.</strong>
-    <code>Lidar</code>에 <code>ok()</code>를 하나 붙이고, <code>main</code> 위에 <code>tune()</code>을 둔다.
+    <code>new Lidar()</code>는 <strong>스코프와 무관하게 살아 있는 객체</strong>를 만들어 그 주소(포인터)를 돌려준다. 이것을 <strong>동적 할당</strong>(dynamic allocation)이라고 한다.
+    스코프를 벗어나도 안 사라지므로 <strong>사람이 <code>delete</code>로 지워야 한다.</strong> 규칙은 한 줄이라 쉬워 보인다.
+    문제는 <strong>함수를 빠져나가는 길이 하나가 아니라는 것</strong>이다. <code>return</code>이 셋이면 <code>delete</code>도 셋이어야 하고, 나중에 <code>return</code>을 하나 더 넣으면 <code>delete</code>도 하나 더 넣어야 한다. 언젠가는 빠뜨린다.
+  </p>
+  <p>
+    C++의 답은 ⑥절과 같다 — <strong>포인터를 객체 안에 넣는다.</strong> ⑤절에서 본 <code>std::unique_ptr</code>가 그 객체다.
+    생성자에서 주소를 받아 두고 소멸자에서 <code>delete</code>한다. 그러면 함수를 어느 길로 나가든 <strong>스코프를 벗어나는 순간 지워진다.</strong>
+    <code>std::make_unique&lt;Lidar&gt;()</code>는 <code>new Lidar()</code>와 <code>unique_ptr</code>를 한 줄로 합친 것이다.
+    RAII를 메모리에 적용한 것이 <strong>스마트 포인터</strong>이고, 12회에서 따로 다룬다.
   </p>
 
-  <div class="codelabel bad">AI가 보통 주는 코드 🔴</div>
-  <pre class="lang-cpp before"><code>class Lidar : public Sensor {
-public:
-  ...
-  float read() override { return buf_.at(0); }
-  bool ok() { return !buf_.empty(); }
-  ...
+  <h3>예제에 적용 — 나가는 길이 셋인 함수에서 실제로 새는지 봤다</h3>
+  <p><code>Lidar</code>에 <code>ok()</code>를 하나 붙이고, <code>main</code> 위에 <code>tune()</code>을 둔다. <code>new</code>로 잡고 끝에서 <code>delete</code>하는, <strong>AI가 보통 주는 모양</strong>이다.</p>
 
-std::mutex m;                  // 한 번에 한 사람만 들어가게 하는 자물쇠
+  <h3>9단계 (v9, 고치기 전) — <code>new</code> / <code>delete</code>로 짠 판</h3>
+  <pre class="lang-cpp"><code>  // Lidar 에 한 줄
+  bool ok() const { return !buf_.empty(); }
 
 // 나가는 길이 셋인데 delete 는 한 줄이다
 void tune(bool busy)
@@ -1450,49 +1332,49 @@ void tune(bool busy)
   if (!p-&gt;ok())  { return; }    // ① 여기로 나가면 안 지워진다
   if (busy)      { return; }    // ② 여기로 나가도 안 지워진다
   delete p;                     // ③ 여기까지 와야만 지워진다
-}</code></pre>
-  <pre class="lang-cpp"><code>  // … ⑤ 블록은 그대로 …
+}
+  // main 에
   std::cout &lt;&lt; "⑥ 함수 중간에서 나가도 반납되나\n";
   tune(true);
-  std::cout &lt;&lt; "  tune() 에서 돌아왔다\n";
-  return 0;</code></pre>
-
+  std::cout &lt;&lt; "  tune() 에서 돌아왔다\n";</code></pre>
   <h3>실제로 나온 출력 — 소멸자 줄이 없다</h3>
   <pre><code>⑥ 함수 중간에서 나가도 반납되나
   [Lidar 생성] 원소 360개 확보
   tune() 에서 돌아왔다</code></pre>
-
-  <!-- fullcode "변형 — new / delete 로 짠 main.cpp (②로 나가서 샌다)" build="g++ -std=c++17 -O2 -o sensors main.cpp && ./sensors"
-       l10_raii/steps/step7_newdelete.cpp as main.cpp
+  <!-- fullcode "전체 코드 — v9 고치기 전 (new / delete 로 짠 판 · ②로 나가서 샌다) main.cpp" build="cmake --build build && ./build/sensors"
+       l10_raii/steps/variants/newdelete/main.cpp
   -->
 <details class="fullcode">
-  <summary>변형 — new / delete 로 짠 main.cpp (②로 나가서 샌다)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o sensors main.cpp &amp;&amp; ./sensors</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 — 상속·다형성과 RAII
-#include &lt;iostream&gt;
-#include &lt;vector&gt;
-#include &lt;memory&gt;         // std::unique_ptr, std::make_unique
+  <summary>전체 코드 — v9 고치기 전 (new / delete 로 짠 판 · ②로 나가서 샌다) main.cpp</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/sensors</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 센서 읽기 — v9 고치기 전 (9단계: new / delete 로 짠 판 · 함수 중간에서 나가면 샌다)
 #include &lt;fstream&gt;        // std::ofstream, std::ifstream
+#include &lt;iostream&gt;
+#include &lt;memory&gt;         // std::unique_ptr, std::make_unique
 #include &lt;mutex&gt;          // std::mutex, std::lock_guard
 #include &lt;string&gt;
+#include &lt;vector&gt;
 
-class Sensor {
+class Sensor                     // 기반 클래스 — 모든 센서에 공통인 것
+{
 public:
-  virtual float read() = 0;      // &quot;읽는 함수는 반드시 있다. 내용은 자식이 채운다&quot;
-  virtual ~Sensor() { std::cout &lt;&lt; &quot;  [Sensor 소멸자]\n&quot;; }
+  virtual float read() = 0;      // 가상 함수. = 0 은 「내용은 파생 클래스가 채운다」
+  virtual ~Sensor() { std::cout &lt;&lt; &quot;  [Sensor 소멸자]\n&quot;; }   // 가상 소멸자
 };
 
-class Lidar : public Sensor {
+class Lidar : public Sensor      // 파생 클래스 — Sensor 를 물려받는다
+{
 public:
   Lidar() : buf_(360, 0.83f) { std::cout &lt;&lt; &quot;  [Lidar 생성] 원소 360개 확보\n&quot;; }
   ~Lidar() { std::cout &lt;&lt; &quot;  [Lidar 소멸자] 원소 360개 반납\n&quot;; }
   float read() override { return buf_.at(0); }
-  bool ok() { return !buf_.empty(); }
+  bool ok() const { return !buf_.empty(); }
 private:
   std::vector&lt;float&gt; buf_;
 };
 
-class Sonar : public Sensor {
+class Sonar : public Sensor
+{
 public:
   Sonar() : dist_(1.2f) { std::cout &lt;&lt; &quot;  [Sonar 생성]\n&quot;; }
   ~Sonar() { std::cout &lt;&lt; &quot;  [Sonar 소멸자]\n&quot;; }
@@ -1501,9 +1383,9 @@ private:
   float dist_;
 };
 
-float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다
+float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다 — 기반 클래스 참조로 받는다
 
-std::mutex m;                  // 한 번에 한 사람만 들어가게 하는 자물쇠
+std::mutex m;                  // 한 번에 한 갈래만 들어가게 하는 자물쇠
 
 // 나가는 길이 셋인데 delete 는 한 줄이다
 void tune(bool busy)
@@ -1565,77 +1447,66 @@ int main()
 }</code></pre></div>
 </details>
 <!-- /fullcode -->
-
-  <h3>무엇이 문제인가</h3>
   <p>
-    <code>busy</code>가 참이라 ②로 나갔고, <strong><code>[Lidar 소멸자]</code> 줄이 없다.</strong> 원소 360개가 그대로 샜다.
-    <strong>나가는 길이 셋인데 <code>delete</code>는 한 줄이다.</strong>
-    ①과 ②로 나가면 그대로 샌다. 그리고 이 코드에 나중에 조건을 하나 더 붙이면
-    <strong>새는 길이 또 하나 늘어난다.</strong>
-    사람이 그때마다 <code>delete</code>를 챙겨 넣어야 하는데, <strong>언젠가는 빠뜨린다.</strong>
+    <code>busy</code>가 참이라 ②로 나갔고, <strong><code>[Lidar 소멸자]</code> 줄이 없다.</strong> 원소 360개가 그대로 샜다. 오류는 없다.
   </p>
-
   <figure>
     <img src="assets/img/10_new_delete.png"
          alt="두 방식을 비교한 흐름도. 왼쪽 new/delete 방식은 세 갈래 중 둘에서 메모리가 새고 하나에서만 반납된다. 오른쪽 RAII 방식은 세 갈래 전부에서 반납된다">
-    <figcaption>왼쪽 상자 옆의 <strong>「샌다」 두 줄</strong>을 본다.
-      오른쪽에는 <code>delete</code>가 <strong>한 줄도 없는데</strong> 세 갈래 전부에서 반납된다.</figcaption>
+    <figcaption>왼쪽 상자 옆의 <strong>「샌다」 두 줄</strong>을 본다. 오른쪽에는 <code>delete</code>가 <strong>한 줄도 없는데</strong> 세 갈래 전부에서 반납된다.</figcaption>
   </figure>
 
-  <h3>이렇게 말하면 된다</h3>
-  <div class="prompt">
-    <button onclick="copyPrompt(this)">복사</button>
-    이 코드에서 new 와 delete 를 직접 쓰지 말고 스코프가 정리해 주는 방식으로 바꿔 줘. 함수 중간에 return 이 여러 개 있어도 새지 않아야 해. 바뀌는 부분만 보여 줘.
-  </div>
-
-  <h3>7단계 — 받은 코드. 이것이 완성본이다</h3>
-  <div class="codelabel good">받은 코드</div>
-  <pre class="lang-cpp after"><code>// 나가는 길이 셋이다 — 어디로 나가도 p 가 반납된다
-void tune(bool busy)
-{
-  auto p = std::make_unique&lt;Lidar&gt;();   // 여기서 잡는다
+  <h3>9단계 (v9, 완성본) — <code>make_unique</code>로</h3>
+  <div class="codelabel bad">고치기 전 — AI가 보통 주는 코드 🔴</div>
+  <pre class="lang-cpp before"><code>  Lidar * p = new Lidar();      // 여기서 잡는다
+  if (!p-&gt;ok())  { return; }    // ① 여기로 나가면 안 지워진다
+  if (busy)      { return; }    // ② 여기로 나가도 안 지워진다
+  delete p;                     // ③ 여기까지 와야만 지워진다</code></pre>
+  <div class="codelabel good">고친 뒤 — 어디로 나가도 반납된다</div>
+  <pre class="lang-cpp after"><code>  auto p = std::make_unique&lt;Lidar&gt;();   // 여기서 잡는다
   if (!p-&gt;ok())  { return; }             // ① 나가면서 반납된다
   if (busy)      { return; }             // ② 나가면서 반납된다
 }                                        // ③ 여기서도 반납된다</code></pre>
-
   <h3>실제로 나온 출력 — 소멸자 줄이 돌아왔다</h3>
   <pre><code>⑥ 함수 중간에서 나가도 반납되나
   [Lidar 생성] 원소 360개 확보
   [Lidar 소멸자] 원소 360개 반납
   [Sensor 소멸자]
   tune() 에서 돌아왔다</code></pre>
-
-  <!-- fullcode "전체 코드 — main.cpp (7단계 · 완성본)" build="g++ -std=c++17 -O2 -o sensors main.cpp && ./sensors"
-       l10_raii/steps/step7.cpp as main.cpp
+  <!-- fullcode "전체 코드 — v9 완성본 (9단계 · make_unique) main.cpp" build="cmake --build build && ./build/sensors"
+       l10_raii/steps/step9/main.cpp
   -->
 <details class="fullcode">
-  <summary>전체 코드 — main.cpp (7단계 · 완성본)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>g++ -std=c++17 -O2 -o sensors main.cpp &amp;&amp; ./sensors</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 — 상속·다형성과 RAII
-#include &lt;iostream&gt;
-#include &lt;vector&gt;
-#include &lt;memory&gt;         // std::unique_ptr, std::make_unique
+  <summary>전체 코드 — v9 완성본 (9단계 · make_unique) main.cpp</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/sensors</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 센서 읽기 — v9 완성본 (9단계: new / delete 대신 make_unique)
 #include &lt;fstream&gt;        // std::ofstream, std::ifstream
+#include &lt;iostream&gt;
+#include &lt;memory&gt;         // std::unique_ptr, std::make_unique
 #include &lt;mutex&gt;          // std::mutex, std::lock_guard
 #include &lt;string&gt;
+#include &lt;vector&gt;
 
-class Sensor {
+class Sensor                     // 기반 클래스 — 모든 센서에 공통인 것
+{
 public:
-  virtual float read() = 0;      // &quot;읽는 함수는 반드시 있다. 내용은 자식이 채운다&quot;
-  virtual ~Sensor() { std::cout &lt;&lt; &quot;  [Sensor 소멸자]\n&quot;; }
+  virtual float read() = 0;      // 가상 함수. = 0 은 「내용은 파생 클래스가 채운다」
+  virtual ~Sensor() { std::cout &lt;&lt; &quot;  [Sensor 소멸자]\n&quot;; }   // 가상 소멸자
 };
 
-class Lidar : public Sensor {
+class Lidar : public Sensor      // 파생 클래스 — Sensor 를 물려받는다
+{
 public:
   Lidar() : buf_(360, 0.83f) { std::cout &lt;&lt; &quot;  [Lidar 생성] 원소 360개 확보\n&quot;; }
   ~Lidar() { std::cout &lt;&lt; &quot;  [Lidar 소멸자] 원소 360개 반납\n&quot;; }
   float read() override { return buf_.at(0); }
-  bool ok() { return !buf_.empty(); }
+  bool ok() const { return !buf_.empty(); }
 private:
   std::vector&lt;float&gt; buf_;
 };
 
-class Sonar : public Sensor {
+class Sonar : public Sensor
+{
 public:
   Sonar() : dist_(1.2f) { std::cout &lt;&lt; &quot;  [Sonar 생성]\n&quot;; }
   ~Sonar() { std::cout &lt;&lt; &quot;  [Sonar 소멸자]\n&quot;; }
@@ -1644,9 +1515,9 @@ private:
   float dist_;
 };
 
-float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다
+float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다 — 기반 클래스 참조로 받는다
 
-std::mutex m;                  // 한 번에 한 사람만 들어가게 하는 자물쇠
+std::mutex m;                  // 한 번에 한 갈래만 들어가게 하는 자물쇠
 
 // 나가는 길이 셋이다 — 어디로 나가도 p 가 반납된다
 void tune(bool busy)
@@ -1707,71 +1578,64 @@ int main()
 }</code></pre></div>
 </details>
 <!-- /fullcode -->
-
   <div class="interp">
-    <strong>해석:</strong> <code>delete</code>가 사라졌다. <strong>줄이 하나 줄어든 것이 이득이 아니다.</strong>
-    이득은 <strong>「나가는 길을 하나 더 만들어도 아무것도 안 고쳐도 된다」</strong>는 쪽이다.
-    코드를 고칠 때마다 사람이 챙겨야 하는 항목이 하나 사라진 것이다.
-    ④절의 <code>unique_ptr</code>가 여기서 다시 나왔다 — <strong>같은 도구가 「기반 클래스 포인터」 역할도 하고 「자동 반납」 역할도 한다.</strong>
+    <strong>해석:</strong> <code>delete</code>가 사라졌다. 줄이 하나 줄어든 것이 이득이 아니다 —
+    <strong>「나가는 길을 하나 더 만들어도 아무것도 안 고쳐도 된다」</strong>는 쪽이다. 코드를 고칠 때마다 사람이 챙겨야 하는 항목이 하나 사라졌다.
   </div>
-
+  <p class="readme-first">객체를 잡는 세 가지 방법과 언제 쓰나.</p>
   <div class="tablewrap">
   <table>
     <tr><th>이렇게 잡는다</th><th>언제</th><th>수준</th></tr>
     <tr><td>그냥 변수로 (<code>Lidar lidar;</code>)</td><td><strong>기본값.</strong> 이 중괄호 안에서만 쓸 것이면 이것</td><td><span class="badge b-lv">[요구]</span></td></tr>
-    <tr><td><code>std::make_unique&lt;T&gt;()</code></td><td>주인이 하나인데 <strong>수명을 중괄호보다 길게</strong> 가져가야 할 때, 또는 기반 클래스 포인터로 잡아야 할 때</td><td><span class="badge b-lv">[알아보기]</span></td></tr>
+    <tr><td><code>std::make_unique&lt;T&gt;()</code></td><td>기반 클래스 포인터로 잡아야 할 때, 또는 수명을 중괄호보다 길게 가져가야 할 때</td><td><span class="badge b-lv">[알아보기]</span></td></tr>
     <tr><td><code>new</code> / <code>delete</code></td><td><strong>안 쓴다.</strong> 남의 옛 코드에서 알아보기만 하면 된다</td><td><span class="badge b-lv">[판단]</span></td></tr>
   </table>
   </div>
-
-  <div class="box trap">
-    <div class="boxtitle">📌 12회로 이어지는 한 줄</div>
-    <p>
-      <code>std::make_unique</code>가 <strong>메모리에 RAII를 적용한 도구</strong>다.
-      새로운 발명이 아니라 <strong>오늘 본 「중괄호가 곧 수명」을 메모리에 그대로 옮긴 것</strong>일 뿐이다.
-      <strong>그래서 RAII가 먼저다.</strong> 이것을 모르고 스마트 포인터를 배우면
-      <em>"포인터인데 이름이 왜 이렇게 기나"</em>에서 멈춘다.
-      <strong>12회에서 제대로 다룬다.</strong>
-    </p>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    이 코드에서 <code>new</code>와 <code>delete</code>를 직접 쓰지 말고 스코프가 정리해 주는 방식으로 바꿔 줘. 함수 중간에 <code>return</code>이 여러 개 있어도 새지 않아야 해. 바뀌는 부분만 보여 줘.
   </div>
 
-  <h3>한 줄 점검</h3>
-  <p>받은 코드에 <code>new</code>가 보이는데 그 함수에 <code>return</code>이 둘 이상 있지 않나?</p>
-
   <!-- ── 🧪 실습 ── -->
-  <h2 id="lab">🧪 실습 — <code>virtual</code>을 붙였다 뗐다 해 본다</h2>
+  <h2 id="lab">🧪 실습 — <code>virtual</code>을 붙였다 뗐다 해 본다 <span class="badge b-green">🟢 맡긴다</span></h2>
   <div class="lab-block">
-    <div class="boxtitle">🧪 실습 (약 30분)</div>
-    <p><strong>알게 되는 것:</strong> 단어 하나로 <strong>화면의 줄 하나가 사라지는 것</strong>을 눈으로 본다.
-      "메모리가 샌다"는 말을 글로 읽는 것과 줄이 없어지는 것을 보는 것은 다르다.</p>
-    <p><strong>준비물:</strong> WSL 터미널 하나, VS Code, <code>g++</code>. 로봇도 ROS도 필요 없다.</p>
-    <p><strong>절차</strong></p>
+    <p class="boxtitle">① 이걸 해 보면 무엇을 알게 되나</p>
+    <p>단어 하나로 <strong>화면의 줄 하나가 사라지는 것</strong>을 눈으로 본다. 「메모리가 샌다」는 말을 글로 읽는 것과 줄이 없어지는 것을 보는 것은 다르다.</p>
+    <p class="boxtitle">② 준비물</p>
+    <ul>
+      <li>WSL 우분투 터미널 하나, VS Code (WSL에 연결된 상태)</li>
+      <li><code>g++</code>과 <code>cmake</code> — 6회에서 깔았다. 로봇도 ROS도 필요 없다</li>
+    </ul>
+    <p class="boxtitle">③ 절차</p>
     <ol>
-      <li>작업 폴더를 만들고 VS Code에서 <code>main.cpp</code>를 새로 만든다.
-        ⑦절 끝의 📄 <strong>「전체 코드 — main.cpp (7단계 · 완성본)」</strong> 상자를 펼쳐 「복사」를 누르고 붙여 넣는다.
-        <strong>타이핑하지 않는다.</strong> (3분)
-        <pre><code>mkdir -p ~/robot_ws/l10
-cd ~/robot_ws/l10
-code .</code></pre></li>
-      <li>빌드하고 실행한다. 아래 「성공 화면」과 같은지 본다. (3분)
-        <pre><code>g++ -std=c++17 -O2 -o sensors main.cpp
-./sensors</code></pre></li>
-      <li><code>Sensor</code>의 소멸자에서 <strong><code>virtual</code>만 지운다.</strong> 다시 빌드해 실행한다.
-        <strong>②·⑥에서 <code>[Lidar 소멸자]</code> 줄이 사라진다.</strong> ①·③·④에서는 안 사라진다 — 왜 그런지 ④절의 「왜 그런가」를 다시 읽는다. (7분)</li>
-      <li>지운 <code>virtual</code>을 되돌린다. <strong>여기까지가 오늘의 핵심이다.</strong> (2분)</li>
-      <li><code>Lidar</code>의 <code>read()</code>에서 이름을 <code>raed()</code>로 한 글자 바꾼다. 빌드한다.
-        <strong>어떤 메시지가 나오는지</strong> 적는다. 되돌린다. (5분)</li>
-      <li><code>④</code> 블록의 중괄호 두 개를 지워 본다 (<code>ofstream</code> 줄이 <code>main</code> 바닥까지 남게 만든다).
-        <strong>"다시 읽어 보니" 줄의 내용이 어떻게 달라지는지</strong> 본다. (5분)</li>
-      <li><code>tune()</code> 안의 <code>make_unique</code> 줄을 ⑦절 「AI가 보통 주는 코드」의 <code>new</code> 방식으로 되돌려 본다.
-        ⑥에서 <strong>어느 줄이 사라지는지</strong> 본다. (5분)</li>
+      <li>
+        <strong>(3분) 작업 폴더를 만들고</strong> ⑧절 끝의 📄 <strong>「v9 완성본」</strong> 상자에서 <code>main.cpp</code>를, ①절 상자에서 <code>CMakeLists.txt</code>를 「복사」해 만든다. <strong>타이핑하지 않는다.</strong>
+        <pre><code>mkdir -p ~/robot_ws/l10/sensors
+cd ~/robot_ws/l10/sensors
+code .</code></pre>
+      </li>
+      <li>
+        <strong>(3분) 빌드하고 실행한다.</strong> 아래 「성공 화면」과 같은지 본다.
+        <pre><code>cmake -S . -B build
+cmake --build build
+./build/sensors</code></pre>
+      </li>
+      <li>
+        <strong>(7분) <code>Sensor</code>의 소멸자에서 <code>virtual</code>만 지운다.</strong> <code>cmake --build build</code> 후 실행한다.
+        ②와 ⑥에서 <code>[Lidar 소멸자]</code> 줄이 사라진다. ①·③·④에서는 안 사라진다 — 왜 그런지 ⑤절 개념을 다시 읽는다.
+      </li>
+      <li><strong>(2분) 지운 <code>virtual</code>을 되돌린다.</strong> 여기까지가 오늘의 핵심이다.</li>
+      <li>
+        <strong>(5분) <code>Lidar</code>의 <code>read()</code>를 <code>raed()</code>로 한 글자 바꾸고 빌드한다.</strong> 어떤 메시지가 나오는지 적는다. 되돌린다.
+      </li>
+      <li>
+        <strong>(5분) <code>tune()</code>의 <code>make_unique</code> 줄을 ⑧절 「고치기 전」의 <code>new</code> 방식으로 되돌려 본다.</strong> ⑥에서 어느 줄이 사라지는지 본다. 되돌린다.
+      </li>
     </ol>
-    <p>
-      <strong>이렇게 되면 성공:</strong> 3번과 7번에서 <strong>화면의 줄 개수가 실제로 바뀌는 것</strong>을 봤고,
-      5번에서 나온 메시지를 자기 말로 한 줄로 설명할 수 있다.
-    </p>
+    <p class="boxtitle">④ 이렇게 되면 성공이다</p>
+    <p>3번과 6번에서 <strong>화면의 줄 개수가 실제로 바뀌는 것</strong>을 봤고, 5번에서 나온 메시지를 자기 말로 한 줄로 설명할 수 있다.</p>
     <p><strong>성공 화면</strong> — 완성본을 그대로 돌리면 아래가 나온다.</p>
-    <pre class="lang-sh"><code>$ ./sensors
+    <pre class="lang-sh"><code>$ ./build/sensors
 ① 상속 — 종류를 따지지 않는다
   [Lidar 생성] 원소 360개 확보
   [Sonar 생성]
@@ -1808,105 +1672,201 @@ code .</code></pre></li>
   [Lidar 소멸자] 원소 360개 반납
   [Sensor 소멸자]
   tune() 에서 돌아왔다</code></pre>
-    <p class="src">확인한 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0 <code>-O2</code>)</p>
+    <p class="src">확인한 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0, CMake 3.28)</p>
     <div class="box trap" style="margin-top:1rem">
       <div class="boxtitle">3번에서 아무 오류도 안 난다</div>
       <p>
         빌드도 되고 실행도 되고 종료 코드도 정상이다. <strong>줄 두 개가 없어진 것이 전부다.</strong>
-        <strong>바로 그것이 이 실습에서 확인할 내용이다.</strong>
-        컴파일러가 안 잡아 주는 종류의 실수가 있다는 것을 손으로 겪어 둔다.
+        바로 그것이 이 실습에서 확인할 내용이다. 컴파일러가 안 잡아 주는 종류의 실수가 있다는 것을 손으로 겪어 둔다.
       </p>
     </div>
   </div>
 
+  <!-- ── 📝 연습문제 ── -->
+  <h2 id="exercise">📝 연습문제 — 오늘 문법이 하나도 없는 코드를 고쳐 본다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+  <p>
+    아래는 <strong>배터리 전압과 온도를 파일에 기록하는 프로그램</strong>이다. 종류를 번호로 따지고, <code>new</code>/<code>delete</code>로 객체를 잡고, <code>close()</code>를 직접 부른다.
+    <strong>오늘 배운 것은 하나도 안 들어 있다.</strong> 이대로도 돌아간다 — 다만 출력을 보면 ③에서 소멸자 두 줄이 없다.
+  </p>
+
+  <!-- fullcode open "연습문제 — 오늘 문법이 없는 원본 (main.cpp + CMakeLists.txt)" build="cmake -S . -B build && cmake --build build && ./build/health_log"
+       l10_raii/steps/exercise_old/main.cpp
+       l10_raii/steps/exercise_old/CMakeLists.txt
+  -->
+<details class="fullcode" open>
+  <summary>연습문제 — 오늘 문법이 없는 원본 (main.cpp + CMakeLists.txt)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake -S . -B build &amp;&amp; cmake --build build &amp;&amp; ./build/health_log</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 연습문제 — 배터리·온도 기록기. 오늘 배운 것을 하나도 안 쓴 코드
+#include &lt;fstream&gt;
+#include &lt;iostream&gt;
+#include &lt;string&gt;
+
+class Battery
+{
+public:
+  Battery() : volt_(11.8f) { std::cout &lt;&lt; &quot;  [Battery 생성]\n&quot;; }
+  ~Battery() { std::cout &lt;&lt; &quot;  [Battery 소멸자]\n&quot;; }
+  float read() { return volt_; }
+private:
+  float volt_;
+};
+
+class Thermo
+{
+public:
+  Thermo() : celsius_(41.5f) { std::cout &lt;&lt; &quot;  [Thermo 생성]\n&quot;; }
+  ~Thermo() { std::cout &lt;&lt; &quot;  [Thermo 소멸자]\n&quot;; }
+  float read() { return celsius_; }
+private:
+  float celsius_;
+};
+
+// 종류를 밖에서 따진다
+float read_kind(int kind, Battery &amp; b, Thermo &amp; t)
+{
+  if (kind == 0) { return b.read(); }
+  else if (kind == 1) { return t.read(); }
+  return -1.0f;
+}
+
+// 한 줄을 파일에 남긴다. dry_run 이면 아무것도 안 쓰고 나간다
+bool log_once(int kind, bool dry_run)
+{
+  Battery * b = new Battery();
+  Thermo * t = new Thermo();
+  std::ofstream f(&quot;health_log.txt&quot;, std::ios::app);
+  if (dry_run) { return false; }               // 여기로 나가면 b, t 가 안 지워진다
+  f &lt;&lt; &quot;kind &quot; &lt;&lt; kind &lt;&lt; &quot; = &quot; &lt;&lt; read_kind(kind, *b, *t) &lt;&lt; &quot;\n&quot;;
+  f.close();
+  delete b;
+  delete t;
+  return true;
+}
+
+int main()
+{
+  std::ofstream(&quot;health_log.txt&quot;);             // 파일을 비운다
+  std::cout &lt;&lt; &quot;① 배터리\n&quot;;  log_once(0, false);
+  std::cout &lt;&lt; &quot;② 온도\n&quot;;    log_once(1, false);
+  std::cout &lt;&lt; &quot;③ 연습 실행\n&quot;; log_once(0, true);
+
+  std::ifstream in(&quot;health_log.txt&quot;);
+  std::string line;
+  while (std::getline(in, line)) { std::cout &lt;&lt; &quot;  파일: &quot; &lt;&lt; line &lt;&lt; &quot;\n&quot;; }
+  return 0;
+}</code></pre></div>
+  <div class="codefile"><div class="fname">CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre class="lang-cmake"><code>cmake_minimum_required(VERSION 3.16)
+project(health_log CXX)
+set(CMAKE_CXX_STANDARD 17)
+add_executable(health_log main.cpp)</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <h3>실제로 나온 출력</h3>
+  <pre><code>① 배터리
+  [Battery 생성]
+  [Thermo 생성]
+  [Battery 소멸자]
+  [Thermo 소멸자]
+② 온도
+  [Battery 생성]
+  [Thermo 생성]
+  [Battery 소멸자]
+  [Thermo 소멸자]
+③ 연습 실행
+  [Battery 생성]
+  [Thermo 생성]
+  파일: kind 0 = 11.8
+  파일: kind 1 = 41.5</code></pre>
+
+  <h3>할 일</h3>
+  <p>
+    이 코드를 <strong>오늘 프로그램이 v1에서 v9로 간 것과 같은 길</strong>로 고친다. 파일에 남는 두 줄은 같아야 하고, <strong>③에서 소멸자 줄이 나와야 한다.</strong>
+    직접 쳐도 되고 에이전트에게 시켜도 된다 — 단, <strong>받은 코드에서 아래 항목이 전부 됐는지는 사람이 확인한다.</strong>
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>고칠 것</th><th>오늘 어디서 했나</th><th>확인하는 법</th></tr>
+    <tr><td>기반 클래스 <code>Sensor</code>를 두고 <code>Battery</code>·<code>Thermo</code>가 상속한다. <code>read()</code>는 순수 가상 함수</td><td>② ③</td><td><code>read_kind</code>와 <code>kind</code> 번호가 없어진다. <code>Sensor &amp;</code> 하나로 받는다</td></tr>
+    <tr><td>파생 클래스의 <code>read()</code>에 <code>override</code></td><td>④</td><td>이름을 일부러 틀리면 빌드가 막힌다</td></tr>
+    <tr><td><code>Sensor</code>의 소멸자를 <code>virtual</code>로</td><td>⑤</td><td><code>unique_ptr&lt;Sensor&gt;</code>로 잡은 객체가 사라질 때 파생 클래스 소멸자 줄이 찍힌다</td></tr>
+    <tr><td><code>new</code>/<code>delete</code>를 없앤다 — 그냥 변수로 만들거나 <code>make_unique</code></td><td>⑧</td><td>파일에 <code>new</code>·<code>delete</code>가 없다. <strong>③에서 소멸자 줄이 나온다</strong></td></tr>
+    <tr><td><code>f.close()</code>를 지운다</td><td>⑦</td><td>지워도 파일 내용이 같다</td></tr>
+  </table>
+  </div>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    이 코드를 오늘 배운 방식으로 고쳐 줘. <code>Battery</code>와 <code>Thermo</code>가 상속하는 기반 클래스 <code>Sensor</code>를 만들고 <code>read()</code>는 순수 가상 함수로, 파생 쪽에는 <code>override</code>를, 기반 클래스 소멸자는 <code>virtual</code>로 해 줘.
+    <code>new</code>/<code>delete</code>와 <code>close()</code>는 없애고 스코프가 정리하게 해 줘. 파일에 남는 두 줄은 지금과 같아야 하고, 한 항목 고칠 때마다 빌드해서 확인해 줘.
+  </div>
+  <p>정답은 하나가 아니다. <strong>위 표의 「확인하는 법」이 전부 통과하면</strong> 된 것이다. 수업 시간에 몇 사람의 결과를 같이 본다.</p>
+
   <!-- ── 프롬프트 모음 ── -->
-  <h2 id="prompts">🤖 오늘 나온 프롬프트 모음</h2>
+  <h2 id="prompts">🤖 오늘 나온 프롬프트 모음 <span class="badge b-green">🟢 맡긴다</span></h2>
   <div class="tablewrap">
   <table>
     <tr><th>이럴 때</th><th>이렇게 말한다</th></tr>
+    <tr><td><code>if</code>로 종류를 따지는 코드가 보일 때</td><td>"기반 클래스 하나를 만들고 종류마다 상속하는 구조로 바꿔 줘. 공통 함수는 순수 가상 함수로 해 줘."</td></tr>
     <tr><td>기반 클래스를 받았을 때</td><td>"상속당하는 클래스의 소멸자에 <code>virtual</code>이 붙어 있는지 확인해 줘. 상속을 안 당하는 클래스에는 붙이지 마."</td></tr>
-    <tr><td>갈아 끼우는 함수가 있을 때</td><td>"기반 클래스 함수를 갈아 끼우는 함수 전부에 <code>override</code>를 붙여 줘. 붙였더니 컴파일이 안 되는 곳은 <strong>고치지 말고 먼저 알려 줘.</strong>"</td></tr>
+    <tr><td>재정의하는 함수가 있을 때</td><td>"기반 클래스의 가상 함수를 재정의하는 함수 전부에 <code>override</code>를 붙여 줘. 붙였더니 컴파일이 안 되는 곳은 <strong>고치지 말고 먼저 알려 줘.</strong>"</td></tr>
     <tr><td><code>new</code>가 보일 때</td><td>"<code>new</code>·<code>delete</code>를 직접 쓰지 말고 스코프가 정리해 주는 방식으로 바꿔 줘. 중간에 <code>return</code>이 여러 개여도 안 새야 해."</td></tr>
     <tr><td><code>close()</code>·<code>unlock()</code>이 보일 때</td><td>"이 <code>close()</code>가 정말 필요한 줄인지 알려 줘. 소멸자가 대신 해 주는 것이면 지워 줘."</td></tr>
-    <tr><td>클래스 뼈대를 시킬 때</td><td>"이 클래스를 나중에 상속할 거야. 소멸자는 <code>virtual</code>로, 갈아 끼울 함수는 <code>virtual</code> + 자식 쪽에 <code>override</code>로 만들어 줘."</td></tr>
+    <tr><td>클래스 뼈대를 시킬 때</td><td>"이 클래스를 나중에 상속할 거야. 소멸자는 <code>virtual</code>로, 재정의할 함수는 <code>virtual</code> + 파생 쪽에 <code>override</code>로 만들어 줘."</td></tr>
   </table>
   </div>
 
   <!-- ── ✅ 점검 ── -->
   <h2 id="check">✅ 오늘의 점검</h2>
   <ul class="check">
-    <li><input type="checkbox" id="c1"><label for="c1">상속당하는 클래스의 소멸자에 <code>virtual</code>이 붙어 있나?</label></li>
-    <li><input type="checkbox" id="c2"><label for="c2">갈아 끼우는 함수마다 <code>override</code>가 붙어 있나?</label></li>
-    <li><input type="checkbox" id="c3"><label for="c3"><code>override</code>를 붙였는데 컴파일이 안 되는 곳을 <strong>버그로 의심</strong>해 봤나?</label></li>
+    <li><input type="checkbox" id="c1"><label for="c1">정적 타입과 동적 타입이 무엇인지, <code>virtual</code>이 <strong>어느 쪽을 보게 하는지</strong> 말할 수 있나?</label></li>
+    <li><input type="checkbox" id="c2"><label for="c2">상속당하는 클래스의 소멸자에 <code>virtual</code>이 붙어 있나?</label></li>
+    <li><input type="checkbox" id="c3"><label for="c3">재정의하는 함수마다 <code>override</code>가 붙어 있나? 붙였는데 컴파일이 안 되는 곳을 <strong>버그로 의심</strong>해 봤나?</label></li>
     <li><input type="checkbox" id="c4"><label for="c4">코드에 <code>new</code>나 <code>delete</code>가 남아 있지 않나?</label></li>
     <li><input type="checkbox" id="c5"><label for="c5"><code>close()</code>·<code>unlock()</code>을 손으로 부르고 있지 않나?</label></li>
     <li><input type="checkbox" id="c6"><label for="c6">소멸자가 <strong>실제로 불리는지</strong> 출력으로 확인해 봤나?</label></li>
-    <li><input type="checkbox" id="c7"><label for="c7">중괄호를 나갈 때 무엇이 정리되는지 한 문장으로 말할 수 있나?</label></li>
+    <li><input type="checkbox" id="c7"><label for="c7">RAII를 「스코프가 곧 수명이다」 말고 <strong>자원과 소멸자로</strong> 한 문장 설명할 수 있나?</label></li>
+    <li><input type="checkbox" id="c8"><label for="c8">연습문제의 「확인하는 법」 다섯 줄을 전부 통과했나?</label></li>
   </ul>
 
   <!-- ── 조금 더 알아두면 ── -->
   <h2 id="more">조금 더 알아두면 <span class="badge b-lv">시험 범위 아님</span></h2>
-
   <details>
-    <summary>왜 소멸자는 자식 → 부모 순서로 불리나</summary>
+    <summary>왜 소멸자는 파생 → 기반 순서로 불리나</summary>
+    <p>만들 때와 지울 때의 순서가 <strong>반대</strong>다. 실행 결과가 그것을 그대로 보여 준다.</p>
+    <pre><code>[Lidar 생성] 원소 360개 확보     ← 기반이 먼저 만들어지고 파생이 채워진다
+[Lidar 소멸자] 원소 360개 반납    ← 파생이 먼저 정리되고
+[Sensor 소멸자]              ← 기반이 나중에 정리된다</code></pre>
     <p>
-      만들 때와 지울 때의 순서가 <strong>반대</strong>다. 실행 결과가 그것을 그대로 보여 준다.
-    </p>
-    <pre><code>[Lidar 생성] 원소 360개 확보     ← 부모가 먼저 만들어지고 자식이 채워진다
-[Lidar 소멸자] 원소 360개 반납    ← 자식이 먼저 정리되고
-[Sensor 소멸자]              ← 부모가 나중에 정리된다</code></pre>
-    <p>
-      이유는 단순하다. <strong>자식은 부모의 것을 쓸 수 있지만 부모는 자식의 것을 모른다.</strong>
-      부모를 먼저 지우면 자식이 정리하는 도중에 이미 없어진 것을 건드리게 된다.
-      <strong>「나중에 만든 것이 먼저 사라진다」</strong>는 규칙은 중괄호 안의 변수들에도 똑같이 적용된다 —
-      ⑤절에서 <code>[Lidar 소멸자]</code>가 맨 마지막에 찍힌 이유가 그것이다.
+      파생 클래스는 기반 클래스의 것을 쓸 수 있지만 기반 클래스는 파생 클래스의 것을 모른다.
+      기반을 먼저 지우면 파생이 정리하는 도중에 이미 없어진 것을 건드리게 된다.
+      「나중에 만든 것이 먼저 사라진다」는 규칙은 중괄호 안의 변수들에도 똑같이 적용된다.
     </p>
   </details>
-
   <details>
     <summary>모든 클래스에 <code>virtual</code> 소멸자를 붙이면 안 되나</summary>
     <p>
-      안 붙이는 것이 맞다. <strong>공짜가 아니기 때문이다.</strong>
+      안 붙이는 것이 맞다. 공짜가 아니기 때문이다. <code>virtual</code>이 하나라도 붙으면 그 클래스의 객체마다 <strong>가상 함수 표를 가리키는 자리가 하나 더 붙는다</strong>(보통 8바이트).
+      <code>float</code> 두 개짜리 작은 객체를 수만 개 만드는 코드라면 낭비다.
     </p>
-    <p>
-      <code>virtual</code>이 하나라도 붙으면 그 클래스의 객체마다 <strong>표를 가리키는 자리가 하나 더 붙는다</strong>
-      (보통 8바이트). <code>float</code> 두 개짜리 작은 객체를 수만 개 만드는 코드라면 이것이 그냥 낭비다.
-    </p>
-    <div class="tablewrap">
-    <table>
-      <tr><th>이런 클래스는</th><th>가상 소멸자를</th></tr>
-      <tr><td>다른 클래스가 상속한다</td><td><strong>붙인다</strong></td></tr>
-      <tr><td>기반 클래스 포인터로 잡아서 지울 일이 있다</td><td><strong>붙인다</strong></td></tr>
-      <tr><td>혼자 쓰는 작은 자료 묶음이다 (점 좌표 같은 것)</td><td>안 붙인다</td></tr>
-    </table>
-    </div>
-    <p><strong>판단 기준 한 줄:</strong> <em>"이 클래스를 누가 상속하나?"</em> 답이 "그렇다"면 붙인다.</p>
+    <p><strong>판단 기준 한 줄:</strong> 「이 클래스를 누가 상속하나?」 답이 「그렇다」면 붙인다.</p>
   </details>
-
   <details>
-    <summary><code>= default</code>와 <code>= delete</code> — 소멸자 옆에서 자주 보이는 두 표기</summary>
-    <p>
-      가상 소멸자를 붙일 때 몸통이 빌 때가 많다. 그때 이렇게 쓴 코드를 자주 본다.
-    </p>
+    <summary><code>= default</code> · <code>= delete</code> · <code>noexcept</code> — 소멸자 옆에서 자주 보이는 표기</summary>
     <pre class="lang-cpp"><code>class Sensor {
 public:
   virtual ~Sensor() = default;   // "기본으로 해 줘" — { } 와 같은 뜻
   virtual float read() = 0;
 };</code></pre>
     <p>
-      <code>= default</code>는 <strong>"컴파일러가 알아서 만들어 주는 기본 동작을 쓰겠다"</strong>는 뜻이다.
-      <code>{ }</code>라고 쓰는 것과 결과가 같은데, <strong>의도가 코드에 드러난다</strong>는 점이 낫다.
-      반대로 <code>= delete</code>는 <strong>"이건 아예 못 쓰게 하라"</strong>는 뜻이다.
-      <strong>알아보기만 하면 된다.</strong> ROS 2 코드에서 자주 보인다.
+      <code>= default</code>는 「컴파일러가 알아서 만들어 주는 기본 동작을 쓰겠다」는 뜻이다. <code>{ }</code>라고 쓰는 것과 결과가 같은데 의도가 코드에 드러난다.
+      <code>= delete</code>는 반대로 「이건 아예 못 쓰게 하라」는 뜻이다.
+      <code>~Lidar() noexcept</code>의 <code>noexcept</code>는 「이 함수는 오류를 위로 던지지 않는다」는 약속인데, 소멸자에는 적지 않아도 이미 붙어 있다.
+      셋 다 <strong>알아보기만 하면 된다.</strong> ROS 2 코드에서 자주 보인다.
     </p>
   </details>
-
   <details>
     <summary>다른 언어에서는 이걸 어떻게 하나 — 가비지 컬렉션과의 차이</summary>
-    <p>
-      파이썬이나 자바에는 <strong>쓰레기 수집기(garbage collector)</strong>가 있다.
-      안 쓰는 메모리를 <strong>나중에 알아서</strong> 회수해 준다. 편하지만 두 가지가 다르다.
-    </p>
+    <p>파이썬이나 자바에는 <strong>쓰레기 수집기</strong>(garbage collector)가 있다. 안 쓰는 메모리를 나중에 알아서 회수해 준다. 편하지만 두 가지가 다르다.</p>
     <div class="tablewrap">
     <table>
       <tr><th></th><th>RAII (C++)</th><th>쓰레기 수집 (파이썬·자바)</th></tr>
@@ -1915,10 +1875,7 @@ public:
       <tr><td>로봇에서</td><td>정리 시점이 정해져 있다</td><td><strong>수집기가 도는 동안 잠깐 멈출 수 있다</strong></td></tr>
     </table>
     </div>
-    <p>
-      마지막 줄이 로봇에서 C++을 쓰는 이유 중 하나다.
-      <strong>"언제 멈출지 모른다"는 것이 제어 주기를 지켜야 하는 프로그램에서는 문제가 된다.</strong>
-    </p>
+    <p>마지막 줄이 로봇에서 C++을 쓰는 이유 중 하나다. 「언제 멈출지 모른다」는 것이 제어 주기를 지켜야 하는 프로그램에서는 문제가 된다.</p>
   </details>
 
   <footer>
