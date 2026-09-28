@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HW2 · 내 프로그램을 CMake 프로젝트로 만들기 | 로봇공학</title>
+<script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}})();</script>
+<link rel="stylesheet" href="../../../assets/site.css">
+<link rel="stylesheet" href="../../assets/lecture.css">
+</head>
+<body>
+<header class="bar">
+  <div class="barin wide">
+    <a class="up" href="../../index.html" aria-label="로봇공학 회차 목록"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a>
+    <nav class="crumb" aria-label="경로">
+      <a href="../../../index.html">강의자료</a><span class="sep">/</span><a href="../../index.html">로봇공학</a><span class="sep">/</span><span class="here">HW2 · C++과 CMake</span>
+    </nav>
+    <span class="spacer"></span>
+    <div class="seg" data-theme-switch role="group" aria-label="밝기">
+      <button type="button" data-mode="auto" aria-pressed="true">자동</button>
+      <button type="button" data-mode="light" aria-pressed="false">밝게</button>
+      <button type="button" data-mode="dark" aria-pressed="false">어둡게</button>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="toc-title">이 과제</div>
+  <a href="#why">왜 이걸 하나요</a>
+  <a href="#topic">무엇을 만드나요 — 주제는 자유</a>
+  <a href="#example">예시 — 마린 둘과 질럿 하나</a>
+  <a href="#layout">A — 파일 구조와 CMake</a>
+  <a href="#elements">B — 코드에 들어갈 것 여섯</a>
+  <a href="#ai">AI와 함께 만들 때</a>
+  <a href="#form">보고서 양식</a>
+  <a href="#submit">제출 방법과 점수</a>
+</nav>
+
+<main>
+
+  <div class="lec-no">로봇공학 · HW2</div>
+  <h1>내 프로그램을 CMake 프로젝트로 만들기</h1>
+
+  <!-- ▼ 마감일은 이 한 줄만 고치면 된다 ▼ -->
+  <p class="deadline">📅 제출 마감 — <strong>2026년 10월 __일 (_) 23:59</strong></p>
+
+  <div class="questions">
+    <span class="lab">이 과제가 묻는 것</span>
+    <ol>
+      <li>함수에 <code>&amp;</code> 한 글자가 없으면 무엇이 달라지나요? <strong>빌드는 되는데</strong> 결과가 이상한 이유가 거기 있습니다.</li>
+      <li>헤더에 함수의 <strong>본문까지</strong> 적으면, 소스 파일이 둘이 되는 순간 무슨 일이 나나요?</li>
+      <li>포인터를 받는 함수는 왜 <code>nullptr</code>인지부터 봐야 하나요?</li>
+    </ol>
+  </div>
+
+  <h2 id="why">왜 이걸 하나요</h2>
+  <p>
+    <a href="../../robotics_07.html">코드를 읽기 위한 최소 장비</a>와
+    <a href="../../robotics_08.html">빌드 시스템</a>, 두 수업에서 본 것을 <strong>한 프로젝트 안에 전부 넣어 봅니다.</strong>
+    수업에서는 라이다 예제 하나를 아홉 단계로 고쳐 갔습니다.
+    이번에는 <strong>여러분이 고른 주제</strong>로 헤더·소스·<code>CMakeLists.txt</code>를 처음부터 만듭니다.
+  </p>
+  <p>
+    무엇을 만드느냐는 정하지 않습니다. 대신 <strong>어떤 요소가 들어가야 하는지</strong>와
+    <strong>보고서에 무엇을 적는지</strong>는 아래에 자세히 정해 두었습니다.
+    요소 하나하나가 수업에서 <em>"이게 없으면 이런 일이 난다"</em>를 보였던 자리입니다.
+  </p>
+  <div class="interp">
+    <strong>프로그램의 크기는 작아도 됩니다.</strong> 파일 넷(헤더 하나 · 소스 둘 · CMake 하나), 100~150줄이면 충분합니다.
+    보려는 것은 규모가 아니라 <strong>요소 하나하나가 제자리에 있는가</strong>와 <strong>그것을 여러분의 말로 설명할 수 있는가</strong>입니다.
+  </div>
+
+  <h2 id="topic">무엇을 만드나요 — 주제는 자유</h2>
+  <p>
+    <strong>등장하는 것이 둘 이상 있고, 각자 하는 일이 있고, 서로 주고받는 일이 있는 프로그램</strong>이면 무엇이든 좋습니다.
+    게임 캐릭터, 스포츠 선수, 악기, 로봇, 가게와 손님, 행성과 위성 — 여러분이 좋아하는 것으로 하는 편이 대체로 잘 됩니다.
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>있어야 하는 것</th><th>무슨 뜻인가</th><th>예시(스타크래프트)에서는</th></tr>
+    <tr><td><strong>등장하는 것 둘 이상</strong></td><td>같은 종류의 값 묶음이 여럿 있다 — <code>struct</code>와 <code>std::vector</code>가 여기서 나온다</td><td>마린 둘, 질럿 하나</td></tr>
+    <tr><td><strong>자체 동작</strong></td><td>등장하는 것 하나가 <strong>자기 상태를 바꾸는</strong> 일 — <code>&amp;</code>로 받는 함수</td><td>목표를 향해 한 칸 움직인다 (<code>move_toward</code>)</td></tr>
+    <tr><td><strong>상호작용</strong></td><td>둘 사이에서 <strong>한쪽이 다른 쪽을 바꾸는</strong> 일 — 상대는 포인터로 받고 <code>nullptr</code>을 먼저 본다</td><td>사거리 안이면 때린다 (<code>attack</code>)</td></tr>
+    <tr><td><strong>진행 과정이 보이는 출력</strong></td><td>단계(프레임·턴·회차)마다 무슨 일이 났는지 찍고, 끝에 결과를 요약한다</td><td><code>--- frame 4</code> / <code>marine1 hits zealot (hp 94)</code> / 마지막 줄에 생존자 수</td></tr>
+  </table>
+  </div>
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 수업 예제와 아래 예시는 주제로 쓰지 않습니다</div>
+    <p>
+      <strong>「정면 장애물 판정기」(7회) · 「거리 값 평균 <code>mean_range</code>」(8회) · 아래 「마린과 질럿」</strong>은 빼고 고릅니다.
+      이름만 바꾼 것도 같은 것으로 봅니다. 라이다를 소재로 하고 싶으면 다른 문제를 골라 주세요 —
+      예를 들어 「로봇 둘이 같은 방에서 서로를 피해 다닌다」 같은 것은 괜찮습니다.
+    </p>
+    <p><strong>친구 것을 베낀 것은 보여 준 사람과 베낀 사람 모두 0점</strong>입니다. 주제가 자유인 과제에서 같은 코드가 나오면 바로 보입니다.</p>
+  </div>
+
+  <h2 id="example">예시 — 마린 둘과 질럿 하나</h2>
+  <p>
+    아래는 요구하는 요소를 전부 갖춘 예시입니다. 마린 둘이 질럿 하나에게 다가가 쏘고, 질럿은 가까운 마린에게 달려가 벱니다.
+    <strong>파일 넷, 130줄</strong>입니다. 클래스는 아직 안 배웠으니 <strong>구조체와 함수만으로</strong> 짰습니다.
+  </p>
+  <p>
+    이 정도면 됩니다. 그런데 <strong>여기서 멈출 이유도 없습니다.</strong> 유닛 종류를 다섯 개로 늘리고, 체력이 닳으면 후퇴하게 하고,
+    지형에 따라 속도를 바꾸고, 100프레임 뒤에 누가 이기는지 통계를 내는 것 — 이런 것은 에이전트에게 시키면 몇 분이면 나옵니다.
+    <strong>여러분이 좋아하는 세계를 하나 골라, 그 세계의 규칙을 코드로 옮겨 보세요.</strong> 규칙이 재미있을수록 코드도 재미있어집니다.
+  </p>
+
+  <pre><code>starcraft/
+├── CMakeLists.txt
+├── include/
+│   └── units.hpp        ← 구조체 둘(Point · Unit)과 함수 선언 일곱
+└── src/
+    ├── units.cpp        ← 함수의 내용
+    └── main.cpp         ← 유닛을 만들고 프레임을 돌린다</code></pre>
+
+  <details class="fullcode" open>
+    <summary>CMakeLists.txt</summary>
+<pre><code>cmake_minimum_required(VERSION 3.16)
+project(starcraft CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# ① 유닛 규칙을 라이브러리로 묶는다
+add_library(units src/units.cpp)
+target_include_directories(units PUBLIC include)
+
+# ② 전투를 돌리는 실행 파일에 ①을 붙인다
+add_executable(battle src/main.cpp)
+target_link_libraries(battle PRIVATE units)</code></pre>
+  </details>
+
+  <details class="fullcode" open>
+    <summary>include/units.hpp — 선언만 있다</summary>
+<pre><code>// units.hpp — 유닛의 모양(구조체)과 할 수 있는 일(함수 선언)
+#ifndef UNITS_HPP_
+#define UNITS_HPP_
+#include &lt;string&gt;
+#include &lt;vector&gt;
+
+namespace starcraft {
+
+struct Point {                // 2차원 위치
+  float x;
+  float y;
+};
+
+struct Unit {                 // 유닛 하나 = 이름 + 능력치 + 위치
+  std::string name;
+  int hp;                     // 체력
+  int strike;                 // 공격력
+  float range;                // 사거리
+  float speed;                // 한 프레임에 움직이는 거리
+  Point pos;
+};
+
+// 유닛을 만든다 — 이름과 위치만 다르고 능력치는 종류마다 정해져 있다
+Unit make_marine(const std::string &amp; name, Point pos);
+Unit make_zealot(const std::string &amp; name, Point pos);
+
+// 읽기만 하는 함수들 — const &amp; 로 받는다
+float distance(const Point &amp; a, const Point &amp; b);
+bool  is_alive(const Unit &amp; u);
+int   alive_count(const std::vector&lt;Unit&gt; &amp; units);
+
+// 자체 동작 — 유닛 자신을 바꾸므로 &amp; 로 받는다
+void move_toward(Unit &amp; u, const Point &amp; target);
+
+// 상호작용 — 공격하는 쪽은 &amp;, 맞는 쪽은 포인터. 상대가 없으면(nullptr) 아무 일도 안 한다
+void attack(Unit &amp; attacker, Unit * target);
+
+// 살아 있는 적 중 가장 가까운 것을 가리킨다. 아무도 없으면 nullptr
+Unit * nearest_enemy(const Unit &amp; me, std::vector&lt;Unit&gt; &amp; enemies);
+
+}  // namespace starcraft
+#endif</code></pre>
+  </details>
+
+  <details class="fullcode">
+    <summary>src/units.cpp — 함수의 내용</summary>
+<pre><code>// units.cpp — 함수의 내용
+#include "units.hpp"
+#include &lt;cmath&gt;
+#include &lt;iostream&gt;
+
+namespace starcraft {
+
+Unit make_marine(const std::string &amp; name, Point pos)
+{
+  std::cout &lt;&lt; name &lt;&lt; ": You wanna piece of me, boy?\n";
+  return Unit{name, 40, 6, 4.0f, 1.0f, pos};
+}
+
+Unit make_zealot(const std::string &amp; name, Point pos)
+{
+  std::cout &lt;&lt; name &lt;&lt; ": My life for Aiur!\n";
+  return Unit{name, 100, 8, 1.0f, 1.0f, pos};
+}
+
+float distance(const Point &amp; a, const Point &amp; b)
+{
+  const float dx = a.x - b.x;
+  const float dy = a.y - b.y;
+  return std::sqrt(dx * dx + dy * dy);
+}
+
+bool is_alive(const Unit &amp; u)
+{
+  return u.hp &gt; 0;
+}
+
+int alive_count(const std::vector&lt;Unit&gt; &amp; units)
+{
+  int n = 0;
+  for (const auto &amp; u : units) {
+    if (is_alive(u)) n++;
+  }
+  return n;
+}
+
+void move_toward(Unit &amp; u, const Point &amp; target)
+{
+  const float dist = distance(u.pos, target);
+  if (dist &lt; 0.01f) return;                    // 이미 도착했다
+  const float step = std::min(u.speed, dist);  // 목표를 지나치지 않는다
+  u.pos.x += (target.x - u.pos.x) / dist * step;
+  u.pos.y += (target.y - u.pos.y) / dist * step;
+  std::cout &lt;&lt; "  " &lt;&lt; u.name &lt;&lt; " -&gt; (" &lt;&lt; u.pos.x &lt;&lt; ", " &lt;&lt; u.pos.y &lt;&lt; ")\n";
+}
+
+void attack(Unit &amp; attacker, Unit * target)
+{
+  if (target == nullptr) return;               // 공격할 상대가 없다
+  if (!is_alive(*target)) return;
+  if (distance(attacker.pos, target-&gt;pos) &gt; attacker.range) {
+    move_toward(attacker, target-&gt;pos);        // 사거리 밖이면 다가간다
+    return;
+  }
+  target-&gt;hp -= attacker.strike;
+  std::cout &lt;&lt; "  " &lt;&lt; attacker.name &lt;&lt; " hits " &lt;&lt; target-&gt;name
+            &lt;&lt; " (hp " &lt;&lt; target-&gt;hp &lt;&lt; ")\n";
+  if (!is_alive(*target)) std::cout &lt;&lt; "  " &lt;&lt; target-&gt;name &lt;&lt; " is KILLED\n";
+}
+
+Unit * nearest_enemy(const Unit &amp; me, std::vector&lt;Unit&gt; &amp; enemies)
+{
+  Unit * best = nullptr;
+  float best_dist = 1e9f;
+  for (auto &amp; e : enemies) {
+    if (!is_alive(e)) continue;
+    const float d = distance(me.pos, e.pos);
+    if (d &lt; best_dist) {
+      best_dist = d;
+      best = &amp;e;
+    }
+  }
+  return best;
+}
+
+}  // namespace starcraft</code></pre>
+  </details>
+
+  <details class="fullcode">
+    <summary>src/main.cpp — 유닛을 만들고 프레임을 돌린다</summary>
+<pre><code>// main.cpp — 마린 둘과 질럿 하나가 만날 때까지 프레임을 돌린다
+#include "units.hpp"
+#include &lt;iostream&gt;
+
+int main()
+{
+  using namespace starcraft;
+  std::cout.precision(2);
+  std::cout &lt;&lt; std::fixed;
+
+  std::vector&lt;Unit&gt; terran{make_marine("marine1", {0.0f, 0.0f}),
+                           make_marine("marine2", {0.0f, 2.0f})};
+  std::vector&lt;Unit&gt; protoss{make_zealot("zealot", {8.0f, 1.0f})};
+
+  const int max_frames = 30;                 // 이보다 오래 끌면 무승부
+  for (int frame = 1; frame &lt;= max_frames; ++frame) {
+    std::cout &lt;&lt; "--- frame " &lt;&lt; frame &lt;&lt; "\n";
+    for (auto &amp; m : terran) {
+      if (is_alive(m)) attack(m, nearest_enemy(m, protoss));
+    }
+    for (auto &amp; z : protoss) {
+      if (is_alive(z)) attack(z, nearest_enemy(z, terran));
+    }
+    if (alive_count(terran) == 0 || alive_count(protoss) == 0) break;
+  }
+
+  std::cout &lt;&lt; "terran " &lt;&lt; alive_count(terran) &lt;&lt; " alive, protoss "
+            &lt;&lt; alive_count(protoss) &lt;&lt; " alive\n";
+  return 0;
+}</code></pre>
+  </details>
+
+  <details class="fullcode">
+    <summary>실제로 나온 출력 — 13프레임 만에 끝난다</summary>
+<pre><code>$ cmake -S . -B build
+$ cmake --build build
+[ 25%] Building CXX object CMakeFiles/units.dir/src/units.cpp.o
+[ 50%] Linking CXX static library libunits.a
+[ 50%] Built target units
+[ 75%] Building CXX object CMakeFiles/battle.dir/src/main.cpp.o
+[100%] Linking CXX executable battle
+[100%] Built target battle
+$ ./build/battle
+marine1: You wanna piece of me, boy?
+marine2: You wanna piece of me, boy?
+zealot: My life for Aiur!
+--- frame 1
+  marine1 -&gt; (0.99, 0.12)
+  marine2 -&gt; (0.99, 1.88)
+  zealot -&gt; (7.01, 0.88)
+--- frame 2
+  marine1 -&gt; (1.98, 0.25)
+  marine2 -&gt; (1.98, 1.71)
+  zealot -&gt; (6.02, 0.75)
+--- frame 3
+  marine1 -&gt; (2.98, 0.37)
+  marine2 -&gt; (2.95, 1.48)
+  zealot -&gt; (5.02, 0.63)
+--- frame 4
+  marine1 hits zealot (hp 94)
+  marine2 hits zealot (hp 88)
+  zealot -&gt; (4.03, 0.50)
+--- frame 5
+  marine1 hits zealot (hp 82)
+  marine2 hits zealot (hp 76)
+  zealot -&gt; (3.04, 0.38)
+--- frame 6
+  marine1 hits zealot (hp 70)
+  marine2 hits zealot (hp 64)
+  zealot hits marine1 (hp 32)
+  …
+--- frame 10
+  marine1 hits zealot (hp 22)
+  marine2 hits zealot (hp 16)
+  zealot hits marine1 (hp 0)
+  marine1 is KILLED
+--- frame 11
+  marine2 hits zealot (hp 10)
+  zealot -&gt; (2.96, 1.38)
+--- frame 12
+  marine2 hits zealot (hp 4)
+  zealot hits marine2 (hp 32)
+--- frame 13
+  marine2 hits zealot (hp -2)
+  zealot is KILLED
+terran 1 alive, protoss 0 alive</code></pre>
+  </details>
+
+  <div class="interp">
+    <strong>이 예시에서 요소를 찾아보세요.</strong>
+    <code>namespace starcraft</code> · 구조체 <code>Point</code>와 <code>Unit</code> · <code>std::vector&lt;Unit&gt;</code>과 <code>for (auto &amp; m : terran)</code> ·
+    자체 동작 <code>move_toward(Unit &amp;, …)</code> · 읽기만 하는 <code>distance(const Point &amp;, …)</code>와 <code>const int max_frames</code> ·
+    상호작용 <code>attack(Unit &amp;, Unit *)</code>의 <code>nullptr</code> 검사 · 헤더에는 선언만.
+    <strong>보고서 3절이 바로 이 일곱 가지를 여러분 코드에서 찾아 적는 자리입니다.</strong>
+  </div>
+
+  <h2 id="layout">A — 파일 구조와 CMake</h2>
+  <p>폴더 모양은 <a href="../../robotics_08.html#project">8회 ③절</a>과 위 예시가 같습니다. <strong>헤더는 <code>include/</code>에, 소스는 <code>src/</code>에</strong> 둡니다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>#</th><th>있어야 하는 것</th><th>수업의 어디</th></tr>
+    <tr><td>A-1</td><td><code>CMakeLists.txt</code> · <code>include/</code>에 헤더 1개 이상 · <code>src/</code>에 <code>main.cpp</code>와 소스 1개 이상</td><td><a href="../../robotics_08.html#project">8회 ③</a></td></tr>
+    <tr><td>A-2</td><td><code>add_library</code>로 <strong>라이브러리 하나</strong>(<code>main.cpp</code>가 아닌 소스들) + <code>target_include_directories(… PUBLIC include)</code></td><td>8회 ③ · <a href="../../robotics_08.html#scope">⑥</a></td></tr>
+    <tr><td>A-3</td><td><code>add_executable</code>로 실행 파일 하나 + <code>target_link_libraries(… PRIVATE …)</code>로 라이브러리를 붙인다</td><td>8회 ③</td></tr>
+    <tr><td>A-4</td><td><code>CMAKE_CXX_STANDARD 17</code>이 있고, <strong><code>include_directories(…)</code>는 없다</strong></td><td><a href="../../robotics_08.html#modern">8회 ⑤</a></td></tr>
+  </table>
+  </div>
+  <p>
+    빌드 명령은 수업 그대로 <code>cmake -S . -B build</code> → <code>cmake --build build</code> → <code>./build/실행파일</code>입니다.
+    <strong>세 명령의 출력을 그대로 보고서 5절에 붙입니다.</strong>
+  </p>
+
+  <h2 id="elements">B — 코드에 들어갈 것 여섯</h2>
+  <p>
+    <a href="../../robotics_07.html">7회 자료</a>의 절 순서 그대로입니다.
+    보고서 3절에서 요소마다 <strong>「어디에 썼고 왜 거기 썼는지」 두 줄</strong>과 <strong>그 부분의 코드 조각</strong>으로 보여 줍니다.
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>#</th><th>들어가야 하는 것</th><th>이렇게 확인합니다</th><th>수업의 어디</th></tr>
+    <tr><td>B-1</td><td><strong><code>namespace</code> 하나</strong>에 여러분의 <code>struct</code>와 함수를 넣는다. 이름은 여러분 세계의 것으로</td><td>부르는 쪽에 <code>이름::</code>이 보인다</td><td><a href="../../robotics_07.html#namespace">7회 ⑧</a></td></tr>
+    <tr><td>B-2</td><td><strong><code>struct</code> 하나 이상</strong> — 등장하는 것 하나를 값 둘 이상으로 묶는다</td><td>멤버가 둘 이상이다</td><td><a href="../../robotics_07.html#struct">7회 ⑦</a></td></tr>
+    <tr><td>B-3</td><td><strong><code>std::vector</code></strong>에 등장하는 것들을 담고, <strong>범위 <code>for</code>와 <code>auto</code></strong>로 돈다</td><td><code>for (auto &amp; x : v)</code> 꼴이 있다</td><td><a href="../../robotics_07.html#vector">7회 ③</a>·<a href="../../robotics_07.html#auto">④</a></td></tr>
+    <tr><td>B-4</td><td><strong>자체 동작 — 원본을 고치는 함수</strong>. <code>&amp;</code>로 받는다</td><td>부른 뒤 부른 쪽의 값이 바뀌어 있다</td><td><a href="../../robotics_07.html#ref">7회 ⑤</a></td></tr>
+    <tr><td>B-5</td><td><strong>읽기만 하는 함수</strong>는 <code>const &amp;</code>로 받는다. 그리고 <strong>바뀌면 안 되는 지역 변수 하나</strong>에 <code>const</code></td><td>그 함수 안에서 인자를 고치려 들면 빌드가 막힌다</td><td><a href="../../robotics_07.html#const">7회 ⑥</a></td></tr>
+    <tr><td>B-6</td><td><strong>상호작용 — 상대를 포인터로 받는 함수</strong>. <code>nullptr</code>인지 먼저 보고, <code>-&gt;</code>로 멤버를 꺼낸다</td><td><code>nullptr</code>을 넘겨도 죽지 않고 조용히 돌아온다</td><td><a href="../../robotics_07.html#arrow">7회 ⑨</a></td></tr>
+  </table>
+  </div>
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 헤더에는 선언만, 내용은 소스에</p>
+    <p>
+      B-4·5·6의 함수는 <strong>선언은 헤더에, 정의(본문)는 소스에</strong> 둡니다 (<a href="../../robotics_07.html#header">7회 ⑩</a>).
+      헤더에 본문까지 적으면 소스가 둘이 되는 순간 <strong>링크 단계에서 <code>multiple definition</code></strong>이 납니다.
+      AI가 흔히 그렇게 써 주니 받은 코드에서 먼저 볼 자리입니다. 헤더 위아래의 <code>#ifndef</code>·<code>#define</code>·<code>#endif</code>도 빠뜨리지 않습니다.
+    </p>
+    <p class="later">클래스는 아직 수업에서 안 다뤘습니다. <strong><code>struct</code>와 함수만으로 충분</strong>하고, 예시도 그렇게 짰습니다.</p>
+  </div>
+
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 하나는 직접 해 봐야 합니다 — <code>&amp;</code>를 지워 보기</div>
+    <p>
+      프로그램이 다 돌아간 뒤, <strong>B-4 함수의 <code>&amp;</code>를 지우고</strong>(헤더와 소스 양쪽) 다시 빌드해 돌려 보세요.
+      <strong>빌드는 됩니다.</strong> 그런데 결과가 달라집니다. 위 예시에서 <code>move_toward(Unit u, …)</code>로 바꾸면
+      유닛마다 「움직였다」고 찍히는데 <strong>좌표가 프레임마다 그대로</strong>이고, 아무도 사거리에 못 들어가 30프레임 뒤 무승부가 납니다.
+      여러분 프로그램에서는 무엇이 달라지는지 <strong>두 출력을 나란히 붙이고 이유를 한 줄</strong> 적습니다(보고서 4절). 그리고 <code>&amp;</code>를 되돌립니다.
+    </p>
+  </div>
+
+  <h2 id="ai">AI와 함께 만들 때</h2>
+  <p>
+    코드를 에이전트에게 받아도 됩니다. 오히려 <strong>이 과제는 그러라고 있는 과제</strong>입니다 — 위 예시보다 훨씬 복잡한 세계를 만들 수 있는 도구가 손에 있으니까요.
+    다만 1회차의 규칙이 그대로 적용됩니다 — <strong>설명하지 못하는 코드는 내지 않습니다.</strong>
+    보고서의 요소별 설명은 <strong>여러분의 말로</strong> 적고, 퀴즈는 그 설명에서 나옵니다.
+  </p>
+  <p>처음 시킬 때 이 페이지의 <strong>A와 B 표를 통째로 붙여 넣으면</strong> 요소가 빠진 코드를 받는 일이 줄어듭니다. 이런 식입니다.</p>
+  <div class="copyform">
+    <button onclick="copyPrompt(this)">복사</button>
+<pre><code>(여러분의 세계를 설명 — 예: 축구 선수 다섯이 공을 패스하다가 슛을 한다. 선수마다 체력·정확도·위치가 있다)
+아래 조건으로 C++17 CMake 프로젝트를 만들어 줘.
+- 폴더: CMakeLists.txt, include/ 헤더 1개, src/main.cpp, src/ 소스 1개
+- CMake: add_library + target_include_directories(PUBLIC include), add_executable + target_link_libraries(PRIVATE). include_directories는 쓰지 마
+- namespace 하나 안에 struct(멤버 둘 이상)와 함수들
+- std::vector에 담고 범위 for + auto로 돈다
+- 자기 상태를 바꾸는 함수는 &amp;로, 읽기만 하는 함수는 const &amp;로 받는다. const 지역 변수 하나
+- 상대를 포인터로 받는 함수 하나 — nullptr 검사 먼저, -&gt;로 멤버 접근
+- 헤더에는 선언만(본문 없이), 헤더 가드 포함. 함수 본문은 소스에
+- 클래스는 쓰지 마. 단계(턴)마다 무슨 일이 났는지 출력하고 끝에 결과를 요약해
+- 전체 130줄 안쪽으로</code></pre>
+  </div>
+  <p>받은 코드에서 <strong>먼저 볼 자리 셋</strong>입니다. 셋 다 7·8회에서 「AI가 흔히 하는 실수」로 짚었던 것입니다.</p>
+  <ul>
+    <li>헤더에 함수 <strong>본문</strong>이 들어 있지 않은가</li>
+    <li><code>CMakeLists.txt</code>에 <code>include_directories</code>가 있지 않은가</li>
+    <li>클래스로 짜 오지 않았는가 — 「구조체와 함수로 바꿔 줘」 한마디면 됩니다</li>
+  </ul>
+  <p>보고서 6절에 <strong>AI에게 시킨 것과, 받은 것에서 여러분이 고친 것</strong>을 두세 줄 적습니다. 고친 것이 없었으면 「없음」이라고 적으면 됩니다.</p>
+
+  <h2 id="form">보고서 양식</h2>
+  <p class="readme-first">
+    아래 <strong>「복사」 버튼</strong>을 누르면 양식이 통째로 복사됩니다.
+    보고서에 붙여 넣고 <strong>괄호 안 안내 글은 지우고</strong> 빈 칸을 채우면 됩니다. <strong>절 번호와 제목은 그대로 둡니다.</strong>
+  </p>
+  <p>
+    3절의 코드 조각은 <strong>그 요소에 해당하는 부분만</strong> 붙입니다. 전체 코드는 맨 끝 8절에 한 번만 들어갑니다.
+    터미널 출력은 <strong>글자로</strong> 붙입니다 — 그림으로 찍지 않습니다.
+  </p>
+
+  <div class="copyform">
+    <button onclick="copyPrompt(this)">복사</button>
+<pre><code># HW2 보고서 — 이름 ______  학번 ______
+
+## 1. 개요
+(세 줄 — 무엇이 등장하고, 각자 무엇을 하고, 서로 무엇을 주고받는지)
+- 등장하는 것:
+- 자체 동작:
+- 상호작용:
+
+## 2. 파일 구조와 CMakeLists.txt
+
+### 2-1. 폴더 모양
+```
+(tree 또는 ls -R 출력)
+```
+
+### 2-2. CMakeLists.txt 전문
+```cmake
+
+```
+
+### 2-3. 타깃 표
+| 타깃 이름 | add_library / add_executable | 들어간 소스 | 붙인 것 (include 경로 · 라이브러리) |
+|---|---|---|---|
+| | | | |
+| | | | |
+
+## 3. 코드 요소 — 어디에, 왜
+(요소마다 「설명 두 줄」은 여러분 코드를 가리켜 적습니다. 코드 조각은 그 부분만.)
+
+### 3-1. namespace (B-1)
+**설명:** namespace 이름은 무엇이고 무엇을 넣었나. 부르는 쪽에서 어떻게 보이나
+-
+-
+```cpp
+
+```
+
+### 3-2. struct (B-2)
+**설명:** 무엇을 어떤 값들로 묶었나. 왜 그 값들이 한 묶음인가
+-
+-
+```cpp
+
+```
+
+### 3-3. std::vector와 범위 for · auto (B-3)
+**설명:** 무엇을 담았고 어디서 돌았나. auto 자리에 원래 타입을 적으면 무엇이 되나
+-
+-
+```cpp
+
+```
+
+### 3-4. 자체 동작 — &amp;로 받는 함수 (B-4)
+**설명:** 어느 함수가 무엇을 고치나. 왜 &amp;가 있어야 하나
+-
+-
+```cpp
+
+```
+
+### 3-5. 읽기만 하는 함수 — const &amp;와 const 변수 (B-5)
+**설명:** 어느 함수가 읽기만 하나. const 지역 변수는 무엇이고 왜 바뀌면 안 되나
+-
+-
+```cpp
+
+```
+
+### 3-6. 상호작용 — 포인터와 nullptr 검사 (B-6)
+**설명:** 어느 함수가 누구를 포인터로 받나. nullptr이 들어오는 경우는 언제인가
+-
+-
+```cpp
+
+```
+
+### 3-7. 헤더와 소스 나누기
+**설명:** 헤더에 무엇이 있고 소스에 무엇이 있나. 헤더 가드는 무엇을 막나
+-
+-
+**헤더 파일 전문:**
+```cpp
+
+```
+
+## 4. &amp;를 지워 보면 — 직접 해 본 것
+(3-4 함수의 &amp;를 헤더·소스 양쪽에서 지우고 다시 빌드해 돌린 결과. 두 출력을 나란히.)
+
+**지우기 전 (원래) 출력 일부:**
+```
+
+```
+
+**지운 뒤 출력 일부:**
+```
+
+```
+
+**달라진 이유 한 줄:**
+
+
+## 5. 빌드와 실행 — 화면에 나온 것 그대로
+
+### 5-1. cmake -S . -B build
+```
+
+```
+
+### 5-2. cmake --build build
+```
+
+```
+
+### 5-3. ./build/실행파일
+```
+
+```
+
+## 6. AI에게 시킨 것과 내가 고친 것
+(두세 줄. 고친 것이 없었으면 「없음」)
+-
+-
+
+## 7. 후기 (선택)
+(어려웠던 것, 막혔다가 풀린 자리. 쓸 말이 없으면 비워 두되 제목은 지우지 않습니다)
+
+
+## 8. 전체 소스 코드
+(헤더 · 소스 전부. 파일마다 이름을 적고 그 아래 코드를 붙입니다)
+
+### include/______.hpp
+```cpp
+
+```
+
+### src/main.cpp
+```cpp
+
+```
+
+### src/______.cpp
+```cpp
+
+```
+</code></pre>
+  </div>
+
+  <h2 id="submit">제출 방법과 점수</h2>
+  <p>
+    채운 보고서를 <strong>PDF 한 개</strong>로 만들어 LMS에 올립니다.
+    파일 이름은 <strong><code>HW2_이름_학번.pdf</code></strong>로,
+    <code>HW2_홍길동_20251234.pdf</code>처럼 자기 이름과 학번을 넣으면 됩니다.
+  </p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>무엇</th><th>점수</th><th>어떻게 봅니다</th></tr>
+    <tr><td>과제 제출</td><td><strong>7점</strong></td><td>아래 세 가지를 봅니다. <strong>프로그램이 얼마나 크고 훌륭한지는 채점하지 않습니다</strong></td></tr>
+    <tr><td>확인 퀴즈</td><td><strong>3점</strong></td><td>제출 후 다음 수업 시간에 짧게 봅니다. 객관식이고 <strong>정답은 그 자리에서 공개합니다</strong></td></tr>
+    <tr><td><strong>합계</strong></td><td><strong>10점</strong></td><td></td></tr>
+  </table>
+  </div>
+
+  <p><strong>제출 7점은 이 세 가지로 봅니다</strong></p>
+  <ol>
+    <li><strong>빌드가 되고 실행이 됩니다</strong> — 5절의 세 출력이 그 증거입니다. 안 되면 기본 점수만 받습니다.</li>
+    <li><strong>A-1~4 · B-1~6과 헤더/소스 분리가 모두 들어 있습니다</strong> — 빠진 요소가 있으면 그만큼 뺍니다.</li>
+    <li><strong>양식의 절이 모두 채워져 있습니다</strong> — 특히 3절의 「설명 두 줄」과 4절의 두 출력.</li>
+  </ol>
+
+  <div class="interp">
+    <strong>퀴즈는 여러분이 이 과제에서 본 화면에서 나옵니다.</strong>
+    <code>&amp;</code>를 지웠을 때의 결과, 헤더에 본문을 적었을 때 나는 오류, 소스를 CMake에 안 넣었을 때 나는 오류 —
+    3절과 4절을 <strong>직접 해 보고</strong> 적었다면 따로 준비할 것이 없습니다.
+  </div>
+
+  <footer>
+    로봇공학 · 순천향대학교 전자정보공학과 ·
+    같이 볼 것: <a href="../../robotics_07.html">코드를 읽기 위한 최소 장비</a> ·
+    <a href="../../robotics_08.html">빌드 시스템</a>
+  </footer>
+</main>
+</div>
+
+<script src="../../../assets/site.js" defer></script>
+</body>
+</html>
