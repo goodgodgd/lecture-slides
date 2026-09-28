@@ -38,13 +38,12 @@
   <a href="#distort">③ 왜곡</a>
   <a href="#distort" class="sub">어느 계수가 일하나</a>
   <a href="#distort" class="sub">모델의 종류</a>
-  <a href="#unproject">④ 역투영은 왜 어려운가</a>
-  <a href="#jac">⑤ 투영 야코비안</a>
-  <a href="#jac" class="sub">자세에 대한 미분</a>
-  <a href="#lab">🧪 점군 오버레이 — 사다리 4단</a>
+  <a href="#unproject" class="sub">역투영 — 거꾸로 가는 길</a>
+  <a href="#reproj">④ 재투영 오차 — 이 함수가 쓰이는 자리</a>
   <a href="#prompt">🤖 의뢰서 — 카메라 모델</a>
+  <a href="#lab">🧪 점군 오버레이 — 사다리 4단</a>
+  <a href="#draw">🎨 이 회차의 그림 — 세 판</a>
   <a href="#verify">🧪 맞는지 어떻게 아나</a>
-  <a href="#draw">🎨 이 회차의 그림</a>
   <a href="#check">✅ 오늘의 점검</a>
   <a href="#more">조금 더 알아두면</a>
 </nav>
@@ -127,7 +126,7 @@
       <dt>재투영 오차 (reprojection error)</dt>
       <dd>3차원 점을 투영한 픽셀과 실제로 관측된 픽셀의 차이.
         <strong>이 강의에서 최소화하게 될 값</strong>이고, 오늘 만드는 함수가 그 계산의 안쪽에 들어간다.
-        ⑤절에서 정의를 정확히 쓴다.</dd>
+        ④절에서 정의를 정확히 쓴다.</dd>
     </dl>
     <p class="later">재투영 오차를 실제로 줄이는 일은 9회(번들조정)에서 한다.</p>
   </div>
@@ -413,7 +412,7 @@ rate_hz:           20</pre>
     <tr><th style="width:22%">모델</th><th>어떤 렌즈에</th><th>역투영</th><th>이 강의에서</th></tr>
     <tr><td><strong>radial-tangential</strong><br>(pinhole + radtan)</td>
       <td>보통 렌즈, 시야각 ~100°까지</td>
-      <td><strong>반복법</strong> (④절). 3~13회</td>
+      <td><strong>반복법</strong> (바로 아래). 3~13회</td>
       <td><strong>쓴다.</strong> EuRoC이 이 모델이다</td></tr>
     <tr><td>equidistant<br>(Kannala-Brandt, KB4)</td>
       <td><strong>어안</strong>, 180° 근처까지</td>
@@ -428,17 +427,20 @@ rate_hz:           20</pre>
   <div class="interp">
     <strong>해석:</strong> 데이터셋을 고를 때 <strong>카메라 모델이 판단 근거 중 하나였다</strong>
     (`_notes/데이터셋_조사.md` 1절). 어안 모델을 쓰면 오늘 회차가 통째로 어려워지고,
-    ④절의 반복이 훨씬 비싸진다. <strong>「첫 구현이 살아남게 하는 조건」을 데이터셋 선택에서 이미 확보한 것</strong>이다.
+    아래에서 볼 반복이 훨씬 비싸진다. <strong>「첫 구현이 살아남게 하는 조건」을 데이터셋 선택에서 이미 확보한 것</strong>이다.
   </div>
 
-  <h2 id="unproject">④ 역투영은 왜 어려운가</h2>
+  <h3 id="unproject">역투영 — 거꾸로 가는 길에는 닫힌 해가 없다</h3>
 
   <p>
-    투영은 닫힌 형태다. 넣으면 바로 나온다. <strong>거꾸로는 그렇지 않다.</strong>
-    \(x_d\)가 주어졌을 때 \(x\)를 구하려면 <strong>5차 다항식</strong>을 풀어야 하고, 닫힌 해가 없다.
+    투영은 넣으면 바로 나온다. <strong>거꾸로는 그렇지 않다.</strong>
+    픽셀에서 \(x_d\)까지는 되돌아갈 수 있지만, 거기서 왜곡 없는 \(x\)를 구하려면
+    <strong>5차 다항식</strong>을 풀어야 하고 닫힌 해가 없다.
+    <strong>어려워진 원인이 왜곡이라는 것</strong>이 요점이다 —
+    왜곡이 없으면 역투영은 뺄셈과 나눗셈 두 번으로 끝난다.
   </p>
 
-  <p>그래서 반복해서 푼다. 아이디어는 단순하다 — <strong>답이라고 가정하고 넣어 본 뒤, 어긋난 만큼 고친다.</strong></p>
+  <p>그래서 반복해서 푼다. <strong>답이라고 가정하고 넣어 본 뒤, 어긋난 만큼 고친다.</strong></p>
 
   <pre>x = x_d;  y = y_d;                         // 첫 추측: 왜곡이 없다고 치자
 반복 {
@@ -448,143 +450,34 @@ rate_hz:           20</pre>
 }                                           // 잔차가 기준 아래로 내려가면 멈춘다</pre>
 
   <p>
-    몇 번이면 되나. 잔차 <span class="mono">0.01 px</span>을 기준으로 실제로 세어 봤다.
-  </p>
-
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th>어디</th><th>반복 횟수</th></tr>
-    <tr><td>중심에서 20 %</td><td>3회</td></tr>
-    <tr><td>중심에서 40 %</td><td>5회</td></tr>
-    <tr><td><strong>영상 모서리</strong></td><td><strong>13회</strong></td></tr>
-  </table>
-  </div>
-
-  <div class="interp">
-    <strong>해석:</strong> 「보통 5~10회면 된다」고들 하는데, <strong>모서리에서는 13회다.</strong>
+    잔차 <span class="mono">0.01 px</span>을 기준으로 세어 보면
+    <strong>중심에서 20 % 지점은 3회, 영상 모서리는 13회</strong>다.
+    「보통 5~10회면 된다」고들 하는데 <strong>모서리는 그보다 오래 걸린다.</strong>
     반복 횟수를 5로 못 박아 두면 <strong>가장자리 점만 덜 풀린 채로 나온다</strong> —
-    ③절에서 본 것과 <strong>정확히 같은 모양의 사고</strong>다.
-    영상 가운데는 멀쩡하고 가장자리만 이상해진다.
-    <strong>횟수가 아니라 잔차로 멈추게 한다.</strong>
-  </div>
-
-  <div class="box trap">
-    <p class="boxtitle">⚠️ 이 반복은 왜 수렴하나 — 그리고 언제 안 하나</p>
-    <p style="margin:0">
-      위 반복은 <strong>고정점 반복</strong>이고, <strong>왜곡이 작을 때만</strong> 수렴한다.
-      \(k_1\)이 크거나 반경이 아주 크면 <strong>발산하거나 엉뚱한 해로 간다.</strong>
-      더 튼튼하게 하려면 <strong>뉴턴법</strong>을 쓴다 — 왜곡 함수의 야코비안을 계산해
-      \(\delta = J^{-1}(\mathbf{x}_d - \mathrm{distort}(\mathbf{x}))\)만큼 밀어 주는 방식이고,
-      반복 횟수가 절반 이하로 준다.
-      <strong>EuRoC 정도의 왜곡에서는 고정점 반복으로 충분하다.</strong>
-      다만 <strong>수렴 검사(잔차 확인)를 빼지 않는 것</strong>이 조건이다.
-    </p>
-  </div>
-
-  <h3>영상을 통째로 펴 놓는 방법 — 그리고 이 강의가 그러지 않는 이유</h3>
-
-  <p>
-    실전에서 자주 쓰는 다른 방법이 있다. <strong>영상 전체를 미리 펴서(undistort) 저장해 두고,
-    그다음부터는 왜곡이 없는 것처럼 쓰는 것</strong>이다. OpenCV의
-    <span class="mono">initUndistortRectifyMap</span> + <span class="mono">remap</span>이 그 일을 한다.
+    이 절 앞부분에서 본 것과 <strong>같은 모양의 사고</strong>다.
+    가운데는 멀쩡하고 가장자리만 이상해진다. <strong>횟수가 아니라 잔차로 멈추게 한다.</strong>
   </p>
-
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th style="width:24%"></th><th>영상을 편다</th><th><strong>좌표만 편다</strong> (이 강의)</th></tr>
-    <tr><td>언제 계산하나</td><td>영상마다 한 번, 전체 픽셀에</td><td><strong>특징점에만</strong> — 프레임당 수백 개</td></tr>
-    <tr><td>비용</td><td>752×480 = 36만 픽셀 보간</td><td>수백 번의 반복법</td></tr>
-    <tr><td>화질</td><td><strong>보간이 들어간다.</strong> 특징점 위치가 미세하게 흔들린다</td><td>원본 픽셀 그대로</td></tr>
-    <tr><td>시야</td><td><strong>가장자리가 잘리거나 검은 영역이 생긴다</strong></td><td>손실 없다</td></tr>
-    <tr><td>편한 점</td><td>이후 코드가 왜곡을 몰라도 된다</td><td>모델을 계속 들고 다녀야 한다</td></tr>
-  </table>
-  </div>
 
   <div class="interp">
-    <strong>해석:</strong> <strong>영상을 펴는 쪽이 편하지만 정보를 조금 잃는다.</strong>
-    보간이 한 번 들어가면 특징점 위치가 서브픽셀 수준에서 흔들리고,
-    그 흔들림이 ⑤절의 재투영 오차에 그대로 더해진다.
-    <strong>이 강의는 좌표만 편다</strong> — 특징점 몇백 개에만 역투영을 돌리면 되므로 비용도 문제가 안 되고,
-    <strong>「원본 픽셀에서 잰 값」이라는 것이 검증에서 중요하기 때문</strong>이다.
-    <strong>단, 스테레오 정합처럼 「두 영상을 줄 맞춰 놓아야 하는」 일에는 펴는 쪽이 필요하다</strong> —
-    그래서 스테레오 파이프라인은 대개 rectify를 먼저 한다. 우리는 단안이라 그럴 일이 없다.
+    <strong>해석:</strong> 다만 <strong>이 반복을 직접 짜야 할 일은 별로 없다</strong> 🟢 —
+    OpenCV <span class="mono">undistortPoints</span>가 같은 일을 한다.
+    부를 자리도 많지 않다. 이 강의에서는 <strong>특징점을 정규화 좌표로 바꿔
+    5회의 \(E\)에 넣을 때</strong> 한 곳이다.
+    <strong>그래서 여기서 남겨 갈 것은 알고리즘이 아니라 한 줄이다</strong> —
+    「왜곡이 있으면 거꾸로 가는 길은 반복이고, 그 반복은 <strong>가장자리에서 늦게 끝난다</strong>」.
+    수렴 조건과 뉴턴법, 그리고 <strong>영상을 통째로 펴 두는 방법</strong>은
+    「조금 더 알아두면」으로 내려 두었다.
   </div>
 
-  <h2 id="jac">⑤ 투영 야코비안 — 9회에서 쓴다</h2>
+  <h2 id="reproj">④ 재투영 오차 — 오늘 만든 함수가 쓰이는 자리</h2>
 
   <p>
-    번들조정은 <strong>「이 3차원 점이나 자세를 조금 움직이면 픽셀이 얼마나 움직이나」</strong>를 알아야 한다.
-    그것이 투영 야코비안이고, <strong>세 조각으로 나눠서</strong> 만든다.
+    한 장 요약의 다섯 단계를 묶어 <strong>함수 하나</strong>로 부를 때 \(\pi(\cdot)\)라고 쓴다 —
+    카메라 좌표의 점을 받아 픽셀을 돌려주는 함수다. 논문에서도 이 기호를 쓴다.
+    이 함수는 <strong>학기 내내 가장 많이 호출되는 함수</strong>가 되는데,
+    부르는 곳은 거의 항상 한 가지 계산이다 —
+    <strong>「예측한 픽셀과 실제로 본 픽셀이 얼마나 다른가」</strong>.
   </p>
-
-  <h3>① 픽셀을 카메라 좌표로 미분한다</h3>
-
-  <p>왜곡을 뺀 부분만 쓰면 이렇게 생겼다.</p>
-
-  $$
-  \frac{\partial \mathbf{u}}{\partial \mathbf{p}_C} =
-  \begin{bmatrix}
-    \dfrac{f_u}{Z} &amp; 0 &amp; -\dfrac{f_u X}{Z^2} \\[6pt]
-    0 &amp; \dfrac{f_v}{Z} &amp; -\dfrac{f_v Y}{Z^2}
-  \end{bmatrix}
-  $$
-
-  <p>
-    \(Z^2\)이 분모에 있다는 것만 봐 두면 된다.
-    <strong>먼 점일수록 픽셀이 덜 움직인다</strong>는 뜻이고,
-    바꿔 말하면 <strong>먼 점은 픽셀을 봐도 깊이를 잘 모른다.</strong> 5회의 주제가 여기서 예고된다.
-  </p>
-
-  <h3>② 카메라 좌표를 자세로 미분한다 — 3회가 회수되는 자리</h3>
-
-  <p>
-    카메라 자세 \(T_{WC}\)를 조금 흔들면 \(\mathbf{p}_C\)가 얼마나 움직이나.
-    3회에서 정한 <strong>right perturbation</strong>으로 흔든다 —
-    회전은 \(R_{WC} \leftarrow R_{WC}\,\mathrm{Exp}(\delta\boldsymbol\theta)\),
-    이동은 \(t_{WC} \leftarrow t_{WC} + R_{WC}\,\delta\mathbf{t}\)다.
-  </p>
-
-  $$
-  \mathbf{p}_C = R_{WC}^\top(\mathbf{p}_W - t_{WC})
-  \qquad\Longrightarrow\qquad
-  \frac{\partial \mathbf{p}_C}{\partial \delta\boldsymbol\theta} = [\mathbf{p}_C]_\times,
-  \qquad
-  \frac{\partial \mathbf{p}_C}{\partial \delta\mathbf{t}} = -I
-  $$
-
-  <p>
-    유도는 3회 ⑧절 그대로다. \(R_{WC}^\top \leftarrow \mathrm{Exp}(-\delta\boldsymbol\theta)R_{WC}^\top\)이므로
-    \(\mathbf{p}_C(\delta) \approx (I - [\delta\boldsymbol\theta]_\times)\mathbf{p}_C
-    = \mathbf{p}_C + [\mathbf{p}_C]_\times\,\delta\boldsymbol\theta\)다.
-  </p>
-
-  <p>
-    <strong>손으로 유도하지 않는다.</strong> 3회에서 만든 수치 야코비안 대조로 확인한다.
-    실제로 대조해 보면 이렇게 나온다.
-  </p>
-
-  <pre>∂p_C/∂δθ = [p_C]×   상대오차 4.990e-08     ← 통과 기준 1e-6
-∂p_C/∂δt = −I       상대오차 1.919e-09
-∂u/∂p_C  (왜곡 제외) 상대오차 2.033e-07</pre>
-
-  <h3>③ 체인 룰로 잇는다</h3>
-
-  $$
-  \frac{\partial \mathbf{u}}{\partial (\delta\mathbf{t},\ \delta\boldsymbol\theta)}
-  = \frac{\partial \mathbf{u}}{\partial \mathbf{p}_C}
-  \begin{bmatrix} -I &amp; [\mathbf{p}_C]_\times \end{bmatrix}
-  \;\in\; \mathbb{R}^{2\times 6}
-  $$
-
-  <div class="interp">
-    <strong>해석:</strong> <strong>야코비안을 통째로 유도하지 않고 조각으로 나눠 잇는 것</strong>이 요령이다.
-    조각마다 따로 수치 대조를 할 수 있어서 <strong>어느 조각이 틀렸는지 바로 갈린다.</strong>
-    9회의 번들조정에서 잔차가 이상할 때 이 세 조각을 하나씩 확인하게 된다.
-    <strong>왜곡까지 포함하려면 \(\partial\mathbf{u}/\partial\mathbf{p}_C\) 자리에 왜곡 야코비안이 한 겹 더 들어간다</strong> —
-    구조는 그대로다.
-  </div>
-
-  <h3>재투영 오차 — 이 강의가 최소화할 값</h3>
 
   $$
   \mathbf{e} = \underbrace{\pi(T_{WC}^{-1}\,\mathbf{p}_W)}_{\text{예측한 픽셀}} - \underbrace{\mathbf{u}^{\text{obs}}}_{\text{관측한 픽셀}} \;\in\; \mathbb{R}^2
@@ -592,34 +485,120 @@ rate_hz:           20</pre>
 
   <p>
     <strong>부호를 어느 쪽으로 잡을지는 약속</strong>이다.
-    이 강의는 <strong>예측 − 관측</strong>으로 두고 규약 문서에 적는다.
-    반대로 잡으면 야코비안 부호가 전부 뒤집히고, <strong>섞으면 최적화가 반대 방향으로 간다.</strong>
+    이 강의는 <strong>예측 − 관측</strong>으로 두고 2회에서 만든 규약 문서에 적는다.
+    반대로 잡아도 틀리지 않는다. 단, <strong>한 프로젝트 안에서 섞으면</strong>
+    최적화가 반대 방향으로 가는데 <strong>그 증상은 코드를 봐서는 잘 안 보인다.</strong>
   </p>
+
+  <div class="interp">
+    <strong>해석:</strong> 이 값을 <strong>실제로 줄이는 일</strong>은 9회(번들조정)에서 한다.
+    그때 <strong>「점이나 자세를 조금 움직이면 픽셀이 얼마나 움직이나」</strong>가 필요해지고,
+    그것이 \(\pi\)를 미분한 <strong>투영 야코비안</strong>이다.
+    <strong>오늘은 유도하지 않는다.</strong> 미분은 그것을 쓰는 자리에서 같이 보는 편이
+    부호와 perturbation 방향을 맞추기 쉽고, 오늘 할 일은 \(\pi\) <strong>자체가 맞는지</strong>까지다.
+  </div>
+
+  <h2 id="prompt">🤖 의뢰서 — 카메라 모델 <span class="badge b-yellow">맡기되 검사한다</span></h2>
+
+  <p>
+    투영·역투영·왜곡은 <strong>길고 기계적인</strong> 코드다. 그래서 코드를 싣지 않고 의뢰서를 싣는다.
+    대신 [검증] 칸에 <strong>②~③절에서 잰 숫자를 그대로 넣는다.</strong>
+  </p>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    <strong>[규약]</strong> 첨부한 <span class="mono">conventions.md</span>대로 카메라는
+    <span class="mono">+z</span> 광축 · <span class="mono">+x</span> 오른쪽 · <span class="mono">+y</span> 아래다.
+    재투영 오차는 <strong>예측 − 관측</strong>으로 둔다.<br><br>
+    <strong>[인터페이스]</strong> 아래 시그니처를 <strong>바꾸지 말고</strong> 구현해 줘.<br>
+    <span class="mono">optional&lt;Vector2d&gt; project(const Vector3d&amp; p_C) const</span> — <span class="mono">Z &lt;= 0</span> 이면 <span class="mono">nullopt</span><br>
+    <span class="mono">Vector3d unproject(const Vector2d&amp; uv) const</span> — 길이 1인 방향 벡터를 돌려준다.
+    <strong>반복을 직접 짜도 되고 <span class="mono">cv::undistortPoints</span>를 불러도 된다</strong> — 판정은 아래 시험 ①이 한다<br>
+    <span class="mono">bool inImage(const Vector2d&amp; uv) const</span><br><br>
+    <strong>[모델]</strong> pinhole + radial-tangential, 계수는 <span class="mono">k1 k2 p1 p2</span> 넷.
+    <span class="mono">yaml</span>에서 읽어 오되 <strong>skew 는 0으로 둔다.</strong><br><br>
+    <strong>[검증]</strong> 아래 세 시험을 같이 써 줘. <strong>기준을 넘으면 실패로 출력한다.</strong><br>
+    ① <span class="mono">project</span> → <span class="mono">unproject</span> 왕복 — 픽셀 오차 <span class="mono">&lt; 1e-6 px</span>.
+    영상 전체에 <strong>고르게 뿌린 1000점</strong>과 <strong>네 모서리</strong>로 한다 —
+    가운데만 쓰면 왜곡 버그도, 반복이 덜 돈 것도 걸리지 않는다<br>
+    ② EuRoC cam0 값으로 <span class="mono">(752, 0)</span> 모서리를 넣었을 때
+    왜곡 없는 자리와의 거리가 <strong>96.0 ± 0.5 px</strong><br>
+    ③ <span class="mono">Z = -1</span>인 점을 넣었을 때 <strong><span class="mono">nullopt</span>이 나오는가</strong><br>
+    <strong>실패하면 어느 점에서 얼마나 벌어졌는지 함께 찍어 줘.</strong><br><br>
+    <strong>[함정]</strong> 역투영에는 닫힌 해가 없다. <strong>반복 횟수를 고정하지 말고 잔차로 멈춰 줘.</strong>
+    왜곡은 반드시 <strong>정규화 좌표에서</strong> 먹인다 — 픽셀 좌표에서 먹이면 틀린다.
+    <span class="mono">yaml</span>의 <span class="mono">intrinsics</span>는
+    <span class="mono">[f_u, f_v, c_u, c_v]</span> 순서다.<br><br>
+    <strong>[남긴다]</strong> 규약에 없어서 임의로 정한 것을 코드 맨 위에 목록으로 적어 줘.
+  </div>
+
+  <p class="readme-first">받은 코드에서 확인할 것</p>
+
+  <pre>□ 역투영이 <strong>횟수가 아니라 잔차</strong>로 멈추는가
+□ Z &lt;= 0 을 조용히 통과시키지 않는가            ← 통과시키면 뒤에 있는 점이 앞에 찍힌다
+□ 왜곡을 <strong>정규화 좌표에서</strong> 먹이는가, 픽셀 좌표에서 먹이는가
+□ 시험 ①이 <strong>네 모서리에서도</strong> 통과하는가        ← 가운데만 통과하면 아직 틀린 것이다
+□ 시험 ②의 숫자가 96.0 근처로 나오는가          ← 다르면 계수 순서를 의심한다
+□ 임의로 정한 것 목록에 내가 동의하지 않는 항목이 있는가</pre>
 
   <h2 id="lab">🧪 점군 오버레이 — 이 강의 첫 「눈으로 판정하는 검증」 <span class="badge b-red">사람이 한다</span></h2>
 
+  <p>
+    앞 절의 시험 셋은 전부 <strong>모델 안에서만</strong> 본 것이다 — 왕복이 맞고, 모서리 왜곡이 96 px이고,
+    뒤에 있는 점을 걸러낸다. 그런데 <strong>이 모델을 2회의 좌표계에 붙였을 때 맞는지</strong>는
+    아직 아무 시험도 하지 않았다. 그것은 숫자로 재기가 어렵다. <strong>그래서 눈으로 본다.</strong>
+  </p>
+
   <div class="box lab-block">
     <p class="boxtitle">🧪 정답 자세로 Leica 점군을 영상에 투영한다</p>
+
     <p style="margin:.2rem 0">
-      <strong>① 무엇을 알게 되나</strong> — 2회의 좌표계와 오늘의 카메라 모델이 <strong>둘 다</strong> 맞는지.
-      한쪽만 틀려도 어긋나고, <strong>어긋나는 모양이 원인마다 다르다.</strong>
+      <strong>① 무엇을 보려는 것인가</strong> — <strong>2회의 좌표계와 오늘의 카메라 모델이 둘 다 맞는지.</strong>
+      자세를 정답으로 고정해 두므로 <strong>추정한 것이 하나도 없다.</strong>
+      그래서 어긋나면 범인은 <strong>1~4회에 내가 만든 것 안에</strong> 있고,
+      <strong>어긋나는 모양이 원인마다 다르다.</strong>
     </p>
+
     <p style="margin:.2rem 0">
-      <strong>② 준비물</strong> — 1주차 로더, <span class="mono">pointcloud0/data.ply</span>,
-      정답 궤적, 오늘 만든 <span class="mono">CameraModel</span>.
+      <strong>② 준비물</strong> — 1~2회에 만든 로더(<span class="mono">groundTruth(t)</span> ·
+      <span class="mono">T_BC()</span> · <span class="mono">camera()</span>) ·
+      앞 절에서 받은 <span class="mono">CameraModel</span> ·
+      <span class="mono">V1_01_easy/mav0/</span>의 <span class="mono">pointcloud0/data.ply</span>와
+      <span class="mono">cam0/data/</span>의 영상 한 장.
     </p>
-    <ol style="margin:.4rem 0">
-      <li>영상 한 장을 고르고, 그 시각의 정답 자세 \(T_{WB}\)를 찾는다.
-        <strong>앞 1.040초는 정답이 없다</strong>(2회 ⑨절). <em>(10분)</em></li>
-      <li>점군을 카메라 좌표계로 옮긴다 — \(\mathbf{p}_C = (T_{WB}T_{BC})^{-1}\mathbf{p}_W\). <em>(10분)</em></li>
-      <li>\(Z &gt; 0\)인 점만 남기고 투영한다. 화면 밖도 버린다. <strong>버린 개수를 세어 둔다.</strong> <em>(10분)</em></li>
-      <li>영상 위에 <strong>깊이를 색으로</strong> 찍는다. 점이 너무 크면 구조가 뭉개진다. <em>(10분)</em></li>
-      <li><strong>세 판을 만든다</strong> — 제대로 한 것 · \(T_{BC}\)를 뺀 것 · 왜곡을 뺀 것. <em>(10분)</em></li>
+
+    <p style="margin:.5rem 0 .2rem">
+      <strong>③ 무엇을 하나</strong> — 다섯 단계다. <strong>단계마다 무엇이 나오는지</strong>까지 적었다.
+    </p>
+    <ol style="margin:.2rem 0">
+      <li><strong>영상 한 장을 골라 그 시각의 정답 자세를 얻는다</strong> → \(T_{WB}\) 하나.
+        <strong>앞 1.040초는 정답이 아예 없어 <span class="mono">nullopt</span>이 온다</strong>(2회 ⑨절) —
+        <strong>가운데쯤의 영상을 고르면 그 자리를 피한다.</strong>
+        정답은 200 Hz, 영상은 20 Hz다. <strong>같은 시각의 줄을 쓸지 앞뒤를 보간할지 정해 규약 문서에 적어 둔다.</strong> <em>(10분)</em></li>
+      <li><strong>점군을 읽고 솎는다</strong> → \(\mathbf{p}_W\) 수십만 개.
+        <strong>1억 개에 가깝다. 전부 투영하면 안 끝난다.</strong> <em>(10분)</em></li>
+      <li><strong>카메라 좌표로 옮겨 투영한다</strong> → \((u, v)\)와 \(Z\)의 목록.
+        \(\mathbf{p}_C = (T_{WB}T_{BC})^{-1}\mathbf{p}_W\)로 옮기고 <span class="mono">project()</span>를 부른다.
+        \(Z \le 0\)과 화면 밖은 버리고 <strong>버린 개수를 세어 둔다.</strong> <em>(15분)</em></li>
+      <li><strong>그 목록을 파일로 남긴다</strong> → <span class="mono">overlay_0.csv</span>
+        (열 셋 — <span class="mono">u, v, Z</span>).
+        <strong>C++는 파일만 남기고 그리는 일은 파이썬이 한다</strong> — 2회에 정한 산출물 규약이다. <em>(5분)</em></li>
+      <li><strong>파이썬이 그 파일을 영상 위에 찍는다</strong> → 판 하나.
+        <strong>깊이를 색으로</strong> 찍고 점은 작게 한다. <em>(10분)</em></li>
     </ol>
+
     <p style="margin:.2rem 0">
-      <strong>④ 이렇게 되면 성공이다</strong> — 첫 판에서 <strong>점들이 영상 속 벽·기둥·바닥의 모서리와 겹친다.</strong>
+      <strong>④ 이렇게 되면 성공이다</strong> — <strong>점들이 영상 속 벽·기둥·바닥의 모서리와 겹친다.</strong>
       숫자를 볼 필요가 없다. 겹치면 맞은 것이다.
     </p>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 넷째 단계가 사소해 보이지만 <strong>여기서 갈린다.</strong>
+    파이썬 쪽에서 투영을 다시 짜서 그려도 그림은 똑같이 나온다. 그런데 그때
+    <strong>검증된 것은 파이썬 코드이고, 앞 절에서 받은 <span class="mono">CameraModel</span>은
+    시험을 안 받은 채로 남는다.</strong>
+    투영은 C++이 하고 파이썬은 <strong>받은 좌표를 찍기만</strong> 한다.
   </div>
 
   <p>
@@ -644,52 +623,7 @@ rate_hz:           20</pre>
     <strong>한 번에 하나씩만 정답으로 바꾸는 것</strong>이 이 단의 규칙이고, 학기 내내 같은 방식으로 쓴다.
   </div>
 
-  <h2 id="prompt">🤖 의뢰서 — 카메라 모델 <span class="badge b-yellow">맡기되 검사한다</span></h2>
-
-  <p>
-    투영·역투영·왜곡은 <strong>길고 기계적인</strong> 코드다. 그래서 코드를 싣지 않고 의뢰서를 싣는다.
-    대신 [검증] 칸에 <strong>②~⑤절에서 잰 숫자를 그대로 넣는다.</strong>
-  </p>
-
-  <div class="prompt">
-    <button onclick="copyPrompt(this)">복사</button>
-    <strong>[규약]</strong> 첨부한 <span class="mono">conventions.md</span>대로 카메라는
-    <span class="mono">+z</span> 광축 · <span class="mono">+x</span> 오른쪽 · <span class="mono">+y</span> 아래다.
-    재투영 오차는 <strong>예측 − 관측</strong>으로 둔다.<br><br>
-    <strong>[인터페이스]</strong> 아래 시그니처를 <strong>바꾸지 말고</strong> 구현해 줘.<br>
-    <span class="mono">optional&lt;Vector2d&gt; project(const Vector3d&amp; p_C) const</span> — <span class="mono">Z &lt;= 0</span> 이면 <span class="mono">nullopt</span><br>
-    <span class="mono">Vector3d unproject(const Vector2d&amp; uv) const</span> — 길이 1인 방향 벡터를 돌려준다<br>
-    <span class="mono">Matrix&lt;double,2,3&gt; dProj_dp(const Vector3d&amp; p_C) const</span> — <strong>왜곡까지 포함</strong><br>
-    <span class="mono">bool inImage(const Vector2d&amp; uv) const</span><br><br>
-    <strong>[모델]</strong> pinhole + radial-tangential, 계수는 <span class="mono">k1 k2 p1 p2</span> 넷.
-    <span class="mono">yaml</span>에서 읽어 오되 <strong>skew 는 0으로 둔다.</strong><br><br>
-    <strong>[검증]</strong> 아래 다섯 시험을 같이 써 줘. <strong>기준을 넘으면 실패로 출력한다.</strong><br>
-    ① <span class="mono">project</span> → <span class="mono">unproject</span> 왕복 — 픽셀 오차 <span class="mono">&lt; 1e-6 px</span>,
-    영상 전체에 <strong>고르게 뿌린 1000점</strong>으로 (가운데만 쓰면 왜곡 버그를 놓친다)<br>
-    ② EuRoC cam0 값으로 <span class="mono">(752, 0)</span> 모서리를 넣었을 때
-    왜곡 없는 자리와의 거리가 <strong>96.0 ± 0.5 px</strong><br>
-    ③ <span class="mono">dProj_dp</span>를 <strong>유한차분과 대조</strong> — 상대오차 <span class="mono">&lt; 1e-6</span>,
-    <strong>모서리 근처 점으로도</strong> 한 번 (왜곡 야코비안이 빠졌는지 여기서 걸린다)<br>
-    ④ <span class="mono">Z = -1</span>인 점을 넣었을 때 <strong><span class="mono">nullopt</span>이 나오는가</strong><br>
-    ⑤ 역투영 반복이 <strong>모서리에서 13회 안에</strong> 잔차 <span class="mono">0.01 px</span> 아래로 내려가는가<br>
-    <strong>실패하면 어느 점에서 얼마나 벌어졌는지 함께 찍어 줘.</strong><br><br>
-    <strong>[함정]</strong> 역투영에는 닫힌 해가 없다. <strong>반복 횟수를 고정하지 말고 잔차로 멈춰 줘.</strong>
-    왜곡은 반드시 <strong>정규화 좌표에서</strong> 먹인다 — 픽셀 좌표에서 먹이면 틀린다.
-    <span class="mono">yaml</span>의 <span class="mono">intrinsics</span>는
-    <span class="mono">[f_u, f_v, c_u, c_v]</span> 순서다.<br><br>
-    <strong>[남긴다]</strong> 규약에 없어서 임의로 정한 것을 코드 맨 위에 목록으로 적어 줘.
-  </div>
-
-  <p class="readme-first">받은 코드에서 확인할 것</p>
-
-  <pre>□ 역투영이 <strong>횟수가 아니라 잔차</strong>로 멈추는가
-□ Z &lt;= 0 을 조용히 통과시키지 않는가            ← 통과시키면 뒤에 있는 점이 앞에 찍힌다
-□ 왜곡을 <strong>정규화 좌표에서</strong> 먹이는가, 픽셀 좌표에서 먹이는가
-□ dProj_dp 에 <strong>왜곡 야코비안이 들어 있는가</strong>      ← 시험 ③의 모서리 점이 이것을 잡는다
-□ 시험 ②의 숫자가 96.0 근처로 나오는가          ← 다르면 계수 순서를 의심한다
-□ 임의로 정한 것 목록에 내가 동의하지 않는 항목이 있는가</pre>
-
-  <p>그리고 오버레이가 이상할 때. <strong>증상을 좁혀서 말한다.</strong></p>
+  <p>표를 봐도 안 갈리면 에이전트에게 묻는다. 그때 <strong>증상을 좁혀서 말한다.</strong></p>
 
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
@@ -703,65 +637,43 @@ rate_hz:           20</pre>
   <div class="interp">
     <strong>해석:</strong> 「가운데는 맞고 가장자리만 틀리다」는 <strong>이 회차의 대표 증상</strong>이고,
     오늘 그 원인이 될 만한 것을 <strong>셋</strong> 배웠다 —
-    왜곡을 아예 안 먹였거나(③절), 역투영 반복이 덜 돌았거나(④절),
-    야코비안에서 왜곡을 뺐거나(⑤절). <strong>증상 하나에 후보 셋을 댈 수 있으면 이 회차는 끝난 것이다.</strong>
+    왜곡을 아예 안 먹였거나, 왜곡을 <strong>픽셀 좌표에서</strong> 먹였거나,
+    역투영 반복이 덜 돌았거나다. <strong>셋 다 ③절에 있다.</strong>
+    <strong>증상 하나에 후보 셋을 댈 수 있으면 이 회차는 끝난 것이다.</strong>
   </div>
-
-  <h2 id="verify">🧪 오늘 만든 것이 맞는지 어떻게 아나 <span class="badge b-red">사람이 한다</span></h2>
-
-  <p>오늘은 1단과 2단에 더해 <strong>4단(정답 부분 주입)</strong>을 처음 쓴다.</p>
-
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th style="width:8%">단</th><th>시험</th><th>통과 기준</th><th>여기서 걸리는 것</th></tr>
-    <tr><td>1</td><td>투영 → 역투영 왕복</td><td><span class="mono">&lt; 1e-6 px</span></td><td>역투영 반복이 덜 돌았다</td></tr>
-    <tr><td>1</td><td>모서리 왜곡 크기</td><td>96.0 ± 0.5 px</td><td>계수 순서, 왜곡을 먹이는 좌표계</td></tr>
-    <tr><td>1</td><td>\(Z \le 0\)에서 실패를 돌려주는가</td><td><span class="mono">nullopt</span></td><td>cheirality 검사 누락</td></tr>
-    <tr><td>2</td><td>투영 야코비안 vs 유한차분 (중심)</td><td>상대오차 <span class="mono">&lt; 1e-6</span></td><td>\(Z^2\) 항 부호</td></tr>
-    <tr><td>2</td><td><strong>같은 시험을 모서리 점으로</strong></td><td>상대오차 <span class="mono">&lt; 1e-6</span></td><td><strong>왜곡 야코비안 누락</strong></td></tr>
-    <tr><td><strong>4</strong></td><td><strong>정답 자세로 Leica 점군 오버레이</strong></td>
-      <td><strong>영상 구조물과 겹친다</strong> (눈으로)</td>
-      <td><strong>좌표계와 카메라 모델 양쪽 전부</strong></td></tr>
-  </table>
-  </div>
-
-  <div class="interp">
-    <strong>해석:</strong> 4번과 5번을 나눠 둔 것이 오늘의 요령이다.
-    <strong>중심 점으로만 야코비안을 대조하면 왜곡 야코비안이 빠져도 통과한다</strong> —
-    중심에서는 왜곡의 미분이 거의 0이기 때문이다.
-    <strong>시험을 어디서 하느냐가 시험의 일부다.</strong>
-  </div>
-
-  <div class="interp">
-    <strong>해석:</strong> 마지막 줄만 통과 기준이 숫자가 아니다. 그런데도 <strong>가장 강한 시험</strong>이다.
-    수식 검사 다섯을 다 통과해도 <strong>좌표계를 반대로 곱했으면</strong> 아무 시험도 걸리지 않는데,
-    오버레이는 그것을 즉시 잡아낸다.
-    <strong>숫자로 판정할 수 없는 것을 눈으로 판정하는 자리</strong>를 하나쯤 두는 것이
-    이 강의에서 계속 쓰는 방식이다.
-  </div>
-
-  <h2 id="draw">🎨 이 회차의 그림 <span class="badge b-green">맡긴다</span></h2>
 
   <p>
-    <strong>점군 오버레이 세 판</strong>이다. \(T_{BC}\)를 넣은 것 · 뺀 것 · 왜곡을 뺀 것을 나란히 놓는다.
+    <strong>여기까지가 판 하나다.</strong> 같은 것을 <span class="mono">T_BC</span>를 뺀 판 ·
+    왜곡을 뺀 판으로 두 번 더 만들어 <strong>나란히 놓는 것</strong>이 이 회차의 그림이다 — 바로 다음 절이다.
+  </p>
+
+  <h2 id="draw">🎨 이 회차의 그림 — 세 판을 나란히 <span class="badge b-green">맡긴다</span></h2>
+
+  <p>
+    앞 절의 다섯 단계를 <strong>세 번 돌려</strong> 파일을 세 벌 만든다 —
+    <strong>제대로 한 것 · \(T_{BC}\)를 뺀 것 · 왜곡을 뺀 것.</strong>
+    한 번에 <strong>하나만</strong> 빼는 것이 요령이다. 그 세 벌을 한 장으로 붙이는 것이 이 회차의 그림이다.
     <strong>이 그림으로 판정하는 것:</strong> 무엇을 빼면 어떻게 어긋나는지를 <strong>한눈에 대조</strong>할 수 있는가.
   </p>
 
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
-    <strong>[할 일]</strong> 점군 오버레이 <strong>세 판</strong>을 한 장의 그림으로 만드는 파이썬 스크립트를 써 줘.
-    같은 영상·같은 시각으로 ① 제대로 한 것 ② <span class="mono">T_BC</span>를 뺀 것 ③ 왜곡을 뺀 것을
+    <strong>[할 일]</strong> 점군 오버레이 <strong>세 판</strong>을 한 장으로 붙이는 파이썬 스크립트를 써 줘.
+    입력은 영상 한 장과 <strong>C++이 남긴 csv 세 개</strong>(<span class="mono">u, v, Z</span> 세 열)다 —
+    ① 제대로 한 것 ② <span class="mono">T_BC</span>를 뺀 것 ③ 왜곡을 뺀 것.
     <strong>가로로 나란히</strong> 놓고 각 판에 제목을 붙여 줘.<br><br>
-    <strong>[규약]</strong> 첨부한 <span class="mono">conventions.md</span>대로
-    <span class="mono">p_C = (T_WB * T_BC).inverse() * p_W</span>다.
-    점은 <strong>깊이를 색으로</strong> 찍고 반지름은 1 px로 작게 해 줘 —
+    <strong>[하지 말 것]</strong> <strong>투영을 파이썬에서 다시 계산하지 말아 줘.</strong>
+    csv에 있는 픽셀 좌표를 그대로 찍는다 — 다시 계산하면 C++ 쪽 모델이 검증되지 않는다.<br><br>
+    <strong>[규약]</strong> 점은 <strong>깊이(<span class="mono">Z</span>)를 색으로</strong> 찍고
+    반지름은 1 px로 작게 해 줘 —
     <strong>크게 찍으면 어긋난 것이 겹쳐 보여서 오히려 맞은 것처럼 보인다.</strong><br><br>
-    <strong>[검증]</strong> 판마다 <strong>영상 안에 찍힌 점의 개수</strong>를 제목에 적어 줘.
+    <strong>[검증]</strong> 판마다 <strong>찍은 점의 개수</strong>를 제목에 적어 줘.
     <strong>①번 판의 개수가 ②번보다 적으면 경고를 찍어 줘</strong> —
     보통은 제대로 한 쪽이 더 많이 보인다.<br><br>
-    <strong>[함정]</strong> Leica 점군은 1억 개에 가깝다. <strong>전부 투영하면 안 끝난다</strong> —
-    먼저 균등하게 솎아 내 줘. 그리고 <span class="mono">Z &lt;= 0</span>인 점을 <strong>버리기 전에 세어서</strong> 같이 찍어 줘.<br><br>
-    <strong>[남긴다]</strong> 몇 개로 솎았는지, 어떤 프레임을 골랐는지 적어 줘.
+    <strong>[함정]</strong> 영상 좌표는 \(v\)가 <strong>아래로</strong> 간다.
+    <span class="mono">imshow</span> 위에 <span class="mono">scatter</span>를 그대로 얹으면 맞는다 —
+    <strong>축을 한 번 더 뒤집지 말아 줘.</strong><br><br>
+    <strong>[남긴다]</strong> 어떤 프레임을 골랐는지, csv 각 파일의 점이 몇 개였는지 적어 줘.
   </div>
 
   <p class="readme-first">받은 그림에서 확인할 것</p>
@@ -769,8 +681,43 @@ rate_hz:           20</pre>
   <pre>□ ①번 판에서 점이 <strong>벽·기둥의 모서리와 겹치는가</strong>
 □ ②번 판이 통째로 돌아가 있는가                ← 90° 가 맞다
 □ ③번 판이 <strong>가장자리에서만</strong> 밀렸는가          ← 가운데도 밀렸으면 다른 문제다
-□ Z &lt;= 0 으로 버려진 점의 개수가 그럴듯한가
+□ 세 판이 <strong>같은 영상·같은 시각</strong>인가              ← 다르면 대조가 성립하지 않는다
 □ 점 크기가 너무 커서 어긋남이 가려지지 않았는가</pre>
+
+  <h2 id="verify">🧪 오늘 만든 것이 맞는지 어떻게 아나 <span class="badge b-red">사람이 한다</span></h2>
+
+  <p>
+    오늘은 1단에 더해 <strong>4단(정답 부분 주입)</strong>을 처음 쓴다.
+    <strong>2단(수치 야코비안 대조)은 오늘 쓸 자리가 없다</strong> — 미분이 필요해지는 9회에서 다시 나온다.
+  </p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th style="width:8%">단</th><th>시험</th><th>통과 기준</th><th>여기서 걸리는 것</th></tr>
+    <tr><td>1</td><td>투영 → 역투영 왕복 <strong>(영상 전체 + 네 모서리)</strong></td>
+      <td><span class="mono">&lt; 1e-6 px</span></td><td>역투영 반복이 덜 돌았다</td></tr>
+    <tr><td>1</td><td>모서리 왜곡 크기</td><td>96.0 ± 0.5 px</td><td>계수 순서, 왜곡을 먹이는 좌표계</td></tr>
+    <tr><td>1</td><td>\(Z \le 0\)에서 실패를 돌려주는가</td><td><span class="mono">nullopt</span></td><td>cheirality 검사 누락</td></tr>
+    <tr><td><strong>4</strong></td><td><strong>정답 자세로 Leica 점군 오버레이</strong></td>
+      <td><strong>영상 구조물과 겹친다</strong> (눈으로)</td>
+      <td><strong>좌표계와 카메라 모델 양쪽 전부</strong></td></tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 첫 줄에 <strong>「네 모서리」를 붙여 둔 것</strong>이 오늘의 요령이다.
+    <strong>가운데 점으로만 왕복을 시험하면 반복이 3회에 끝나 버려서 그냥 통과한다</strong> —
+    덜 도는 것도, 왜곡을 잘못 먹인 것도 중심에서는 1 px 아래에 숨는다.
+    <strong>시험을 어디서 하느냐가 시험의 일부다.</strong> 이 회차의 숫자가 전부 모서리에서 나온 이유다.
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 마지막 줄만 통과 기준이 숫자가 아니다. 그런데도 <strong>가장 강한 시험</strong>이다.
+    앞의 숫자 시험 셋을 다 통과해도 <strong>좌표계를 반대로 곱했으면</strong> 아무 시험도 걸리지 않는데,
+    오버레이는 그것을 즉시 잡아낸다.
+    <strong>숫자로 판정할 수 없는 것을 눈으로 판정하는 자리</strong>를 하나쯤 두는 것이
+    이 강의에서 계속 쓰는 방식이다.
+  </div>
 
   <h2 id="check">✅ 오늘의 점검</h2>
   <ul class="check">
@@ -781,15 +728,62 @@ rate_hz:           20</pre>
     <li><input type="checkbox" id="c5"><label for="c5">방사 왜곡과 접선 왜곡의 <strong>물리적 원인</strong>을 각각 말할 수 있다</label></li>
     <li><input type="checkbox" id="c6"><label for="c6">계수 넷 중 <strong>어느 것이 실제로 일하는지</strong> 숫자로 말할 수 있다</label></li>
     <li><input type="checkbox" id="c7"><label for="c7">왜곡을 빼먹으면 <strong>어디의 점이</strong> 얼마나 틀리는지 말할 수 있다</label></li>
-    <li><input type="checkbox" id="c8"><label for="c8">역투영에 닫힌 해가 없는 이유와, 반복을 언제 멈춰야 하는지 안다</label></li>
-    <li><input type="checkbox" id="c9"><label for="c9">투영 야코비안을 <strong>세 조각으로 나눠</strong> 쓸 수 있다</label></li>
+    <li><input type="checkbox" id="c8"><label for="c8">역투영에 <strong>닫힌 해가 없는 이유</strong>를 말할 수 있고, 실제로 그 일을 누가 해 주는지 안다</label></li>
+    <li><input type="checkbox" id="c9"><label for="c9">재투영 오차의 <strong>부호를 어느 쪽으로 정했는지</strong>, 섞이면 무엇이 일어나는지 안다</label></li>
     <li><input type="checkbox" id="c10"><label for="c10">픽셀 하나로 3차원 점을 복원할 수 없는 이유를 식으로 말할 수 있다</label></li>
     <li><input type="checkbox" id="c11"><label for="c11">점군 오버레이를 세 판 만들었고, 어긋나는 모양이 서로 달랐다</label></li>
-    <li><input type="checkbox" id="c12"><label for="c12">야코비안 대조를 <strong>모서리 점으로도</strong> 했고 <span class="mono">1e-6</span> 안에 들었다</label></li>
+    <li><input type="checkbox" id="c12"><label for="c12">왕복 시험을 <strong>네 모서리로도</strong> 했고 <span class="mono">1e-6 px</span> 안에 들었다</label></li>
     <li><input type="checkbox" id="c13"><label for="c13">\(Z \le 0\)인 점을 걸러 내고 있다</label></li>
   </ul>
 
   <h2 id="more">조금 더 알아두면 <span class="badge b-lv">시험 범위 아님</span></h2>
+
+  <details class="story">
+    <summary>역투영의 반복은 왜 수렴하나 — 그리고 안 될 때는 뉴턴법</summary>
+    <p>
+      ③절에 적은 반복은 <strong>고정점 반복</strong>이고, <strong>왜곡이 작을 때만</strong> 수렴한다.
+      \(k_1\)이 크거나 반경이 아주 크면 <strong>발산하거나 엉뚱한 해로 간다.</strong>
+    </p>
+    <p>
+      더 튼튼하게 하려면 <strong>뉴턴법</strong>을 쓴다 — 왜곡 함수의 야코비안 \(J\)를 계산해
+      \(\delta = J^{-1}(\mathbf{x}_d - \mathrm{distort}(\mathbf{x}))\)만큼 밀어 주는 방식이고,
+      반복 횟수가 절반 이하로 준다.
+      <strong>EuRoC 정도의 왜곡에서는 고정점 반복으로 충분하다.</strong>
+      다만 <strong>수렴 검사(잔차 확인)를 빼지 않는 것</strong>이 조건이다.
+    </p>
+  </details>
+
+  <details class="story">
+    <summary>영상을 통째로 펴 두는 방법 — 그리고 이 강의가 그러지 않는 이유</summary>
+    <p>
+      실전에서 자주 쓰는 다른 방법이 있다. <strong>영상 전체를 미리 펴서(undistort) 저장해 두고,
+      그다음부터는 왜곡이 없는 것처럼 쓰는 것</strong>이다. OpenCV의
+      <span class="mono">initUndistortRectifyMap</span> + <span class="mono">remap</span>이 그 일을 한다.
+    </p>
+
+    <div class="tablewrap">
+    <table class="summary-table">
+      <tr><th style="width:24%"></th><th>영상을 편다</th><th><strong>좌표만 편다</strong> (이 강의)</th></tr>
+      <tr><td>언제 계산하나</td><td>영상마다 한 번, 전체 픽셀에</td><td><strong>특징점에만</strong> — 프레임당 수백 개</td></tr>
+      <tr><td>비용</td><td>752×480 = 36만 픽셀 보간</td><td>수백 번의 반복법</td></tr>
+      <tr><td>화질</td><td><strong>보간이 들어간다.</strong> 특징점 위치가 미세하게 흔들린다</td><td>원본 픽셀 그대로</td></tr>
+      <tr><td>시야</td><td><strong>가장자리가 잘리거나 검은 영역이 생긴다</strong></td><td>손실 없다</td></tr>
+      <tr><td>편한 점</td><td>이후 코드가 왜곡을 몰라도 된다</td><td>모델을 계속 들고 다녀야 한다</td></tr>
+    </table>
+    </div>
+
+    <p>
+      <strong>영상을 펴는 쪽이 편하지만 정보를 조금 잃는다.</strong>
+      보간이 한 번 들어가면 특징점 위치가 서브픽셀 수준에서 흔들리고,
+      그 흔들림이 ④절의 재투영 오차에 그대로 더해진다.
+      <strong>이 강의는 좌표만 편다</strong> — 특징점 몇백 개에만 역투영을 돌리면 되므로 비용도 문제가 안 되고,
+      <strong>「원본 픽셀에서 잰 값」이라는 것이 검증에서 중요하기 때문</strong>이다.
+    </p>
+    <p>
+      단, <strong>스테레오 정합처럼 「두 영상을 줄 맞춰 놓아야 하는」 일에는 펴는 쪽이 필요하다</strong> —
+      그래서 스테레오 파이프라인은 대개 rectify를 먼저 한다. 우리는 단안이라 그럴 일이 없다.
+    </p>
+  </details>
 
   <details class="story">
     <summary>이 강의에서 캘리브레이션은 하지 않는다 — 왜, 그리고 대신 무엇을 아나</summary>
