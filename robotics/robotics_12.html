@@ -97,7 +97,7 @@
 
   <h3>읽는 법</h3>
   <ul>
-    <li>먼저 <strong>10회 ⑧절에서 배운 대로</strong> <code>make_unique</code>로 짠 판을 돌린다. 이것이 출발점이다.</li>
+    <li>먼저 <strong>10회 ⑦절에서 배운 대로</strong> <code>make_unique</code>로 짠 판을 돌린다. 이것이 출발점이다.</li>
     <li>②절부터는 절마다 <strong>「개념」</strong>이 먼저 온다 — 그 문법이 무엇이고 어떤 문제를 풀려고 생겼는지. 그다음 <strong>「예제에 적용」</strong>에서 프로그램에 줄을 더하거나 한 곳을 고친다.</li>
     <li>고치는 자리는 <strong>고치기 전</strong>(붉은 테두리)과 <strong>고친 뒤</strong>(푸른 테두리)를 따로 놓는다. 더하기만 하는 단계는 더한 뒤의 모양만 보인다.</li>
     <li>그 아래 <strong>📄 「전체 코드」 상자</strong>를 누르면 그 단계의 <code>main.cpp</code> 전체가 나온다. 첫 줄 주석에 <strong>버전(v1, v2, …)</strong>이 있다. <strong>어느 버전을 펼쳐도 그대로 빌드되고 돌아간다.</strong></li>
@@ -214,7 +214,7 @@ add_executable(ptr_container main.cpp)</code></pre></div>
 
   <h3>개념 — 스마트 포인터는 「지울 책임」을 진 포인터다</h3>
   <p>
-    동적으로 만든 객체는 누군가 지워야 한다(10회 ⑧절). <strong>그 책임이 누구에게 있는가</strong>를 <strong>소유권</strong>(ownership)이라고 한다.
+    동적으로 만든 객체는 누군가 지워야 한다(10회 ⑦절). <strong>그 책임이 누구에게 있는가</strong>를 <strong>소유권</strong>(ownership)이라고 한다.
     <strong>스마트 포인터</strong>(smart pointer)는 객체의 주소를 담는 포인터인데, <strong>자기가 사라질 때 가리키는 객체를 지우는 책임</strong>까지 진다 — RAII를 포인터에 적용한 것이다.
     표준에 둘이 있고, 고르는 기준은 성능이 아니라 <strong>「이 객체의 주인이 몇인가」</strong>다.
   </p>

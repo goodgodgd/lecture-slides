@@ -28,15 +28,14 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약 — 용어 여덟 개</a>
+  <a href="#summary">한 장 요약 — 용어 일곱 개</a>
   <a href="#start">① 오늘 만들 것 — if 문으로 먼저</a>
   <a href="#inherit">② 상속 · <code>: public</code></a>
   <a href="#virtual">③ 가상 함수와 다형성 · <code>virtual</code> · <code>= 0</code></a>
   <a href="#override">④ <code>override</code></a>
   <a href="#dtor">⑤ 🔴 가상 소멸자</a>
   <a href="#raii">⑥ RAII — 스코프가 곧 수명</a>
-  <a href="#stdraii">⑦ 파일과 잠금도 같은 원리</a>
-  <a href="#newdelete">⑧ <code>new</code> / <code>delete</code>를 안 쓰는 이유</a>
+  <a href="#newdelete">⑦ <code>new</code> / <code>delete</code>를 안 쓰는 이유</a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
   <a href="#prompts">🤖 프롬프트 모음</a>
@@ -60,12 +59,12 @@
   </div>
 
   <p>
-    오늘 배울 것은 둘이다. 앞의 넷은 <strong>상속과 다형성</strong>이고, 뒤의 셋은 <strong>RAII</strong>다.
+    오늘 배울 것은 둘이다. 앞의 넷은 <strong>상속과 다형성</strong>이고, 뒤의 둘은 <strong>RAII</strong>다.
     성격이 달라 보이지만 한 줄로 이어진다. <strong>둘 다 「객체가 사라질 때 무슨 일이 일어나는가」의 이야기다.</strong>
-    9회에서 소멸자가 자동으로 불린다는 것을 봤다. 오늘은 그것이 <strong>안 불리는 경우</strong>(⑤)와, 그것을 <strong>믿고 뒷정리를 맡기는 방법</strong>(⑥~⑧)을 본다.
+    9회에서 소멸자가 자동으로 불린다는 것을 봤다. 오늘은 그것이 <strong>안 불리는 경우</strong>(⑤)와, 그것을 <strong>믿고 뒷정리를 맡기는 방법</strong>(⑥·⑦)을 본다.
   </p>
   <p>
-    오늘은 <strong>용어 여덟 개</strong>를 다룬다. 절마다 <strong>먼저 그 문법이 무엇이고 왜 생겼는지를 설명하고</strong>,
+    오늘은 <strong>용어 일곱 개</strong>를 다룬다. 절마다 <strong>먼저 그 문법이 무엇이고 왜 생겼는지를 설명하고</strong>,
     그다음에 <strong>센서 둘의 값을 읽는 작은 프로그램</strong>에 그것을 적용한다.
     프로그램은 <code>if</code> 문으로 먼저 짜 두고, 절이 넘어갈 때마다 문법 하나씩으로 고쳐 간다.
   </p>
@@ -82,7 +81,6 @@
     <tr><td><code>override</code></td><td><code>float read() override</code></td><td>「기반 클래스의 가상 함수를 재정의한다」는 선언. 이름을 오타 내면 <strong>컴파일이 멈춘다</strong></td></tr>
     <tr><td>🔴 가상 소멸자</td><td><code>virtual ~Sensor()</code></td><td>없으면 기반 클래스 포인터로 지울 때 <strong>파생 클래스 소멸자가 아예 안 불린다.</strong> 오류도 크래시도 없다</td></tr>
     <tr><td>RAII · 스코프 · 수명</td><td><code>{ Lidar a; ... }</code></td><td>자원은 생성자에서 얻고 소멸자에서 돌려준다. <strong>중괄호를 벗어나는 순간 정리된다</strong></td></tr>
-    <tr><td><code>std::ofstream</code> · <code>std::lock_guard</code></td><td><code>std::ofstream f("...");</code></td><td>파일과 잠금도 같은 원리다. <code>close()</code>·<code>unlock()</code>을 <strong>안 부르는 쪽이 맞다</strong></td></tr>
     <tr><td><code>new</code> / <code>delete</code> · <code>std::make_unique</code></td><td><code>auto p = std::make_unique&lt;Lidar&gt;();</code></td><td><code>new</code>/<code>delete</code> 짝을 사람이 맞추면 나가는 길이 늘 때마다 샌다. <code>make_unique</code>가 그 짝을 대신 맞춘다</td></tr>
   </table>
   </div>
@@ -1021,7 +1019,7 @@ int main()
 
   <h3>개념 — 얻은 것은 소멸자가 돌려준다</h3>
   <p>
-    메모리, 열어 둔 파일, 잠근 자물쇠처럼 <strong>쓰고 나면 반드시 돌려줘야 하는 것</strong>을 <strong>자원</strong>(resource)이라고 한다.
+    메모리나 열어 둔 파일처럼 <strong>쓰고 나면 반드시 돌려줘야 하는 것</strong>을 <strong>자원</strong>(resource)이라고 한다.
     자원의 어려움은 얻는 쪽이 아니라 돌려주는 쪽에 있다 — 돌려주는 줄을 빠뜨리면 새고, 함수를 빠져나가는 길이 여럿이면 길마다 챙겨야 한다.
   </p>
   <p>
@@ -1033,6 +1031,8 @@ int main()
   <p>
     앞 절까지 계속 본 것이 이미 RAII다. <code>Lidar</code>는 생성자에서 원소 360개를 얻고 소멸자에서 반납했고, 아무도 반납하라고 시키지 않았다.
     <code>std::vector</code>와 <code>std::string</code>도 같은 방식으로 만들어져 있다.
+    파일도 마찬가지다. 파일을 쓰는 <code>std::ofstream</code>은 생성자에서 파일을 열고 소멸자에서 닫으므로,
+    <code>close()</code>를 직접 부르지 않아도 중괄호를 나가는 순간 닫히고 내용이 저장된다.
   </p>
 
   <h3>예제에 적용 — 중괄호를 겹쳐서 수명을 눈으로 본다</h3>
@@ -1132,178 +1132,8 @@ int main()
     <code>[Lidar 소멸자]</code>는 맨 마지막이다 — 나중에 만든 것이 먼저 사라진다(9회 ③절).
   </div>
 
-  <!-- ── ⑦ 표준 라이브러리의 RAII ── -->
-  <h2 id="stdraii">⑦ 파일도 잠금도 같은 원리다 — <code>std::ofstream</code> · <code>std::lock_guard</code> <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
-
-  <h3>개념 — 표준 라이브러리의 자원 객체는 이미 RAII로 만들어져 있다</h3>
-  <p>
-    우리가 만든 <code>Lidar</code>만 그런 것이 아니다. 표준 라이브러리에서 자원을 다루는 클래스는 <strong>전부 RAII로 만들어져 있다.</strong>
-    파일을 쓰는 <code>std::ofstream</code>은 생성자에서 파일을 열고 소멸자에서 닫는다.
-    자물쇠를 잠그는 <code>std::lock_guard</code>는 생성자에서 잠그고 소멸자에서 푼다.
-    그래서 <strong><code>close()</code>나 <code>unlock()</code>을 직접 부르는 줄이 없는 것이 정상</strong>이다.
-  </p>
-  <p class="readme-first">무엇을 먼저 볼지: <strong>가운데 「사람이 부르면」 열</strong>을 본다. 셋 다 부를 필요가 없다.</p>
-  <div class="tablewrap">
-  <table>
-    <tr><th>무엇을 잡나</th><th>사람이 부르면</th><th>안 부르면</th></tr>
-    <tr><td>메모리 (<code>std::vector</code>·<code>unique_ptr</code>)</td><td><code>delete</code> — <strong>빠뜨리면 샌다</strong></td><td>중괄호를 나갈 때 반납된다</td></tr>
-    <tr><td>파일 (<code>std::ofstream</code>)</td><td><code>close()</code> — 빠뜨리면 <strong>내용이 저장 안 될 수 있다</strong></td><td>중괄호를 나갈 때 닫힌다</td></tr>
-    <tr><td>잠금 (<code>std::lock_guard</code>)</td><td><code>unlock()</code> — 빠뜨리면 <strong>프로그램이 멈춘다</strong></td><td>중괄호를 나갈 때 풀린다</td></tr>
-  </table>
-  </div>
-
-  <h3>예제에 적용 — 파일 하나를 쓰고, 자물쇠 하나를 잠근다</h3>
-  <h3>8단계 (v8) — 헤더 셋과 블록 둘이 는다</h3>
-  <pre class="lang-cpp"><code>#include &lt;fstream&gt;        // std::ofstream, std::ifstream
-#include &lt;mutex&gt;          // std::mutex, std::lock_guard
-#include &lt;string&gt;
-  // …
-std::mutex m;                  // 한 번에 한 갈래만 들어가게 하는 자물쇠
-  // …
-  std::cout &lt;&lt; "④ 파일도 같은 원리다 — close() 를 부르지 않았다\n";
-  {
-    Lidar lidar;
-    std::ofstream f("scan_log.txt");
-    f &lt;&lt; "라이다 값 " &lt;&lt; lidar.read() &lt;&lt; "\n";
-    std::cout &lt;&lt; "  파일에 한 줄 썼다\n";
-  }
-  std::ifstream in("scan_log.txt");
-  std::string line; std::getline(in, line);
-  std::cout &lt;&lt; "  다시 읽어 보니: \"" &lt;&lt; line &lt;&lt; "\"  → 이미 닫혀서 내용이 저장됐다\n";
-
-  std::cout &lt;&lt; "⑤ 잠금(lock)도 같은 원리다 — unlock() 을 부르지 않았다\n";
-  {
-    std::lock_guard&lt;std::mutex&gt; g(m);
-    std::cout &lt;&lt; "  잠근 채로 일하는 중\n";
-  }
-  std::cout &lt;&lt; "  중괄호를 나오면서 자동으로 풀렸다\n";</code></pre>
-  <div class="box firstseen">
-    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
-    <dl>
-      <dt>std::ofstream f("scan_log.txt")</dt>
-      <dd>파일을 <strong>쓰기용으로 연다.</strong> <code>f &lt;&lt; …</code>는 <code>std::cout</code>과 같은 모양인데 화면 대신 파일로 간다.
-          읽기용은 <code>std::ifstream</code>이고, <code>std::getline(in, line)</code>이 거기서 한 줄을 읽어 <code>line</code>에 담는다.
-          여기서는 <code>close()</code>를 한 번도 안 불렀는데 내용이 저장됐다는 것을 보이려고 썼다.</dd>
-      <dt>std::mutex m / std::lock_guard&lt;std::mutex&gt; g(m)</dt>
-      <dd><code>mutex</code>는 <strong>한 번에 한 갈래만 들어가게 하는 자물쇠</strong>다. 여러 갈래가 동시에 같은 값을 건드리면 깨지므로 그 자리를 잠그는 데 쓴다.
-          <code>lock_guard</code>는 <strong>이 줄에서 잠그고 중괄호를 나갈 때 자동으로 푼다.</strong>
-          여기서는 잠금이 자동으로 풀리는 것을 보여 주는 재료로만 썼다.</dd>
-    </dl>
-  </div>
-  <h3>실제로 나온 출력</h3>
-  <pre><code>④ 파일도 같은 원리다 — close() 를 부르지 않았다
-  [Lidar 생성] 원소 360개 확보
-  파일에 한 줄 썼다
-  [Lidar 소멸자] 원소 360개 반납
-  [Sensor 소멸자]
-  다시 읽어 보니: "라이다 값 0.83"  → 이미 닫혀서 내용이 저장됐다
-⑤ 잠금(lock)도 같은 원리다 — unlock() 을 부르지 않았다
-  잠근 채로 일하는 중
-  중괄호를 나오면서 자동으로 풀렸다</code></pre>
-  <!-- fullcode "전체 코드 — v8 (8단계 · 파일과 잠금) main.cpp" build="cmake --build build && ./build/sensors"
-       l10_raii/steps/step8/main.cpp
-  -->
-<details class="fullcode">
-  <summary>전체 코드 — v8 (8단계 · 파일과 잠금) main.cpp</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/sensors</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 센서 읽기 — v8 (8단계: 파일과 잠금도 같은 원리다)
-#include &lt;fstream&gt;        // std::ofstream, std::ifstream
-#include &lt;iostream&gt;
-#include &lt;memory&gt;         // std::unique_ptr, std::make_unique
-#include &lt;mutex&gt;          // std::mutex, std::lock_guard
-#include &lt;string&gt;
-#include &lt;vector&gt;
-
-class Sensor                     // 기반 클래스 — 모든 센서에 공통인 것
-{
-public:
-  virtual float read() = 0;      // 가상 함수. = 0 은 「내용은 파생 클래스가 채운다」
-  virtual ~Sensor() { std::cout &lt;&lt; &quot;  [Sensor 소멸자]\n&quot;; }   // 가상 소멸자
-};
-
-class Lidar : public Sensor      // 파생 클래스 — Sensor 를 물려받는다
-{
-public:
-  Lidar() : buf_(360, 0.83f) { std::cout &lt;&lt; &quot;  [Lidar 생성] 원소 360개 확보\n&quot;; }
-  ~Lidar() { std::cout &lt;&lt; &quot;  [Lidar 소멸자] 원소 360개 반납\n&quot;; }
-  float read() override { return buf_.at(0); }
-private:
-  std::vector&lt;float&gt; buf_;
-};
-
-class Sonar : public Sensor
-{
-public:
-  Sonar() : dist_(1.2f) { std::cout &lt;&lt; &quot;  [Sonar 생성]\n&quot;; }
-  ~Sonar() { std::cout &lt;&lt; &quot;  [Sonar 소멸자]\n&quot;; }
-  float read() override { return dist_; }
-private:
-  float dist_;
-};
-
-float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다 — 기반 클래스 참조로 받는다
-
-std::mutex m;                  // 한 번에 한 갈래만 들어가게 하는 자물쇠
-
-int main()
-{
-  std::cout &lt;&lt; &quot;① 상속 — 종류를 따지지 않는다\n&quot;;
-  {
-    Lidar lidar;
-    Sonar sonar;
-    std::cout &lt;&lt; &quot;  lidar → &quot; &lt;&lt; read_any(lidar) &lt;&lt; &quot; m\n&quot;;
-    std::cout &lt;&lt; &quot;  sonar → &quot; &lt;&lt; read_any(sonar) &lt;&lt; &quot; m\n&quot;;
-  }
-
-  std::cout &lt;&lt; &quot;② 정적 타입은 Sensor, 동적 타입은 Lidar — 중괄호를 나가면\n&quot;;
-  {
-    std::unique_ptr&lt;Sensor&gt; s = std::make_unique&lt;Lidar&gt;();
-    s-&gt;read();
-  }
-
-  std::cout &lt;&lt; &quot;③ 중괄호 하나가 곧 수명이다\n&quot;;
-  {
-    Lidar a;
-    {
-      Sonar b;
-      std::cout &lt;&lt; &quot;  안쪽 중괄호 안이다\n&quot;;
-    }
-    std::cout &lt;&lt; &quot;  안쪽을 빠져나왔다\n&quot;;
-  }
-
-  std::cout &lt;&lt; &quot;④ 파일도 같은 원리다 — close() 를 부르지 않았다\n&quot;;
-  {
-    Lidar lidar;
-    std::ofstream f(&quot;scan_log.txt&quot;);
-    f &lt;&lt; &quot;라이다 값 &quot; &lt;&lt; lidar.read() &lt;&lt; &quot;\n&quot;;
-    std::cout &lt;&lt; &quot;  파일에 한 줄 썼다\n&quot;;
-  }
-  std::ifstream in(&quot;scan_log.txt&quot;);
-  std::string line; std::getline(in, line);
-  std::cout &lt;&lt; &quot;  다시 읽어 보니: \&quot;&quot; &lt;&lt; line &lt;&lt; &quot;\&quot;  → 이미 닫혀서 내용이 저장됐다\n&quot;;
-
-  std::cout &lt;&lt; &quot;⑤ 잠금(lock)도 같은 원리다 — unlock() 을 부르지 않았다\n&quot;;
-  {
-    std::lock_guard&lt;std::mutex&gt; g(m);
-    std::cout &lt;&lt; &quot;  잠근 채로 일하는 중\n&quot;;
-  }
-  std::cout &lt;&lt; &quot;  중괄호를 나오면서 자동으로 풀렸다\n&quot;;
-  return 0;
-}</code></pre></div>
-</details>
-<!-- /fullcode -->
-  <div class="interp">
-    <strong>해석:</strong> <code>f.close()</code>를 부른 줄이 코드에 없는데 중괄호를 나온 뒤 다시 읽었더니 <code>라이다 값 0.83</code>이 들어 있었다.
-    <code>ofstream</code>의 소멸자가 파일을 닫고 내용을 밀어 넣은 것이다. 같은 중괄호 안의 <code>Lidar</code>도 그 순간 같이 사라졌다.
-    <strong>C++에서는 뒷정리 코드를 안 쓰는 것이 잘 쓴 것이다.</strong> 반대로 <code>close()</code>나 <code>unlock()</code>이 코드에 보이면 「왜 직접 부르지?」부터 묻는다.
-  </div>
-  <div class="prompt">
-    <button onclick="copyPrompt(this)">복사</button>
-    이 코드에 <code>close()</code>나 <code>unlock()</code>을 직접 부르는 줄이 있으면 알려 줘. 소멸자가 어차피 해 주는 것이면 그 줄을 지우고, 꼭 그 자리에서 불러야 하는 이유가 있으면 지우지 말고 이유를 한 줄로 적어 줘.
-  </div>
-
-  <!-- ── ⑧ new / delete ── -->
-  <h2 id="newdelete">⑧ <code>new</code>와 <code>delete</code>의 짝을 사람이 맞추다 보면 언젠가 어긋난다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+  <!-- ── ⑦ new / delete ── -->
+  <h2 id="newdelete">⑦ <code>new</code>와 <code>delete</code>의 짝을 사람이 맞추다 보면 언젠가 어긋난다 <span class="badge b-red">🔴 사람이 한다</span></h2>
 
   <h3>개념 — 동적 할당과 그 짝</h3>
   <p>
@@ -1321,7 +1151,7 @@ int main()
   <h3>예제에 적용 — 나가는 길이 셋인 함수에서 실제로 새는지 봤다</h3>
   <p><code>Lidar</code>에 <code>ok()</code>를 하나 붙이고, <code>main</code> 위에 <code>tune()</code>을 둔다. <code>new</code>로 잡고 끝에서 <code>delete</code>하는, <strong>AI가 보통 주는 모양</strong>이다.</p>
 
-  <h3>9단계 (v9, 고치기 전) — <code>new</code> / <code>delete</code>로 짠 판</h3>
+  <h3>8단계 (v8, 고치기 전) — <code>new</code> / <code>delete</code>로 짠 판</h3>
   <pre class="lang-cpp"><code>  // Lidar 에 한 줄
   bool ok() const { return !buf_.empty(); }
 
@@ -1334,25 +1164,22 @@ void tune(bool busy)
   delete p;                     // ③ 여기까지 와야만 지워진다
 }
   // main 에
-  std::cout &lt;&lt; "⑥ 함수 중간에서 나가도 반납되나\n";
+  std::cout &lt;&lt; "④ 함수 중간에서 나가도 반납되나\n";
   tune(true);
   std::cout &lt;&lt; "  tune() 에서 돌아왔다\n";</code></pre>
   <h3>실제로 나온 출력 — 소멸자 줄이 없다</h3>
-  <pre><code>⑥ 함수 중간에서 나가도 반납되나
+  <pre><code>④ 함수 중간에서 나가도 반납되나
   [Lidar 생성] 원소 360개 확보
   tune() 에서 돌아왔다</code></pre>
-  <!-- fullcode "전체 코드 — v9 고치기 전 (new / delete 로 짠 판 · ②로 나가서 샌다) main.cpp" build="cmake --build build && ./build/sensors"
+  <!-- fullcode "전체 코드 — v8 고치기 전 (new / delete 로 짠 판 · ②로 나가서 샌다) main.cpp" build="cmake --build build && ./build/sensors"
        l10_raii/steps/variants/newdelete/main.cpp
   -->
 <details class="fullcode">
-  <summary>전체 코드 — v9 고치기 전 (new / delete 로 짠 판 · ②로 나가서 샌다) main.cpp</summary>
+  <summary>전체 코드 — v8 고치기 전 (new / delete 로 짠 판 · ②로 나가서 샌다) main.cpp</summary>
   <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/sensors</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 센서 읽기 — v9 고치기 전 (9단계: new / delete 로 짠 판 · 함수 중간에서 나가면 샌다)
-#include &lt;fstream&gt;        // std::ofstream, std::ifstream
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 센서 읽기 — v8 고치기 전 (8단계: new / delete 로 짠 판 · 함수 중간에서 나가면 샌다)
 #include &lt;iostream&gt;
 #include &lt;memory&gt;         // std::unique_ptr, std::make_unique
-#include &lt;mutex&gt;          // std::mutex, std::lock_guard
-#include &lt;string&gt;
 #include &lt;vector&gt;
 
 class Sensor                     // 기반 클래스 — 모든 센서에 공통인 것
@@ -1384,8 +1211,6 @@ private:
 };
 
 float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다 — 기반 클래스 참조로 받는다
-
-std::mutex m;                  // 한 번에 한 갈래만 들어가게 하는 자물쇠
 
 // 나가는 길이 셋인데 delete 는 한 줄이다
 void tune(bool busy)
@@ -1422,25 +1247,7 @@ int main()
     std::cout &lt;&lt; &quot;  안쪽을 빠져나왔다\n&quot;;
   }
 
-  std::cout &lt;&lt; &quot;④ 파일도 같은 원리다 — close() 를 부르지 않았다\n&quot;;
-  {
-    Lidar lidar;
-    std::ofstream f(&quot;scan_log.txt&quot;);
-    f &lt;&lt; &quot;라이다 값 &quot; &lt;&lt; lidar.read() &lt;&lt; &quot;\n&quot;;
-    std::cout &lt;&lt; &quot;  파일에 한 줄 썼다\n&quot;;
-  }
-  std::ifstream in(&quot;scan_log.txt&quot;);
-  std::string line; std::getline(in, line);
-  std::cout &lt;&lt; &quot;  다시 읽어 보니: \&quot;&quot; &lt;&lt; line &lt;&lt; &quot;\&quot;  → 이미 닫혀서 내용이 저장됐다\n&quot;;
-
-  std::cout &lt;&lt; &quot;⑤ 잠금(lock)도 같은 원리다 — unlock() 을 부르지 않았다\n&quot;;
-  {
-    std::lock_guard&lt;std::mutex&gt; g(m);
-    std::cout &lt;&lt; &quot;  잠근 채로 일하는 중\n&quot;;
-  }
-  std::cout &lt;&lt; &quot;  중괄호를 나오면서 자동으로 풀렸다\n&quot;;
-
-  std::cout &lt;&lt; &quot;⑥ 함수 중간에서 나가도 반납되나\n&quot;;
+  std::cout &lt;&lt; &quot;④ 함수 중간에서 나가도 반납되나\n&quot;;
   tune(true);
   std::cout &lt;&lt; &quot;  tune() 에서 돌아왔다\n&quot;;
   return 0;
@@ -1456,7 +1263,7 @@ int main()
     <figcaption>왼쪽 상자 옆의 <strong>「샌다」 두 줄</strong>을 본다. 오른쪽에는 <code>delete</code>가 <strong>한 줄도 없는데</strong> 세 갈래 전부에서 반납된다.</figcaption>
   </figure>
 
-  <h3>9단계 (v9, 완성본) — <code>make_unique</code>로</h3>
+  <h3>8단계 (v8, 완성본) — <code>make_unique</code>로</h3>
   <div class="codelabel bad">고치기 전 — AI가 보통 주는 코드 🔴</div>
   <pre class="lang-cpp before"><code>  Lidar * p = new Lidar();      // 여기서 잡는다
   if (!p-&gt;ok())  { return; }    // ① 여기로 나가면 안 지워진다
@@ -1468,23 +1275,20 @@ int main()
   if (busy)      { return; }             // ② 나가면서 반납된다
 }                                        // ③ 여기서도 반납된다</code></pre>
   <h3>실제로 나온 출력 — 소멸자 줄이 돌아왔다</h3>
-  <pre><code>⑥ 함수 중간에서 나가도 반납되나
+  <pre><code>④ 함수 중간에서 나가도 반납되나
   [Lidar 생성] 원소 360개 확보
   [Lidar 소멸자] 원소 360개 반납
   [Sensor 소멸자]
   tune() 에서 돌아왔다</code></pre>
-  <!-- fullcode "전체 코드 — v9 완성본 (9단계 · make_unique) main.cpp" build="cmake --build build && ./build/sensors"
-       l10_raii/steps/step9/main.cpp
+  <!-- fullcode "전체 코드 — v8 완성본 (8단계 · make_unique) main.cpp" build="cmake --build build && ./build/sensors"
+       l10_raii/steps/step8/main.cpp
   -->
 <details class="fullcode">
-  <summary>전체 코드 — v9 완성본 (9단계 · make_unique) main.cpp</summary>
+  <summary>전체 코드 — v8 완성본 (8단계 · make_unique) main.cpp</summary>
   <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/sensors</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 센서 읽기 — v9 완성본 (9단계: new / delete 대신 make_unique)
-#include &lt;fstream&gt;        // std::ofstream, std::ifstream
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 센서 읽기 — v8 완성본 (8단계: new / delete 대신 make_unique)
 #include &lt;iostream&gt;
 #include &lt;memory&gt;         // std::unique_ptr, std::make_unique
-#include &lt;mutex&gt;          // std::mutex, std::lock_guard
-#include &lt;string&gt;
 #include &lt;vector&gt;
 
 class Sensor                     // 기반 클래스 — 모든 센서에 공통인 것
@@ -1516,8 +1320,6 @@ private:
 };
 
 float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다 — 기반 클래스 참조로 받는다
-
-std::mutex m;                  // 한 번에 한 갈래만 들어가게 하는 자물쇠
 
 // 나가는 길이 셋이다 — 어디로 나가도 p 가 반납된다
 void tune(bool busy)
@@ -1553,25 +1355,7 @@ int main()
     std::cout &lt;&lt; &quot;  안쪽을 빠져나왔다\n&quot;;
   }
 
-  std::cout &lt;&lt; &quot;④ 파일도 같은 원리다 — close() 를 부르지 않았다\n&quot;;
-  {
-    Lidar lidar;
-    std::ofstream f(&quot;scan_log.txt&quot;);
-    f &lt;&lt; &quot;라이다 값 &quot; &lt;&lt; lidar.read() &lt;&lt; &quot;\n&quot;;
-    std::cout &lt;&lt; &quot;  파일에 한 줄 썼다\n&quot;;
-  }
-  std::ifstream in(&quot;scan_log.txt&quot;);
-  std::string line; std::getline(in, line);
-  std::cout &lt;&lt; &quot;  다시 읽어 보니: \&quot;&quot; &lt;&lt; line &lt;&lt; &quot;\&quot;  → 이미 닫혀서 내용이 저장됐다\n&quot;;
-
-  std::cout &lt;&lt; &quot;⑤ 잠금(lock)도 같은 원리다 — unlock() 을 부르지 않았다\n&quot;;
-  {
-    std::lock_guard&lt;std::mutex&gt; g(m);
-    std::cout &lt;&lt; &quot;  잠근 채로 일하는 중\n&quot;;
-  }
-  std::cout &lt;&lt; &quot;  중괄호를 나오면서 자동으로 풀렸다\n&quot;;
-
-  std::cout &lt;&lt; &quot;⑥ 함수 중간에서 나가도 반납되나\n&quot;;
+  std::cout &lt;&lt; &quot;④ 함수 중간에서 나가도 반납되나\n&quot;;
   tune(true);
   std::cout &lt;&lt; &quot;  tune() 에서 돌아왔다\n&quot;;
   return 0;
@@ -1609,7 +1393,7 @@ int main()
     <p class="boxtitle">③ 절차</p>
     <ol>
       <li>
-        <strong>(3분) 작업 폴더를 만들고</strong> ⑧절 끝의 📄 <strong>「v9 완성본」</strong> 상자에서 <code>main.cpp</code>를, ①절 상자에서 <code>CMakeLists.txt</code>를 「복사」해 만든다. <strong>타이핑하지 않는다.</strong>
+        <strong>(3분) 작업 폴더를 만들고</strong> ⑦절 끝의 📄 <strong>「v8 완성본」</strong> 상자에서 <code>main.cpp</code>를, ①절 상자에서 <code>CMakeLists.txt</code>를 「복사」해 만든다. <strong>타이핑하지 않는다.</strong>
         <pre><code>mkdir -p ~/robot_ws/l10/sensors
 cd ~/robot_ws/l10/sensors
 code .</code></pre>
@@ -1622,14 +1406,14 @@ cmake --build build
       </li>
       <li>
         <strong>(7분) <code>Sensor</code>의 소멸자에서 <code>virtual</code>만 지운다.</strong> <code>cmake --build build</code> 후 실행한다.
-        ②와 ⑥에서 <code>[Lidar 소멸자]</code> 줄이 사라진다. ①·③·④에서는 안 사라진다 — 왜 그런지 ⑤절 개념을 다시 읽는다.
+        ②와 ④에서 <code>[Lidar 소멸자]</code> 줄이 사라진다. ①·③에서는 안 사라진다 — 왜 그런지 ⑤절 개념을 다시 읽는다.
       </li>
       <li><strong>(2분) 지운 <code>virtual</code>을 되돌린다.</strong> 여기까지가 오늘의 핵심이다.</li>
       <li>
         <strong>(5분) <code>Lidar</code>의 <code>read()</code>를 <code>raed()</code>로 한 글자 바꾸고 빌드한다.</strong> 어떤 메시지가 나오는지 적는다. 되돌린다.
       </li>
       <li>
-        <strong>(5분) <code>tune()</code>의 <code>make_unique</code> 줄을 ⑧절 「고치기 전」의 <code>new</code> 방식으로 되돌려 본다.</strong> ⑥에서 어느 줄이 사라지는지 본다. 되돌린다.
+        <strong>(5분) <code>tune()</code>의 <code>make_unique</code> 줄을 ⑦절 「고치기 전」의 <code>new</code> 방식으로 되돌려 본다.</strong> ④에서 어느 줄이 사라지는지 본다. 되돌린다.
       </li>
     </ol>
     <p class="boxtitle">④ 이렇게 되면 성공이다</p>
@@ -1658,16 +1442,7 @@ cmake --build build
   안쪽을 빠져나왔다
   [Lidar 소멸자] 원소 360개 반납
   [Sensor 소멸자]
-④ 파일도 같은 원리다 — close() 를 부르지 않았다
-  [Lidar 생성] 원소 360개 확보
-  파일에 한 줄 썼다
-  [Lidar 소멸자] 원소 360개 반납
-  [Sensor 소멸자]
-  다시 읽어 보니: "라이다 값 0.83"  → 이미 닫혀서 내용이 저장됐다
-⑤ 잠금(lock)도 같은 원리다 — unlock() 을 부르지 않았다
-  잠근 채로 일하는 중
-  중괄호를 나오면서 자동으로 풀렸다
-⑥ 함수 중간에서 나가도 반납되나
+④ 함수 중간에서 나가도 반납되나
   [Lidar 생성] 원소 360개 확보
   [Lidar 소멸자] 원소 360개 반납
   [Sensor 소멸자]
@@ -1781,7 +1556,7 @@ add_executable(health_log main.cpp)</code></pre></div>
 
   <h3>할 일</h3>
   <p>
-    이 코드를 <strong>오늘 프로그램이 v1에서 v9로 간 것과 같은 길</strong>로 고친다. 파일에 남는 두 줄은 같아야 하고, <strong>③에서 소멸자 줄이 나와야 한다.</strong>
+    이 코드를 <strong>오늘 프로그램이 v1에서 v8로 간 것과 같은 길</strong>로 고친다. 파일에 남는 두 줄은 같아야 하고, <strong>③에서 소멸자 줄이 나와야 한다.</strong>
     직접 쳐도 되고 에이전트에게 시켜도 된다 — 단, <strong>받은 코드에서 아래 항목이 전부 됐는지는 사람이 확인한다.</strong>
   </p>
   <div class="tablewrap">
@@ -1790,8 +1565,8 @@ add_executable(health_log main.cpp)</code></pre></div>
     <tr><td>기반 클래스 <code>Sensor</code>를 두고 <code>Battery</code>·<code>Thermo</code>가 상속한다. <code>read()</code>는 순수 가상 함수</td><td>② ③</td><td><code>read_kind</code>와 <code>kind</code> 번호가 없어진다. <code>Sensor &amp;</code> 하나로 받는다</td></tr>
     <tr><td>파생 클래스의 <code>read()</code>에 <code>override</code></td><td>④</td><td>이름을 일부러 틀리면 빌드가 막힌다</td></tr>
     <tr><td><code>Sensor</code>의 소멸자를 <code>virtual</code>로</td><td>⑤</td><td><code>unique_ptr&lt;Sensor&gt;</code>로 잡은 객체가 사라질 때 파생 클래스 소멸자 줄이 찍힌다</td></tr>
-    <tr><td><code>new</code>/<code>delete</code>를 없앤다 — 그냥 변수로 만들거나 <code>make_unique</code></td><td>⑧</td><td>파일에 <code>new</code>·<code>delete</code>가 없다. <strong>③에서 소멸자 줄이 나온다</strong></td></tr>
-    <tr><td><code>f.close()</code>를 지운다</td><td>⑦</td><td>지워도 파일 내용이 같다</td></tr>
+    <tr><td><code>new</code>/<code>delete</code>를 없앤다 — 그냥 변수로 만들거나 <code>make_unique</code></td><td>⑦</td><td>파일에 <code>new</code>·<code>delete</code>가 없다. <strong>③에서 소멸자 줄이 나온다</strong></td></tr>
+    <tr><td><code>f.close()</code>를 지운다</td><td>⑥</td><td>지워도 파일 내용이 같다</td></tr>
   </table>
   </div>
   <div class="prompt">
@@ -1810,7 +1585,7 @@ add_executable(health_log main.cpp)</code></pre></div>
     <tr><td>기반 클래스를 받았을 때</td><td>"상속당하는 클래스의 소멸자에 <code>virtual</code>이 붙어 있는지 확인해 줘. 상속을 안 당하는 클래스에는 붙이지 마."</td></tr>
     <tr><td>재정의하는 함수가 있을 때</td><td>"기반 클래스의 가상 함수를 재정의하는 함수 전부에 <code>override</code>를 붙여 줘. 붙였더니 컴파일이 안 되는 곳은 <strong>고치지 말고 먼저 알려 줘.</strong>"</td></tr>
     <tr><td><code>new</code>가 보일 때</td><td>"<code>new</code>·<code>delete</code>를 직접 쓰지 말고 스코프가 정리해 주는 방식으로 바꿔 줘. 중간에 <code>return</code>이 여러 개여도 안 새야 해."</td></tr>
-    <tr><td><code>close()</code>·<code>unlock()</code>이 보일 때</td><td>"이 <code>close()</code>가 정말 필요한 줄인지 알려 줘. 소멸자가 대신 해 주는 것이면 지워 줘."</td></tr>
+    <tr><td><code>close()</code>가 보일 때</td><td>"이 <code>close()</code>가 정말 필요한 줄인지 알려 줘. 소멸자가 대신 해 주는 것이면 지워 줘."</td></tr>
     <tr><td>클래스 뼈대를 시킬 때</td><td>"이 클래스를 나중에 상속할 거야. 소멸자는 <code>virtual</code>로, 재정의할 함수는 <code>virtual</code> + 파생 쪽에 <code>override</code>로 만들어 줘."</td></tr>
   </table>
   </div>
@@ -1822,7 +1597,7 @@ add_executable(health_log main.cpp)</code></pre></div>
     <li><input type="checkbox" id="c2"><label for="c2">상속당하는 클래스의 소멸자에 <code>virtual</code>이 붙어 있나?</label></li>
     <li><input type="checkbox" id="c3"><label for="c3">재정의하는 함수마다 <code>override</code>가 붙어 있나? 붙였는데 컴파일이 안 되는 곳을 <strong>버그로 의심</strong>해 봤나?</label></li>
     <li><input type="checkbox" id="c4"><label for="c4">코드에 <code>new</code>나 <code>delete</code>가 남아 있지 않나?</label></li>
-    <li><input type="checkbox" id="c5"><label for="c5"><code>close()</code>·<code>unlock()</code>을 손으로 부르고 있지 않나?</label></li>
+    <li><input type="checkbox" id="c5"><label for="c5">파일을 다 쓰고 <code>close()</code>를 손으로 부르고 있지 않나?</label></li>
     <li><input type="checkbox" id="c6"><label for="c6">소멸자가 <strong>실제로 불리는지</strong> 출력으로 확인해 봤나?</label></li>
     <li><input type="checkbox" id="c7"><label for="c7">RAII를 「스코프가 곧 수명이다」 말고 <strong>자원과 소멸자로</strong> 한 문장 설명할 수 있나?</label></li>
     <li><input type="checkbox" id="c8"><label for="c8">연습문제의 「확인하는 법」 다섯 줄을 전부 통과했나?</label></li>
@@ -1871,7 +1646,7 @@ public:
     <table>
       <tr><th></th><th>RAII (C++)</th><th>쓰레기 수집 (파이썬·자바)</th></tr>
       <tr><td>언제 정리되나</td><td><strong>중괄호를 나가는 그 순간</strong></td><td>수집기가 도는 때. <strong>언제인지 모른다</strong></td></tr>
-      <tr><td>파일·잠금도 되나</td><td>된다. 메모리와 똑같이 처리된다</td><td>메모리만. 파일은 따로 닫아야 한다</td></tr>
+      <tr><td>파일도 되나</td><td>된다. 메모리와 똑같이 처리된다</td><td>메모리만. 파일은 따로 닫아야 한다</td></tr>
       <tr><td>로봇에서</td><td>정리 시점이 정해져 있다</td><td><strong>수집기가 도는 동안 잠깐 멈출 수 있다</strong></td></tr>
     </table>
     </div>
