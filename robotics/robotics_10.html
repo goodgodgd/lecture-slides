@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>10회 · 상속·다형성과 RAII | 로봇공학</title>
+<title>10회 · 상속과 다형성 | 로봇공학</title>
 <script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}})();</script>
 <link rel="stylesheet" href="../assets/site.css">
 <link rel="stylesheet" href="assets/lecture.css">
@@ -13,7 +13,7 @@
   <div class="barin wide">
     <a class="up" href="index.html" aria-label="로봇공학 회차 목록"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a>
     <nav class="crumb" aria-label="경로">
-      <a href="../index.html">강의자료</a><span class="sep">/</span><a href="index.html">로봇공학</a><span class="sep">/</span><span class="here">10회 · 상속·다형성과 RAII</span>
+      <a href="../index.html">강의자료</a><span class="sep">/</span><a href="index.html">로봇공학</a><span class="sep">/</span><span class="here">10회 · 상속과 다형성</span>
     </nav>
     <span class="spacer"></span>
     <div class="navlinks"><a class="navlink" href="robotics_09.html" aria-label="이전 회차"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a><a class="navlink" href="robotics_11.html" aria-label="다음 회차"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></a></div>
@@ -28,14 +28,12 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약 — 용어 일곱 개</a>
+  <a href="#summary">한 장 요약 — 용어 다섯 개</a>
   <a href="#start">① 오늘 만들 것 — if 문으로 먼저</a>
   <a href="#inherit">② 상속 · <code>: public</code></a>
   <a href="#virtual">③ 가상 함수와 다형성 · <code>virtual</code> · <code>= 0</code></a>
   <a href="#override">④ <code>override</code></a>
   <a href="#dtor">⑤ 🔴 가상 소멸자</a>
-  <a href="#raii">⑥ RAII — 스코프가 곧 수명</a>
-  <a href="#newdelete">⑦ <code>new</code> / <code>delete</code>를 안 쓰는 이유</a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
   <a href="#prompts">🤖 프롬프트 모음</a>
@@ -46,7 +44,7 @@
 <main>
 
   <div class="lec-no">로봇공학 · 10회 · 2부 C++</div>
-  <h1>상속·다형성과 RAII — 뒷정리를 사람이 하지 않는다</h1>
+  <h1>상속과 다형성 — 종류를 묻지 않고 부른다</h1>
 
   <div class="questions">
     <span class="lab">오늘 답할 질문</span>
@@ -54,17 +52,16 @@
       <li>ROS 2 예제 첫 줄의 <code>class MyNode : public rclcpp::Node</code> — 이 콜론은 무슨 뜻인가?</li>
       <li><code>virtual</code>이 있는 함수와 없는 함수는 <strong>무엇을 보고</strong> 어느 것을 부를지 정하나?</li>
       <li>소멸자에 <code>virtual</code>을 안 붙였을 뿐인데 왜 메모리가 새나? <strong>그런데 왜 아무 오류도 안 나나?</strong></li>
-      <li>C++ 코드에는 왜 <code>delete</code>도 <code>close()</code>도 거의 안 보이나?</li>
     </ol>
   </div>
 
   <p>
-    오늘 배울 것은 둘이다. 앞의 넷은 <strong>상속과 다형성</strong>이고, 뒤의 둘은 <strong>RAII</strong>다.
-    성격이 달라 보이지만 한 줄로 이어진다. <strong>둘 다 「객체가 사라질 때 무슨 일이 일어나는가」의 이야기다.</strong>
-    9회에서 소멸자가 자동으로 불린다는 것을 봤다. 오늘은 그것이 <strong>안 불리는 경우</strong>(⑤)와, 그것을 <strong>믿고 뒷정리를 맡기는 방법</strong>(⑥·⑦)을 본다.
+    오늘 배울 것은 <strong>상속과 다형성</strong>이다. 종류가 다른 센서들을 <strong>종류를 묻지 않고 같은 방식으로 부르는 법</strong>이다.
+    앞의 넷(②~④)이 그 문법이고, 마지막 ⑤는 그 문법을 쓸 때 <strong>소멸자가 안 불리는 경우</strong>다.
+    9회에서 소멸자는 자동으로 불린다고 했는데, 상속을 쓰면 그 규칙에 예외가 하나 생긴다.
   </p>
   <p>
-    오늘은 <strong>용어 일곱 개</strong>를 다룬다. 절마다 <strong>먼저 그 문법이 무엇이고 왜 생겼는지를 설명하고</strong>,
+    오늘은 <strong>용어 다섯 개</strong>를 다룬다. 절마다 <strong>먼저 그 문법이 무엇이고 왜 생겼는지를 설명하고</strong>,
     그다음에 <strong>센서 둘의 값을 읽는 작은 프로그램</strong>에 그것을 적용한다.
     프로그램은 <code>if</code> 문으로 먼저 짜 두고, 절이 넘어갈 때마다 문법 하나씩으로 고쳐 간다.
   </p>
@@ -80,8 +77,6 @@
     <tr><td>순수 가상 함수 · 추상 클래스</td><td><code>virtual float read() = 0;</code></td><td>「내용은 파생 클래스가 채운다」. 하나라도 남아 있는 클래스로는 <strong>객체를 만들 수 없다</strong></td></tr>
     <tr><td><code>override</code></td><td><code>float read() override</code></td><td>「기반 클래스의 가상 함수를 재정의한다」는 선언. 이름을 오타 내면 <strong>컴파일이 멈춘다</strong></td></tr>
     <tr><td>🔴 가상 소멸자</td><td><code>virtual ~Sensor()</code></td><td>없으면 기반 클래스 포인터로 지울 때 <strong>파생 클래스 소멸자가 아예 안 불린다.</strong> 오류도 크래시도 없다</td></tr>
-    <tr><td>RAII · 스코프 · 수명</td><td><code>{ Lidar a; ... }</code></td><td>자원은 생성자에서 얻고 소멸자에서 돌려준다. <strong>중괄호를 벗어나는 순간 정리된다</strong></td></tr>
-    <tr><td><code>new</code> / <code>delete</code> · <code>std::make_unique</code></td><td><code>auto p = std::make_unique&lt;Lidar&gt;();</code></td><td><code>new</code>/<code>delete</code> 짝을 사람이 맞추면 나가는 길이 늘 때마다 샌다. <code>make_unique</code>가 그 짝을 대신 맞춘다</td></tr>
   </table>
   </div>
   <div class="interp">
@@ -834,7 +829,7 @@ public:
           <strong>중괄호를 벗어나면 붙잡고 있던 객체를 알아서 지운다</strong> — 그때 어느 소멸자가 불리는지가 이 절의 관전 대상이다.
           <code>s-&gt;read()</code>의 화살표는 7회의 것이다.</dd>
     </dl>
-    <p class="later">제대로 다루는 곳: 12회(스마트 포인터 — <code>unique_ptr</code>·<code>shared_ptr</code>·소유권)</p>
+    <p class="later">제대로 다루는 곳: 11회(RAII와 스마트 포인터 — <code>unique_ptr</code>·<code>shared_ptr</code>·소유권)</p>
   </div>
 
   <h3>실제로 나온 출력 — ②에 줄이 하나 없다</h3>
@@ -925,7 +920,7 @@ int main()
     </p>
   </div>
 
-  <h3>6단계 (v6) — 한 단어만 붙이면 된다</h3>
+  <h3>6단계 (v6, 완성본) — 한 단어만 붙이면 된다</h3>
   <div class="codelabel bad">고치기 전 (v5) — AI가 보통 주는 기반 클래스 🔴</div>
   <pre class="lang-cpp before"><code>  ~Sensor() { std::cout &lt;&lt; "  [Sensor 소멸자]\n"; }   // virtual 이 없다</code></pre>
   <div class="codelabel good">고친 뒤 (v6)</div>
@@ -935,13 +930,13 @@ int main()
   [Lidar 생성] 원소 360개 확보
   [Lidar 소멸자] 원소 360개 반납
   [Sensor 소멸자]</code></pre>
-  <!-- fullcode "전체 코드 — v6 (6단계 · 가상 소멸자) main.cpp" build="cmake --build build && ./build/sensors"
+  <!-- fullcode "전체 코드 — v6 완성본 (6단계 · 가상 소멸자) main.cpp" build="cmake --build build && ./build/sensors"
        l10_raii/steps/step6/main.cpp
   -->
 <details class="fullcode">
-  <summary>전체 코드 — v6 (6단계 · 가상 소멸자) main.cpp</summary>
+  <summary>전체 코드 — v6 완성본 (6단계 · 가상 소멸자) main.cpp</summary>
   <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/sensors</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 센서 읽기 — v6 (6단계: 가상 소멸자)
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 센서 읽기 — v6 완성본 (6단계: 가상 소멸자)
 #include &lt;iostream&gt;
 #include &lt;memory&gt;         // std::unique_ptr, std::make_unique
 #include &lt;vector&gt;
@@ -1014,372 +1009,6 @@ int main()
     </div>
   </div>
 
-  <!-- ── ⑥ RAII ── -->
-  <h2 id="raii">⑥ RAII — 자원의 수명을 객체의 수명에 묶는다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
-
-  <h3>개념 — 얻은 것은 소멸자가 돌려준다</h3>
-  <p>
-    메모리나 열어 둔 파일처럼 <strong>쓰고 나면 반드시 돌려줘야 하는 것</strong>을 <strong>자원</strong>(resource)이라고 한다.
-    자원의 어려움은 얻는 쪽이 아니라 돌려주는 쪽에 있다 — 돌려주는 줄을 빠뜨리면 새고, 함수를 빠져나가는 길이 여럿이면 길마다 챙겨야 한다.
-  </p>
-  <p>
-    C++의 답은 <strong>자원을 객체 안에 넣는 것</strong>이다. <strong>생성자에서 자원을 얻고, 소멸자에서 돌려준다.</strong>
-    9회 ③절에서 본 대로 소멸자는 객체가 스코프를 벗어날 때 자동으로 불리므로 — <code>return</code>으로 나가든 오류로 튀어나가든 —
-    <strong>자원은 객체가 사라지는 순간 반드시 돌아온다.</strong> 이 설계 방식을 <strong>RAII</strong>라고 한다.
-    Resource Acquisition Is Initialization(자원 획득이 곧 초기화)의 약자인데 이름은 잊어도 된다. 기억할 것은 <strong>「스코프가 곧 수명이다」</strong> 한 줄이다.
-  </p>
-  <p>
-    앞 절까지 계속 본 것이 이미 RAII다. <code>Lidar</code>는 생성자에서 원소 360개를 얻고 소멸자에서 반납했고, 아무도 반납하라고 시키지 않았다.
-    <code>std::vector</code>와 <code>std::string</code>도 같은 방식으로 만들어져 있다.
-    파일도 마찬가지다. 파일을 쓰는 <code>std::ofstream</code>은 생성자에서 파일을 열고 소멸자에서 닫으므로,
-    <code>close()</code>를 직접 부르지 않아도 중괄호를 나가는 순간 닫히고 내용이 저장된다.
-  </p>
-
-  <h3>예제에 적용 — 중괄호를 겹쳐서 수명을 눈으로 본다</h3>
-  <p>새 문법은 없다. v6의 <code>Lidar</code>와 <code>Sonar</code>를 <strong>중괄호 두 겹 안에</strong> 만들어 볼 뿐이다. 소멸자가 이미 말을 하니 언제 사라지는지가 그대로 찍힌다.</p>
-
-  <h3>7단계 (v7) — 블록 하나를 더한다</h3>
-  <pre class="lang-cpp"><code>  std::cout &lt;&lt; "③ 중괄호 하나가 곧 수명이다\n";
-  {
-    Lidar a;
-    {
-      Sonar b;
-      std::cout &lt;&lt; "  안쪽 중괄호 안이다\n";
-    }
-    std::cout &lt;&lt; "  안쪽을 빠져나왔다\n";
-  }</code></pre>
-  <h3>실제로 나온 출력</h3>
-  <pre><code>③ 중괄호 하나가 곧 수명이다
-  [Lidar 생성] 원소 360개 확보
-  [Sonar 생성]
-  안쪽 중괄호 안이다
-  [Sonar 소멸자]
-  [Sensor 소멸자]
-  안쪽을 빠져나왔다
-  [Lidar 소멸자] 원소 360개 반납
-  [Sensor 소멸자]</code></pre>
-  <!-- fullcode "전체 코드 — v7 (7단계 · 스코프가 곧 수명) main.cpp" build="cmake --build build && ./build/sensors"
-       l10_raii/steps/step7/main.cpp
-  -->
-<details class="fullcode">
-  <summary>전체 코드 — v7 (7단계 · 스코프가 곧 수명) main.cpp</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/sensors</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 센서 읽기 — v7 (7단계: 스코프가 곧 수명이다)
-#include &lt;iostream&gt;
-#include &lt;memory&gt;         // std::unique_ptr, std::make_unique
-#include &lt;vector&gt;
-
-class Sensor                     // 기반 클래스 — 모든 센서에 공통인 것
-{
-public:
-  virtual float read() = 0;      // 가상 함수. = 0 은 「내용은 파생 클래스가 채운다」
-  virtual ~Sensor() { std::cout &lt;&lt; &quot;  [Sensor 소멸자]\n&quot;; }   // 가상 소멸자
-};
-
-class Lidar : public Sensor      // 파생 클래스 — Sensor 를 물려받는다
-{
-public:
-  Lidar() : buf_(360, 0.83f) { std::cout &lt;&lt; &quot;  [Lidar 생성] 원소 360개 확보\n&quot;; }
-  ~Lidar() { std::cout &lt;&lt; &quot;  [Lidar 소멸자] 원소 360개 반납\n&quot;; }
-  float read() override { return buf_.at(0); }
-private:
-  std::vector&lt;float&gt; buf_;
-};
-
-class Sonar : public Sensor
-{
-public:
-  Sonar() : dist_(1.2f) { std::cout &lt;&lt; &quot;  [Sonar 생성]\n&quot;; }
-  ~Sonar() { std::cout &lt;&lt; &quot;  [Sonar 소멸자]\n&quot;; }
-  float read() override { return dist_; }
-private:
-  float dist_;
-};
-
-float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다 — 기반 클래스 참조로 받는다
-
-int main()
-{
-  std::cout &lt;&lt; &quot;① 상속 — 종류를 따지지 않는다\n&quot;;
-  {
-    Lidar lidar;
-    Sonar sonar;
-    std::cout &lt;&lt; &quot;  lidar → &quot; &lt;&lt; read_any(lidar) &lt;&lt; &quot; m\n&quot;;
-    std::cout &lt;&lt; &quot;  sonar → &quot; &lt;&lt; read_any(sonar) &lt;&lt; &quot; m\n&quot;;
-  }
-
-  std::cout &lt;&lt; &quot;② 정적 타입은 Sensor, 동적 타입은 Lidar — 중괄호를 나가면\n&quot;;
-  {
-    std::unique_ptr&lt;Sensor&gt; s = std::make_unique&lt;Lidar&gt;();
-    s-&gt;read();
-  }
-
-  std::cout &lt;&lt; &quot;③ 중괄호 하나가 곧 수명이다\n&quot;;
-  {
-    Lidar a;
-    {
-      Sonar b;
-      std::cout &lt;&lt; &quot;  안쪽 중괄호 안이다\n&quot;;
-    }
-    std::cout &lt;&lt; &quot;  안쪽을 빠져나왔다\n&quot;;
-  }
-  return 0;
-}</code></pre></div>
-</details>
-<!-- /fullcode -->
-  <div class="interp">
-    <strong>해석:</strong> <code>[Sonar 소멸자]</code>가 <code>안쪽을 빠져나왔다</code>보다 <strong>먼저</strong> 찍혔다. 닫는 중괄호를 지나는 순간에 이미 소멸자가 끝났다는 뜻이다.
-    <code>[Lidar 소멸자]</code>는 맨 마지막이다 — 나중에 만든 것이 먼저 사라진다(9회 ③절).
-  </div>
-
-  <!-- ── ⑦ new / delete ── -->
-  <h2 id="newdelete">⑦ <code>new</code>와 <code>delete</code>의 짝을 사람이 맞추다 보면 언젠가 어긋난다 <span class="badge b-red">🔴 사람이 한다</span></h2>
-
-  <h3>개념 — 동적 할당과 그 짝</h3>
-  <p>
-    <code>new Lidar()</code>는 <strong>스코프와 무관하게 살아 있는 객체</strong>를 만들어 그 주소(포인터)를 돌려준다. 이것을 <strong>동적 할당</strong>(dynamic allocation)이라고 한다.
-    스코프를 벗어나도 안 사라지므로 <strong>사람이 <code>delete</code>로 지워야 한다.</strong> 규칙은 한 줄이라 쉬워 보인다.
-    문제는 <strong>함수를 빠져나가는 길이 하나가 아니라는 것</strong>이다. <code>return</code>이 셋이면 <code>delete</code>도 셋이어야 하고, 나중에 <code>return</code>을 하나 더 넣으면 <code>delete</code>도 하나 더 넣어야 한다. 언젠가는 빠뜨린다.
-  </p>
-  <p>
-    C++의 답은 ⑥절과 같다 — <strong>포인터를 객체 안에 넣는다.</strong> ⑤절에서 본 <code>std::unique_ptr</code>가 그 객체다.
-    생성자에서 주소를 받아 두고 소멸자에서 <code>delete</code>한다. 그러면 함수를 어느 길로 나가든 <strong>스코프를 벗어나는 순간 지워진다.</strong>
-    <code>std::make_unique&lt;Lidar&gt;()</code>는 <code>new Lidar()</code>와 <code>unique_ptr</code>를 한 줄로 합친 것이다.
-    RAII를 메모리에 적용한 것이 <strong>스마트 포인터</strong>이고, 12회에서 따로 다룬다.
-  </p>
-
-  <h3>예제에 적용 — 나가는 길이 셋인 함수에서 실제로 새는지 봤다</h3>
-  <p><code>Lidar</code>에 <code>ok()</code>를 하나 붙이고, <code>main</code> 위에 <code>tune()</code>을 둔다. <code>new</code>로 잡고 끝에서 <code>delete</code>하는, <strong>AI가 보통 주는 모양</strong>이다.</p>
-
-  <h3>8단계 (v8, 고치기 전) — <code>new</code> / <code>delete</code>로 짠 판</h3>
-  <pre class="lang-cpp"><code>  // Lidar 에 한 줄
-  bool ok() const { return !buf_.empty(); }
-
-// 나가는 길이 셋인데 delete 는 한 줄이다
-void tune(bool busy)
-{
-  Lidar * p = new Lidar();      // 여기서 잡는다
-  if (!p-&gt;ok())  { return; }    // ① 여기로 나가면 안 지워진다
-  if (busy)      { return; }    // ② 여기로 나가도 안 지워진다
-  delete p;                     // ③ 여기까지 와야만 지워진다
-}
-  // main 에
-  std::cout &lt;&lt; "④ 함수 중간에서 나가도 반납되나\n";
-  tune(true);
-  std::cout &lt;&lt; "  tune() 에서 돌아왔다\n";</code></pre>
-  <h3>실제로 나온 출력 — 소멸자 줄이 없다</h3>
-  <pre><code>④ 함수 중간에서 나가도 반납되나
-  [Lidar 생성] 원소 360개 확보
-  tune() 에서 돌아왔다</code></pre>
-  <!-- fullcode "전체 코드 — v8 고치기 전 (new / delete 로 짠 판 · ②로 나가서 샌다) main.cpp" build="cmake --build build && ./build/sensors"
-       l10_raii/steps/variants/newdelete/main.cpp
-  -->
-<details class="fullcode">
-  <summary>전체 코드 — v8 고치기 전 (new / delete 로 짠 판 · ②로 나가서 샌다) main.cpp</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/sensors</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 센서 읽기 — v8 고치기 전 (8단계: new / delete 로 짠 판 · 함수 중간에서 나가면 샌다)
-#include &lt;iostream&gt;
-#include &lt;memory&gt;         // std::unique_ptr, std::make_unique
-#include &lt;vector&gt;
-
-class Sensor                     // 기반 클래스 — 모든 센서에 공통인 것
-{
-public:
-  virtual float read() = 0;      // 가상 함수. = 0 은 「내용은 파생 클래스가 채운다」
-  virtual ~Sensor() { std::cout &lt;&lt; &quot;  [Sensor 소멸자]\n&quot;; }   // 가상 소멸자
-};
-
-class Lidar : public Sensor      // 파생 클래스 — Sensor 를 물려받는다
-{
-public:
-  Lidar() : buf_(360, 0.83f) { std::cout &lt;&lt; &quot;  [Lidar 생성] 원소 360개 확보\n&quot;; }
-  ~Lidar() { std::cout &lt;&lt; &quot;  [Lidar 소멸자] 원소 360개 반납\n&quot;; }
-  float read() override { return buf_.at(0); }
-  bool ok() const { return !buf_.empty(); }
-private:
-  std::vector&lt;float&gt; buf_;
-};
-
-class Sonar : public Sensor
-{
-public:
-  Sonar() : dist_(1.2f) { std::cout &lt;&lt; &quot;  [Sonar 생성]\n&quot;; }
-  ~Sonar() { std::cout &lt;&lt; &quot;  [Sonar 소멸자]\n&quot;; }
-  float read() override { return dist_; }
-private:
-  float dist_;
-};
-
-float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다 — 기반 클래스 참조로 받는다
-
-// 나가는 길이 셋인데 delete 는 한 줄이다
-void tune(bool busy)
-{
-  Lidar * p = new Lidar();      // 여기서 잡는다
-  if (!p-&gt;ok())  { return; }    // ① 여기로 나가면 안 지워진다
-  if (busy)      { return; }    // ② 여기로 나가도 안 지워진다
-  delete p;                     // ③ 여기까지 와야만 지워진다
-}
-
-int main()
-{
-  std::cout &lt;&lt; &quot;① 상속 — 종류를 따지지 않는다\n&quot;;
-  {
-    Lidar lidar;
-    Sonar sonar;
-    std::cout &lt;&lt; &quot;  lidar → &quot; &lt;&lt; read_any(lidar) &lt;&lt; &quot; m\n&quot;;
-    std::cout &lt;&lt; &quot;  sonar → &quot; &lt;&lt; read_any(sonar) &lt;&lt; &quot; m\n&quot;;
-  }
-
-  std::cout &lt;&lt; &quot;② 정적 타입은 Sensor, 동적 타입은 Lidar — 중괄호를 나가면\n&quot;;
-  {
-    std::unique_ptr&lt;Sensor&gt; s = std::make_unique&lt;Lidar&gt;();
-    s-&gt;read();
-  }
-
-  std::cout &lt;&lt; &quot;③ 중괄호 하나가 곧 수명이다\n&quot;;
-  {
-    Lidar a;
-    {
-      Sonar b;
-      std::cout &lt;&lt; &quot;  안쪽 중괄호 안이다\n&quot;;
-    }
-    std::cout &lt;&lt; &quot;  안쪽을 빠져나왔다\n&quot;;
-  }
-
-  std::cout &lt;&lt; &quot;④ 함수 중간에서 나가도 반납되나\n&quot;;
-  tune(true);
-  std::cout &lt;&lt; &quot;  tune() 에서 돌아왔다\n&quot;;
-  return 0;
-}</code></pre></div>
-</details>
-<!-- /fullcode -->
-  <p>
-    <code>busy</code>가 참이라 ②로 나갔고, <strong><code>[Lidar 소멸자]</code> 줄이 없다.</strong> 원소 360개가 그대로 샜다. 오류는 없다.
-  </p>
-  <figure>
-    <img src="assets/img/10_new_delete.png"
-         alt="두 방식을 비교한 흐름도. 왼쪽 new/delete 방식은 세 갈래 중 둘에서 메모리가 새고 하나에서만 반납된다. 오른쪽 RAII 방식은 세 갈래 전부에서 반납된다">
-    <figcaption>왼쪽 상자 옆의 <strong>「샌다」 두 줄</strong>을 본다. 오른쪽에는 <code>delete</code>가 <strong>한 줄도 없는데</strong> 세 갈래 전부에서 반납된다.</figcaption>
-  </figure>
-
-  <h3>8단계 (v8, 완성본) — <code>make_unique</code>로</h3>
-  <div class="codelabel bad">고치기 전 — AI가 보통 주는 코드 🔴</div>
-  <pre class="lang-cpp before"><code>  Lidar * p = new Lidar();      // 여기서 잡는다
-  if (!p-&gt;ok())  { return; }    // ① 여기로 나가면 안 지워진다
-  if (busy)      { return; }    // ② 여기로 나가도 안 지워진다
-  delete p;                     // ③ 여기까지 와야만 지워진다</code></pre>
-  <div class="codelabel good">고친 뒤 — 어디로 나가도 반납된다</div>
-  <pre class="lang-cpp after"><code>  auto p = std::make_unique&lt;Lidar&gt;();   // 여기서 잡는다
-  if (!p-&gt;ok())  { return; }             // ① 나가면서 반납된다
-  if (busy)      { return; }             // ② 나가면서 반납된다
-}                                        // ③ 여기서도 반납된다</code></pre>
-  <h3>실제로 나온 출력 — 소멸자 줄이 돌아왔다</h3>
-  <pre><code>④ 함수 중간에서 나가도 반납되나
-  [Lidar 생성] 원소 360개 확보
-  [Lidar 소멸자] 원소 360개 반납
-  [Sensor 소멸자]
-  tune() 에서 돌아왔다</code></pre>
-  <!-- fullcode "전체 코드 — v8 완성본 (8단계 · make_unique) main.cpp" build="cmake --build build && ./build/sensors"
-       l10_raii/steps/step8/main.cpp
-  -->
-<details class="fullcode">
-  <summary>전체 코드 — v8 완성본 (8단계 · make_unique) main.cpp</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/sensors</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 센서 읽기 — v8 완성본 (8단계: new / delete 대신 make_unique)
-#include &lt;iostream&gt;
-#include &lt;memory&gt;         // std::unique_ptr, std::make_unique
-#include &lt;vector&gt;
-
-class Sensor                     // 기반 클래스 — 모든 센서에 공통인 것
-{
-public:
-  virtual float read() = 0;      // 가상 함수. = 0 은 「내용은 파생 클래스가 채운다」
-  virtual ~Sensor() { std::cout &lt;&lt; &quot;  [Sensor 소멸자]\n&quot;; }   // 가상 소멸자
-};
-
-class Lidar : public Sensor      // 파생 클래스 — Sensor 를 물려받는다
-{
-public:
-  Lidar() : buf_(360, 0.83f) { std::cout &lt;&lt; &quot;  [Lidar 생성] 원소 360개 확보\n&quot;; }
-  ~Lidar() { std::cout &lt;&lt; &quot;  [Lidar 소멸자] 원소 360개 반납\n&quot;; }
-  float read() override { return buf_.at(0); }
-  bool ok() const { return !buf_.empty(); }
-private:
-  std::vector&lt;float&gt; buf_;
-};
-
-class Sonar : public Sensor
-{
-public:
-  Sonar() : dist_(1.2f) { std::cout &lt;&lt; &quot;  [Sonar 생성]\n&quot;; }
-  ~Sonar() { std::cout &lt;&lt; &quot;  [Sonar 소멸자]\n&quot;; }
-  float read() override { return dist_; }
-private:
-  float dist_;
-};
-
-float read_any(Sensor &amp; s) { return s.read(); }   // 종류를 묻지 않는다 — 기반 클래스 참조로 받는다
-
-// 나가는 길이 셋이다 — 어디로 나가도 p 가 반납된다
-void tune(bool busy)
-{
-  auto p = std::make_unique&lt;Lidar&gt;();   // 여기서 잡는다
-  if (!p-&gt;ok())  { return; }             // ① 나가면서 반납된다
-  if (busy)      { return; }             // ② 나가면서 반납된다
-}                                        // ③ 여기서도 반납된다
-
-int main()
-{
-  std::cout &lt;&lt; &quot;① 상속 — 종류를 따지지 않는다\n&quot;;
-  {
-    Lidar lidar;
-    Sonar sonar;
-    std::cout &lt;&lt; &quot;  lidar → &quot; &lt;&lt; read_any(lidar) &lt;&lt; &quot; m\n&quot;;
-    std::cout &lt;&lt; &quot;  sonar → &quot; &lt;&lt; read_any(sonar) &lt;&lt; &quot; m\n&quot;;
-  }
-
-  std::cout &lt;&lt; &quot;② 정적 타입은 Sensor, 동적 타입은 Lidar — 중괄호를 나가면\n&quot;;
-  {
-    std::unique_ptr&lt;Sensor&gt; s = std::make_unique&lt;Lidar&gt;();
-    s-&gt;read();
-  }
-
-  std::cout &lt;&lt; &quot;③ 중괄호 하나가 곧 수명이다\n&quot;;
-  {
-    Lidar a;
-    {
-      Sonar b;
-      std::cout &lt;&lt; &quot;  안쪽 중괄호 안이다\n&quot;;
-    }
-    std::cout &lt;&lt; &quot;  안쪽을 빠져나왔다\n&quot;;
-  }
-
-  std::cout &lt;&lt; &quot;④ 함수 중간에서 나가도 반납되나\n&quot;;
-  tune(true);
-  std::cout &lt;&lt; &quot;  tune() 에서 돌아왔다\n&quot;;
-  return 0;
-}</code></pre></div>
-</details>
-<!-- /fullcode -->
-  <div class="interp">
-    <strong>해석:</strong> <code>delete</code>가 사라졌다. 줄이 하나 줄어든 것이 이득이 아니다 —
-    <strong>「나가는 길을 하나 더 만들어도 아무것도 안 고쳐도 된다」</strong>는 쪽이다. 코드를 고칠 때마다 사람이 챙겨야 하는 항목이 하나 사라졌다.
-  </div>
-  <p class="readme-first">객체를 잡는 세 가지 방법과 언제 쓰나.</p>
-  <div class="tablewrap">
-  <table>
-    <tr><th>이렇게 잡는다</th><th>언제</th><th>수준</th></tr>
-    <tr><td>그냥 변수로 (<code>Lidar lidar;</code>)</td><td><strong>기본값.</strong> 이 중괄호 안에서만 쓸 것이면 이것</td><td><span class="badge b-lv">[요구]</span></td></tr>
-    <tr><td><code>std::make_unique&lt;T&gt;()</code></td><td>기반 클래스 포인터로 잡아야 할 때, 또는 수명을 중괄호보다 길게 가져가야 할 때</td><td><span class="badge b-lv">[알아보기]</span></td></tr>
-    <tr><td><code>new</code> / <code>delete</code></td><td><strong>안 쓴다.</strong> 남의 옛 코드에서 알아보기만 하면 된다</td><td><span class="badge b-lv">[판단]</span></td></tr>
-  </table>
-  </div>
-  <div class="prompt">
-    <button onclick="copyPrompt(this)">복사</button>
-    이 코드에서 <code>new</code>와 <code>delete</code>를 직접 쓰지 말고 스코프가 정리해 주는 방식으로 바꿔 줘. 함수 중간에 <code>return</code>이 여러 개 있어도 새지 않아야 해. 바뀌는 부분만 보여 줘.
-  </div>
-
   <!-- ── 🧪 실습 ── -->
   <h2 id="lab">🧪 실습 — <code>virtual</code>을 붙였다 뗐다 해 본다 <span class="badge b-green">🟢 맡긴다</span></h2>
   <div class="lab-block">
@@ -1393,7 +1022,7 @@ int main()
     <p class="boxtitle">③ 절차</p>
     <ol>
       <li>
-        <strong>(3분) 작업 폴더를 만들고</strong> ⑦절 끝의 📄 <strong>「v8 완성본」</strong> 상자에서 <code>main.cpp</code>를, ①절 상자에서 <code>CMakeLists.txt</code>를 「복사」해 만든다. <strong>타이핑하지 않는다.</strong>
+        <strong>(3분) 작업 폴더를 만들고</strong> ⑤절 끝의 📄 <strong>「v6 완성본」</strong> 상자에서 <code>main.cpp</code>를, ①절 상자에서 <code>CMakeLists.txt</code>를 「복사」해 만든다. <strong>타이핑하지 않는다.</strong>
         <pre><code>mkdir -p ~/robot_ws/l10/sensors
 cd ~/robot_ws/l10/sensors
 code .</code></pre>
@@ -1406,18 +1035,15 @@ cmake --build build
       </li>
       <li>
         <strong>(7분) <code>Sensor</code>의 소멸자에서 <code>virtual</code>만 지운다.</strong> <code>cmake --build build</code> 후 실행한다.
-        ②와 ④에서 <code>[Lidar 소멸자]</code> 줄이 사라진다. ①·③에서는 안 사라진다 — 왜 그런지 ⑤절 개념을 다시 읽는다.
+        ②에서 <code>[Lidar 소멸자]</code> 줄이 사라진다. ①에서는 안 사라진다 — 왜 그런지 ⑤절 개념을 다시 읽는다.
       </li>
       <li><strong>(2분) 지운 <code>virtual</code>을 되돌린다.</strong> 여기까지가 오늘의 핵심이다.</li>
       <li>
         <strong>(5분) <code>Lidar</code>의 <code>read()</code>를 <code>raed()</code>로 한 글자 바꾸고 빌드한다.</strong> 어떤 메시지가 나오는지 적는다. 되돌린다.
       </li>
-      <li>
-        <strong>(5분) <code>tune()</code>의 <code>make_unique</code> 줄을 ⑦절 「고치기 전」의 <code>new</code> 방식으로 되돌려 본다.</strong> ④에서 어느 줄이 사라지는지 본다. 되돌린다.
-      </li>
     </ol>
     <p class="boxtitle">④ 이렇게 되면 성공이다</p>
-    <p>3번과 6번에서 <strong>화면의 줄 개수가 실제로 바뀌는 것</strong>을 봤고, 5번에서 나온 메시지를 자기 말로 한 줄로 설명할 수 있다.</p>
+    <p>3번에서 <strong>화면의 줄 개수가 실제로 바뀌는 것</strong>을 봤고, 5번에서 나온 메시지를 자기 말로 한 줄로 설명할 수 있다.</p>
     <p><strong>성공 화면</strong> — 완성본을 그대로 돌리면 아래가 나온다.</p>
     <pre class="lang-sh"><code>$ ./build/sensors
 ① 상속 — 종류를 따지지 않는다
@@ -1432,26 +1058,12 @@ cmake --build build
 ② 정적 타입은 Sensor, 동적 타입은 Lidar — 중괄호를 나가면
   [Lidar 생성] 원소 360개 확보
   [Lidar 소멸자] 원소 360개 반납
-  [Sensor 소멸자]
-③ 중괄호 하나가 곧 수명이다
-  [Lidar 생성] 원소 360개 확보
-  [Sonar 생성]
-  안쪽 중괄호 안이다
-  [Sonar 소멸자]
-  [Sensor 소멸자]
-  안쪽을 빠져나왔다
-  [Lidar 소멸자] 원소 360개 반납
-  [Sensor 소멸자]
-④ 함수 중간에서 나가도 반납되나
-  [Lidar 생성] 원소 360개 확보
-  [Lidar 소멸자] 원소 360개 반납
-  [Sensor 소멸자]
-  tune() 에서 돌아왔다</code></pre>
+  [Sensor 소멸자]</code></pre>
     <p class="src">확인한 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0, CMake 3.28)</p>
     <div class="box trap" style="margin-top:1rem">
       <div class="boxtitle">3번에서 아무 오류도 안 난다</div>
       <p>
-        빌드도 되고 실행도 되고 종료 코드도 정상이다. <strong>줄 두 개가 없어진 것이 전부다.</strong>
+        빌드도 되고 실행도 되고 종료 코드도 정상이다. <strong>줄 하나가 없어진 것이 전부다.</strong>
         바로 그것이 이 실습에서 확인할 내용이다. 컴파일러가 안 잡아 주는 종류의 실수가 있다는 것을 손으로 겪어 둔다.
       </p>
     </div>
@@ -1460,21 +1072,19 @@ cmake --build build
   <!-- ── 📝 연습문제 ── -->
   <h2 id="exercise">📝 연습문제 — 오늘 문법이 하나도 없는 코드를 고쳐 본다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
   <p>
-    아래는 <strong>배터리 전압과 온도를 파일에 기록하는 프로그램</strong>이다. 종류를 번호로 따지고, <code>new</code>/<code>delete</code>로 객체를 잡고, <code>close()</code>를 직접 부른다.
-    <strong>오늘 배운 것은 하나도 안 들어 있다.</strong> 이대로도 돌아간다 — 다만 출력을 보면 ③에서 소멸자 두 줄이 없다.
+    아래는 <strong>배터리 전압과 모터 온도를 읽는 프로그램</strong>이다. 오늘 ①절의 v1처럼 종류를 번호로 따진다.
+    <strong>오늘 배운 것은 하나도 안 들어 있다.</strong> 이대로도 돌아간다 — 다만 센서가 하나 늘 때마다 <code>read_kind</code>의 <code>if</code>와 인자가 같이 는다.
   </p>
 
-  <!-- fullcode open "연습문제 — 오늘 문법이 없는 원본 (main.cpp + CMakeLists.txt)" build="cmake -S . -B build && cmake --build build && ./build/health_log"
+  <!-- fullcode open "연습문제 — 오늘 문법이 없는 원본 (main.cpp + CMakeLists.txt)" build="cmake -S . -B build && cmake --build build && ./build/battery_read"
        l10_raii/steps/exercise_old/main.cpp
        l10_raii/steps/exercise_old/CMakeLists.txt
   -->
 <details class="fullcode" open>
   <summary>연습문제 — 오늘 문법이 없는 원본 (main.cpp + CMakeLists.txt)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cmake -S . -B build &amp;&amp; cmake --build build &amp;&amp; ./build/health_log</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 연습문제 — 배터리·온도 기록기. 오늘 배운 것을 하나도 안 쓴 코드
-#include &lt;fstream&gt;
+  <p class="how">빌드해서 돌리는 법: <code>cmake -S . -B build &amp;&amp; cmake --build build &amp;&amp; ./build/battery_read</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 10회 연습문제 — 배터리·온도 읽기. 오늘 배운 것을 하나도 안 쓴 코드
 #include &lt;iostream&gt;
-#include &lt;string&gt;
 
 class Battery
 {
@@ -1496,7 +1106,7 @@ private:
   float celsius_;
 };
 
-// 종류를 밖에서 따진다
+// 종류를 밖에서 번호로 따진다
 float read_kind(int kind, Battery &amp; b, Thermo &amp; t)
 {
   if (kind == 0) { return b.read(); }
@@ -1504,59 +1114,32 @@ float read_kind(int kind, Battery &amp; b, Thermo &amp; t)
   return -1.0f;
 }
 
-// 한 줄을 파일에 남긴다. dry_run 이면 아무것도 안 쓰고 나간다
-bool log_once(int kind, bool dry_run)
-{
-  Battery * b = new Battery();
-  Thermo * t = new Thermo();
-  std::ofstream f(&quot;health_log.txt&quot;, std::ios::app);
-  if (dry_run) { return false; }               // 여기로 나가면 b, t 가 안 지워진다
-  f &lt;&lt; &quot;kind &quot; &lt;&lt; kind &lt;&lt; &quot; = &quot; &lt;&lt; read_kind(kind, *b, *t) &lt;&lt; &quot;\n&quot;;
-  f.close();
-  delete b;
-  delete t;
-  return true;
-}
-
 int main()
 {
-  std::ofstream(&quot;health_log.txt&quot;);             // 파일을 비운다
-  std::cout &lt;&lt; &quot;① 배터리\n&quot;;  log_once(0, false);
-  std::cout &lt;&lt; &quot;② 온도\n&quot;;    log_once(1, false);
-  std::cout &lt;&lt; &quot;③ 연습 실행\n&quot;; log_once(0, true);
-
-  std::ifstream in(&quot;health_log.txt&quot;);
-  std::string line;
-  while (std::getline(in, line)) { std::cout &lt;&lt; &quot;  파일: &quot; &lt;&lt; line &lt;&lt; &quot;\n&quot;; }
+  Battery b;
+  Thermo t;
+  std::cout &lt;&lt; &quot;① 배터리 전압 = &quot; &lt;&lt; read_kind(0, b, t) &lt;&lt; &quot; V\n&quot;;
+  std::cout &lt;&lt; &quot;② 모터 온도   = &quot; &lt;&lt; read_kind(1, b, t) &lt;&lt; &quot; C\n&quot;;
   return 0;
 }</code></pre></div>
   <div class="codefile"><div class="fname">CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre class="lang-cmake"><code>cmake_minimum_required(VERSION 3.16)
-project(health_log CXX)
+project(battery_read CXX)
 set(CMAKE_CXX_STANDARD 17)
-add_executable(health_log main.cpp)</code></pre></div>
+add_executable(battery_read main.cpp)</code></pre></div>
 </details>
 <!-- /fullcode -->
 
   <h3>실제로 나온 출력</h3>
-  <pre><code>① 배터리
-  [Battery 생성]
+  <pre><code>  [Battery 생성]
   [Thermo 생성]
-  [Battery 소멸자]
+① 배터리 전압 = 11.8 V
+② 모터 온도   = 41.5 C
   [Thermo 소멸자]
-② 온도
-  [Battery 생성]
-  [Thermo 생성]
-  [Battery 소멸자]
-  [Thermo 소멸자]
-③ 연습 실행
-  [Battery 생성]
-  [Thermo 생성]
-  파일: kind 0 = 11.8
-  파일: kind 1 = 41.5</code></pre>
+  [Battery 소멸자]</code></pre>
 
   <h3>할 일</h3>
   <p>
-    이 코드를 <strong>오늘 프로그램이 v1에서 v8로 간 것과 같은 길</strong>로 고친다. 파일에 남는 두 줄은 같아야 하고, <strong>③에서 소멸자 줄이 나와야 한다.</strong>
+    이 코드를 <strong>오늘 프로그램이 v1에서 v6로 간 것과 같은 길</strong>로 고친다. ①·② 두 줄의 값은 같아야 한다.
     직접 쳐도 되고 에이전트에게 시켜도 된다 — 단, <strong>받은 코드에서 아래 항목이 전부 됐는지는 사람이 확인한다.</strong>
   </p>
   <div class="tablewrap">
@@ -1564,15 +1147,13 @@ add_executable(health_log main.cpp)</code></pre></div>
     <tr><th>고칠 것</th><th>오늘 어디서 했나</th><th>확인하는 법</th></tr>
     <tr><td>기반 클래스 <code>Sensor</code>를 두고 <code>Battery</code>·<code>Thermo</code>가 상속한다. <code>read()</code>는 순수 가상 함수</td><td>② ③</td><td><code>read_kind</code>와 <code>kind</code> 번호가 없어진다. <code>Sensor &amp;</code> 하나로 받는다</td></tr>
     <tr><td>파생 클래스의 <code>read()</code>에 <code>override</code></td><td>④</td><td>이름을 일부러 틀리면 빌드가 막힌다</td></tr>
-    <tr><td><code>Sensor</code>의 소멸자를 <code>virtual</code>로</td><td>⑤</td><td><code>unique_ptr&lt;Sensor&gt;</code>로 잡은 객체가 사라질 때 파생 클래스 소멸자 줄이 찍힌다</td></tr>
-    <tr><td><code>new</code>/<code>delete</code>를 없앤다 — 그냥 변수로 만들거나 <code>make_unique</code></td><td>⑦</td><td>파일에 <code>new</code>·<code>delete</code>가 없다. <strong>③에서 소멸자 줄이 나온다</strong></td></tr>
-    <tr><td><code>f.close()</code>를 지운다</td><td>⑥</td><td>지워도 파일 내용이 같다</td></tr>
+    <tr><td><code>Sensor</code>의 소멸자를 <code>virtual</code>로</td><td>⑤</td><td>⑤절처럼 <code>std::unique_ptr&lt;Sensor&gt; s = std::make_unique&lt;Battery&gt;();</code>를 중괄호 안에 두고 나가면 <code>[Battery 소멸자]</code>가 찍힌다</td></tr>
   </table>
   </div>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
     이 코드를 오늘 배운 방식으로 고쳐 줘. <code>Battery</code>와 <code>Thermo</code>가 상속하는 기반 클래스 <code>Sensor</code>를 만들고 <code>read()</code>는 순수 가상 함수로, 파생 쪽에는 <code>override</code>를, 기반 클래스 소멸자는 <code>virtual</code>로 해 줘.
-    <code>new</code>/<code>delete</code>와 <code>close()</code>는 없애고 스코프가 정리하게 해 줘. 파일에 남는 두 줄은 지금과 같아야 하고, 한 항목 고칠 때마다 빌드해서 확인해 줘.
+    <code>read_kind</code>처럼 번호로 종류를 따지는 함수는 <code>Sensor &amp;</code> 하나로 받게 바꿔 줘. 찍히는 값은 지금과 같아야 하고, 한 항목 고칠 때마다 빌드해서 확인해 줘.
   </div>
   <p>정답은 하나가 아니다. <strong>위 표의 「확인하는 법」이 전부 통과하면</strong> 된 것이다. 수업 시간에 몇 사람의 결과를 같이 본다.</p>
 
@@ -1584,8 +1165,6 @@ add_executable(health_log main.cpp)</code></pre></div>
     <tr><td><code>if</code>로 종류를 따지는 코드가 보일 때</td><td>"기반 클래스 하나를 만들고 종류마다 상속하는 구조로 바꿔 줘. 공통 함수는 순수 가상 함수로 해 줘."</td></tr>
     <tr><td>기반 클래스를 받았을 때</td><td>"상속당하는 클래스의 소멸자에 <code>virtual</code>이 붙어 있는지 확인해 줘. 상속을 안 당하는 클래스에는 붙이지 마."</td></tr>
     <tr><td>재정의하는 함수가 있을 때</td><td>"기반 클래스의 가상 함수를 재정의하는 함수 전부에 <code>override</code>를 붙여 줘. 붙였더니 컴파일이 안 되는 곳은 <strong>고치지 말고 먼저 알려 줘.</strong>"</td></tr>
-    <tr><td><code>new</code>가 보일 때</td><td>"<code>new</code>·<code>delete</code>를 직접 쓰지 말고 스코프가 정리해 주는 방식으로 바꿔 줘. 중간에 <code>return</code>이 여러 개여도 안 새야 해."</td></tr>
-    <tr><td><code>close()</code>가 보일 때</td><td>"이 <code>close()</code>가 정말 필요한 줄인지 알려 줘. 소멸자가 대신 해 주는 것이면 지워 줘."</td></tr>
     <tr><td>클래스 뼈대를 시킬 때</td><td>"이 클래스를 나중에 상속할 거야. 소멸자는 <code>virtual</code>로, 재정의할 함수는 <code>virtual</code> + 파생 쪽에 <code>override</code>로 만들어 줘."</td></tr>
   </table>
   </div>
@@ -1596,11 +1175,8 @@ add_executable(health_log main.cpp)</code></pre></div>
     <li><input type="checkbox" id="c1"><label for="c1">정적 타입과 동적 타입이 무엇인지, <code>virtual</code>이 <strong>어느 쪽을 보게 하는지</strong> 말할 수 있나?</label></li>
     <li><input type="checkbox" id="c2"><label for="c2">상속당하는 클래스의 소멸자에 <code>virtual</code>이 붙어 있나?</label></li>
     <li><input type="checkbox" id="c3"><label for="c3">재정의하는 함수마다 <code>override</code>가 붙어 있나? 붙였는데 컴파일이 안 되는 곳을 <strong>버그로 의심</strong>해 봤나?</label></li>
-    <li><input type="checkbox" id="c4"><label for="c4">코드에 <code>new</code>나 <code>delete</code>가 남아 있지 않나?</label></li>
-    <li><input type="checkbox" id="c5"><label for="c5">파일을 다 쓰고 <code>close()</code>를 손으로 부르고 있지 않나?</label></li>
-    <li><input type="checkbox" id="c6"><label for="c6">소멸자가 <strong>실제로 불리는지</strong> 출력으로 확인해 봤나?</label></li>
-    <li><input type="checkbox" id="c7"><label for="c7">RAII를 「스코프가 곧 수명이다」 말고 <strong>자원과 소멸자로</strong> 한 문장 설명할 수 있나?</label></li>
-    <li><input type="checkbox" id="c8"><label for="c8">연습문제의 「확인하는 법」 다섯 줄을 전부 통과했나?</label></li>
+    <li><input type="checkbox" id="c4"><label for="c4">소멸자가 <strong>실제로 불리는지</strong> 출력으로 확인해 봤나?</label></li>
+    <li><input type="checkbox" id="c5"><label for="c5">연습문제의 「확인하는 법」 세 줄을 전부 통과했나?</label></li>
   </ul>
 
   <!-- ── 조금 더 알아두면 ── -->
@@ -1639,23 +1215,10 @@ public:
       셋 다 <strong>알아보기만 하면 된다.</strong> ROS 2 코드에서 자주 보인다.
     </p>
   </details>
-  <details>
-    <summary>다른 언어에서는 이걸 어떻게 하나 — 가비지 컬렉션과의 차이</summary>
-    <p>파이썬이나 자바에는 <strong>쓰레기 수집기</strong>(garbage collector)가 있다. 안 쓰는 메모리를 나중에 알아서 회수해 준다. 편하지만 두 가지가 다르다.</p>
-    <div class="tablewrap">
-    <table>
-      <tr><th></th><th>RAII (C++)</th><th>쓰레기 수집 (파이썬·자바)</th></tr>
-      <tr><td>언제 정리되나</td><td><strong>중괄호를 나가는 그 순간</strong></td><td>수집기가 도는 때. <strong>언제인지 모른다</strong></td></tr>
-      <tr><td>파일도 되나</td><td>된다. 메모리와 똑같이 처리된다</td><td>메모리만. 파일은 따로 닫아야 한다</td></tr>
-      <tr><td>로봇에서</td><td>정리 시점이 정해져 있다</td><td><strong>수집기가 도는 동안 잠깐 멈출 수 있다</strong></td></tr>
-    </table>
-    </div>
-    <p>마지막 줄이 로봇에서 C++을 쓰는 이유 중 하나다. 「언제 멈출지 모른다」는 것이 제어 주기를 지켜야 하는 프로그램에서는 문제가 된다.</p>
-  </details>
 
   <footer>
     로봇공학 · 순천향대학교 전자정보공학과 ·
-    다음 회차: <a href="robotics_11.html">11회 복사와 이동</a>
+    다음 회차: <a href="robotics_11.html">11회 RAII와 스마트 포인터</a>
   </footer>
 </main>
 </div>

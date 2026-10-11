@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>12회 · 스마트 포인터와 컨테이너 — 누가 주인이고, 어디에 담나 | 로봇공학</title>
+<title>12회 · 컨테이너 — 담고, 넘기고, 돈다 | 로봇공학</title>
 <script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}})();</script>
 <link rel="stylesheet" href="../assets/site.css">
 <link rel="stylesheet" href="assets/lecture.css">
@@ -13,7 +13,7 @@
   <div class="barin wide">
     <a class="up" href="index.html" aria-label="로봇공학 회차 목록"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a>
     <nav class="crumb" aria-label="경로">
-      <a href="../index.html">강의자료</a><span class="sep">/</span><a href="index.html">로봇공학</a><span class="sep">/</span><span class="here">12회 · 스마트 포인터와 컨테이너</span>
+      <a href="../index.html">강의자료</a><span class="sep">/</span><a href="index.html">로봇공학</a><span class="sep">/</span><span class="here">12회 · 컨테이너</span>
     </nav>
     <span class="spacer"></span>
     <div class="navlinks"><a class="navlink" href="robotics_11.html" aria-label="이전 회차"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a><a class="navlink" href="robotics_13.html" aria-label="다음 회차"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></a></div>
@@ -28,13 +28,12 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약 — 용어 일곱 개</a>
-  <a href="#start">① 오늘 만들 것 — 10회의 <code>make_unique</code>에서 시작</a>
-  <a href="#own">② 소유권 · <code>unique_ptr</code> · <code>shared_ptr</code></a>
-  <a href="#alias">③ 타입 별칭 · <code>using</code></a>
-  <a href="#container">④ 컨테이너 · <code>vector</code> · <code>array</code></a>
-  <a href="#reserve">⑤ 용량과 재할당 · <code>reserve</code></a>
-  <a href="#rangefor">⑥ 범위 기반 for · <code>const auto &amp;</code></a>
+  <a href="#summary">한 장 요약 — 용어 다섯 개</a>
+  <a href="#start">① 오늘 만들 것 — AI가 준 그대로</a>
+  <a href="#container">② 컨테이너 · <code>vector</code> · <code>array</code></a>
+  <a href="#byref">③ 값 전달과 참조 전달 · <code>const &amp;</code></a>
+  <a href="#reserve">④ 용량과 재할당 · <code>reserve</code></a>
+  <a href="#rangefor">⑤ 범위 기반 for · <code>const auto &amp;</code></a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
   <a href="#prompts">🤖 프롬프트 모음</a>
@@ -45,40 +44,38 @@
 <main>
 
   <div class="lec-no">로봇공학 · 12회 · 2부 C++</div>
-  <h1>스마트 포인터와 컨테이너 — 누가 주인이고, 어디에 담나</h1>
+  <h1>컨테이너 — 담고, 넘기고, 돈다</h1>
 
   <div class="questions">
     <span class="lab">오늘 답할 질문</span>
     <ol>
-      <li>10회에서 쓴 <code>std::make_unique</code>가 돌려주는 것은 정확히 무엇인가? 「주인」이란 무슨 뜻인가?</li>
-      <li><code>unique_ptr</code>와 <code>shared_ptr</code> 중 무엇을 고르나?</li>
-      <li>남의 코드에 늘 보이는 <code>::SharedPtr</code>은 무엇인가?</li>
-      <li><code>reserve()</code> 한 줄이 실제로 얼마나 이득인가?</li>
+      <li><code>std::vector</code>와 <code>std::array</code>는 무엇이 다르고, C 스타일 배열은 왜 안 쓰나?</li>
+      <li>함수에 <code>vector</code>를 넘길 때 무슨 일이 일어나나? 인자는 어떻게 받아야 하나?</li>
+      <li><code>reserve()</code> 한 줄은 무엇을 없애나?</li>
+      <li><code>for (auto x : v)</code>와 <code>for (const auto &amp; x : v)</code>는 무엇이 다른가?</li>
     </ol>
   </div>
 
   <p>
-    10회에서 <code>new</code>/<code>delete</code> 대신 <code>std::make_unique</code>를 썼다. 그때는 「스코프를 벗어나면 알아서 지워진다」까지만 봤다.
-    오늘 앞 절반은 그 포인터가 <strong>무엇을 뜻하는지</strong> — 객체의 <strong>소유권</strong>이 하나인지 여럿인지 — 를 세우는 자리다.
-    뒤 절반은 <strong>값을 담는 컨테이너</strong>다. 이 과목에서 쓰는 컨테이너는 사실상 <code>std::vector</code> 하나이고, 그 하나를 제대로 쓰는 법이 나머지 전부보다 중요하다.
+    라이다 한 바퀴는 거리 값 360개이고, 찾아낸 콘은 몇 개가 될지 모른다. 로봇 코드는 <strong>값 여러 개를 한 번에 다루는 일</strong>이 대부분이다.
+    오늘은 그 값들을 <strong>담는 타입</strong>(컨테이너)과, 담은 것을 <strong>함수에 넘기고 한 바퀴 도는 법</strong>을 다룬다.
+    이 과목에서 쓰는 컨테이너는 사실상 <code>std::vector</code> 하나이고, 그 하나를 제대로 쓰는 법이 나머지 전부보다 중요하다.
   </p>
   <p>
-    오늘은 <strong>용어 일곱 개</strong>를 다룬다. 절마다 <strong>먼저 그 문법이 무엇이고 왜 생겼는지를 설명하고</strong>, 그다음에 <strong>센서 하나와 스캔 목록을 다루는 작은 프로그램</strong>에 그것을 적용한다.
-    11회처럼 주장에는 숫자를 붙인다 — <code>reserve()</code> 한 줄이 몇 배인지, <code>const auto &amp;</code>를 빼면 복사가 몇 번 나는지 잰다.
+    오늘은 <strong>용어 다섯 개</strong>를 다룬다. 절마다 <strong>먼저 그 문법이 무엇이고 왜 생겼는지를 설명하고</strong>, 그다음에 <strong>라이다 스캔을 다루는 작은 프로그램</strong>에 그것을 적용한다.
+    오늘 다루는 것 중 셋은 <strong>틀린 답을 내지 않는다.</strong> 맞는 답을 내면서 쓸데없이 복사할 뿐이다. 그래서 복사 횟수와 시간을 <strong>실제로 세고 잰다.</strong>
   </p>
 
   <!-- ── 한 장 요약표 ── -->
-  <h2 id="summary">한 장 요약 — 학기가 끝나도 이 표만 남으면 된다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+  <h2 id="summary">한 장 요약 — 학기가 끝나도 이 표만 남으면 된다</h2>
   <p class="readme-first">무엇을 먼저 볼지: <strong>「기본값」이라고 적힌 세 줄</strong>이 오늘의 알맹이다. 나머지는 그 기본값을 벗어날 이유가 있을 때만 고른다.</p>
   <div class="tablewrap">
   <table class="summary-table">
     <tr><th>용어</th><th>코드에서 이렇게 보인다</th><th>이것만 알면 된다</th></tr>
-    <tr><td>소유권 · 스마트 포인터</td><td><code>std::unique_ptr&lt;T&gt;</code></td><td>객체를 <strong>지울 책임이 누구에게 있나</strong>가 소유권이다. 스마트 포인터는 그 책임을 진 포인터다</td></tr>
-    <tr><td><code>unique_ptr</code> · <code>make_unique</code></td><td><code>auto p = std::make_unique&lt;T&gt;(...);</code></td><td><strong>기본값.</strong> 주인이 하나다. 복사가 안 되고 <code>std::move</code>로 주인을 넘긴다</td></tr>
-    <tr><td><code>shared_ptr</code> · <code>make_shared</code> · 참조 횟수</td><td><code>auto p = std::make_shared&lt;T&gt;(...);</code></td><td>주인이 <strong>여럿</strong>일 때만. 주인 수를 세다가 마지막이 지운다</td></tr>
-    <tr><td>타입 별칭</td><td><code>using SharedPtr = std::shared_ptr&lt;T&gt;;</code></td><td>긴 타입의 <strong>다른 이름</strong>일 뿐이다. <code>…::SharedPtr</code>이 보이면 겁먹지 않는다</td></tr>
-    <tr><td><code>std::vector</code> · <code>std::array</code></td><td><code>std::vector&lt;float&gt; v;</code> / <code>std::array&lt;float, 4&gt; w;</code></td><td><code>vector</code>가 <strong>기본값.</strong> 개수가 코드에 이미 적혀 있을 때만 <code>array</code>. C 배열은 안 쓴다</td></tr>
-    <tr><td>용량 · 재할당 · <code>reserve</code></td><td><code>v.reserve(n);</code></td><td>몇 개 들어올지 알면 담기 전에 한 줄. 자리를 다시 잡는 일(재할당)이 0번이 된다</td></tr>
+    <tr><td>컨테이너 · <code>std::vector</code> · <code>std::array</code></td><td><code>std::vector&lt;float&gt; v;</code> / <code>std::array&lt;float, 4&gt; w;</code></td><td><code>vector</code>가 <strong>기본값.</strong> 개수가 코드에 이미 적혀 있을 때만 <code>array</code>. C 배열은 안 쓴다</td></tr>
+    <tr><td>값 전달 · 참조 전달</td><td><code>float front(const ScanMsg &amp; msg)</code></td><td>읽기만 할 인자는 <strong><code>const &amp;</code>가 기본값.</strong> 값으로 받으면 부를 때마다 사본이 생긴다</td></tr>
+    <tr><td>복사 생성자로 복사 세기</td><td><code>ScanMsg(const ScanMsg &amp; o) … { ++g_copy; }</code></td><td>복사는 화면에 안 보인다. 11회의 복사 생성자에 <strong>세는 줄</strong>을 넣으면 보인다</td></tr>
+    <tr><td>용량 · 재할당 · <code>reserve</code></td><td><code>v.reserve(n);</code></td><td>몇 개 들어올지 알면 담기 전에 한 줄. 재할당이 0번이 된다</td></tr>
     <tr><td>범위 기반 for · <code>const auto &amp;</code></td><td><code>for (const auto &amp; x : v)</code></td><td><strong>기본값.</strong> <code>auto x</code>로 쓰면 한 바퀴마다 사본이 생긴다</td></tr>
   </table>
   </div>
@@ -87,415 +84,119 @@
   </div>
 
   <!-- ── ① 시작 ── -->
-  <h2 id="start">① 오늘 만들 것 — 센서를 켜고 끄는 프로그램, 10회의 <code>make_unique</code> 그대로 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+  <h2 id="start">① 오늘 만들 것 — 라이다 스캔과 바퀴 속도, AI가 준 그대로 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
   <h3>무엇을 만드나</h3>
   <p>
-    센서 하나를 켜고, 상태를 확인하고, 문제가 있으면 그만두는 함수 <code>setup()</code>이다. 센서 객체는 켜질 때와 꺼질 때 한 줄씩 찍는다 — 이 두 줄이 오늘 내내 <strong>「정리가 됐는지」를 눈으로 보는 장치</strong>다.
-    뒤 절에서 라이다 스캔 목록이 재료로 더해진다.
+    라이다 메시지를 흉내 낸 구조체 <code>ScanMsg</code>에서 <strong>정면 거리</strong>를 꺼내고, 바퀴 네 개의 속도를 찍는 프로그램이다.
+    실제 ROS 2에서는 <code>ScanMsg</code> 자리에 <code>sensor_msgs::msg::LaserScan</code>이라는 긴 이름이 오고, 모양과 성질은 같다. 이 메시지가 <strong>초당 5번 이상</strong> 들어온다.
   </p>
 
   <h3>읽는 법</h3>
   <ul>
-    <li>먼저 <strong>10회 ⑦절에서 배운 대로</strong> <code>make_unique</code>로 짠 판을 돌린다. 이것이 출발점이다.</li>
-    <li>②절부터는 절마다 <strong>「개념」</strong>이 먼저 온다 — 그 문법이 무엇이고 어떤 문제를 풀려고 생겼는지. 그다음 <strong>「예제에 적용」</strong>에서 프로그램에 줄을 더하거나 한 곳을 고친다.</li>
+    <li>먼저 <strong>AI에게 시켜서 받은 코드를 그대로</strong> 돌린다. 맞는 값이 나온다.</li>
+    <li>②절부터는 절마다 <strong>「개념」</strong>이 먼저 온다 — 그 문법이 무엇이고 어떤 문제를 풀려고 생겼는지. 그다음 <strong>「예제에 적용」</strong>에서 프로그램의 한 곳을 고치거나 <strong>세고 재는 장치를 몇 줄 더한다.</strong></li>
     <li>고치는 자리는 <strong>고치기 전</strong>(붉은 테두리)과 <strong>고친 뒤</strong>(푸른 테두리)를 따로 놓는다. 더하기만 하는 단계는 더한 뒤의 모양만 보인다.</li>
     <li>그 아래 <strong>📄 「전체 코드」 상자</strong>를 누르면 그 단계의 <code>main.cpp</code> 전체가 나온다. 첫 줄 주석에 <strong>버전(v1, v2, …)</strong>이 있다. <strong>어느 버전을 펼쳐도 그대로 빌드되고 돌아간다.</strong></li>
     <li>「실제로 나온 출력」에는 그 절이 새로 찍는 줄만 보인다. 전체 출력은 실습 「성공 화면」에 한 번 있다.</li>
     <li>빌드는 <strong>CMake</strong>다. 시간을 재는 절이 있어 <code>CMakeLists.txt</code>에 최적화를 켜는 한 줄이 들어 있다.</li>
   </ul>
 
-  <h3>1단계 (v1) — <code>Sensor</code> 클래스와 <code>setup()</code></h3>
-  <pre class="lang-cpp"><code>class Sensor {
-public:
-  explicit Sensor(std::string n, bool ok) : n_(std::move(n)), ok_(ok) { std::cout &lt;&lt; "  [" &lt;&lt; n_ &lt;&lt; " 켜짐]\n"; }
-  ~Sensor() { std::cout &lt;&lt; "  [" &lt;&lt; n_ &lt;&lt; " 꺼짐]\n"; }
-  bool ok() const { return ok_; }
-  void start() { std::cout &lt;&lt; "  " &lt;&lt; n_ &lt;&lt; " 측정 시작\n"; }
-  const std::string &amp; name() const { return n_; }
-private:
-  std::string n_;
-  bool ok_;
+  <h3>1단계 (v1) — 값으로 받고, C 배열에 담는다</h3>
+  <pre class="lang-cpp"><code>const int kScanSize = 360;             // 라이다 한 바퀴의 거리 값 개수
+
+struct ScanMsg {
+  std::vector&lt;float&gt; ranges;           // 거리 값 360개
+  ScanMsg() : ranges(kScanSize, 1.0f) {}
 };
 
-// 센서 하나를 켜고, 상태가 나쁘면 그만두고, 좋으면 측정을 시작한다
-void setup(const std::string &amp; name, bool ok)
+// 정면 거리를 꺼낸다 — 값으로 받는다
+float front(ScanMsg msg)
 {
-  auto s = std::make_unique&lt;Sensor&gt;(name, ok);
-  if (!s-&gt;ok()) {
-    std::cout &lt;&lt; "  " &lt;&lt; name &lt;&lt; " 상태 불량 — 그만둔다\n";
-    return;                            // 여기서 나가도 알아서 정리된다 (10회)
-  }
-  s-&gt;start();
+  return msg.ranges.at(0);
 }
 
 int main()
 {
-  std::cout &lt;&lt; "① 센서를 unique_ptr 이 소유하면 치우는 일이 사라진다\n";
-  setup("라이다", true);
-  setup("카메라", false);
+  std::cout &lt;&lt; "① 스캔 하나와 바퀴 넷\n";
+  ScanMsg msg;
+  std::cout &lt;&lt; "  정면 거리 = " &lt;&lt; front(msg) &lt;&lt; " m\n";
+
+  float wheel[4] = {0.5f, 0.5f, 0.5f, 0.5f};   // 바퀴 속도 4개
+  int wheel_count = 4;                          // 개수는 따로 들고 다닌다
+  std::cout &lt;&lt; "  바퀴 " &lt;&lt; wheel_count &lt;&lt; "개, 첫 바퀴 " &lt;&lt; wheel[0] &lt;&lt; " m/s\n";
   return 0;
 }</code></pre>
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
     <dl>
-      <dt>explicit Sensor(std::string n, bool ok) : n_(std::move(n))</dt>
-      <dd>생성자 앞의 <code>explicit</code>는 「이 생성자로 몰래 자동 변환되지 말라」는 표시다. 인자가 있는 생성자에는 붙이는 것이 기본이다.
-          인자를 값으로 받아 <code>std::move</code>로 멤버에 넣는 것은 11회 「조금 더」의 그 모양이다 — 어차피 보관할 값이라 사본을 받아서 옮긴다.</dd>
-      <dt>const std::string &amp; name() const</dt>
-      <dd>9회의 <code>const</code> 멤버 함수인데 <strong>반환도 <code>const</code> 참조</strong>다. 이름을 돌려줄 때 문자열을 복사하지 않는다(11회).</dd>
+      <dt>const int kScanSize = 360;</dt>
+      <dd>파일 맨 위에 둔 <strong>이름 붙은 상수</strong>다. <code>360</code>을 코드 여기저기에 박는 대신 이 이름을 쓴다. 실습에서 이 한 줄만 바꾸면 프로그램 전체가 따라오는 것을 본다.</dd>
+      <dt>ranges(kScanSize, 1.0f)</dt>
+      <dd>원소가 360개이고 <strong>전부 1.0으로 채워진</strong> <code>vector</code>를 만든다. 라이다 한 바퀴의 거리 값이 전부 1.0 m라고 치고 메시지를 채우는 데 썼다.</dd>
+      <dt>set(CMAKE_BUILD_TYPE Release)</dt>
+      <dd>📄 상자의 <code>CMakeLists.txt</code>에 있는 줄이다. 8회에서 <code>-DCMAKE_BUILD_TYPE</code> 옵션으로 본 것을 파일 안에 적었다. 최적화를 켜고 빌드한다 — <strong>시간을 잴 때는 켜야</strong> 실제 프로그램에 가까운 숫자가 나온다.</dd>
     </dl>
   </div>
   <h3>실제로 나온 출력</h3>
   <pre class="lang-sh"><code>$ cmake -S . -B build
 $ cmake --build build
-$ ./build/ptr_container
-① 센서를 unique_ptr 이 소유하면 치우는 일이 사라진다
-  [라이다 켜짐]
-  라이다 측정 시작
-  [라이다 꺼짐]
-  [카메라 켜짐]
-  카메라 상태 불량 — 그만둔다
-  [카메라 꺼짐]</code></pre>
-  <!-- fullcode "전체 코드 — v1 (1단계 · 10회의 make_unique 로 센서를 켠다) main.cpp + CMakeLists.txt — 이대로 빌드된다" build="cmake -S . -B build && cmake --build build && ./build/ptr_container"
-       l12_ptr_container/steps/step1/main.cpp
-       l12_ptr_container/steps/step1/CMakeLists.txt
+$ ./build/scan_list
+① 스캔 하나와 바퀴 넷
+  정면 거리 = 1 m
+  바퀴 4개, 첫 바퀴 0.5 m/s</code></pre>
+  <!-- fullcode "전체 코드 — v1 (1단계 · AI가 준 그대로) main.cpp + CMakeLists.txt — 이대로 빌드된다" build="cmake -S . -B build && cmake --build build && ./build/scan_list"
+       l12_container/steps/step1/main.cpp
+       l12_container/steps/step1/CMakeLists.txt
   -->
 <details class="fullcode">
-  <summary>전체 코드 — v1 (1단계 · 10회의 make_unique 로 센서를 켠다) main.cpp + CMakeLists.txt — 이대로 빌드된다</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cmake -S . -B build &amp;&amp; cmake --build build &amp;&amp; ./build/ptr_container</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 스마트 포인터와 컨테이너 — v1 (1단계: 10회의 make_unique 로 센서를 켠다)
+  <summary>전체 코드 — v1 (1단계 · AI가 준 그대로) main.cpp + CMakeLists.txt — 이대로 빌드된다</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake -S . -B build &amp;&amp; cmake --build build &amp;&amp; ./build/scan_list</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 라이다 스캔 다루기 — v1 (1단계: AI가 준 그대로)
 #include &lt;iostream&gt;
-#include &lt;memory&gt;
-#include &lt;string&gt;
 #include &lt;vector&gt;
-
-class Sensor {
-public:
-  explicit Sensor(std::string n, bool ok) : n_(std::move(n)), ok_(ok) { std::cout &lt;&lt; &quot;  [&quot; &lt;&lt; n_ &lt;&lt; &quot; 켜짐]\n&quot;; }
-  ~Sensor() { std::cout &lt;&lt; &quot;  [&quot; &lt;&lt; n_ &lt;&lt; &quot; 꺼짐]\n&quot;; }
-  bool ok() const { return ok_; }
-  void start() { std::cout &lt;&lt; &quot;  &quot; &lt;&lt; n_ &lt;&lt; &quot; 측정 시작\n&quot;; }
-  const std::string &amp; name() const { return n_; }
-private:
-  std::string n_;
-  bool ok_;
-};
-
-// 센서 하나를 켜고, 상태가 나쁘면 그만두고, 좋으면 측정을 시작한다
-void setup(const std::string &amp; name, bool ok)
-{
-  auto s = std::make_unique&lt;Sensor&gt;(name, ok);
-  if (!s-&gt;ok()) {
-    std::cout &lt;&lt; &quot;  &quot; &lt;&lt; name &lt;&lt; &quot; 상태 불량 — 그만둔다\n&quot;;
-    return;                            // 여기서 나가도 알아서 정리된다
-  }
-  s-&gt;start();
-}                                      // 중괄호를 벗어나는 순간 끝. delete 가 없다
-
-int main()
-{
-  std::cout &lt;&lt; &quot;① 센서를 unique_ptr 이 소유하면 치우는 일이 사라진다\n&quot;;
-  setup(&quot;라이다&quot;, true);
-  setup(&quot;카메라&quot;, false);
-  return 0;
-}</code></pre></div>
-  <div class="codefile"><div class="fname">CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre class="lang-cmake"><code>cmake_minimum_required(VERSION 3.16)
-project(ptr_container CXX)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_BUILD_TYPE Release)             # 시간을 재는 회차라 최적화를 켠다
-add_executable(ptr_container main.cpp)</code></pre></div>
-</details>
-<!-- /fullcode -->
-  <p>가운데서 <code>return</code>해도 「카메라 꺼짐」이 찍혔다. 10회에서 본 그대로다. 그런데 <code>auto s</code>의 정확한 타입이 무엇이고, 그것을 다른 곳에 넘기면 어떻게 되는지는 아직 안 봤다. 그것이 ②절이다.</p>
-
-  <!-- ── ② 소유권 ── -->
-  <h2 id="own">② 소유권 — 주인이 하나면 <code>unique_ptr</code>, 여럿이면 <code>shared_ptr</code> <span class="badge b-red">🔴 사람이 한다</span></h2>
-
-  <h3>개념 — 스마트 포인터는 「지울 책임」을 진 포인터다</h3>
-  <p>
-    동적으로 만든 객체는 누군가 지워야 한다(10회 ⑦절). <strong>그 책임이 누구에게 있는가</strong>를 <strong>소유권</strong>(ownership)이라고 한다.
-    <strong>스마트 포인터</strong>(smart pointer)는 객체의 주소를 담는 포인터인데, <strong>자기가 사라질 때 가리키는 객체를 지우는 책임</strong>까지 진다 — RAII를 포인터에 적용한 것이다.
-    표준에 둘이 있고, 고르는 기준은 성능이 아니라 <strong>「이 객체의 주인이 몇인가」</strong>다.
-  </p>
-  <div class="tablewrap">
-  <table>
-    <tr><th></th><th><code>std::unique_ptr&lt;T&gt;</code></th><th><code>std::shared_ptr&lt;T&gt;</code></th></tr>
-    <tr><td>주인</td><td><strong>하나</strong></td><td><strong>여럿</strong></td></tr>
-    <tr><td>복사</td><td>안 된다 (컴파일 오류)</td><td>된다 — 복사할 때마다 주인이 하나 는다</td></tr>
-    <tr><td>주인을 넘기려면</td><td><code>std::move</code> — 넘긴 쪽은 빈 포인터(<code>nullptr</code>)가 된다</td><td>그냥 복사한다</td></tr>
-    <tr><td>언제 지워지나</td><td>주인이 사라질 때</td><td><strong>참조 횟수</strong>(reference count)가 0이 될 때 — 마지막 주인이 사라질 때</td></tr>
-    <tr><td>만드는 법</td><td><code>std::make_unique&lt;T&gt;(인자…)</code></td><td><code>std::make_shared&lt;T&gt;(인자…)</code></td></tr>
-    <tr><td>비용</td><td>맨 포인터와 같다</td><td>주인 수를 여러 스레드에서 안전하게 세느라 만들고 지울 때마다 비용이 든다</td></tr>
-  </table>
-  </div>
-  <p>
-    <strong>AI는 「메모리를 안전하게 관리해 줘」라고 하면 대부분 <code>shared_ptr</code>을 준다.</strong> 돌아가고 새지도 않는다. 그런데 대개 필요 없는 선택이다.
-    비용보다 더 중요한 것은 코드가 말하는 내용이다 — <code>shared_ptr</code>이 보이면 읽는 사람은 「여러 곳이 같이 쓰는구나」라고 이해한다. 실제로는 한 곳만 쓰는데 <code>shared_ptr</code>이면 코드가 거짓말을 하고 있는 것이다.
-  </p>
-  <p class="readme-first">무엇을 먼저 볼지: <strong>왼쪽 두 질문에 답하는 순서</strong>가 곧 고르는 순서다. 첫 줄을 빠뜨리기 쉽다.</p>
-  <div class="tablewrap">
-  <table>
-    <tr><th>주인이 몇인가</th><th>다른 곳에 넘길 일이 있나</th><th>고를 것</th></tr>
-    <tr><td>하나</td><td>없다</td><td><strong>스마트 포인터 자체가 필요 없다.</strong> 그냥 변수나 멤버로 갖는다</td></tr>
-    <tr><td>하나</td><td>있다 (만든 곳과 쓰는 곳이 다르다)</td><td><code>std::unique_ptr</code> — 넘길 때 <code>std::move</code></td></tr>
-    <tr><td><strong>여럿</strong></td><td>—</td><td><code>std::shared_ptr</code></td></tr>
-    <tr><td>여럿인데 <strong>서로를 가리킨다</strong></td><td>—</td><td>여기서 멈추고 설계를 다시 본다. 서로 잡고 있으면 아무도 안 꺼진다 (「조금 더」)</td></tr>
-  </table>
-  </div>
-
-  <h3>예제에 적용 — 주인이 바뀌는 것과 주인 수가 변하는 것을 출력으로 본다</h3>
-  <h3>2단계 (v2) — <code>main</code>에 두 묶음을 더한다</h3>
-  <pre class="lang-cpp"><code>  std::cout &lt;&lt; "\n② unique_ptr — 주인이 하나다\n";
-  {
-    std::unique_ptr&lt;Sensor&gt; a = std::make_unique&lt;Sensor&gt;("라이다", true);
-    std::cout &lt;&lt; "  a 가 가리키는 것: " &lt;&lt; a-&gt;name() &lt;&lt; "\n";
-    std::unique_ptr&lt;Sensor&gt; b = std::move(a);      // 주인이 바뀐다. 복사는 안 된다
-    std::cout &lt;&lt; "  넘긴 뒤 a 는 비었나? " &lt;&lt; (a == nullptr ? "그렇다" : "아니다") &lt;&lt; "\n";
-    std::cout &lt;&lt; "  이제 주인은 b: " &lt;&lt; b-&gt;name() &lt;&lt; "\n";
-  }
-  std::cout &lt;&lt; "  중괄호를 나오면 delete 를 안 써도 꺼졌다\n";
-
-  std::cout &lt;&lt; "\n② shared_ptr — 여럿이 나눠 가진다. 마지막이 끄고 나간다\n";
-  {
-    std::shared_ptr&lt;Sensor&gt; p1 = std::make_shared&lt;Sensor&gt;("카메라", true);
-    std::cout &lt;&lt; "  주인 수 = " &lt;&lt; p1.use_count() &lt;&lt; "\n";
-    {
-      std::shared_ptr&lt;Sensor&gt; p2 = p1;             // 복사가 된다. 세는 숫자가 는다
-      std::cout &lt;&lt; "  주인 수 = " &lt;&lt; p1.use_count() &lt;&lt; "  (p2 가 생겼다)\n";
-    }
-    std::cout &lt;&lt; "  주인 수 = " &lt;&lt; p1.use_count() &lt;&lt; "  (p2 가 사라졌다)\n";
-  }</code></pre>
-  <div class="box firstseen">
-    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
-    <dl>
-      <dt>p1.use_count()</dt>
-      <dd>지금 이 객체를 소유한 <code>shared_ptr</code>가 몇 개인지(참조 횟수)다. <code>p2</code>가 생기고 사라질 때 이 숫자가 어떻게 변하는지 보려고 썼다.</dd>
-      <dt>a == nullptr</dt>
-      <dd>스마트 포인터도 7회의 <code>nullptr</code>과 비교할 수 있다. <code>std::move</code>로 주인을 넘긴 <code>unique_ptr</code>는 빈 포인터가 된다.</dd>
-    </dl>
-  </div>
-  <h3>실제로 나온 출력</h3>
-  <pre><code>② unique_ptr — 주인이 하나다
-  [라이다 켜짐]
-  a 가 가리키는 것: 라이다
-  넘긴 뒤 a 는 비었나? 그렇다
-  이제 주인은 b: 라이다
-  [라이다 꺼짐]
-  중괄호를 나오면 delete 를 안 써도 꺼졌다
-
-② shared_ptr — 여럿이 나눠 가진다. 마지막이 끄고 나간다
-  [카메라 켜짐]
-  주인 수 = 1
-  주인 수 = 2  (p2 가 생겼다)
-  주인 수 = 1  (p2 가 사라졌다)
-  [카메라 꺼짐]</code></pre>
-  <!-- fullcode "전체 코드 — v2 (2단계 · unique_ptr 와 shared_ptr — 소유권) main.cpp" build="cmake --build build && ./build/ptr_container"
-       l12_ptr_container/steps/step2/main.cpp
-  -->
-<details class="fullcode">
-  <summary>전체 코드 — v2 (2단계 · unique_ptr 와 shared_ptr — 소유권) main.cpp</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/ptr_container</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 스마트 포인터와 컨테이너 — v2 (2단계: unique_ptr 와 shared_ptr — 소유권)
-#include &lt;iostream&gt;
-#include &lt;memory&gt;
-#include &lt;string&gt;
-#include &lt;vector&gt;
-
-class Sensor {
-public:
-  explicit Sensor(std::string n, bool ok) : n_(std::move(n)), ok_(ok) { std::cout &lt;&lt; &quot;  [&quot; &lt;&lt; n_ &lt;&lt; &quot; 켜짐]\n&quot;; }
-  ~Sensor() { std::cout &lt;&lt; &quot;  [&quot; &lt;&lt; n_ &lt;&lt; &quot; 꺼짐]\n&quot;; }
-  bool ok() const { return ok_; }
-  void start() { std::cout &lt;&lt; &quot;  &quot; &lt;&lt; n_ &lt;&lt; &quot; 측정 시작\n&quot;; }
-  const std::string &amp; name() const { return n_; }
-private:
-  std::string n_;
-  bool ok_;
-};
-
-// 센서 하나를 켜고, 상태가 나쁘면 그만두고, 좋으면 측정을 시작한다
-void setup(const std::string &amp; name, bool ok)
-{
-  auto s = std::make_unique&lt;Sensor&gt;(name, ok);
-  if (!s-&gt;ok()) {
-    std::cout &lt;&lt; &quot;  &quot; &lt;&lt; name &lt;&lt; &quot; 상태 불량 — 그만둔다\n&quot;;
-    return;                            // 여기서 나가도 알아서 정리된다
-  }
-  s-&gt;start();
-}                                      // 중괄호를 벗어나는 순간 끝. delete 가 없다
-
-int main()
-{
-  std::cout &lt;&lt; &quot;① 센서를 unique_ptr 이 소유하면 치우는 일이 사라진다\n&quot;;
-  setup(&quot;라이다&quot;, true);
-  setup(&quot;카메라&quot;, false);
-
-  std::cout &lt;&lt; &quot;\n② unique_ptr — 주인이 하나다\n&quot;;
-  {
-    std::unique_ptr&lt;Sensor&gt; a = std::make_unique&lt;Sensor&gt;(&quot;라이다&quot;, true);
-    std::cout &lt;&lt; &quot;  a 가 가리키는 것: &quot; &lt;&lt; a-&gt;name() &lt;&lt; &quot;\n&quot;;
-    std::unique_ptr&lt;Sensor&gt; b = std::move(a);      // 주인이 바뀐다. 복사는 안 된다
-    std::cout &lt;&lt; &quot;  넘긴 뒤 a 는 비었나? &quot; &lt;&lt; (a == nullptr ? &quot;그렇다&quot; : &quot;아니다&quot;) &lt;&lt; &quot;\n&quot;;
-    std::cout &lt;&lt; &quot;  이제 주인은 b: &quot; &lt;&lt; b-&gt;name() &lt;&lt; &quot;\n&quot;;
-  }
-  std::cout &lt;&lt; &quot;  중괄호를 나오면 delete 를 안 써도 꺼졌다\n&quot;;
-
-  std::cout &lt;&lt; &quot;\n② shared_ptr — 여럿이 나눠 가진다. 마지막이 끄고 나간다\n&quot;;
-  {
-    std::shared_ptr&lt;Sensor&gt; p1 = std::make_shared&lt;Sensor&gt;(&quot;카메라&quot;, true);
-    std::cout &lt;&lt; &quot;  주인 수 = &quot; &lt;&lt; p1.use_count() &lt;&lt; &quot;\n&quot;;
-    {
-      std::shared_ptr&lt;Sensor&gt; p2 = p1;             // 복사가 된다. 세는 숫자가 는다
-      std::cout &lt;&lt; &quot;  주인 수 = &quot; &lt;&lt; p1.use_count() &lt;&lt; &quot;  (p2 가 생겼다)\n&quot;;
-    }
-    std::cout &lt;&lt; &quot;  주인 수 = &quot; &lt;&lt; p1.use_count() &lt;&lt; &quot;  (p2 가 사라졌다)\n&quot;;
-  }
-  return 0;
-}</code></pre></div>
-</details>
-<!-- /fullcode -->
-  <div class="interp">
-    <strong>해석:</strong> 세 자리를 짚는다. <strong>「넘긴 뒤 a 는 비었나? 그렇다」</strong> — <code>unique_ptr</code>는 넘기면 주인이 바뀌고 넘겨준 쪽은 빈다.
-    <strong>주인 수 1 → 2 → 1</strong> — 안쪽 중괄호에서 <code>p2</code>가 생겼다 사라지는 동안 숫자가 오르내린다. 그리고 <strong>「꺼짐」이 찍히는 위치</strong> — <code>delete</code> 없이 중괄호를 나올 때마다 꺼졌다.
-  </div>
-  <div class="prompt">
-    <button onclick="copyPrompt(this)">복사</button>
-    이 코드에서 <code>shared_ptr</code>을 쓴 자리마다 <strong>주인이 정말 여럿인지</strong> 확인해 줘. 한 곳만 쓰는 것은 <code>unique_ptr</code>로 바꾸고, 포인터가 아예 필요 없는 자리는 그냥 변수로 바꿔 줘. 왜 바꿨는지 한 줄씩 적어 줘.
-  </div>
-
-  <!-- ── ③ 타입 별칭 ── -->
-  <h2 id="alias">③ 타입 별칭 — <code>using</code>으로 긴 타입에 짧은 이름을 붙인다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
-
-  <h3>개념 — 새 타입이 아니라 같은 타입의 다른 이름</h3>
-  <p>
-    <code>std::shared_ptr&lt;sensor_msgs::msg::LaserScan&gt;</code>처럼 타입 이름이 길어지면 줄 하나가 화면을 넘어간다.
-    <strong>타입 별칭</strong>(type alias)은 <code>using 새이름 = 원래타입;</code>으로 <strong>같은 타입에 다른 이름을 붙이는 것</strong>이다. 새 타입이 생기는 것이 아니라서 원래 이름으로 만든 것과 별명으로 만든 것을 서로 대입할 수 있다.
-    별칭을 클래스 안에 두면 <code>클래스::별명</code>으로 부른다 — 7회의 범위 지정 연산자 <code>::</code>가 여기서 다시 쓰인다.
-    <strong>만들 일은 드물지만 읽을 일은 아주 많다.</strong>
-  </p>
-
-  <h3>예제에 적용 — 스캔 구조체를 넣고 별명을 하나 붙인다</h3>
-  <h3>3단계 (v3) — <code>ScanMsg</code>와 <code>ScanMsg::SharedPtr</code></h3>
-  <pre class="lang-cpp"><code>const int kScanSize = 360;             // 라이다 한 바퀴의 거리 값 개수
-struct ScanMsg {
-  std::vector&lt;float&gt; ranges;
-  ScanMsg() : ranges(kScanSize, 1.0f) {}
-  using SharedPtr = std::shared_ptr&lt;ScanMsg&gt;;   // 이 구조체 안에 별명을 하나 둔다
-};
-
-  // main 에
-  std::cout &lt;&lt; "\n④ ::SharedPtr 은 별명일 뿐이다\n";
-  ScanMsg::SharedPtr       msg1 = std::make_shared&lt;ScanMsg&gt;();
-  std::shared_ptr&lt;ScanMsg&gt; msg2 = msg1;            // 같은 타입이므로 그대로 대입된다
-  std::cout &lt;&lt; "  msg1 과 msg2 가 같은 스캔을 잡고 있나? " &lt;&lt; (msg1 == msg2 ? "그렇다" : "아니다")
-            &lt;&lt; "  (주인 수 " &lt;&lt; msg1.use_count() &lt;&lt; ")\n";</code></pre>
-  <div class="box firstseen">
-    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
-    <dl>
-      <dt>const int kScanSize = 360;</dt>
-      <dd>파일 맨 위에 둔 <strong>이름 붙은 상수</strong>다. <code>360</code>을 코드 여기저기에 박는 대신 이 이름을 쓴다. 실습에서 이 한 줄만 바꾸면 프로그램 전체가 따라오는 것을 본다.</dd>
-    </dl>
-  </div>
-  <h3>실제로 나온 출력</h3>
-  <pre><code>④ ::SharedPtr 은 별명일 뿐이다
-  msg1 과 msg2 가 같은 스캔을 잡고 있나? 그렇다  (주인 수 2)</code></pre>
-  <!-- fullcode "전체 코드 — v3 (3단계 · 타입 별칭 using) main.cpp" build="cmake --build build && ./build/ptr_container"
-       l12_ptr_container/steps/step3/main.cpp
-  -->
-<details class="fullcode">
-  <summary>전체 코드 — v3 (3단계 · 타입 별칭 using) main.cpp</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/ptr_container</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 스마트 포인터와 컨테이너 — v3 (3단계: 타입 별칭 using)
-#include &lt;iostream&gt;
-#include &lt;memory&gt;
-#include &lt;string&gt;
-#include &lt;vector&gt;
-
-class Sensor {
-public:
-  explicit Sensor(std::string n, bool ok) : n_(std::move(n)), ok_(ok) { std::cout &lt;&lt; &quot;  [&quot; &lt;&lt; n_ &lt;&lt; &quot; 켜짐]\n&quot;; }
-  ~Sensor() { std::cout &lt;&lt; &quot;  [&quot; &lt;&lt; n_ &lt;&lt; &quot; 꺼짐]\n&quot;; }
-  bool ok() const { return ok_; }
-  void start() { std::cout &lt;&lt; &quot;  &quot; &lt;&lt; n_ &lt;&lt; &quot; 측정 시작\n&quot;; }
-  const std::string &amp; name() const { return n_; }
-private:
-  std::string n_;
-  bool ok_;
-};
 
 const int kScanSize = 360;             // 라이다 한 바퀴의 거리 값 개수
 
 struct ScanMsg {
-  std::vector&lt;float&gt; ranges;
+  std::vector&lt;float&gt; ranges;           // 거리 값 360개
   ScanMsg() : ranges(kScanSize, 1.0f) {}
-  // 이 구조체 안에 별명을 하나 둔다
-  using SharedPtr = std::shared_ptr&lt;ScanMsg&gt;;
 };
 
-// 센서 하나를 켜고, 상태가 나쁘면 그만두고, 좋으면 측정을 시작한다
-void setup(const std::string &amp; name, bool ok)
+// 정면 거리를 꺼낸다 — 값으로 받는다
+float front(ScanMsg msg)
 {
-  auto s = std::make_unique&lt;Sensor&gt;(name, ok);
-  if (!s-&gt;ok()) {
-    std::cout &lt;&lt; &quot;  &quot; &lt;&lt; name &lt;&lt; &quot; 상태 불량 — 그만둔다\n&quot;;
-    return;                            // 여기서 나가도 알아서 정리된다
-  }
-  s-&gt;start();
-}                                      // 중괄호를 벗어나는 순간 끝. delete 가 없다
+  return msg.ranges.at(0);
+}
 
 int main()
 {
-  std::cout &lt;&lt; &quot;① 센서를 unique_ptr 이 소유하면 치우는 일이 사라진다\n&quot;;
-  setup(&quot;라이다&quot;, true);
-  setup(&quot;카메라&quot;, false);
+  std::cout &lt;&lt; &quot;① 스캔 하나와 바퀴 넷\n&quot;;
+  ScanMsg msg;
+  std::cout &lt;&lt; &quot;  정면 거리 = &quot; &lt;&lt; front(msg) &lt;&lt; &quot; m\n&quot;;
 
-  std::cout &lt;&lt; &quot;\n② unique_ptr — 주인이 하나다\n&quot;;
-  {
-    std::unique_ptr&lt;Sensor&gt; a = std::make_unique&lt;Sensor&gt;(&quot;라이다&quot;, true);
-    std::cout &lt;&lt; &quot;  a 가 가리키는 것: &quot; &lt;&lt; a-&gt;name() &lt;&lt; &quot;\n&quot;;
-    std::unique_ptr&lt;Sensor&gt; b = std::move(a);      // 주인이 바뀐다. 복사는 안 된다
-    std::cout &lt;&lt; &quot;  넘긴 뒤 a 는 비었나? &quot; &lt;&lt; (a == nullptr ? &quot;그렇다&quot; : &quot;아니다&quot;) &lt;&lt; &quot;\n&quot;;
-    std::cout &lt;&lt; &quot;  이제 주인은 b: &quot; &lt;&lt; b-&gt;name() &lt;&lt; &quot;\n&quot;;
-  }
-  std::cout &lt;&lt; &quot;  중괄호를 나오면 delete 를 안 써도 꺼졌다\n&quot;;
-
-  std::cout &lt;&lt; &quot;\n② shared_ptr — 여럿이 나눠 가진다. 마지막이 끄고 나간다\n&quot;;
-  {
-    std::shared_ptr&lt;Sensor&gt; p1 = std::make_shared&lt;Sensor&gt;(&quot;카메라&quot;, true);
-    std::cout &lt;&lt; &quot;  주인 수 = &quot; &lt;&lt; p1.use_count() &lt;&lt; &quot;\n&quot;;
-    {
-      std::shared_ptr&lt;Sensor&gt; p2 = p1;             // 복사가 된다. 세는 숫자가 는다
-      std::cout &lt;&lt; &quot;  주인 수 = &quot; &lt;&lt; p1.use_count() &lt;&lt; &quot;  (p2 가 생겼다)\n&quot;;
-    }
-    std::cout &lt;&lt; &quot;  주인 수 = &quot; &lt;&lt; p1.use_count() &lt;&lt; &quot;  (p2 가 사라졌다)\n&quot;;
-  }
-
-  std::cout &lt;&lt; &quot;\n④ ::SharedPtr 은 별명일 뿐이다\n&quot;;
-  ScanMsg::SharedPtr       msg1 = std::make_shared&lt;ScanMsg&gt;();
-  std::shared_ptr&lt;ScanMsg&gt; msg2 = msg1;            // 같은 타입이므로 그대로 대입된다
-  std::cout &lt;&lt; &quot;  msg1 과 msg2 가 같은 스캔을 잡고 있나? &quot; &lt;&lt; (msg1 == msg2 ? &quot;그렇다&quot; : &quot;아니다&quot;)
-            &lt;&lt; &quot;  (주인 수 &quot; &lt;&lt; msg1.use_count() &lt;&lt; &quot;)\n&quot;;
+  float wheel[4] = {0.5f, 0.5f, 0.5f, 0.5f};   // 바퀴 속도 4개
+  int wheel_count = 4;                          // 개수는 따로 들고 다닌다
+  std::cout &lt;&lt; &quot;  바퀴 &quot; &lt;&lt; wheel_count &lt;&lt; &quot;개, 첫 바퀴 &quot; &lt;&lt; wheel[0] &lt;&lt; &quot; m/s\n&quot;;
   return 0;
 }</code></pre></div>
+  <div class="codefile"><div class="fname">CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre class="lang-cmake"><code>cmake_minimum_required(VERSION 3.16)
+project(scan_list CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_BUILD_TYPE Release)             # 시간을 재는 회차라 최적화를 켠다
+add_executable(scan_list main.cpp)</code></pre></div>
 </details>
 <!-- /fullcode -->
-  <div class="box trap">
-    <div class="boxtitle">📌 3부에서 이 모양을 그대로 만난다</div>
-    <p>
-      ROS 2의 메시지 타입은 전부 이 별칭을 미리 붙여 두고 있어서, 콜백 인자에 <code>sensor_msgs::msg::LaserScan::SharedPtr</code>이 보인다. 속은 오늘 배운 <code>std::shared_ptr</code>이 전부다.
-      왜 하필 <code>shared</code>인지도 ②절의 기준 그대로다 — 메시지 하나가 도착하면 <strong>받는 곳이 여러 군데일 수 있고</strong> 누가 마지막까지 쓰는지 미리 알 수 없다. 20회에서 제대로 다룬다.
-    </p>
-  </div>
+  <p>이 코드는 <strong>컴파일되고, 실행되고, 맞는 값을 낸다.</strong> 그래서 그냥 넘어가기 쉽다. 고칠 곳은 두 군데인데, 하나는 눈에 보이고(<code>wheel_count</code>) 하나는 안 보인다(<code>ScanMsg msg</code>).</p>
 
-  <!-- ── ④ 컨테이너 ── -->
-  <h2 id="container">④ 컨테이너 — <code>vector</code>가 기본값, 개수가 박혀 있으면 <code>array</code> <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+  <!-- ── ② 컨테이너 ── -->
+  <h2 id="container">② 컨테이너 — <code>vector</code>가 기본값, 개수가 박혀 있으면 <code>array</code> <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
   <h3>개념 — 값 여러 개를 담는 타입</h3>
   <p>
-    <strong>컨테이너</strong>(container)는 같은 타입의 값 여러 개를 담는 클래스 템플릿이다(7회 ③절). 표준에 여러 개가 있지만 <strong>이 과목의 코드는 <code>std::vector</code> 하나로 전부 돌아간다.</strong>
+    <strong>컨테이너</strong>(container)는 같은 타입의 값 여러 개를 담는 클래스 템플릿이다(7회 ③절). 표준에 여러 개가 있지만 <strong>이 과목의 코드는 <code>std::vector</code> 하나로 거의 전부 돌아간다.</strong>
     <code>std::vector&lt;T&gt;</code>는 <strong>크기가 실행 중에 정해지고 변하는 배열</strong>이다. <code>push_back</code>으로 늘고 <code>size()</code>가 개수를 답한다.
-    <code>std::array&lt;T, N&gt;</code>은 <strong>크기 <code>N</code>이 템플릿 인자로 코드에 박힌 배열</strong>이다. 컴파일할 때 정해지므로 실행 중에 못 늘린다. 바퀴 4개, 좌표 3개처럼 절대 변하지 않는 개수에 쓴다.
+    <code>std::array&lt;T, N&gt;</code>은 <strong>크기 <code>N</code>이 템플릿 인자로 코드에 박힌 배열</strong>이다. 컴파일할 때 정해지므로 실행 중에 못 늘린다. 바퀴 4개, 좌표 3개처럼 변하지 않는 개수에 쓴다.
   </p>
   <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 열</strong>이 고르는 기준이다.</p>
   <div class="tablewrap">
@@ -503,119 +204,227 @@ int main()
     <tr><th>컨테이너</th><th>크기가 정해지는 때</th><th>이 과목에서 쓰는 자리</th></tr>
     <tr><td><code>std::vector&lt;T&gt;</code></td><td>실행 중. 늘었다 줄었다 한다</td><td><strong>기본값.</strong> 라이다 값 360개, 찾아낸 콘 목록</td></tr>
     <tr><td><code>std::array&lt;T, N&gt;</code></td><td>컴파일할 때. 못 바꾼다</td><td>바퀴 속도 4개, x·y·z 3개</td></tr>
-    <tr><td>C 스타일 배열 <code>float a[4]</code></td><td>컴파일할 때</td><td><strong>쓰지 않는다.</strong> 자기 크기를 모른다 — 함수에 넘기는 순간 개수 정보가 사라져 개수를 따로 들고 다녀야 한다</td></tr>
+    <tr><td>C 스타일 배열 <code>float a[4]</code></td><td>컴파일할 때</td><td><strong>이 과목에서는 권하지 않는다.</strong> 자기 크기를 모른다 — 함수에 넘기는 순간 개수 정보가 사라져 개수를 따로 들고 다녀야 한다</td></tr>
   </table>
   </div>
 
-  <h3>예제에 적용 — 둘을 나란히 놓고 크기를 물어본다</h3>
-  <h3>4단계 (v4) — <code>#include &lt;array&gt;</code>와 <code>main</code> 여섯 줄</h3>
-  <pre class="lang-cpp"><code>  std::cout &lt;&lt; "\n⑤ array 와 vector — 크기가 언제 정해지나\n";
-  std::array&lt;float, 4&gt; wheel = {0.0f, 0.0f, 0.0f, 0.0f};   // 크기가 코드에 박혀 있다
-  wheel[0] = 0.5f;
+  <h3>예제에 적용 — <code>wheel_count</code>를 없애고, 둘의 크기를 물어본다</h3>
+  <p>v1의 <code>wheel_count</code>가 「개수를 따로 들고 다닌다」의 그 모양이다. 바퀴 개수는 변하지 않으니 <code>std::array</code>로 바꾼다. 맨 위에 <code>#include &lt;array&gt;</code>를 더한다.</p>
+  <h3>2단계 (v2) — <code>std::array</code>로 바꾸고 <code>main</code>에 한 묶음</h3>
+  <div class="codelabel bad">고치기 전 (v1)</div>
+  <pre class="lang-cpp before"><code>  float wheel[4] = {0.5f, 0.5f, 0.5f, 0.5f};   // 바퀴 속도 4개
+  int wheel_count = 4;                          // 개수는 따로 들고 다닌다
+  std::cout &lt;&lt; "  바퀴 " &lt;&lt; wheel_count &lt;&lt; "개, 첫 바퀴 " &lt;&lt; wheel[0] &lt;&lt; " m/s\n";</code></pre>
+  <div class="codelabel good">고친 뒤 (v2)</div>
+  <pre class="lang-cpp after"><code>  std::array&lt;float, 4&gt; wheel = {0.5f, 0.5f, 0.5f, 0.5f};   // 크기가 코드에 박혀 있다
+  std::cout &lt;&lt; "  바퀴 " &lt;&lt; wheel.size() &lt;&lt; "개, 첫 바퀴 " &lt;&lt; wheel[0] &lt;&lt; " m/s\n";
+
+  std::cout &lt;&lt; "\n② array 와 vector — 크기가 언제 정해지나\n";
   std::cout &lt;&lt; "  array  : 크기 " &lt;&lt; wheel.size() &lt;&lt; "  (컴파일할 때 이미 정해졌다)\n";
-  std::cout &lt;&lt; "  vector : 크기 " &lt;&lt; msg1-&gt;ranges.size() &lt;&lt; "  (실행 중에 정했다)\n";
-  msg1-&gt;ranges.push_back(2.0f);                    // vector 는 이렇게 늘릴 수 있다
-  std::cout &lt;&lt; "  vector : push_back 뒤 크기 " &lt;&lt; msg1-&gt;ranges.size() &lt;&lt; "  (array 는 이렇게 늘릴 수 없다)\n";</code></pre>
+  std::cout &lt;&lt; "  vector : 크기 " &lt;&lt; msg.ranges.size() &lt;&lt; "  (실행 중에 정했다)\n";
+  msg.ranges.push_back(2.0f);                    // vector 는 이렇게 늘릴 수 있다
+  std::cout &lt;&lt; "  vector : push_back 뒤 크기 " &lt;&lt; msg.ranges.size() &lt;&lt; "  (array 는 이렇게 늘릴 수 없다)\n";</code></pre>
   <h3>실제로 나온 출력</h3>
-  <pre><code>⑤ array 와 vector — 크기가 언제 정해지나
+  <pre><code>  바퀴 4개, 첫 바퀴 0.5 m/s
+
+② array 와 vector — 크기가 언제 정해지나
   array  : 크기 4  (컴파일할 때 이미 정해졌다)
   vector : 크기 360  (실행 중에 정했다)
   vector : push_back 뒤 크기 361  (array 는 이렇게 늘릴 수 없다)</code></pre>
-  <!-- fullcode "전체 코드 — v4 (4단계 · std::array 와 std::vector) main.cpp" build="cmake --build build && ./build/ptr_container"
-       l12_ptr_container/steps/step4/main.cpp
+  <!-- fullcode "전체 코드 — v2 (2단계 · std::array 와 std::vector) main.cpp" build="cmake --build build && ./build/scan_list"
+       l12_container/steps/step2/main.cpp
   -->
 <details class="fullcode">
-  <summary>전체 코드 — v4 (4단계 · std::array 와 std::vector) main.cpp</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/ptr_container</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 스마트 포인터와 컨테이너 — v4 (4단계: std::array 와 std::vector)
+  <summary>전체 코드 — v2 (2단계 · std::array 와 std::vector) main.cpp</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/scan_list</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 라이다 스캔 다루기 — v2 (2단계: C 배열 대신 std::array)
 #include &lt;array&gt;
 #include &lt;iostream&gt;
-#include &lt;memory&gt;
-#include &lt;string&gt;
 #include &lt;vector&gt;
-
-class Sensor {
-public:
-  explicit Sensor(std::string n, bool ok) : n_(std::move(n)), ok_(ok) { std::cout &lt;&lt; &quot;  [&quot; &lt;&lt; n_ &lt;&lt; &quot; 켜짐]\n&quot;; }
-  ~Sensor() { std::cout &lt;&lt; &quot;  [&quot; &lt;&lt; n_ &lt;&lt; &quot; 꺼짐]\n&quot;; }
-  bool ok() const { return ok_; }
-  void start() { std::cout &lt;&lt; &quot;  &quot; &lt;&lt; n_ &lt;&lt; &quot; 측정 시작\n&quot;; }
-  const std::string &amp; name() const { return n_; }
-private:
-  std::string n_;
-  bool ok_;
-};
 
 const int kScanSize = 360;             // 라이다 한 바퀴의 거리 값 개수
 
 struct ScanMsg {
-  std::vector&lt;float&gt; ranges;
+  std::vector&lt;float&gt; ranges;           // 거리 값 360개
   ScanMsg() : ranges(kScanSize, 1.0f) {}
-  // 이 구조체 안에 별명을 하나 둔다
-  using SharedPtr = std::shared_ptr&lt;ScanMsg&gt;;
 };
 
-// 센서 하나를 켜고, 상태가 나쁘면 그만두고, 좋으면 측정을 시작한다
-void setup(const std::string &amp; name, bool ok)
+// 정면 거리를 꺼낸다 — 값으로 받는다
+float front(ScanMsg msg)
 {
-  auto s = std::make_unique&lt;Sensor&gt;(name, ok);
-  if (!s-&gt;ok()) {
-    std::cout &lt;&lt; &quot;  &quot; &lt;&lt; name &lt;&lt; &quot; 상태 불량 — 그만둔다\n&quot;;
-    return;                            // 여기서 나가도 알아서 정리된다
-  }
-  s-&gt;start();
-}                                      // 중괄호를 벗어나는 순간 끝. delete 가 없다
+  return msg.ranges.at(0);
+}
 
 int main()
 {
-  std::cout &lt;&lt; &quot;① 센서를 unique_ptr 이 소유하면 치우는 일이 사라진다\n&quot;;
-  setup(&quot;라이다&quot;, true);
-  setup(&quot;카메라&quot;, false);
+  std::cout &lt;&lt; &quot;① 스캔 하나와 바퀴 넷\n&quot;;
+  ScanMsg msg;
+  std::cout &lt;&lt; &quot;  정면 거리 = &quot; &lt;&lt; front(msg) &lt;&lt; &quot; m\n&quot;;
 
-  std::cout &lt;&lt; &quot;\n② unique_ptr — 주인이 하나다\n&quot;;
-  {
-    std::unique_ptr&lt;Sensor&gt; a = std::make_unique&lt;Sensor&gt;(&quot;라이다&quot;, true);
-    std::cout &lt;&lt; &quot;  a 가 가리키는 것: &quot; &lt;&lt; a-&gt;name() &lt;&lt; &quot;\n&quot;;
-    std::unique_ptr&lt;Sensor&gt; b = std::move(a);      // 주인이 바뀐다. 복사는 안 된다
-    std::cout &lt;&lt; &quot;  넘긴 뒤 a 는 비었나? &quot; &lt;&lt; (a == nullptr ? &quot;그렇다&quot; : &quot;아니다&quot;) &lt;&lt; &quot;\n&quot;;
-    std::cout &lt;&lt; &quot;  이제 주인은 b: &quot; &lt;&lt; b-&gt;name() &lt;&lt; &quot;\n&quot;;
-  }
-  std::cout &lt;&lt; &quot;  중괄호를 나오면 delete 를 안 써도 꺼졌다\n&quot;;
+  std::array&lt;float, 4&gt; wheel = {0.5f, 0.5f, 0.5f, 0.5f};   // 크기가 코드에 박혀 있다
+  std::cout &lt;&lt; &quot;  바퀴 &quot; &lt;&lt; wheel.size() &lt;&lt; &quot;개, 첫 바퀴 &quot; &lt;&lt; wheel[0] &lt;&lt; &quot; m/s\n&quot;;
 
-  std::cout &lt;&lt; &quot;\n② shared_ptr — 여럿이 나눠 가진다. 마지막이 끄고 나간다\n&quot;;
-  {
-    std::shared_ptr&lt;Sensor&gt; p1 = std::make_shared&lt;Sensor&gt;(&quot;카메라&quot;, true);
-    std::cout &lt;&lt; &quot;  주인 수 = &quot; &lt;&lt; p1.use_count() &lt;&lt; &quot;\n&quot;;
-    {
-      std::shared_ptr&lt;Sensor&gt; p2 = p1;             // 복사가 된다. 세는 숫자가 는다
-      std::cout &lt;&lt; &quot;  주인 수 = &quot; &lt;&lt; p1.use_count() &lt;&lt; &quot;  (p2 가 생겼다)\n&quot;;
-    }
-    std::cout &lt;&lt; &quot;  주인 수 = &quot; &lt;&lt; p1.use_count() &lt;&lt; &quot;  (p2 가 사라졌다)\n&quot;;
-  }
-
-  std::cout &lt;&lt; &quot;\n④ ::SharedPtr 은 별명일 뿐이다\n&quot;;
-  ScanMsg::SharedPtr       msg1 = std::make_shared&lt;ScanMsg&gt;();
-  std::shared_ptr&lt;ScanMsg&gt; msg2 = msg1;            // 같은 타입이므로 그대로 대입된다
-  std::cout &lt;&lt; &quot;  msg1 과 msg2 가 같은 스캔을 잡고 있나? &quot; &lt;&lt; (msg1 == msg2 ? &quot;그렇다&quot; : &quot;아니다&quot;)
-            &lt;&lt; &quot;  (주인 수 &quot; &lt;&lt; msg1.use_count() &lt;&lt; &quot;)\n&quot;;
-
-  std::cout &lt;&lt; &quot;\n⑤ array 와 vector — 크기가 언제 정해지나\n&quot;;
-  std::array&lt;float, 4&gt; wheel = {0.0f, 0.0f, 0.0f, 0.0f};   // 크기가 코드에 박혀 있다
-  wheel[0] = 0.5f;
+  std::cout &lt;&lt; &quot;\n② array 와 vector — 크기가 언제 정해지나\n&quot;;
   std::cout &lt;&lt; &quot;  array  : 크기 &quot; &lt;&lt; wheel.size() &lt;&lt; &quot;  (컴파일할 때 이미 정해졌다)\n&quot;;
-  std::cout &lt;&lt; &quot;  vector : 크기 &quot; &lt;&lt; msg1-&gt;ranges.size() &lt;&lt; &quot;  (실행 중에 정했다)\n&quot;;
-  msg1-&gt;ranges.push_back(2.0f);                    // vector 는 이렇게 늘릴 수 있다
-  std::cout &lt;&lt; &quot;  vector : push_back 뒤 크기 &quot; &lt;&lt; msg1-&gt;ranges.size() &lt;&lt; &quot;  (array 는 이렇게 늘릴 수 없다)\n&quot;;
+  std::cout &lt;&lt; &quot;  vector : 크기 &quot; &lt;&lt; msg.ranges.size() &lt;&lt; &quot;  (실행 중에 정했다)\n&quot;;
+  msg.ranges.push_back(2.0f);                    // vector 는 이렇게 늘릴 수 있다
+  std::cout &lt;&lt; &quot;  vector : push_back 뒤 크기 &quot; &lt;&lt; msg.ranges.size() &lt;&lt; &quot;  (array 는 이렇게 늘릴 수 없다)\n&quot;;
   return 0;
 }</code></pre></div>
 </details>
 <!-- /fullcode -->
   <div class="interp">
-    <strong>해석:</strong> 둘 다 <code>size()</code>를 물어보면 답한다. C 스타일 배열은 못 한다. <strong>AI가 <code>float a[4]</code>를 주면 옛날 코드를 베낀 것</strong>이므로 바꿔 달라고 한다.
+    <strong>해석:</strong> 둘 다 <code>size()</code>를 물어보면 답한다. C 스타일 배열은 못 한다. 그래서 <code>wheel_count</code> 같은 변수가 따라붙고, 배열을 고치면서 그 변수를 안 고치면 어긋난다.
+    <strong>AI가 <code>float a[4]</code>를 주면 옛날 코드를 닮은 것</strong>이므로 바꿔 달라고 하면 된다.
   </div>
 
-  <!-- ── ⑤ reserve ── -->
-  <h2 id="reserve">⑤ 용량과 재할당 — <code>reserve()</code> 한 줄이 이사 열 번을 없앤다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+  <!-- ── ③ 값 전달과 참조 전달 ── -->
+  <h2 id="byref">③ 값 전달과 참조 전달 — 읽기만 할 인자는 <code>const &amp;</code>로 받는다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <h3>개념 — 함수는 인자를 두 가지 방식으로 받는다</h3>
+  <p>
+    <strong>값 전달</strong>(pass by value)은 <code>float f(ScanMsg msg)</code> 모양이다. 함수가 시작될 때 <strong>넘긴 것의 사본이 하나 만들어지고</strong> 함수는 그 사본을 쓴다(7회 ⑤절).
+    <strong>참조 전달</strong>(pass by reference)은 <code>float f(ScanMsg &amp; msg)</code> 모양이다. 사본 없이 <strong>원본에 다른 이름을 붙여</strong> 쓴다.
+    앞에 <code>const</code>를 붙이면 「원본을 못 고친다」는 약속까지 함수 이름 옆에 적힌다(7회 ⑥절).
+  </p>
+  <p>
+    사본을 만드는 이유는 보통 원본을 건드리지 않고 고치기 위해서다. 읽기만 하는 함수에는 그 이유가 없다.
+    그렇다고 언제나 참조가 답은 아니다 — 참조도 결국 <strong>8바이트짜리 주소</strong>를 넘기는 일이라, <code>int</code>·<code>float</code>처럼 그보다 작은 값은 그냥 값으로 넘기는 편이 싸다.
+  </p>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>첫 줄이 기본값</strong>이고 나머지 두 줄은 예외다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>이렇게 받는다</th><th>언제</th><th>왜</th></tr>
+    <tr><td><code>const T &amp;</code></td><td><strong>기본값.</strong> 함수가 값을 읽기만 할 때</td><td>사본이 안 만들어진다. <code>const</code>가 원본을 못 고친다는 것을 보장한다</td></tr>
+    <tr><td><code>T</code> (값)</td><td><code>int</code>·<code>float</code>·<code>bool</code>처럼 8바이트 이하의 작은 값.<br>또는 어차피 사본이 필요할 때</td><td>작은 값은 참조로 받는 것이 <strong>오히려 손해</strong>다</td></tr>
+    <tr><td><code>T &amp;</code></td><td><strong>원본을 고쳐야</strong> 할 때</td><td>결과를 인자에 써 넣는 함수다. 부르는 쪽이 값이 바뀔 수 있다는 것을 알아야 하므로 아껴 쓴다</td></tr>
+  </table>
+  </div>
+  <p>
+    이것이 왜 따로 한 절인가. 실제 회사의 C++ 코드를 1년간 추적한 연구에서, AI가 짠 코드는 사람이 짠 코드보다 <strong>복사·할당 오버헤드가 1.39배</strong> 많았다. 같은 연구에서 정확성 문제는 사람과 비슷했다.
+    <strong>AI는 틀린 코드보다 둔한 코드를 더 많이 만드는 것 같다.</strong> 둔한 코드는 맞는 답을 내므로 출력만 봐서는 드러나지 않는다.
+  </p>
+
+  <h3>예제에 적용 — 복사가 나는지 세는 장치를 붙인다</h3>
+  <p>
+    v2의 <code>front(ScanMsg msg)</code>가 정말 사본을 만드는지는 출력으로 알 수 없다. 11회 ③절에서 본 <strong>복사 생성자</strong> — 객체가 다른 객체의 사본으로 만들어질 때 불리는 생성자 — 를
+    <code>ScanMsg</code>에 직접 쓰고 그 안에 <strong>숫자를 하나 올리는 줄</strong>을 넣으면 복사가 보인다. 비교하려고 값으로 받는 판을 <code>front_by_value</code>라는 이름으로 남겨 둔다.
+  </p>
+  <h3>3단계 (v3) — 세는 줄을 넣고, <code>front()</code>를 <code>const &amp;</code>로</h3>
+  <pre class="lang-cpp"><code>int g_copy = 0;                        // ScanMsg 가 복사된 횟수
+
+struct ScanMsg {
+  std::vector&lt;float&gt; ranges;           // 거리 값 360개
+  ScanMsg() : ranges(kScanSize, 1.0f) {}
+  ScanMsg(const ScanMsg &amp; o) : ranges(o.ranges) { ++g_copy; }   // 복사 생성자 — 복사될 때마다 하나 센다
+};</code></pre>
+  <div class="codelabel bad">고치기 전 (v2)</div>
+  <pre class="lang-cpp before"><code>// 정면 거리를 꺼낸다 — 값으로 받는다
+float front(ScanMsg msg)
+{
+  return msg.ranges.at(0);
+}</code></pre>
+  <div class="codelabel good">고친 뒤 (v3) — 비교용 판은 이름을 바꿔 남겨 둔다</div>
+  <pre class="lang-cpp after"><code>// 비교하려고 남겨 둔 고치기 전 판 — 값으로 받는다
+float front_by_value(ScanMsg msg)
+{
+  return msg.ranges.at(0);
+}
+
+// 정면 거리를 꺼낸다 — const 참조로 받는다
+float front(const ScanMsg &amp; msg)
+{
+  return msg.ranges.at(0);
+}
+
+  // main 에
+  std::cout &lt;&lt; "\n③ 값 전달과 참조 전달 — 함수에 넘길 때 복사가 나나\n";
+  g_copy = 0;
+  front_by_value(msg);
+  std::cout &lt;&lt; "  front_by_value(msg) : ScanMsg 복사 " &lt;&lt; g_copy &lt;&lt; "회\n";
+  g_copy = 0;
+  front(msg);
+  std::cout &lt;&lt; "  front(msg)          : ScanMsg 복사 " &lt;&lt; g_copy &lt;&lt; "회\n";</code></pre>
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>ScanMsg(const ScanMsg &amp; o) : ranges(o.ranges) { ++g_copy; }</dt>
+      <dd>복사 생성자를 손으로 쓴 것이다. <code>ranges(o.ranges)</code>로 원본의 값을 복사하는 일은 컴파일러가 만들어 주던 것과 같고, 거기에 <code>++g_copy</code> 한 줄을 더했다. 사본이 하나 생길 때마다 <code>g_copy</code>가 1씩 는다.</dd>
+    </dl>
+  </div>
+  <h3>실제로 나온 출력</h3>
+  <pre><code>③ 값 전달과 참조 전달 — 함수에 넘길 때 복사가 나나
+  front_by_value(msg) : ScanMsg 복사 1회
+  front(msg)          : ScanMsg 복사 0회</code></pre>
+  <!-- fullcode "전체 코드 — v3 (3단계 · const & 로 받고 복사를 센다) main.cpp" build="cmake --build build && ./build/scan_list"
+       l12_container/steps/step3/main.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — v3 (3단계 · const &amp; 로 받고 복사를 센다) main.cpp</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/scan_list</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 라이다 스캔 다루기 — v3 (3단계: 읽기만 할 인자는 const &amp; 로)
+#include &lt;array&gt;
+#include &lt;iostream&gt;
+#include &lt;vector&gt;
+
+const int kScanSize = 360;             // 라이다 한 바퀴의 거리 값 개수
+int g_copy = 0;                        // ScanMsg 가 복사된 횟수
+
+struct ScanMsg {
+  std::vector&lt;float&gt; ranges;           // 거리 값 360개
+  ScanMsg() : ranges(kScanSize, 1.0f) {}
+  ScanMsg(const ScanMsg &amp; o) : ranges(o.ranges) { ++g_copy; }   // 복사 생성자 — 복사될 때마다 하나 센다
+};
+
+// 비교하려고 남겨 둔 고치기 전 판 — 값으로 받는다
+float front_by_value(ScanMsg msg)
+{
+  return msg.ranges.at(0);
+}
+
+// 정면 거리를 꺼낸다 — const 참조로 받는다
+float front(const ScanMsg &amp; msg)
+{
+  return msg.ranges.at(0);
+}
+
+int main()
+{
+  std::cout &lt;&lt; &quot;① 스캔 하나와 바퀴 넷\n&quot;;
+  ScanMsg msg;
+  std::cout &lt;&lt; &quot;  정면 거리 = &quot; &lt;&lt; front(msg) &lt;&lt; &quot; m\n&quot;;
+
+  std::array&lt;float, 4&gt; wheel = {0.5f, 0.5f, 0.5f, 0.5f};   // 크기가 코드에 박혀 있다
+  std::cout &lt;&lt; &quot;  바퀴 &quot; &lt;&lt; wheel.size() &lt;&lt; &quot;개, 첫 바퀴 &quot; &lt;&lt; wheel[0] &lt;&lt; &quot; m/s\n&quot;;
+
+  std::cout &lt;&lt; &quot;\n② array 와 vector — 크기가 언제 정해지나\n&quot;;
+  std::cout &lt;&lt; &quot;  array  : 크기 &quot; &lt;&lt; wheel.size() &lt;&lt; &quot;  (컴파일할 때 이미 정해졌다)\n&quot;;
+  std::cout &lt;&lt; &quot;  vector : 크기 &quot; &lt;&lt; msg.ranges.size() &lt;&lt; &quot;  (실행 중에 정했다)\n&quot;;
+  msg.ranges.push_back(2.0f);                    // vector 는 이렇게 늘릴 수 있다
+  std::cout &lt;&lt; &quot;  vector : push_back 뒤 크기 &quot; &lt;&lt; msg.ranges.size() &lt;&lt; &quot;  (array 는 이렇게 늘릴 수 없다)\n&quot;;
+
+  std::cout &lt;&lt; &quot;\n③ 값 전달과 참조 전달 — 함수에 넘길 때 복사가 나나\n&quot;;
+  g_copy = 0;
+  front_by_value(msg);
+  std::cout &lt;&lt; &quot;  front_by_value(msg) : ScanMsg 복사 &quot; &lt;&lt; g_copy &lt;&lt; &quot;회\n&quot;;
+  g_copy = 0;
+  front(msg);
+  std::cout &lt;&lt; &quot;  front(msg)          : ScanMsg 복사 &quot; &lt;&lt; g_copy &lt;&lt; &quot;회\n&quot;;
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+  <div class="interp">
+    <strong>해석:</strong> <strong>1회와 0회</strong>다. 1회가 작아 보이지만 그 한 번에 거리 값 361개(②에서 하나 늘렸다)가 통째로 새로 만들어졌고, 이 함수는 메시지가 들어올 때마다 불린다.
+    고친 뒤에도 정면 거리는 똑같이 나온다 — <strong>세는 장치가 없으면 고친 것이 맞는지 확인할 방법이 없었다.</strong>
+  </div>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    이 코드에서 <code>vector</code>나 구조체를 값으로 받는 함수 인자를 찾아 줘. 읽기만 하는 것은 <code>const</code> 참조로 바꾸고, <code>int</code>·<code>float</code>처럼 작은 값은 그대로 둬. 왜 그렇게 나눴는지 한 줄씩 적어 줘.
+  </div>
+
+  <!-- ── ④ reserve ── -->
+  <h2 id="reserve">④ 용량과 재할당 — <code>reserve()</code> 한 줄이 재할당 열 번을 없앤다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
   <h3>개념 — 크기와 용량은 다르다</h3>
   <p>
@@ -632,10 +441,10 @@ int main()
     재할당은 공짜가 아니고 담는 동안 여러 번 일어난다. <strong>몇 개가 들어올지 미리 안다면</strong> <code>v.reserve(n)</code>으로 자리를 한 번에 잡아 둘 수 있다. 값이 들어가는 것은 아니다 — <code>size()</code>는 그대로 0이고 <code>capacity()</code>만 <code>n</code>이 된다.
   </p>
 
-  <h3>예제에 적용 — 이사 횟수를 세고 시간을 잰다</h3>
-  <h3>5단계 (v5) — 함수 둘을 넣고 <code>main</code>에서 부른다</h3>
-  <p>맨 위에 <code>&lt;chrono&gt;</code>와 <code>&lt;cstdio&gt;</code>가 늘고, <code>setup()</code> 아래에 함수 둘이 든다. 첫째는 <strong>재할당 횟수를 세는 함수</strong>, 둘째는 같은 일을 10만 번 반복해 <strong>시간을 재는 함수</strong>다.</p>
-  <pre class="lang-cpp"><code>// kScanSize 개를 push_back 하는 동안 자리를 몇 번 다시 잡는지 센다
+  <h3>예제에 적용 — 재할당 횟수를 세고 시간을 잰다</h3>
+  <h3>4단계 (v4) — 함수 둘을 넣고 <code>main</code>에서 부른다</h3>
+  <p>맨 위에 <code>&lt;chrono&gt;</code>와 <code>&lt;cstdio&gt;</code>가 늘고, <code>front()</code> 아래에 함수 둘이 든다. 첫째는 <strong>재할당 횟수를 세는 함수</strong>, 둘째는 같은 일을 10만 번 반복해 <strong>시간을 재는 함수</strong>다.</p>
+  <pre class="lang-cpp"><code>// kScanSize 개를 push_back 하는 동안 재할당이 몇 번 일어나는지 센다
 void count_grow(bool use_reserve)
 {
   std::vector&lt;float&gt; v;
@@ -647,7 +456,7 @@ void count_grow(bool use_reserve)
     if (v.capacity() != cap) { cap = v.capacity(); ++grow; }
   }
   std::cout &lt;&lt; "  " &lt;&lt; (use_reserve ? "reserve 하고" : "reserve 없이") &lt;&lt; " : " &lt;&lt; kScanSize
-            &lt;&lt; "개를 담는 동안 자리를 " &lt;&lt; grow &lt;&lt; "번 다시 잡았다 (최종 capacity=" &lt;&lt; v.capacity() &lt;&lt; ")\n";
+            &lt;&lt; "개를 담는 동안 재할당 " &lt;&lt; grow &lt;&lt; "번 (최종 capacity=" &lt;&lt; v.capacity() &lt;&lt; ")\n";
 }
 
 // 같은 일을 loops 번 반복해 걸린 시간(ms)을 잰다
@@ -658,14 +467,14 @@ double time_fill(bool use_reserve, int loops, size_t &amp; sink)
     std::vector&lt;float&gt; v;
     if (use_reserve) { v.reserve(kScanSize); }
     for (int i = 0; i &lt; kScanSize; ++i) { v.push_back(0.5f); }
-    sink += v.size();                  // 결과를 써야 컴파일러가 루프를 지우지 않는다 (11회)
+    sink += v.size();                  // 결과를 써야 컴파일러가 루프를 지우지 않는다
   }
   const auto t1 = std::chrono::steady_clock::now();
   return std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
 }
 
   // main 에
-  std::cout &lt;&lt; "\n⑥ reserve — 자리를 미리 잡는다\n";
+  std::cout &lt;&lt; "\n④ reserve — 자리를 미리 잡는다\n";
   count_grow(false);
   count_grow(true);
   const int loops = 100000;
@@ -681,64 +490,53 @@ double time_fill(bool use_reserve, int loops, size_t &amp; sink)
       <dt>v.capacity()</dt>
       <dd>지금 잡아 둔 자리가 몇 개인지다. <code>size()</code>와 다르다. 이 숫자가 언제 바뀌는지를 보고 재할당 횟수를 셌다.</dd>
       <dt>size_t &amp; sink</dt>
-      <dd><code>size_t</code>는 개수를 담는 정수 타입이다 — <code>size()</code>·<code>capacity()</code>가 돌려주는 것이 이 타입이다. 뒤의 <code>&amp;</code>는 참조다. 두 번 부르는 동안 같은 변수에 계속 더하려고 참조로 받았다.</dd>
+      <dd><code>size_t</code>는 개수를 담는 정수 타입이다 — <code>size()</code>·<code>capacity()</code>가 돌려주는 것이 이 타입이다. 뒤의 <code>&amp;</code>는 ③절의 참조다. 두 번 부르는 동안 같은 변수에 계속 더하려고 참조로 받았다 — 원본을 고치는 함수라 <code>const</code>가 없다.</dd>
+      <dt>std::chrono::steady_clock::now()</dt>
+      <dd>지금 시각을 잰다. 두 번 재서 빼면 걸린 시간이 나오고, <code>duration&lt;double, std::milli&gt;</code>가 그것을 ms 단위 숫자로 바꾼다. 시간을 재는 모양은 늘 이 세 줄이므로 통째로 가져다 쓰면 된다.</dd>
     </dl>
   </div>
   <h3>실제로 나온 출력</h3>
-  <pre><code>⑥ reserve — 자리를 미리 잡는다
-  reserve 없이 : 360개를 담는 동안 자리를 10번 다시 잡았다 (최종 capacity=512)
-  reserve 하고 : 360개를 담는 동안 자리를 0번 다시 잡았다 (최종 capacity=360)
-  reserve 없이 :    29.5 ms
-  reserve 하고 :    17.6 ms
-  차이         : 1.68배 (100000회 기준, sink=72000000)</code></pre>
-  <!-- fullcode "전체 코드 — v5 (5단계 · capacity 와 reserve) main.cpp" build="cmake --build build && ./build/ptr_container"
-       l12_ptr_container/steps/step5/main.cpp
+  <pre><code>④ reserve — 자리를 미리 잡는다
+  reserve 없이 : 360개를 담는 동안 재할당 10번 (최종 capacity=512)
+  reserve 하고 : 360개를 담는 동안 재할당 0번 (최종 capacity=360)
+  reserve 없이 :    33.0 ms
+  reserve 하고 :    18.2 ms
+  차이         : 1.81배 (100000회 기준, sink=72000000)</code></pre>
+  <!-- fullcode "전체 코드 — v4 (4단계 · capacity 와 reserve) main.cpp" build="cmake --build build && ./build/scan_list"
+       l12_container/steps/step4/main.cpp
   -->
 <details class="fullcode">
-  <summary>전체 코드 — v5 (5단계 · capacity 와 reserve) main.cpp</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/ptr_container</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 스마트 포인터와 컨테이너 — v5 (5단계: capacity 와 reserve)
+  <summary>전체 코드 — v4 (4단계 · capacity 와 reserve) main.cpp</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/scan_list</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 라이다 스캔 다루기 — v4 (4단계: capacity 와 reserve)
 #include &lt;array&gt;
 #include &lt;chrono&gt;
 #include &lt;cstdio&gt;
 #include &lt;iostream&gt;
-#include &lt;memory&gt;
-#include &lt;string&gt;
 #include &lt;vector&gt;
 
-class Sensor {
-public:
-  explicit Sensor(std::string n, bool ok) : n_(std::move(n)), ok_(ok) { std::cout &lt;&lt; &quot;  [&quot; &lt;&lt; n_ &lt;&lt; &quot; 켜짐]\n&quot;; }
-  ~Sensor() { std::cout &lt;&lt; &quot;  [&quot; &lt;&lt; n_ &lt;&lt; &quot; 꺼짐]\n&quot;; }
-  bool ok() const { return ok_; }
-  void start() { std::cout &lt;&lt; &quot;  &quot; &lt;&lt; n_ &lt;&lt; &quot; 측정 시작\n&quot;; }
-  const std::string &amp; name() const { return n_; }
-private:
-  std::string n_;
-  bool ok_;
-};
-
 const int kScanSize = 360;             // 라이다 한 바퀴의 거리 값 개수
+int g_copy = 0;                        // ScanMsg 가 복사된 횟수
 
 struct ScanMsg {
-  std::vector&lt;float&gt; ranges;
+  std::vector&lt;float&gt; ranges;           // 거리 값 360개
   ScanMsg() : ranges(kScanSize, 1.0f) {}
-  // 이 구조체 안에 별명을 하나 둔다
-  using SharedPtr = std::shared_ptr&lt;ScanMsg&gt;;
+  ScanMsg(const ScanMsg &amp; o) : ranges(o.ranges) { ++g_copy; }   // 복사 생성자 — 복사될 때마다 하나 센다
 };
 
-// 센서 하나를 켜고, 상태가 나쁘면 그만두고, 좋으면 측정을 시작한다
-void setup(const std::string &amp; name, bool ok)
+// 비교하려고 남겨 둔 고치기 전 판 — 값으로 받는다
+float front_by_value(ScanMsg msg)
 {
-  auto s = std::make_unique&lt;Sensor&gt;(name, ok);
-  if (!s-&gt;ok()) {
-    std::cout &lt;&lt; &quot;  &quot; &lt;&lt; name &lt;&lt; &quot; 상태 불량 — 그만둔다\n&quot;;
-    return;                            // 여기서 나가도 알아서 정리된다
-  }
-  s-&gt;start();
-}                                      // 중괄호를 벗어나는 순간 끝. delete 가 없다
+  return msg.ranges.at(0);
+}
 
-// kScanSize 개를 push_back 하는 동안 자리를 몇 번 다시 잡는지 센다
+// 정면 거리를 꺼낸다 — const 참조로 받는다
+float front(const ScanMsg &amp; msg)
+{
+  return msg.ranges.at(0);
+}
+
+// kScanSize 개를 push_back 하는 동안 재할당이 몇 번 일어나는지 센다
 void count_grow(bool use_reserve)
 {
   std::vector&lt;float&gt; v;
@@ -750,7 +548,7 @@ void count_grow(bool use_reserve)
     if (v.capacity() != cap) { cap = v.capacity(); ++grow; }
   }
   std::cout &lt;&lt; &quot;  &quot; &lt;&lt; (use_reserve ? &quot;reserve 하고&quot; : &quot;reserve 없이&quot;) &lt;&lt; &quot; : &quot; &lt;&lt; kScanSize
-            &lt;&lt; &quot;개를 담는 동안 자리를 &quot; &lt;&lt; grow &lt;&lt; &quot;번 다시 잡았다 (최종 capacity=&quot; &lt;&lt; v.capacity() &lt;&lt; &quot;)\n&quot;;
+            &lt;&lt; &quot;개를 담는 동안 재할당 &quot; &lt;&lt; grow &lt;&lt; &quot;번 (최종 capacity=&quot; &lt;&lt; v.capacity() &lt;&lt; &quot;)\n&quot;;
 }
 
 // 같은 일을 loops 번 반복해 걸린 시간(ms)을 잰다
@@ -769,46 +567,28 @@ double time_fill(bool use_reserve, int loops, size_t &amp; sink)
 
 int main()
 {
-  std::cout &lt;&lt; &quot;① 센서를 unique_ptr 이 소유하면 치우는 일이 사라진다\n&quot;;
-  setup(&quot;라이다&quot;, true);
-  setup(&quot;카메라&quot;, false);
+  std::cout &lt;&lt; &quot;① 스캔 하나와 바퀴 넷\n&quot;;
+  ScanMsg msg;
+  std::cout &lt;&lt; &quot;  정면 거리 = &quot; &lt;&lt; front(msg) &lt;&lt; &quot; m\n&quot;;
 
-  std::cout &lt;&lt; &quot;\n② unique_ptr — 주인이 하나다\n&quot;;
-  {
-    std::unique_ptr&lt;Sensor&gt; a = std::make_unique&lt;Sensor&gt;(&quot;라이다&quot;, true);
-    std::cout &lt;&lt; &quot;  a 가 가리키는 것: &quot; &lt;&lt; a-&gt;name() &lt;&lt; &quot;\n&quot;;
-    std::unique_ptr&lt;Sensor&gt; b = std::move(a);      // 주인이 바뀐다. 복사는 안 된다
-    std::cout &lt;&lt; &quot;  넘긴 뒤 a 는 비었나? &quot; &lt;&lt; (a == nullptr ? &quot;그렇다&quot; : &quot;아니다&quot;) &lt;&lt; &quot;\n&quot;;
-    std::cout &lt;&lt; &quot;  이제 주인은 b: &quot; &lt;&lt; b-&gt;name() &lt;&lt; &quot;\n&quot;;
-  }
-  std::cout &lt;&lt; &quot;  중괄호를 나오면 delete 를 안 써도 꺼졌다\n&quot;;
+  std::array&lt;float, 4&gt; wheel = {0.5f, 0.5f, 0.5f, 0.5f};   // 크기가 코드에 박혀 있다
+  std::cout &lt;&lt; &quot;  바퀴 &quot; &lt;&lt; wheel.size() &lt;&lt; &quot;개, 첫 바퀴 &quot; &lt;&lt; wheel[0] &lt;&lt; &quot; m/s\n&quot;;
 
-  std::cout &lt;&lt; &quot;\n② shared_ptr — 여럿이 나눠 가진다. 마지막이 끄고 나간다\n&quot;;
-  {
-    std::shared_ptr&lt;Sensor&gt; p1 = std::make_shared&lt;Sensor&gt;(&quot;카메라&quot;, true);
-    std::cout &lt;&lt; &quot;  주인 수 = &quot; &lt;&lt; p1.use_count() &lt;&lt; &quot;\n&quot;;
-    {
-      std::shared_ptr&lt;Sensor&gt; p2 = p1;             // 복사가 된다. 세는 숫자가 는다
-      std::cout &lt;&lt; &quot;  주인 수 = &quot; &lt;&lt; p1.use_count() &lt;&lt; &quot;  (p2 가 생겼다)\n&quot;;
-    }
-    std::cout &lt;&lt; &quot;  주인 수 = &quot; &lt;&lt; p1.use_count() &lt;&lt; &quot;  (p2 가 사라졌다)\n&quot;;
-  }
-
-  std::cout &lt;&lt; &quot;\n④ ::SharedPtr 은 별명일 뿐이다\n&quot;;
-  ScanMsg::SharedPtr       msg1 = std::make_shared&lt;ScanMsg&gt;();
-  std::shared_ptr&lt;ScanMsg&gt; msg2 = msg1;            // 같은 타입이므로 그대로 대입된다
-  std::cout &lt;&lt; &quot;  msg1 과 msg2 가 같은 스캔을 잡고 있나? &quot; &lt;&lt; (msg1 == msg2 ? &quot;그렇다&quot; : &quot;아니다&quot;)
-            &lt;&lt; &quot;  (주인 수 &quot; &lt;&lt; msg1.use_count() &lt;&lt; &quot;)\n&quot;;
-
-  std::cout &lt;&lt; &quot;\n⑤ array 와 vector — 크기가 언제 정해지나\n&quot;;
-  std::array&lt;float, 4&gt; wheel = {0.0f, 0.0f, 0.0f, 0.0f};   // 크기가 코드에 박혀 있다
-  wheel[0] = 0.5f;
+  std::cout &lt;&lt; &quot;\n② array 와 vector — 크기가 언제 정해지나\n&quot;;
   std::cout &lt;&lt; &quot;  array  : 크기 &quot; &lt;&lt; wheel.size() &lt;&lt; &quot;  (컴파일할 때 이미 정해졌다)\n&quot;;
-  std::cout &lt;&lt; &quot;  vector : 크기 &quot; &lt;&lt; msg1-&gt;ranges.size() &lt;&lt; &quot;  (실행 중에 정했다)\n&quot;;
-  msg1-&gt;ranges.push_back(2.0f);                    // vector 는 이렇게 늘릴 수 있다
-  std::cout &lt;&lt; &quot;  vector : push_back 뒤 크기 &quot; &lt;&lt; msg1-&gt;ranges.size() &lt;&lt; &quot;  (array 는 이렇게 늘릴 수 없다)\n&quot;;
+  std::cout &lt;&lt; &quot;  vector : 크기 &quot; &lt;&lt; msg.ranges.size() &lt;&lt; &quot;  (실행 중에 정했다)\n&quot;;
+  msg.ranges.push_back(2.0f);                    // vector 는 이렇게 늘릴 수 있다
+  std::cout &lt;&lt; &quot;  vector : push_back 뒤 크기 &quot; &lt;&lt; msg.ranges.size() &lt;&lt; &quot;  (array 는 이렇게 늘릴 수 없다)\n&quot;;
 
-  std::cout &lt;&lt; &quot;\n⑥ reserve — 자리를 미리 잡는다\n&quot;;
+  std::cout &lt;&lt; &quot;\n③ 값 전달과 참조 전달 — 함수에 넘길 때 복사가 나나\n&quot;;
+  g_copy = 0;
+  front_by_value(msg);
+  std::cout &lt;&lt; &quot;  front_by_value(msg) : ScanMsg 복사 &quot; &lt;&lt; g_copy &lt;&lt; &quot;회\n&quot;;
+  g_copy = 0;
+  front(msg);
+  std::cout &lt;&lt; &quot;  front(msg)          : ScanMsg 복사 &quot; &lt;&lt; g_copy &lt;&lt; &quot;회\n&quot;;
+
+  std::cout &lt;&lt; &quot;\n④ reserve — 자리를 미리 잡는다\n&quot;;
   count_grow(false);
   count_grow(true);
   const int loops = 100000;
@@ -824,7 +604,7 @@ int main()
 <!-- /fullcode -->
   <div class="interp">
     <strong>해석:</strong> 담은 원소는 360개인데 용량은 512다 — 1 → 2 → 4 → … 로 두 배씩 가면 360을 넘기는 첫 숫자가 512이고, 그래서 재할당이 <strong>열 번</strong>이다. 한 번 늘릴 때마다 있던 값을 전부 옮긴다.
-    <code>reserve(kScanSize)</code> 한 줄이 그 <strong>열 번을 0번으로</strong> 만든다. 배수 1.68배보다 이 횟수가 더 중요하다.
+    <code>reserve(kScanSize)</code> 한 줄이 그 <strong>열 번을 0번으로</strong> 만든다. 배수 1.81배보다 이 횟수가 더 중요하다.
     그리고 <strong>몇 개가 들어올지는 코드를 짠 사람만 안다.</strong> 라이다 값이 360개라는 사실은 AI가 모른다 — 알려 주면 그때부터 넣어 준다.
     <span style="color:var(--muted)">잰 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0, Release 빌드)</span>
   </div>
@@ -833,13 +613,13 @@ int main()
     담는 코드 앞에 <code>reserve</code>를 넣어 줘. 몇 개가 들어올지는 <strong>원본 배열의 크기</strong>로 잡으면 돼. 숫자를 코드에 박지 말아 줘.
   </div>
 
-  <!-- ── ⑥ 범위 for ── -->
-  <h2 id="rangefor">⑥ 범위 기반 for — <code>const auto &amp;</code>를 빼면 매 바퀴 복사가 난다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+  <!-- ── ⑤ 범위 for ── -->
+  <h2 id="rangefor">⑤ 범위 기반 for — <code>const auto &amp;</code>를 빼면 매 바퀴 복사가 난다 <span class="badge b-red">🔴 사람이 한다</span></h2>
 
   <h3>개념 — 반복 변수가 사본인지 참조인지</h3>
   <p>
     <strong>범위 기반 for</strong>(range-based for) <code>for (선언 : 컨테이너)</code>는 컨테이너의 원소를 앞에서부터 하나씩 꺼내 선언한 변수에 담는다. 번호를 세는 변수가 없으므로 범위를 넘어갈 자리 자체가 없다(7회 ④절).
-    문제는 <strong>「담는다」가 어떻게 담느냐</strong>다. 7회 「조금 더」에서 <code>auto</code>는 <code>const</code>와 <code>&amp;</code>를 떼어 버린다고 했다. 그래서 <code>for (auto x : v)</code>는 <strong>한 바퀴마다 원소의 사본을 만든다</strong> — 11회의 값 전달과 같은 일이다.
+    문제는 <strong>「담는다」가 어떻게 담느냐</strong>다. 7회 「조금 더」에서 <code>auto</code>는 <code>const</code>와 <code>&amp;</code>를 떼어 버린다고 했다. 그래서 <code>for (auto x : v)</code>는 <strong>한 바퀴마다 원소의 사본을 만든다</strong> — ③절의 값 전달과 같은 일이다.
     <code>for (const auto &amp; x : v)</code>라고 적어야 원소에 이름표만 붙는다.
   </p>
   <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 열</strong>에서 자기 상황을 찾는다.</p>
@@ -853,18 +633,9 @@ int main()
   </div>
 
   <h3>예제에 적용 — 스캔 100개를 두 방식으로 돌면서 복사를 센다</h3>
-  <h3>6단계 (v6, 완성본) — <code>ScanMsg</code>에 세는 줄, <code>main</code>에 반복문 둘</h3>
-  <p>11회의 복사 생성자를 <code>ScanMsg</code>에 넣어 복사 횟수를 센다.</p>
-  <pre class="lang-cpp"><code>int g_copy = 0;                        // ScanMsg 가 복사된 횟수
-struct ScanMsg {
-  std::vector&lt;float&gt; ranges;
-  ScanMsg() : ranges(kScanSize, 1.0f) {}
-  ScanMsg(const ScanMsg &amp; o) : ranges(o.ranges) { ++g_copy; }   // 복사될 때마다 하나 센다 (11회)
-  using SharedPtr = std::shared_ptr&lt;ScanMsg&gt;;
-};
-
-  // main 에
-  std::cout &lt;&lt; "\n⑦ 범위 for — const auto &amp; 를 빼면 매 바퀴 복사가 난다\n";
+  <h3>5단계 (v5, 완성본) — <code>main</code>에 반복문 둘</h3>
+  <p>③절에서 <code>ScanMsg</code>에 넣어 둔 세는 줄을 그대로 쓴다.</p>
+  <pre class="lang-cpp"><code>  std::cout &lt;&lt; "\n⑤ 범위 for — const auto &amp; 를 빼면 매 바퀴 복사가 난다\n";
   std::vector&lt;ScanMsg&gt; history(100);               // 스캔 100개를 모아 두었다
   float sum = 0.0f;
   g_copy = 0;
@@ -875,60 +646,45 @@ struct ScanMsg {
   std::cout &lt;&lt; "  for (const auto &amp; s : history) : ScanMsg 복사 " &lt;&lt; g_copy &lt;&lt; "회\n";
   std::cout &lt;&lt; "  스캔 " &lt;&lt; history.size() &lt;&lt; "개를 한 바퀴씩 돌았다 (sum=" &lt;&lt; sum &lt;&lt; ")\n";</code></pre>
   <h3>실제로 나온 출력</h3>
-  <pre><code>⑦ 범위 for — const auto &amp; 를 빼면 매 바퀴 복사가 난다
+  <pre><code>⑤ 범위 for — const auto &amp; 를 빼면 매 바퀴 복사가 난다
   for (auto s : history)         : ScanMsg 복사 100회
   for (const auto &amp; s : history) : ScanMsg 복사 0회
   스캔 100개를 한 바퀴씩 돌았다 (sum=200)</code></pre>
-  <!-- fullcode "전체 코드 — v6 완성본 (6단계 · 범위 기반 for 와 const auto &) main.cpp" build="cmake --build build && ./build/ptr_container"
-       l12_ptr_container/steps/step6/main.cpp
+  <!-- fullcode "전체 코드 — v5 완성본 (5단계 · 범위 기반 for 와 const auto &) main.cpp" build="cmake --build build && ./build/scan_list"
+       l12_container/steps/step5/main.cpp
   -->
 <details class="fullcode">
-  <summary>전체 코드 — v6 완성본 (6단계 · 범위 기반 for 와 const auto &amp;) main.cpp</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/ptr_container</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 스마트 포인터와 컨테이너 — v6 완성본 (6단계: 범위 기반 for 와 const auto &amp;)
+  <summary>전체 코드 — v5 완성본 (5단계 · 범위 기반 for 와 const auto &amp;) main.cpp</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/scan_list</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 라이다 스캔 다루기 — v5 완성본 (5단계: 범위 기반 for 와 const auto &amp;)
 #include &lt;array&gt;
 #include &lt;chrono&gt;
 #include &lt;cstdio&gt;
 #include &lt;iostream&gt;
-#include &lt;memory&gt;
-#include &lt;string&gt;
 #include &lt;vector&gt;
-
-class Sensor {
-public:
-  explicit Sensor(std::string n, bool ok) : n_(std::move(n)), ok_(ok) { std::cout &lt;&lt; &quot;  [&quot; &lt;&lt; n_ &lt;&lt; &quot; 켜짐]\n&quot;; }
-  ~Sensor() { std::cout &lt;&lt; &quot;  [&quot; &lt;&lt; n_ &lt;&lt; &quot; 꺼짐]\n&quot;; }
-  bool ok() const { return ok_; }
-  void start() { std::cout &lt;&lt; &quot;  &quot; &lt;&lt; n_ &lt;&lt; &quot; 측정 시작\n&quot;; }
-  const std::string &amp; name() const { return n_; }
-private:
-  std::string n_;
-  bool ok_;
-};
 
 const int kScanSize = 360;             // 라이다 한 바퀴의 거리 값 개수
 int g_copy = 0;                        // ScanMsg 가 복사된 횟수
 
 struct ScanMsg {
-  std::vector&lt;float&gt; ranges;
+  std::vector&lt;float&gt; ranges;           // 거리 값 360개
   ScanMsg() : ranges(kScanSize, 1.0f) {}
-  ScanMsg(const ScanMsg &amp; o) : ranges(o.ranges) { ++g_copy; }   // 복사될 때마다 하나 센다
-  // 이 구조체 안에 별명을 하나 둔다
-  using SharedPtr = std::shared_ptr&lt;ScanMsg&gt;;
+  ScanMsg(const ScanMsg &amp; o) : ranges(o.ranges) { ++g_copy; }   // 복사 생성자 — 복사될 때마다 하나 센다
 };
 
-// 센서 하나를 켜고, 상태가 나쁘면 그만두고, 좋으면 측정을 시작한다
-void setup(const std::string &amp; name, bool ok)
+// 비교하려고 남겨 둔 고치기 전 판 — 값으로 받는다
+float front_by_value(ScanMsg msg)
 {
-  auto s = std::make_unique&lt;Sensor&gt;(name, ok);
-  if (!s-&gt;ok()) {
-    std::cout &lt;&lt; &quot;  &quot; &lt;&lt; name &lt;&lt; &quot; 상태 불량 — 그만둔다\n&quot;;
-    return;                            // 여기서 나가도 알아서 정리된다
-  }
-  s-&gt;start();
-}                                      // 중괄호를 벗어나는 순간 끝. delete 가 없다
+  return msg.ranges.at(0);
+}
 
-// kScanSize 개를 push_back 하는 동안 자리를 몇 번 다시 잡는지 센다
+// 정면 거리를 꺼낸다 — const 참조로 받는다
+float front(const ScanMsg &amp; msg)
+{
+  return msg.ranges.at(0);
+}
+
+// kScanSize 개를 push_back 하는 동안 재할당이 몇 번 일어나는지 센다
 void count_grow(bool use_reserve)
 {
   std::vector&lt;float&gt; v;
@@ -940,7 +696,7 @@ void count_grow(bool use_reserve)
     if (v.capacity() != cap) { cap = v.capacity(); ++grow; }
   }
   std::cout &lt;&lt; &quot;  &quot; &lt;&lt; (use_reserve ? &quot;reserve 하고&quot; : &quot;reserve 없이&quot;) &lt;&lt; &quot; : &quot; &lt;&lt; kScanSize
-            &lt;&lt; &quot;개를 담는 동안 자리를 &quot; &lt;&lt; grow &lt;&lt; &quot;번 다시 잡았다 (최종 capacity=&quot; &lt;&lt; v.capacity() &lt;&lt; &quot;)\n&quot;;
+            &lt;&lt; &quot;개를 담는 동안 재할당 &quot; &lt;&lt; grow &lt;&lt; &quot;번 (최종 capacity=&quot; &lt;&lt; v.capacity() &lt;&lt; &quot;)\n&quot;;
 }
 
 // 같은 일을 loops 번 반복해 걸린 시간(ms)을 잰다
@@ -959,46 +715,28 @@ double time_fill(bool use_reserve, int loops, size_t &amp; sink)
 
 int main()
 {
-  std::cout &lt;&lt; &quot;① 센서를 unique_ptr 이 소유하면 치우는 일이 사라진다\n&quot;;
-  setup(&quot;라이다&quot;, true);
-  setup(&quot;카메라&quot;, false);
+  std::cout &lt;&lt; &quot;① 스캔 하나와 바퀴 넷\n&quot;;
+  ScanMsg msg;
+  std::cout &lt;&lt; &quot;  정면 거리 = &quot; &lt;&lt; front(msg) &lt;&lt; &quot; m\n&quot;;
 
-  std::cout &lt;&lt; &quot;\n② unique_ptr — 주인이 하나다\n&quot;;
-  {
-    std::unique_ptr&lt;Sensor&gt; a = std::make_unique&lt;Sensor&gt;(&quot;라이다&quot;, true);
-    std::cout &lt;&lt; &quot;  a 가 가리키는 것: &quot; &lt;&lt; a-&gt;name() &lt;&lt; &quot;\n&quot;;
-    std::unique_ptr&lt;Sensor&gt; b = std::move(a);      // 주인이 바뀐다. 복사는 안 된다
-    std::cout &lt;&lt; &quot;  넘긴 뒤 a 는 비었나? &quot; &lt;&lt; (a == nullptr ? &quot;그렇다&quot; : &quot;아니다&quot;) &lt;&lt; &quot;\n&quot;;
-    std::cout &lt;&lt; &quot;  이제 주인은 b: &quot; &lt;&lt; b-&gt;name() &lt;&lt; &quot;\n&quot;;
-  }
-  std::cout &lt;&lt; &quot;  중괄호를 나오면 delete 를 안 써도 꺼졌다\n&quot;;
+  std::array&lt;float, 4&gt; wheel = {0.5f, 0.5f, 0.5f, 0.5f};   // 크기가 코드에 박혀 있다
+  std::cout &lt;&lt; &quot;  바퀴 &quot; &lt;&lt; wheel.size() &lt;&lt; &quot;개, 첫 바퀴 &quot; &lt;&lt; wheel[0] &lt;&lt; &quot; m/s\n&quot;;
 
-  std::cout &lt;&lt; &quot;\n② shared_ptr — 여럿이 나눠 가진다. 마지막이 끄고 나간다\n&quot;;
-  {
-    std::shared_ptr&lt;Sensor&gt; p1 = std::make_shared&lt;Sensor&gt;(&quot;카메라&quot;, true);
-    std::cout &lt;&lt; &quot;  주인 수 = &quot; &lt;&lt; p1.use_count() &lt;&lt; &quot;\n&quot;;
-    {
-      std::shared_ptr&lt;Sensor&gt; p2 = p1;             // 복사가 된다. 세는 숫자가 는다
-      std::cout &lt;&lt; &quot;  주인 수 = &quot; &lt;&lt; p1.use_count() &lt;&lt; &quot;  (p2 가 생겼다)\n&quot;;
-    }
-    std::cout &lt;&lt; &quot;  주인 수 = &quot; &lt;&lt; p1.use_count() &lt;&lt; &quot;  (p2 가 사라졌다)\n&quot;;
-  }
-
-  std::cout &lt;&lt; &quot;\n④ ::SharedPtr 은 별명일 뿐이다\n&quot;;
-  ScanMsg::SharedPtr       msg1 = std::make_shared&lt;ScanMsg&gt;();
-  std::shared_ptr&lt;ScanMsg&gt; msg2 = msg1;            // 같은 타입이므로 그대로 대입된다
-  std::cout &lt;&lt; &quot;  msg1 과 msg2 가 같은 스캔을 잡고 있나? &quot; &lt;&lt; (msg1 == msg2 ? &quot;그렇다&quot; : &quot;아니다&quot;)
-            &lt;&lt; &quot;  (주인 수 &quot; &lt;&lt; msg1.use_count() &lt;&lt; &quot;)\n&quot;;
-
-  std::cout &lt;&lt; &quot;\n⑤ array 와 vector — 크기가 언제 정해지나\n&quot;;
-  std::array&lt;float, 4&gt; wheel = {0.0f, 0.0f, 0.0f, 0.0f};   // 크기가 코드에 박혀 있다
-  wheel[0] = 0.5f;
+  std::cout &lt;&lt; &quot;\n② array 와 vector — 크기가 언제 정해지나\n&quot;;
   std::cout &lt;&lt; &quot;  array  : 크기 &quot; &lt;&lt; wheel.size() &lt;&lt; &quot;  (컴파일할 때 이미 정해졌다)\n&quot;;
-  std::cout &lt;&lt; &quot;  vector : 크기 &quot; &lt;&lt; msg1-&gt;ranges.size() &lt;&lt; &quot;  (실행 중에 정했다)\n&quot;;
-  msg1-&gt;ranges.push_back(2.0f);                    // vector 는 이렇게 늘릴 수 있다
-  std::cout &lt;&lt; &quot;  vector : push_back 뒤 크기 &quot; &lt;&lt; msg1-&gt;ranges.size() &lt;&lt; &quot;  (array 는 이렇게 늘릴 수 없다)\n&quot;;
+  std::cout &lt;&lt; &quot;  vector : 크기 &quot; &lt;&lt; msg.ranges.size() &lt;&lt; &quot;  (실행 중에 정했다)\n&quot;;
+  msg.ranges.push_back(2.0f);                    // vector 는 이렇게 늘릴 수 있다
+  std::cout &lt;&lt; &quot;  vector : push_back 뒤 크기 &quot; &lt;&lt; msg.ranges.size() &lt;&lt; &quot;  (array 는 이렇게 늘릴 수 없다)\n&quot;;
 
-  std::cout &lt;&lt; &quot;\n⑥ reserve — 자리를 미리 잡는다\n&quot;;
+  std::cout &lt;&lt; &quot;\n③ 값 전달과 참조 전달 — 함수에 넘길 때 복사가 나나\n&quot;;
+  g_copy = 0;
+  front_by_value(msg);
+  std::cout &lt;&lt; &quot;  front_by_value(msg) : ScanMsg 복사 &quot; &lt;&lt; g_copy &lt;&lt; &quot;회\n&quot;;
+  g_copy = 0;
+  front(msg);
+  std::cout &lt;&lt; &quot;  front(msg)          : ScanMsg 복사 &quot; &lt;&lt; g_copy &lt;&lt; &quot;회\n&quot;;
+
+  std::cout &lt;&lt; &quot;\n④ reserve — 자리를 미리 잡는다\n&quot;;
   count_grow(false);
   count_grow(true);
   const int loops = 100000;
@@ -1009,7 +747,7 @@ int main()
   std::printf(&quot;  reserve 하고 : %7.1f ms\n&quot;, res);
   std::printf(&quot;  차이         : %.2f배 (%d회 기준, sink=%zu)\n&quot;, no_res / res, loops, sink);
 
-  std::cout &lt;&lt; &quot;\n⑦ 범위 for — const auto &amp; 를 빼면 매 바퀴 복사가 난다\n&quot;;
+  std::cout &lt;&lt; &quot;\n⑤ 범위 for — const auto &amp; 를 빼면 매 바퀴 복사가 난다\n&quot;;
   std::vector&lt;ScanMsg&gt; history(100);               // 스캔 100개를 모아 두었다
   float sum = 0.0f;
   g_copy = 0;
@@ -1025,6 +763,7 @@ int main()
 <!-- /fullcode -->
   <div class="interp">
     <strong>해석:</strong> <strong>100회와 0회</strong>다. <code>auto s</code>와 <code>const auto &amp; s</code>는 글자 여덟 개 차이인데, 앞의 것은 한 바퀴마다 값 360개짜리 사본을 만든다. 두 줄이 내는 답(<code>sum</code>)은 같다 — 여기서도 맞지만 둔한 코드다.
+    ③절의 함수 인자와 같은 이야기다. <strong>「이름을 붙일 때 <code>&amp;</code>가 있나」</strong> 하나만 보면 둘 다 잡힌다.
   </div>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
@@ -1035,7 +774,7 @@ int main()
   <h2 id="lab">🧪 실습 — 개수를 열 배로 늘리면 재할당은 몇 번 늘어나나 <span class="badge b-green">🟢 맡긴다</span></h2>
   <div class="lab-block">
     <p class="boxtitle">① 이걸 해 보면 무엇을 알게 되나</p>
-    <p><code>delete</code> 없이도 정리가 된다는 것을 눈으로 보고, <strong>담는 개수를 열 배로 늘리면 재할당 횟수가 어떻게 되는지</strong> 확인한다.</p>
+    <p><strong>담는 개수를 열 배로 늘리면 재할당 횟수가 어떻게 되는지</strong> 확인하고, 숫자를 이름 붙은 상수 하나로 둔 덕을 본다.</p>
     <p class="boxtitle">② 준비물</p>
     <ul>
       <li>WSL 우분투 터미널 하나, VS Code (WSL에 연결된 상태)</li>
@@ -1044,123 +783,90 @@ int main()
     <p class="boxtitle">③ 절차</p>
     <ol>
       <li>
-        <strong>(3분) 작업 폴더를 만들고</strong> ⑥절 끝의 📄 <strong>「v6 완성본」</strong> 상자에서 <code>main.cpp</code>를, ①절 상자에서 <code>CMakeLists.txt</code>를 「복사」해 만든다. <strong>타이핑하지 않는다.</strong>
-        <pre><code>mkdir -p ~/robot_ws/l12/ptr_container
-cd ~/robot_ws/l12/ptr_container
+        <strong>(3분) 작업 폴더를 만들고</strong> ⑤절 끝의 📄 <strong>「v5 완성본」</strong> 상자에서 <code>main.cpp</code>를, ①절 상자에서 <code>CMakeLists.txt</code>를 「복사」해 만든다. <strong>타이핑하지 않는다.</strong>
+        <pre><code>mkdir -p ~/robot_ws/l12/scan_list
+cd ~/robot_ws/l12/scan_list
 code .</code></pre>
       </li>
       <li>
-        <strong>(5분) 빌드해서 돌린다.</strong> 출력이 아래 「성공 화면」과 같은지 본다. <strong>「꺼짐」이 어느 줄 다음에 찍히는지</strong>를 특히 본다.
+        <strong>(5분) 빌드해서 돌린다.</strong> 출력이 아래 「성공 화면」과 같은지 본다.
         <pre><code>cmake -S . -B build
 cmake --build build
-./build/ptr_container</code></pre>
+./build/scan_list</code></pre>
       </li>
-      <li><strong>(3분) ⑥ 묶음의 재할당 횟수와 최종 capacity</strong>를 적어 둔다.</li>
+      <li><strong>(3분) ④ 묶음의 재할당 횟수와 최종 capacity</strong>를 적어 둔다.</li>
       <li><strong>(10분) 파일 위쪽의 <code>const int kScanSize = 360;</code>을 <code>3600</code>으로 바꾸고</strong> <code>cmake --build build</code> 후 다시 돌린다.</li>
       <li><strong>(7분) 3번과 4번의 재할당 횟수와 최종 capacity를 나란히 적고,</strong> 개수를 열 배로 늘렸는데 재할당이 왜 열 배가 되지 않는지 한 줄로 쓴다.</li>
       <li><strong>(2분) <code>kScanSize</code>를 360으로 되돌리고</strong> 한 번 더 빌드해서 되는지 확인한다.</li>
     </ol>
     <p class="boxtitle">④ 이렇게 되면 성공이다</p>
     <p><strong>성공 화면</strong> — 2번에서 이 화면이 나온다. 시간(ms)은 노트북마다 다르다.</p>
-    <pre><code>① 센서를 unique_ptr 이 소유하면 치우는 일이 사라진다
-  [라이다 켜짐]
-  라이다 측정 시작
-  [라이다 꺼짐]
-  [카메라 켜짐]
-  카메라 상태 불량 — 그만둔다
-  [카메라 꺼짐]
+    <pre><code>① 스캔 하나와 바퀴 넷
+  정면 거리 = 1 m
+  바퀴 4개, 첫 바퀴 0.5 m/s
 
-② unique_ptr — 주인이 하나다
-  [라이다 켜짐]
-  a 가 가리키는 것: 라이다
-  넘긴 뒤 a 는 비었나? 그렇다
-  이제 주인은 b: 라이다
-  [라이다 꺼짐]
-  중괄호를 나오면 delete 를 안 써도 꺼졌다
-
-② shared_ptr — 여럿이 나눠 가진다. 마지막이 끄고 나간다
-  [카메라 켜짐]
-  주인 수 = 1
-  주인 수 = 2  (p2 가 생겼다)
-  주인 수 = 1  (p2 가 사라졌다)
-  [카메라 꺼짐]
-
-④ ::SharedPtr 은 별명일 뿐이다
-  msg1 과 msg2 가 같은 스캔을 잡고 있나? 그렇다  (주인 수 2)
-
-⑤ array 와 vector — 크기가 언제 정해지나
+② array 와 vector — 크기가 언제 정해지나
   array  : 크기 4  (컴파일할 때 이미 정해졌다)
   vector : 크기 360  (실행 중에 정했다)
   vector : push_back 뒤 크기 361  (array 는 이렇게 늘릴 수 없다)
 
-⑥ reserve — 자리를 미리 잡는다
-  reserve 없이 : 360개를 담는 동안 자리를 10번 다시 잡았다 (최종 capacity=512)
-  reserve 하고 : 360개를 담는 동안 자리를 0번 다시 잡았다 (최종 capacity=360)
-  reserve 없이 :    32.9 ms
-  reserve 하고 :    18.2 ms
-  차이         : 1.81배 (100000회 기준, sink=72000000)
+③ 값 전달과 참조 전달 — 함수에 넘길 때 복사가 나나
+  front_by_value(msg) : ScanMsg 복사 1회
+  front(msg)          : ScanMsg 복사 0회
 
-⑦ 범위 for — const auto &amp; 를 빼면 매 바퀴 복사가 난다
+④ reserve — 자리를 미리 잡는다
+  reserve 없이 : 360개를 담는 동안 재할당 10번 (최종 capacity=512)
+  reserve 하고 : 360개를 담는 동안 재할당 0번 (최종 capacity=360)
+  reserve 없이 :    30.2 ms
+  reserve 하고 :    17.5 ms
+  차이         : 1.72배 (100000회 기준, sink=72000000)
+
+⑤ 범위 for — const auto &amp; 를 빼면 매 바퀴 복사가 난다
   for (auto s : history)         : ScanMsg 복사 100회
   for (const auto &amp; s : history) : ScanMsg 복사 0회
   스캔 100개를 한 바퀴씩 돌았다 (sum=200)</code></pre>
-    <p><strong>4번에서는</strong> ⑥ 묶음이 이렇게 바뀐다 — 재할당이 <strong>10번에서 13번</strong>으로 늘고, 최종 capacity가 <strong>512에서 4096</strong>이 된다. 담는 개수는 열 배가 됐는데 재할당은 세 번밖에 안 늘었다 — 두 배씩 늘리기 때문이다.</p>
-    <pre><code>⑥ reserve — 자리를 미리 잡는다
-  reserve 없이 : 3600개를 담는 동안 자리를 13번 다시 잡았다 (최종 capacity=4096)
-  reserve 하고 : 3600개를 담는 동안 자리를 0번 다시 잡았다 (최종 capacity=3600)
-  reserve 없이 :   387.7 ms
-  reserve 하고 :   161.6 ms
+    <p><strong>4번에서는</strong> ④ 묶음이 이렇게 바뀐다 — 재할당이 <strong>10번에서 13번</strong>으로 늘고, 최종 capacity가 <strong>512에서 4096</strong>이 된다. 담는 개수는 열 배가 됐는데 재할당은 세 번밖에 안 늘었다 — 두 배씩 늘리기 때문이다.</p>
+    <pre><code>④ reserve — 자리를 미리 잡는다
+  reserve 없이 : 3600개를 담는 동안 재할당 13번 (최종 capacity=4096)
+  reserve 하고 : 3600개를 담는 동안 재할당 0번 (최종 capacity=3600)
+  reserve 없이 :   386.6 ms
+  reserve 하고 :   161.2 ms
   차이         : 2.40배 (100000회 기준, sink=720000000)</code></pre>
-    <!-- fullcode "맞춰 보기 — 4번 (kScanSize 를 3600 으로 바꾼 판) main.cpp" build="cmake --build build && ./build/ptr_container"
-         l12_ptr_container/steps/variants/lab_3600/main.cpp
+    <!-- fullcode "맞춰 보기 — 4번 (kScanSize 를 3600 으로 바꾼 판) main.cpp" build="cmake --build build && ./build/scan_list"
+         l12_container/steps/variants/lab_3600/main.cpp
     -->
 <details class="fullcode">
   <summary>맞춰 보기 — 4번 (kScanSize 를 3600 으로 바꾼 판) main.cpp</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/ptr_container</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 스마트 포인터와 컨테이너 — v6 실습 4번 (kScanSize 를 3600 으로 바꾼 판)
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/scan_list</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 라이다 스캔 다루기 — 실습 4번 (kScanSize 를 3600 으로 바꾼 판)
 #include &lt;array&gt;
 #include &lt;chrono&gt;
 #include &lt;cstdio&gt;
 #include &lt;iostream&gt;
-#include &lt;memory&gt;
-#include &lt;string&gt;
 #include &lt;vector&gt;
 
-class Sensor {
-public:
-  explicit Sensor(std::string n, bool ok) : n_(std::move(n)), ok_(ok) { std::cout &lt;&lt; &quot;  [&quot; &lt;&lt; n_ &lt;&lt; &quot; 켜짐]\n&quot;; }
-  ~Sensor() { std::cout &lt;&lt; &quot;  [&quot; &lt;&lt; n_ &lt;&lt; &quot; 꺼짐]\n&quot;; }
-  bool ok() const { return ok_; }
-  void start() { std::cout &lt;&lt; &quot;  &quot; &lt;&lt; n_ &lt;&lt; &quot; 측정 시작\n&quot;; }
-  const std::string &amp; name() const { return n_; }
-private:
-  std::string n_;
-  bool ok_;
-};
-
-const int kScanSize = 3600;             // 라이다 한 바퀴의 거리 값 개수
+const int kScanSize = 3600;            // 라이다 한 바퀴의 거리 값 개수
 int g_copy = 0;                        // ScanMsg 가 복사된 횟수
 
 struct ScanMsg {
-  std::vector&lt;float&gt; ranges;
+  std::vector&lt;float&gt; ranges;           // 거리 값 360개
   ScanMsg() : ranges(kScanSize, 1.0f) {}
-  ScanMsg(const ScanMsg &amp; o) : ranges(o.ranges) { ++g_copy; }   // 복사될 때마다 하나 센다
-  // 이 구조체 안에 별명을 하나 둔다
-  using SharedPtr = std::shared_ptr&lt;ScanMsg&gt;;
+  ScanMsg(const ScanMsg &amp; o) : ranges(o.ranges) { ++g_copy; }   // 복사 생성자 — 복사될 때마다 하나 센다
 };
 
-// 센서 하나를 켜고, 상태가 나쁘면 그만두고, 좋으면 측정을 시작한다
-void setup(const std::string &amp; name, bool ok)
+// 비교하려고 남겨 둔 고치기 전 판 — 값으로 받는다
+float front_by_value(ScanMsg msg)
 {
-  auto s = std::make_unique&lt;Sensor&gt;(name, ok);
-  if (!s-&gt;ok()) {
-    std::cout &lt;&lt; &quot;  &quot; &lt;&lt; name &lt;&lt; &quot; 상태 불량 — 그만둔다\n&quot;;
-    return;                            // 여기서 나가도 알아서 정리된다
-  }
-  s-&gt;start();
-}                                      // 중괄호를 벗어나는 순간 끝. delete 가 없다
+  return msg.ranges.at(0);
+}
 
-// kScanSize 개를 push_back 하는 동안 자리를 몇 번 다시 잡는지 센다
+// 정면 거리를 꺼낸다 — const 참조로 받는다
+float front(const ScanMsg &amp; msg)
+{
+  return msg.ranges.at(0);
+}
+
+// kScanSize 개를 push_back 하는 동안 재할당이 몇 번 일어나는지 센다
 void count_grow(bool use_reserve)
 {
   std::vector&lt;float&gt; v;
@@ -1172,7 +878,7 @@ void count_grow(bool use_reserve)
     if (v.capacity() != cap) { cap = v.capacity(); ++grow; }
   }
   std::cout &lt;&lt; &quot;  &quot; &lt;&lt; (use_reserve ? &quot;reserve 하고&quot; : &quot;reserve 없이&quot;) &lt;&lt; &quot; : &quot; &lt;&lt; kScanSize
-            &lt;&lt; &quot;개를 담는 동안 자리를 &quot; &lt;&lt; grow &lt;&lt; &quot;번 다시 잡았다 (최종 capacity=&quot; &lt;&lt; v.capacity() &lt;&lt; &quot;)\n&quot;;
+            &lt;&lt; &quot;개를 담는 동안 재할당 &quot; &lt;&lt; grow &lt;&lt; &quot;번 (최종 capacity=&quot; &lt;&lt; v.capacity() &lt;&lt; &quot;)\n&quot;;
 }
 
 // 같은 일을 loops 번 반복해 걸린 시간(ms)을 잰다
@@ -1191,46 +897,28 @@ double time_fill(bool use_reserve, int loops, size_t &amp; sink)
 
 int main()
 {
-  std::cout &lt;&lt; &quot;① 센서를 unique_ptr 이 소유하면 치우는 일이 사라진다\n&quot;;
-  setup(&quot;라이다&quot;, true);
-  setup(&quot;카메라&quot;, false);
+  std::cout &lt;&lt; &quot;① 스캔 하나와 바퀴 넷\n&quot;;
+  ScanMsg msg;
+  std::cout &lt;&lt; &quot;  정면 거리 = &quot; &lt;&lt; front(msg) &lt;&lt; &quot; m\n&quot;;
 
-  std::cout &lt;&lt; &quot;\n② unique_ptr — 주인이 하나다\n&quot;;
-  {
-    std::unique_ptr&lt;Sensor&gt; a = std::make_unique&lt;Sensor&gt;(&quot;라이다&quot;, true);
-    std::cout &lt;&lt; &quot;  a 가 가리키는 것: &quot; &lt;&lt; a-&gt;name() &lt;&lt; &quot;\n&quot;;
-    std::unique_ptr&lt;Sensor&gt; b = std::move(a);      // 주인이 바뀐다. 복사는 안 된다
-    std::cout &lt;&lt; &quot;  넘긴 뒤 a 는 비었나? &quot; &lt;&lt; (a == nullptr ? &quot;그렇다&quot; : &quot;아니다&quot;) &lt;&lt; &quot;\n&quot;;
-    std::cout &lt;&lt; &quot;  이제 주인은 b: &quot; &lt;&lt; b-&gt;name() &lt;&lt; &quot;\n&quot;;
-  }
-  std::cout &lt;&lt; &quot;  중괄호를 나오면 delete 를 안 써도 꺼졌다\n&quot;;
+  std::array&lt;float, 4&gt; wheel = {0.5f, 0.5f, 0.5f, 0.5f};   // 크기가 코드에 박혀 있다
+  std::cout &lt;&lt; &quot;  바퀴 &quot; &lt;&lt; wheel.size() &lt;&lt; &quot;개, 첫 바퀴 &quot; &lt;&lt; wheel[0] &lt;&lt; &quot; m/s\n&quot;;
 
-  std::cout &lt;&lt; &quot;\n② shared_ptr — 여럿이 나눠 가진다. 마지막이 끄고 나간다\n&quot;;
-  {
-    std::shared_ptr&lt;Sensor&gt; p1 = std::make_shared&lt;Sensor&gt;(&quot;카메라&quot;, true);
-    std::cout &lt;&lt; &quot;  주인 수 = &quot; &lt;&lt; p1.use_count() &lt;&lt; &quot;\n&quot;;
-    {
-      std::shared_ptr&lt;Sensor&gt; p2 = p1;             // 복사가 된다. 세는 숫자가 는다
-      std::cout &lt;&lt; &quot;  주인 수 = &quot; &lt;&lt; p1.use_count() &lt;&lt; &quot;  (p2 가 생겼다)\n&quot;;
-    }
-    std::cout &lt;&lt; &quot;  주인 수 = &quot; &lt;&lt; p1.use_count() &lt;&lt; &quot;  (p2 가 사라졌다)\n&quot;;
-  }
-
-  std::cout &lt;&lt; &quot;\n④ ::SharedPtr 은 별명일 뿐이다\n&quot;;
-  ScanMsg::SharedPtr       msg1 = std::make_shared&lt;ScanMsg&gt;();
-  std::shared_ptr&lt;ScanMsg&gt; msg2 = msg1;            // 같은 타입이므로 그대로 대입된다
-  std::cout &lt;&lt; &quot;  msg1 과 msg2 가 같은 스캔을 잡고 있나? &quot; &lt;&lt; (msg1 == msg2 ? &quot;그렇다&quot; : &quot;아니다&quot;)
-            &lt;&lt; &quot;  (주인 수 &quot; &lt;&lt; msg1.use_count() &lt;&lt; &quot;)\n&quot;;
-
-  std::cout &lt;&lt; &quot;\n⑤ array 와 vector — 크기가 언제 정해지나\n&quot;;
-  std::array&lt;float, 4&gt; wheel = {0.0f, 0.0f, 0.0f, 0.0f};   // 크기가 코드에 박혀 있다
-  wheel[0] = 0.5f;
+  std::cout &lt;&lt; &quot;\n② array 와 vector — 크기가 언제 정해지나\n&quot;;
   std::cout &lt;&lt; &quot;  array  : 크기 &quot; &lt;&lt; wheel.size() &lt;&lt; &quot;  (컴파일할 때 이미 정해졌다)\n&quot;;
-  std::cout &lt;&lt; &quot;  vector : 크기 &quot; &lt;&lt; msg1-&gt;ranges.size() &lt;&lt; &quot;  (실행 중에 정했다)\n&quot;;
-  msg1-&gt;ranges.push_back(2.0f);                    // vector 는 이렇게 늘릴 수 있다
-  std::cout &lt;&lt; &quot;  vector : push_back 뒤 크기 &quot; &lt;&lt; msg1-&gt;ranges.size() &lt;&lt; &quot;  (array 는 이렇게 늘릴 수 없다)\n&quot;;
+  std::cout &lt;&lt; &quot;  vector : 크기 &quot; &lt;&lt; msg.ranges.size() &lt;&lt; &quot;  (실행 중에 정했다)\n&quot;;
+  msg.ranges.push_back(2.0f);                    // vector 는 이렇게 늘릴 수 있다
+  std::cout &lt;&lt; &quot;  vector : push_back 뒤 크기 &quot; &lt;&lt; msg.ranges.size() &lt;&lt; &quot;  (array 는 이렇게 늘릴 수 없다)\n&quot;;
 
-  std::cout &lt;&lt; &quot;\n⑥ reserve — 자리를 미리 잡는다\n&quot;;
+  std::cout &lt;&lt; &quot;\n③ 값 전달과 참조 전달 — 함수에 넘길 때 복사가 나나\n&quot;;
+  g_copy = 0;
+  front_by_value(msg);
+  std::cout &lt;&lt; &quot;  front_by_value(msg) : ScanMsg 복사 &quot; &lt;&lt; g_copy &lt;&lt; &quot;회\n&quot;;
+  g_copy = 0;
+  front(msg);
+  std::cout &lt;&lt; &quot;  front(msg)          : ScanMsg 복사 &quot; &lt;&lt; g_copy &lt;&lt; &quot;회\n&quot;;
+
+  std::cout &lt;&lt; &quot;\n④ reserve — 자리를 미리 잡는다\n&quot;;
   count_grow(false);
   count_grow(true);
   const int loops = 100000;
@@ -1241,7 +929,7 @@ int main()
   std::printf(&quot;  reserve 하고 : %7.1f ms\n&quot;, res);
   std::printf(&quot;  차이         : %.2f배 (%d회 기준, sink=%zu)\n&quot;, no_res / res, loops, sink);
 
-  std::cout &lt;&lt; &quot;\n⑦ 범위 for — const auto &amp; 를 빼면 매 바퀴 복사가 난다\n&quot;;
+  std::cout &lt;&lt; &quot;\n⑤ 범위 for — const auto &amp; 를 빼면 매 바퀴 복사가 난다\n&quot;;
   std::vector&lt;ScanMsg&gt; history(100);               // 스캔 100개를 모아 두었다
   float sum = 0.0f;
   g_copy = 0;
@@ -1256,7 +944,7 @@ int main()
 </details>
 <!-- /fullcode -->
     <div class="interp">
-      <strong>해석:</strong> 한 줄을 바꿨는데 「3600개」·「3600」·「720000000」이 전부 따라왔다. 숫자 <code>360</code>을 코드 여기저기에 박지 않고 <code>kScanSize</code> 한 이름으로 둔 덕이다. ⑤절 프롬프트 끝의 「숫자를 코드에 박지 말아 줘」가 이것이다.
+      <strong>해석:</strong> 한 줄을 바꿨는데 「3600개」·「3600」·「720000000」이 전부 따라왔다. 숫자 <code>360</code>을 코드 여기저기에 박지 않고 <code>kScanSize</code> 한 이름으로 둔 덕이다. ④절 프롬프트 끝의 「숫자를 코드에 박지 말아 줘」가 이것이다.
       <span style="color:var(--muted)">확인한 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0, CMake 3.28, Release 빌드)</span>
     </div>
   </div>
@@ -1264,139 +952,124 @@ int main()
   <!-- ── 연습문제 ── -->
   <h2 id="exercise">📝 연습문제 — 기본값이 아닌 것을 전부 기본값으로 되돌린다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
   <p>
-    아래는 <strong>라이다에서 찾은 콘 후보를 목록에 담고 기록하는 프로그램</strong>이다. 오늘 배운 것은 하나도 안 들어 있다 — 주인이 하나뿐인 기록기를 <code>shared_ptr</code>로 잡고, 바퀴 속도를 C 배열에 담고, <code>reserve</code> 없이 담고, <code>auto</code>로 돈다.
-    이대로도 돌아간다. 마지막 줄에 <strong>복사 23회</strong>가 찍힌다.
+    아래는 <strong>라이다에서 찾은 콘 후보를 목록에 담고 x 좌표 합을 구하는 프로그램</strong>이다. 오늘 배운 것은 하나도 안 들어 있다 — 바퀴 속도를 C 배열에 담고, <code>reserve</code> 없이 담고, 목록을 값으로 넘기고, <code>auto</code>로 돈다.
+    이대로도 돌아간다. <code>Cone</code>에는 ③절처럼 복사를 세는 줄이 들어 있다.
   </p>
   <!-- fullcode open "연습문제 — 오늘 문법이 없는 원본 (main.cpp + CMakeLists.txt)" build="cmake -S . -B build && cmake --build build && ./build/cone_list"
-       l12_ptr_container/steps/exercise_old/main.cpp
-       l12_ptr_container/steps/exercise_old/CMakeLists.txt
+       l12_container/steps/exercise_old/main.cpp
+       l12_container/steps/exercise_old/CMakeLists.txt
   -->
 <details class="fullcode" open>
   <summary>연습문제 — 오늘 문법이 없는 원본 (main.cpp + CMakeLists.txt)</summary>
   <p class="how">빌드해서 돌리는 법: <code>cmake -S . -B build &amp;&amp; cmake --build build &amp;&amp; ./build/cone_list</code></p>
   <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 연습문제 — 콘 후보 목록. 오늘 배운 것을 하나도 안 쓴 코드
 #include &lt;iostream&gt;
-#include &lt;memory&gt;
-#include &lt;string&gt;
 #include &lt;vector&gt;
 
 int g_copy = 0;   // Cone 이 복사된 횟수
 
 struct Cone {
   float x, y;
-  std::string label;
-  Cone(float x_, float y_, std::string l) : x(x_), y(y_), label(l) {}
-  Cone(const Cone &amp; o) : x(o.x), y(o.y), label(o.label) { ++g_copy; }
+  Cone(float x_, float y_) : x(x_), y(y_) {}
+  Cone(const Cone &amp; o) : x(o.x), y(o.y) { ++g_copy; }   // 복사 생성자 — 복사될 때마다 하나 센다
 };
 
-class Logger
+// 콘들의 x 좌표 합
+float sum_x(std::vector&lt;Cone&gt; cones)
 {
-public:
-  explicit Logger(std::string name) : name_(name) { std::cout &lt;&lt; &quot;  [&quot; &lt;&lt; name_ &lt;&lt; &quot; 기록 시작]\n&quot;; }
-  ~Logger() { std::cout &lt;&lt; &quot;  [&quot; &lt;&lt; name_ &lt;&lt; &quot; 기록 끝]\n&quot;; }
-  void note(const std::string &amp; s) { std::cout &lt;&lt; &quot;  &quot; &lt;&lt; name_ &lt;&lt; &quot;: &quot; &lt;&lt; s &lt;&lt; &quot;\n&quot;; }
-private:
-  std::string name_;
-};
+  float s = 0.0f;
+  for (auto c : cones) { s += c.x; }
+  return s;
+}
 
 int main()
 {
-  std::shared_ptr&lt;Logger&gt; log = std::make_shared&lt;Logger&gt;(&quot;cone&quot;);   // 쓰는 곳은 main 하나뿐이다
-
-  float wheel[4] = {0.0f, 0.0f, 0.0f, 0.0f};   // 바퀴 속도 4개
-  wheel[0] = 0.5f;
+  float wheel[4] = {0.5f, 0.5f, 0.5f, 0.5f};   // 바퀴 속도 4개
   int wheel_count = 4;
 
   std::vector&lt;Cone&gt; cones;                     // 라이다에서 찾은 콘 후보
   int found = 0;
   for (int i = 0; i &lt; 8; ++i) {
-    cones.push_back(Cone(0.5f * i, 1.0f, &quot;cone&quot; + std::to_string(i)));
+    Cone c(0.5f * i, 1.0f);
+    cones.push_back(c);
     ++found;
   }
+  std::cout &lt;&lt; &quot;  담는 동안 Cone 복사 &quot; &lt;&lt; g_copy &lt;&lt; &quot;회\n&quot;;
 
-  float sum_x = 0.0f;
-  for (auto c : cones) { sum_x += c.x; }
-  log-&gt;note(&quot;콘 &quot; + std::to_string(found) + &quot;개, x 합 &quot; + std::to_string(sum_x));
-  log-&gt;note(&quot;바퀴 &quot; + std::to_string(wheel_count) + &quot;개, 첫 바퀴 &quot; + std::to_string(wheel[0]));
-  std::cout &lt;&lt; &quot;  Cone 복사 &quot; &lt;&lt; g_copy &lt;&lt; &quot;회\n&quot;;
+  g_copy = 0;
+  float sx = sum_x(cones);
+  std::cout &lt;&lt; &quot;  콘 &quot; &lt;&lt; found &lt;&lt; &quot;개, x 합 &quot; &lt;&lt; sx &lt;&lt; &quot;\n&quot;;
+  std::cout &lt;&lt; &quot;  바퀴 &quot; &lt;&lt; wheel_count &lt;&lt; &quot;개, 첫 바퀴 &quot; &lt;&lt; wheel[0] &lt;&lt; &quot; m/s\n&quot;;
+  std::cout &lt;&lt; &quot;  합을 구하는 동안 Cone 복사 &quot; &lt;&lt; g_copy &lt;&lt; &quot;회\n&quot;;
   return 0;
 }</code></pre></div>
   <div class="codefile"><div class="fname">CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre class="lang-cmake"><code>cmake_minimum_required(VERSION 3.16)
 project(cone_list CXX)
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_BUILD_TYPE Release)             # 시간을 재는 회차라 최적화를 켠다
 add_executable(cone_list main.cpp)</code></pre></div>
 </details>
 <!-- /fullcode -->
   <h3>실제로 나온 출력</h3>
-  <pre><code>  [cone 기록 시작]
-  cone: 콘 8개, x 합 14.000000
-  cone: 바퀴 4개, 첫 바퀴 0.500000
-  Cone 복사 23회
-  [cone 기록 끝]</code></pre>
+  <pre><code>  담는 동안 Cone 복사 15회
+  콘 8개, x 합 14
+  바퀴 4개, 첫 바퀴 0.5 m/s
+  합을 구하는 동안 Cone 복사 16회</code></pre>
   <h3>할 일</h3>
-  <p>한 장 요약표의 「기본값」으로 전부 되돌린다. 기록 두 줄은 같아야 하고 <strong>복사 횟수가 0회</strong>가 되어야 한다. 받은 코드에서 아래 항목이 전부 됐는지는 사람이 확인한다.</p>
+  <p>
+    한 장 요약표의 「기본값」으로 전부 되돌린다. 가운데 두 줄은 같아야 하고, 복사 횟수는 <strong>담는 동안 8회, 합을 구하는 동안 0회</strong>가 되어야 한다.
+    담는 동안의 8회는 남는 것이 맞다 — <code>push_back(c)</code>는 <code>c</code>의 사본을 컨테이너 안에 만들기 때문이다. 받은 코드에서 아래 항목이 전부 됐는지는 사람이 확인한다.
+  </p>
   <div class="tablewrap">
   <table>
     <tr><th>고칠 것</th><th>오늘 어디서 했나</th><th>확인하는 법</th></tr>
-    <tr><td><code>Logger</code>는 주인이 하나이고 넘길 일도 없다 → 스마트 포인터 없이 그냥 변수로</td><td>②</td><td>파일에 <code>shared_ptr</code>이 없다. <code>log.note(...)</code>처럼 점으로 부른다</td></tr>
-    <tr><td><code>float wheel[4]</code>과 <code>wheel_count</code> → <code>std::array&lt;float, 4&gt;</code> 하나</td><td>④</td><td><code>wheel.size()</code>로 개수를 얻는다. <code>wheel_count</code>가 없다</td></tr>
-    <tr><td>담기 전에 <code>reserve</code>. 개수 <code>8</code>은 이름 붙은 상수로</td><td>⑤</td><td><code>push_back</code> 앞에 <code>reserve</code>가 있고, <code>found</code> 대신 <code>cones.size()</code>를 쓴다</td></tr>
-    <tr><td><code>for (auto c : cones)</code> → <code>const auto &amp;</code></td><td>⑥</td><td>복사 횟수가 8 줄어든다</td></tr>
-    <tr><td><code>Cone</code>에 이동 생성자가 없어 <code>push_back</code> 때 복사된다 → <code>noexcept</code> 이동 생성자 (11회)</td><td>11회 ④</td><td>마지막 줄이 「복사 0회」다</td></tr>
+    <tr><td><code>float wheel[4]</code>과 <code>wheel_count</code> → <code>std::array&lt;float, 4&gt;</code> 하나</td><td>②</td><td><code>wheel.size()</code>로 개수를 얻는다. <code>wheel_count</code>가 없다</td></tr>
+    <tr><td><code>sum_x</code>의 인자를 <code>const &amp;</code>로</td><td>③</td><td>합을 구하는 동안의 복사가 8 줄어든다</td></tr>
+    <tr><td>담기 전에 <code>reserve</code>. 개수 <code>8</code>은 이름 붙은 상수로</td><td>④</td><td>담는 동안의 복사가 15회에서 8회가 된다. <code>found</code> 대신 <code>cones.size()</code>를 쓴다</td></tr>
+    <tr><td><code>for (auto c : cones)</code> → <code>const auto &amp;</code></td><td>⑤</td><td>합을 구하는 동안의 복사가 0회가 된다</td></tr>
   </table>
   </div>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
-    이 코드에서 기본값이 아닌 선택을 전부 찾아 이유를 한 줄씩 적은 뒤 고쳐 줘. 주인이 하나인 <code>Logger</code>는 스마트 포인터 없이, C 배열은 <code>std::array</code>로, 담기 전에 <code>reserve</code>, 범위 for는 <code>const auto &amp;</code>로.
-    <code>Cone</code>에는 <code>noexcept</code> 이동 생성자를 더해 줘. 마지막 줄이 「복사 0회」가 될 때까지 한 항목 고칠 때마다 빌드해서 확인해 줘.
+    이 코드에서 기본값이 아닌 선택을 전부 찾아 이유를 한 줄씩 적은 뒤 고쳐 줘. C 배열은 <code>std::array</code>로, 읽기만 하는 인자는 <code>const</code> 참조로, 담기 전에 <code>reserve</code>, 범위 for는 <code>const auto &amp;</code>로.
+    한 항목 고칠 때마다 빌드해서 복사 횟수가 어떻게 바뀌는지 알려 줘.
   </div>
-  <p>정답은 하나가 아니다. <strong>위 표의 「확인하는 법」이 전부 통과하고 복사가 0회면</strong> 된 것이다. 수업 시간에 몇 사람의 결과를 같이 본다.</p>
+  <p>정답은 하나가 아니다. <strong>위 표의 「확인하는 법」이 전부 통과하면</strong> 된 것이다. 수업 시간에 몇 사람의 결과를 같이 본다.</p>
 
   <!-- ── 프롬프트 모음 ── -->
   <h2 id="prompts">🤖 오늘 나온 프롬프트 모음 <span class="badge b-green">🟢 맡긴다</span></h2>
   <div class="tablewrap">
   <table>
     <tr><th>이럴 때</th><th>이렇게 말한다</th></tr>
-    <tr><td><code>shared_ptr</code>이 여러 개 보일 때</td><td>"<code>shared_ptr</code>을 쓴 자리마다 주인이 정말 여럿인지 확인해 줘. 한 곳만 쓰는 것은 <code>unique_ptr</code>로, 포인터가 필요 없는 자리는 그냥 변수로 바꿔 줘."</td></tr>
+    <tr><td>함수 인자가 보일 때</td><td>"<code>vector</code>나 구조체를 값으로 받는 인자를 찾아 줘. 읽기만 하는 것은 <code>const</code> 참조로 바꾸고, 작은 값은 그대로 둬."</td></tr>
     <tr><td>담는 코드일 때</td><td>"담는 코드 앞에 <code>reserve</code>를 넣어 줘. 개수는 원본 배열의 크기로 잡고, 숫자를 코드에 박지 말아 줘."</td></tr>
     <tr><td>반복문이 보일 때</td><td>"범위 for 에서 <code>auto</code> 대신 <code>const auto &amp;</code>를 써 줘. 값을 바꿔야 하는 자리만 <code>auto &amp;</code>로 해 줘."</td></tr>
     <tr><td>C 스타일 배열이 보일 때</td><td>"<code>float a[4]</code> 같은 배열을 <code>std::array</code>나 <code>std::vector</code>로 바꿔 줘. 크기를 따로 들고 다니지 않게 해 줘."</td></tr>
-    <tr><td><code>::SharedPtr</code>이 무엇인지 모를 때</td><td>"이 <code>SharedPtr</code>이 어디서 <code>using</code>으로 정의됐는지 찾아서 원래 타입을 알려 줘."</td></tr>
+    <tr><td>복사가 나는지 궁금할 때</td><td>"이 구조체에 복사 생성자를 넣어 복사될 때마다 숫자를 세게 해 줘. 그 숫자를 찍어서 어디서 복사가 나는지 보여 줘."</td></tr>
   </table>
   </div>
 
   <!-- ── 점검 ── -->
   <h2 id="check">✅ 오늘의 점검</h2>
   <ul class="check">
-    <li><input type="checkbox" id="c1"><label for="c1">소유권·참조 횟수·타입 별칭·용량·재할당을 <strong>각각 한 문장으로</strong> 말할 수 있나?</label></li>
-    <li><input type="checkbox" id="c2"><label for="c2"><code>shared_ptr</code>을 쓴 자리마다 <strong>주인이 정말 여럿</strong>인가? 사실은 포인터가 아예 필요 없는 자리는 없나?</label></li>
+    <li><input type="checkbox" id="c1"><label for="c1">크기와 용량, 재할당, 값 전달과 참조 전달을 <strong>각각 한 문장으로</strong> 말할 수 있나?</label></li>
+    <li><input type="checkbox" id="c2"><label for="c2">읽기만 하는 <code>vector</code>·구조체 인자가 <code>const &amp;</code>인가? <code>int</code>·<code>float</code>는 값으로 받았나?</label></li>
     <li><input type="checkbox" id="c3"><label for="c3">담는 코드 앞에 <code>reserve</code>가 있나? 그 개수는 <strong>숫자가 아니라 크기</strong>로 잡았나?</label></li>
     <li><input type="checkbox" id="c4"><label for="c4">범위 for 가 <code>const auto &amp;</code>인가? 값을 바꾸는 자리만 <code>auto &amp;</code>인가?</label></li>
     <li><input type="checkbox" id="c5"><label for="c5">개수가 고정인데 <code>vector</code>를 쓰거나, 변하는데 <code>array</code>를 쓰지 않았나? C 스타일 배열이 남아 있지 않나?</label></li>
-    <li><input type="checkbox" id="c6"><label for="c6">연습문제의 마지막 줄이 「복사 0회」가 됐나?</label></li>
+    <li><input type="checkbox" id="c6"><label for="c6">연습문제의 복사 횟수가 「담는 동안 8회, 합을 구하는 동안 0회」가 됐나?</label></li>
   </ul>
 
   <!-- ── 조금 더 ── -->
   <h2 id="more">조금 더 알아두면 <span class="badge b-lv">시험 범위 아님</span></h2>
   <details>
-    <summary><code>make_shared</code>가 <code>shared_ptr(new T)</code>보다 나은 이유</summary>
+    <summary>함수가 <code>vector</code>를 만들어 돌려줄 때 — <code>return v;</code>에 <code>std::move</code>를 붙이지 않는다</summary>
     <p>
-      <code>shared_ptr</code>은 객체 말고 참조 횟수를 둘 자리도 따로 필요하다. <code>std::shared_ptr&lt;Sensor&gt; p(new Sensor(...))</code>라고 쓰면 메모리를 두 번 잡는다 — 객체 한 번, 참조 횟수 한 번.
-      <code>std::make_shared&lt;Sensor&gt;(...)</code>는 둘을 한 번에 잡는다. 자리를 잡는 일이 한 번 줄고, 두 개가 붙어 있어 읽기도 빠르다. 쓰는 모양이 더 짧기까지 하므로 고민할 이유가 없다.
+      함수 안에서 만든 <code>vector</code>를 <code>return v;</code>로 돌려주면 사본이 생길 것 같지만, 컴파일러가 <strong>처음부터 부른 쪽 자리에 만들어</strong> 사본도 이동도 안 생긴다. 이것을 <strong>복사 생략</strong>(copy elision)이라고 한다.
+      그래서 결과를 참조 인자로 받아 채우는 모양(<code>void f(std::vector&lt;float&gt; &amp; out)</code>)보다 그냥 돌려주는 모양이 읽기 쉽고 손해도 없다.
     </p>
-  </details>
-  <details>
-    <summary>서로를 가리키면 아무도 안 꺼진다 (순환 참조)</summary>
     <p>
-      <code>shared_ptr</code>은 참조 횟수가 0이 될 때 객체를 정리한다. 그런데 A가 B를 잡고 B가 A를 잡으면 둘 다 영원히 1 이상이다. 둘을 쓰던 코드가 다 끝나도 둘 다 안 꺼진다.
-      이것이 스마트 포인터를 쓰고도 메모리가 새는 거의 유일한 경우다. 해결하는 도구(<code>std::weak_ptr</code>)가 표준에 있지만, 이 과목의 코드에서는 그런 구조를 만들지 않는 것이 답이다.
-    </p>
-  </details>
-  <details>
-    <summary><code>list</code>와 <code>deque</code>는 왜 안 다루나</summary>
-    <p>
-      중간에 원소를 자주 끼워 넣거나 빼는 경우에 유리한 컨테이너들이다. <code>vector</code>는 중간에 끼워 넣으면 뒤에 있는 원소를 전부 한 자리씩 밀어야 하기 때문이다.
-      그런데 이 과목의 코드에는 그런 자리가 없다. 라이다 값은 통째로 왔다가 통째로 버려지고, 찾아낸 콘 목록은 뒤에만 붙는다. 그리고 값이 메모리에 나란히 붙어 있어 <code>vector</code>는 한 바퀴 도는 일에서 특히 빠르다. <strong>고민되면 <code>vector</code>다.</strong>
+      AI가 가끔 <code>return std::move(v);</code>를 준다. 11회의 <code>std::move</code>를 붙이면 더 빠를 것 같지만 <strong>오히려 복사 생략을 막는다.</strong> 돌려줄 때는 그냥 <code>return v;</code>가 맞다.
     </p>
   </details>
   <details>
@@ -1406,6 +1079,20 @@ add_executable(cone_list main.cpp)</code></pre></div>
       <li><code>v.resize(360)</code> — <strong>값을 360개 만들어 채운다.</strong> <code>size()</code>가 360이 된다. 여기에 <code>push_back</code>을 하면 361번째가 생긴다.</li>
     </ul>
     <p>담을 준비를 하는 것이 목적이면 <code>reserve</code>다. <code>resize</code>를 쓰고 <code>push_back</code>까지 하면 앞쪽 원소 360개가 0으로 채워진 채 남는다 — 라이다 값 앞에 0이 360개 붙으면 가장 가까운 장애물이 0 m가 된다.</p>
+  </details>
+  <details>
+    <summary><code>push_back</code>과 <code>emplace_back</code></summary>
+    <p>
+      연습문제의 「담는 동안 8회」는 <code>push_back(c)</code>가 이미 만든 <code>c</code>를 복사해 넣기 때문이다. <code>cones.emplace_back(0.5f * i, 1.0f)</code>라고 쓰면 생성자 인자를 넘겨 <strong>컨테이너 안에서 바로 만든다.</strong> 그러면 그 8회도 없어진다.
+      AI 코드에 <code>emplace_back</code>이 보이면 「안에서 바로 만드는 <code>push_back</code>」으로 읽으면 된다.
+    </p>
+  </details>
+  <details>
+    <summary><code>list</code>와 <code>deque</code>는 왜 안 다루나</summary>
+    <p>
+      중간에 원소를 자주 끼워 넣거나 빼는 경우에 유리한 컨테이너들이다. <code>vector</code>는 중간에 끼워 넣으면 뒤에 있는 원소를 전부 한 자리씩 밀어야 하기 때문이다.
+      그런데 이 과목의 코드에는 그런 자리가 거의 없다. 라이다 값은 통째로 왔다가 통째로 버려지고, 찾아낸 콘 목록은 뒤에만 붙는다. 그리고 값이 메모리에 나란히 붙어 있어 <code>vector</code>는 한 바퀴 도는 일에서 특히 빠르다. <strong>고민되면 <code>vector</code>다.</strong>
+    </p>
   </details>
 
   <footer>

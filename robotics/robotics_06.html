@@ -104,7 +104,7 @@
     <tr>
       <td><strong>1.39 / 2 / 0.4배</strong></td>
       <td>AI가 짠 C++ 코드가 사람이 짠 것과 갈라진 세 자리 — 복사·직접 루프·표준 라이브러리</td>
-      <td>11회(복사와 이동)와 13회(STL)가 2부의 중심인 이유다</td>
+      <td>12회(컨테이너 — 복사를 세어 본다)와 13회(STL)가 2부의 중심인 이유다</td>
     </tr>
     <tr>
       <td><strong>0.94배</strong></td>
@@ -114,7 +114,7 @@
     <tr>
       <td><strong>약 70%</strong></td>
       <td>마이크로소프트(2019)와 구글 크롬 팀(2020)이 각자 센, 심각한 보안 결함 중 <strong>메모리를 잘못 다뤄서</strong> 생긴 것의 비율</td>
-      <td>Rust가 나온 이유다. 그리고 C++ 안에서 같은 문제를 다루는 10회·12회가 있는 이유이기도 하다</td>
+      <td>Rust가 나온 이유다. 그리고 C++ 안에서 같은 문제를 다루는 11회가 있는 이유이기도 하다</td>
     </tr>
   </table>
   </div>
@@ -769,7 +769,7 @@ $ python3 scan_filter.py</code></pre>
     <tr><th></th><th>C++</th><th>Go</th><th>Rust</th></tr>
     <tr><td>나온 때 · 만든 곳</td><td>1979~83 · 벨 연구소</td><td>2009 · 구글</td><td>2015(1.0) · 모질라</td></tr>
     <tr><td>C++의 무엇을 고치려 했나</td><td>— (시뮬라의 느림과 C의 정리 안 됨을 고쳤다)</td><td><strong>복잡함 · 빌드 시간 · 동시 처리</strong></td><td><strong>메모리 안전성</strong></td></tr>
-    <tr><td><strong>메모리를 누가 책임지나</strong></td><td><strong>프로그래머</strong> (도구: 스마트 포인터 — 12회)</td><td><strong>실행 중의 GC</strong></td><td><strong>컴파일러</strong> (소유권 검사)</td></tr>
+    <tr><td><strong>메모리를 누가 책임지나</strong></td><td><strong>프로그래머</strong> (도구: 스마트 포인터 — 11회)</td><td><strong>실행 중의 GC</strong></td><td><strong>컴파일러</strong> (소유권 검사)</td></tr>
     <tr><td>그 대가</td><td>실수하면 아무도 안 잡는다</td><td>GC가 멈추는 순간을 못 정한다</td><td>배우기 어렵다 · C++ 라이브러리를 바로 못 쓴다</td></tr>
     <tr><td>속도</td><td>기준</td><td>대체로 더 느리고, GC 멈춤이 있다</td><td>C++과 비슷</td></tr>
     <tr><td>배우기</td><td>방대하다</td><td>셋 중 가장 쉽다</td><td>초반 벽이 높다</td></tr>
@@ -799,7 +799,7 @@ $ python3 scan_filter.py</code></pre>
   <h3>C++을 알면 이 둘이 보인다</h3>
   <p>
     반대로 읽으면 이렇다. Rust의 소유권 규칙은 <strong>C++11이 들여온 「이동」과 「스마트 포인터」를 컴파일러가 강제하는 것</strong>에 가깝다.
-    11회(복사와 이동)와 12회(스마트 포인터)를 지나면 Rust 문서의 첫 장이 읽힌다.
+    11회(스마트 포인터와 <code>std::move</code>)를 지나면 Rust 문서의 첫 장이 읽힌다.
     Go의 GC는 파이썬이 하는 것과 같은 방식이다. C++에서 메모리를 한 번 손으로 다뤄 보면 GC가 <strong>무엇을 대신해 주고 무엇을 가져가는지</strong>가 보인다.
     <strong>C++이 첫 언어로 나쁘지 않은 이유가 이것이다.</strong> 다른 언어가 자동으로 해 주는 것을 한 번은 손으로 해 본 사람이 그 자동화를 판단할 수 있다.
   </p>
@@ -840,7 +840,7 @@ $ python3 scan_filter.py</code></pre>
     <tr>
       <td>복사·할당 오버헤드</td><td><strong>1.39배</strong></td>
       <td>옮기거나 빌려 봐도 될 것을 <strong>통째로 복사</strong>한다</td>
-      <td><strong>11회</strong> 복사와 이동</td>
+      <td><strong>12회</strong> 컨테이너 — 값 전달과 참조 전달</td>
     </tr>
     <tr>
       <td>명시적 for 루프</td><td>약 <strong>2배</strong></td>
@@ -889,7 +889,7 @@ $ python3 scan_filter.py</code></pre>
   <!-- ── ⑦ 2부 지도 ── -->
   <h2 id="map">⑦ 2부 아홉 회차는 그 둔함을 걷어내는 순서로 짜였다 <span class="badge b-green">🟢 맡긴다</span></h2>
 
-  <p class="readme-first">무엇을 먼저 볼지: <strong>★이 붙은 두 줄(11회·13회)</strong>이 위 표의 세 줄에 대응한다.</p>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>★이 붙은 두 줄(12회·13회)</strong>이 위 표의 세 줄에 대응한다.</p>
   <div class="tablewrap">
   <table>
     <tr><th>회</th><th>제목</th><th>다루는 것</th><th>왜 여기 있나</th></tr>
@@ -897,9 +897,9 @@ $ python3 scan_filter.py</code></pre>
     <tr><td>7</td><td>코드를 읽기 위한 최소 장비</td><td><code>auto</code>, <code>&amp;</code>, <code>const</code>, <code>::</code>, <code>-&gt;</code>, <code>&lt;&gt;</code>, <code>#include</code>, <code>nullptr</code></td><td>읽지 못하면 검사도 못 한다</td></tr>
     <tr><td>8</td><td>클래스 — 노드가 상태를 갖는 방식</td><td>멤버 변수·함수, 생성자·소멸자, 멤버 초기화 리스트, 헤더/소스 분리</td><td>ROS 2 코드는 전부 클래스다</td></tr>
     <tr><td>9</td><td>빌드 시스템 📖</td><td>컴파일과 링크, CMake, 빌드 오류 3단계 읽기</td><td>파일이 둘 이상이면 필요해진다</td></tr>
-    <tr><td>10</td><td>상속·다형성과 RAII</td><td><code>virtual</code>, <code>override</code>, 가상 소멸자, 스코프와 수명</td><td>AI가 가상 소멸자를 자주 빠뜨린다</td></tr>
-    <tr><td><strong>11</strong>★</td><td><strong>복사와 이동</strong></td><td>값 전달 vs 참조 전달, <code>const &amp;</code>, <code>std::move</code></td><td><strong>위 표 1.39배 줄</strong></td></tr>
-    <tr><td>12</td><td>스마트 포인터와 컨테이너</td><td><code>unique_ptr</code>, <code>shared_ptr</code>, <code>std::vector</code>, <code>reserve()</code></td><td>ROS 2 콜백 인자가 전부 스마트 포인터다</td></tr>
+    <tr><td>10</td><td>상속과 다형성</td><td><code>virtual</code>, <code>override</code>, 가상 소멸자</td><td>AI가 가상 소멸자를 자주 빠뜨린다</td></tr>
+    <tr><td>11</td><td>RAII와 스마트 포인터</td><td><code>new</code>/<code>delete</code>, RAII, <code>unique_ptr</code>, <code>std::move</code>, <code>shared_ptr</code></td><td>ROS 2 콜백 인자가 전부 스마트 포인터다</td></tr>
+    <tr><td><strong>12</strong>★</td><td><strong>컨테이너</strong></td><td><code>std::vector</code>, <code>std::array</code>, <code>const &amp;</code>, <code>reserve()</code>, 범위 for</td><td><strong>위 표 1.39배 줄</strong></td></tr>
     <tr><td><strong>13</strong>★</td><td><strong>STL 알고리즘</strong> 📖</td><td><code>min_element</code>, <code>count_if</code>, <code>copy_if</code>, <code>sort</code> 등</td><td><strong>위 표 2배·0.4배 줄</strong></td></tr>
     <tr><td>14</td><td>람다·<code>const</code>·C++17</td><td>람다와 캡처, <code>const</code> 멤버 함수, <code>std::optional</code></td><td>13회 코드에 이미 나와 있던 문법</td></tr>
   </table>
@@ -1239,9 +1239,9 @@ python3 --version</code></pre>
     <div class="tablewrap">
     <table>
       <tr><th>실수</th><th>어떻게 생기나</th><th>Rust는 어떻게 막나</th><th>C++에서는 어디서 배우나</th></tr>
-      <tr><td>돌려준 메모리를 또 쓴다</td><td>지운 객체를 가리키는 자리가 남아 있다가 나중에 읽힌다</td><td>주인이 사라지면 가리키던 자리도 컴파일 오류</td><td><strong>10회</strong> 스코프와 수명 · <strong>12회</strong> 스마트 포인터</td></tr>
+      <tr><td>돌려준 메모리를 또 쓴다</td><td>지운 객체를 가리키는 자리가 남아 있다가 나중에 읽힌다</td><td>주인이 사라지면 가리키던 자리도 컴파일 오류</td><td><strong>11회</strong> RAII와 스마트 포인터</td></tr>
       <tr><td>배열 범위를 넘는다</td><td>360칸짜리에 <code>[360]</code>을 쓴다. C++은 검사하지 않는다</td><td>실행 중 검사해서 즉시 멈춘다</td><td><strong>12회</strong> <code>std::vector</code>와 범위 for · <strong>13회</strong> 범위를 받는 알고리즘</td></tr>
-      <tr><td>돌려주는 것을 잊는다</td><td><code>new</code>로 받고 <code>delete</code>를 안 한다. 오래 돌면 메모리가 는다</td><td>주인이 사라질 때 자동으로 돌려준다</td><td><strong>10회</strong> RAII · <strong>12회</strong> <code>unique_ptr</code></td></tr>
+      <tr><td>돌려주는 것을 잊는다</td><td><code>new</code>로 받고 <code>delete</code>를 안 한다. 오래 돌면 메모리가 는다</td><td>주인이 사라질 때 자동으로 돌려준다</td><td><strong>11회</strong> RAII · <code>unique_ptr</code></td></tr>
     </table>
     </div>
     <p>

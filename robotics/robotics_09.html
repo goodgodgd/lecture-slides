@@ -432,7 +432,7 @@ int main()
   </div>
   <div class="interp">
     <strong>해석:</strong> 마지막 줄이 이 문법의 값어치다. 오류가 나서 중간에 튀어나가도 소멸자는 불린다.
-    <strong>정리하는 일을 사람이 기억하지 않아도 되게 만드는 것</strong>이 C++의 사고방식이고, 10회에서 이것만 따로 다룬다.
+    <strong>정리하는 일을 사람이 기억하지 않아도 되게 만드는 것</strong>이 C++의 사고방식이고, 11회(RAII와 스마트 포인터)에서 이것만 따로 다룬다.
   </div>
 
   <h3>예제에 적용 — 만들 때 값을 받고, 사라질 때 버린 개수를 보고한다</h3>
@@ -1876,17 +1876,17 @@ public:
     <table>
       <tr><th>안 다룬 것</th><th>왜</th><th>언제 다루나</th></tr>
       <tr><td>상속과 <code>virtual</code></td><td>클래스 하나부터 익힌 뒤가 맞다</td><td>10회</td></tr>
-      <tr><td>복사 생성자, 대입 연산자</td><td>복사가 왜 비싼지를 먼저 봐야 한다</td><td>11회</td></tr>
+      <tr><td>복사 생성자, 대입 연산자</td><td>주소를 들고 있는 클래스를 만들어 봐야 왜 필요한지 보인다</td><td>11회</td></tr>
       <tr><td>클래스 템플릿 만들기</td><td>읽을 일은 많고 만들 일은 거의 없다</td><td>14회에 읽을거리로</td></tr>
       <tr><td>연산자 오버로딩</td><td>이 과목의 코드에 나오지 않는다</td><td>다루지 않는다</td></tr>
-      <tr><td><code>new</code>/<code>delete</code>로 객체 만들기</td><td>직접 쓰면 안 되는 것이다</td><td>10회(왜 안 쓰는지) · 12회(대신 쓰는 것)</td></tr>
+      <tr><td><code>new</code>/<code>delete</code>로 객체 만들기</td><td>직접 쓰면 안 되는 것이다</td><td>11회(왜 안 쓰는지와 대신 쓰는 것)</td></tr>
     </table>
     </div>
   </details>
 
   <footer>
     로봇공학 · 순천향대학교 전자정보공학과 ·
-    다음 회차: <a href="robotics_10.html">10회 상속·다형성과 RAII</a>
+    다음 회차: <a href="robotics_10.html">10회 상속과 다형성</a>
   </footer>
 </main>
 </div>
