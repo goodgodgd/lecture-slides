@@ -30,10 +30,11 @@
   <div class="toc-title">이 회차 목차</div>
   <a href="#summary">한 장 요약 — 용어 여섯 개</a>
   <a href="#start">① 오늘 만들 것 — AI가 준 그대로</a>
-  <a href="#container">② 컨테이너 · <code>vector</code> · <code>array</code> · <code>list</code> · <code>deque</code></a>
+  <a href="#container">② 컨테이너 · <code>vector</code> · <code>array</code></a>
   <a href="#byref">③ 값 전달과 참조 전달 · <code>const &amp;</code></a>
   <a href="#reserve">④ 용량과 재할당 · <code>reserve</code></a>
   <a href="#rangefor">⑤ 범위 기반 for · <code>const auto &amp;</code></a>
+  <a href="#listdeque">⑥ <code>list</code> · <code>deque</code> — <code>vector</code>와 비교</a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
   <a href="#prompts">🤖 프롬프트 모음</a>
@@ -50,10 +51,10 @@
     <span class="lab">오늘 답할 질문</span>
     <ol>
       <li><code>std::vector</code>와 <code>std::array</code>는 무엇이 다르고, C 스타일 배열은 왜 안 쓰나?</li>
-      <li><code>list</code>와 <code>deque</code>는 언제 <code>vector</code>보다 나은가?</li>
       <li>함수에 <code>vector</code>를 넘길 때 무슨 일이 일어나나? 인자는 어떻게 받아야 하나?</li>
       <li><code>reserve()</code> 한 줄은 무엇을 없애나?</li>
       <li><code>for (auto x : v)</code>와 <code>for (const auto &amp; x : v)</code>는 무엇이 다른가?</li>
+      <li><code>list</code>와 <code>deque</code>는 언제 <code>vector</code>보다 나은가?</li>
     </ol>
   </div>
 
@@ -74,11 +75,11 @@
   <table class="summary-table">
     <tr><th>용어</th><th>코드에서 이렇게 보인다</th><th>이것만 알면 된다</th></tr>
     <tr><td>컨테이너 · <code>std::vector</code> · <code>std::array</code></td><td><code>std::vector&lt;float&gt; v;</code> / <code>std::array&lt;float, 4&gt; w;</code></td><td><code>vector</code>가 <strong>기본값.</strong> 개수가 코드에 이미 적혀 있을 때만 <code>array</code>. C 배열은 안 쓴다</td></tr>
-    <tr><td><code>std::list</code> · <code>std::deque</code></td><td><code>l.push_front(x);</code> / <code>d.push_front(x);</code></td><td>중간·앞에 자주 넣고 뺄 때 고려한다. <code>list</code>는 <code>[]</code>가 없다. <strong>고민되면 <code>vector</code></strong></td></tr>
     <tr><td>값 전달 · 참조 전달</td><td><code>float front(const ScanMsg &amp; msg)</code></td><td>읽기만 할 인자는 <strong><code>const &amp;</code>가 기본값.</strong> 값으로 받으면 부를 때마다 사본이 생긴다</td></tr>
     <tr><td>복사 생성자로 복사 세기</td><td><code>ScanMsg(const ScanMsg &amp; o) … { ++g_copy; }</code></td><td>복사는 화면에 안 보인다. 11회의 복사 생성자에 <strong>세는 줄</strong>을 넣으면 보인다</td></tr>
     <tr><td>용량 · 재할당 · <code>reserve</code></td><td><code>v.reserve(n);</code></td><td>몇 개 들어올지 알면 담기 전에 한 줄. 재할당이 0번이 된다</td></tr>
     <tr><td>범위 기반 for · <code>const auto &amp;</code></td><td><code>for (const auto &amp; x : v)</code></td><td><strong>기본값.</strong> <code>auto x</code>로 쓰면 한 바퀴마다 사본이 생긴다</td></tr>
+    <tr><td><code>std::list</code> · <code>std::deque</code></td><td><code>std::deque&lt;float&gt; d;</code> / <code>std::list&lt;float&gt; l;</code></td><td>앞에서 자주 빼면 <code>deque</code>, 중간에 자주 넣고 빼면 <code>list</code>. <code>list</code>는 <code>[]</code>가 없다. <strong>고민되면 <code>vector</code></strong></td></tr>
   </table>
   </div>
   <div class="interp">
@@ -100,7 +101,7 @@
     <li>②절부터는 절마다 <strong>「개념」</strong>이 먼저 온다 — 그 문법이 무엇이고 어떤 문제를 풀려고 생겼는지. 그다음 <strong>「예제에 적용」</strong>에서 프로그램의 한 곳을 고치거나 <strong>세는 장치를 몇 줄 더한다.</strong></li>
     <li>고치는 자리는 <strong>고치기 전</strong>(붉은 테두리)과 <strong>고친 뒤</strong>(푸른 테두리)를 따로 놓는다. 더하기만 하는 단계는 더한 뒤의 모양만 보인다.</li>
     <li>그 아래 <strong>📄 「전체 코드」 상자</strong>를 누르면 그 단계의 <code>main.cpp</code> 전체가 나온다. 첫 줄 주석에 <strong>버전(v1, v2, …)</strong>이 있다. <strong>어느 버전을 펼쳐도 그대로 빌드되고 돌아간다.</strong></li>
-    <li>v1~v3은 <strong>프로그램 하나가 자란다.</strong> v4·v5는 그 절에서 볼 것 하나만 남긴 <strong>짧은 프로그램</strong>이다 — 앞 단계의 출력이 섞이면 봐야 할 줄이 묻히기 때문이다.</li>
+    <li>v1~v3은 <strong>프로그램 하나가 자란다.</strong> v4~v6은 그 절에서 볼 것 하나만 남긴 <strong>짧은 프로그램</strong>이다 — 앞 단계의 출력이 섞이면 봐야 할 줄이 묻히기 때문이다.</li>
     <li>「실제로 나온 출력」에는 그 절이 새로 찍는 줄만 보인다.</li>
     <li>빌드는 <strong>CMake</strong>다. <code>CMakeLists.txt</code>는 ①절 상자에 한 번 있고, 뒤 단계에서도 그대로 쓴다.</li>
   </ul>
@@ -190,7 +191,7 @@ add_executable(scan_list main.cpp)</code></pre></div>
   <p>이 코드는 <strong>컴파일되고, 실행되고, 맞는 값을 낸다.</strong> 그래서 그냥 넘어가기 쉽다. 고칠 곳은 두 군데인데, 하나는 눈에 보이고(<code>wheel_count</code>) 하나는 안 보인다(<code>ScanMsg msg</code>).</p>
 
   <!-- ── ② 컨테이너 ── -->
-  <h2 id="container">② 컨테이너 — <code>vector</code>·<code>array</code>·<code>list</code>·<code>deque</code> <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+  <h2 id="container">② 컨테이너 — <code>vector</code>가 기본값, 개수가 박혀 있으면 <code>array</code> <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
   <h3>개념 — 값 여러 개를 담는 타입</h3>
   <p>
@@ -207,64 +208,6 @@ add_executable(scan_list main.cpp)</code></pre></div>
     <tr><td>C 스타일 배열 <code>float a[4]</code></td><td>컴파일할 때</td><td><strong>이 과목에서는 권하지 않는다.</strong> 자기 크기를 모른다 — 함수에 넘기는 순간 개수 정보가 사라져 개수를 따로 들고 다녀야 한다</td></tr>
   </table>
   </div>
-
-  <h3>개념 — <code>vector</code>가 불편한 자리, <code>list</code>와 <code>deque</code></h3>
-  <p>
-    그럼 표준에는 왜 다른 컨테이너가 또 있을까? <code>vector</code>는 값을 메모리에 <strong>빈틈없이 나란히</strong> 둔다. 그래서 번호로 바로 꺼낼 수 있고(<code>v[2]</code>) 한 바퀴 도는 것도 빠르다.
-    대신 <strong>중간이나 앞에 끼워 넣으면 그 뒤의 원소를 전부 한 칸씩 밀어야 하고</strong>, 중간에서 빼면 전부 한 칸씩 당겨야 한다.
-  </p>
-  <figure>
-    <img src="assets/img/12_vector_insert.png"
-         alt="10 20 30 40 50 이 든 vector 의 40 자리에 35 를 넣자 40 과 50 이 한 칸씩 뒤로 복사되고, 다시 30 을 지우자 35 40 50 이 한 칸씩 앞으로 복사되는 그림">
-    <figcaption><code>vector</code>의 중간에 넣고 빼기. 35를 넣으려고 뒤의 두 개를 <strong>밀고</strong>(복사 2회), 30을 빼려고 뒤의 세 개를 <strong>당겼다</strong>(복사 3회). 원소가 360개면 최대 360번이다.</figcaption>
-  </figure>
-  <p>
-    <strong><code>std::list&lt;T&gt;</code></strong>는 <strong>연결 리스트</strong>(linked list)다. 원소 하나하나가 <strong>노드</strong>(node)라는 따로 떨어진 조각에 들고, 노드마다 <strong>값과 다음 노드의 주소</strong>를 함께 가진다. 노드들은 메모리 여기저기에 흩어져 있고 주소로만 이어진다.
-    그래서 중간에 넣을 때 아무것도 밀 필요가 없다 — <strong>새 노드를 만들고 연결 두 개만 바꾸면 끝</strong>이다. 대신 번호로 바로 갈 수 없다. 세 번째 원소를 보려면 첫 노드부터 연결을 따라 두 번 가야 하고, 그래서 <code>l[2]</code>는 아예 없다.
-  </p>
-  <figure>
-    <img src="assets/img/12_list_insert.png"
-         alt="100 노드와 300 노드 사이에 200 이 든 새 노드를 끼우고, 100 의 next 가 200 을, 200 의 next 가 300 을 가리키게 연결만 바꾼 그림">
-    <figcaption><code>list</code>의 중간에 넣기. 100과 300 사이에 새 노드 200을 만들고 <code>next</code> 연결 두 개만 바꿨다. 300은 제자리에 있다.</figcaption>
-  </figure>
-  <p>
-    <strong><code>std::deque&lt;T&gt;</code></strong>(덱, double-ended queue — 「양쪽이 열린 줄」)는 그 중간쯤이다. 값을 <strong>일정한 크기의 블록 여러 개</strong>에 나눠 담고 블록들을 목록으로 관리한다.
-    그래서 <strong>앞에도 뒤에도</strong> 빨리 붙일 수 있고(<code>push_front</code>·<code>push_back</code>), <code>d[2]</code>처럼 번호로도 꺼낼 수 있다. 다만 중간에 넣으면 <code>vector</code>처럼 밀어야 한다.
-  </p>
-  <pre class="lang-cpp"><code>std::vector&lt;float&gt; v = {10, 20, 30};
-std::list&lt;float&gt;   l = {10, 20, 30};
-std::deque&lt;float&gt;  d = {10, 20, 30};
-
-v.insert(v.begin(), 5);   // vector : 앞에 넣으려면 10, 20, 30 을 전부 한 칸씩 민다
-l.push_front(5);          // list   : 새 노드를 만들어 연결만 바꾼다
-d.push_front(5);          // deque  : 앞쪽 블록에 붙인다 — 뒤의 값은 그대로다
-
-v[2];  d[2];              // vector·deque : 번호로 바로 꺼낸다 (둘 다 20)
-// l[2];                  // list 는 컴파일 오류 — 앞에서부터 연결을 따라가야 한다</code></pre>
-  <div class="box firstseen">
-    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
-    <dl>
-      <dt>#include &lt;list&gt; · #include &lt;deque&gt;</dt>
-      <dd>컨테이너마다 헤더가 따로 있다. 쓰려면 맨 위에 그 헤더를 더한다.</dd>
-      <dt>v.insert(v.begin(), 5)</dt>
-      <dd><code>v.begin()</code>이 가리키는 자리 — 맨 앞 — 에 5를 끼워 넣는다. <code>begin()</code>처럼 원소의 자리를 가리키는 것을 <strong>반복자</strong>(iterator)라고 하고, 13회에서 본격적으로 쓴다.</dd>
-      <dt>push_front(x)</dt>
-      <dd><code>push_back</code>의 반대쪽이다. 맨 앞에 붙인다. <code>list</code>와 <code>deque</code>에는 있고 <code>vector</code>에는 없다 — 앞에 붙이는 것이 비싸기 때문이다.</dd>
-    </dl>
-  </div>
-  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 열</strong>이 고르는 기준이다.</p>
-  <div class="tablewrap">
-  <table>
-    <tr><th>컨테이너</th><th>번호로 꺼내기 <code>[i]</code></th><th>앞에 넣기</th><th>중간에 넣기</th><th>언제 쓰나</th></tr>
-    <tr><td><code>std::vector</code></td><td>바로</td><td>전부 민다</td><td>뒤를 전부 민다</td><td><strong>기본값.</strong> 뒤에만 붙이고 한 바퀴 도는 일</td></tr>
-    <tr><td><code>std::deque</code></td><td>바로</td><td><strong>빠르다</strong></td><td>민다</td><td>앞뒤 양쪽에서 넣고 빼는 대기열 — 오래된 것을 앞에서 버리고 새것을 뒤에 붙이는 경우</td></tr>
-    <tr><td><code>std::list</code></td><td><strong>없다</strong> (따라가야 한다)</td><td>빠르다</td><td><strong>연결만 바꾼다</strong></td><td>중간에서 넣고 빼는 일이 아주 잦을 때</td></tr>
-  </table>
-  </div>
-  <p>
-    이 과목의 코드에는 중간에 넣고 빼는 자리가 거의 없다. 라이다 값은 통째로 왔다가 통째로 버려지고, 찾아낸 콘 목록은 뒤에만 붙는다.
-    그리고 값이 나란히 붙어 있는 <code>vector</code>는 한 바퀴 도는 일에서 특히 빠르다. 그래서 <strong>고민되면 <code>vector</code></strong>이고, 이 회차의 나머지도 <code>vector</code>로 간다.
-  </p>
 
   <h3>예제에 적용 — <code>wheel_count</code>를 없애고, 둘의 크기를 물어본다</h3>
   <p>v1의 <code>wheel_count</code>가 「개수를 따로 들고 다닌다」의 그 모양이다. 바퀴 개수는 변하지 않으니 <code>std::array</code>로 바꾼다. 맨 위에 <code>#include &lt;array&gt;</code>를 더한다.</p>
@@ -491,7 +434,7 @@ int main()
     자리를 하나씩 늘리면 매번 재할당이 나므로, 대개 <strong>지금의 두 배</strong>로 늘린다 — 1 → 2 → 4 → 8 → …
   </p>
   <figure>
-    <img src="assets/img/12_vector_growth.png"
+    <img src="assets/img/12_vector_growth.png" width="500"
          alt="size 3 capacity 4 인 배열에 push_back 을 두 번 해서 자리가 모자라자 더 큰 자리를 새로 잡고 값을 전부 옮기는 그림">
     <figcaption><strong>세 번째 줄</strong>이 재할당이다. 자리가 꽉 찼는데 하나를 더 넣으라고 하자 더 큰 자리를 새로 잡고 있던 값을 전부 옮긴 뒤 원래 자리를 버렸다.</figcaption>
   </figure>
@@ -712,6 +655,196 @@ int main()
     범위 for 문에서 <code>auto</code> 대신 <code>const auto &amp;</code>를 써 줘. 값을 바꿔야 하는 자리만 <code>auto &amp;</code>로 하고, 왜 그 자리만 그런지 알려 줘.
   </div>
 
+  <!-- ── ⑥ list 와 deque ── -->
+  <h2 id="listdeque">⑥ <code>list</code>와 <code>deque</code> — <code>vector</code>와 무엇이 다른가 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <h3>개념 — <code>vector</code>는 앞과 중간에서 넣고 빼는 것이 비싸다</h3>
+  <p>
+    지금까지 <code>vector</code> 하나로 다 했다. 그런데 표준에는 왜 다른 컨테이너가 또 있을까?
+    <code>vector</code>는 값을 메모리에 <strong>빈틈없이 나란히</strong> 둔다. 그래서 번호로 바로 꺼낼 수 있고(<code>v[3]</code>) 한 바퀴 도는 것도 빠르다.
+    대신 <strong>중간이나 앞에 끼워 넣으면 그 뒤의 원소를 전부 한 칸씩 밀어야 하고</strong>, 빼면 전부 한 칸씩 당겨야 한다. 끝(<code>push_back</code>)에서만 싸다.
+  </p>
+  <figure>
+    <img src="assets/img/12_vector_insert.png" width="440"
+         alt="10 20 30 40 50 이 든 vector 의 40 자리에 35 를 넣자 40 과 50 이 한 칸씩 뒤로 복사되고, 다시 30 을 지우자 35 40 50 이 한 칸씩 앞으로 복사되는 그림">
+    <figcaption><code>vector</code>의 중간에 넣고 빼기. 35를 넣으려고 뒤의 두 개를 <strong>밀고</strong>(복사 2회), 30을 빼려고 뒤의 세 개를 <strong>당겼다</strong>(복사 3회). 맨 앞에서 빼면 나머지 전부를 당긴다.</figcaption>
+  </figure>
+
+  <h3>개념 — <code>std::list</code>: 연결 리스트</h3>
+  <p>
+    <strong><code>std::list&lt;T&gt;</code></strong>는 <strong>연결 리스트</strong>(linked list)다. 원소 하나하나가 <strong>노드</strong>(node)라는 따로 떨어진 조각에 들고, 노드마다 <strong>값과 다음 노드의 주소</strong>를 함께 가진다(<code>std::list</code>는 이전 노드의 주소도 가진다).
+    노드들은 메모리 여기저기에 흩어져 있고 주소로만 이어진다. 그래서 어디에 넣든 아무것도 밀 필요가 없다 — <strong>새 노드를 만들고 연결만 바꾸면 끝</strong>이다. 빼는 것도 연결을 끊고 그 노드만 지우면 된다.
+  </p>
+  <figure>
+    <img src="assets/img/12_list_insert.png" width="640"
+         alt="100 노드와 300 노드 사이에 200 이 든 새 노드를 끼우고, 100 의 next 가 200 을, 200 의 next 가 300 을 가리키게 연결만 바꾼 그림">
+    <figcaption><code>list</code>의 중간에 넣기. 100과 300 사이에 새 노드 200을 만들고 <code>next</code> 연결 두 개만 바꿨다. 300은 제자리에 있다.</figcaption>
+  </figure>
+  <p>
+    대신 <strong>번호로 바로 갈 수 없다.</strong> 네 번째 원소를 보려면 첫 노드부터 연결을 세 번 따라가야 한다. 그래서 <code>list</code>에는 <code>[]</code>와 <code>at()</code>이 아예 없다. 노드마다 주소를 따로 들고 있어 메모리도 더 쓰고, 값이 흩어져 있어 한 바퀴 도는 것도 <code>vector</code>보다 느린 편이다.
+  </p>
+
+  <h3>개념 — <code>std::deque</code>: 앞뒤가 다 열린 컨테이너</h3>
+  <p>
+    <strong><code>std::deque&lt;T&gt;</code></strong>(「덱」이라고 읽는다. double-ended queue — 양쪽이 열린 대기열)는 둘의 중간쯤이다. 값을 <strong>일정한 크기의 블록 여러 개</strong>에 나눠 담고, 블록들의 주소를 <strong>블록 목록</strong>으로 따로 관리한다.
+  </p>
+  <figure>
+    <img src="assets/img/12_deque_blocks.png" width="560"
+         alt="블록 목록 세 칸이 각각 네 칸짜리 블록 셋을 가리킨다. 첫 블록은 앞 두 칸이 비어 있어 push_front 가 거기에 들어가고, 마지막 블록은 뒤 두 칸이 비어 있어 push_back 이 거기에 들어간다">
+    <figcaption><code>deque</code>의 구조. 첫 블록의 앞쪽과 마지막 블록의 뒤쪽에 빈칸이 있어 <strong>앞에도 뒤에도</strong> 아무것도 밀지 않고 붙는다. 블록이 차면 새 블록을 하나 더 잡고 목록에 적는다.</figcaption>
+  </figure>
+  <p>
+    그래서 <code>push_front</code>·<code>pop_front</code>가 <code>push_back</code>만큼 싸다. 몇 번째 원소가 어느 블록 몇 번째 칸에 있는지 계산할 수 있으므로 <code>d[3]</code>처럼 번호로도 꺼낸다.
+    다만 <strong>중간에 넣으면</strong> <code>vector</code>처럼 밀어야 한다(앞쪽과 뒤쪽 중 짧은 쪽을 민다).
+  </p>
+
+  <h3>개념 — 셋을 나란히 놓으면</h3>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 열</strong>에서 자기 상황을 찾는다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>컨테이너</th><th>번호로 꺼내기 <code>[i]</code></th><th>끝에 넣고 빼기</th><th>앞에 넣고 빼기</th><th>중간에 넣고 빼기</th><th>언제 쓰나</th></tr>
+    <tr><td><code>std::vector</code></td><td>바로</td><td>싸다</td><td><strong>전부 민다</strong></td><td>뒤를 전부 민다</td><td><strong>기본값.</strong> 뒤에만 붙이고 한 바퀴 도는 일 — 이 과목의 거의 전부</td></tr>
+    <tr><td><code>std::deque</code></td><td>바로</td><td>싸다</td><td><strong>싸다</strong></td><td>짧은 쪽을 민다</td><td>새것은 뒤에 붙이고 오래된 것은 앞에서 버리는 <strong>대기열</strong></td></tr>
+    <tr><td><code>std::list</code></td><td><strong>없다</strong> (따라가야 한다)</td><td>싸다</td><td>싸다</td><td><strong>연결만 바꾼다</strong></td><td>중간에서 넣고 빼는 일이 아주 잦을 때</td></tr>
+  </table>
+  </div>
+  <p>세 컨테이너는 <code>push_back</code>·<code>size()</code>·<code>insert</code>·<code>erase</code>·범위 for 를 <strong>같은 이름으로</strong> 쓴다. 그래서 타입 이름 하나만 바꿔 끼워 볼 수 있다.</p>
+
+  <h3>예제에 적용 — 최근 스캔 값 10개만 남기는 기록</h3>
+  <p>
+    로봇은 보통 <strong>최근 몇 개</strong>만 기억한다 — 새 값이 들어오면 뒤에 붙이고, 10개를 넘으면 가장 오래된 맨 앞을 버린다. 이것을 세 컨테이너로 똑같이 짜서, 버리는 동안 <strong>원소가 몇 번 복사되는지</strong> 센다.
+    세는 장치는 ③절과 같다. 이번에는 원소 하나(<code>Range</code>)에 <strong>복사 생성자</strong>와 <strong>복사 대입 연산자</strong>(11회) 둘 다 세는 줄을 넣는다 — 밀고 당기는 것은 「옆 칸에 대입」이기 때문이다.
+    이 단계도 <strong>짧은 프로그램으로 따로</strong> 만든다.
+  </p>
+  <h3>6단계 (v6) — 컨테이너 셋에 같은 일을 시킨다</h3>
+  <pre class="lang-cpp"><code>const size_t kKeep = 10;               // 최근 몇 개만 남기나
+int g_copy = 0;                        // Range 가 복사된 횟수 (복사 생성 + 복사 대입)
+
+struct Range {
+  float m;                             // 거리 값 하나
+  Range(float v) : m(v) {}
+  Range(const Range &amp; o) : m(o.m) { ++g_copy; }                              // 복사 생성자
+  Range &amp; operator=(const Range &amp; o) { m = o.m; ++g_copy; return *this; }    // 복사 대입 연산자
+};
+
+int main()
+{
+  std::vector&lt;Range&gt; v;
+  std::deque&lt;Range&gt;  d;
+  std::list&lt;Range&gt;   l;
+  v.reserve(kKeep + 1);                // 재할당 복사는 ④절에서 봤으니 여기서는 빼고 본다
+
+  int cv = 0, cd = 0, cl = 0;          // 버리는 동안 난 복사 횟수
+  for (int i = 0; i &lt; 100; ++i) {
+    v.push_back(Range(1.0f * i));      // 새 값은 뒤에 붙인다
+    d.push_back(Range(1.0f * i));
+    l.push_back(Range(1.0f * i));
+    if (v.size() &gt; kKeep) {            // 넘치면 맨 앞(가장 오래된 것)을 버린다
+      g_copy = 0; v.erase(v.begin()); cv += g_copy;
+      g_copy = 0; d.erase(d.begin()); cd += g_copy;
+      g_copy = 0; l.erase(l.begin()); cl += g_copy;
+    }
+  }
+  // … 횟수를 찍는다
+
+  g_copy = 0; v.insert(v.begin() + 3, Range(-1.0f));
+  g_copy = 0; l.insert(std::next(l.begin(), 3), Range(-1.0f));   // list 는 + 3 이 안 된다</code></pre>
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>#include &lt;deque&gt; · &lt;list&gt; · &lt;iterator&gt;</dt>
+      <dd>컨테이너마다 헤더가 따로 있다. <code>&lt;iterator&gt;</code>는 아래 <code>std::next</code>가 든 헤더다.</dd>
+      <dt>v.begin()</dt>
+      <dd>맨 앞 원소의 <strong>자리</strong>를 가리킨다. 이렇게 원소의 자리를 가리키는 것을 <strong>반복자</strong>(iterator)라고 하고, 13회에서 본격적으로 쓴다. <code>erase</code>·<code>insert</code>는 번호가 아니라 이 자리를 받는다.</dd>
+      <dt>v.erase(v.begin())</dt>
+      <dd>그 자리의 원소를 지운다. 세 컨테이너 모두 같은 이름이다. <code>deque</code>·<code>list</code>에는 같은 일을 하는 <code>pop_front()</code>도 있지만, <code>vector</code>에는 없어서 셋 다 <code>erase</code>로 맞췄다 — 세 줄이 이름까지 똑같다.</dd>
+      <dt>std::next(l.begin(), 3)</dt>
+      <dd>맨 앞 자리에서 3칸 간 자리다. <code>vector</code>는 <code>v.begin() + 3</code>으로 한 번에 건너뛰지만, <code>list</code>는 번호로 못 가므로 <code>std::next</code>로 한 칸씩 따라가야 한다.</dd>
+    </dl>
+  </div>
+  <h3>실제로 나온 출력</h3>
+  <pre><code>⑥ 최근 10개만 남긴다 — 100개가 들어오는 동안 앞에서 버린다
+  vector : 원소 복사 900회
+  deque  : 원소 복사 0회
+  list   : 원소 복사 0회
+
+⑥ 10개 중 앞에서 3번째 자리에 하나를 끼워 넣는다 (넣는 값 자신의 복사 1회는 뺐다)
+  vector : 원소 복사 7회
+  list   : 원소 복사 0회
+
+⑥ 번호로 꺼낸다
+  v[3] = -1, d[3] = 93  (vector·deque 는 [] 로 바로 꺼낸다)
+  list 의 3번째 = -1  (list 는 [] 가 없어 앞에서부터 세 번 따라갔다)</code></pre>
+  <!-- fullcode "전체 코드 — v6 (6단계 · list 와 deque) main.cpp" build="cmake --build build && ./build/scan_list"
+       l12_container/steps/step6/main.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — v6 (6단계 · list 와 deque) main.cpp</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/scan_list</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 라이다 스캔 다루기 — v6 (6단계: list 와 deque)
+#include &lt;deque&gt;
+#include &lt;iostream&gt;
+#include &lt;iterator&gt;
+#include &lt;list&gt;
+#include &lt;vector&gt;
+
+const size_t kKeep = 10;               // 최근 몇 개만 남기나
+int g_copy = 0;                        // Range 가 복사된 횟수 (복사 생성 + 복사 대입)
+
+struct Range {
+  float m;                             // 거리 값 하나
+  Range(float v) : m(v) {}
+  Range(const Range &amp; o) : m(o.m) { ++g_copy; }                              // 복사 생성자
+  Range &amp; operator=(const Range &amp; o) { m = o.m; ++g_copy; return *this; }    // 복사 대입 연산자
+};
+
+int main()
+{
+  std::vector&lt;Range&gt; v;
+  std::deque&lt;Range&gt;  d;
+  std::list&lt;Range&gt;   l;
+  v.reserve(kKeep + 1);                // 재할당 복사는 ④절에서 봤으니 여기서는 빼고 본다
+
+  std::cout &lt;&lt; &quot;⑥ 최근 &quot; &lt;&lt; kKeep &lt;&lt; &quot;개만 남긴다 — 100개가 들어오는 동안 앞에서 버린다\n&quot;;
+  int cv = 0, cd = 0, cl = 0;          // 버리는 동안 난 복사 횟수
+  for (int i = 0; i &lt; 100; ++i) {
+    v.push_back(Range(1.0f * i));      // 새 값은 뒤에 붙인다
+    d.push_back(Range(1.0f * i));
+    l.push_back(Range(1.0f * i));
+    if (v.size() &gt; kKeep) {            // 넘치면 맨 앞(가장 오래된 것)을 버린다
+      g_copy = 0; v.erase(v.begin()); cv += g_copy;
+      g_copy = 0; d.erase(d.begin()); cd += g_copy;
+      g_copy = 0; l.erase(l.begin()); cl += g_copy;
+    }
+  }
+  std::cout &lt;&lt; &quot;  vector : 원소 복사 &quot; &lt;&lt; cv &lt;&lt; &quot;회\n&quot;;
+  std::cout &lt;&lt; &quot;  deque  : 원소 복사 &quot; &lt;&lt; cd &lt;&lt; &quot;회\n&quot;;
+  std::cout &lt;&lt; &quot;  list   : 원소 복사 &quot; &lt;&lt; cl &lt;&lt; &quot;회\n&quot;;
+
+  std::cout &lt;&lt; &quot;\n⑥ 10개 중 앞에서 3번째 자리에 하나를 끼워 넣는다 (넣는 값 자신의 복사 1회는 뺐다)\n&quot;;
+  g_copy = 0; v.insert(v.begin() + 3, Range(-1.0f));
+  std::cout &lt;&lt; &quot;  vector : 원소 복사 &quot; &lt;&lt; g_copy - 1 &lt;&lt; &quot;회\n&quot;;
+  g_copy = 0; l.insert(std::next(l.begin(), 3), Range(-1.0f));   // list 는 + 3 이 안 된다
+  std::cout &lt;&lt; &quot;  list   : 원소 복사 &quot; &lt;&lt; g_copy - 1 &lt;&lt; &quot;회\n&quot;;
+
+  std::cout &lt;&lt; &quot;\n⑥ 번호로 꺼낸다\n&quot;;
+  std::cout &lt;&lt; &quot;  v[3] = &quot; &lt;&lt; v[3].m &lt;&lt; &quot;, d[3] = &quot; &lt;&lt; d[3].m &lt;&lt; &quot;  (vector·deque 는 [] 로 바로 꺼낸다)\n&quot;;
+  std::cout &lt;&lt; &quot;  list 의 3번째 = &quot; &lt;&lt; std::next(l.begin(), 3)-&gt;m &lt;&lt; &quot;  (list 는 [] 가 없어 앞에서부터 세 번 따라갔다)\n&quot;;
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+  <div class="interp">
+    <strong>해석:</strong> 맨 앞을 90번 버리는 동안 <code>vector</code>는 <strong>900회</strong> 복사했다 — 버릴 때마다 남은 10개를 한 칸씩 당겼다. <code>deque</code>와 <code>list</code>는 <strong>0회</strong>다. 세 줄은 이름까지 똑같은 <code>erase</code>인데 이렇게 갈린다.
+    가운데에 끼워 넣을 때는 <code>vector</code>가 뒤의 7개를 밀었고 <code>list</code>는 연결만 바꿨다.
+    마지막 줄의 <code>d[3]</code>이 93인 것은 <code>d</code>에는 끼워 넣지 않았기 때문이다 — <code>deque</code>는 앞에서 버리기만 해서 90~99가 남아 있다.
+    그렇다고 <code>list</code>를 기본으로 쓸 이유는 없다. 번호로 못 꺼내고, 한 바퀴 도는 것은 <code>vector</code>가 빠르다. <strong>앞에서 버리는 대기열이면 <code>deque</code>, 중간에서 자주 넣고 빼면 <code>list</code>, 나머지는 <code>vector</code></strong>로 고르면 대체로 맞다.
+  </div>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    이 코드에서 <code>vector</code>의 맨 앞이나 중간에서 <code>insert</code>·<code>erase</code>를 반복하는 곳이 있는지 찾아 줘. 있으면 <code>deque</code>나 <code>list</code>가 나은지, 그 컨테이너를 번호(<code>[]</code>)로 꺼내 쓰는 곳은 없는지 같이 알려 줘.
+  </div>
+
   <!-- ── 실습 ── -->
   <h2 id="lab">🧪 실습 — 개수를 열 배로 늘리면 재할당은 몇 번 늘어나나 <span class="badge b-green">🟢 맡긴다</span></h2>
   <div class="lab-block">
@@ -908,6 +1041,7 @@ add_executable(cone_list main.cpp)</code></pre></div>
     <tr><td>함수 인자가 보일 때</td><td>"<code>vector</code>나 구조체를 값으로 받는 인자를 찾아 줘. 읽기만 하는 것은 <code>const</code> 참조로 바꾸고, 작은 값은 그대로 둬."</td></tr>
     <tr><td>담는 코드일 때</td><td>"담는 코드 앞에 <code>reserve</code>를 넣어 줘. 개수는 원본 배열의 크기로 잡고, 숫자를 코드에 박지 말아 줘."</td></tr>
     <tr><td>반복문이 보일 때</td><td>"범위 for 에서 <code>auto</code> 대신 <code>const auto &amp;</code>를 써 줘. 값을 바꿔야 하는 자리만 <code>auto &amp;</code>로 해 줘."</td></tr>
+    <tr><td>앞이나 중간에서 넣고 뺄 때</td><td>"<code>vector</code>의 맨 앞이나 중간에서 <code>insert</code>·<code>erase</code>를 반복하는 곳을 찾아 줘. <code>deque</code>나 <code>list</code>가 나은지, 번호로 꺼내 쓰는 곳은 없는지 같이 알려 줘."</td></tr>
     <tr><td>C 스타일 배열이 보일 때</td><td>"<code>float a[4]</code> 같은 배열을 <code>std::array</code>나 <code>std::vector</code>로 바꿔 줘. 크기를 따로 들고 다니지 않게 해 줘."</td></tr>
     <tr><td>복사가 나는지 궁금할 때</td><td>"이 구조체에 복사 생성자를 넣어 복사될 때마다 숫자를 세게 해 줘. 그 숫자를 찍어서 어디서 복사가 나는지 보여 줘."</td></tr>
   </table>
@@ -921,6 +1055,7 @@ add_executable(cone_list main.cpp)</code></pre></div>
     <li><input type="checkbox" id="c3"><label for="c3">담는 코드 앞에 <code>reserve</code>가 있나? 그 개수는 <strong>숫자가 아니라 크기</strong>로 잡았나?</label></li>
     <li><input type="checkbox" id="c4"><label for="c4">범위 for 가 <code>const auto &amp;</code>인가? 값을 바꾸는 자리만 <code>auto &amp;</code>인가?</label></li>
     <li><input type="checkbox" id="c5"><label for="c5">개수가 고정인데 <code>vector</code>를 쓰거나, 변하는데 <code>array</code>를 쓰지 않았나? C 스타일 배열이 남아 있지 않나?</label></li>
+    <li><input type="checkbox" id="c7"><label for="c7">맨 앞에서 자꾸 버리는 <code>vector</code>가 없나? 있으면 <code>deque</code>로 바꿀 이유가 있는지 물었나?</label></li>
     <li><input type="checkbox" id="c6"><label for="c6">연습문제의 복사 횟수가 「담는 동안 8회, 합을 구하는 동안 0회」가 됐나?</label></li>
   </ul>
 
