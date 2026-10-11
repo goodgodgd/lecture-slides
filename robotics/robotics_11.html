@@ -1471,6 +1471,18 @@ add_executable(health_log main.cpp)</code></pre></div>
     </p>
   </details>
   <details>
+    <summary>왜 돌려줄 때는 <code>std::move</code>를 쓰지 않나 — <code>return s;</code></summary>
+    <p>
+      <code>std::move</code>는 「이 변수는 이제 안 쓴다」는 표시다. <strong>부르는 쪽</strong>의 <code>warm_up(std::move(b))</code>에서는 컴파일러가 그 줄 뒤에 <code>b</code>를 또 쓸지 알 수 없으므로 사람이 표시해 줘야 한다.
+      <strong>돌려주는 쪽</strong>의 <code>return s;</code>는 다르다. 그 줄이 끝나면 <code>s</code>는 바로 사라지므로 아무도 다시 볼 수 없다는 것을 컴파일러가 안다.
+      그래서 <strong>지역 변수나 매개변수 이름 하나를 돌려줄 때는 컴파일러가 알아서 이동한다.</strong> 붙여도 같은 일을 할 뿐이고, 지역 변수라면 오히려 컴파일러의 최적화를 막을 수도 있다.
+    </p>
+    <p>
+      단, 함수가 끝나도 남아 있는 것을 돌려줄 때는 이야기가 다르다. 클래스 안에서 멤버를 돌려주는 <code>return s_;</code>는 복사로 본다. 소유권을 넘겨줄 생각이면 <code>return std::move(s_);</code>라고 써야 한다.
+      <code>unique_ptr</code>라면 빠뜨렸을 때 컴파일 오류가 나므로 빌드에서 알 수 있다.
+    </p>
+  </details>
+  <details>
     <summary><code>make_shared</code>가 <code>shared_ptr(new T)</code>보다 나은 이유</summary>
     <p>
       <code>shared_ptr</code>은 객체 말고 참조 횟수를 둘 자리도 따로 필요하다. <code>std::shared_ptr&lt;Sensor&gt; p(new Sensor(...))</code>라고 쓰면 메모리를 두 번 잡는다 — 객체 한 번, 참조 횟수 한 번.

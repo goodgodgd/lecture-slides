@@ -28,9 +28,9 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약 — 용어 다섯 개</a>
+  <a href="#summary">한 장 요약 — 용어 여섯 개</a>
   <a href="#start">① 오늘 만들 것 — AI가 준 그대로</a>
-  <a href="#container">② 컨테이너 · <code>vector</code> · <code>array</code></a>
+  <a href="#container">② 컨테이너 · <code>vector</code> · <code>array</code> · <code>list</code> · <code>deque</code></a>
   <a href="#byref">③ 값 전달과 참조 전달 · <code>const &amp;</code></a>
   <a href="#reserve">④ 용량과 재할당 · <code>reserve</code></a>
   <a href="#rangefor">⑤ 범위 기반 for · <code>const auto &amp;</code></a>
@@ -50,6 +50,7 @@
     <span class="lab">오늘 답할 질문</span>
     <ol>
       <li><code>std::vector</code>와 <code>std::array</code>는 무엇이 다르고, C 스타일 배열은 왜 안 쓰나?</li>
+      <li><code>list</code>와 <code>deque</code>는 언제 <code>vector</code>보다 나은가?</li>
       <li>함수에 <code>vector</code>를 넘길 때 무슨 일이 일어나나? 인자는 어떻게 받아야 하나?</li>
       <li><code>reserve()</code> 한 줄은 무엇을 없애나?</li>
       <li><code>for (auto x : v)</code>와 <code>for (const auto &amp; x : v)</code>는 무엇이 다른가?</li>
@@ -62,8 +63,8 @@
     이 과목에서 쓰는 컨테이너는 사실상 <code>std::vector</code> 하나이고, 그 하나를 제대로 쓰는 법이 나머지 전부보다 중요하다.
   </p>
   <p>
-    오늘은 <strong>용어 다섯 개</strong>를 다룬다. 절마다 <strong>먼저 그 문법이 무엇이고 왜 생겼는지를 설명하고</strong>, 그다음에 <strong>라이다 스캔을 다루는 작은 프로그램</strong>에 그것을 적용한다.
-    오늘 다루는 것 중 셋은 <strong>틀린 답을 내지 않는다.</strong> 맞는 답을 내면서 쓸데없이 복사할 뿐이다. 그래서 복사 횟수와 시간을 <strong>실제로 세고 잰다.</strong>
+    오늘은 <strong>용어 여섯 개</strong>를 다룬다. 절마다 <strong>먼저 그 문법이 무엇이고 왜 생겼는지를 설명하고</strong>, 그다음에 <strong>라이다 스캔을 다루는 작은 프로그램</strong>에 그것을 적용한다.
+    오늘 다루는 것 중 셋은 <strong>틀린 답을 내지 않는다.</strong> 맞는 답을 내면서 쓸데없이 복사할 뿐이다. 그래서 복사와 재할당이 몇 번 일어나는지 <strong>실제로 센다.</strong>
   </p>
 
   <!-- ── 한 장 요약표 ── -->
@@ -73,6 +74,7 @@
   <table class="summary-table">
     <tr><th>용어</th><th>코드에서 이렇게 보인다</th><th>이것만 알면 된다</th></tr>
     <tr><td>컨테이너 · <code>std::vector</code> · <code>std::array</code></td><td><code>std::vector&lt;float&gt; v;</code> / <code>std::array&lt;float, 4&gt; w;</code></td><td><code>vector</code>가 <strong>기본값.</strong> 개수가 코드에 이미 적혀 있을 때만 <code>array</code>. C 배열은 안 쓴다</td></tr>
+    <tr><td><code>std::list</code> · <code>std::deque</code></td><td><code>l.push_front(x);</code> / <code>d.push_front(x);</code></td><td>중간·앞에 자주 넣고 뺄 때 고려한다. <code>list</code>는 <code>[]</code>가 없다. <strong>고민되면 <code>vector</code></strong></td></tr>
     <tr><td>값 전달 · 참조 전달</td><td><code>float front(const ScanMsg &amp; msg)</code></td><td>읽기만 할 인자는 <strong><code>const &amp;</code>가 기본값.</strong> 값으로 받으면 부를 때마다 사본이 생긴다</td></tr>
     <tr><td>복사 생성자로 복사 세기</td><td><code>ScanMsg(const ScanMsg &amp; o) … { ++g_copy; }</code></td><td>복사는 화면에 안 보인다. 11회의 복사 생성자에 <strong>세는 줄</strong>을 넣으면 보인다</td></tr>
     <tr><td>용량 · 재할당 · <code>reserve</code></td><td><code>v.reserve(n);</code></td><td>몇 개 들어올지 알면 담기 전에 한 줄. 재할당이 0번이 된다</td></tr>
@@ -95,11 +97,12 @@
   <h3>읽는 법</h3>
   <ul>
     <li>먼저 <strong>AI에게 시켜서 받은 코드를 그대로</strong> 돌린다. 맞는 값이 나온다.</li>
-    <li>②절부터는 절마다 <strong>「개념」</strong>이 먼저 온다 — 그 문법이 무엇이고 어떤 문제를 풀려고 생겼는지. 그다음 <strong>「예제에 적용」</strong>에서 프로그램의 한 곳을 고치거나 <strong>세고 재는 장치를 몇 줄 더한다.</strong></li>
+    <li>②절부터는 절마다 <strong>「개념」</strong>이 먼저 온다 — 그 문법이 무엇이고 어떤 문제를 풀려고 생겼는지. 그다음 <strong>「예제에 적용」</strong>에서 프로그램의 한 곳을 고치거나 <strong>세는 장치를 몇 줄 더한다.</strong></li>
     <li>고치는 자리는 <strong>고치기 전</strong>(붉은 테두리)과 <strong>고친 뒤</strong>(푸른 테두리)를 따로 놓는다. 더하기만 하는 단계는 더한 뒤의 모양만 보인다.</li>
     <li>그 아래 <strong>📄 「전체 코드」 상자</strong>를 누르면 그 단계의 <code>main.cpp</code> 전체가 나온다. 첫 줄 주석에 <strong>버전(v1, v2, …)</strong>이 있다. <strong>어느 버전을 펼쳐도 그대로 빌드되고 돌아간다.</strong></li>
-    <li>「실제로 나온 출력」에는 그 절이 새로 찍는 줄만 보인다. 전체 출력은 실습 「성공 화면」에 한 번 있다.</li>
-    <li>빌드는 <strong>CMake</strong>다. 시간을 재는 절이 있어 <code>CMakeLists.txt</code>에 최적화를 켜는 한 줄이 들어 있다.</li>
+    <li>v1~v3은 <strong>프로그램 하나가 자란다.</strong> v4·v5는 그 절에서 볼 것 하나만 남긴 <strong>짧은 프로그램</strong>이다 — 앞 단계의 출력이 섞이면 봐야 할 줄이 묻히기 때문이다.</li>
+    <li>「실제로 나온 출력」에는 그 절이 새로 찍는 줄만 보인다.</li>
+    <li>빌드는 <strong>CMake</strong>다. <code>CMakeLists.txt</code>는 ①절 상자에 한 번 있고, 뒤 단계에서도 그대로 쓴다.</li>
   </ul>
 
   <h3>1단계 (v1) — 값으로 받고, C 배열에 담는다</h3>
@@ -134,8 +137,6 @@ int main()
       <dd>파일 맨 위에 둔 <strong>이름 붙은 상수</strong>다. <code>360</code>을 코드 여기저기에 박는 대신 이 이름을 쓴다. 실습에서 이 한 줄만 바꾸면 프로그램 전체가 따라오는 것을 본다.</dd>
       <dt>ranges(kScanSize, 1.0f)</dt>
       <dd>원소가 360개이고 <strong>전부 1.0으로 채워진</strong> <code>vector</code>를 만든다. 라이다 한 바퀴의 거리 값이 전부 1.0 m라고 치고 메시지를 채우는 데 썼다.</dd>
-      <dt>set(CMAKE_BUILD_TYPE Release)</dt>
-      <dd>📄 상자의 <code>CMakeLists.txt</code>에 있는 줄이다. 8회에서 <code>-DCMAKE_BUILD_TYPE</code> 옵션으로 본 것을 파일 안에 적었다. 최적화를 켜고 빌드한다 — <strong>시간을 잴 때는 켜야</strong> 실제 프로그램에 가까운 숫자가 나온다.</dd>
     </dl>
   </div>
   <h3>실제로 나온 출력</h3>
@@ -183,14 +184,13 @@ int main()
   <div class="codefile"><div class="fname">CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre class="lang-cmake"><code>cmake_minimum_required(VERSION 3.16)
 project(scan_list CXX)
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_BUILD_TYPE Release)             # 시간을 재는 회차라 최적화를 켠다
 add_executable(scan_list main.cpp)</code></pre></div>
 </details>
 <!-- /fullcode -->
   <p>이 코드는 <strong>컴파일되고, 실행되고, 맞는 값을 낸다.</strong> 그래서 그냥 넘어가기 쉽다. 고칠 곳은 두 군데인데, 하나는 눈에 보이고(<code>wheel_count</code>) 하나는 안 보인다(<code>ScanMsg msg</code>).</p>
 
   <!-- ── ② 컨테이너 ── -->
-  <h2 id="container">② 컨테이너 — <code>vector</code>가 기본값, 개수가 박혀 있으면 <code>array</code> <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+  <h2 id="container">② 컨테이너 — <code>vector</code>·<code>array</code>·<code>list</code>·<code>deque</code> <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
   <h3>개념 — 값 여러 개를 담는 타입</h3>
   <p>
@@ -207,6 +207,64 @@ add_executable(scan_list main.cpp)</code></pre></div>
     <tr><td>C 스타일 배열 <code>float a[4]</code></td><td>컴파일할 때</td><td><strong>이 과목에서는 권하지 않는다.</strong> 자기 크기를 모른다 — 함수에 넘기는 순간 개수 정보가 사라져 개수를 따로 들고 다녀야 한다</td></tr>
   </table>
   </div>
+
+  <h3>개념 — <code>vector</code>가 불편한 자리, <code>list</code>와 <code>deque</code></h3>
+  <p>
+    그럼 표준에는 왜 다른 컨테이너가 또 있을까? <code>vector</code>는 값을 메모리에 <strong>빈틈없이 나란히</strong> 둔다. 그래서 번호로 바로 꺼낼 수 있고(<code>v[2]</code>) 한 바퀴 도는 것도 빠르다.
+    대신 <strong>중간이나 앞에 끼워 넣으면 그 뒤의 원소를 전부 한 칸씩 밀어야 하고</strong>, 중간에서 빼면 전부 한 칸씩 당겨야 한다.
+  </p>
+  <figure>
+    <img src="assets/img/12_vector_insert.png"
+         alt="10 20 30 40 50 이 든 vector 의 40 자리에 35 를 넣자 40 과 50 이 한 칸씩 뒤로 복사되고, 다시 30 을 지우자 35 40 50 이 한 칸씩 앞으로 복사되는 그림">
+    <figcaption><code>vector</code>의 중간에 넣고 빼기. 35를 넣으려고 뒤의 두 개를 <strong>밀고</strong>(복사 2회), 30을 빼려고 뒤의 세 개를 <strong>당겼다</strong>(복사 3회). 원소가 360개면 최대 360번이다.</figcaption>
+  </figure>
+  <p>
+    <strong><code>std::list&lt;T&gt;</code></strong>는 <strong>연결 리스트</strong>(linked list)다. 원소 하나하나가 <strong>노드</strong>(node)라는 따로 떨어진 조각에 들고, 노드마다 <strong>값과 다음 노드의 주소</strong>를 함께 가진다. 노드들은 메모리 여기저기에 흩어져 있고 주소로만 이어진다.
+    그래서 중간에 넣을 때 아무것도 밀 필요가 없다 — <strong>새 노드를 만들고 연결 두 개만 바꾸면 끝</strong>이다. 대신 번호로 바로 갈 수 없다. 세 번째 원소를 보려면 첫 노드부터 연결을 따라 두 번 가야 하고, 그래서 <code>l[2]</code>는 아예 없다.
+  </p>
+  <figure>
+    <img src="assets/img/12_list_insert.png"
+         alt="100 노드와 300 노드 사이에 200 이 든 새 노드를 끼우고, 100 의 next 가 200 을, 200 의 next 가 300 을 가리키게 연결만 바꾼 그림">
+    <figcaption><code>list</code>의 중간에 넣기. 100과 300 사이에 새 노드 200을 만들고 <code>next</code> 연결 두 개만 바꿨다. 300은 제자리에 있다.</figcaption>
+  </figure>
+  <p>
+    <strong><code>std::deque&lt;T&gt;</code></strong>(덱, double-ended queue — 「양쪽이 열린 줄」)는 그 중간쯤이다. 값을 <strong>일정한 크기의 블록 여러 개</strong>에 나눠 담고 블록들을 목록으로 관리한다.
+    그래서 <strong>앞에도 뒤에도</strong> 빨리 붙일 수 있고(<code>push_front</code>·<code>push_back</code>), <code>d[2]</code>처럼 번호로도 꺼낼 수 있다. 다만 중간에 넣으면 <code>vector</code>처럼 밀어야 한다.
+  </p>
+  <pre class="lang-cpp"><code>std::vector&lt;float&gt; v = {10, 20, 30};
+std::list&lt;float&gt;   l = {10, 20, 30};
+std::deque&lt;float&gt;  d = {10, 20, 30};
+
+v.insert(v.begin(), 5);   // vector : 앞에 넣으려면 10, 20, 30 을 전부 한 칸씩 민다
+l.push_front(5);          // list   : 새 노드를 만들어 연결만 바꾼다
+d.push_front(5);          // deque  : 앞쪽 블록에 붙인다 — 뒤의 값은 그대로다
+
+v[2];  d[2];              // vector·deque : 번호로 바로 꺼낸다 (둘 다 20)
+// l[2];                  // list 는 컴파일 오류 — 앞에서부터 연결을 따라가야 한다</code></pre>
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>#include &lt;list&gt; · #include &lt;deque&gt;</dt>
+      <dd>컨테이너마다 헤더가 따로 있다. 쓰려면 맨 위에 그 헤더를 더한다.</dd>
+      <dt>v.insert(v.begin(), 5)</dt>
+      <dd><code>v.begin()</code>이 가리키는 자리 — 맨 앞 — 에 5를 끼워 넣는다. <code>begin()</code>처럼 원소의 자리를 가리키는 것을 <strong>반복자</strong>(iterator)라고 하고, 13회에서 본격적으로 쓴다.</dd>
+      <dt>push_front(x)</dt>
+      <dd><code>push_back</code>의 반대쪽이다. 맨 앞에 붙인다. <code>list</code>와 <code>deque</code>에는 있고 <code>vector</code>에는 없다 — 앞에 붙이는 것이 비싸기 때문이다.</dd>
+    </dl>
+  </div>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 열</strong>이 고르는 기준이다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>컨테이너</th><th>번호로 꺼내기 <code>[i]</code></th><th>앞에 넣기</th><th>중간에 넣기</th><th>언제 쓰나</th></tr>
+    <tr><td><code>std::vector</code></td><td>바로</td><td>전부 민다</td><td>뒤를 전부 민다</td><td><strong>기본값.</strong> 뒤에만 붙이고 한 바퀴 도는 일</td></tr>
+    <tr><td><code>std::deque</code></td><td>바로</td><td><strong>빠르다</strong></td><td>민다</td><td>앞뒤 양쪽에서 넣고 빼는 대기열 — 오래된 것을 앞에서 버리고 새것을 뒤에 붙이는 경우</td></tr>
+    <tr><td><code>std::list</code></td><td><strong>없다</strong> (따라가야 한다)</td><td>빠르다</td><td><strong>연결만 바꾼다</strong></td><td>중간에서 넣고 빼는 일이 아주 잦을 때</td></tr>
+  </table>
+  </div>
+  <p>
+    이 과목의 코드에는 중간에 넣고 빼는 자리가 거의 없다. 라이다 값은 통째로 왔다가 통째로 버려지고, 찾아낸 콘 목록은 뒤에만 붙는다.
+    그리고 값이 나란히 붙어 있는 <code>vector</code>는 한 바퀴 도는 일에서 특히 빠르다. 그래서 <strong>고민되면 <code>vector</code></strong>이고, 이 회차의 나머지도 <code>vector</code>로 간다.
+  </p>
 
   <h3>예제에 적용 — <code>wheel_count</code>를 없애고, 둘의 크기를 물어본다</h3>
   <p>v1의 <code>wheel_count</code>가 「개수를 따로 들고 다닌다」의 그 모양이다. 바퀴 개수는 변하지 않으니 <code>std::array</code>로 바꾼다. 맨 위에 <code>#include &lt;array&gt;</code>를 더한다.</p>
@@ -441,172 +499,122 @@ int main()
     재할당은 공짜가 아니고 담는 동안 여러 번 일어난다. <strong>몇 개가 들어올지 미리 안다면</strong> <code>v.reserve(n)</code>으로 자리를 한 번에 잡아 둘 수 있다. 값이 들어가는 것은 아니다 — <code>size()</code>는 그대로 0이고 <code>capacity()</code>만 <code>n</code>이 된다.
   </p>
 
-  <h3>예제에 적용 — 재할당 횟수를 세고 시간을 잰다</h3>
-  <h3>4단계 (v4) — 함수 둘을 넣고 <code>main</code>에서 부른다</h3>
-  <p>맨 위에 <code>&lt;chrono&gt;</code>와 <code>&lt;cstdio&gt;</code>가 늘고, <code>front()</code> 아래에 함수 둘이 든다. 첫째는 <strong>재할당 횟수를 세는 함수</strong>, 둘째는 같은 일을 10만 번 반복해 <strong>시간을 재는 함수</strong>다.</p>
-  <pre class="lang-cpp"><code>// kScanSize 개를 push_back 하는 동안 재할당이 몇 번 일어나는지 센다
-void count_grow(bool use_reserve)
+  <h3>예제에 적용 — 360개를 담는 동안 재할당이 몇 번 나는지 본다</h3>
+  <p>
+    라이다 값 360개를 <code>push_back</code>으로 하나씩 담으면 재할당이 몇 번 날까? 재할당은 화면에 아무것도 찍지 않는다. 그런데 재할당이 나면 <strong><code>capacity()</code>가 바뀐다.</strong>
+    그러니 한 개 넣을 때마다 용량을 들여다보고, <strong>바뀐 순간에만 한 줄</strong> 찍으면 재할당이 하나씩 보인다.
+    이것만 보려고 이 단계는 <strong>짧은 프로그램으로 따로</strong> 만든다. <code>ScanMsg</code>도 앞 절의 함수도 없이 <code>vector&lt;float&gt;</code> 하나만 남겼다.
+  </p>
+  <h3>4단계 (v4) — 용량이 바뀔 때만 찍는 함수 하나</h3>
+  <pre class="lang-cpp"><code>// 거리 값 kScanSize 개를 push_back 으로 담는다 — 용량이 바뀔 때만 한 줄 찍는다
+void fill_scan(bool use_reserve)
 {
-  std::vector&lt;float&gt; v;
-  if (use_reserve) { v.reserve(kScanSize); }
-  size_t cap = v.capacity();
-  int grow = 0;
+  std::vector&lt;float&gt; ranges;
+  if (use_reserve) { ranges.reserve(kScanSize); }
+  std::cout &lt;&lt; "  시작          : size " &lt;&lt; ranges.size() &lt;&lt; ", capacity " &lt;&lt; ranges.capacity() &lt;&lt; "칸\n";
+
+  size_t cap = ranges.capacity();      // 바로 앞의 용량
+  int grow = 0;                        // 재할당 횟수
   for (int i = 0; i &lt; kScanSize; ++i) {
-    v.push_back(0.5f);
-    if (v.capacity() != cap) { cap = v.capacity(); ++grow; }
+    ranges.push_back(1.0f);
+    if (ranges.capacity() != cap) {    // 용량이 바뀌었다 = 재할당이 일어났다
+      ++grow;
+      std::cout &lt;&lt; "  재할당 " &lt;&lt; grow &lt;&lt; "번째 : size " &lt;&lt; ranges.size()
+                &lt;&lt; "에서 " &lt;&lt; cap &lt;&lt; "칸 → " &lt;&lt; ranges.capacity() &lt;&lt; "칸\n";
+      cap = ranges.capacity();
+    }
   }
-  std::cout &lt;&lt; "  " &lt;&lt; (use_reserve ? "reserve 하고" : "reserve 없이") &lt;&lt; " : " &lt;&lt; kScanSize
-            &lt;&lt; "개를 담는 동안 재할당 " &lt;&lt; grow &lt;&lt; "번 (최종 capacity=" &lt;&lt; v.capacity() &lt;&lt; ")\n";
-}
-
-// 같은 일을 loops 번 반복해 걸린 시간(ms)을 잰다
-double time_fill(bool use_reserve, int loops, size_t &amp; sink)
-{
-  const auto t0 = std::chrono::steady_clock::now();
-  for (int k = 0; k &lt; loops; ++k) {
-    std::vector&lt;float&gt; v;
-    if (use_reserve) { v.reserve(kScanSize); }
-    for (int i = 0; i &lt; kScanSize; ++i) { v.push_back(0.5f); }
-    sink += v.size();                  // 결과를 써야 컴파일러가 루프를 지우지 않는다
-  }
-  const auto t1 = std::chrono::steady_clock::now();
-  return std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
-}
-
-  // main 에
-  std::cout &lt;&lt; "\n④ reserve — 자리를 미리 잡는다\n";
-  count_grow(false);
-  count_grow(true);
-  const int loops = 100000;
-  size_t sink = 0;
-  const double no_res = time_fill(false, loops, sink);
-  const double res    = time_fill(true,  loops, sink);
-  std::printf("  reserve 없이 : %7.1f ms\n", no_res);
-  std::printf("  reserve 하고 : %7.1f ms\n", res);
-  std::printf("  차이         : %.2f배 (%d회 기준, sink=%zu)\n", no_res / res, loops, sink);</code></pre>
-  <div class="box firstseen">
-    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
-    <dl>
-      <dt>v.capacity()</dt>
-      <dd>지금 잡아 둔 자리가 몇 개인지다. <code>size()</code>와 다르다. 이 숫자가 언제 바뀌는지를 보고 재할당 횟수를 셌다.</dd>
-      <dt>size_t &amp; sink</dt>
-      <dd><code>size_t</code>는 개수를 담는 정수 타입이다 — <code>size()</code>·<code>capacity()</code>가 돌려주는 것이 이 타입이다. 뒤의 <code>&amp;</code>는 ③절의 참조다. 두 번 부르는 동안 같은 변수에 계속 더하려고 참조로 받았다 — 원본을 고치는 함수라 <code>const</code>가 없다.</dd>
-      <dt>std::chrono::steady_clock::now()</dt>
-      <dd>지금 시각을 잰다. 두 번 재서 빼면 걸린 시간이 나오고, <code>duration&lt;double, std::milli&gt;</code>가 그것을 ms 단위 숫자로 바꾼다. 시간을 재는 모양은 늘 이 세 줄이므로 통째로 가져다 쓰면 된다.</dd>
-    </dl>
-  </div>
-  <h3>실제로 나온 출력</h3>
-  <pre><code>④ reserve — 자리를 미리 잡는다
-  reserve 없이 : 360개를 담는 동안 재할당 10번 (최종 capacity=512)
-  reserve 하고 : 360개를 담는 동안 재할당 0번 (최종 capacity=360)
-  reserve 없이 :    33.0 ms
-  reserve 하고 :    18.2 ms
-  차이         : 1.81배 (100000회 기준, sink=72000000)</code></pre>
-  <!-- fullcode "전체 코드 — v4 (4단계 · capacity 와 reserve) main.cpp" build="cmake --build build && ./build/scan_list"
-       l12_container/steps/step4/main.cpp
-  -->
-<details class="fullcode">
-  <summary>전체 코드 — v4 (4단계 · capacity 와 reserve) main.cpp</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/scan_list</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 라이다 스캔 다루기 — v4 (4단계: capacity 와 reserve)
-#include &lt;array&gt;
-#include &lt;chrono&gt;
-#include &lt;cstdio&gt;
-#include &lt;iostream&gt;
-#include &lt;vector&gt;
-
-const int kScanSize = 360;             // 라이다 한 바퀴의 거리 값 개수
-int g_copy = 0;                        // ScanMsg 가 복사된 횟수
-
-struct ScanMsg {
-  std::vector&lt;float&gt; ranges;           // 거리 값 360개
-  ScanMsg() : ranges(kScanSize, 1.0f) {}
-  ScanMsg(const ScanMsg &amp; o) : ranges(o.ranges) { ++g_copy; }   // 복사 생성자 — 복사될 때마다 하나 센다
-};
-
-// 비교하려고 남겨 둔 고치기 전 판 — 값으로 받는다
-float front_by_value(ScanMsg msg)
-{
-  return msg.ranges.at(0);
-}
-
-// 정면 거리를 꺼낸다 — const 참조로 받는다
-float front(const ScanMsg &amp; msg)
-{
-  return msg.ranges.at(0);
-}
-
-// kScanSize 개를 push_back 하는 동안 재할당이 몇 번 일어나는지 센다
-void count_grow(bool use_reserve)
-{
-  std::vector&lt;float&gt; v;
-  if (use_reserve) { v.reserve(kScanSize); }
-  size_t cap = v.capacity();
-  int grow = 0;
-  for (int i = 0; i &lt; kScanSize; ++i) {
-    v.push_back(0.5f);
-    if (v.capacity() != cap) { cap = v.capacity(); ++grow; }
-  }
-  std::cout &lt;&lt; &quot;  &quot; &lt;&lt; (use_reserve ? &quot;reserve 하고&quot; : &quot;reserve 없이&quot;) &lt;&lt; &quot; : &quot; &lt;&lt; kScanSize
-            &lt;&lt; &quot;개를 담는 동안 재할당 &quot; &lt;&lt; grow &lt;&lt; &quot;번 (최종 capacity=&quot; &lt;&lt; v.capacity() &lt;&lt; &quot;)\n&quot;;
-}
-
-// 같은 일을 loops 번 반복해 걸린 시간(ms)을 잰다
-double time_fill(bool use_reserve, int loops, size_t &amp; sink)
-{
-  const auto t0 = std::chrono::steady_clock::now();
-  for (int k = 0; k &lt; loops; ++k) {
-    std::vector&lt;float&gt; v;
-    if (use_reserve) { v.reserve(kScanSize); }
-    for (int i = 0; i &lt; kScanSize; ++i) { v.push_back(0.5f); }
-    sink += v.size();                  // 결과를 써야 컴파일러가 루프를 지우지 않는다
-  }
-  const auto t1 = std::chrono::steady_clock::now();
-  return std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+  std::cout &lt;&lt; "  끝            : size " &lt;&lt; ranges.size() &lt;&lt; ", capacity " &lt;&lt; ranges.capacity()
+            &lt;&lt; "칸, 재할당 " &lt;&lt; grow &lt;&lt; "번\n";
 }
 
 int main()
 {
-  std::cout &lt;&lt; &quot;① 스캔 하나와 바퀴 넷\n&quot;;
-  ScanMsg msg;
-  std::cout &lt;&lt; &quot;  정면 거리 = &quot; &lt;&lt; front(msg) &lt;&lt; &quot; m\n&quot;;
+  std::cout &lt;&lt; "④ reserve 없이 " &lt;&lt; kScanSize &lt;&lt; "개를 담는다\n";
+  fill_scan(false);
 
-  std::array&lt;float, 4&gt; wheel = {0.5f, 0.5f, 0.5f, 0.5f};   // 크기가 코드에 박혀 있다
-  std::cout &lt;&lt; &quot;  바퀴 &quot; &lt;&lt; wheel.size() &lt;&lt; &quot;개, 첫 바퀴 &quot; &lt;&lt; wheel[0] &lt;&lt; &quot; m/s\n&quot;;
+  std::cout &lt;&lt; "\n④ reserve(" &lt;&lt; kScanSize &lt;&lt; ") 하고 담는다\n";
+  fill_scan(true);
+  return 0;
+}</code></pre>
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>v.capacity()</dt>
+      <dd>지금 잡아 둔 자리가 몇 칸인지다. <code>size()</code>와 다르다. 이 숫자가 바뀌는 순간이 재할당이 일어난 순간이다.</dd>
+      <dt>size_t</dt>
+      <dd>개수를 담는 정수 타입이다 — <code>size()</code>·<code>capacity()</code>가 돌려주는 것이 이 타입이라 바로 앞의 용량을 담는 변수도 이 타입으로 했다.</dd>
+      <dt>v.reserve(n)</dt>
+      <dd>자리를 <code>n</code>칸 미리 잡는다. 값은 넣지 않는다 — <code>size()</code>는 0 그대로다.</dd>
+    </dl>
+  </div>
+  <h3>실제로 나온 출력</h3>
+  <pre><code>④ reserve 없이 360개를 담는다
+  시작          : size 0, capacity 0칸
+  재할당 1번째 : size 1에서 0칸 → 1칸
+  재할당 2번째 : size 2에서 1칸 → 2칸
+  재할당 3번째 : size 3에서 2칸 → 4칸
+  재할당 4번째 : size 5에서 4칸 → 8칸
+  재할당 5번째 : size 9에서 8칸 → 16칸
+  재할당 6번째 : size 17에서 16칸 → 32칸
+  재할당 7번째 : size 33에서 32칸 → 64칸
+  재할당 8번째 : size 65에서 64칸 → 128칸
+  재할당 9번째 : size 129에서 128칸 → 256칸
+  재할당 10번째 : size 257에서 256칸 → 512칸
+  끝            : size 360, capacity 512칸, 재할당 10번
 
-  std::cout &lt;&lt; &quot;\n② array 와 vector — 크기가 언제 정해지나\n&quot;;
-  std::cout &lt;&lt; &quot;  array  : 크기 &quot; &lt;&lt; wheel.size() &lt;&lt; &quot;  (컴파일할 때 이미 정해졌다)\n&quot;;
-  std::cout &lt;&lt; &quot;  vector : 크기 &quot; &lt;&lt; msg.ranges.size() &lt;&lt; &quot;  (실행 중에 정했다)\n&quot;;
-  msg.ranges.push_back(2.0f);                    // vector 는 이렇게 늘릴 수 있다
-  std::cout &lt;&lt; &quot;  vector : push_back 뒤 크기 &quot; &lt;&lt; msg.ranges.size() &lt;&lt; &quot;  (array 는 이렇게 늘릴 수 없다)\n&quot;;
+④ reserve(360) 하고 담는다
+  시작          : size 0, capacity 360칸
+  끝            : size 360, capacity 360칸, 재할당 0번</code></pre>
+  <!-- fullcode "전체 코드 — v4 (4단계 · 용량과 reserve) main.cpp" build="cmake --build build && ./build/scan_list"
+       l12_container/steps/step4/main.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — v4 (4단계 · 용량과 reserve) main.cpp</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/scan_list</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 라이다 스캔 다루기 — v4 (4단계: 용량과 reserve)
+#include &lt;iostream&gt;
+#include &lt;vector&gt;
 
-  std::cout &lt;&lt; &quot;\n③ 값 전달과 참조 전달 — 함수에 넘길 때 복사가 나나\n&quot;;
-  g_copy = 0;
-  front_by_value(msg);
-  std::cout &lt;&lt; &quot;  front_by_value(msg) : ScanMsg 복사 &quot; &lt;&lt; g_copy &lt;&lt; &quot;회\n&quot;;
-  g_copy = 0;
-  front(msg);
-  std::cout &lt;&lt; &quot;  front(msg)          : ScanMsg 복사 &quot; &lt;&lt; g_copy &lt;&lt; &quot;회\n&quot;;
+const int kScanSize = 360;             // 라이다 한 바퀴의 거리 값 개수
 
-  std::cout &lt;&lt; &quot;\n④ reserve — 자리를 미리 잡는다\n&quot;;
-  count_grow(false);
-  count_grow(true);
-  const int loops = 100000;
-  size_t sink = 0;
-  const double no_res = time_fill(false, loops, sink);
-  const double res    = time_fill(true,  loops, sink);
-  std::printf(&quot;  reserve 없이 : %7.1f ms\n&quot;, no_res);
-  std::printf(&quot;  reserve 하고 : %7.1f ms\n&quot;, res);
-  std::printf(&quot;  차이         : %.2f배 (%d회 기준, sink=%zu)\n&quot;, no_res / res, loops, sink);
+// 거리 값 kScanSize 개를 push_back 으로 담는다 — 용량이 바뀔 때만 한 줄 찍는다
+void fill_scan(bool use_reserve)
+{
+  std::vector&lt;float&gt; ranges;
+  if (use_reserve) { ranges.reserve(kScanSize); }
+  std::cout &lt;&lt; &quot;  시작          : size &quot; &lt;&lt; ranges.size() &lt;&lt; &quot;, capacity &quot; &lt;&lt; ranges.capacity() &lt;&lt; &quot;칸\n&quot;;
+
+  size_t cap = ranges.capacity();      // 바로 앞의 용량
+  int grow = 0;                        // 재할당 횟수
+  for (int i = 0; i &lt; kScanSize; ++i) {
+    ranges.push_back(1.0f);
+    if (ranges.capacity() != cap) {    // 용량이 바뀌었다 = 재할당이 일어났다
+      ++grow;
+      std::cout &lt;&lt; &quot;  재할당 &quot; &lt;&lt; grow &lt;&lt; &quot;번째 : size &quot; &lt;&lt; ranges.size()
+                &lt;&lt; &quot;에서 &quot; &lt;&lt; cap &lt;&lt; &quot;칸 → &quot; &lt;&lt; ranges.capacity() &lt;&lt; &quot;칸\n&quot;;
+      cap = ranges.capacity();
+    }
+  }
+  std::cout &lt;&lt; &quot;  끝            : size &quot; &lt;&lt; ranges.size() &lt;&lt; &quot;, capacity &quot; &lt;&lt; ranges.capacity()
+            &lt;&lt; &quot;칸, 재할당 &quot; &lt;&lt; grow &lt;&lt; &quot;번\n&quot;;
+}
+
+int main()
+{
+  std::cout &lt;&lt; &quot;④ reserve 없이 &quot; &lt;&lt; kScanSize &lt;&lt; &quot;개를 담는다\n&quot;;
+  fill_scan(false);
+
+  std::cout &lt;&lt; &quot;\n④ reserve(&quot; &lt;&lt; kScanSize &lt;&lt; &quot;) 하고 담는다\n&quot;;
+  fill_scan(true);
   return 0;
 }</code></pre></div>
 </details>
 <!-- /fullcode -->
   <div class="interp">
-    <strong>해석:</strong> 담은 원소는 360개인데 용량은 512다 — 1 → 2 → 4 → … 로 두 배씩 가면 360을 넘기는 첫 숫자가 512이고, 그래서 재할당이 <strong>열 번</strong>이다. 한 번 늘릴 때마다 있던 값을 전부 옮긴다.
-    <code>reserve(kScanSize)</code> 한 줄이 그 <strong>열 번을 0번으로</strong> 만든다. 배수 1.81배보다 이 횟수가 더 중요하다.
+    <strong>해석:</strong> 용량이 0 → 1 → 2 → 4 → … 로 <strong>두 배씩</strong> 늘었다. 360을 넘기는 첫 숫자가 512라서 재할당이 <strong>열 번</strong>이고, 끝나고 나면 152칸이 빈 채로 남는다. 재할당 한 번마다 있던 값을 전부 새 자리로 옮겼다 — 마지막 한 번만 해도 256개다.
+    <code>reserve(kScanSize)</code> 한 줄을 넣자 처음부터 360칸이 잡혀 <strong>재할당 줄이 하나도 찍히지 않았다.</strong>
     그리고 <strong>몇 개가 들어올지는 코드를 짠 사람만 안다.</strong> 라이다 값이 360개라는 사실은 AI가 모른다 — 알려 주면 그때부터 넣어 준다.
-    <span style="color:var(--muted)">잰 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0, Release 빌드)</span>
   </div>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
@@ -633,33 +641,37 @@ int main()
   </div>
 
   <h3>예제에 적용 — 스캔 100개를 두 방식으로 돌면서 복사를 센다</h3>
-  <h3>5단계 (v5, 완성본) — <code>main</code>에 반복문 둘</h3>
-  <p>③절에서 <code>ScanMsg</code>에 넣어 둔 세는 줄을 그대로 쓴다.</p>
-  <pre class="lang-cpp"><code>  std::cout &lt;&lt; "\n⑤ 범위 for — const auto &amp; 를 빼면 매 바퀴 복사가 난다\n";
-  std::vector&lt;ScanMsg&gt; history(100);               // 스캔 100개를 모아 두었다
+  <h3>5단계 (v5) — 스캔 100개를 두 방식으로 돈다</h3>
+  <p>이 단계도 <strong>짧은 프로그램으로 따로</strong> 만든다. v3의 <code>ScanMsg</code> — 복사될 때마다 <code>g_copy</code>를 하나 올리는 그 구조체 — 만 가져오고, 나머지는 반복문 둘이다.</p>
+  <pre class="lang-cpp"><code>int main()
+{
+  std::vector&lt;ScanMsg&gt; history(100);   // 스캔 100개를 모아 두었다
   float sum = 0.0f;
+
+  std::cout &lt;&lt; "⑤ 범위 for — const auto &amp; 를 빼면 매 바퀴 복사가 난다\n";
   g_copy = 0;
   for (auto s : history) { sum += s.ranges[0]; }
   std::cout &lt;&lt; "  for (auto s : history)         : ScanMsg 복사 " &lt;&lt; g_copy &lt;&lt; "회\n";
+
   g_copy = 0;
   for (const auto &amp; s : history) { sum += s.ranges[0]; }
   std::cout &lt;&lt; "  for (const auto &amp; s : history) : ScanMsg 복사 " &lt;&lt; g_copy &lt;&lt; "회\n";
-  std::cout &lt;&lt; "  스캔 " &lt;&lt; history.size() &lt;&lt; "개를 한 바퀴씩 돌았다 (sum=" &lt;&lt; sum &lt;&lt; ")\n";</code></pre>
+
+  std::cout &lt;&lt; "  스캔 " &lt;&lt; history.size() &lt;&lt; "개를 두 번 돌았다 (sum=" &lt;&lt; sum &lt;&lt; ")\n";
+  return 0;
+}</code></pre>
   <h3>실제로 나온 출력</h3>
   <pre><code>⑤ 범위 for — const auto &amp; 를 빼면 매 바퀴 복사가 난다
   for (auto s : history)         : ScanMsg 복사 100회
   for (const auto &amp; s : history) : ScanMsg 복사 0회
-  스캔 100개를 한 바퀴씩 돌았다 (sum=200)</code></pre>
-  <!-- fullcode "전체 코드 — v5 완성본 (5단계 · 범위 기반 for 와 const auto &) main.cpp" build="cmake --build build && ./build/scan_list"
+  스캔 100개를 두 번 돌았다 (sum=200)</code></pre>
+  <!-- fullcode "전체 코드 — v5 (5단계 · 범위 기반 for 와 const auto &) main.cpp" build="cmake --build build && ./build/scan_list"
        l12_container/steps/step5/main.cpp
   -->
 <details class="fullcode">
-  <summary>전체 코드 — v5 완성본 (5단계 · 범위 기반 for 와 const auto &amp;) main.cpp</summary>
+  <summary>전체 코드 — v5 (5단계 · 범위 기반 for 와 const auto &amp;) main.cpp</summary>
   <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/scan_list</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 라이다 스캔 다루기 — v5 완성본 (5단계: 범위 기반 for 와 const auto &amp;)
-#include &lt;array&gt;
-#include &lt;chrono&gt;
-#include &lt;cstdio&gt;
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 라이다 스캔 다루기 — v5 (5단계: 범위 기반 for 와 const auto &amp;)
 #include &lt;iostream&gt;
 #include &lt;vector&gt;
 
@@ -672,91 +684,21 @@ struct ScanMsg {
   ScanMsg(const ScanMsg &amp; o) : ranges(o.ranges) { ++g_copy; }   // 복사 생성자 — 복사될 때마다 하나 센다
 };
 
-// 비교하려고 남겨 둔 고치기 전 판 — 값으로 받는다
-float front_by_value(ScanMsg msg)
-{
-  return msg.ranges.at(0);
-}
-
-// 정면 거리를 꺼낸다 — const 참조로 받는다
-float front(const ScanMsg &amp; msg)
-{
-  return msg.ranges.at(0);
-}
-
-// kScanSize 개를 push_back 하는 동안 재할당이 몇 번 일어나는지 센다
-void count_grow(bool use_reserve)
-{
-  std::vector&lt;float&gt; v;
-  if (use_reserve) { v.reserve(kScanSize); }
-  size_t cap = v.capacity();
-  int grow = 0;
-  for (int i = 0; i &lt; kScanSize; ++i) {
-    v.push_back(0.5f);
-    if (v.capacity() != cap) { cap = v.capacity(); ++grow; }
-  }
-  std::cout &lt;&lt; &quot;  &quot; &lt;&lt; (use_reserve ? &quot;reserve 하고&quot; : &quot;reserve 없이&quot;) &lt;&lt; &quot; : &quot; &lt;&lt; kScanSize
-            &lt;&lt; &quot;개를 담는 동안 재할당 &quot; &lt;&lt; grow &lt;&lt; &quot;번 (최종 capacity=&quot; &lt;&lt; v.capacity() &lt;&lt; &quot;)\n&quot;;
-}
-
-// 같은 일을 loops 번 반복해 걸린 시간(ms)을 잰다
-double time_fill(bool use_reserve, int loops, size_t &amp; sink)
-{
-  const auto t0 = std::chrono::steady_clock::now();
-  for (int k = 0; k &lt; loops; ++k) {
-    std::vector&lt;float&gt; v;
-    if (use_reserve) { v.reserve(kScanSize); }
-    for (int i = 0; i &lt; kScanSize; ++i) { v.push_back(0.5f); }
-    sink += v.size();                  // 결과를 써야 컴파일러가 루프를 지우지 않는다
-  }
-  const auto t1 = std::chrono::steady_clock::now();
-  return std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
-}
-
 int main()
 {
-  std::cout &lt;&lt; &quot;① 스캔 하나와 바퀴 넷\n&quot;;
-  ScanMsg msg;
-  std::cout &lt;&lt; &quot;  정면 거리 = &quot; &lt;&lt; front(msg) &lt;&lt; &quot; m\n&quot;;
-
-  std::array&lt;float, 4&gt; wheel = {0.5f, 0.5f, 0.5f, 0.5f};   // 크기가 코드에 박혀 있다
-  std::cout &lt;&lt; &quot;  바퀴 &quot; &lt;&lt; wheel.size() &lt;&lt; &quot;개, 첫 바퀴 &quot; &lt;&lt; wheel[0] &lt;&lt; &quot; m/s\n&quot;;
-
-  std::cout &lt;&lt; &quot;\n② array 와 vector — 크기가 언제 정해지나\n&quot;;
-  std::cout &lt;&lt; &quot;  array  : 크기 &quot; &lt;&lt; wheel.size() &lt;&lt; &quot;  (컴파일할 때 이미 정해졌다)\n&quot;;
-  std::cout &lt;&lt; &quot;  vector : 크기 &quot; &lt;&lt; msg.ranges.size() &lt;&lt; &quot;  (실행 중에 정했다)\n&quot;;
-  msg.ranges.push_back(2.0f);                    // vector 는 이렇게 늘릴 수 있다
-  std::cout &lt;&lt; &quot;  vector : push_back 뒤 크기 &quot; &lt;&lt; msg.ranges.size() &lt;&lt; &quot;  (array 는 이렇게 늘릴 수 없다)\n&quot;;
-
-  std::cout &lt;&lt; &quot;\n③ 값 전달과 참조 전달 — 함수에 넘길 때 복사가 나나\n&quot;;
-  g_copy = 0;
-  front_by_value(msg);
-  std::cout &lt;&lt; &quot;  front_by_value(msg) : ScanMsg 복사 &quot; &lt;&lt; g_copy &lt;&lt; &quot;회\n&quot;;
-  g_copy = 0;
-  front(msg);
-  std::cout &lt;&lt; &quot;  front(msg)          : ScanMsg 복사 &quot; &lt;&lt; g_copy &lt;&lt; &quot;회\n&quot;;
-
-  std::cout &lt;&lt; &quot;\n④ reserve — 자리를 미리 잡는다\n&quot;;
-  count_grow(false);
-  count_grow(true);
-  const int loops = 100000;
-  size_t sink = 0;
-  const double no_res = time_fill(false, loops, sink);
-  const double res    = time_fill(true,  loops, sink);
-  std::printf(&quot;  reserve 없이 : %7.1f ms\n&quot;, no_res);
-  std::printf(&quot;  reserve 하고 : %7.1f ms\n&quot;, res);
-  std::printf(&quot;  차이         : %.2f배 (%d회 기준, sink=%zu)\n&quot;, no_res / res, loops, sink);
-
-  std::cout &lt;&lt; &quot;\n⑤ 범위 for — const auto &amp; 를 빼면 매 바퀴 복사가 난다\n&quot;;
-  std::vector&lt;ScanMsg&gt; history(100);               // 스캔 100개를 모아 두었다
+  std::vector&lt;ScanMsg&gt; history(100);   // 스캔 100개를 모아 두었다
   float sum = 0.0f;
+
+  std::cout &lt;&lt; &quot;⑤ 범위 for — const auto &amp; 를 빼면 매 바퀴 복사가 난다\n&quot;;
   g_copy = 0;
   for (auto s : history) { sum += s.ranges[0]; }
   std::cout &lt;&lt; &quot;  for (auto s : history)         : ScanMsg 복사 &quot; &lt;&lt; g_copy &lt;&lt; &quot;회\n&quot;;
+
   g_copy = 0;
   for (const auto &amp; s : history) { sum += s.ranges[0]; }
   std::cout &lt;&lt; &quot;  for (const auto &amp; s : history) : ScanMsg 복사 &quot; &lt;&lt; g_copy &lt;&lt; &quot;회\n&quot;;
-  std::cout &lt;&lt; &quot;  스캔 &quot; &lt;&lt; history.size() &lt;&lt; &quot;개를 한 바퀴씩 돌았다 (sum=&quot; &lt;&lt; sum &lt;&lt; &quot;)\n&quot;;
+
+  std::cout &lt;&lt; &quot;  스캔 &quot; &lt;&lt; history.size() &lt;&lt; &quot;개를 두 번 돌았다 (sum=&quot; &lt;&lt; sum &lt;&lt; &quot;)\n&quot;;
   return 0;
 }</code></pre></div>
 </details>
@@ -783,7 +725,7 @@ int main()
     <p class="boxtitle">③ 절차</p>
     <ol>
       <li>
-        <strong>(3분) 작업 폴더를 만들고</strong> ⑤절 끝의 📄 <strong>「v5 완성본」</strong> 상자에서 <code>main.cpp</code>를, ①절 상자에서 <code>CMakeLists.txt</code>를 「복사」해 만든다. <strong>타이핑하지 않는다.</strong>
+        <strong>(3분) 작업 폴더를 만들고</strong> ④절의 📄 <strong>「v4」</strong> 상자에서 <code>main.cpp</code>를, ①절 상자에서 <code>CMakeLists.txt</code>를 「복사」해 만든다. <strong>타이핑하지 않는다.</strong>
         <pre><code>mkdir -p ~/robot_ws/l12/scan_list
 cd ~/robot_ws/l12/scan_list
 code .</code></pre>
@@ -794,44 +736,33 @@ code .</code></pre>
 cmake --build build
 ./build/scan_list</code></pre>
       </li>
-      <li><strong>(3분) ④ 묶음의 재할당 횟수와 최종 capacity</strong>를 적어 둔다.</li>
+      <li><strong>(3분) reserve 없이 담았을 때의 재할당 횟수와 마지막 capacity</strong>를 적어 둔다.</li>
       <li><strong>(10분) 파일 위쪽의 <code>const int kScanSize = 360;</code>을 <code>3600</code>으로 바꾸고</strong> <code>cmake --build build</code> 후 다시 돌린다.</li>
       <li><strong>(7분) 3번과 4번의 재할당 횟수와 최종 capacity를 나란히 적고,</strong> 개수를 열 배로 늘렸는데 재할당이 왜 열 배가 되지 않는지 한 줄로 쓴다.</li>
       <li><strong>(2분) <code>kScanSize</code>를 360으로 되돌리고</strong> 한 번 더 빌드해서 되는지 확인한다.</li>
     </ol>
     <p class="boxtitle">④ 이렇게 되면 성공이다</p>
-    <p><strong>성공 화면</strong> — 2번에서 이 화면이 나온다. 시간(ms)은 노트북마다 다르다.</p>
-    <pre><code>① 스캔 하나와 바퀴 넷
-  정면 거리 = 1 m
-  바퀴 4개, 첫 바퀴 0.5 m/s
+    <p><strong>성공 화면</strong> — 2번에서 ④절의 「실제로 나온 출력」과 같은 화면이 나온다. 마지막 두 묶음의 줄은 이렇다.</p>
+    <pre><code>  재할당 10번째 : size 257에서 256칸 → 512칸
+  끝            : size 360, capacity 512칸, 재할당 10번
 
-② array 와 vector — 크기가 언제 정해지나
-  array  : 크기 4  (컴파일할 때 이미 정해졌다)
-  vector : 크기 360  (실행 중에 정했다)
-  vector : push_back 뒤 크기 361  (array 는 이렇게 늘릴 수 없다)
+④ reserve(360) 하고 담는다
+  시작          : size 0, capacity 360칸
+  끝            : size 360, capacity 360칸, 재할당 0번</code></pre>
+    <p><strong>4번에서는</strong> 재할당 줄이 <strong>세 줄 더</strong> 찍힌다 — 512 → 1024 → 2048 → 4096. 담는 개수는 열 배가 됐는데 재할당은 10번에서 13번으로 세 번밖에 안 늘었다. 두 배씩 늘리기 때문이다.</p>
+    <pre><code>④ reserve 없이 3600개를 담는다
+  시작          : size 0, capacity 0칸
+  재할당 1번째 : size 1에서 0칸 → 1칸
+  …
+  재할당 10번째 : size 257에서 256칸 → 512칸
+  재할당 11번째 : size 513에서 512칸 → 1024칸
+  재할당 12번째 : size 1025에서 1024칸 → 2048칸
+  재할당 13번째 : size 2049에서 2048칸 → 4096칸
+  끝            : size 3600, capacity 4096칸, 재할당 13번
 
-③ 값 전달과 참조 전달 — 함수에 넘길 때 복사가 나나
-  front_by_value(msg) : ScanMsg 복사 1회
-  front(msg)          : ScanMsg 복사 0회
-
-④ reserve — 자리를 미리 잡는다
-  reserve 없이 : 360개를 담는 동안 재할당 10번 (최종 capacity=512)
-  reserve 하고 : 360개를 담는 동안 재할당 0번 (최종 capacity=360)
-  reserve 없이 :    30.2 ms
-  reserve 하고 :    17.5 ms
-  차이         : 1.72배 (100000회 기준, sink=72000000)
-
-⑤ 범위 for — const auto &amp; 를 빼면 매 바퀴 복사가 난다
-  for (auto s : history)         : ScanMsg 복사 100회
-  for (const auto &amp; s : history) : ScanMsg 복사 0회
-  스캔 100개를 한 바퀴씩 돌았다 (sum=200)</code></pre>
-    <p><strong>4번에서는</strong> ④ 묶음이 이렇게 바뀐다 — 재할당이 <strong>10번에서 13번</strong>으로 늘고, 최종 capacity가 <strong>512에서 4096</strong>이 된다. 담는 개수는 열 배가 됐는데 재할당은 세 번밖에 안 늘었다 — 두 배씩 늘리기 때문이다.</p>
-    <pre><code>④ reserve — 자리를 미리 잡는다
-  reserve 없이 : 3600개를 담는 동안 재할당 13번 (최종 capacity=4096)
-  reserve 하고 : 3600개를 담는 동안 재할당 0번 (최종 capacity=3600)
-  reserve 없이 :   386.6 ms
-  reserve 하고 :   161.2 ms
-  차이         : 2.40배 (100000회 기준, sink=720000000)</code></pre>
+④ reserve(3600) 하고 담는다
+  시작          : size 0, capacity 3600칸
+  끝            : size 3600, capacity 3600칸, 재할당 0번</code></pre>
     <!-- fullcode "맞춰 보기 — 4번 (kScanSize 를 3600 으로 바꾼 판) main.cpp" build="cmake --build build && ./build/scan_list"
          l12_container/steps/variants/lab_3600/main.cpp
     -->
@@ -839,113 +770,47 @@ cmake --build build
   <summary>맞춰 보기 — 4번 (kScanSize 를 3600 으로 바꾼 판) main.cpp</summary>
   <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/scan_list</code></p>
   <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 라이다 스캔 다루기 — 실습 4번 (kScanSize 를 3600 으로 바꾼 판)
-#include &lt;array&gt;
-#include &lt;chrono&gt;
-#include &lt;cstdio&gt;
 #include &lt;iostream&gt;
 #include &lt;vector&gt;
 
 const int kScanSize = 3600;            // 라이다 한 바퀴의 거리 값 개수
-int g_copy = 0;                        // ScanMsg 가 복사된 횟수
 
-struct ScanMsg {
-  std::vector&lt;float&gt; ranges;           // 거리 값 360개
-  ScanMsg() : ranges(kScanSize, 1.0f) {}
-  ScanMsg(const ScanMsg &amp; o) : ranges(o.ranges) { ++g_copy; }   // 복사 생성자 — 복사될 때마다 하나 센다
-};
-
-// 비교하려고 남겨 둔 고치기 전 판 — 값으로 받는다
-float front_by_value(ScanMsg msg)
+// 거리 값 kScanSize 개를 push_back 으로 담는다 — 용량이 바뀔 때만 한 줄 찍는다
+void fill_scan(bool use_reserve)
 {
-  return msg.ranges.at(0);
-}
+  std::vector&lt;float&gt; ranges;
+  if (use_reserve) { ranges.reserve(kScanSize); }
+  std::cout &lt;&lt; &quot;  시작          : size &quot; &lt;&lt; ranges.size() &lt;&lt; &quot;, capacity &quot; &lt;&lt; ranges.capacity() &lt;&lt; &quot;칸\n&quot;;
 
-// 정면 거리를 꺼낸다 — const 참조로 받는다
-float front(const ScanMsg &amp; msg)
-{
-  return msg.ranges.at(0);
-}
-
-// kScanSize 개를 push_back 하는 동안 재할당이 몇 번 일어나는지 센다
-void count_grow(bool use_reserve)
-{
-  std::vector&lt;float&gt; v;
-  if (use_reserve) { v.reserve(kScanSize); }
-  size_t cap = v.capacity();
-  int grow = 0;
+  size_t cap = ranges.capacity();      // 바로 앞의 용량
+  int grow = 0;                        // 재할당 횟수
   for (int i = 0; i &lt; kScanSize; ++i) {
-    v.push_back(0.5f);
-    if (v.capacity() != cap) { cap = v.capacity(); ++grow; }
+    ranges.push_back(1.0f);
+    if (ranges.capacity() != cap) {    // 용량이 바뀌었다 = 재할당이 일어났다
+      ++grow;
+      std::cout &lt;&lt; &quot;  재할당 &quot; &lt;&lt; grow &lt;&lt; &quot;번째 : size &quot; &lt;&lt; ranges.size()
+                &lt;&lt; &quot;에서 &quot; &lt;&lt; cap &lt;&lt; &quot;칸 → &quot; &lt;&lt; ranges.capacity() &lt;&lt; &quot;칸\n&quot;;
+      cap = ranges.capacity();
+    }
   }
-  std::cout &lt;&lt; &quot;  &quot; &lt;&lt; (use_reserve ? &quot;reserve 하고&quot; : &quot;reserve 없이&quot;) &lt;&lt; &quot; : &quot; &lt;&lt; kScanSize
-            &lt;&lt; &quot;개를 담는 동안 재할당 &quot; &lt;&lt; grow &lt;&lt; &quot;번 (최종 capacity=&quot; &lt;&lt; v.capacity() &lt;&lt; &quot;)\n&quot;;
-}
-
-// 같은 일을 loops 번 반복해 걸린 시간(ms)을 잰다
-double time_fill(bool use_reserve, int loops, size_t &amp; sink)
-{
-  const auto t0 = std::chrono::steady_clock::now();
-  for (int k = 0; k &lt; loops; ++k) {
-    std::vector&lt;float&gt; v;
-    if (use_reserve) { v.reserve(kScanSize); }
-    for (int i = 0; i &lt; kScanSize; ++i) { v.push_back(0.5f); }
-    sink += v.size();                  // 결과를 써야 컴파일러가 루프를 지우지 않는다
-  }
-  const auto t1 = std::chrono::steady_clock::now();
-  return std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
+  std::cout &lt;&lt; &quot;  끝            : size &quot; &lt;&lt; ranges.size() &lt;&lt; &quot;, capacity &quot; &lt;&lt; ranges.capacity()
+            &lt;&lt; &quot;칸, 재할당 &quot; &lt;&lt; grow &lt;&lt; &quot;번\n&quot;;
 }
 
 int main()
 {
-  std::cout &lt;&lt; &quot;① 스캔 하나와 바퀴 넷\n&quot;;
-  ScanMsg msg;
-  std::cout &lt;&lt; &quot;  정면 거리 = &quot; &lt;&lt; front(msg) &lt;&lt; &quot; m\n&quot;;
+  std::cout &lt;&lt; &quot;④ reserve 없이 &quot; &lt;&lt; kScanSize &lt;&lt; &quot;개를 담는다\n&quot;;
+  fill_scan(false);
 
-  std::array&lt;float, 4&gt; wheel = {0.5f, 0.5f, 0.5f, 0.5f};   // 크기가 코드에 박혀 있다
-  std::cout &lt;&lt; &quot;  바퀴 &quot; &lt;&lt; wheel.size() &lt;&lt; &quot;개, 첫 바퀴 &quot; &lt;&lt; wheel[0] &lt;&lt; &quot; m/s\n&quot;;
-
-  std::cout &lt;&lt; &quot;\n② array 와 vector — 크기가 언제 정해지나\n&quot;;
-  std::cout &lt;&lt; &quot;  array  : 크기 &quot; &lt;&lt; wheel.size() &lt;&lt; &quot;  (컴파일할 때 이미 정해졌다)\n&quot;;
-  std::cout &lt;&lt; &quot;  vector : 크기 &quot; &lt;&lt; msg.ranges.size() &lt;&lt; &quot;  (실행 중에 정했다)\n&quot;;
-  msg.ranges.push_back(2.0f);                    // vector 는 이렇게 늘릴 수 있다
-  std::cout &lt;&lt; &quot;  vector : push_back 뒤 크기 &quot; &lt;&lt; msg.ranges.size() &lt;&lt; &quot;  (array 는 이렇게 늘릴 수 없다)\n&quot;;
-
-  std::cout &lt;&lt; &quot;\n③ 값 전달과 참조 전달 — 함수에 넘길 때 복사가 나나\n&quot;;
-  g_copy = 0;
-  front_by_value(msg);
-  std::cout &lt;&lt; &quot;  front_by_value(msg) : ScanMsg 복사 &quot; &lt;&lt; g_copy &lt;&lt; &quot;회\n&quot;;
-  g_copy = 0;
-  front(msg);
-  std::cout &lt;&lt; &quot;  front(msg)          : ScanMsg 복사 &quot; &lt;&lt; g_copy &lt;&lt; &quot;회\n&quot;;
-
-  std::cout &lt;&lt; &quot;\n④ reserve — 자리를 미리 잡는다\n&quot;;
-  count_grow(false);
-  count_grow(true);
-  const int loops = 100000;
-  size_t sink = 0;
-  const double no_res = time_fill(false, loops, sink);
-  const double res    = time_fill(true,  loops, sink);
-  std::printf(&quot;  reserve 없이 : %7.1f ms\n&quot;, no_res);
-  std::printf(&quot;  reserve 하고 : %7.1f ms\n&quot;, res);
-  std::printf(&quot;  차이         : %.2f배 (%d회 기준, sink=%zu)\n&quot;, no_res / res, loops, sink);
-
-  std::cout &lt;&lt; &quot;\n⑤ 범위 for — const auto &amp; 를 빼면 매 바퀴 복사가 난다\n&quot;;
-  std::vector&lt;ScanMsg&gt; history(100);               // 스캔 100개를 모아 두었다
-  float sum = 0.0f;
-  g_copy = 0;
-  for (auto s : history) { sum += s.ranges[0]; }
-  std::cout &lt;&lt; &quot;  for (auto s : history)         : ScanMsg 복사 &quot; &lt;&lt; g_copy &lt;&lt; &quot;회\n&quot;;
-  g_copy = 0;
-  for (const auto &amp; s : history) { sum += s.ranges[0]; }
-  std::cout &lt;&lt; &quot;  for (const auto &amp; s : history) : ScanMsg 복사 &quot; &lt;&lt; g_copy &lt;&lt; &quot;회\n&quot;;
-  std::cout &lt;&lt; &quot;  스캔 &quot; &lt;&lt; history.size() &lt;&lt; &quot;개를 한 바퀴씩 돌았다 (sum=&quot; &lt;&lt; sum &lt;&lt; &quot;)\n&quot;;
+  std::cout &lt;&lt; &quot;\n④ reserve(&quot; &lt;&lt; kScanSize &lt;&lt; &quot;) 하고 담는다\n&quot;;
+  fill_scan(true);
   return 0;
 }</code></pre></div>
 </details>
 <!-- /fullcode -->
     <div class="interp">
-      <strong>해석:</strong> 한 줄을 바꿨는데 「3600개」·「3600」·「720000000」이 전부 따라왔다. 숫자 <code>360</code>을 코드 여기저기에 박지 않고 <code>kScanSize</code> 한 이름으로 둔 덕이다. ④절 프롬프트 끝의 「숫자를 코드에 박지 말아 줘」가 이것이다.
-      <span style="color:var(--muted)">확인한 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0, CMake 3.28, Release 빌드)</span>
+      <strong>해석:</strong> 한 줄을 바꿨는데 「3600개」·「reserve(3600)」·「capacity 3600칸」이 전부 따라왔다. 숫자 <code>360</code>을 코드 여기저기에 박지 않고 <code>kScanSize</code> 한 이름으로 둔 덕이다. ④절 프롬프트 끝의 「숫자를 코드에 박지 말아 줘」가 이것이다.
+      <span style="color:var(--muted)">확인한 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0, CMake 3.28)</span>
     </div>
   </div>
 
@@ -1006,7 +871,6 @@ int main()
   <div class="codefile"><div class="fname">CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre class="lang-cmake"><code>cmake_minimum_required(VERSION 3.16)
 project(cone_list CXX)
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_BUILD_TYPE Release)             # 시간을 재는 회차라 최적화를 켠다
 add_executable(cone_list main.cpp)</code></pre></div>
 </details>
 <!-- /fullcode -->
@@ -1085,13 +949,6 @@ add_executable(cone_list main.cpp)</code></pre></div>
     <p>
       연습문제의 「담는 동안 8회」는 <code>push_back(c)</code>가 이미 만든 <code>c</code>를 복사해 넣기 때문이다. <code>cones.emplace_back(0.5f * i, 1.0f)</code>라고 쓰면 생성자 인자를 넘겨 <strong>컨테이너 안에서 바로 만든다.</strong> 그러면 그 8회도 없어진다.
       AI 코드에 <code>emplace_back</code>이 보이면 「안에서 바로 만드는 <code>push_back</code>」으로 읽으면 된다.
-    </p>
-  </details>
-  <details>
-    <summary><code>list</code>와 <code>deque</code>는 왜 안 다루나</summary>
-    <p>
-      중간에 원소를 자주 끼워 넣거나 빼는 경우에 유리한 컨테이너들이다. <code>vector</code>는 중간에 끼워 넣으면 뒤에 있는 원소를 전부 한 자리씩 밀어야 하기 때문이다.
-      그런데 이 과목의 코드에는 그런 자리가 거의 없다. 라이다 값은 통째로 왔다가 통째로 버려지고, 찾아낸 콘 목록은 뒤에만 붙는다. 그리고 값이 메모리에 나란히 붙어 있어 <code>vector</code>는 한 바퀴 도는 일에서 특히 빠르다. <strong>고민되면 <code>vector</code>다.</strong>
     </p>
   </details>
 
