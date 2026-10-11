@@ -666,14 +666,28 @@ int main()
     복사가 막혀 있으니 소유자가 둘이 될 수 없다.
   </p>
   <p>
-    그러면 만든 곳과 쓰는 곳이 달라서 <strong>소유권을 다른 변수에 넘겨야 할 때</strong>는 어떻게 하나? 복사 대신 <strong><code>std::move</code></strong>를 쓴다.
-    <code>b = std::move(a)</code>는 「<code>a</code>는 이제 안 쓴다」는 표시이고, <code>unique_ptr</code>는 이 표시를 보면 들고 있던 주소를 <code>b</code>에 넘기고 <strong>자기는 빈 포인터</strong>(<code>nullptr</code>)가 된다.
+    그러면 만든 곳과 쓰는 곳이 다를 때는 어떻게 하나? 이런 일은 대개 <strong>함수를 부를 때</strong> 생긴다. 센서는 <code>main</code>이 만들었는데 그것을 맡아 돌리는 것은 다른 함수인 경우다.
+    <code>unique_ptr</code>를 값으로 받는 매개변수에 그냥 넘기면 매개변수를 복사로 만들어야 하므로 막힌다. 복사 대신 <strong><code>std::move</code></strong>를 쓴다.
+    <code>run(std::move(a))</code>는 「<code>a</code>는 이제 안 쓴다」는 표시이고, <code>unique_ptr</code>는 이 표시를 보면 들고 있던 주소를 매개변수에 넘기고 <strong>자기는 빈 포인터</strong>(<code>nullptr</code>)가 된다.
     객체는 그대로 하나이고 소유자만 바뀐다. 이것을 <strong>이동</strong>(move)이라고 한다. 넘겨준 <code>a</code>는 비어 있으므로 <strong>그 뒤로 <code>a</code>를 쓰지 않는다.</strong>
+  </p>
+  <p>함수가 그 객체로 무엇을 하느냐에 따라 넘기는 모양이 달라진다. 보통은 아래 셋 중 하나다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>함수가 객체를</th><th>함수 모양</th><th>부르는 쪽</th><th>부른 뒤 <code>a</code>는</th></tr>
+    <tr><td>잠깐 쓰기만 한다</td><td><code>void f(Sensor &amp; s)</code></td><td><code>f(*a);</code></td><td>그대로 소유자다. 이동이 없다</td></tr>
+    <tr><td><strong>받아서 끝까지 맡는다</strong></td><td><code>void f(std::unique_ptr&lt;Sensor&gt; s)</code></td><td><code>f(std::move(a));</code></td><td>빈다. 객체는 함수가 끝날 때 지워진다</td></tr>
+    <tr><td><strong>받아서 처리하고 돌려준다</strong></td><td><code>std::unique_ptr&lt;Sensor&gt; f(std::unique_ptr&lt;Sensor&gt; s)</code></td><td><code>a = f(std::move(a));</code></td><td>돌려받아 다시 찬다</td></tr>
+  </table>
+  </div>
+  <p>
+    첫 줄은 7회의 참조 전달 그대로다. 소유권과 상관없이 잠깐 쓰는 함수는 스마트 포인터를 몰라도 되고, 이런 함수가 가장 많다.
+    <code>std::move</code>가 나오는 것은 <strong>소유권이 함수로 건너가는</strong> 아래 두 줄이다.
   </p>
   <p class="later">10회 ⑤절에서 설명 없이 쓴 <code>std::unique_ptr&lt;Sensor&gt; s = std::make_unique&lt;Lidar&gt;();</code>가 이것이다. 이동이 클래스 안에서 어떻게 만들어지는지는 이 과목에서 다루지 않는다(「조금 더」).</p>
 
   <h3>예제에 적용 — <code>SensorPtr</code>를 지우고 표준판으로 바꾼 뒤, 소유권을 넘겨 본다</h3>
-  <h3>4단계 (v4) — <code>#include &lt;memory&gt;</code>, <code>setup()</code> 고치기, <code>main</code>에 한 묶음</h3>
+  <h3>4단계 (v4) — <code>#include &lt;memory&gt;</code>, <code>setup()</code> 고치기, 소유권을 받는 함수 둘</h3>
   <p><code>SensorPtr</code> 클래스는 통째로 지운다. 맨 위에 <code>#include &lt;memory&gt;</code>를 더한다.</p>
   <div class="codelabel bad">고치기 전 (v3)</div>
   <pre class="lang-cpp before"><code>  SensorPtr s(new Sensor(name, ok));   // 맡긴다 — delete 는 SensorPtr 의 소멸자가 한다
@@ -689,18 +703,39 @@ int main()
     return;
   }
   s-&gt;start();</code></pre>
-  <p><code>main</code>의 끝에는 소유권을 넘기는 묶음을 더한다. 이름을 찍으려고 <code>Sensor</code>에 접근자 <code>name()</code>도 하나 붙였다.</p>
+  <p><code>main</code> 위에는 위 표의 둘째·셋째 줄에 해당하는 함수를 하나씩 두고, <code>main</code>의 끝에서 그 둘을 부른다. 이름을 찍으려고 <code>Sensor</code>에 접근자 <code>name()</code>도 하나 붙였다.</p>
   <pre class="lang-cpp"><code>  const std::string &amp; name() const { return n_; }   // Sensor 에 한 줄
 
+// main 위에 함수 둘
+// 센서를 맡아서 끝까지 쓰는 함수 — 소유권을 받아 간다
+void run(std::unique_ptr&lt;Sensor&gt; s)
+{
+  s-&gt;start();
+  std::cout &lt;&lt; "  run 이 끝난다\n";
+}   // 여기서 매개변수 s 가 사라지며 센서를 지운다
+
+// 센서를 받아 처리한 뒤 돌려주는 함수 — 소유권을 받았다가 다시 넘겨준다
+std::unique_ptr&lt;Sensor&gt; warm_up(std::unique_ptr&lt;Sensor&gt; s)
+{
+  std::cout &lt;&lt; "  " &lt;&lt; s-&gt;name() &lt;&lt; " 예열 끝\n";
+  return s;                // 돌려줄 때는 std::move 를 쓰지 않는다
+}
+
   // main 에
-  std::cout &lt;&lt; "\n④ unique_ptr — 복사는 안 되고, std::move 로 주인을 넘긴다\n";
+  std::cout &lt;&lt; "\n④-1 unique_ptr 를 함수에 넘겨주고 끝 — 함수가 지운다\n";
   {
     std::unique_ptr&lt;Sensor&gt; a = std::make_unique&lt;Sensor&gt;("라이다", true);
-    std::unique_ptr&lt;Sensor&gt; b = std::move(a);          // 주인이 a 에서 b 로 바뀐다
-    std::cout &lt;&lt; "  넘긴 뒤 a 는 비었나? " &lt;&lt; (a == nullptr ? "그렇다" : "아니다") &lt;&lt; "\n";
-    std::cout &lt;&lt; "  이제 주인은 b: " &lt;&lt; b-&gt;name() &lt;&lt; "\n";
+    run(std::move(a));                                  // 소유권이 a 에서 run 의 s 로 간다
+    std::cout &lt;&lt; "  돌아온 뒤 a 는 비었나? " &lt;&lt; (a == nullptr ? "그렇다" : "아니다") &lt;&lt; "\n";
   }
-  std::cout &lt;&lt; "  중괄호를 나오자 b 가 지웠다. 한 번만 꺼졌다\n";</code></pre>
+
+  std::cout &lt;&lt; "\n④-2 unique_ptr 를 넘겼다가 처리 결과로 돌려받는다\n";
+  {
+    std::unique_ptr&lt;Sensor&gt; b = std::make_unique&lt;Sensor&gt;("카메라", true);
+    b = warm_up(std::move(b));                          // 넘겼다가 돌려받아 다시 b 에 담는다
+    std::cout &lt;&lt; "  돌려받은 b 로 계속 쓴다: " &lt;&lt; b-&gt;name() &lt;&lt; "\n";
+  }
+  std::cout &lt;&lt; "  중괄호를 나오자 b 가 지웠다\n";</code></pre>
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
     <dl>
@@ -708,15 +743,26 @@ int main()
       <dd>꺾쇠 안이 만들 타입(템플릿 인자)이고, 괄호 안은 그 타입의 생성자에 그대로 넘어갈 인자다. <code>new Sensor(name, ok)</code>를 하고 그 주소를 <code>unique_ptr</code>에 담아 돌려준다.</dd>
       <dt>a == nullptr</dt>
       <dd>스마트 포인터도 7회의 <code>nullptr</code>과 비교할 수 있다. 소유권을 넘겨준 <code>unique_ptr</code>는 빈 포인터가 된다는 것을 확인하려고 썼다.</dd>
+      <dt>return s;</dt>
+      <dd>매개변수나 함수 안의 지역 변수를 돌려줄 때는 컴파일러가 알아서 이동한다. 그래서 <code>std::move</code>를 붙이지 않는다. 붙여야 하는 것은 <strong>부르는 쪽</strong>의 <code>warm_up(std::move(b))</code>다.</dd>
+      <dt>b = warm_up(std::move(b));</dt>
+      <dd>오른쪽 함수가 먼저 끝나고 그 반환값이 <code>b</code>에 대입된다. <code>b</code>는 함수가 도는 동안만 비어 있고, 줄이 끝날 때는 다시 소유자다.</dd>
     </dl>
   </div>
   <h3>실제로 나온 출력</h3>
-  <pre><code>④ unique_ptr — 복사는 안 되고, std::move 로 주인을 넘긴다
+  <pre><code>④-1 unique_ptr 를 함수에 넘겨주고 끝 — 함수가 지운다
   [라이다 켜짐]
-  넘긴 뒤 a 는 비었나? 그렇다
-  이제 주인은 b: 라이다
+  라이다 측정 시작
+  run 이 끝난다
   [라이다 꺼짐]
-  중괄호를 나오자 b 가 지웠다. 한 번만 꺼졌다</code></pre>
+  돌아온 뒤 a 는 비었나? 그렇다
+
+④-2 unique_ptr 를 넘겼다가 처리 결과로 돌려받는다
+  [카메라 켜짐]
+  카메라 예열 끝
+  돌려받은 b 로 계속 쓴다: 카메라
+  [카메라 꺼짐]
+  중괄호를 나오자 b 가 지웠다</code></pre>
   <!-- fullcode "전체 코드 — v4 (4단계 · unique_ptr 와 std::move) main.cpp" build="cmake --build build && ./build/sensor_ptr"
        l11_raii_ptr/steps/step4/main.cpp
   -->
@@ -752,37 +798,62 @@ void setup(const std::string &amp; name, bool ok)
   s-&gt;start();
 }
 
+// 센서를 맡아서 끝까지 쓰는 함수 — 소유권을 받아 간다
+void run(std::unique_ptr&lt;Sensor&gt; s)
+{
+  s-&gt;start();
+  std::cout &lt;&lt; &quot;  run 이 끝난다\n&quot;;
+}   // 여기서 매개변수 s 가 사라지며 센서를 지운다
+
+// 센서를 받아 처리한 뒤 돌려주는 함수 — 소유권을 받았다가 다시 넘겨준다
+std::unique_ptr&lt;Sensor&gt; warm_up(std::unique_ptr&lt;Sensor&gt; s)
+{
+  std::cout &lt;&lt; &quot;  &quot; &lt;&lt; s-&gt;name() &lt;&lt; &quot; 예열 끝\n&quot;;
+  return s;                // 돌려줄 때는 std::move 를 쓰지 않는다
+}
+
 int main()
 {
   std::cout &lt;&lt; &quot;① 나가는 길이 둘인 함수\n&quot;;
   setup(&quot;라이다&quot;, true);
   setup(&quot;카메라&quot;, false);
 
-  std::cout &lt;&lt; &quot;\n④ unique_ptr — 복사는 안 되고, std::move 로 주인을 넘긴다\n&quot;;
+  std::cout &lt;&lt; &quot;\n④-1 unique_ptr 를 함수에 넘겨주고 끝 — 함수가 지운다\n&quot;;
   {
     std::unique_ptr&lt;Sensor&gt; a = std::make_unique&lt;Sensor&gt;(&quot;라이다&quot;, true);
-    std::unique_ptr&lt;Sensor&gt; b = std::move(a);          // 주인이 a 에서 b 로 바뀐다
-    std::cout &lt;&lt; &quot;  넘긴 뒤 a 는 비었나? &quot; &lt;&lt; (a == nullptr ? &quot;그렇다&quot; : &quot;아니다&quot;) &lt;&lt; &quot;\n&quot;;
-    std::cout &lt;&lt; &quot;  이제 주인은 b: &quot; &lt;&lt; b-&gt;name() &lt;&lt; &quot;\n&quot;;
+    run(std::move(a));                                  // 소유권이 a 에서 run 의 s 로 간다
+    std::cout &lt;&lt; &quot;  돌아온 뒤 a 는 비었나? &quot; &lt;&lt; (a == nullptr ? &quot;그렇다&quot; : &quot;아니다&quot;) &lt;&lt; &quot;\n&quot;;
   }
-  std::cout &lt;&lt; &quot;  중괄호를 나오자 b 가 지웠다. 한 번만 꺼졌다\n&quot;;
+
+  std::cout &lt;&lt; &quot;\n④-2 unique_ptr 를 넘겼다가 처리 결과로 돌려받는다\n&quot;;
+  {
+    std::unique_ptr&lt;Sensor&gt; b = std::make_unique&lt;Sensor&gt;(&quot;카메라&quot;, true);
+    b = warm_up(std::move(b));                          // 넘겼다가 돌려받아 다시 b 에 담는다
+    std::cout &lt;&lt; &quot;  돌려받은 b 로 계속 쓴다: &quot; &lt;&lt; b-&gt;name() &lt;&lt; &quot;\n&quot;;
+  }
+  std::cout &lt;&lt; &quot;  중괄호를 나오자 b 가 지웠다\n&quot;;
   return 0;
 }</code></pre></div>
 </details>
 <!-- /fullcode -->
   <div class="interp">
-    <strong>해석:</strong> <code>[라이다 켜짐]</code>과 <code>[라이다 꺼짐]</code>이 <strong>한 번씩</strong>이다. 변수는 <code>a</code>·<code>b</code> 둘인데 객체는 하나이고, 지운 것도 한 번이다 — ③절의 두 번 지우기가 일어나지 않았다.
-    <code>a</code>가 소유권을 넘기고 비었기 때문에 <code>a</code>의 소멸자는 지울 것이 없었다.
+    <strong>해석:</strong> ④-1에서 <code>[라이다 꺼짐]</code>은 <code>run 이 끝난다</code> 바로 다음, <code>main</code>으로 돌아오기 <strong>전에</strong> 찍혔다. 소유자가 된 매개변수 <code>s</code>가 함수 끝에서 사라졌기 때문이다.
+    <code>a</code>는 비어 있어 중괄호를 나갈 때 지울 것이 없었다 — 변수는 둘이 거쳐 갔지만 지운 것은 한 번이고, ③절의 두 번 지우기가 일어나지 않았다.
+    ④-2에서는 <code>warm_up</code>이 끝나도 <strong>꺼지지 않았다.</strong> 소유권이 반환값을 타고 다시 <code>b</code>로 왔기 때문이다. 꺼진 것은 <code>b</code>가 중괄호를 나갈 때 한 번이다.
   </div>
-  <p><code>std::move</code>를 빠뜨리고 <code>b = a</code>라고 쓰면 ③절의 v3 변형과 같은 오류가 난다. <code>unique_ptr</code>도 복사를 <code>= delete</code>로 막아 두었다는 것이 오류 메시지에 그대로 보인다.</p>
+  <p><code>std::move</code>를 빠뜨리고 <code>run(a)</code>라고 쓰면 ③절의 v3 변형과 같은 오류가 난다. 매개변수 <code>s</code>를 <code>a</code>의 복사로 만들어야 하는데, <code>unique_ptr</code>도 복사를 <code>= delete</code>로 막아 두었다는 것이 오류 메시지에 그대로 보인다.</p>
   <pre class="lang-sh"><code>$ cmake --build build
-/home/ubuntu/robot_ws/l11/sensor_ptr/main.cpp:39:33: error: use of deleted function ‘std::unique_ptr&lt;_Tp, _Dp&gt;::unique_ptr(const std::unique_ptr&lt;_Tp, _Dp&gt;&amp;) [with _Tp = Sensor; _Dp = std::default_delete&lt;Sensor&gt;]’
-   39 |     std::unique_ptr&lt;Sensor&gt; b = a;                     // std::move 를 빠뜨렸다
-      |                                 ^
+/home/ubuntu/robot_ws/l11/sensor_ptr/main.cpp:53:8: error: use of deleted function ‘std::unique_ptr&lt;_Tp, _Dp&gt;::unique_ptr(const std::unique_ptr&lt;_Tp, _Dp&gt;&amp;) [with _Tp = Sensor; _Dp = std::default_delete&lt;Sensor&gt;]’
+   53 |     run(a);                                             // std::move 를 빠뜨렸다
+      |     ~~~^~~
 …
 /usr/include/c++/13/bits/unique_ptr.h:522:7: note: declared here
   522 |       unique_ptr(const unique_ptr&amp;) = delete;
-      |       ^~~~~~~~~~</code></pre>
+      |       ^~~~~~~~~~
+/home/ubuntu/robot_ws/l11/sensor_ptr/main.cpp:31:34: note:   initializing argument 1 of ‘void run(std::unique_ptr&lt;Sensor&gt;)’
+   31 | void run(std::unique_ptr&lt;Sensor&gt; s)
+      |          ~~~~~~~~~~~~~~~~~~~~~~~~^</code></pre>
+  <p>마지막 <code>note</code>가 「<code>run</code>의 첫 번째 매개변수를 만들다가 막혔다」고 짚어 준다.</p>
   <!-- fullcode "전체 코드 — v4 변형 (std::move 없이 넘긴 판 · 빌드가 막힌다) main.cpp" build="cmake --build build   # error 가 난다"
        l11_raii_ptr/steps/variants/move_missing/main.cpp
   -->
@@ -818,20 +889,40 @@ void setup(const std::string &amp; name, bool ok)
   s-&gt;start();
 }
 
+// 센서를 맡아서 끝까지 쓰는 함수 — 소유권을 받아 간다
+void run(std::unique_ptr&lt;Sensor&gt; s)
+{
+  s-&gt;start();
+  std::cout &lt;&lt; &quot;  run 이 끝난다\n&quot;;
+}   // 여기서 매개변수 s 가 사라지며 센서를 지운다
+
+// 센서를 받아 처리한 뒤 돌려주는 함수 — 소유권을 받았다가 다시 넘겨준다
+std::unique_ptr&lt;Sensor&gt; warm_up(std::unique_ptr&lt;Sensor&gt; s)
+{
+  std::cout &lt;&lt; &quot;  &quot; &lt;&lt; s-&gt;name() &lt;&lt; &quot; 예열 끝\n&quot;;
+  return s;                // 돌려줄 때는 std::move 를 쓰지 않는다
+}
+
 int main()
 {
   std::cout &lt;&lt; &quot;① 나가는 길이 둘인 함수\n&quot;;
   setup(&quot;라이다&quot;, true);
   setup(&quot;카메라&quot;, false);
 
-  std::cout &lt;&lt; &quot;\n④ unique_ptr — 복사는 안 되고, std::move 로 주인을 넘긴다\n&quot;;
+  std::cout &lt;&lt; &quot;\n④-1 unique_ptr 를 함수에 넘겨주고 끝 — 함수가 지운다\n&quot;;
   {
     std::unique_ptr&lt;Sensor&gt; a = std::make_unique&lt;Sensor&gt;(&quot;라이다&quot;, true);
-    std::unique_ptr&lt;Sensor&gt; b = a;                     // std::move 를 빠뜨렸다
-    std::cout &lt;&lt; &quot;  넘긴 뒤 a 는 비었나? &quot; &lt;&lt; (a == nullptr ? &quot;그렇다&quot; : &quot;아니다&quot;) &lt;&lt; &quot;\n&quot;;
-    std::cout &lt;&lt; &quot;  이제 주인은 b: &quot; &lt;&lt; b-&gt;name() &lt;&lt; &quot;\n&quot;;
+    run(a);                                             // std::move 를 빠뜨렸다
+    std::cout &lt;&lt; &quot;  돌아온 뒤 a 는 비었나? &quot; &lt;&lt; (a == nullptr ? &quot;그렇다&quot; : &quot;아니다&quot;) &lt;&lt; &quot;\n&quot;;
   }
-  std::cout &lt;&lt; &quot;  중괄호를 나오자 b 가 지웠다. 한 번만 꺼졌다\n&quot;;
+
+  std::cout &lt;&lt; &quot;\n④-2 unique_ptr 를 넘겼다가 처리 결과로 돌려받는다\n&quot;;
+  {
+    std::unique_ptr&lt;Sensor&gt; b = std::make_unique&lt;Sensor&gt;(&quot;카메라&quot;, true);
+    b = warm_up(std::move(b));                          // 넘겼다가 돌려받아 다시 b 에 담는다
+    std::cout &lt;&lt; &quot;  돌려받은 b 로 계속 쓴다: &quot; &lt;&lt; b-&gt;name() &lt;&lt; &quot;\n&quot;;
+  }
+  std::cout &lt;&lt; &quot;  중괄호를 나오자 b 가 지웠다\n&quot;;
   return 0;
 }</code></pre></div>
 </details>
@@ -855,12 +946,17 @@ int main()
     <tr><th></th><th><code>std::unique_ptr&lt;T&gt;</code></th><th><code>std::shared_ptr&lt;T&gt;</code></th></tr>
     <tr><td>소유자</td><td><strong>하나</strong></td><td><strong>여럿</strong></td></tr>
     <tr><td>복사</td><td>안 된다 (컴파일 오류)</td><td>된다 — 복사할 때마다 소유자가 하나 는다</td></tr>
-    <tr><td>소유권을 넘기려면</td><td><code>std::move</code> — 넘긴 쪽은 빈다</td><td>그냥 복사한다</td></tr>
+    <tr><td>함수에 값으로 넘기면</td><td><code>std::move</code>가 있어야 한다 — 넘긴 쪽은 빈다</td><td>복사된다 — 넘긴 쪽도 계속 소유자다</td></tr>
     <tr><td>언제 지워지나</td><td>소유자가 사라질 때</td><td>참조 횟수가 0이 될 때 — 마지막 소유자가 사라질 때</td></tr>
     <tr><td>만드는 법</td><td><code>std::make_unique&lt;T&gt;(인자…)</code></td><td><code>std::make_shared&lt;T&gt;(인자…)</code></td></tr>
     <tr><td>비용</td><td>맨 포인터와 같다</td><td>소유자 수를 여러 스레드에서 안전하게 세느라 복사하고 지울 때마다 비용이 든다</td></tr>
   </table>
   </div>
+  <p>
+    함수에 넘길 때 이 차이가 그대로 드러난다. <code>shared_ptr</code>를 값으로 받는 함수에 넘기면 매개변수가 복사본이 되어 <strong>함수가 도는 동안 소유자가 하나 늘고</strong>, 함수가 끝나면 다시 준다.
+    부른 쪽도 계속 소유자이므로 ④-2처럼 <strong>처리 결과를 돌려받을 필요가 없다</strong> — 둘이 같은 객체를 보고 있어서 함수가 한 일은 부른 쪽에서도 그대로 보인다.
+    부른 쪽이 더 쓰지 않을 거면 <code>std::move</code>로 넘길 수도 있다. 그러면 복사 없이 함수가 소유권을 받고, 그 함수가 <strong>마지막 소유자</strong>라면 함수가 끝날 때 지운다.
+  </p>
   <p>
     <strong>AI는 「메모리를 안전하게 관리해 줘」라고 하면 <code>shared_ptr</code>을 주는 경우가 많다.</strong> 돌아가고 새지도 않는다. 그런데 대개 필요 없는 선택이다.
     비용보다 더 중요한 것은 코드가 말하는 내용이다 — <code>shared_ptr</code>이 보이면 읽는 사람은 「여러 곳이 같이 쓰는구나」라고 이해한다. 실제로는 한 곳만 쓰는데 <code>shared_ptr</code>이면 코드가 읽는 사람을 헷갈리게 한다.
@@ -875,39 +971,49 @@ int main()
   </table>
   </div>
 
-  <h3>예제에 적용 — 소유자 수가 오르내리는 것을 출력으로 본다</h3>
-  <h3>5단계 (v5) — <code>main</code>에 한 묶음을 더한다</h3>
-  <pre class="lang-cpp"><code>  std::cout &lt;&lt; "\n⑤ shared_ptr — 주인이 여럿이다. 마지막 주인이 지운다\n";
+  <h3>예제에 적용 — 카메라 하나를 두 모듈에 넘기며 참조 횟수를 본다</h3>
+  <p>주행 모듈과 기록 모듈이 같은 카메라를 쓴다고 하자. 주행 모듈에는 복사로 넘기고, 카메라를 더 쓰지 않게 된 뒤 기록 모듈에는 <code>std::move</code>로 넘긴다.</p>
+  <h3>5단계 (v5) — 함수 하나와 <code>main</code>에 한 묶음을 더한다</h3>
+  <pre class="lang-cpp"><code>// main 위에
+// 센서를 같이 쓰는 함수 — 값으로 받으면 shared_ptr 가 복사되어 소유자가 하나 는다
+void use_shared(const std::string &amp; who, std::shared_ptr&lt;Sensor&gt; cam)
+{
+  std::cout &lt;&lt; "  " &lt;&lt; who &lt;&lt; ": " &lt;&lt; cam-&gt;name() &lt;&lt; " 사용 중 (참조 횟수 " &lt;&lt; cam.use_count() &lt;&lt; ")\n";
+}   // 여기서 매개변수 cam 이 사라진다. 참조 횟수가 0 이 되었을 때만 지운다
+
+  // main 에
+  std::cout &lt;&lt; "\n⑤ shared_ptr 를 함수에 넘긴다 — 마지막 소유자가 지운다\n";
   {
-    std::shared_ptr&lt;Sensor&gt; p1 = std::make_shared&lt;Sensor&gt;("카메라", true);
-    std::cout &lt;&lt; "  주인 수 = " &lt;&lt; p1.use_count() &lt;&lt; "\n";
-    {
-      std::shared_ptr&lt;Sensor&gt; p2 = p1;             // 복사가 된다. 주인 수가 는다
-      std::cout &lt;&lt; "  주인 수 = " &lt;&lt; p1.use_count() &lt;&lt; "  (p2 가 생겼다)\n";
-    }
-    std::cout &lt;&lt; "  주인 수 = " &lt;&lt; p1.use_count() &lt;&lt; "  (p2 가 사라졌다)\n";
+    std::shared_ptr&lt;Sensor&gt; p = std::make_shared&lt;Sensor&gt;("카메라", true);
+    std::cout &lt;&lt; "  참조 횟수 = " &lt;&lt; p.use_count() &lt;&lt; "\n";
+    use_shared("주행 모듈", p);                          // 복사해서 넘긴다. p 도 계속 소유자다
+    std::cout &lt;&lt; "  돌아온 뒤 참조 횟수 = " &lt;&lt; p.use_count() &lt;&lt; ", p 로 계속 쓴다: " &lt;&lt; p-&gt;name() &lt;&lt; "\n";
+    use_shared("기록 모듈", std::move(p));               // 더 안 쓸 거면 넘겨준다. 이제 함수가 마지막 소유자다
+    std::cout &lt;&lt; "  돌아온 뒤 p 는 비었나? " &lt;&lt; (p == nullptr ? "그렇다" : "아니다") &lt;&lt; "\n";
   }</code></pre>
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
     <dl>
-      <dt>p1.use_count()</dt>
-      <dd>지금 이 객체를 소유한 <code>shared_ptr</code>가 몇 개인지(참조 횟수)다. <code>p2</code>가 생기고 사라질 때 이 숫자가 어떻게 변하는지 보려고 썼다.</dd>
+      <dt>p.use_count()</dt>
+      <dd>지금 이 객체를 소유한 <code>shared_ptr</code>가 몇 개인지(참조 횟수)다. 함수에 넘어가 매개변수 <code>cam</code>이 생기고 사라질 때 이 숫자가 어떻게 변하는지 보려고 썼다.</dd>
     </dl>
   </div>
   <h3>실제로 나온 출력</h3>
-  <pre><code>⑤ shared_ptr — 주인이 여럿이다. 마지막 주인이 지운다
+  <pre><code>⑤ shared_ptr 를 함수에 넘긴다 — 마지막 소유자가 지운다
   [카메라 켜짐]
-  주인 수 = 1
-  주인 수 = 2  (p2 가 생겼다)
-  주인 수 = 1  (p2 가 사라졌다)
-  [카메라 꺼짐]</code></pre>
+  참조 횟수 = 1
+  주행 모듈: 카메라 사용 중 (참조 횟수 2)
+  돌아온 뒤 참조 횟수 = 1, p 로 계속 쓴다: 카메라
+  기록 모듈: 카메라 사용 중 (참조 횟수 1)
+  [카메라 꺼짐]
+  돌아온 뒤 p 는 비었나? 그렇다</code></pre>
   <!-- fullcode "전체 코드 — v5 (5단계 · shared_ptr 와 참조 횟수) main.cpp" build="cmake --build build && ./build/sensor_ptr"
        l11_raii_ptr/steps/step5/main.cpp
   -->
 <details class="fullcode">
   <summary>전체 코드 — v5 (5단계 · shared_ptr 와 참조 횟수) main.cpp</summary>
   <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/sensor_ptr</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 11회 센서 켜고 끄기 — v5 (5단계: 주인이 여럿이면 shared_ptr)
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 11회 센서 켜고 끄기 — v5 (5단계: 소유자가 여럿이면 shared_ptr)
 #include &lt;iostream&gt;
 #include &lt;memory&gt;
 #include &lt;string&gt;
@@ -936,38 +1042,64 @@ void setup(const std::string &amp; name, bool ok)
   s-&gt;start();
 }
 
+// 센서를 맡아서 끝까지 쓰는 함수 — 소유권을 받아 간다
+void run(std::unique_ptr&lt;Sensor&gt; s)
+{
+  s-&gt;start();
+  std::cout &lt;&lt; &quot;  run 이 끝난다\n&quot;;
+}   // 여기서 매개변수 s 가 사라지며 센서를 지운다
+
+// 센서를 받아 처리한 뒤 돌려주는 함수 — 소유권을 받았다가 다시 넘겨준다
+std::unique_ptr&lt;Sensor&gt; warm_up(std::unique_ptr&lt;Sensor&gt; s)
+{
+  std::cout &lt;&lt; &quot;  &quot; &lt;&lt; s-&gt;name() &lt;&lt; &quot; 예열 끝\n&quot;;
+  return s;                // 돌려줄 때는 std::move 를 쓰지 않는다
+}
+
+// 센서를 같이 쓰는 함수 — 값으로 받으면 shared_ptr 가 복사되어 소유자가 하나 는다
+void use_shared(const std::string &amp; who, std::shared_ptr&lt;Sensor&gt; cam)
+{
+  std::cout &lt;&lt; &quot;  &quot; &lt;&lt; who &lt;&lt; &quot;: &quot; &lt;&lt; cam-&gt;name() &lt;&lt; &quot; 사용 중 (참조 횟수 &quot; &lt;&lt; cam.use_count() &lt;&lt; &quot;)\n&quot;;
+}   // 여기서 매개변수 cam 이 사라진다. 참조 횟수가 0 이 되었을 때만 지운다
+
 int main()
 {
   std::cout &lt;&lt; &quot;① 나가는 길이 둘인 함수\n&quot;;
   setup(&quot;라이다&quot;, true);
   setup(&quot;카메라&quot;, false);
 
-  std::cout &lt;&lt; &quot;\n④ unique_ptr — 복사는 안 되고, std::move 로 주인을 넘긴다\n&quot;;
+  std::cout &lt;&lt; &quot;\n④-1 unique_ptr 를 함수에 넘겨주고 끝 — 함수가 지운다\n&quot;;
   {
     std::unique_ptr&lt;Sensor&gt; a = std::make_unique&lt;Sensor&gt;(&quot;라이다&quot;, true);
-    std::unique_ptr&lt;Sensor&gt; b = std::move(a);          // 주인이 a 에서 b 로 바뀐다
-    std::cout &lt;&lt; &quot;  넘긴 뒤 a 는 비었나? &quot; &lt;&lt; (a == nullptr ? &quot;그렇다&quot; : &quot;아니다&quot;) &lt;&lt; &quot;\n&quot;;
-    std::cout &lt;&lt; &quot;  이제 주인은 b: &quot; &lt;&lt; b-&gt;name() &lt;&lt; &quot;\n&quot;;
+    run(std::move(a));                                  // 소유권이 a 에서 run 의 s 로 간다
+    std::cout &lt;&lt; &quot;  돌아온 뒤 a 는 비었나? &quot; &lt;&lt; (a == nullptr ? &quot;그렇다&quot; : &quot;아니다&quot;) &lt;&lt; &quot;\n&quot;;
   }
-  std::cout &lt;&lt; &quot;  중괄호를 나오자 b 가 지웠다. 한 번만 꺼졌다\n&quot;;
 
-  std::cout &lt;&lt; &quot;\n⑤ shared_ptr — 주인이 여럿이다. 마지막 주인이 지운다\n&quot;;
+  std::cout &lt;&lt; &quot;\n④-2 unique_ptr 를 넘겼다가 처리 결과로 돌려받는다\n&quot;;
   {
-    std::shared_ptr&lt;Sensor&gt; p1 = std::make_shared&lt;Sensor&gt;(&quot;카메라&quot;, true);
-    std::cout &lt;&lt; &quot;  주인 수 = &quot; &lt;&lt; p1.use_count() &lt;&lt; &quot;\n&quot;;
-    {
-      std::shared_ptr&lt;Sensor&gt; p2 = p1;             // 복사가 된다. 주인 수가 는다
-      std::cout &lt;&lt; &quot;  주인 수 = &quot; &lt;&lt; p1.use_count() &lt;&lt; &quot;  (p2 가 생겼다)\n&quot;;
-    }
-    std::cout &lt;&lt; &quot;  주인 수 = &quot; &lt;&lt; p1.use_count() &lt;&lt; &quot;  (p2 가 사라졌다)\n&quot;;
+    std::unique_ptr&lt;Sensor&gt; b = std::make_unique&lt;Sensor&gt;(&quot;카메라&quot;, true);
+    b = warm_up(std::move(b));                          // 넘겼다가 돌려받아 다시 b 에 담는다
+    std::cout &lt;&lt; &quot;  돌려받은 b 로 계속 쓴다: &quot; &lt;&lt; b-&gt;name() &lt;&lt; &quot;\n&quot;;
+  }
+  std::cout &lt;&lt; &quot;  중괄호를 나오자 b 가 지웠다\n&quot;;
+
+  std::cout &lt;&lt; &quot;\n⑤ shared_ptr 를 함수에 넘긴다 — 마지막 소유자가 지운다\n&quot;;
+  {
+    std::shared_ptr&lt;Sensor&gt; p = std::make_shared&lt;Sensor&gt;(&quot;카메라&quot;, true);
+    std::cout &lt;&lt; &quot;  참조 횟수 = &quot; &lt;&lt; p.use_count() &lt;&lt; &quot;\n&quot;;
+    use_shared(&quot;주행 모듈&quot;, p);                          // 복사해서 넘긴다. p 도 계속 소유자다
+    std::cout &lt;&lt; &quot;  돌아온 뒤 참조 횟수 = &quot; &lt;&lt; p.use_count() &lt;&lt; &quot;, p 로 계속 쓴다: &quot; &lt;&lt; p-&gt;name() &lt;&lt; &quot;\n&quot;;
+    use_shared(&quot;기록 모듈&quot;, std::move(p));               // 더 안 쓸 거면 넘겨준다. 이제 함수가 마지막 소유자다
+    std::cout &lt;&lt; &quot;  돌아온 뒤 p 는 비었나? &quot; &lt;&lt; (p == nullptr ? &quot;그렇다&quot; : &quot;아니다&quot;) &lt;&lt; &quot;\n&quot;;
   }
   return 0;
 }</code></pre></div>
 </details>
 <!-- /fullcode -->
   <div class="interp">
-    <strong>해석:</strong> <strong>1 → 2 → 1</strong>이다. 안쪽 중괄호에서 <code>p2</code>가 생겼다 사라지는 동안 숫자가 오르내렸고, <code>p2</code>가 사라질 때는 <strong>꺼지지 않았다</strong> — 아직 <code>p1</code>이 쓰고 있기 때문이다.
-    <code>[카메라 꺼짐]</code>은 마지막 소유자 <code>p1</code>이 바깥 중괄호를 나갈 때 한 번 찍혔다.
+    <strong>해석:</strong> 주행 모듈에서는 <strong>1 → 2 → 1</strong>이다. 함수가 도는 동안 매개변수 <code>cam</code>이 소유자 하나를 더했고, 함수가 끝나 <code>cam</code>이 사라질 때는 <strong>꺼지지 않았다</strong> — 아직 <code>p</code>가 소유자이기 때문이다. 돌려받지 않았는데도 <code>p</code>로 그대로 쓴다.
+    기록 모듈에는 <code>std::move(p)</code>로 넘겼으니 복사가 없어 횟수가 <strong>1 그대로</strong>이고, 이제 <code>cam</code>이 마지막 소유자다.
+    그래서 <code>[카메라 꺼짐]</code>이 <code>main</code>으로 돌아오기 <strong>전에</strong> 찍혔다 — ④-1의 <code>run</code>과 같은 모양이다.
   </div>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
@@ -999,10 +1131,10 @@ int main()
   ScanMsg::SharedPtr       msg1 = std::make_shared&lt;ScanMsg&gt;();
   std::shared_ptr&lt;ScanMsg&gt; msg2 = msg1;            // 같은 타입이므로 그대로 대입된다
   std::cout &lt;&lt; "  msg1 과 msg2 가 같은 스캔을 잡고 있나? " &lt;&lt; (msg1 == msg2 ? "그렇다" : "아니다")
-            &lt;&lt; "  (주인 수 " &lt;&lt; msg1.use_count() &lt;&lt; ", 거리 값 " &lt;&lt; msg1-&gt;ranges.size() &lt;&lt; "개)\n";</code></pre>
+            &lt;&lt; "  (참조 횟수 " &lt;&lt; msg1.use_count() &lt;&lt; ", 거리 값 " &lt;&lt; msg1-&gt;ranges.size() &lt;&lt; "개)\n";</code></pre>
   <h3>실제로 나온 출력</h3>
   <pre><code>⑥ ::SharedPtr 은 타입 별칭일 뿐이다
-  msg1 과 msg2 가 같은 스캔을 잡고 있나? 그렇다  (주인 수 2, 거리 값 360개)</code></pre>
+  msg1 과 msg2 가 같은 스캔을 잡고 있나? 그렇다  (참조 횟수 2, 거리 값 360개)</code></pre>
   <!-- fullcode "전체 코드 — v6 완성본 (6단계 · 타입 별칭 using) main.cpp" build="cmake --build build && ./build/sensor_ptr"
        l11_raii_ptr/steps/step6/main.cpp
   -->
@@ -1045,37 +1177,62 @@ void setup(const std::string &amp; name, bool ok)
   s-&gt;start();
 }
 
+// 센서를 맡아서 끝까지 쓰는 함수 — 소유권을 받아 간다
+void run(std::unique_ptr&lt;Sensor&gt; s)
+{
+  s-&gt;start();
+  std::cout &lt;&lt; &quot;  run 이 끝난다\n&quot;;
+}   // 여기서 매개변수 s 가 사라지며 센서를 지운다
+
+// 센서를 받아 처리한 뒤 돌려주는 함수 — 소유권을 받았다가 다시 넘겨준다
+std::unique_ptr&lt;Sensor&gt; warm_up(std::unique_ptr&lt;Sensor&gt; s)
+{
+  std::cout &lt;&lt; &quot;  &quot; &lt;&lt; s-&gt;name() &lt;&lt; &quot; 예열 끝\n&quot;;
+  return s;                // 돌려줄 때는 std::move 를 쓰지 않는다
+}
+
+// 센서를 같이 쓰는 함수 — 값으로 받으면 shared_ptr 가 복사되어 소유자가 하나 는다
+void use_shared(const std::string &amp; who, std::shared_ptr&lt;Sensor&gt; cam)
+{
+  std::cout &lt;&lt; &quot;  &quot; &lt;&lt; who &lt;&lt; &quot;: &quot; &lt;&lt; cam-&gt;name() &lt;&lt; &quot; 사용 중 (참조 횟수 &quot; &lt;&lt; cam.use_count() &lt;&lt; &quot;)\n&quot;;
+}   // 여기서 매개변수 cam 이 사라진다. 참조 횟수가 0 이 되었을 때만 지운다
+
 int main()
 {
   std::cout &lt;&lt; &quot;① 나가는 길이 둘인 함수\n&quot;;
   setup(&quot;라이다&quot;, true);
   setup(&quot;카메라&quot;, false);
 
-  std::cout &lt;&lt; &quot;\n④ unique_ptr — 복사는 안 되고, std::move 로 주인을 넘긴다\n&quot;;
+  std::cout &lt;&lt; &quot;\n④-1 unique_ptr 를 함수에 넘겨주고 끝 — 함수가 지운다\n&quot;;
   {
     std::unique_ptr&lt;Sensor&gt; a = std::make_unique&lt;Sensor&gt;(&quot;라이다&quot;, true);
-    std::unique_ptr&lt;Sensor&gt; b = std::move(a);          // 주인이 a 에서 b 로 바뀐다
-    std::cout &lt;&lt; &quot;  넘긴 뒤 a 는 비었나? &quot; &lt;&lt; (a == nullptr ? &quot;그렇다&quot; : &quot;아니다&quot;) &lt;&lt; &quot;\n&quot;;
-    std::cout &lt;&lt; &quot;  이제 주인은 b: &quot; &lt;&lt; b-&gt;name() &lt;&lt; &quot;\n&quot;;
+    run(std::move(a));                                  // 소유권이 a 에서 run 의 s 로 간다
+    std::cout &lt;&lt; &quot;  돌아온 뒤 a 는 비었나? &quot; &lt;&lt; (a == nullptr ? &quot;그렇다&quot; : &quot;아니다&quot;) &lt;&lt; &quot;\n&quot;;
   }
-  std::cout &lt;&lt; &quot;  중괄호를 나오자 b 가 지웠다. 한 번만 꺼졌다\n&quot;;
 
-  std::cout &lt;&lt; &quot;\n⑤ shared_ptr — 주인이 여럿이다. 마지막 주인이 지운다\n&quot;;
+  std::cout &lt;&lt; &quot;\n④-2 unique_ptr 를 넘겼다가 처리 결과로 돌려받는다\n&quot;;
   {
-    std::shared_ptr&lt;Sensor&gt; p1 = std::make_shared&lt;Sensor&gt;(&quot;카메라&quot;, true);
-    std::cout &lt;&lt; &quot;  주인 수 = &quot; &lt;&lt; p1.use_count() &lt;&lt; &quot;\n&quot;;
-    {
-      std::shared_ptr&lt;Sensor&gt; p2 = p1;             // 복사가 된다. 주인 수가 는다
-      std::cout &lt;&lt; &quot;  주인 수 = &quot; &lt;&lt; p1.use_count() &lt;&lt; &quot;  (p2 가 생겼다)\n&quot;;
-    }
-    std::cout &lt;&lt; &quot;  주인 수 = &quot; &lt;&lt; p1.use_count() &lt;&lt; &quot;  (p2 가 사라졌다)\n&quot;;
+    std::unique_ptr&lt;Sensor&gt; b = std::make_unique&lt;Sensor&gt;(&quot;카메라&quot;, true);
+    b = warm_up(std::move(b));                          // 넘겼다가 돌려받아 다시 b 에 담는다
+    std::cout &lt;&lt; &quot;  돌려받은 b 로 계속 쓴다: &quot; &lt;&lt; b-&gt;name() &lt;&lt; &quot;\n&quot;;
+  }
+  std::cout &lt;&lt; &quot;  중괄호를 나오자 b 가 지웠다\n&quot;;
+
+  std::cout &lt;&lt; &quot;\n⑤ shared_ptr 를 함수에 넘긴다 — 마지막 소유자가 지운다\n&quot;;
+  {
+    std::shared_ptr&lt;Sensor&gt; p = std::make_shared&lt;Sensor&gt;(&quot;카메라&quot;, true);
+    std::cout &lt;&lt; &quot;  참조 횟수 = &quot; &lt;&lt; p.use_count() &lt;&lt; &quot;\n&quot;;
+    use_shared(&quot;주행 모듈&quot;, p);                          // 복사해서 넘긴다. p 도 계속 소유자다
+    std::cout &lt;&lt; &quot;  돌아온 뒤 참조 횟수 = &quot; &lt;&lt; p.use_count() &lt;&lt; &quot;, p 로 계속 쓴다: &quot; &lt;&lt; p-&gt;name() &lt;&lt; &quot;\n&quot;;
+    use_shared(&quot;기록 모듈&quot;, std::move(p));               // 더 안 쓸 거면 넘겨준다. 이제 함수가 마지막 소유자다
+    std::cout &lt;&lt; &quot;  돌아온 뒤 p 는 비었나? &quot; &lt;&lt; (p == nullptr ? &quot;그렇다&quot; : &quot;아니다&quot;) &lt;&lt; &quot;\n&quot;;
   }
 
   std::cout &lt;&lt; &quot;\n⑥ ::SharedPtr 은 타입 별칭일 뿐이다\n&quot;;
   ScanMsg::SharedPtr       msg1 = std::make_shared&lt;ScanMsg&gt;();
   std::shared_ptr&lt;ScanMsg&gt; msg2 = msg1;            // 같은 타입이므로 그대로 대입된다
   std::cout &lt;&lt; &quot;  msg1 과 msg2 가 같은 스캔을 잡고 있나? &quot; &lt;&lt; (msg1 == msg2 ? &quot;그렇다&quot; : &quot;아니다&quot;)
-            &lt;&lt; &quot;  (주인 수 &quot; &lt;&lt; msg1.use_count() &lt;&lt; &quot;, 거리 값 &quot; &lt;&lt; msg1-&gt;ranges.size() &lt;&lt; &quot;개)\n&quot;;
+            &lt;&lt; &quot;  (참조 횟수 &quot; &lt;&lt; msg1.use_count() &lt;&lt; &quot;, 거리 값 &quot; &lt;&lt; msg1-&gt;ranges.size() &lt;&lt; &quot;개)\n&quot;;
   return 0;
 }</code></pre></div>
 </details>
@@ -1118,7 +1275,7 @@ cmake --build build
         <code>s-&gt;ok()</code>와 <code>s-&gt;start()</code>는 그대로 두어도 빌드된다. ① 묶음에서 어느 줄이 사라지는지 본다. 되돌린다.
       </li>
       <li>
-        <strong>(5분) ④ 묶음의 <code>std::move(a)</code>를 <code>a</code>로 바꾸고 빌드한다.</strong> 오류 메시지에서 <code>use of deleted function</code>과 <code>declared here</code> 두 곳을 찾는다. 되돌린다.
+        <strong>(5분) ④-1 묶음의 <code>run(std::move(a))</code>를 <code>run(a)</code>로 바꾸고 빌드한다.</strong> 오류 메시지에서 <code>use of deleted function</code>과 <code>declared here</code> 두 곳을 찾는다. 되돌린다.
       </li>
     </ol>
     <p class="boxtitle">④ 이렇게 되면 성공이다</p>
@@ -1133,22 +1290,31 @@ cmake --build build
   카메라 상태 불량 — 그만둔다
   [카메라 꺼짐]
 
-④ unique_ptr — 복사는 안 되고, std::move 로 주인을 넘긴다
+④-1 unique_ptr 를 함수에 넘겨주고 끝 — 함수가 지운다
   [라이다 켜짐]
-  넘긴 뒤 a 는 비었나? 그렇다
-  이제 주인은 b: 라이다
+  라이다 측정 시작
+  run 이 끝난다
   [라이다 꺼짐]
-  중괄호를 나오자 b 가 지웠다. 한 번만 꺼졌다
+  돌아온 뒤 a 는 비었나? 그렇다
 
-⑤ shared_ptr — 주인이 여럿이다. 마지막 주인이 지운다
+④-2 unique_ptr 를 넘겼다가 처리 결과로 돌려받는다
   [카메라 켜짐]
-  주인 수 = 1
-  주인 수 = 2  (p2 가 생겼다)
-  주인 수 = 1  (p2 가 사라졌다)
+  카메라 예열 끝
+  돌려받은 b 로 계속 쓴다: 카메라
   [카메라 꺼짐]
+  중괄호를 나오자 b 가 지웠다
+
+⑤ shared_ptr 를 함수에 넘긴다 — 마지막 소유자가 지운다
+  [카메라 켜짐]
+  참조 횟수 = 1
+  주행 모듈: 카메라 사용 중 (참조 횟수 2)
+  돌아온 뒤 참조 횟수 = 1, p 로 계속 쓴다: 카메라
+  기록 모듈: 카메라 사용 중 (참조 횟수 1)
+  [카메라 꺼짐]
+  돌아온 뒤 p 는 비었나? 그렇다
 
 ⑥ ::SharedPtr 은 타입 별칭일 뿐이다
-  msg1 과 msg2 가 같은 스캔을 잡고 있나? 그렇다  (주인 수 2, 거리 값 360개)</code></pre>
+  msg1 과 msg2 가 같은 스캔을 잡고 있나? 그렇다  (참조 횟수 2, 거리 값 360개)</code></pre>
     <p class="src">확인한 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0, CMake 3.28)</p>
     <div class="box trap" style="margin-top:1rem">
       <div class="boxtitle">3번에서 아무 오류도 안 난다</div>
