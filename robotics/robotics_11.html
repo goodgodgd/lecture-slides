@@ -954,7 +954,7 @@ int main()
   </div>
   <p>
     함수에 넘길 때 이 차이가 그대로 드러난다. <code>shared_ptr</code>를 값으로 받는 함수에 넘기면 매개변수가 복사본이 되어 <strong>함수가 도는 동안 소유자가 하나 늘고</strong>, 함수가 끝나면 다시 준다.
-    부른 쪽도 계속 소유자이므로 ④-2처럼 <strong>처리 결과를 돌려받을 필요가 없다</strong> — 둘이 같은 객체를 보고 있어서 함수가 한 일은 부른 쪽에서도 그대로 보인다.
+    부른 쪽도 계속 소유자이므로 <strong>처리 결과를 돌려받을 필요가 없다</strong> — 둘이 같은 객체를 보고 있어서 함수가 한 일은 부른 쪽에서도 그대로 보인다.
     부른 쪽이 더 쓰지 않을 거면 <code>std::move</code>로 넘길 수도 있다. 그러면 복사 없이 함수가 소유권을 받고, 그 함수가 <strong>마지막 소유자</strong>라면 함수가 끝날 때 지운다.
   </p>
   <p>
@@ -971,26 +971,28 @@ int main()
   </table>
   </div>
 
-  <h3>예제에 적용 — 카메라 하나를 두 모듈에 넘기며 참조 횟수를 본다</h3>
-  <p>주행 모듈과 기록 모듈이 같은 카메라를 쓴다고 하자. 주행 모듈에는 복사로 넘기고, 카메라를 더 쓰지 않게 된 뒤 기록 모듈에는 <code>std::move</code>로 넘긴다.</p>
-  <h3>5단계 (v5) — 함수 하나와 <code>main</code>에 한 묶음을 더한다</h3>
-  <pre class="lang-cpp"><code>// main 위에
-// 센서를 같이 쓰는 함수 — 값으로 받으면 shared_ptr 가 복사되어 소유자가 하나 는다
-void use_shared(const std::string &amp; who, std::shared_ptr&lt;Sensor&gt; cam)
+  <h3>예제에 적용 — 카메라 하나를 함수에 두 번 넘기며 참조 횟수를 본다</h3>
+  <p>카메라 하나를 같이 쓰는 함수 <code>use</code>에 두 번 넘긴다. 처음에는 복사로 넘기고, 카메라를 더 쓰지 않게 된 뒤에는 <code>std::move</code>로 넘긴다.</p>
+  <h3>5단계 (v5) — 이 절만 보이는 짧은 프로그램</h3>
+  <p>v4는 그대로 두고 새 <code>main.cpp</code>로 시작한다. <code>Sensor</code>는 켜지고 꺼질 때 이름만 찍게 줄였다.</p>
+  <pre class="lang-cpp"><code>// 카메라를 같이 쓰는 함수 — 값으로 받으므로 shared_ptr 가 복사된다
+void use(std::shared_ptr&lt;Sensor&gt; cam)
 {
-  std::cout &lt;&lt; "  " &lt;&lt; who &lt;&lt; ": " &lt;&lt; cam-&gt;name() &lt;&lt; " 사용 중 (참조 횟수 " &lt;&lt; cam.use_count() &lt;&lt; ")\n";
-}   // 여기서 매개변수 cam 이 사라진다. 참조 횟수가 0 이 되었을 때만 지운다
+  std::cout &lt;&lt; "  함수 안: 참조 횟수 " &lt;&lt; cam.use_count() &lt;&lt; "\n";
+}   // 여기서 cam 이 사라진다. 참조 횟수가 0 이 될 때만 지운다
 
-  // main 에
-  std::cout &lt;&lt; "\n⑤ shared_ptr 를 함수에 넘긴다 — 마지막 소유자가 지운다\n";
-  {
-    std::shared_ptr&lt;Sensor&gt; p = std::make_shared&lt;Sensor&gt;("카메라", true);
-    std::cout &lt;&lt; "  참조 횟수 = " &lt;&lt; p.use_count() &lt;&lt; "\n";
-    use_shared("주행 모듈", p);                          // 복사해서 넘긴다. p 도 계속 소유자다
-    std::cout &lt;&lt; "  돌아온 뒤 참조 횟수 = " &lt;&lt; p.use_count() &lt;&lt; ", p 로 계속 쓴다: " &lt;&lt; p-&gt;name() &lt;&lt; "\n";
-    use_shared("기록 모듈", std::move(p));               // 더 안 쓸 거면 넘겨준다. 이제 함수가 마지막 소유자다
-    std::cout &lt;&lt; "  돌아온 뒤 p 는 비었나? " &lt;&lt; (p == nullptr ? "그렇다" : "아니다") &lt;&lt; "\n";
-  }</code></pre>
+int main()
+{
+  std::shared_ptr&lt;Sensor&gt; p = std::make_shared&lt;Sensor&gt;("카메라");
+  std::cout &lt;&lt; "참조 횟수 " &lt;&lt; p.use_count() &lt;&lt; "\n";
+
+  use(p);                         // 복사해서 넘긴다. p 도 계속 소유자다
+  std::cout &lt;&lt; "돌아온 뒤: 참조 횟수 " &lt;&lt; p.use_count() &lt;&lt; "\n";
+
+  use(std::move(p));              // 더 안 쓸 거면 넘겨준다. 함수가 마지막 소유자다
+  std::cout &lt;&lt; "돌아온 뒤: p 는 " &lt;&lt; (p == nullptr ? "비었다" : "그대로다") &lt;&lt; "\n";
+  return 0;
+}</code></pre>
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
     <dl>
@@ -999,14 +1001,13 @@ void use_shared(const std::string &amp; who, std::shared_ptr&lt;Sensor&gt; cam)
     </dl>
   </div>
   <h3>실제로 나온 출력</h3>
-  <pre><code>⑤ shared_ptr 를 함수에 넘긴다 — 마지막 소유자가 지운다
-  [카메라 켜짐]
-  참조 횟수 = 1
-  주행 모듈: 카메라 사용 중 (참조 횟수 2)
-  돌아온 뒤 참조 횟수 = 1, p 로 계속 쓴다: 카메라
-  기록 모듈: 카메라 사용 중 (참조 횟수 1)
-  [카메라 꺼짐]
-  돌아온 뒤 p 는 비었나? 그렇다</code></pre>
+  <pre><code>[카메라 켜짐]
+참조 횟수 1
+  함수 안: 참조 횟수 2
+돌아온 뒤: 참조 횟수 1
+  함수 안: 참조 횟수 1
+[카메라 꺼짐]
+돌아온 뒤: p 는 비었다</code></pre>
   <!-- fullcode "전체 코드 — v5 (5단계 · shared_ptr 와 참조 횟수) main.cpp" build="cmake --build build && ./build/sensor_ptr"
        l11_raii_ptr/steps/step5/main.cpp
   -->
@@ -1021,85 +1022,36 @@ void use_shared(const std::string &amp; who, std::shared_ptr&lt;Sensor&gt; cam)
 class Sensor
 {
 public:
-  Sensor(const std::string &amp; n, bool ok) : n_(n), ok_(ok) { std::cout &lt;&lt; &quot;  [&quot; &lt;&lt; n_ &lt;&lt; &quot; 켜짐]\n&quot;; }
-  ~Sensor() { std::cout &lt;&lt; &quot;  [&quot; &lt;&lt; n_ &lt;&lt; &quot; 꺼짐]\n&quot;; }
-  bool ok() const { return ok_; }
-  void start() { std::cout &lt;&lt; &quot;  &quot; &lt;&lt; n_ &lt;&lt; &quot; 측정 시작\n&quot;; }
-  const std::string &amp; name() const { return n_; }
+  Sensor(const std::string &amp; n) : n_(n) { std::cout &lt;&lt; &quot;[&quot; &lt;&lt; n_ &lt;&lt; &quot; 켜짐]\n&quot;; }
+  ~Sensor() { std::cout &lt;&lt; &quot;[&quot; &lt;&lt; n_ &lt;&lt; &quot; 꺼짐]\n&quot;; }
 private:
   std::string n_;
-  bool ok_;
 };
 
-// 센서 하나를 켜고, 상태가 나쁘면 그만두고, 좋으면 측정을 시작한다
-void setup(const std::string &amp; name, bool ok)
+// 카메라를 같이 쓰는 함수 — 값으로 받으므로 shared_ptr 가 복사된다
+void use(std::shared_ptr&lt;Sensor&gt; cam)
 {
-  std::unique_ptr&lt;Sensor&gt; s = std::make_unique&lt;Sensor&gt;(name, ok);   // 표준 스마트 포인터
-  if (!s-&gt;ok()) {
-    std::cout &lt;&lt; &quot;  &quot; &lt;&lt; name &lt;&lt; &quot; 상태 불량 — 그만둔다\n&quot;;
-    return;
-  }
-  s-&gt;start();
-}
-
-// 센서를 맡아서 끝까지 쓰는 함수 — 소유권을 받아 간다
-void run(std::unique_ptr&lt;Sensor&gt; s)
-{
-  s-&gt;start();
-  std::cout &lt;&lt; &quot;  run 이 끝난다\n&quot;;
-}   // 여기서 매개변수 s 가 사라지며 센서를 지운다
-
-// 센서를 받아 처리한 뒤 돌려주는 함수 — 소유권을 받았다가 다시 넘겨준다
-std::unique_ptr&lt;Sensor&gt; warm_up(std::unique_ptr&lt;Sensor&gt; s)
-{
-  std::cout &lt;&lt; &quot;  &quot; &lt;&lt; s-&gt;name() &lt;&lt; &quot; 예열 끝\n&quot;;
-  return s;                // 돌려줄 때는 std::move 를 쓰지 않는다
-}
-
-// 센서를 같이 쓰는 함수 — 값으로 받으면 shared_ptr 가 복사되어 소유자가 하나 는다
-void use_shared(const std::string &amp; who, std::shared_ptr&lt;Sensor&gt; cam)
-{
-  std::cout &lt;&lt; &quot;  &quot; &lt;&lt; who &lt;&lt; &quot;: &quot; &lt;&lt; cam-&gt;name() &lt;&lt; &quot; 사용 중 (참조 횟수 &quot; &lt;&lt; cam.use_count() &lt;&lt; &quot;)\n&quot;;
-}   // 여기서 매개변수 cam 이 사라진다. 참조 횟수가 0 이 되었을 때만 지운다
+  std::cout &lt;&lt; &quot;  함수 안: 참조 횟수 &quot; &lt;&lt; cam.use_count() &lt;&lt; &quot;\n&quot;;
+}   // 여기서 cam 이 사라진다. 참조 횟수가 0 이 될 때만 지운다
 
 int main()
 {
-  std::cout &lt;&lt; &quot;① 나가는 길이 둘인 함수\n&quot;;
-  setup(&quot;라이다&quot;, true);
-  setup(&quot;카메라&quot;, false);
+  std::shared_ptr&lt;Sensor&gt; p = std::make_shared&lt;Sensor&gt;(&quot;카메라&quot;);
+  std::cout &lt;&lt; &quot;참조 횟수 &quot; &lt;&lt; p.use_count() &lt;&lt; &quot;\n&quot;;
 
-  std::cout &lt;&lt; &quot;\n④-1 unique_ptr 를 함수에 넘겨주고 끝 — 함수가 지운다\n&quot;;
-  {
-    std::unique_ptr&lt;Sensor&gt; a = std::make_unique&lt;Sensor&gt;(&quot;라이다&quot;, true);
-    run(std::move(a));                                  // 소유권이 a 에서 run 의 s 로 간다
-    std::cout &lt;&lt; &quot;  돌아온 뒤 a 는 비었나? &quot; &lt;&lt; (a == nullptr ? &quot;그렇다&quot; : &quot;아니다&quot;) &lt;&lt; &quot;\n&quot;;
-  }
+  use(p);                         // 복사해서 넘긴다. p 도 계속 소유자다
+  std::cout &lt;&lt; &quot;돌아온 뒤: 참조 횟수 &quot; &lt;&lt; p.use_count() &lt;&lt; &quot;\n&quot;;
 
-  std::cout &lt;&lt; &quot;\n④-2 unique_ptr 를 넘겼다가 처리 결과로 돌려받는다\n&quot;;
-  {
-    std::unique_ptr&lt;Sensor&gt; b = std::make_unique&lt;Sensor&gt;(&quot;카메라&quot;, true);
-    b = warm_up(std::move(b));                          // 넘겼다가 돌려받아 다시 b 에 담는다
-    std::cout &lt;&lt; &quot;  돌려받은 b 로 계속 쓴다: &quot; &lt;&lt; b-&gt;name() &lt;&lt; &quot;\n&quot;;
-  }
-  std::cout &lt;&lt; &quot;  중괄호를 나오자 b 가 지웠다\n&quot;;
-
-  std::cout &lt;&lt; &quot;\n⑤ shared_ptr 를 함수에 넘긴다 — 마지막 소유자가 지운다\n&quot;;
-  {
-    std::shared_ptr&lt;Sensor&gt; p = std::make_shared&lt;Sensor&gt;(&quot;카메라&quot;, true);
-    std::cout &lt;&lt; &quot;  참조 횟수 = &quot; &lt;&lt; p.use_count() &lt;&lt; &quot;\n&quot;;
-    use_shared(&quot;주행 모듈&quot;, p);                          // 복사해서 넘긴다. p 도 계속 소유자다
-    std::cout &lt;&lt; &quot;  돌아온 뒤 참조 횟수 = &quot; &lt;&lt; p.use_count() &lt;&lt; &quot;, p 로 계속 쓴다: &quot; &lt;&lt; p-&gt;name() &lt;&lt; &quot;\n&quot;;
-    use_shared(&quot;기록 모듈&quot;, std::move(p));               // 더 안 쓸 거면 넘겨준다. 이제 함수가 마지막 소유자다
-    std::cout &lt;&lt; &quot;  돌아온 뒤 p 는 비었나? &quot; &lt;&lt; (p == nullptr ? &quot;그렇다&quot; : &quot;아니다&quot;) &lt;&lt; &quot;\n&quot;;
-  }
+  use(std::move(p));              // 더 안 쓸 거면 넘겨준다. 함수가 마지막 소유자다
+  std::cout &lt;&lt; &quot;돌아온 뒤: p 는 &quot; &lt;&lt; (p == nullptr ? &quot;비었다&quot; : &quot;그대로다&quot;) &lt;&lt; &quot;\n&quot;;
   return 0;
 }</code></pre></div>
 </details>
 <!-- /fullcode -->
   <div class="interp">
-    <strong>해석:</strong> 주행 모듈에서는 <strong>1 → 2 → 1</strong>이다. 함수가 도는 동안 매개변수 <code>cam</code>이 소유자 하나를 더했고, 함수가 끝나 <code>cam</code>이 사라질 때는 <strong>꺼지지 않았다</strong> — 아직 <code>p</code>가 소유자이기 때문이다. 돌려받지 않았는데도 <code>p</code>로 그대로 쓴다.
-    기록 모듈에는 <code>std::move(p)</code>로 넘겼으니 복사가 없어 횟수가 <strong>1 그대로</strong>이고, 이제 <code>cam</code>이 마지막 소유자다.
-    그래서 <code>[카메라 꺼짐]</code>이 <code>main</code>으로 돌아오기 <strong>전에</strong> 찍혔다 — ④-1의 <code>run</code>과 같은 모양이다.
+    <strong>해석:</strong> 첫 번째 <code>use(p)</code>에서는 <strong>1 → 2 → 1</strong>이다. 함수가 도는 동안 매개변수 <code>cam</code>이 소유자 하나를 더했고, 함수가 끝나 <code>cam</code>이 사라질 때는 <strong>꺼지지 않았다</strong> — 아직 <code>p</code>가 소유자이기 때문이다. 돌려받지 않아도 <code>p</code>로 그대로 쓸 수 있다.
+    두 번째 <code>use(std::move(p))</code>는 복사가 없어 함수 안에서도 <strong>1</strong>이고, 이제 <code>cam</code>이 마지막 소유자다.
+    그래서 <code>[카메라 꺼짐]</code>이 <code>main</code>으로 돌아오기 <strong>전에</strong> 찍혔다.
   </div>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
@@ -1118,120 +1070,46 @@ int main()
   </p>
 
   <h3>예제에 적용 — 스캔 구조체를 넣고 별칭을 하나 붙인다</h3>
-  <h3>6단계 (v6, 완성본) — <code>ScanMsg</code>와 <code>ScanMsg::SharedPtr</code></h3>
-  <p>맨 위에 <code>#include &lt;vector&gt;</code>를 더하고, <code>Sensor</code> 아래에 라이다 한 바퀴를 흉내 낸 구조체를 둔다.</p>
+  <h3>6단계 (v6) — <code>ScanMsg</code>와 <code>ScanMsg::SharedPtr</code></h3>
+  <p>v5처럼 이 절만 보이는 짧은 프로그램이다. 라이다 한 바퀴를 흉내 낸 구조체에 별칭을 하나 붙인다.</p>
   <pre class="lang-cpp"><code>struct ScanMsg {
   std::vector&lt;float&gt; ranges;
-  ScanMsg() : ranges(360, 1.0f) {}       // 라이다 한 바퀴 — 거리 값 360개
-  using SharedPtr = std::shared_ptr&lt;ScanMsg&gt;;   // 이 구조체 안에 타입 별칭을 하나 둔다
+  ScanMsg() : ranges(360, 1.0f) {}                // 라이다 한 바퀴 — 거리 값 360개
+  using SharedPtr = std::shared_ptr&lt;ScanMsg&gt;;     // 이 구조체 안에 타입 별칭을 하나 둔다
 };
-
-  // main 에
-  std::cout &lt;&lt; "\n⑥ ::SharedPtr 은 타입 별칭일 뿐이다\n";
-  ScanMsg::SharedPtr       msg1 = std::make_shared&lt;ScanMsg&gt;();
-  std::shared_ptr&lt;ScanMsg&gt; msg2 = msg1;            // 같은 타입이므로 그대로 대입된다
-  std::cout &lt;&lt; "  msg1 과 msg2 가 같은 스캔을 잡고 있나? " &lt;&lt; (msg1 == msg2 ? "그렇다" : "아니다")
-            &lt;&lt; "  (참조 횟수 " &lt;&lt; msg1.use_count() &lt;&lt; ", 거리 값 " &lt;&lt; msg1-&gt;ranges.size() &lt;&lt; "개)\n";</code></pre>
-  <h3>실제로 나온 출력</h3>
-  <pre><code>⑥ ::SharedPtr 은 타입 별칭일 뿐이다
-  msg1 과 msg2 가 같은 스캔을 잡고 있나? 그렇다  (참조 횟수 2, 거리 값 360개)</code></pre>
-  <!-- fullcode "전체 코드 — v6 완성본 (6단계 · 타입 별칭 using) main.cpp" build="cmake --build build && ./build/sensor_ptr"
-       l11_raii_ptr/steps/step6/main.cpp
-  -->
-<details class="fullcode">
-  <summary>전체 코드 — v6 완성본 (6단계 · 타입 별칭 using) main.cpp</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/sensor_ptr</code></p>
-  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 11회 센서 켜고 끄기 — v6 완성본 (6단계: 타입 별칭 using)
-#include &lt;iostream&gt;
-#include &lt;memory&gt;
-#include &lt;string&gt;
-#include &lt;vector&gt;
-
-class Sensor
-{
-public:
-  Sensor(const std::string &amp; n, bool ok) : n_(n), ok_(ok) { std::cout &lt;&lt; &quot;  [&quot; &lt;&lt; n_ &lt;&lt; &quot; 켜짐]\n&quot;; }
-  ~Sensor() { std::cout &lt;&lt; &quot;  [&quot; &lt;&lt; n_ &lt;&lt; &quot; 꺼짐]\n&quot;; }
-  bool ok() const { return ok_; }
-  void start() { std::cout &lt;&lt; &quot;  &quot; &lt;&lt; n_ &lt;&lt; &quot; 측정 시작\n&quot;; }
-  const std::string &amp; name() const { return n_; }
-private:
-  std::string n_;
-  bool ok_;
-};
-
-struct ScanMsg {
-  std::vector&lt;float&gt; ranges;
-  ScanMsg() : ranges(360, 1.0f) {}       // 라이다 한 바퀴 — 거리 값 360개
-  using SharedPtr = std::shared_ptr&lt;ScanMsg&gt;;   // 이 구조체 안에 타입 별칭을 하나 둔다
-};
-
-// 센서 하나를 켜고, 상태가 나쁘면 그만두고, 좋으면 측정을 시작한다
-void setup(const std::string &amp; name, bool ok)
-{
-  std::unique_ptr&lt;Sensor&gt; s = std::make_unique&lt;Sensor&gt;(name, ok);   // 표준 스마트 포인터
-  if (!s-&gt;ok()) {
-    std::cout &lt;&lt; &quot;  &quot; &lt;&lt; name &lt;&lt; &quot; 상태 불량 — 그만둔다\n&quot;;
-    return;
-  }
-  s-&gt;start();
-}
-
-// 센서를 맡아서 끝까지 쓰는 함수 — 소유권을 받아 간다
-void run(std::unique_ptr&lt;Sensor&gt; s)
-{
-  s-&gt;start();
-  std::cout &lt;&lt; &quot;  run 이 끝난다\n&quot;;
-}   // 여기서 매개변수 s 가 사라지며 센서를 지운다
-
-// 센서를 받아 처리한 뒤 돌려주는 함수 — 소유권을 받았다가 다시 넘겨준다
-std::unique_ptr&lt;Sensor&gt; warm_up(std::unique_ptr&lt;Sensor&gt; s)
-{
-  std::cout &lt;&lt; &quot;  &quot; &lt;&lt; s-&gt;name() &lt;&lt; &quot; 예열 끝\n&quot;;
-  return s;                // 돌려줄 때는 std::move 를 쓰지 않는다
-}
-
-// 센서를 같이 쓰는 함수 — 값으로 받으면 shared_ptr 가 복사되어 소유자가 하나 는다
-void use_shared(const std::string &amp; who, std::shared_ptr&lt;Sensor&gt; cam)
-{
-  std::cout &lt;&lt; &quot;  &quot; &lt;&lt; who &lt;&lt; &quot;: &quot; &lt;&lt; cam-&gt;name() &lt;&lt; &quot; 사용 중 (참조 횟수 &quot; &lt;&lt; cam.use_count() &lt;&lt; &quot;)\n&quot;;
-}   // 여기서 매개변수 cam 이 사라진다. 참조 횟수가 0 이 되었을 때만 지운다
 
 int main()
 {
-  std::cout &lt;&lt; &quot;① 나가는 길이 둘인 함수\n&quot;;
-  setup(&quot;라이다&quot;, true);
-  setup(&quot;카메라&quot;, false);
-
-  std::cout &lt;&lt; &quot;\n④-1 unique_ptr 를 함수에 넘겨주고 끝 — 함수가 지운다\n&quot;;
-  {
-    std::unique_ptr&lt;Sensor&gt; a = std::make_unique&lt;Sensor&gt;(&quot;라이다&quot;, true);
-    run(std::move(a));                                  // 소유권이 a 에서 run 의 s 로 간다
-    std::cout &lt;&lt; &quot;  돌아온 뒤 a 는 비었나? &quot; &lt;&lt; (a == nullptr ? &quot;그렇다&quot; : &quot;아니다&quot;) &lt;&lt; &quot;\n&quot;;
-  }
-
-  std::cout &lt;&lt; &quot;\n④-2 unique_ptr 를 넘겼다가 처리 결과로 돌려받는다\n&quot;;
-  {
-    std::unique_ptr&lt;Sensor&gt; b = std::make_unique&lt;Sensor&gt;(&quot;카메라&quot;, true);
-    b = warm_up(std::move(b));                          // 넘겼다가 돌려받아 다시 b 에 담는다
-    std::cout &lt;&lt; &quot;  돌려받은 b 로 계속 쓴다: &quot; &lt;&lt; b-&gt;name() &lt;&lt; &quot;\n&quot;;
-  }
-  std::cout &lt;&lt; &quot;  중괄호를 나오자 b 가 지웠다\n&quot;;
-
-  std::cout &lt;&lt; &quot;\n⑤ shared_ptr 를 함수에 넘긴다 — 마지막 소유자가 지운다\n&quot;;
-  {
-    std::shared_ptr&lt;Sensor&gt; p = std::make_shared&lt;Sensor&gt;(&quot;카메라&quot;, true);
-    std::cout &lt;&lt; &quot;  참조 횟수 = &quot; &lt;&lt; p.use_count() &lt;&lt; &quot;\n&quot;;
-    use_shared(&quot;주행 모듈&quot;, p);                          // 복사해서 넘긴다. p 도 계속 소유자다
-    std::cout &lt;&lt; &quot;  돌아온 뒤 참조 횟수 = &quot; &lt;&lt; p.use_count() &lt;&lt; &quot;, p 로 계속 쓴다: &quot; &lt;&lt; p-&gt;name() &lt;&lt; &quot;\n&quot;;
-    use_shared(&quot;기록 모듈&quot;, std::move(p));               // 더 안 쓸 거면 넘겨준다. 이제 함수가 마지막 소유자다
-    std::cout &lt;&lt; &quot;  돌아온 뒤 p 는 비었나? &quot; &lt;&lt; (p == nullptr ? &quot;그렇다&quot; : &quot;아니다&quot;) &lt;&lt; &quot;\n&quot;;
-  }
-
-  std::cout &lt;&lt; &quot;\n⑥ ::SharedPtr 은 타입 별칭일 뿐이다\n&quot;;
   ScanMsg::SharedPtr       msg1 = std::make_shared&lt;ScanMsg&gt;();
-  std::shared_ptr&lt;ScanMsg&gt; msg2 = msg1;            // 같은 타입이므로 그대로 대입된다
-  std::cout &lt;&lt; &quot;  msg1 과 msg2 가 같은 스캔을 잡고 있나? &quot; &lt;&lt; (msg1 == msg2 ? &quot;그렇다&quot; : &quot;아니다&quot;)
+  std::shared_ptr&lt;ScanMsg&gt; msg2 = msg1;           // 같은 타입이므로 그대로 대입된다
+  std::cout &lt;&lt; "msg1 과 msg2 가 같은 스캔인가? " &lt;&lt; (msg1 == msg2 ? "그렇다" : "아니다")
+            &lt;&lt; "  (참조 횟수 " &lt;&lt; msg1.use_count() &lt;&lt; ", 거리 값 " &lt;&lt; msg1-&gt;ranges.size() &lt;&lt; "개)\n";
+  return 0;
+}</code></pre>
+  <h3>실제로 나온 출력</h3>
+  <pre><code>msg1 과 msg2 가 같은 스캔인가? 그렇다  (참조 횟수 2, 거리 값 360개)</code></pre>
+  <!-- fullcode "전체 코드 — v6 (6단계 · 타입 별칭 using) main.cpp" build="cmake --build build && ./build/sensor_ptr"
+       l11_raii_ptr/steps/step6/main.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — v6 (6단계 · 타입 별칭 using) main.cpp</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/sensor_ptr</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 11회 — v6 (6단계: 타입 별칭 using)
+#include &lt;iostream&gt;
+#include &lt;memory&gt;
+#include &lt;vector&gt;
+
+struct ScanMsg {
+  std::vector&lt;float&gt; ranges;
+  ScanMsg() : ranges(360, 1.0f) {}                // 라이다 한 바퀴 — 거리 값 360개
+  using SharedPtr = std::shared_ptr&lt;ScanMsg&gt;;     // 이 구조체 안에 타입 별칭을 하나 둔다
+};
+
+int main()
+{
+  ScanMsg::SharedPtr       msg1 = std::make_shared&lt;ScanMsg&gt;();
+  std::shared_ptr&lt;ScanMsg&gt; msg2 = msg1;           // 같은 타입이므로 그대로 대입된다
+  std::cout &lt;&lt; &quot;msg1 과 msg2 가 같은 스캔인가? &quot; &lt;&lt; (msg1 == msg2 ? &quot;그렇다&quot; : &quot;아니다&quot;)
             &lt;&lt; &quot;  (참조 횟수 &quot; &lt;&lt; msg1.use_count() &lt;&lt; &quot;, 거리 값 &quot; &lt;&lt; msg1-&gt;ranges.size() &lt;&lt; &quot;개)\n&quot;;
   return 0;
 }</code></pre></div>
@@ -1258,7 +1136,7 @@ int main()
     <p class="boxtitle">③ 절차</p>
     <ol>
       <li>
-        <strong>(3분) 작업 폴더를 만들고</strong> ⑥절 끝의 📄 <strong>「v6 완성본」</strong> 상자에서 <code>main.cpp</code>를, ①절 상자에서 <code>CMakeLists.txt</code>를 「복사」해 만든다. <strong>타이핑하지 않는다.</strong>
+        <strong>(3분) 작업 폴더를 만들고</strong> ④절의 📄 <strong>「v4」</strong> 상자에서 <code>main.cpp</code>를, ①절 상자에서 <code>CMakeLists.txt</code>를 「복사」해 만든다. <strong>타이핑하지 않는다.</strong>
         <pre><code>mkdir -p ~/robot_ws/l11/sensor_ptr
 cd ~/robot_ws/l11/sensor_ptr
 code .</code></pre>
@@ -1280,7 +1158,7 @@ cmake --build build
     </ol>
     <p class="boxtitle">④ 이렇게 되면 성공이다</p>
     <p>3번에서 <strong><code>[라이다 꺼짐]</code>과 <code>[카메라 꺼짐]</code>이 둘 다 사라지는 것</strong>을 봤고 — <code>delete</code>가 한 줄도 없으니 아무도 안 지운다 — 4번의 오류가 <strong>어느 줄에서 무엇을 막았는지</strong> 한 줄로 말할 수 있다.</p>
-    <p><strong>성공 화면</strong> — 완성본을 그대로 돌리면 아래가 나온다.</p>
+    <p><strong>성공 화면</strong> — v4를 그대로 돌리면 아래가 나온다.</p>
     <pre class="lang-sh"><code>$ ./build/sensor_ptr
 ① 나가는 길이 둘인 함수
   [라이다 켜짐]
@@ -1302,19 +1180,7 @@ cmake --build build
   카메라 예열 끝
   돌려받은 b 로 계속 쓴다: 카메라
   [카메라 꺼짐]
-  중괄호를 나오자 b 가 지웠다
-
-⑤ shared_ptr 를 함수에 넘긴다 — 마지막 소유자가 지운다
-  [카메라 켜짐]
-  참조 횟수 = 1
-  주행 모듈: 카메라 사용 중 (참조 횟수 2)
-  돌아온 뒤 참조 횟수 = 1, p 로 계속 쓴다: 카메라
-  기록 모듈: 카메라 사용 중 (참조 횟수 1)
-  [카메라 꺼짐]
-  돌아온 뒤 p 는 비었나? 그렇다
-
-⑥ ::SharedPtr 은 타입 별칭일 뿐이다
-  msg1 과 msg2 가 같은 스캔을 잡고 있나? 그렇다  (참조 횟수 2, 거리 값 360개)</code></pre>
+  중괄호를 나오자 b 가 지웠다</code></pre>
     <p class="src">확인한 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0, CMake 3.28)</p>
     <div class="box trap" style="margin-top:1rem">
       <div class="boxtitle">3번에서 아무 오류도 안 난다</div>
