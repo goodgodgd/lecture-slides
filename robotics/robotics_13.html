@@ -31,7 +31,7 @@
   <a href="#summary">한 장 요약</a>
   <a href="#story">📖 STL은 어디서 왔나</a>
   <a href="#program">⓪ 오늘의 프로그램</a>
-  <a href="#block1">① 가장 가까운 것 찾기</a>
+  <a href="#block1">① 가장 작은 값 찾기</a>
   <a href="#block2">② 쓸 만한 값 세기</a>
   <a href="#block3">③ 골라 담기</a>
   <a href="#block4">④ 나머지 여섯 개</a>
@@ -203,6 +203,14 @@ int main()
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
     <dl>
+      <dt>&lt;cstdio&gt; 와 std::printf</dt>
+      <dd>7회의 <code>printf</code>와 <strong>같은 함수</strong>다. C 헤더 <code>&lt;stdio.h&gt;</code>를 C++ 이름으로 부른 것이 <code>&lt;cstdio&gt;</code>이고,
+          이 헤더는 함수를 <code>std::</code> 안에 넣어 준다. <code>&lt;cmath&gt;</code>의 <code>std::isfinite</code>와 같은 짝이다.
+          <br>7회에서는 <code>std::cout</code>으로 바꿨는데 왜 다시 쓸까? 이 회차는 거리 값을 <strong>소수 둘째 자리로 맞춰</strong> 여러 번 찍는다.
+          <code>%.2f</code> 한 줄이면 되는 것을 <code>std::cout</code>으로 하려면 자릿수를 정하는 도구를 하나 더 배워야 한다.
+          그래서 여기서는 <code>printf</code>를 쓴다. 7회에서 본 대로 서식을 타입에 맞게 고르는 것만 조심하면 된다
+          — <code>raw.size()</code>를 <code>static_cast&lt;int&gt;</code>로 바꿔 넘기는 것도 <code>%d</code>에 맞추려는 것이다.</dd>
+
       <dt>std::nanf("")</dt>
       <dd><code>NaN</code>(숫자가 아님) 값을 하나 만들어 준다. 라이다가 측정에 실패했을 때 보내는 것과 같은 값이다.
           여기서는 함정을 재현하려고 일부러 섞었다. <code>INFINITY</code>는 6회에서 본 그 값이다.</dd>
@@ -249,27 +257,27 @@ int main()
   </p>
 
   <!-- ── 💻 코딩 블록 1 ── -->
-  <h2 id="block1">① 가장 가까운 장애물을 찾는 코드 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+  <h2 id="block1">① 가장 작은 값을 찾는 코드 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
   <h3>언제 이게 필요해지나</h3>
   <p>
-    라이다가 준 거리 배열에서 <strong>가장 가까운 값</strong>을 찾으려고 한다.
-    앞에 뭔가 있는지 판단하려면 이게 첫 단계다.
-    배열은 <strong>0번이 정면</strong>이고 반시계 방향으로 돌아가므로, 몇 번째 칸인지가 곧 방향이다.
+    라이다가 준 거리 배열에서 <strong>가장 작은 값</strong>을 찾으려고 한다.
+    거리 값이 가장 작은 방향에 가장 가까운 장애물이 있다. 앞에 뭔가 있는지 판단하려면 이게 첫 단계다.
+    배열은 <strong>0번이 정면</strong>이고 반시계 방향으로 돌아가므로, 원소의 인덱스가 곧 방향이다.
   </p>
 
   <div class="codelabel bad">AI가 보통 주는 코드 🔴 — <code>main</code>의 출력 줄 아래에 이렇게 넣는다</div>
   <pre class="lang-cpp before"><code>  // … 1단계까지의 줄은 그대로 …
-  // ① 가장 가까운 값 — AI가 보통 주는 모양
+  // ① 가장 작은 값 — AI가 보통 주는 모양
   float min_range = 999.0f;
   for (size_t i = 0; i &lt; raw.size(); i++) {
     if (raw[i] &lt; min_range) { min_range = raw[i]; }
   }
-  std::printf("for 문      가장 가까운 값        = %.2f\n", min_range);
+  std::printf("for 문 가장 작은 값 = %.2f\n", min_range);
   return 0;</code></pre>
 
   <h3>실제로 나온 출력</h3>
-  <pre><code>for 문      가장 가까운 값        = 0.10</code></pre>
+  <pre><code>for 문 가장 작은 값 = 0.10</code></pre>
 
   <!-- fullcode "전체 코드 — main.cpp 변형 (AI가 준 for문을 그대로 넣은 판)" build="g++ -std=c++17 -O2 -o scan_algo main.cpp && ./scan_algo"
        l13_stl/steps/step2_for.cpp as main.cpp
@@ -293,12 +301,12 @@ int main()
   for (float r : raw) { std::printf(&quot;%.2f &quot;, r); }
   std::printf(&quot;\n잴 수 있는 거리 = %.2f ~ %.2f m\n&quot;, lo, hi);
 
-  // ① 가장 가까운 값 — AI가 보통 주는 모양
+  // ① 가장 작은 값 — AI가 보통 주는 모양
   float min_range = 999.0f;
   for (size_t i = 0; i &lt; raw.size(); i++) {
     if (raw[i] &lt; min_range) { min_range = raw[i]; }
   }
-  std::printf(&quot;for 문      가장 가까운 값        = %.2f\n&quot;, min_range);
+  std::printf(&quot;for 문 가장 작은 값 = %.2f\n&quot;, min_range);
   return 0;
 }</code></pre></div>
 </details>
@@ -325,7 +333,7 @@ int main()
   <h3>이렇게 말하면 된다</h3>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
-    최솟값 찾는 for문을 <code>std::min_element</code>로 바꿔 줘. 초깃값을 임의로 두지 말고, 배열이 비었을 때도 안전하게 처리해 줘. 가장 가까운 값이 앞에서 몇 번째인지도 같이 찍어 줘.
+    최솟값 찾는 for문을 <code>std::min_element</code>로 바꿔 줘. 초깃값을 임의로 두지 말고, 배열이 비었을 때도 안전하게 처리해 줘. 가장 작은 값의 인덱스도 같이 찍어 줘.
   </div>
 
   <div class="codelabel good">받은 코드 — for문 다섯 줄이 이 네 줄로 바뀐다. 맨 위에 헤더 둘이 더 붙는다</div>
@@ -335,10 +343,10 @@ int main()
 #include &lt;iterator&gt;    // std::distance · std::back_inserter
 #include &lt;vector&gt;
   // …
-  // ① 가장 가까운 값 — min_element 는 값이 아니라 「자리」를 돌려준다
+  // ① 가장 작은 값 — min_element 는 값이 아니라 「자리」를 돌려준다
   const auto it = std::min_element(raw.begin(), raw.end());
   if (it == raw.end()) { return 1; }    // 배열이 비었다 — 여기서 끝낸다
-  std::printf("min_element 가장 가까운 값        = %.2f (앞에서 %d번째)\n",
+  std::printf("min_element 가장 작은 값 = %.2f (인덱스 %d)\n",
               *it, static_cast&lt;int&gt;(std::distance(raw.begin(), it)));
   return 0;</code></pre>
 
@@ -351,16 +359,16 @@ int main()
           여기서는 <code>min_element</code>를 쓰려고 넣었다.</dd>
 
       <dt>raw.begin() / raw.end()</dt>
-      <dd>배열의 <strong>첫 칸</strong>과 <strong>마지막 칸 다음</strong>을 가리키는 위치표다.
-          <code>end()</code>는 마지막 값이 아니라 <strong>끝을 지나간 자리</strong>라는 것이 중요하다.
+      <dd>12회 ⑦절의 <strong>반복자</strong>다. <code>begin()</code>은 첫 원소를, <code>end()</code>는 <strong>마지막 원소 다음 빈자리</strong>를 가리킨다.
+          표준 알고리즘은 전부 이렇게 <strong>반복자 한 쌍</strong>으로 구간을 받는다.
           여기서는 "이 구간 전체를 봐 달라"고 알려 주는 데 썼다.</dd>
 
       <dt>std::min_element(first, last)</dt>
-      <dd>구간에서 가장 작은 것이 <strong>어디 있는지</strong>를 돌려준다. 값이 아니라 <strong>위치</strong>다.
-          여기서는 그 위치를 <code>it</code>에 받았다.</dd>
+      <dd>구간에서 가장 작은 것이 <strong>어디 있는지</strong>를 돌려준다. 값이 아니라 그 자리를 가리키는 <strong>반복자</strong>다.
+          여기서는 그 반복자를 <code>it</code>에 받았다.</dd>
 
       <dt>*it</dt>
-      <dd>위치표 앞에 별표를 붙이면 <strong>그 자리에 있는 값</strong>이 나온다.
+      <dd>반복자 앞에 <code>*</code>를 붙이면 <strong>그 자리에 있는 값</strong>이 나온다(12회 ⑦절).
           여기서는 <code>min_element</code>가 가리킨 자리의 거리 값을 꺼내는 데 썼다.</dd>
 
       <dt>it == raw.end()</dt>
@@ -370,30 +378,30 @@ int main()
     </dl>
   </div>
 
-  <h3>가장 가까운 것이 「몇 번 방향」인지도 알아야 한다</h3>
+  <h3>가장 작은 값의 인덱스도 알아야 한다</h3>
   <p>
     거리만으로는 부족하다. <strong>어느 쪽에 있는지</strong>를 알아야 피할 수 있다.
-    받은 코드의 마지막 줄이 그 일을 한다 — <code>min_element</code>가 돌려준 자리가 <strong>앞에서 몇 번째인지</strong>를 센다.
-    360개짜리 진짜 스캔이라면 그 번호가 곧 각도(도)다. 0 = 정면, 90 = 왼쪽, 270 = 오른쪽.
+    받은 코드의 마지막 줄이 그 일을 한다 — <code>min_element</code>가 돌려준 자리의 <strong>인덱스</strong>를 구한다. 인덱스는 <code>raw[i]</code>의 <code>i</code>처럼 0부터 세는 원소 번호다.
+    360개짜리 진짜 스캔이라면 그 인덱스가 곧 각도(도)다. 0 = 정면, 90 = 왼쪽, 270 = 오른쪽.
   </p>
 
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
     <dl>
       <dt>#include &lt;iterator&gt;</dt>
-      <dd>위치표를 다루는 도구가 들어 있는 헤더다. 여기서는 <code>std::distance</code> 때문에 넣었다. ③에서 하나 더 쓴다.</dd>
+      <dd>반복자를 다루는 함수가 들어 있는 헤더다. 여기서는 <code>std::distance</code> 때문에 넣었다. ③에서 하나 더 쓴다.</dd>
 
       <dt>std::distance(first, last)</dt>
-      <dd>두 위치 사이에 값이 몇 개 있는지 세어 준다.
-          여기서는 <code>min_element</code>가 돌려준 위치가
-          <strong>앞에서 몇 번째인지</strong>를 알아내는 데 썼다.
+      <dd>두 반복자 사이가 몇 칸인지 세어 준다(12회 ⑦절).
+          여기서는 <code>begin()</code>에서 <code>min_element</code>가 돌려준 자리까지 세어
+          그 원소의 <strong>인덱스</strong>를 알아내는 데 썼다.
           <code>%d</code>로 찍으려고 <code>static_cast&lt;int&gt;</code>를 씌웠다.</dd>
     </dl>
     <p class="later">제대로 다루는 곳: 24회(LaserScan 데이터 다루기 — 인덱스와 각도의 관계)</p>
   </div>
 
   <h3>실제로 나온 출력</h3>
-  <pre><code>min_element 가장 가까운 값        = 0.10 (앞에서 0번째)</code></pre>
+  <pre><code>min_element 가장 작은 값 = 0.10 (인덱스 0)</code></pre>
   <p>
     답은 for문과 같은 <strong>0.10</strong>이다. 바뀐 것은 답이 아니라 <strong>틀릴 자리가 사라졌다</strong>는 것이다 —
     근거 없는 초깃값도, 인덱스도, 빈 배열일 때의 엉뚱한 답도 없다.
@@ -423,10 +431,10 @@ int main()
   for (float r : raw) { std::printf(&quot;%.2f &quot;, r); }
   std::printf(&quot;\n잴 수 있는 거리 = %.2f ~ %.2f m\n&quot;, lo, hi);
 
-  // ① 가장 가까운 값 — min_element 는 값이 아니라 「자리」를 돌려준다
+  // ① 가장 작은 값 — min_element 는 값이 아니라 「자리」를 돌려준다
   const auto it = std::min_element(raw.begin(), raw.end());
   if (it == raw.end()) { return 1; }    // 배열이 비었다 — 여기서 끝낸다
-  std::printf(&quot;min_element 가장 가까운 값        = %.2f (앞에서 %d번째)\n&quot;,
+  std::printf(&quot;min_element 가장 작은 값 = %.2f (인덱스 %d)\n&quot;,
               *it, static_cast&lt;int&gt;(std::distance(raw.begin(), it)));
   return 0;
 }</code></pre></div>
@@ -438,7 +446,7 @@ int main()
   <table>
     <tr><th>이걸 쓴다</th><th>언제</th></tr>
     <tr><td><code>min_element</code></td><td><strong>기본값.</strong> 가장 작은 <em>값</em>이 필요할 때</td></tr>
-    <tr><td><code>min_element</code> + <code>std::distance</code></td><td>가장 가까운 것이 <strong>몇 번 방향인지</strong>도 필요할 때 — 우리 프로젝트가 여기 해당한다</td></tr>
+    <tr><td><code>min_element</code> + <code>std::distance</code></td><td>가장 작은 값의 <strong>인덱스</strong>도 필요할 때 — 우리 프로젝트가 여기 해당한다</td></tr>
     <tr><td>직접 루프</td><td>최솟값을 찾으면서 <strong>동시에 다른 일도</strong> 해야 할 때. 그때도 두 번 도는 쪽이 대개 더 읽기 쉽다</td></tr>
   </table>
   </div>
@@ -486,7 +494,7 @@ for (size_t i = 0; i &lt; raw.size(); i++) {
   // ② 쓸 만한 값이 몇 개인가
   const auto n_valid = std::count_if(raw.begin(), raw.end(),
                                      [lo, hi](float r) { return r &gt;= lo &amp;&amp; r &lt;= hi; });
-  std::printf("count_if    유효값 개수           = %d\n", static_cast&lt;int&gt;(n_valid));
+  std::printf("count_if 유효값 개수 = %d\n", static_cast&lt;int&gt;(n_valid));
   return 0;</code></pre>
 
   <div class="box firstseen">
@@ -507,7 +515,7 @@ for (size_t i = 0; i &lt; raw.size(); i++) {
   </div>
 
   <h3>실제로 나온 출력</h3>
-  <pre><code>count_if    유효값 개수           = 6</code></pre>
+  <pre><code>count_if 유효값 개수 = 6</code></pre>
 
   <!-- fullcode "전체 코드 — main.cpp (3단계 · count_if 까지)" build="g++ -std=c++17 -O2 -o scan_algo main.cpp && ./scan_algo"
        l13_stl/steps/step3.cpp as main.cpp
@@ -533,16 +541,16 @@ int main()
   for (float r : raw) { std::printf(&quot;%.2f &quot;, r); }
   std::printf(&quot;\n잴 수 있는 거리 = %.2f ~ %.2f m\n&quot;, lo, hi);
 
-  // ① 가장 가까운 값 — min_element 는 값이 아니라 「자리」를 돌려준다
+  // ① 가장 작은 값 — min_element 는 값이 아니라 「자리」를 돌려준다
   const auto it = std::min_element(raw.begin(), raw.end());
   if (it == raw.end()) { return 1; }    // 배열이 비었다 — 여기서 끝낸다
-  std::printf(&quot;min_element 가장 가까운 값        = %.2f (앞에서 %d번째)\n&quot;,
+  std::printf(&quot;min_element 가장 작은 값 = %.2f (인덱스 %d)\n&quot;,
               *it, static_cast&lt;int&gt;(std::distance(raw.begin(), it)));
 
   // ② 쓸 만한 값이 몇 개인가
   const auto n_valid = std::count_if(raw.begin(), raw.end(),
                                      [lo, hi](float r) { return r &gt;= lo &amp;&amp; r &lt;= hi; });
-  std::printf(&quot;count_if    유효값 개수           = %d\n&quot;, static_cast&lt;int&gt;(n_valid));
+  std::printf(&quot;count_if 유효값 개수 = %d\n&quot;, static_cast&lt;int&gt;(n_valid));
   return 0;
 }</code></pre></div>
 </details>
@@ -562,7 +570,7 @@ int main()
   <h3>언제 이게 필요해지나</h3>
   <p>
     세는 것으로는 부족하다. <strong>쓸 만한 값만 따로 모아야</strong>
-    그다음 계산(가장 가까운 것, 평균, 중앙값, 좌표 변환)을 할 수 있다.
+    그다음 계산(가장 작은 값, 평균, 중앙값, 좌표 변환)을 할 수 있다.
     ①에서 못 고친 「0.10 m가 가장 가깝다」는 답도 여기서 바로잡힌다.
   </p>
 
@@ -592,18 +600,18 @@ for (size_t i = 0; i &lt; raw.size(); i++) {
 
   // ② 쓸 만한 값이 몇 개인가
   const auto n_valid = std::count_if(raw.begin(), raw.end(), valid);
-  std::printf("count_if    유효값 개수           = %d\n", static_cast&lt;int&gt;(n_valid));
+  std::printf("count_if 유효값 개수 = %d\n", static_cast&lt;int&gt;(n_valid));
 
   // ③ 쓸 만한 값만 골라 담는다
   std::vector&lt;float&gt; good;
   good.reserve(raw.size());             // 미리 자리를 잡아 둔다
   std::copy_if(raw.begin(), raw.end(), std::back_inserter(good), valid);
-  std::printf("copy_if     골라 담은 것          = ");
+  std::printf("copy_if 골라 담은 것 = ");
   for (float r : good) { std::printf("%.2f ", r); }
   std::printf("\n");
 
   const auto it2 = std::min_element(good.begin(), good.end());
-  std::printf("min_element 걸러낸 뒤 가장 가까운 = %.2f (앞에서 %d번째)\n",
+  std::printf("min_element 걸러낸 뒤 가장 작은 값 = %.2f (인덱스 %d)\n",
               *it2, static_cast&lt;int&gt;(std::distance(good.begin(), it2)));
   return 0;</code></pre>
 
@@ -621,7 +629,11 @@ for (size_t i = 0; i &lt; raw.size(); i++) {
 
       <dt>std::back_inserter(good)</dt>
       <dd><code>good</code> 뒤에 계속 밀어 넣는 「받는 자리」를 만들어 준다.
-          미리 크기를 잡아 두지 않아도 알아서 늘어난다.
+          <code>copy_if</code>는 받는 곳에 <code>*out = 값</code>과 <code>++out</code> 두 가지만 할 뿐, <code>push_back</code>을 부를 줄 모른다.
+          <code>back_inserter</code>가 만든 반복자는 <strong>그 대입을 <code>good.push_back(값)</code>으로 바꾸고</strong>, <code>++</code>에는 아무 일도 하지 않는다.
+          그래서 미리 크기를 잡아 두지 않아도 <code>good</code>이 알아서 늘어난다.
+          빈 <code>good</code>에 <code>good.begin()</code>을 넘기면 원소가 없는 자리에 덮어쓰게 된다(12회 ⑧절의 정의되지 않은 동작).
+          속은 <code>push_back</code>이므로 바로 위의 <code>reserve</code>가 재할당을 없애 준다(12회 ④절).
           여기서는 몇 개가 통과할지 모르기 때문에 이걸 썼다.</dd>
 
       <dt>std::isfinite(r)</dt>
@@ -633,12 +645,12 @@ for (size_t i = 0; i &lt; raw.size(); i++) {
   </div>
 
   <h3>실제로 나온 출력</h3>
-  <pre><code>copy_if     골라 담은 것          = 0.83 1.24 2.05 0.42 3.30 0.55
-min_element 걸러낸 뒤 가장 가까운 = 0.42 (앞에서 3번째)</code></pre>
+  <pre><code>copy_if 골라 담은 것 = 0.83 1.24 2.05 0.42 3.30 0.55
+min_element 걸러낸 뒤 가장 작은 값 = 0.42 (인덱스 3)</code></pre>
   <p>
     ①에서 0.10이었던 답이 <strong>0.42</strong>로 바뀌었다. 이것이 진짜 가장 가까운 장애물이다.
-    「앞에서 3번째」는 <strong>걸러낸 뒤</strong> 배열에서의 자리다.
-    원본에서의 자리(= 각도)가 필요하면 따로 챙겨야 한다 — 24회에서 그 방법을 다룬다.
+    「인덱스 3」은 <strong>걸러낸 뒤</strong> 배열에서의 자리다.
+    원본에서의 인덱스(= 각도)가 필요하면 따로 챙겨야 한다 — 24회에서 그 방법을 다룬다.
   </p>
 
   <!-- fullcode "전체 코드 — main.cpp (4단계 · copy_if 까지)" build="g++ -std=c++17 -O2 -o scan_algo main.cpp && ./scan_algo"
@@ -665,10 +677,10 @@ int main()
   for (float r : raw) { std::printf(&quot;%.2f &quot;, r); }
   std::printf(&quot;\n잴 수 있는 거리 = %.2f ~ %.2f m\n&quot;, lo, hi);
 
-  // ① 가장 가까운 값 — min_element 는 값이 아니라 「자리」를 돌려준다
+  // ① 가장 작은 값 — min_element 는 값이 아니라 「자리」를 돌려준다
   const auto it = std::min_element(raw.begin(), raw.end());
   if (it == raw.end()) { return 1; }    // 배열이 비었다 — 여기서 끝낸다
-  std::printf(&quot;min_element 가장 가까운 값        = %.2f (앞에서 %d번째)\n&quot;,
+  std::printf(&quot;min_element 가장 작은 값 = %.2f (인덱스 %d)\n&quot;,
               *it, static_cast&lt;int&gt;(std::distance(raw.begin(), it)));
 
   // ②③ 「쓸 만한 값인가」를 한 번만 적어 두고 두 곳에서 쓴다
@@ -676,18 +688,18 @@ int main()
 
   // ② 쓸 만한 값이 몇 개인가
   const auto n_valid = std::count_if(raw.begin(), raw.end(), valid);
-  std::printf(&quot;count_if    유효값 개수           = %d\n&quot;, static_cast&lt;int&gt;(n_valid));
+  std::printf(&quot;count_if 유효값 개수 = %d\n&quot;, static_cast&lt;int&gt;(n_valid));
 
   // ③ 쓸 만한 값만 골라 담는다
   std::vector&lt;float&gt; good;
   good.reserve(raw.size());             // 미리 자리를 잡아 둔다
   std::copy_if(raw.begin(), raw.end(), std::back_inserter(good), valid);
-  std::printf(&quot;copy_if     골라 담은 것          = &quot;);
+  std::printf(&quot;copy_if 골라 담은 것 = &quot;);
   for (float r : good) { std::printf(&quot;%.2f &quot;, r); }
   std::printf(&quot;\n&quot;);
 
   const auto it2 = std::min_element(good.begin(), good.end());
-  std::printf(&quot;min_element 걸러낸 뒤 가장 가까운 = %.2f (앞에서 %d번째)\n&quot;,
+  std::printf(&quot;min_element 걸러낸 뒤 가장 작은 값 = %.2f (인덱스 %d)\n&quot;,
               *it2, static_cast&lt;int&gt;(std::distance(good.begin(), it2)));
   return 0;
 }</code></pre></div>
@@ -722,25 +734,25 @@ int main()
   // … ③ 까지의 줄은 그대로 …
   // ④ 나머지 여섯 개 — 전부 「구간을 주고, 필요하면 조건을 준다」는 같은 모양이다
   const auto f = std::find_if(good.begin(), good.end(), [](float r) { return r &lt; 0.5f; });
-  std::printf("find_if     0.5m 보다 가까운 첫 값 = %.2f\n", *f);
+  std::printf("find_if 0.5m 보다 가까운 첫 번째 값 = %.2f\n", *f);
 
   const float sum = std::accumulate(good.begin(), good.end(), 0.0f);
-  std::printf("accumulate  합 %.2f → 평균 %.3f m\n", sum, sum / good.size());
+  std::printf("accumulate 합 %.2f → 평균 %.3f m\n", sum, sum / good.size());
 
   std::vector&lt;float&gt; cm(good.size());   // 받는 컨테이너는 미리 같은 크기로
   std::transform(good.begin(), good.end(), cm.begin(), [](float m) { return m * 100.0f; });
-  std::printf("transform   cm 로 바꾼 것         = ");
+  std::printf("transform cm 로 바꾼 것 = ");
   for (float c : cm) { std::printf("%.0f ", c); }
   std::printf("\n");
 
   const bool near_any = std::any_of(good.begin(), good.end(), [](float r) { return r &lt; 0.3f; });
   const bool all_far  = std::all_of(good.begin(), good.end(), [](float r) { return r &gt; 1.0f; });
-  std::printf("any_of      0.3m 안쪽에 뭐가 있나   = %s\n", near_any ? "있다" : "없다");
-  std::printf("all_of      전부 1m 밖인가          = %s\n", all_far ? "그렇다" : "아니다");
+  std::printf("any_of 0.3m 미만 값이 하나라도 있나? = %s\n", near_any ? "있다" : "없다");
+  std::printf("all_of 모든 값이 1m 보다 큰가? = %s\n", all_far ? "그렇다" : "아니다");
 
   std::vector&lt;float&gt; sorted = good;     // 원본은 두고 사본을 정렬한다
   std::sort(sorted.begin(), sorted.end());
-  std::printf("sort        정렬 후 중앙값         = %.2f\n", sorted.at(sorted.size() / 2));
+  std::printf("sort 정렬 후 중앙값 = %.2f\n", sorted.at(sorted.size() / 2));
   return 0;</code></pre>
 
   <div class="box firstseen">
@@ -768,12 +780,12 @@ int main()
   </div>
 
   <h3>실제로 나온 출력</h3>
-  <pre><code>find_if     0.5m 보다 가까운 첫 값 = 0.42
-accumulate  합 8.39 → 평균 1.398 m
-transform   cm 로 바꾼 것         = 83 124 205 42 330 55
-any_of      0.3m 안쪽에 뭐가 있나   = 없다
-all_of      전부 1m 밖인가          = 아니다
-sort        정렬 후 중앙값         = 1.24</code></pre>
+  <pre><code>find_if 0.5m 보다 가까운 첫 번째 값 = 0.42
+accumulate 합 8.39 → 평균 1.398 m
+transform cm 로 바꾼 것 = 83 124 205 42 330 55
+any_of 0.3m 미만 값이 하나라도 있나? = 없다
+all_of 모든 값이 1m 보다 큰가? = 아니다
+sort 정렬 후 중앙값 = 1.24</code></pre>
 
   <!-- fullcode "전체 코드 — main.cpp (5단계 · 알고리즘 아홉 개 전부)" build="g++ -std=c++17 -O2 -o scan_algo main.cpp && ./scan_algo"
        l13_stl/steps/step5.cpp as main.cpp
@@ -800,10 +812,10 @@ int main()
   for (float r : raw) { std::printf(&quot;%.2f &quot;, r); }
   std::printf(&quot;\n잴 수 있는 거리 = %.2f ~ %.2f m\n&quot;, lo, hi);
 
-  // ① 가장 가까운 값 — min_element 는 값이 아니라 「자리」를 돌려준다
+  // ① 가장 작은 값 — min_element 는 값이 아니라 「자리」를 돌려준다
   const auto it = std::min_element(raw.begin(), raw.end());
   if (it == raw.end()) { return 1; }    // 배열이 비었다 — 여기서 끝낸다
-  std::printf(&quot;min_element 가장 가까운 값        = %.2f (앞에서 %d번째)\n&quot;,
+  std::printf(&quot;min_element 가장 작은 값 = %.2f (인덱스 %d)\n&quot;,
               *it, static_cast&lt;int&gt;(std::distance(raw.begin(), it)));
 
   // ②③ 「쓸 만한 값인가」를 한 번만 적어 두고 두 곳에서 쓴다
@@ -811,41 +823,41 @@ int main()
 
   // ② 쓸 만한 값이 몇 개인가
   const auto n_valid = std::count_if(raw.begin(), raw.end(), valid);
-  std::printf(&quot;count_if    유효값 개수           = %d\n&quot;, static_cast&lt;int&gt;(n_valid));
+  std::printf(&quot;count_if 유효값 개수 = %d\n&quot;, static_cast&lt;int&gt;(n_valid));
 
   // ③ 쓸 만한 값만 골라 담는다
   std::vector&lt;float&gt; good;
   good.reserve(raw.size());             // 미리 자리를 잡아 둔다
   std::copy_if(raw.begin(), raw.end(), std::back_inserter(good), valid);
-  std::printf(&quot;copy_if     골라 담은 것          = &quot;);
+  std::printf(&quot;copy_if 골라 담은 것 = &quot;);
   for (float r : good) { std::printf(&quot;%.2f &quot;, r); }
   std::printf(&quot;\n&quot;);
 
   const auto it2 = std::min_element(good.begin(), good.end());
-  std::printf(&quot;min_element 걸러낸 뒤 가장 가까운 = %.2f (앞에서 %d번째)\n&quot;,
+  std::printf(&quot;min_element 걸러낸 뒤 가장 작은 값 = %.2f (인덱스 %d)\n&quot;,
               *it2, static_cast&lt;int&gt;(std::distance(good.begin(), it2)));
 
   // ④ 나머지 여섯 개 — 전부 「구간을 주고, 필요하면 조건을 준다」는 같은 모양이다
   const auto f = std::find_if(good.begin(), good.end(), [](float r) { return r &lt; 0.5f; });
-  std::printf(&quot;find_if     0.5m 보다 가까운 첫 값 = %.2f\n&quot;, *f);
+  std::printf(&quot;find_if 0.5m 보다 가까운 첫 번째 값 = %.2f\n&quot;, *f);
 
   const float sum = std::accumulate(good.begin(), good.end(), 0.0f);
-  std::printf(&quot;accumulate  합 %.2f → 평균 %.3f m\n&quot;, sum, sum / good.size());
+  std::printf(&quot;accumulate 합 %.2f → 평균 %.3f m\n&quot;, sum, sum / good.size());
 
   std::vector&lt;float&gt; cm(good.size());   // 받는 컨테이너는 미리 같은 크기로
   std::transform(good.begin(), good.end(), cm.begin(), [](float m) { return m * 100.0f; });
-  std::printf(&quot;transform   cm 로 바꾼 것         = &quot;);
+  std::printf(&quot;transform cm 로 바꾼 것 = &quot;);
   for (float c : cm) { std::printf(&quot;%.0f &quot;, c); }
   std::printf(&quot;\n&quot;);
 
   const bool near_any = std::any_of(good.begin(), good.end(), [](float r) { return r &lt; 0.3f; });
   const bool all_far  = std::all_of(good.begin(), good.end(), [](float r) { return r &gt; 1.0f; });
-  std::printf(&quot;any_of      0.3m 안쪽에 뭐가 있나   = %s\n&quot;, near_any ? &quot;있다&quot; : &quot;없다&quot;);
-  std::printf(&quot;all_of      전부 1m 밖인가          = %s\n&quot;, all_far ? &quot;그렇다&quot; : &quot;아니다&quot;);
+  std::printf(&quot;any_of 0.3m 미만 값이 하나라도 있나? = %s\n&quot;, near_any ? &quot;있다&quot; : &quot;없다&quot;);
+  std::printf(&quot;all_of 모든 값이 1m 보다 큰가? = %s\n&quot;, all_far ? &quot;그렇다&quot; : &quot;아니다&quot;);
 
   std::vector&lt;float&gt; sorted = good;     // 원본은 두고 사본을 정렬한다
   std::sort(sorted.begin(), sorted.end());
-  std::printf(&quot;sort        정렬 후 중앙값         = %.2f\n&quot;, sorted.at(sorted.size() / 2));
+  std::printf(&quot;sort 정렬 후 중앙값 = %.2f\n&quot;, sorted.at(sorted.size() / 2));
   return 0;
 }</code></pre></div>
 </details>
@@ -856,7 +868,7 @@ int main()
   <table>
     <tr><th>출력 줄</th><th>어디를 보나</th></tr>
     <tr><td><code>find_if … = 0.42</code></td><td>조건에 맞는 <strong>첫 번째</strong>다. 여기서는 0.5보다 작은 것이 0.42 하나뿐이지만, 여럿이면 <strong>앞에 있는 것</strong>이 나온다</td></tr>
-    <tr><td><code>all_of … 아니다</code></td><td>0.42가 1 m보다 가깝다. <strong>하나만 어겨도 <code>all_of</code>는 거짓이다</strong></td></tr>
+    <tr><td><code>all_of … 아니다</code></td><td>0.42는 1 m보다 크지 않다. <strong>하나만 어겨도 <code>all_of</code>는 거짓이다</strong></td></tr>
     <tr><td><code>sort … 중앙값 1.24</code></td><td>6개를 정렬해 3번 칸을 읽은 것이다. 짝수 개일 때 중앙값을 어떻게 볼지는 정하기 나름이다</td></tr>
   </table>
   </div>
@@ -941,10 +953,12 @@ int main()
 
   <h3>최솟값 찾기 — 빌드할 때마다 순위가 뒤집혔다</h3>
   <p>360개 배열에서 최솟값을 찾는 일을 10만 번 시켰다. 그런데 <strong>같은 소스에 줄 몇 개를 더해 다시 빌드했더니 결과가 뒤집혔다.</strong></p>
-  <pre><code>6단계 빌드      직접 짠 for문   :     8.4 ms
-                min_element     :    16.3 ms   (0.52배 빠르다)
-7단계(완성본)   직접 짠 for문   :    16.3 ms
-                min_element     :     8.5 ms   (1.93배 빠르다)</code></pre>
+  <pre><code>6단계 빌드
+  직접 짠 for문: 8.4 ms
+  min_element: 16.3 ms (0.52배 빠르다)
+7단계(완성본)
+  직접 짠 for문: 16.3 ms
+  min_element: 8.5 ms (1.93배 빠르다)</code></pre>
   <p>
     두 빌드 모두 여러 번 돌려도 같은 숫자가 나온다. 즉 <strong>한쪽이 8 ms, 다른 쪽이 16 ms</strong>인데
     어느 쪽이 8인지는 <strong>코드가 메모리 어디에 놓이느냐</strong>에 따라 갈렸다.
@@ -955,9 +969,9 @@ int main()
 
   <h3>정렬 — 여기서는 이야기가 다르다</h3>
   <pre><code>⑤ 정렬 — 360개 배열 × 10000회
-  직접 짠 선택 정렬 :    364.9 ms
-  std::sort         :     20.8 ms   (17.6배 빠르다)
-  std::nth_element  :      5.1 ms   (72.2배 빠르다)</code></pre>
+  직접 짠 선택 정렬: 364.9 ms
+  std::sort: 20.8 ms (17.6배 빠르다)
+  std::nth_element: 5.1 ms (72.2배 빠르다)</code></pre>
   <p>이쪽은 빌드를 바꿔도 여러 번 돌려도 364~367 / 18~21 / 4.5~5.1 ms 안에서 움직인다. <strong>순위가 뒤집히지 않는다.</strong></p>
 
   <!-- fullcode "전체 코드 — main.cpp (6단계 · 속도 측정까지)" build="g++ -std=c++17 -O2 -o scan_algo main.cpp && ./scan_algo"
@@ -1010,8 +1024,8 @@ void measure_speed()
   const double stl_ms = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
 
   std::printf(&quot;\n⑤ 속도 — 360개 배열 × %d회\n&quot;, LOOPS_MIN);
-  std::printf(&quot;  직접 짠 for문   : %7.1f ms\n&quot;, loop_ms);
-  std::printf(&quot;  min_element     : %7.1f ms   (%.2f배 빠르다)\n&quot;, stl_ms, loop_ms / stl_ms);
+  std::printf(&quot;  직접 짠 for문: %.1f ms\n&quot;, loop_ms);
+  std::printf(&quot;  min_element: %.1f ms (%.2f배 빠르다)\n&quot;, stl_ms, loop_ms / stl_ms);
 
   // 정렬해서 중앙값 얻기 1만 번
   const int LOOPS_SORT = 10000;
@@ -1044,9 +1058,9 @@ void measure_speed()
   const double nth = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
 
   std::printf(&quot;⑤ 정렬 — 360개 배열 × %d회 (sink=%.0f)\n&quot;, LOOPS_SORT, sink);
-  std::printf(&quot;  직접 짠 선택 정렬 : %8.1f ms\n&quot;, hand);
-  std::printf(&quot;  std::sort         : %8.1f ms   (%.1f배 빠르다)\n&quot;, stl, hand / stl);
-  std::printf(&quot;  std::nth_element  : %8.1f ms   (%.1f배 빠르다)\n&quot;, nth, hand / nth);
+  std::printf(&quot;  직접 짠 선택 정렬: %.1f ms\n&quot;, hand);
+  std::printf(&quot;  std::sort: %.1f ms (%.1f배 빠르다)\n&quot;, stl, hand / stl);
+  std::printf(&quot;  std::nth_element: %.1f ms (%.1f배 빠르다)\n&quot;, nth, hand / nth);
 }
 
 int main()
@@ -1060,10 +1074,10 @@ int main()
   for (float r : raw) { std::printf(&quot;%.2f &quot;, r); }
   std::printf(&quot;\n잴 수 있는 거리 = %.2f ~ %.2f m\n&quot;, lo, hi);
 
-  // ① 가장 가까운 값 — min_element 는 값이 아니라 「자리」를 돌려준다
+  // ① 가장 작은 값 — min_element 는 값이 아니라 「자리」를 돌려준다
   const auto it = std::min_element(raw.begin(), raw.end());
   if (it == raw.end()) { return 1; }    // 배열이 비었다 — 여기서 끝낸다
-  std::printf(&quot;min_element 가장 가까운 값        = %.2f (앞에서 %d번째)\n&quot;,
+  std::printf(&quot;min_element 가장 작은 값 = %.2f (인덱스 %d)\n&quot;,
               *it, static_cast&lt;int&gt;(std::distance(raw.begin(), it)));
 
   // ②③ 「쓸 만한 값인가」를 한 번만 적어 두고 두 곳에서 쓴다
@@ -1071,41 +1085,41 @@ int main()
 
   // ② 쓸 만한 값이 몇 개인가
   const auto n_valid = std::count_if(raw.begin(), raw.end(), valid);
-  std::printf(&quot;count_if    유효값 개수           = %d\n&quot;, static_cast&lt;int&gt;(n_valid));
+  std::printf(&quot;count_if 유효값 개수 = %d\n&quot;, static_cast&lt;int&gt;(n_valid));
 
   // ③ 쓸 만한 값만 골라 담는다
   std::vector&lt;float&gt; good;
   good.reserve(raw.size());             // 미리 자리를 잡아 둔다
   std::copy_if(raw.begin(), raw.end(), std::back_inserter(good), valid);
-  std::printf(&quot;copy_if     골라 담은 것          = &quot;);
+  std::printf(&quot;copy_if 골라 담은 것 = &quot;);
   for (float r : good) { std::printf(&quot;%.2f &quot;, r); }
   std::printf(&quot;\n&quot;);
 
   const auto it2 = std::min_element(good.begin(), good.end());
-  std::printf(&quot;min_element 걸러낸 뒤 가장 가까운 = %.2f (앞에서 %d번째)\n&quot;,
+  std::printf(&quot;min_element 걸러낸 뒤 가장 작은 값 = %.2f (인덱스 %d)\n&quot;,
               *it2, static_cast&lt;int&gt;(std::distance(good.begin(), it2)));
 
   // ④ 나머지 여섯 개 — 전부 「구간을 주고, 필요하면 조건을 준다」는 같은 모양이다
   const auto f = std::find_if(good.begin(), good.end(), [](float r) { return r &lt; 0.5f; });
-  std::printf(&quot;find_if     0.5m 보다 가까운 첫 값 = %.2f\n&quot;, *f);
+  std::printf(&quot;find_if 0.5m 보다 가까운 첫 번째 값 = %.2f\n&quot;, *f);
 
   const float sum = std::accumulate(good.begin(), good.end(), 0.0f);
-  std::printf(&quot;accumulate  합 %.2f → 평균 %.3f m\n&quot;, sum, sum / good.size());
+  std::printf(&quot;accumulate 합 %.2f → 평균 %.3f m\n&quot;, sum, sum / good.size());
 
   std::vector&lt;float&gt; cm(good.size());   // 받는 컨테이너는 미리 같은 크기로
   std::transform(good.begin(), good.end(), cm.begin(), [](float m) { return m * 100.0f; });
-  std::printf(&quot;transform   cm 로 바꾼 것         = &quot;);
+  std::printf(&quot;transform cm 로 바꾼 것 = &quot;);
   for (float c : cm) { std::printf(&quot;%.0f &quot;, c); }
   std::printf(&quot;\n&quot;);
 
   const bool near_any = std::any_of(good.begin(), good.end(), [](float r) { return r &lt; 0.3f; });
   const bool all_far  = std::all_of(good.begin(), good.end(), [](float r) { return r &gt; 1.0f; });
-  std::printf(&quot;any_of      0.3m 안쪽에 뭐가 있나   = %s\n&quot;, near_any ? &quot;있다&quot; : &quot;없다&quot;);
-  std::printf(&quot;all_of      전부 1m 밖인가          = %s\n&quot;, all_far ? &quot;그렇다&quot; : &quot;아니다&quot;);
+  std::printf(&quot;any_of 0.3m 미만 값이 하나라도 있나? = %s\n&quot;, near_any ? &quot;있다&quot; : &quot;없다&quot;);
+  std::printf(&quot;all_of 모든 값이 1m 보다 큰가? = %s\n&quot;, all_far ? &quot;그렇다&quot; : &quot;아니다&quot;);
 
   std::vector&lt;float&gt; sorted = good;     // 원본은 두고 사본을 정렬한다
   std::sort(sorted.begin(), sorted.end());
-  std::printf(&quot;sort        정렬 후 중앙값         = %.2f\n&quot;, sorted.at(sorted.size() / 2));
+  std::printf(&quot;sort 정렬 후 중앙값 = %.2f\n&quot;, sorted.at(sorted.size() / 2));
 
   measure_speed();
   return 0;
@@ -1139,7 +1153,7 @@ int main()
     <p>
       라이다는 측정에 실패한 방향을 <code>inf</code>나 <code>NaN</code>으로 채워 보낸다.
       너무 멀거나, 너무 가깝거나, 검은 물체라 빛이 안 돌아온 경우다.
-      우리 <code>raw</code>에도 6번째 칸에 <code>nan</code>이 있었는데 ①의 답은 멀쩡했다. <strong>운이 좋았을 뿐이다.</strong>
+      우리 <code>raw</code>에도 인덱스 5 자리에 <code>nan</code>이 있었는데 ①의 답은 멀쩡했다. <strong>운이 좋았을 뿐이다.</strong>
     </p>
     <p>
       문제는 <code>NaN</code>의 성질이다. <strong><code>NaN</code>은 어떤 비교에도 거짓을 낸다.</strong>
@@ -1151,7 +1165,7 @@ int main()
 void show_min(const char * label, const std::vector&lt;float&gt; &amp; v)
 {
   const auto it = std::min_element(v.begin(), v.end());
-  std::printf("  %s min_element → %5.2f  (앞에서 %d번째)\n",
+  std::printf("  %s min_element → %.2f (인덱스 %d)\n",
               label, *it, static_cast&lt;int&gt;(std::distance(v.begin(), it)));
 }
 
@@ -1161,14 +1175,14 @@ int main()
   // ⚠️ NaN 은 어떤 비교에도 거짓이다 — 그래서 어디 있느냐에 따라 답이 달라진다
   const float N = std::nanf("");
   std::printf("\n⚠️ NaN 비교\n");
-  std::printf("  NaN &lt; 5.0 : %s\n", (N &lt; 5.0f) ? "참" : "거짓");
-  std::printf("  NaN &gt; 5.0 : %s\n", (N &gt; 5.0f) ? "참" : "거짓");
+  std::printf("  NaN &lt; 5.0: %s\n", (N &lt; 5.0f) ? "참" : "거짓");
+  std::printf("  NaN &gt; 5.0: %s\n", (N &gt; 5.0f) ? "참" : "거짓");
   std::printf("  NaN == NaN: %s\n", (N == N) ? "참" : "거짓");
 
   std::printf("⚠️ 같은 값 묶음인데 NaN 의 자리만 다르다\n");
-  show_min("NaN 이 앞에  :", {N, 3.0f, 0.5f, 2.0f});
+  show_min("NaN 이 앞에:", {N, 3.0f, 0.5f, 2.0f});
   show_min("NaN 이 가운데:", {3.0f, N, 0.5f, 2.0f});
-  show_min("NaN 이 없음  :", {3.0f, 0.5f, 2.0f});
+  show_min("NaN 이 없음:", {3.0f, 0.5f, 2.0f});
   return 0;
 }</code></pre>
 
@@ -1176,7 +1190,7 @@ int main()
       <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
       <dl>
         <dt>const char * label</dt>
-        <dd>따옴표로 적은 글자("NaN 이 앞에  :")를 받는 인자다. <code>std::printf</code>의 첫 인자와 같은 종류다.
+        <dd>따옴표로 적은 글자("NaN 이 앞에:")를 받는 인자다. <code>std::printf</code>의 첫 인자와 같은 종류다.
             여기서는 출력 줄 앞에 붙일 이름표를 받는 데 썼다.</dd>
 
         <dt>show_min("…", {N, 3.0f, 0.5f, 2.0f})</dt>
@@ -1187,13 +1201,13 @@ int main()
 
     <p>실제로 나온 출력이다.</p>
     <pre><code>⚠️ NaN 비교
-  NaN &lt; 5.0 : 거짓
-  NaN &gt; 5.0 : 거짓
+  NaN &lt; 5.0: 거짓
+  NaN &gt; 5.0: 거짓
   NaN == NaN: 거짓
 ⚠️ 같은 값 묶음인데 NaN 의 자리만 다르다
-  NaN 이 앞에  : min_element →   nan  (앞에서 0번째)
-  NaN 이 가운데: min_element →  0.50  (앞에서 2번째)
-  NaN 이 없음  : min_element →  0.50  (앞에서 1번째)</code></pre>
+  NaN 이 앞에: min_element → nan (인덱스 0)
+  NaN 이 가운데: min_element → 0.50 (인덱스 2)
+  NaN 이 없음: min_element → 0.50 (인덱스 1)</code></pre>
     <p>
       <code>min_element</code>는 "이게 저것보다 작은가"를 반복해서 묻는 함수인데,
       그 질문에 계속 거짓이 돌아오면 <strong>비교가 무의미해진다.</strong>
@@ -1215,14 +1229,14 @@ int main()
     if (r &lt; lo || r &gt; hi) { continue; } // NaN 은 둘 다 거짓 → 안 걸러진다
     leaky.push_back(r);
   }
-  show_min("빼는 조건   :", leaky);
+  show_min("빼는 조건:", leaky);
   std::vector&lt;float&gt; kept;              // ③ 과 같은 「고르는 조건」 + isfinite
   std::copy_if(tricky.begin(), tricky.end(), std::back_inserter(kept), valid);
-  show_min("고르는 조건 :", kept);
+  show_min("고르는 조건:", kept);
   return 0;</code></pre>
     <pre><code>⚠️ 「빼는 조건」으로 거르면 NaN 이 통과한다
-  빼는 조건   : min_element →   nan  (앞에서 0번째)
-  고르는 조건 : min_element →  0.50  (앞에서 1번째)</code></pre>
+  빼는 조건: min_element → nan (인덱스 0)
+  고르는 조건: min_element → 0.50 (인덱스 1)</code></pre>
     <p>
       <code>r &lt; lo || r &gt; hi</code>는 <code>NaN</code>에게 두 번 다 「거짓」이라 <code>continue</code>에 걸리지 않는다.
       <code>inf</code>는 <code>&gt; hi</code>에 걸려 빠지지만 <strong><code>NaN</code>만 살아남는다.</strong>
@@ -1285,8 +1299,8 @@ void measure_speed()
   const double stl_ms = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
 
   std::printf(&quot;\n⑤ 속도 — 360개 배열 × %d회\n&quot;, LOOPS_MIN);
-  std::printf(&quot;  직접 짠 for문   : %7.1f ms\n&quot;, loop_ms);
-  std::printf(&quot;  min_element     : %7.1f ms   (%.2f배 빠르다)\n&quot;, stl_ms, loop_ms / stl_ms);
+  std::printf(&quot;  직접 짠 for문: %.1f ms\n&quot;, loop_ms);
+  std::printf(&quot;  min_element: %.1f ms (%.2f배 빠르다)\n&quot;, stl_ms, loop_ms / stl_ms);
 
   // 정렬해서 중앙값 얻기 1만 번
   const int LOOPS_SORT = 10000;
@@ -1319,16 +1333,16 @@ void measure_speed()
   const double nth = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
 
   std::printf(&quot;⑤ 정렬 — 360개 배열 × %d회 (sink=%.0f)\n&quot;, LOOPS_SORT, sink);
-  std::printf(&quot;  직접 짠 선택 정렬 : %8.1f ms\n&quot;, hand);
-  std::printf(&quot;  std::sort         : %8.1f ms   (%.1f배 빠르다)\n&quot;, stl, hand / stl);
-  std::printf(&quot;  std::nth_element  : %8.1f ms   (%.1f배 빠르다)\n&quot;, nth, hand / nth);
+  std::printf(&quot;  직접 짠 선택 정렬: %.1f ms\n&quot;, hand);
+  std::printf(&quot;  std::sort: %.1f ms (%.1f배 빠르다)\n&quot;, stl, hand / stl);
+  std::printf(&quot;  std::nth_element: %.1f ms (%.1f배 빠르다)\n&quot;, nth, hand / nth);
 }
 
 // ⚠️ 작은 묶음을 받아 min_element 가 무엇을 고르는지 찍는다
 void show_min(const char * label, const std::vector&lt;float&gt; &amp; v)
 {
   const auto it = std::min_element(v.begin(), v.end());
-  std::printf(&quot;  %s min_element → %5.2f  (앞에서 %d번째)\n&quot;,
+  std::printf(&quot;  %s min_element → %.2f (인덱스 %d)\n&quot;,
               label, *it, static_cast&lt;int&gt;(std::distance(v.begin(), it)));
 }
 
@@ -1343,10 +1357,10 @@ int main()
   for (float r : raw) { std::printf(&quot;%.2f &quot;, r); }
   std::printf(&quot;\n잴 수 있는 거리 = %.2f ~ %.2f m\n&quot;, lo, hi);
 
-  // ① 가장 가까운 값 — min_element 는 값이 아니라 「자리」를 돌려준다
+  // ① 가장 작은 값 — min_element 는 값이 아니라 「자리」를 돌려준다
   const auto it = std::min_element(raw.begin(), raw.end());
   if (it == raw.end()) { return 1; }    // 배열이 비었다 — 여기서 끝낸다
-  std::printf(&quot;min_element 가장 가까운 값        = %.2f (앞에서 %d번째)\n&quot;,
+  std::printf(&quot;min_element 가장 작은 값 = %.2f (인덱스 %d)\n&quot;,
               *it, static_cast&lt;int&gt;(std::distance(raw.begin(), it)));
 
   // ②③ 「쓸 만한 값인가」를 한 번만 적어 두고 두 곳에서 쓴다
@@ -1354,55 +1368,55 @@ int main()
 
   // ② 쓸 만한 값이 몇 개인가
   const auto n_valid = std::count_if(raw.begin(), raw.end(), valid);
-  std::printf(&quot;count_if    유효값 개수           = %d\n&quot;, static_cast&lt;int&gt;(n_valid));
+  std::printf(&quot;count_if 유효값 개수 = %d\n&quot;, static_cast&lt;int&gt;(n_valid));
 
   // ③ 쓸 만한 값만 골라 담는다
   std::vector&lt;float&gt; good;
   good.reserve(raw.size());             // 미리 자리를 잡아 둔다
   std::copy_if(raw.begin(), raw.end(), std::back_inserter(good), valid);
-  std::printf(&quot;copy_if     골라 담은 것          = &quot;);
+  std::printf(&quot;copy_if 골라 담은 것 = &quot;);
   for (float r : good) { std::printf(&quot;%.2f &quot;, r); }
   std::printf(&quot;\n&quot;);
 
   const auto it2 = std::min_element(good.begin(), good.end());
-  std::printf(&quot;min_element 걸러낸 뒤 가장 가까운 = %.2f (앞에서 %d번째)\n&quot;,
+  std::printf(&quot;min_element 걸러낸 뒤 가장 작은 값 = %.2f (인덱스 %d)\n&quot;,
               *it2, static_cast&lt;int&gt;(std::distance(good.begin(), it2)));
 
   // ④ 나머지 여섯 개 — 전부 「구간을 주고, 필요하면 조건을 준다」는 같은 모양이다
   const auto f = std::find_if(good.begin(), good.end(), [](float r) { return r &lt; 0.5f; });
-  std::printf(&quot;find_if     0.5m 보다 가까운 첫 값 = %.2f\n&quot;, *f);
+  std::printf(&quot;find_if 0.5m 보다 가까운 첫 번째 값 = %.2f\n&quot;, *f);
 
   const float sum = std::accumulate(good.begin(), good.end(), 0.0f);
-  std::printf(&quot;accumulate  합 %.2f → 평균 %.3f m\n&quot;, sum, sum / good.size());
+  std::printf(&quot;accumulate 합 %.2f → 평균 %.3f m\n&quot;, sum, sum / good.size());
 
   std::vector&lt;float&gt; cm(good.size());   // 받는 컨테이너는 미리 같은 크기로
   std::transform(good.begin(), good.end(), cm.begin(), [](float m) { return m * 100.0f; });
-  std::printf(&quot;transform   cm 로 바꾼 것         = &quot;);
+  std::printf(&quot;transform cm 로 바꾼 것 = &quot;);
   for (float c : cm) { std::printf(&quot;%.0f &quot;, c); }
   std::printf(&quot;\n&quot;);
 
   const bool near_any = std::any_of(good.begin(), good.end(), [](float r) { return r &lt; 0.3f; });
   const bool all_far  = std::all_of(good.begin(), good.end(), [](float r) { return r &gt; 1.0f; });
-  std::printf(&quot;any_of      0.3m 안쪽에 뭐가 있나   = %s\n&quot;, near_any ? &quot;있다&quot; : &quot;없다&quot;);
-  std::printf(&quot;all_of      전부 1m 밖인가          = %s\n&quot;, all_far ? &quot;그렇다&quot; : &quot;아니다&quot;);
+  std::printf(&quot;any_of 0.3m 미만 값이 하나라도 있나? = %s\n&quot;, near_any ? &quot;있다&quot; : &quot;없다&quot;);
+  std::printf(&quot;all_of 모든 값이 1m 보다 큰가? = %s\n&quot;, all_far ? &quot;그렇다&quot; : &quot;아니다&quot;);
 
   std::vector&lt;float&gt; sorted = good;     // 원본은 두고 사본을 정렬한다
   std::sort(sorted.begin(), sorted.end());
-  std::printf(&quot;sort        정렬 후 중앙값         = %.2f\n&quot;, sorted.at(sorted.size() / 2));
+  std::printf(&quot;sort 정렬 후 중앙값 = %.2f\n&quot;, sorted.at(sorted.size() / 2));
 
   measure_speed();
 
   // ⚠️ NaN 은 어떤 비교에도 거짓이다 — 그래서 어디 있느냐에 따라 답이 달라진다
   const float N = std::nanf(&quot;&quot;);
   std::printf(&quot;\n⚠️ NaN 비교\n&quot;);
-  std::printf(&quot;  NaN &lt; 5.0 : %s\n&quot;, (N &lt; 5.0f) ? &quot;참&quot; : &quot;거짓&quot;);
-  std::printf(&quot;  NaN &gt; 5.0 : %s\n&quot;, (N &gt; 5.0f) ? &quot;참&quot; : &quot;거짓&quot;);
+  std::printf(&quot;  NaN &lt; 5.0: %s\n&quot;, (N &lt; 5.0f) ? &quot;참&quot; : &quot;거짓&quot;);
+  std::printf(&quot;  NaN &gt; 5.0: %s\n&quot;, (N &gt; 5.0f) ? &quot;참&quot; : &quot;거짓&quot;);
   std::printf(&quot;  NaN == NaN: %s\n&quot;, (N == N) ? &quot;참&quot; : &quot;거짓&quot;);
 
   std::printf(&quot;⚠️ 같은 값 묶음인데 NaN 의 자리만 다르다\n&quot;);
-  show_min(&quot;NaN 이 앞에  :&quot;, {N, 3.0f, 0.5f, 2.0f});
+  show_min(&quot;NaN 이 앞에:&quot;, {N, 3.0f, 0.5f, 2.0f});
   show_min(&quot;NaN 이 가운데:&quot;, {3.0f, N, 0.5f, 2.0f});
-  show_min(&quot;NaN 이 없음  :&quot;, {3.0f, 0.5f, 2.0f});
+  show_min(&quot;NaN 이 없음:&quot;, {3.0f, 0.5f, 2.0f});
 
   std::printf(&quot;⚠️ 「빼는 조건」으로 거르면 NaN 이 통과한다\n&quot;);
   const std::vector&lt;float&gt; tricky{N, 3.0f, 0.5f, 2.0f, INFINITY};
@@ -1411,10 +1425,10 @@ int main()
     if (r &lt; lo || r &gt; hi) { continue; } // NaN 은 둘 다 거짓 → 안 걸러진다
     leaky.push_back(r);
   }
-  show_min(&quot;빼는 조건   :&quot;, leaky);
+  show_min(&quot;빼는 조건:&quot;, leaky);
   std::vector&lt;float&gt; kept;              // ③ 과 같은 「고르는 조건」 + isfinite
   std::copy_if(tricky.begin(), tricky.end(), std::back_inserter(kept), valid);
-  show_min(&quot;고르는 조건 :&quot;, kept);
+  show_min(&quot;고르는 조건:&quot;, kept);
   return 0;
 }</code></pre></div>
 </details>
@@ -1472,49 +1486,49 @@ auto valid = [lo, hi](float r) { return !(r &lt; lo || r &gt; hi); };</code></pr
     <p>고치기 전 완성본을 돌리면 아래가 그대로 나온다. 속도 줄의 숫자만 컴퓨터마다 다르다.</p>
     <pre><code>원본 10개 = 0.10 0.83 inf 1.24 9.90 nan 2.05 0.42 3.30 0.55
 잴 수 있는 거리 = 0.16 ~ 8.00 m
-min_element 가장 가까운 값        = 0.10 (앞에서 0번째)
-count_if    유효값 개수           = 6
-copy_if     골라 담은 것          = 0.83 1.24 2.05 0.42 3.30 0.55
-min_element 걸러낸 뒤 가장 가까운 = 0.42 (앞에서 3번째)
-find_if     0.5m 보다 가까운 첫 값 = 0.42
-accumulate  합 8.39 → 평균 1.398 m
-transform   cm 로 바꾼 것         = 83 124 205 42 330 55
-any_of      0.3m 안쪽에 뭐가 있나   = 없다
-all_of      전부 1m 밖인가          = 아니다
-sort        정렬 후 중앙값         = 1.24
+min_element 가장 작은 값 = 0.10 (인덱스 0)
+count_if 유효값 개수 = 6
+copy_if 골라 담은 것 = 0.83 1.24 2.05 0.42 3.30 0.55
+min_element 걸러낸 뒤 가장 작은 값 = 0.42 (인덱스 3)
+find_if 0.5m 보다 가까운 첫 번째 값 = 0.42
+accumulate 합 8.39 → 평균 1.398 m
+transform cm 로 바꾼 것 = 83 124 205 42 330 55
+any_of 0.3m 미만 값이 하나라도 있나? = 없다
+all_of 모든 값이 1m 보다 큰가? = 아니다
+sort 정렬 후 중앙값 = 1.24
 
 ⑤ 속도 — 360개 배열 × 100000회
-  직접 짠 for문   :    16.3 ms
-  min_element     :     8.5 ms   (1.93배 빠르다)
+  직접 짠 for문: 16.3 ms
+  min_element: 8.5 ms (1.93배 빠르다)
 ⑤ 정렬 — 360개 배열 × 10000회 (sink=134800)
-  직접 짠 선택 정렬 :    364.9 ms
-  std::sort         :     20.8 ms   (17.6배 빠르다)
-  std::nth_element  :      5.1 ms   (72.2배 빠르다)
+  직접 짠 선택 정렬: 364.9 ms
+  std::sort: 20.8 ms (17.6배 빠르다)
+  std::nth_element: 5.1 ms (72.2배 빠르다)
 
 ⚠️ NaN 비교
-  NaN &lt; 5.0 : 거짓
-  NaN &gt; 5.0 : 거짓
+  NaN &lt; 5.0: 거짓
+  NaN &gt; 5.0: 거짓
   NaN == NaN: 거짓
 ⚠️ 같은 값 묶음인데 NaN 의 자리만 다르다
-  NaN 이 앞에  : min_element →   nan  (앞에서 0번째)
-  NaN 이 가운데: min_element →  0.50  (앞에서 2번째)
-  NaN 이 없음  : min_element →  0.50  (앞에서 1번째)
+  NaN 이 앞에: min_element → nan (인덱스 0)
+  NaN 이 가운데: min_element → 0.50 (인덱스 2)
+  NaN 이 없음: min_element → 0.50 (인덱스 1)
 ⚠️ 「빼는 조건」으로 거르면 NaN 이 통과한다
-  빼는 조건   : min_element →   nan  (앞에서 0번째)
-  고르는 조건 : min_element →  0.50  (앞에서 1번째)</code></pre>
+  빼는 조건: min_element → nan (인덱스 0)
+  고르는 조건: min_element → 0.50 (인덱스 1)</code></pre>
 
     <p class="boxtitle">5단계에서 무엇이 무너지나 — 우리가 돌려 본 결과</p>
-    <pre><code>count_if    유효값 개수           = 7
-copy_if     골라 담은 것          = 0.83 1.24 nan 2.05 0.42 3.30 0.55
-min_element 걸러낸 뒤 가장 가까운 = 0.42 (앞에서 4번째)
-accumulate  합 nan → 평균 nan m
-transform   cm 로 바꾼 것         = 83 124 nan 205 42 330 55
-sort        정렬 후 중앙값         = nan
-  고르는 조건 : min_element →   nan  (앞에서 0번째)</code></pre>
+    <pre><code>count_if 유효값 개수 = 7
+copy_if 골라 담은 것 = 0.83 1.24 nan 2.05 0.42 3.30 0.55
+min_element 걸러낸 뒤 가장 작은 값 = 0.42 (인덱스 4)
+accumulate 합 nan → 평균 nan m
+transform cm 로 바꾼 것 = 83 124 nan 205 42 330 55
+sort 정렬 후 중앙값 = nan
+  고르는 조건: min_element → nan (인덱스 0)</code></pre>
     <div class="interp">
       <strong>해석:</strong> 조건 한 줄을 뒤집었을 뿐인데 <strong>일곱 줄이 달라졌다.</strong>
       <code>nan</code>이 <code>good</code>에 들어온 순간, 합·평균·중앙값이 전부 <code>nan</code>이 되고
-      「걸러낸 뒤 가장 가까운」은 답은 같아도 자리(3→4번째)가 밀린다.
+      「걸러낸 뒤 가장 작은 값」은 답은 같아도 인덱스(3→4)가 밀린다.
       <strong><code>min_element</code>만 운 좋게 살아남았다</strong> — <code>nan</code>이 가운데 있었기 때문이다.
       <span style="color:var(--muted)">확인한 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0 <code>-O2</code>)</span>
     </div>
@@ -1569,8 +1583,8 @@ void measure_speed()
   const double stl_ms = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
 
   std::printf(&quot;\n⑤ 속도 — 360개 배열 × %d회\n&quot;, LOOPS_MIN);
-  std::printf(&quot;  직접 짠 for문   : %7.1f ms\n&quot;, loop_ms);
-  std::printf(&quot;  min_element     : %7.1f ms   (%.2f배 빠르다)\n&quot;, stl_ms, loop_ms / stl_ms);
+  std::printf(&quot;  직접 짠 for문: %.1f ms\n&quot;, loop_ms);
+  std::printf(&quot;  min_element: %.1f ms (%.2f배 빠르다)\n&quot;, stl_ms, loop_ms / stl_ms);
 
   // 정렬해서 중앙값 얻기 1만 번
   const int LOOPS_SORT = 10000;
@@ -1603,16 +1617,16 @@ void measure_speed()
   const double nth = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();
 
   std::printf(&quot;⑤ 정렬 — 360개 배열 × %d회 (sink=%.0f)\n&quot;, LOOPS_SORT, sink);
-  std::printf(&quot;  직접 짠 선택 정렬 : %8.1f ms\n&quot;, hand);
-  std::printf(&quot;  std::sort         : %8.1f ms   (%.1f배 빠르다)\n&quot;, stl, hand / stl);
-  std::printf(&quot;  std::nth_element  : %8.1f ms   (%.1f배 빠르다)\n&quot;, nth, hand / nth);
+  std::printf(&quot;  직접 짠 선택 정렬: %.1f ms\n&quot;, hand);
+  std::printf(&quot;  std::sort: %.1f ms (%.1f배 빠르다)\n&quot;, stl, hand / stl);
+  std::printf(&quot;  std::nth_element: %.1f ms (%.1f배 빠르다)\n&quot;, nth, hand / nth);
 }
 
 // ⚠️ 작은 묶음을 받아 min_element 가 무엇을 고르는지 찍는다
 void show_min(const char * label, const std::vector&lt;float&gt; &amp; v)
 {
   const auto it = std::min_element(v.begin(), v.end());
-  std::printf(&quot;  %s min_element → %5.2f  (앞에서 %d번째)\n&quot;,
+  std::printf(&quot;  %s min_element → %.2f (인덱스 %d)\n&quot;,
               label, *it, static_cast&lt;int&gt;(std::distance(v.begin(), it)));
 }
 
@@ -1627,10 +1641,10 @@ int main()
   for (float r : raw) { std::printf(&quot;%.2f &quot;, r); }
   std::printf(&quot;\n잴 수 있는 거리 = %.2f ~ %.2f m\n&quot;, lo, hi);
 
-  // ① 가장 가까운 값 — min_element 는 값이 아니라 「자리」를 돌려준다
+  // ① 가장 작은 값 — min_element 는 값이 아니라 「자리」를 돌려준다
   const auto it = std::min_element(raw.begin(), raw.end());
   if (it == raw.end()) { return 1; }    // 배열이 비었다 — 여기서 끝낸다
-  std::printf(&quot;min_element 가장 가까운 값        = %.2f (앞에서 %d번째)\n&quot;,
+  std::printf(&quot;min_element 가장 작은 값 = %.2f (인덱스 %d)\n&quot;,
               *it, static_cast&lt;int&gt;(std::distance(raw.begin(), it)));
 
   // ②③ 「쓸 만한 값인가」를 한 번만 적어 두고 두 곳에서 쓴다
@@ -1638,55 +1652,55 @@ int main()
 
   // ② 쓸 만한 값이 몇 개인가
   const auto n_valid = std::count_if(raw.begin(), raw.end(), valid);
-  std::printf(&quot;count_if    유효값 개수           = %d\n&quot;, static_cast&lt;int&gt;(n_valid));
+  std::printf(&quot;count_if 유효값 개수 = %d\n&quot;, static_cast&lt;int&gt;(n_valid));
 
   // ③ 쓸 만한 값만 골라 담는다
   std::vector&lt;float&gt; good;
   good.reserve(raw.size());             // 미리 자리를 잡아 둔다
   std::copy_if(raw.begin(), raw.end(), std::back_inserter(good), valid);
-  std::printf(&quot;copy_if     골라 담은 것          = &quot;);
+  std::printf(&quot;copy_if 골라 담은 것 = &quot;);
   for (float r : good) { std::printf(&quot;%.2f &quot;, r); }
   std::printf(&quot;\n&quot;);
 
   const auto it2 = std::min_element(good.begin(), good.end());
-  std::printf(&quot;min_element 걸러낸 뒤 가장 가까운 = %.2f (앞에서 %d번째)\n&quot;,
+  std::printf(&quot;min_element 걸러낸 뒤 가장 작은 값 = %.2f (인덱스 %d)\n&quot;,
               *it2, static_cast&lt;int&gt;(std::distance(good.begin(), it2)));
 
   // ④ 나머지 여섯 개 — 전부 「구간을 주고, 필요하면 조건을 준다」는 같은 모양이다
   const auto f = std::find_if(good.begin(), good.end(), [](float r) { return r &lt; 0.5f; });
-  std::printf(&quot;find_if     0.5m 보다 가까운 첫 값 = %.2f\n&quot;, *f);
+  std::printf(&quot;find_if 0.5m 보다 가까운 첫 번째 값 = %.2f\n&quot;, *f);
 
   const float sum = std::accumulate(good.begin(), good.end(), 0.0f);
-  std::printf(&quot;accumulate  합 %.2f → 평균 %.3f m\n&quot;, sum, sum / good.size());
+  std::printf(&quot;accumulate 합 %.2f → 평균 %.3f m\n&quot;, sum, sum / good.size());
 
   std::vector&lt;float&gt; cm(good.size());   // 받는 컨테이너는 미리 같은 크기로
   std::transform(good.begin(), good.end(), cm.begin(), [](float m) { return m * 100.0f; });
-  std::printf(&quot;transform   cm 로 바꾼 것         = &quot;);
+  std::printf(&quot;transform cm 로 바꾼 것 = &quot;);
   for (float c : cm) { std::printf(&quot;%.0f &quot;, c); }
   std::printf(&quot;\n&quot;);
 
   const bool near_any = std::any_of(good.begin(), good.end(), [](float r) { return r &lt; 0.3f; });
   const bool all_far  = std::all_of(good.begin(), good.end(), [](float r) { return r &gt; 1.0f; });
-  std::printf(&quot;any_of      0.3m 안쪽에 뭐가 있나   = %s\n&quot;, near_any ? &quot;있다&quot; : &quot;없다&quot;);
-  std::printf(&quot;all_of      전부 1m 밖인가          = %s\n&quot;, all_far ? &quot;그렇다&quot; : &quot;아니다&quot;);
+  std::printf(&quot;any_of 0.3m 미만 값이 하나라도 있나? = %s\n&quot;, near_any ? &quot;있다&quot; : &quot;없다&quot;);
+  std::printf(&quot;all_of 모든 값이 1m 보다 큰가? = %s\n&quot;, all_far ? &quot;그렇다&quot; : &quot;아니다&quot;);
 
   std::vector&lt;float&gt; sorted = good;     // 원본은 두고 사본을 정렬한다
   std::sort(sorted.begin(), sorted.end());
-  std::printf(&quot;sort        정렬 후 중앙값         = %.2f\n&quot;, sorted.at(sorted.size() / 2));
+  std::printf(&quot;sort 정렬 후 중앙값 = %.2f\n&quot;, sorted.at(sorted.size() / 2));
 
   measure_speed();
 
   // ⚠️ NaN 은 어떤 비교에도 거짓이다 — 그래서 어디 있느냐에 따라 답이 달라진다
   const float N = std::nanf(&quot;&quot;);
   std::printf(&quot;\n⚠️ NaN 비교\n&quot;);
-  std::printf(&quot;  NaN &lt; 5.0 : %s\n&quot;, (N &lt; 5.0f) ? &quot;참&quot; : &quot;거짓&quot;);
-  std::printf(&quot;  NaN &gt; 5.0 : %s\n&quot;, (N &gt; 5.0f) ? &quot;참&quot; : &quot;거짓&quot;);
+  std::printf(&quot;  NaN &lt; 5.0: %s\n&quot;, (N &lt; 5.0f) ? &quot;참&quot; : &quot;거짓&quot;);
+  std::printf(&quot;  NaN &gt; 5.0: %s\n&quot;, (N &gt; 5.0f) ? &quot;참&quot; : &quot;거짓&quot;);
   std::printf(&quot;  NaN == NaN: %s\n&quot;, (N == N) ? &quot;참&quot; : &quot;거짓&quot;);
 
   std::printf(&quot;⚠️ 같은 값 묶음인데 NaN 의 자리만 다르다\n&quot;);
-  show_min(&quot;NaN 이 앞에  :&quot;, {N, 3.0f, 0.5f, 2.0f});
+  show_min(&quot;NaN 이 앞에:&quot;, {N, 3.0f, 0.5f, 2.0f});
   show_min(&quot;NaN 이 가운데:&quot;, {3.0f, N, 0.5f, 2.0f});
-  show_min(&quot;NaN 이 없음  :&quot;, {3.0f, 0.5f, 2.0f});
+  show_min(&quot;NaN 이 없음:&quot;, {3.0f, 0.5f, 2.0f});
 
   std::printf(&quot;⚠️ 「빼는 조건」으로 거르면 NaN 이 통과한다\n&quot;);
   const std::vector&lt;float&gt; tricky{N, 3.0f, 0.5f, 2.0f, INFINITY};
@@ -1695,10 +1709,10 @@ int main()
     if (r &lt; lo || r &gt; hi) { continue; } // NaN 은 둘 다 거짓 → 안 걸러진다
     leaky.push_back(r);
   }
-  show_min(&quot;빼는 조건   :&quot;, leaky);
+  show_min(&quot;빼는 조건:&quot;, leaky);
   std::vector&lt;float&gt; kept;              // ③ 과 같은 「고르는 조건」 + isfinite
   std::copy_if(tricky.begin(), tricky.end(), std::back_inserter(kept), valid);
-  show_min(&quot;고르는 조건 :&quot;, kept);
+  show_min(&quot;고르는 조건:&quot;, kept);
   return 0;
 }</code></pre></div>
 </details>

@@ -28,13 +28,15 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약 — 용어 여섯 개</a>
+  <a href="#summary">한 장 요약 — 용어 여덟 개</a>
   <a href="#start">① 오늘 만들 것 — AI가 준 그대로</a>
   <a href="#container">② 컨테이너 · <code>vector</code> · <code>array</code></a>
   <a href="#byref">③ 값 전달과 참조 전달 · <code>const &amp;</code></a>
   <a href="#reserve">④ 용량과 재할당 · <code>reserve</code></a>
   <a href="#rangefor">⑤ 범위 기반 for · <code>const auto &amp;</code></a>
   <a href="#listdeque">⑥ <code>list</code> · <code>deque</code> — <code>vector</code>와 비교</a>
+  <a href="#iterator">⑦ 반복자 · <code>begin</code> · <code>end</code></a>
+  <a href="#invalidation">⑧ 반복자 무효화 · <code>it = v.erase(it)</code></a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
   <a href="#prompts">🤖 프롬프트 모음</a>
@@ -55,6 +57,7 @@
       <li><code>reserve()</code> 한 줄은 무엇을 없애나?</li>
       <li><code>for (auto x : v)</code>와 <code>for (const auto &amp; x : v)</code>는 무엇이 다른가?</li>
       <li><code>list</code>와 <code>deque</code>는 언제 <code>vector</code>보다 나은가?</li>
+      <li>반복자는 무엇이고, 원소를 지우거나 넣은 뒤에는 왜 다시 받아야 하나?</li>
     </ol>
   </div>
 
@@ -64,7 +67,7 @@
     이 과목에서 쓰는 컨테이너는 사실상 <code>std::vector</code> 하나이고, 그 하나를 제대로 쓰는 법이 나머지 전부보다 중요하다.
   </p>
   <p>
-    오늘은 <strong>용어 여섯 개</strong>를 다룬다. 절마다 <strong>먼저 그 문법이 무엇이고 왜 생겼는지를 설명하고</strong>, 그다음에 <strong>라이다 스캔을 다루는 작은 프로그램</strong>에 그것을 적용한다.
+    오늘은 <strong>용어 여덟 개</strong>를 다룬다. 절마다 <strong>먼저 그 문법이 무엇이고 왜 생겼는지를 설명하고</strong>, 그다음에 <strong>라이다 스캔을 다루는 작은 프로그램</strong>에 그것을 적용한다.
     오늘 다루는 것 중 셋은 <strong>틀린 답을 내지 않는다.</strong> 맞는 답을 내면서 쓸데없이 복사할 뿐이다. 그래서 복사와 재할당이 몇 번 일어나는지 <strong>실제로 센다.</strong>
   </p>
 
@@ -80,6 +83,8 @@
     <tr><td>용량 · 재할당 · <code>reserve</code></td><td><code>v.reserve(n);</code></td><td>몇 개 들어올지 알면 담기 전에 한 줄. 재할당이 0번이 된다</td></tr>
     <tr><td>범위 기반 for · <code>const auto &amp;</code></td><td><code>for (const auto &amp; x : v)</code></td><td><strong>기본값.</strong> <code>auto x</code>로 쓰면 한 바퀴마다 사본이 생긴다</td></tr>
     <tr><td><code>std::list</code> · <code>std::deque</code></td><td><code>std::deque&lt;float&gt; d;</code> / <code>std::list&lt;float&gt; l;</code></td><td>앞에서 자주 빼면 <code>deque</code>, 중간에 자주 넣고 빼면 <code>list</code>. <code>list</code>는 <code>[]</code>가 없다. <strong>고민되면 <code>vector</code></strong></td></tr>
+    <tr><td>반복자 · <code>begin()</code> · <code>end()</code></td><td><code>for (auto it = v.begin(); it != v.end(); ++it)</code></td><td>원소의 자리를 가리킨다. <code>*it</code>가 값. <code>end()</code>는 <strong>마지막 다음 빈자리</strong>다. <code>list</code>는 <code>it + n</code> 대신 <code>std::next</code></td></tr>
+    <tr><td>반복자 무효화</td><td><code>it = v.erase(it);</code></td><td>넣거나 지웠으면 그 전의 반복자는 <strong>버리고 다시 받는다.</strong> 돌면서 지울 때는 <code>erase</code>의 반환값을 받는다</td></tr>
   </table>
   </div>
   <div class="interp">
@@ -101,7 +106,7 @@
     <li>②절부터는 절마다 <strong>「개념」</strong>이 먼저 온다 — 그 문법이 무엇이고 어떤 문제를 풀려고 생겼는지. 그다음 <strong>「예제에 적용」</strong>에서 프로그램의 한 곳을 고치거나 <strong>세는 장치를 몇 줄 더한다.</strong></li>
     <li>고치는 자리는 <strong>고치기 전</strong>(붉은 테두리)과 <strong>고친 뒤</strong>(푸른 테두리)를 따로 놓는다. 더하기만 하는 단계는 더한 뒤의 모양만 보인다.</li>
     <li>그 아래 <strong>📄 「전체 코드」 상자</strong>를 누르면 그 단계의 <code>main.cpp</code> 전체가 나온다. 첫 줄 주석에 <strong>버전(v1, v2, …)</strong>이 있다. <strong>어느 버전을 펼쳐도 그대로 빌드되고 돌아간다.</strong></li>
-    <li>v1~v3은 <strong>프로그램 하나가 자란다.</strong> v4~v6은 그 절에서 볼 것 하나만 남긴 <strong>짧은 프로그램</strong>이다 — 앞 단계의 출력이 섞이면 봐야 할 줄이 묻히기 때문이다.</li>
+    <li>v1~v3은 <strong>프로그램 하나가 자란다.</strong> v4~v8은 그 절에서 볼 것 하나만 남긴 <strong>짧은 프로그램</strong>이다 — 앞 단계의 출력이 섞이면 봐야 할 줄이 묻히기 때문이다.</li>
     <li>「실제로 나온 출력」에는 그 절이 새로 찍는 줄만 보인다.</li>
     <li>빌드는 <strong>CMake</strong>다. <code>CMakeLists.txt</code>는 ①절 상자에 한 번 있고, 뒤 단계에서도 그대로 쓴다.</li>
   </ul>
@@ -755,7 +760,7 @@ int main()
       <dt>#include &lt;deque&gt; · &lt;list&gt; · &lt;iterator&gt;</dt>
       <dd>컨테이너마다 헤더가 따로 있다. <code>&lt;iterator&gt;</code>는 아래 <code>std::next</code>가 든 헤더다.</dd>
       <dt>v.begin()</dt>
-      <dd>맨 앞 원소의 <strong>자리</strong>를 가리킨다. 이렇게 원소의 자리를 가리키는 것을 <strong>반복자</strong>(iterator)라고 하고, 13회에서 본격적으로 쓴다. <code>erase</code>·<code>insert</code>는 번호가 아니라 이 자리를 받는다.</dd>
+      <dd>맨 앞 원소의 <strong>자리</strong>를 가리킨다. 이렇게 원소의 자리를 가리키는 것을 <strong>반복자</strong>(iterator)라고 하고, ⑦절에서 정리한다. <code>erase</code>·<code>insert</code>는 번호가 아니라 이 자리를 받는다.</dd>
       <dt>v.erase(v.begin())</dt>
       <dd>그 자리의 원소를 지운다. 세 컨테이너 모두 같은 이름이다. <code>deque</code>·<code>list</code>에는 같은 일을 하는 <code>pop_front()</code>도 있지만, <code>vector</code>에는 없어서 셋 다 <code>erase</code>로 맞췄다 — 세 줄이 이름까지 똑같다.</dd>
       <dt>std::next(l.begin(), 3)</dt>
@@ -843,6 +848,440 @@ int main()
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
     이 코드에서 <code>vector</code>의 맨 앞이나 중간에서 <code>insert</code>·<code>erase</code>를 반복하는 곳이 있는지 찾아 줘. 있으면 <code>deque</code>나 <code>list</code>가 나은지, 그 컨테이너를 번호(<code>[]</code>)로 꺼내 쓰는 곳은 없는지 같이 알려 줘.
+  </div>
+
+  <!-- ── ⑦ 반복자 ── -->
+  <h2 id="iterator">⑦ 반복자 — 원소의 자리를 가리키는 객체 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <h3>개념 — 반복자(iterator)</h3>
+  <p>
+    ⑥절에서 <code>v.erase(v.begin())</code>라고 썼다. <code>erase</code>에 인덱스(<code>v[i]</code>의 <code>i</code>처럼 0부터 세는 원소 번호)가 아니라 <code>v.begin()</code>을 넘겼다. 그것은 정확히 무엇일까?
+  </p>
+  <p>
+    <strong>반복자</strong>(iterator)는 <strong>컨테이너 안에서 원소 하나의 자리를 가리키는 객체</strong>다.
+    7회의 포인터가 메모리 주소로 변수 하나를 가리켰듯이, 반복자는 컨테이너 안의 원소 하나를 가리킨다.
+  </p>
+  <p>
+    왜 이런 것이 따로 있을까? ⑥절에서 본 세 컨테이너는 원소를 두는 방식이 전혀 다르다 — <code>vector</code>는 나란히, <code>list</code>는 흩어진 노드에, <code>deque</code>는 블록 여러 개에.
+    그런데 <strong>「그 자리의 값을 꺼낸다」·「다음 원소로 간다」</strong>는 일은 어느 컨테이너에서나 필요하다.
+    반복자는 그 차이를 안에 감추고 <strong>어느 컨테이너에서나 같은 모양의 연산</strong>을 내준다. 그래서 같은 반복문이 <code>vector</code>에도 <code>list</code>에도 돈다.
+  </p>
+  <pre class="lang-cpp"><code>auto it = v.begin();   // 첫 원소의 자리
+*it                    // 그 자리의 값 — 읽을 수도, 고칠 수도 있다
+++it                   // 다음 자리로 한 칸
+it != v.end()          // 아직 끝에 닿지 않았나</code></pre>
+  <p>
+    <code>*it</code>는 7회의 포인터에서 본 <code>*</code>와 같은 뜻이다 — 가리키는 곳의 값.
+    <code>it</code>의 타입은 <code>std::vector&lt;float&gt;::iterator</code>처럼 길어서 보통 <code>auto</code>로 받는다(7회 ④절).
+  </p>
+
+  <h3>개념 — 반열린 구간 <code>[begin, end)</code></h3>
+  <p>
+    <code>begin()</code>은 첫 원소를 가리킨다. 그럼 <code>end()</code>는 마지막 원소를 가리킬까?
+    그렇지 않다. <code>end()</code>는 <strong>마지막 원소의 다음 자리</strong> — 원소가 없는 자리를 가리킨다.
+  </p>
+  <figure>
+    <img src="assets/img/12_iterator_range.png" width="560"
+         alt="0.83 1.24 0.42 2.05 0.55 다섯 칸 중 첫 칸을 begin() 이 가리키고, 다섯 칸 뒤의 점선 빈칸을 end() 가 가리킨다. 칸 아래에는 ++it 화살표가 한 칸씩 이어져 빈칸에서 끝난다">
+    <figcaption>원소 5개짜리 <code>vector</code>의 <code>begin()</code>과 <code>end()</code>. <code>end()</code>는 다섯 번째 원소가 아니라 <strong>그 다음 빈자리</strong>다. <code>++it</code>를 다섯 번 하면 <code>end()</code>에 닿는다.</figcaption>
+  </figure>
+  <p>
+    수학의 반열린 구간 <code>[a, b)</code>처럼 앞은 들어가고 뒤는 빠진다고 해서 이 모양을 <strong>반열린 구간</strong>(half-open range)이라고 한다.
+    이렇게 두면 좋은 점이 셋 있다.
+  </p>
+  <ul>
+    <li><strong>빈 컨테이너</strong>는 <code>begin() == end()</code> 하나로 드러난다. 따로 검사할 것이 없다.</li>
+    <li>한 바퀴 도는 조건이 언제나 <code>it != v.end()</code> 하나다.</li>
+    <li><code>vector</code>에서는 <code>v.end() - v.begin()</code>이 곧 원소 개수다.</li>
+  </ul>
+  <p>
+    단, <code>end()</code>는 원소가 없는 자리이므로 <code>*v.end()</code>로 값을 꺼내면 안 된다. 컨테이너 밖을 읽는 것이고 무엇이 나올지 정해져 있지 않다.
+  </p>
+  <p>
+    ⑤절의 범위 기반 for도 속에서는 이 모양으로 돈다. <code>for (const auto &amp; x : v) { … }</code>를 컴파일러는 대략 이렇게 풀어 쓴다.
+  </p>
+  <pre class="lang-cpp"><code>for (auto it = v.begin(); it != v.end(); ++it) {
+  const auto &amp; x = *it;
+  …
+}</code></pre>
+  <p>그래서 범위 기반 for는 <code>begin()</code>과 <code>end()</code>가 있는 것이면 무엇이든 돈다. 인덱스가 없는 <code>list</code>도 돈 이유가 이것이다.</p>
+
+  <h3>개념 — 반복자의 종류</h3>
+  <p>
+    반복자가 같은 모양의 연산을 내준다고 했지만 전부 같지는 않다. 컨테이너가 원소를 두는 방식에 따라 <strong>할 수 있는 연산이 다르다.</strong>
+  </p>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>가운데 열</strong> — <code>it + n</code>이 되는지 안 되는지.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>종류</th><th>한 번에 n칸 <code>it + n</code> · 두 자리의 차 <code>it2 - it1</code></th><th>한 칸씩 <code>++it</code> · <code>--it</code></th><th>컨테이너</th></tr>
+    <tr><td><strong>임의 접근 반복자</strong>(random access iterator)</td><td>된다</td><td>된다</td><td><code>vector</code> · <code>deque</code> · <code>array</code></td></tr>
+    <tr><td><strong>양방향 반복자</strong>(bidirectional iterator)</td><td><strong>안 된다</strong> — 컴파일 오류</td><td>된다</td><td><code>list</code></td></tr>
+  </table>
+  </div>
+  <p>
+    <code>list</code>에 인덱스가 없는 것(⑥절)과 같은 이유다. n칸 앞으로 가려면 연결을 n번 따라가야 하므로, 한 번에 가는 것처럼 보이는 <code>+</code>를 아예 주지 않는다.
+    대신 <strong>어느 종류에나 쓰이는 함수 둘</strong>이 <code>&lt;iterator&gt;</code>에 있다.
+  </p>
+  <ul>
+    <li><code>std::next(it, n)</code> — <code>it</code>에서 n칸 간 자리. <code>vector</code>면 한 번에, <code>list</code>면 한 칸씩 n번 간다.</li>
+    <li><code>std::distance(a, b)</code> — <code>a</code>에서 <code>b</code>까지 몇 칸인지.</li>
+  </ul>
+
+  <h3>예제에 적용 — <code>vector</code>와 <code>list</code>를 같은 반복문으로 돈다</h3>
+  <p>
+    ⑥절의 <code>list</code>는 인덱스가 없어서 <code>for (int i = 0; …; ++i)</code>로 돌 수 없었다. 반복자로는 <code>vector</code>와 글자까지 같은 반복문으로 돈다.
+    최근 거리 값 5개를 두 컨테이너에 똑같이 담고, 반복자로 돌고, 고치고, 건너뛰어 본다. 이 단계도 <strong>짧은 프로그램으로 따로</strong> 만든다.
+  </p>
+  <h3>7단계 (v7) — 반복자로 돌고, 고치고, 건너뛴다</h3>
+  <pre class="lang-cpp"><code>std::vector&lt;float&gt; v{0.83f, 1.24f, 0.42f, 2.05f, 0.55f};   // 최근 거리 값 5개
+std::list&lt;float&gt; l{0.83f, 1.24f, 0.42f, 2.05f, 0.55f};     // 같은 값을 list 에도 담았다
+
+for (auto it = v.begin(); it != v.end(); ++it) { std::cout &lt;&lt; ' ' &lt;&lt; *it; }
+for (auto it = l.begin(); it != l.end(); ++it) { std::cout &lt;&lt; ' ' &lt;&lt; *it; }
+
+for (auto it = l.begin(); it != l.end(); ++it) {
+  if (*it &lt; 0.5f) { *it = 0.5f; }      // 0.5 m 보다 작은 값은 0.5 로 맞춘다
+}
+
+auto v2 = v.begin() + 2;             // vector 는 한 번에 두 칸 건너뛴다
+auto l2 = std::next(l.begin(), 2);   // list 는 한 칸씩 두 번 따라간다
+// … v.end() - v.begin(), std::distance(l.begin(), l.end()), 빈 vector 의 begin() == end() 를 찍는다</code></pre>
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>for (auto it = v.begin(); it != v.end(); ++it)</dt>
+      <dd>반복자로 도는 for 문이다. <code>it</code>를 첫 자리에 두고, <code>end()</code>에 닿을 때까지 한 칸씩 옮긴다. <code>list</code> 줄과 비교하면 컨테이너 이름 한 글자만 다르다.</dd>
+      <dt>*it = 0.5f</dt>
+      <dd>반복자가 가리키는 <strong>원소 자체</strong>를 고친다. 사본이 아니므로 <code>l</code> 안의 값이 바뀐다 — ⑤절 표의 <code>for (auto &amp; x : v)</code>와 같은 일이다.</dd>
+      <dt>v.begin() + 2 · std::next(l.begin(), 2)</dt>
+      <dd>첫 자리에서 두 칸 간 자리, 곧 인덱스 2의 원소를 가리킨다. 임의 접근 반복자는 <code>+</code>로, 양방향 반복자는 <code>std::next</code>로 간다.</dd>
+      <dt>v.end() - v.begin() · std::distance(l.begin(), l.end())</dt>
+      <dd>두 자리 사이가 몇 칸인지다. 처음부터 끝까지 쟀으니 원소 개수와 같다.</dd>
+    </dl>
+  </div>
+  <h3>실제로 나온 출력</h3>
+  <pre><code>⑦ 반복자로 한 바퀴 돈다 — vector 와 list 가 같은 모양이다
+  vector: 0.83 1.24 0.42 2.05 0.55
+  list: 0.83 1.24 0.42 2.05 0.55
+
+⑦ 반복자로 원소를 고친다 — 0.5 m 보다 작은 값은 0.5 로 맞춘다
+  list: 0.83 1.24 0.5 2.05 0.55
+
+⑦ 반복자를 건너뛰고, 두 반복자 사이를 센다
+  *(v.begin() + 2) = 0.42
+  *std::next(l.begin(), 2) = 0.5
+  v.end() - v.begin() = 5
+  std::distance(l.begin(), l.end()) = 5
+  빈 vector 에서 begin() == end() 는 참</code></pre>
+  <!-- fullcode "전체 코드 — v7 (7단계 · 반복자) main.cpp" build="cmake --build build && ./build/scan_list"
+       l12_container/steps/step7/main.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — v7 (7단계 · 반복자) main.cpp</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/scan_list</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 라이다 스캔 다루기 — v7 (7단계: 반복자)
+#include &lt;iostream&gt;
+#include &lt;iterator&gt;
+#include &lt;list&gt;
+#include &lt;vector&gt;
+
+int main()
+{
+  std::vector&lt;float&gt; v{0.83f, 1.24f, 0.42f, 2.05f, 0.55f};   // 최근 거리 값 5개
+  std::list&lt;float&gt; l{0.83f, 1.24f, 0.42f, 2.05f, 0.55f};     // 같은 값을 list 에도 담았다
+
+  std::cout &lt;&lt; &quot;⑦ 반복자로 한 바퀴 돈다 — vector 와 list 가 같은 모양이다\n&quot;;
+  std::cout &lt;&lt; &quot;  vector:&quot;;
+  for (auto it = v.begin(); it != v.end(); ++it) { std::cout &lt;&lt; &#x27; &#x27; &lt;&lt; *it; }
+  std::cout &lt;&lt; &quot;\n  list:&quot;;
+  for (auto it = l.begin(); it != l.end(); ++it) { std::cout &lt;&lt; &#x27; &#x27; &lt;&lt; *it; }
+  std::cout &lt;&lt; &#x27;\n&#x27;;
+
+  std::cout &lt;&lt; &quot;\n⑦ 반복자로 원소를 고친다 — 0.5 m 보다 작은 값은 0.5 로 맞춘다\n&quot;;
+  for (auto it = l.begin(); it != l.end(); ++it) {
+    if (*it &lt; 0.5f) { *it = 0.5f; }
+  }
+  std::cout &lt;&lt; &quot;  list:&quot;;
+  for (const auto &amp; r : l) { std::cout &lt;&lt; &#x27; &#x27; &lt;&lt; r; }
+  std::cout &lt;&lt; &#x27;\n&#x27;;
+
+  std::cout &lt;&lt; &quot;\n⑦ 반복자를 건너뛰고, 두 반복자 사이를 센다\n&quot;;
+  auto v2 = v.begin() + 2;             // vector 는 한 번에 두 칸 건너뛴다
+  auto l2 = std::next(l.begin(), 2);   // list 는 한 칸씩 두 번 따라간다
+  std::cout &lt;&lt; &quot;  *(v.begin() + 2) = &quot; &lt;&lt; *v2 &lt;&lt; &#x27;\n&#x27;;
+  std::cout &lt;&lt; &quot;  *std::next(l.begin(), 2) = &quot; &lt;&lt; *l2 &lt;&lt; &#x27;\n&#x27;;
+  std::cout &lt;&lt; &quot;  v.end() - v.begin() = &quot; &lt;&lt; (v.end() - v.begin()) &lt;&lt; &#x27;\n&#x27;;
+  std::cout &lt;&lt; &quot;  std::distance(l.begin(), l.end()) = &quot; &lt;&lt; std::distance(l.begin(), l.end()) &lt;&lt; &#x27;\n&#x27;;
+
+  std::vector&lt;float&gt; empty;            // 아직 아무것도 안 담은 스캔
+  std::cout &lt;&lt; &quot;  빈 vector 에서 begin() == end() 는 &quot; &lt;&lt; (empty.begin() == empty.end() ? &quot;참&quot; : &quot;거짓&quot;) &lt;&lt; &#x27;\n&#x27;;
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+  <div class="interp">
+    <strong>해석:</strong> 첫 묶음의 두 반복문은 컨테이너 이름만 다르고 같은 답을 낸다. 인덱스가 없는 <code>list</code>도 반복자로는 <code>vector</code>와 똑같이 돈다.
+    셋째 묶음에서 인덱스 2의 값이 <code>vector</code>는 0.42, <code>list</code>는 0.5로 갈린 것은 둘째 묶음에서 <code>list</code>만 고쳤기 때문이다 — <code>*it = 0.5f</code>가 원본을 바꿨다는 증거다.
+  </div>
+
+  <h3>막히는 것을 확인한다 — <code>list</code> 반복자에 <code>+ 2</code>를 하면</h3>
+  <p>v7에서 <code>std::next</code> 한 줄을 <code>vector</code>처럼 <code>+ 2</code>로 바꾸고 빌드해 봤다.</p>
+  <div class="codelabel bad">v7 변형 — 한 줄을 바꾼 판</div>
+  <pre class="lang-cpp before"><code>auto l2 = l.begin() + 2;             // list 도 vector 처럼 건너뛰어 본다</code></pre>
+  <pre class="lang-sh"><code>$ cmake --build build
+/home/ubuntu/robot_ws/l12/scan_list/main.cpp: In function ‘int main()’:
+/home/ubuntu/robot_ws/l12/scan_list/main.cpp:29:23: error: no match for ‘operator+’ (operand types are ‘std::__cxx11::list&lt;float&gt;::iterator’ and ‘int’)
+   29 |   auto l2 = l.begin() + 2;             // list 도 vector 처럼 건너뛰어 본다
+      |             ~~~~~~~~~ ^ ~
+      |                    |    |
+      |                    |    int
+      |                    std::__cxx11::list&lt;float&gt;::iterator</code></pre>
+  <!-- fullcode "전체 코드 — v7 변형 (list 반복자에 + 2 · 빌드가 막힌다) main.cpp" build="cmake --build build   # error 가 난다"
+       l12_container/steps/variants/bad_list_plus/main.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — v7 변형 (list 반복자에 + 2 · 빌드가 막힌다) main.cpp</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build   # error 가 난다</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 라이다 스캔 다루기 — v7 변형 (list 반복자에 + 2 · 빌드가 막힌다)
+#include &lt;iostream&gt;
+#include &lt;iterator&gt;
+#include &lt;list&gt;
+#include &lt;vector&gt;
+
+int main()
+{
+  std::vector&lt;float&gt; v{0.83f, 1.24f, 0.42f, 2.05f, 0.55f};   // 최근 거리 값 5개
+  std::list&lt;float&gt; l{0.83f, 1.24f, 0.42f, 2.05f, 0.55f};     // 같은 값을 list 에도 담았다
+
+  std::cout &lt;&lt; &quot;⑦ 반복자로 한 바퀴 돈다 — vector 와 list 가 같은 모양이다\n&quot;;
+  std::cout &lt;&lt; &quot;  vector:&quot;;
+  for (auto it = v.begin(); it != v.end(); ++it) { std::cout &lt;&lt; &#x27; &#x27; &lt;&lt; *it; }
+  std::cout &lt;&lt; &quot;\n  list:&quot;;
+  for (auto it = l.begin(); it != l.end(); ++it) { std::cout &lt;&lt; &#x27; &#x27; &lt;&lt; *it; }
+  std::cout &lt;&lt; &#x27;\n&#x27;;
+
+  std::cout &lt;&lt; &quot;\n⑦ 반복자로 원소를 고친다 — 0.5 m 보다 작은 값은 0.5 로 맞춘다\n&quot;;
+  for (auto it = l.begin(); it != l.end(); ++it) {
+    if (*it &lt; 0.5f) { *it = 0.5f; }
+  }
+  std::cout &lt;&lt; &quot;  list:&quot;;
+  for (const auto &amp; r : l) { std::cout &lt;&lt; &#x27; &#x27; &lt;&lt; r; }
+  std::cout &lt;&lt; &#x27;\n&#x27;;
+
+  std::cout &lt;&lt; &quot;\n⑦ 반복자를 건너뛰고, 두 반복자 사이를 센다\n&quot;;
+  auto v2 = v.begin() + 2;             // vector 는 한 번에 두 칸 건너뛴다
+  auto l2 = l.begin() + 2;             // list 도 vector 처럼 건너뛰어 본다
+  std::cout &lt;&lt; &quot;  *(v.begin() + 2) = &quot; &lt;&lt; *v2 &lt;&lt; &#x27;\n&#x27;;
+  std::cout &lt;&lt; &quot;  *std::next(l.begin(), 2) = &quot; &lt;&lt; *l2 &lt;&lt; &#x27;\n&#x27;;
+  std::cout &lt;&lt; &quot;  v.end() - v.begin() = &quot; &lt;&lt; (v.end() - v.begin()) &lt;&lt; &#x27;\n&#x27;;
+  std::cout &lt;&lt; &quot;  std::distance(l.begin(), l.end()) = &quot; &lt;&lt; std::distance(l.begin(), l.end()) &lt;&lt; &#x27;\n&#x27;;
+
+  std::vector&lt;float&gt; empty;            // 아직 아무것도 안 담은 스캔
+  std::cout &lt;&lt; &quot;  빈 vector 에서 begin() == end() 는 &quot; &lt;&lt; (empty.begin() == empty.end() ? &quot;참&quot; : &quot;거짓&quot;) &lt;&lt; &#x27;\n&#x27;;
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+  <div class="interp">
+    <strong>해석:</strong> 「<code>list</code> 반복자와 <code>int</code>를 더하는 <code>+</code>가 없다」는 오류다. 그 아래로 「혹시 이것이냐」는 <code>note:</code> 줄이 길게 이어지는데, 첫 <code>error:</code> 줄만 읽으면 된다.
+    이 실수는 <strong>컴파일러가 잡아 준다.</strong> 고치는 법은 <code>std::next(l.begin(), 2)</code>다.
+  </div>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    이 코드에서 반복자를 <code>it + n</code>으로 옮기는 곳을 찾아 줘. 컨테이너가 <code>list</code>로 바뀌어도 빌드되게 <code>std::next</code>로 바꿔야 하는 곳이 있는지 알려 줘.
+  </div>
+
+  <!-- ── ⑧ 반복자 무효화 ── -->
+  <h2 id="invalidation">⑧ 반복자 무효화 — 지우거나 넣은 뒤에는 반복자를 다시 받는다 <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <h3>개념 — 반복자 무효화(iterator invalidation)</h3>
+  <p>
+    반복자는 원소의 자리를 가리킨다. 그런데 그 원소가 다른 자리로 옮겨 가거나 지워지면 어떻게 될까?
+    반복자는 그것을 모른 채 <strong>옛 자리를 계속 가리킨다.</strong> 이렇게 더는 쓸 수 없게 된 반복자를 <strong>무효화된 반복자</strong>(invalidated iterator)라고 한다.
+  </p>
+  <p>
+    무효화된 반복자로 값을 읽거나 <code>++</code>를 하면 <strong>정의되지 않은 동작</strong>(undefined behavior)이 된다. C++ 표준이 그 결과를 정해 두지 않았다는 뜻이다.
+    맞게 도는 것처럼 보일 수도, 틀린 답을 낼 수도, 프로그램이 죽을 수도 있다. 컴파일러는 이것을 대체로 잡아 주지 못한다.
+  </p>
+  <p>언제 무효화되는지는 컨테이너가 원소를 두는 방식(⑥절)에서 바로 나온다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>이런 일을 하면</th><th><code>vector</code></th><th><code>list</code></th></tr>
+    <tr><td><code>push_back</code>으로 <strong>재할당</strong>이 일어나면 (④절)</td><td>원소가 전부 새 자리로 옮겨 가서 <strong>전부 무효</strong></td><td>재할당이 없다. 아무것도 무효가 되지 않는다</td></tr>
+    <tr><td><code>erase(it)</code></td><td>뒤의 원소를 당기므로 <strong><code>it</code>와 그 뒤 전부 무효</strong></td><td>지운 원소를 가리키던 <code>it</code> 하나만 무효</td></tr>
+    <tr><td><code>insert(it, …)</code></td><td>뒤의 원소를 미므로 <strong>그 자리부터 뒤 전부 무효</strong>(재할당이 나면 전부)</td><td>아무것도 무효가 되지 않는다</td></tr>
+  </table>
+  </div>
+  <p>
+    <code>deque</code>는 규칙이 더 복잡하다. 셋 다 한 줄로 줄이면 이렇다 — <strong>원소를 넣거나 지웠으면, 그 전에 받아 둔 반복자는 버리고 다시 받는다.</strong>
+  </p>
+  <p>
+    돌면서 지우는 반복문이 이 규칙이 가장 자주 걸리는 자리다. <code>erase</code>는 <strong>지운 원소의 다음 자리를 가리키는 새 반복자</strong>를 돌려준다. 그것을 받아서 이어 간다.
+  </p>
+  <pre class="lang-cpp"><code>for (auto it = v.begin(); it != v.end();) {   // 셋째 칸(++it)을 비워 둔다
+  if (지울 값이면) {
+    it = v.erase(it);    // 지운 다음 자리를 받는다
+  } else {
+    ++it;                // 안 지웠을 때만 한 칸 간다
+  }
+}</code></pre>
+
+  <h3>예제에 적용 — 잴 수 없는 거리를 돌면서 지운다</h3>
+  <p>
+    이 과목의 라이다(LDS-02)는 0.16 m보다 가까운 것을 재지 못한다. 그보다 작은 값은 측정 실패이므로 스캔에서 빼야 한다.
+    「돌면서 지우는」 반복문은 AI 코드에 흔히 나오고, 반복자 무효화 실수도 바로 거기서 나온다. 앞부분에서는 ④절의 재할당이 정말 원소를 옮기는지도 확인한다.
+    이 단계도 <strong>짧은 프로그램으로 따로</strong> 만든다.
+  </p>
+  <h3>8단계 (v8) — 재할당이 원소를 옮기는지 보고, 돌면서 지운다</h3>
+  <pre class="lang-cpp"><code>std::vector&lt;float&gt; a{0.83f, 1.24f, 0.42f};   // reserve 없이 3개
+std::vector&lt;float&gt; b{0.83f, 1.24f, 0.42f};
+b.reserve(10);                               // 10개 자리를 미리 잡았다
+const float * pa = &amp;a[0];                    // 첫 원소의 주소를 적어 둔다 (7회 포인터)
+const float * pb = &amp;b[0];
+a.push_back(2.05f);
+b.push_back(2.05f);
+// … &amp;a[0] == pa, &amp;b[0] == pb 인지 찍는다</code></pre>
+  <p>돌면서 지우는 부분은 AI가 흔히 주는 모양을 먼저 놓고, 그다음 고친 모양을 놓는다.</p>
+  <div class="codelabel bad">고치기 전 — 지운 반복자를 그대로 <code>++</code> 한다</div>
+  <pre class="lang-cpp before"><code>std::vector&lt;float&gt; scan{0.10f, 0.05f, 0.83f, 1.24f, 0.12f, 0.42f};
+for (auto it = scan.begin(); it != scan.end(); ++it) {
+  if (*it &lt; 0.16f) {
+    scan.erase(it);                  // 지운 자리의 it 을 그대로 들고 ++ 한다
+  }
+}</code></pre>
+  <div class="codelabel good">고친 뒤 — <code>erase</code>가 돌려준 반복자를 받는다</div>
+  <pre class="lang-cpp after"><code>std::vector&lt;float&gt; scan{0.10f, 0.05f, 0.83f, 1.24f, 0.12f, 0.42f};
+for (auto it = scan.begin(); it != scan.end();) {
+  if (*it &lt; 0.16f) {
+    it = scan.erase(it);             // erase 가 돌려주는 「지운 다음 자리」를 받는다
+  } else {
+    ++it;                            // 안 지웠을 때만 한 칸 간다
+  }
+}</code></pre>
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>&amp;a[0]</dt>
+      <dd>첫 원소의 <strong>주소</strong>다. 7회 ⑨절의 주소 연산자 <code>&amp;</code>를 원소에 붙였다. 재할당 전에 적어 둔 주소와 뒤의 주소를 비교해서 원소가 옮겨 갔는지 본다.</dd>
+      <dt>for (auto it = scan.begin(); it != scan.end();)</dt>
+      <dd>for 문의 셋째 칸을 비워 둘 수 있다. 한 칸 옮기는 일을 본문의 <code>else</code>에서 하려고 비웠다.</dd>
+      <dt>it = scan.erase(it)</dt>
+      <dd><code>erase</code>는 <strong>지운 원소 바로 다음 원소의 자리</strong>를 돌려준다. 지운 뒤 <code>it</code>는 무효이므로 이 새 자리로 바꿔 끼운다.</dd>
+    </dl>
+  </div>
+  <h3>실제로 나온 출력</h3>
+  <p>고치기 전 판의 돌면서 지우는 부분:</p>
+  <pre><code>⑧ 돌면서 지운다 — 0.16 m 보다 작은 값(잴 수 없는 거리)을 뺀다
+  지우기 전: 0.1 0.05 0.83 1.24 0.12 0.42
+  지운 뒤: 0.05 0.83 1.24 0.42</code></pre>
+  <!-- fullcode "전체 코드 — v8 변형 (지운 반복자를 그대로 ++ 한 판 · 틀린 답이 나온다) main.cpp" build="cmake --build build && ./build/scan_list"
+       l12_container/steps/variants/erase_wrong/main.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — v8 변형 (지운 반복자를 그대로 ++ 한 판 · 틀린 답이 나온다) main.cpp</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/scan_list</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 라이다 스캔 다루기 — v8 변형 (지운 반복자를 그대로 ++ 한 판 · 틀린 답이 나온다)
+#include &lt;iostream&gt;
+#include &lt;vector&gt;
+
+// 원소들을 한 줄로 찍는다
+void print(const char * label, const std::vector&lt;float&gt; &amp; v)
+{
+  std::cout &lt;&lt; &quot;  &quot; &lt;&lt; label &lt;&lt; &#x27;:&#x27;;
+  for (const auto &amp; r : v) { std::cout &lt;&lt; &#x27; &#x27; &lt;&lt; r; }
+  std::cout &lt;&lt; &#x27;\n&#x27;;
+}
+
+int main()
+{
+  std::cout &lt;&lt; &quot;⑧ push_back 으로 재할당이 일어나면 원소가 다른 자리로 옮겨 간다\n&quot;;
+  std::vector&lt;float&gt; a{0.83f, 1.24f, 0.42f};   // reserve 없이 3개
+  std::vector&lt;float&gt; b{0.83f, 1.24f, 0.42f};
+  b.reserve(10);                               // 10개 자리를 미리 잡았다
+  const float * pa = &amp;a[0];                    // 첫 원소의 주소를 적어 둔다 (7회 포인터)
+  const float * pb = &amp;b[0];
+  a.push_back(2.05f);
+  b.push_back(2.05f);
+  std::cout &lt;&lt; &quot;  reserve 없음: 첫 원소가 &quot; &lt;&lt; (&amp;a[0] == pa ? &quot;제자리에 있다&quot; : &quot;다른 주소로 옮겨 갔다&quot;) &lt;&lt; &#x27;\n&#x27;;
+  std::cout &lt;&lt; &quot;  reserve(10): 첫 원소가 &quot; &lt;&lt; (&amp;b[0] == pb ? &quot;제자리에 있다&quot; : &quot;다른 주소로 옮겨 갔다&quot;) &lt;&lt; &#x27;\n&#x27;;
+
+  std::cout &lt;&lt; &quot;\n⑧ 돌면서 지운다 — 0.16 m 보다 작은 값(잴 수 없는 거리)을 뺀다\n&quot;;
+  std::vector&lt;float&gt; scan{0.10f, 0.05f, 0.83f, 1.24f, 0.12f, 0.42f};
+  print(&quot;지우기 전&quot;, scan);
+  for (auto it = scan.begin(); it != scan.end(); ++it) {
+    if (*it &lt; 0.16f) {
+      scan.erase(it);                  // 지운 자리의 it 을 그대로 들고 ++ 한다
+    }
+  }
+  print(&quot;지운 뒤&quot;, scan);
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+  <p>고친 v8 전체:</p>
+  <pre><code>⑧ push_back 으로 재할당이 일어나면 원소가 다른 자리로 옮겨 간다
+  reserve 없음: 첫 원소가 다른 주소로 옮겨 갔다
+  reserve(10): 첫 원소가 제자리에 있다
+
+⑧ 돌면서 지운다 — 0.16 m 보다 작은 값(잴 수 없는 거리)을 뺀다
+  지우기 전: 0.1 0.05 0.83 1.24 0.12 0.42
+  지운 뒤: 0.83 1.24 0.42</code></pre>
+  <!-- fullcode "전체 코드 — v8 (8단계 · 반복자 무효화) main.cpp" build="cmake --build build && ./build/scan_list"
+       l12_container/steps/step8/main.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — v8 (8단계 · 반복자 무효화) main.cpp</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cmake --build build &amp;&amp; ./build/scan_list</code></p>
+  <div class="codefile"><div class="fname">main.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 12회 라이다 스캔 다루기 — v8 (8단계: 반복자 무효화)
+#include &lt;iostream&gt;
+#include &lt;vector&gt;
+
+// 원소들을 한 줄로 찍는다
+void print(const char * label, const std::vector&lt;float&gt; &amp; v)
+{
+  std::cout &lt;&lt; &quot;  &quot; &lt;&lt; label &lt;&lt; &#x27;:&#x27;;
+  for (const auto &amp; r : v) { std::cout &lt;&lt; &#x27; &#x27; &lt;&lt; r; }
+  std::cout &lt;&lt; &#x27;\n&#x27;;
+}
+
+int main()
+{
+  std::cout &lt;&lt; &quot;⑧ push_back 으로 재할당이 일어나면 원소가 다른 자리로 옮겨 간다\n&quot;;
+  std::vector&lt;float&gt; a{0.83f, 1.24f, 0.42f};   // reserve 없이 3개
+  std::vector&lt;float&gt; b{0.83f, 1.24f, 0.42f};
+  b.reserve(10);                               // 10개 자리를 미리 잡았다
+  const float * pa = &amp;a[0];                    // 첫 원소의 주소를 적어 둔다 (7회 포인터)
+  const float * pb = &amp;b[0];
+  a.push_back(2.05f);
+  b.push_back(2.05f);
+  std::cout &lt;&lt; &quot;  reserve 없음: 첫 원소가 &quot; &lt;&lt; (&amp;a[0] == pa ? &quot;제자리에 있다&quot; : &quot;다른 주소로 옮겨 갔다&quot;) &lt;&lt; &#x27;\n&#x27;;
+  std::cout &lt;&lt; &quot;  reserve(10): 첫 원소가 &quot; &lt;&lt; (&amp;b[0] == pb ? &quot;제자리에 있다&quot; : &quot;다른 주소로 옮겨 갔다&quot;) &lt;&lt; &#x27;\n&#x27;;
+
+  std::cout &lt;&lt; &quot;\n⑧ 돌면서 지운다 — 0.16 m 보다 작은 값(잴 수 없는 거리)을 뺀다\n&quot;;
+  std::vector&lt;float&gt; scan{0.10f, 0.05f, 0.83f, 1.24f, 0.12f, 0.42f};
+  print(&quot;지우기 전&quot;, scan);
+  for (auto it = scan.begin(); it != scan.end();) {
+    if (*it &lt; 0.16f) {
+      it = scan.erase(it);             // erase 가 돌려주는 「지운 다음 자리」를 받는다
+    } else {
+      ++it;                            // 안 지웠을 때만 한 칸 간다
+    }
+  }
+  print(&quot;지운 뒤&quot;, scan);
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+  <div class="interp">
+    <strong>해석:</strong> 첫 묶음 — <code>reserve</code> 없이 3개가 든 <code>a</code>에 하나를 더 넣자 재할당이 일어나 <strong>첫 원소가 다른 주소로 옮겨 갔다.</strong> 그 전에 받아 둔 반복자가 있었다면 버려진 자리를 가리키고 있는 셈이다.
+    <code>reserve(10)</code>을 한 <code>b</code>는 제자리다. ④절의 <code>reserve</code>는 재할당 복사만 없애는 것이 아니라 <strong>용량 안에서는 반복자도 지켜 준다.</strong>
+    <br>둘째 묶음 — 고치기 전 판은 <strong>0.05를 남겼다.</strong> 0.10을 지우자 뒤의 원소가 한 칸씩 당겨져 0.05가 그 자리에 왔는데, 반복문이 <code>++it</code>로 그 자리를 건너뛰었다.
+    빌드도 되고 경고도 없고 실행도 끝까지 됐다. 이번에는 값 하나를 놓친 것으로 끝났지만 정의되지 않은 동작이므로 다른 값·다른 컴파일러에서는 결과를 장담할 수 없다.
+    <strong>그래서 이 자리는 사람이 본다.</strong> 「돌면서 <code>erase</code>를 하는데 반환값을 안 받는다」가 보이면 의심해 볼 만하다.
+  </div>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    이 코드에서 반복문을 돌면서 <code>erase</code>나 <code>insert</code>, <code>push_back</code>을 하는 곳을 찾아 줘. 그 뒤에도 옛 반복자를 계속 쓰는 곳이 있으면 <code>it = v.erase(it)</code> 모양으로 고치고, 왜 그 자리가 위험했는지 한 줄씩 알려 줘.
   </div>
 
   <!-- ── 실습 ── -->
@@ -1042,6 +1481,8 @@ add_executable(cone_list main.cpp)</code></pre></div>
     <tr><td>담는 코드일 때</td><td>"담는 코드 앞에 <code>reserve</code>를 넣어 줘. 개수는 원본 배열의 크기로 잡고, 숫자를 코드에 박지 말아 줘."</td></tr>
     <tr><td>반복문이 보일 때</td><td>"범위 for 에서 <code>auto</code> 대신 <code>const auto &amp;</code>를 써 줘. 값을 바꿔야 하는 자리만 <code>auto &amp;</code>로 해 줘."</td></tr>
     <tr><td>앞이나 중간에서 넣고 뺄 때</td><td>"<code>vector</code>의 맨 앞이나 중간에서 <code>insert</code>·<code>erase</code>를 반복하는 곳을 찾아 줘. <code>deque</code>나 <code>list</code>가 나은지, 번호로 꺼내 쓰는 곳은 없는지 같이 알려 줘."</td></tr>
+    <tr><td>반복자를 건너뛸 때</td><td>"반복자를 <code>it + n</code>으로 옮기는 곳을 찾아 줘. 컨테이너가 <code>list</code>로 바뀌어도 빌드되게 <code>std::next</code>로 바꿔야 하는 곳이 있는지 알려 줘."</td></tr>
+    <tr><td>돌면서 지우거나 넣을 때</td><td>"반복문을 돌면서 <code>erase</code>·<code>insert</code>·<code>push_back</code>을 하는 곳을 찾아 줘. 옛 반복자를 계속 쓰는 곳이 있으면 <code>it = v.erase(it)</code> 모양으로 고쳐 줘."</td></tr>
     <tr><td>C 스타일 배열이 보일 때</td><td>"<code>float a[4]</code> 같은 배열을 <code>std::array</code>나 <code>std::vector</code>로 바꿔 줘. 크기를 따로 들고 다니지 않게 해 줘."</td></tr>
     <tr><td>복사가 나는지 궁금할 때</td><td>"이 구조체에 복사 생성자를 넣어 복사될 때마다 숫자를 세게 해 줘. 그 숫자를 찍어서 어디서 복사가 나는지 보여 줘."</td></tr>
   </table>
@@ -1056,6 +1497,8 @@ add_executable(cone_list main.cpp)</code></pre></div>
     <li><input type="checkbox" id="c4"><label for="c4">범위 for 가 <code>const auto &amp;</code>인가? 값을 바꾸는 자리만 <code>auto &amp;</code>인가?</label></li>
     <li><input type="checkbox" id="c5"><label for="c5">개수가 고정인데 <code>vector</code>를 쓰거나, 변하는데 <code>array</code>를 쓰지 않았나? C 스타일 배열이 남아 있지 않나?</label></li>
     <li><input type="checkbox" id="c7"><label for="c7">맨 앞에서 자꾸 버리는 <code>vector</code>가 없나? 있으면 <code>deque</code>로 바꿀 이유가 있는지 물었나?</label></li>
+    <li><input type="checkbox" id="c8"><label for="c8"><code>end()</code>가 무엇을 가리키는지, <code>list</code> 반복자에 왜 <code>+ 2</code>가 안 되는지 말할 수 있나?</label></li>
+    <li><input type="checkbox" id="c9"><label for="c9">돌면서 <code>erase</code>하는 반복문이 <code>it = v.erase(it)</code>로 반환값을 받나?</label></li>
     <li><input type="checkbox" id="c6"><label for="c6">연습문제의 복사 횟수가 「담는 동안 8회, 합을 구하는 동안 0회」가 됐나?</label></li>
   </ul>
 
