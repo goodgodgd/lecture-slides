@@ -1,0 +1,2599 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>21회 · 서비스·파라미터·launch | 로봇공학</title>
+<script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}})();</script>
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="assets/lecture.css">
+</head>
+<body>
+<header class="bar">
+  <div class="barin wide">
+    <a class="up" href="index.html" aria-label="로봇공학 회차 목록"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a>
+    <nav class="crumb" aria-label="경로">
+      <a href="../index.html">강의자료</a><span class="sep">/</span><a href="index.html">로봇공학</a><span class="sep">/</span><span class="here">21회 · 서비스·파라미터·launch</span>
+    </nav>
+    <span class="spacer"></span>
+    <div class="navlinks"><a class="navlink" href="robotics_20.html" aria-label="이전 회차"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a><a class="navlink" href="robotics_22.html" aria-label="다음 회차"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></a></div>
+    <div class="seg" data-theme-switch role="group" aria-label="밝기">
+      <button type="button" data-mode="auto" aria-pressed="true">자동</button>
+      <button type="button" data-mode="light" aria-pressed="false">밝게</button>
+      <button type="button" data-mode="dark" aria-pressed="false">어둡게</button>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="toc-title">이 회차 목차</div>
+  <a href="#summary">한 장 요약</a>
+  <a href="#plan">① wall_stop v4~v8</a>
+  <a href="#v4">② 파라미터 선언과 읽기 (v4)</a>
+  <a href="#v5">③ ros2 param set과 읽는 시점 (v5)</a>
+  <a href="#yaml">④ YAML 파라미터 파일</a>
+  <a href="#v6">⑤ 서비스 서버 create_service (v6)</a>
+  <a href="#v7">⑥ 서비스 클라이언트 async_send_request (v7)</a>
+  <a href="#v8">⑦ launch 파일 (v8)</a>
+  <a href="#install">⑧ install(DIRECTORY)과 share/</a>
+  <a href="#review">⑨ 받은 코드 검사 목록</a>
+  <a href="#lab">🧪 실습</a>
+  <a href="#exercise">📝 연습문제</a>
+  <a href="#prompts">🤖 프롬프트 모음</a>
+  <a href="#check">✅ 점검</a>
+  <a href="#more">조금 더 알아두면</a>
+</nav>
+
+<main>
+
+  <div class="lec-no">로봇공학 · 21회 · 3부 ROS 2</div>
+  <h1>서비스·파라미터·launch</h1>
+
+  <div class="questions">
+    <span class="lab">오늘 답할 질문</span>
+    <ol>
+      <li>코드에 적힌 속도와 여유 거리를 <strong>노드를 끄지 않고</strong> 바꾸려면 코드에 무엇이 있어야 하나?</li>
+      <li><code>ros2 param set</code>이 <code>Set parameter successful</code>이라고 답했는데 거북이가 그대로다. 왜 그럴까?</li>
+      <li>튜닝해서 찾은 값은 어디에 남겨 두고, 노드를 켤 때 어떻게 읽게 하나?</li>
+      <li>「멈춰라」 같은 한 번의 부탁을 <strong>내 노드가 받으려면</strong>, 또 <strong>남의 노드에 하려면</strong> 코드에 무엇이 있어야 하나?</li>
+      <li>터미널 여러 개에 나눠 치던 것을 파일 하나로 띄울 수 있나? 그 파일을 <code>ros2 launch</code>가 못 찾는다면 어디를 보나?</li>
+    </ol>
+  </div>
+
+  <p>
+    20회에 만든 <code>wall_stop</code>은 벽 앞 1 m에서 거북이를 세웠다. 그런데 실습 4번에서 여유 거리를 2 m로 바꿔 보려고 했을 때,
+    숫자 하나를 고치고 <strong>다시 빌드하고 다시 띄워야</strong> 했다. 콘 트랙 앞에서 속도를 스무 번 바꿔 본다고 하면 그 일이 스무 번이다.
+    오늘은 같은 패키지 <code>turtle_drive</code>의 <code>wall_stop</code>을 다섯 단계(v4~v8)로 키우면서, 17회에서 개념으로만 본 <strong>파라미터</strong>와 <strong>서비스</strong>를 코드로 만든다.
+  </p>
+  <p>
+    순서는 이렇다. 먼저 속도와 여유 거리를 <strong>파라미터</strong>로 꺼내고(v4), 실행 중에 바꾼 값이 실제로 먹게 고치고(v5), 찾은 값을 <strong>YAML 파일</strong>로 남긴다.
+    그다음 「주행 켜기·끄기」를 받는 <strong>서비스 서버</strong>를 달고(v6), 거북이가 설 때마다 turtlesim의 <code>/turtle1/set_pen</code>을 부르는 <strong>서비스 클라이언트</strong>를 단다(v7).
+    마지막으로 turtlesim과 <code>wall_stop</code>을 파일 하나로 함께 띄우는 <strong>launch 파일</strong>을 만든다(v8).
+  </p>
+  <p>
+    각 단계에는 <strong>빌드는 되는데 기대대로 안 되는</strong> 자리가 하나씩 있다. <code>param set</code>은 성공했다는데 거북이가 그대로인 것,
+    YAML 파일에 노드 이름을 틀리게 적어도 아무 말이 없는 것, 서비스 응답을 기다리다 노드 전체가 멈추는 것, launch 파일이 분명히 있는데 못 찾는 것.
+    오늘은 그 자리를 하나씩 직접 만나 보고, 무엇을 보면 알아챌 수 있는지 정리한다.
+  </p>
+
+  <!-- ── 한 장 요약표 ── -->
+  <h2 id="summary">한 장 요약</h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>오른쪽 열</strong>이 받은 코드를 검사할 때 보는 기준이다. 가운데 열은 그것이 코드와 파일에서 어떻게 생겼는지다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>용어</th><th>코드에서 이렇게 보인다</th><th>이것만 알면 된다</th></tr>
+    <tr><td>파라미터 선언 · 읽기</td><td><code>declare_parameter("speed", 1.0)</code> · <code>get_parameter("speed").as_double()</code></td><td>선언해야 밖에서 보이고 바꿀 수 있다. <strong>타입은 기본값이 정한다</strong> — <code>1.0</code>이면 double, <code>1</code>이면 정수</td></tr>
+    <tr><td>읽는 시점</td><td><code>on_timer()</code> 안의 <code>read_parameters()</code></td><td><code>param set</code>은 노드 안의 값만 바꾼다. <strong>생성자에서 한 번만 읽으면</strong> 멤버는 옛 값 그대로다</td></tr>
+    <tr><td>파라미터 파일 (YAML)</td><td><code>/wall_stop:</code> → <code>ros__parameters:</code> → <code>speed: 0.8</code></td><td>맨 윗줄 <strong>노드 이름이 틀리면 조용히 무시된다.</strong> 실수 파라미터는 <code>2</code>가 아니라 <code>2.0</code></td></tr>
+    <tr><td>서비스 서버</td><td><code>create_service&lt;std_srvs::srv::SetBool&gt;("~/enable", 콜백)</code></td><td>콜백이 요청을 읽고 응답을 채운다. <code>~/</code>는 「내 노드 이름 아래」 — <code>/wall_stop/enable</code></td></tr>
+    <tr><td>서비스 클라이언트</td><td><code>create_client&lt;turtlesim::srv::SetPen&gt;("/turtle1/set_pen")</code> · <code>async_send_request(req, 콜백)</code></td><td>보내고 <strong>바로 돌아온다.</strong> 응답은 <code>spin</code>이 콜백으로 넘겨준다. <strong>콜백 안에서 응답을 기다리면 노드가 멈춘다</strong></td></tr>
+    <tr><td>launch 파일</td><td><code>launch/wall_stop.launch.py</code> · <code>ros2 launch turtle_drive wall_stop.launch.py</code></td><td>노드 여러 개를 파라미터와 함께 한 번에 띄운다. AI가 주는 것은 대개 파이썬(<code>.launch.py</code>)이고, 우리는 <strong>읽고 검사</strong>한다</td></tr>
+    <tr><td>파일 설치</td><td><code>install(DIRECTORY launch config DESTINATION share/${PROJECT_NAME})</code></td><td>실행 파일은 <code>lib/</code>, launch·YAML은 <code>share/</code>. 빠지면 <code>ros2 launch</code>가 <code>was not found</code>. <strong>src의 YAML을 고치면 다시 빌드</strong>해야 반영된다</td></tr>
+    <tr><td>의존성</td><td><code>&lt;depend&gt;std_srvs&lt;/depend&gt;</code> · <code>&lt;exec_depend&gt;ros2launch&lt;/exec_depend&gt;</code></td><td>서비스 타입 패키지도 두 파일 양쪽에. launch는 실행할 때만 필요하니 <code>exec_depend</code></td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 여덟 줄 중 굵게 쓴 경고가 다섯 개다. 다섯 모두 <strong>빌드가 잡아 주지 않는다.</strong> 빌드는 성공하고, 명령도 「성공」이라고 답한다.
+    그래서 오늘의 확인은 늘 같은 질문으로 끝난다 — <strong>그래서 거북이가 실제로 바뀌었나?</strong> 그것은 화면과 <code>ros2 topic echo</code>로 여러분이 봅니다.
+  </div>
+
+  <!-- ── ① 오늘 만들 것 ── -->
+  <h2 id="plan">① <code>wall_stop</code> v4~v8 <span class="badge b-red">🔴 사람이 한다</span></h2>
+  <p>
+    값을 바꿀 때마다 다시 빌드하는 방식은 무엇이 불편할까? 20회 실습 4번을 떠올려 보면 한 번에 네 가지 일을 했다 —
+    <code>wall_margin_</code> 줄을 고치고, <code>colcon build</code>를 하고, 노드를 끄고, <code>/reset</code>으로 거북이를 되돌린 뒤 다시 띄웠다.
+    고친 숫자가 맞는지 보려면 이 네 가지를 또 해야 한다. 그리고 그사이 <strong>앞의 값으로 어떻게 움직였는지</strong>는 기억에만 남는다.
+  </p>
+  <p>
+    17회에서 그 해법이 파라미터라고 했다. 노드가 가진 이름 붙은 설정값이고, 밖에서 <code>ros2 param get</code>·<code>set</code>으로 읽고 바꿀 수 있다. 18회에서 turtlesim의 배경색을 그렇게 바꿨다.
+    오늘은 <strong>우리 노드에 그 창구를 만든다.</strong> 20회에서 숫자 셋을 기본 멤버 초기화자로 모아 둔 것이 여기서 쓸모가 있다 — 바꿔 볼 값이 이미 한자리에 있다.
+  </p>
+  <div class="codelabel bad">출발점 — 20회 v3 의 멤버 셋 (const 가 붙어 있다)</div>
+  <pre class="lang-cpp before"><code>  const double speed_ = 1.0;          // 앞으로 가는 속도 (m/s)
+  const double wall_margin_ = 1.0;    // 벽 앞 이만큼에서 선다 (m)
+  const double world_size_ = 11.0889; // turtlesim 창 한 변의 길이 (m)</code></pre>
+  <p>
+    셋 중 <code>speed_</code>와 <code>wall_margin_</code>은 튜닝할 값이고, <code>world_size_</code>는 turtlesim 창의 크기라 바꿀 일이 없다. 그래서 앞의 둘만 파라미터로 꺼낸다.
+    오늘 다섯 단계에서 무엇이 더해지는지 먼저 한 표로 본다.
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>단계</th><th>더하는 것</th><th>바뀌는 파일</th><th>거북이는</th></tr>
+    <tr><td><strong>v4</strong> (②절)</td><td>파라미터 <code>speed</code>·<code>wall_margin</code> 선언과 읽기</td><td><code>wall_stop.cpp</code></td><td>시작할 때 준 값으로 선다. 실행 중에 바꾼 값은 <strong>안 먹는다</strong></td></tr>
+    <tr><td><strong>v5</strong> (③·④절)</td><td>타이머 콜백에서 매번 읽기 · <code>config/wall_stop.yaml</code></td><td><code>wall_stop.cpp</code> · 새 파일 하나</td><td><code>param set</code>이 <strong>바로 먹는다</strong>. 파일의 값으로 시작할 수 있다</td></tr>
+    <tr><td><strong>v6</strong> (⑤절)</td><td>서비스 서버 <code>~/enable</code></td><td><code>wall_stop.cpp</code> · <code>CMakeLists.txt</code> · <code>package.xml</code></td><td><code>ros2 service call</code>로 세우고 다시 달리게 한다</td></tr>
+    <tr><td><strong>v7</strong> (⑥절)</td><td>서비스 클라이언트 → <code>/turtle1/set_pen</code></td><td><code>wall_stop.cpp</code></td><td>설 때마다 펜 색이 바뀐다 — 선 색이 바뀐 자리가 <strong>선 자리</strong>다</td></tr>
+    <tr><td><strong>v8</strong> (⑦·⑧절)</td><td><code>launch/wall_stop.launch.py</code> · 파일 설치</td><td>새 파일 하나 · <code>CMakeLists.txt</code> · <code>package.xml</code></td><td><code>ros2 launch</code> 한 줄로 turtlesim과 함께 뜬다</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 코드(<code>wall_stop.cpp</code>)가 바뀌는 것은 v4~v7이고, v8은 코드를 한 줄도 안 바꾸고 <strong>파일 두 개와 설치 규칙</strong>만 더한다.
+    20회까지는 「빌드되면 반은 된 것」이었는데, v8의 launch·YAML 파일은 컴파일하지 않는 파일이라 <strong>빌드가 아무것도 검사하지 않는다.</strong> ⑧절이 그 이야기다.
+  </div>
+
+  <!-- ── ② v4 ── -->
+  <h2 id="v4">② 파라미터 선언과 읽기 — <code>declare_parameter</code> · <code>get_parameter</code> (v4) <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <h3>개념 — 노드가 밖에 내놓는 이름 붙은 설정값</h3>
+  <p>
+    멤버 변수 <code>speed_</code>도 이름 붙은 값인데, 왜 그것만으로는 밖에서 못 바꿀까? 멤버 변수는 <strong>프로그램 안</strong>에만 있다.
+    다른 프로세스(<code>ros2 param</code> 명령)는 그 메모리를 들여다볼 수 없다. 그래서 ROS 2는 노드마다 <strong>파라미터 저장소</strong>를 하나씩 두고,
+    노드가 「이 이름의 값을 밖에 내놓겠다」고 <strong>선언</strong>한 것만 그 저장소에 넣는다. 밖에서 <code>get</code>·<code>set</code>하는 것은 이 저장소다.
+    17회에서 「밖에서 읽고 바꾸는 일은 ROS가 서비스로 처리해 준다」고 했는데, 19회 ⑥절의 <code>ros2 node info</code>에 보이던 <code>/hello_node/get_parameters</code>·<code>set_parameters</code>처럼 이름에 <code>parameter</code>가 붙은 서비스 여섯 개가 그 창구다.
+  </p>
+  <pre class="lang-cpp"><code>// 선언 — 이름과 기본값. 이 순간 저장소에 "speed" 가 생기고 밖에서 보인다
+this-&gt;declare_parameter("speed", 1.0);
+
+// 읽기 — 저장소에서 지금 값을 꺼내 C++ 값으로 바꾼다
+double speed = this-&gt;get_parameter("speed").as_double();</code></pre>
+  <div class="tablewrap">
+  <table>
+    <tr><th>하는 일</th><th>모양</th><th>무엇을 보나</th></tr>
+    <tr><td>선언</td><td><code>declare_parameter("이름", 기본값)</code></td><td><strong>기본값의 타입이 파라미터의 타입</strong>이 된다. <code>1.0</code> → double, <code>1</code> → 정수, <code>true</code> → bool, <code>"abc"</code> → 문자열</td></tr>
+    <tr><td>읽기</td><td><code>get_parameter("이름").as_double()</code></td><td><code>as_</code> 뒤가 선언한 타입과 같은가 (17회 표: 실수 파라미터는 언제나 double)</td></tr>
+    <tr><td>시작할 때 값 주기</td><td><code>ros2 run … --ros-args -p 이름:=값</code></td><td>기본값 대신 이 값으로 선언된다. 코드를 안 고친다</td></tr>
+    <tr><td>실행 중에 바꾸기</td><td><code>ros2 param set /노드 이름 값</code></td><td>저장소의 값이 바뀐다. <strong>코드가 그 값을 언제 다시 읽나</strong>는 따로다 (③절)</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 첫 줄이 이 절의 함정을 품고 있다. 기본값을 <code>1</code>로 적으면 그 파라미터는 <strong>정수</strong>가 되고, 나중에 <code>0.5</code>를 넣으려 하면 「타입이 다르다」로 거절된다.
+    C++에서 <code>1</code>과 <code>1.0</code>은 같은 수처럼 보이지만 파라미터에서는 다른 타입이다. 실수 파라미터의 기본값에는 소수점을 붙여 두면 이 문제를 처음부터 피할 수 있다.
+  </div>
+
+  <h3>예제에 적용 — <code>const</code>를 떼고 생성자에서 읽는다</h3>
+  <p>
+    <code>speed_</code>·<code>wall_margin_</code>은 이제 생성자 안에서 파라미터 값으로 채워진다. 값이 나중에 들어오니 <code>const</code>를 뗀다.
+    기본값은 <code>declare_parameter</code>의 둘째 인자 한 곳에만 둔다 — 멤버 쪽에도 1.0을 적어 두면 두 숫자가 갈라졌을 때 어느 것이 진짜인지 헷갈린다. 멤버는 0.0으로 시작한다.
+    <code>world_size_</code>는 그대로 <code>const</code>로 둔다.
+  </p>
+
+  <h3>4단계 (v4) — 선언 둘, 읽기 둘</h3>
+  <div class="codelabel bad">고치기 전 (20회 v3) — 생성자 머리와 멤버</div>
+  <pre class="lang-cpp before"><code>  WallStop()
+  : Node("wall_stop")
+  {
+    cmd_pub_ = this-&gt;create_publisher&lt;geometry_msgs::msg::Twist&gt;("/turtle1/cmd_vel", 10);
+    // … (구독자·타이머) …
+    RCLCPP_INFO(this-&gt;get_logger(), "벽 앞 %.1f m 에서 섭니다", wall_margin_);
+  }
+  // …
+  const double speed_ = 1.0;          // 앞으로 가는 속도 (m/s)
+  const double wall_margin_ = 1.0;    // 벽 앞 이만큼에서 선다 (m)
+  const double world_size_ = 11.0889; // turtlesim 창 한 변의 길이 (m)</code></pre>
+  <div class="codelabel good">고친 뒤 (v4)</div>
+  <pre class="lang-cpp after"><code>  WallStop()
+  : Node("wall_stop")
+  {
+    // 파라미터를 선언한다 — 이름과 기본값. 타입은 기본값에서 정해진다 (1.0 이므로 double)
+    this-&gt;declare_parameter("speed", 1.0);
+    this-&gt;declare_parameter("wall_margin", 1.0);
+    // 지금 값을 읽어 멤버에 넣는다
+    speed_ = this-&gt;get_parameter("speed").as_double();
+    wall_margin_ = this-&gt;get_parameter("wall_margin").as_double();
+
+    cmd_pub_ = this-&gt;create_publisher&lt;geometry_msgs::msg::Twist&gt;("/turtle1/cmd_vel", 10);
+    // … (구독자·타이머) …
+    RCLCPP_INFO(this-&gt;get_logger(), "speed = %.2f m/s, wall_margin = %.2f m", speed_, wall_margin_);
+  }
+  // …
+  double speed_ = 0.0;                // 파라미터 speed 에서 읽는다 (m/s)
+  double wall_margin_ = 0.0;          // 파라미터 wall_margin 에서 읽는다 (m)
+  const double world_size_ = 11.0889; // turtlesim 창 한 변의 길이 (m) — 바꿀 일이 없어 그대로 둔다</code></pre>
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>this-&gt;declare_parameter("이름", 기본값)</dt>
+      <dd><code>rclcpp::Node</code>에서 물려받은 멤버 함수. 노드의 파라미터 저장소에 그 이름을 만들고, 시작할 때 따로 준 값이 없으면 기본값을 넣는다. 여기서는 <code>speed</code>와 <code>wall_margin</code>을 둘 다 double 1.0으로 선언했다.</dd>
+      <dt>this-&gt;get_parameter("이름")</dt>
+      <dd>저장소에서 그 파라미터를 꺼낸다. 돌려받는 것은 <code>rclcpp::Parameter</code> 객체(이름 + 타입 + 값)이고, 그대로는 C++ 숫자가 아니다.</dd>
+      <dt>.as_double()</dt>
+      <dd>그 파라미터의 값을 <code>double</code>로 꺼낸다. 정수면 <code>as_int()</code>, bool이면 <code>as_bool()</code>, 문자열이면 <code>as_string()</code>이다. 선언한 타입과 다른 것으로 꺼내면 예외가 나서 노드가 죽는다.</dd>
+    </dl>
+  </div>
+  <p>
+    <code>CMakeLists.txt</code>와 <code>package.xml</code>은 바뀌지 않는다. 파라미터 기능은 <code>rclcpp</code> 안에 있기 때문이다.
+  </p>
+
+  <h3>실제로 나온 출력</h3>
+  <p>빌드하고 turtlesim 옆에 띄운다. 거북이가 벽 앞에서 선 뒤에 다른 터미널에서 파라미터를 본다.</p>
+  <pre class="lang-sh"><code>$ ros2 run turtle_drive wall_stop
+[INFO] [1792276862.696645869] [wall_stop]: speed = 1.00 m/s, wall_margin = 1.00 m
+[INFO] [1792276867.496756039] [wall_stop]: 앞 벽까지 0.95 m — 섭니다 (x = 10.14, y = 5.54)</code></pre>
+  <pre class="lang-sh"><code>$ ros2 param list /wall_stop
+  qos_overrides./parameter_events.publisher.depth
+  qos_overrides./parameter_events.publisher.durability
+  qos_overrides./parameter_events.publisher.history
+  qos_overrides./parameter_events.publisher.reliability
+  speed
+  start_type_description_service
+  use_sim_time
+  wall_margin
+$ ros2 param describe /wall_stop speed
+Parameter name: speed
+  Type: double
+  Constraints:</code></pre>
+  <p>
+    <code>speed</code>와 <code>wall_margin</code>이 목록에 생겼다. 나머지 여섯 줄은 선언하지 않아도 모든 노드에 있는 것이라, 18회 turtlesim의 목록에도 똑같이 있었다.
+    <code>describe</code>의 <code>Type: double</code>이 기본값 <code>1.0</code>에서 정해진 타입이다. turtlesim의 <code>background_r</code>에는 <code>Constraints</code> 아래에 0~255가 있었는데 우리 것은 비어 있다 — 범위를 정해 두지 않았기 때문이다(「조금 더 알아두면」).
+  </p>
+  <p>이번에는 코드를 고치지 않고 <strong>시작할 때</strong> 여유 거리를 2 m로 준다.</p>
+  <pre class="lang-sh"><code>$ ros2 run turtle_drive wall_stop --ros-args -p wall_margin:=2.0
+[INFO] [1792276882.808785720] [wall_stop]: speed = 1.00 m/s, wall_margin = 2.00 m
+[INFO] [1792276886.608794174] [wall_stop]: 앞 벽까지 1.96 m — 섭니다 (x = 9.13, y = 5.54)</code></pre>
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 명령에서 처음 나오는 것</p>
+    <dl>
+      <dt>--ros-args -p 이름:=값</dt>
+      <dd><code>--ros-args</code>는 17회에서 노드 이름을 바꿀 때(<code>-r __node:=…</code>) 본 「여기부터는 ROS에게 주는 인자」라는 표시다. <code>-p</code>는 그 뒤의 <code>이름:=값</code>을 파라미터 값으로 준다. 여기서는 <code>wall_margin</code>을 2.0으로 시작했다 — 20회 실습에서 빌드를 다시 해야 했던 일을 명령 한 줄로 했다.</dd>
+    </dl>
+  </div>
+
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 실수 파라미터에 정수를 주면 노드가 죽는다</div>
+    <p>소수점 하나를 빼고 <code>wall_margin:=2</code>로 주면 이렇게 된다.</p>
+    <pre class="lang-sh"><code>$ ros2 run turtle_drive wall_stop --ros-args -p wall_margin:=2
+terminate called after throwing an instance of 'rclcpp::exceptions::InvalidParameterTypeException'
+  what():  parameter 'wall_margin' has invalid type: Wrong parameter type, parameter {wall_margin} is of type {double}, setting it to {integer} is not allowed.
+[ros2run]: Aborted</code></pre>
+    <p>
+      <code>2</code>는 정수로 읽히고, double로 선언한 파라미터에 정수를 넣는 것은 허락되지 않는다. 그래서 <code>declare_parameter</code>가 예외를 던지고 노드가 시작하자마자 끝난다.
+      18회에서 turtlesim에 <code>background_r 1.5</code>를 넣었을 때 <code>Wrong parameter type</code>이 난 것과 같은 규칙이 방향만 반대로 걸린 것이다.
+      <strong>실수 값에는 <code>.0</code>을 붙여 두면</strong> 덜 헤맨다 — 명령에서도, ④절의 YAML 파일에서도.
+    </p>
+  </div>
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 선언하지 않고 읽으면 시작하자마자 죽는다</div>
+    <p>v4에서 <code>declare_parameter</code> 두 줄만 지우고 빌드하면 빌드는 되고, 실행하면 이렇게 끝난다.</p>
+    <pre class="lang-sh"><code>$ ros2 run turtle_drive wall_stop
+terminate called after throwing an instance of 'rclcpp::exceptions::ParameterNotDeclaredException'
+  what():  speed
+[ros2run]: Aborted</code></pre>
+    <p>
+      「<code>speed</code>라는 파라미터는 선언된 적이 없다」는 뜻이다. AI가 준 코드에서 <code>get_parameter</code>는 있는데 짝이 되는 <code>declare_parameter</code>가 다른 함수에 있거나 빠져 있으면 이 줄이 나온다.
+      <strong>선언이 읽기보다 먼저</strong>, 보통은 생성자 맨 위에 있는지 본다.
+    </p>
+  </div>
+
+  <!-- fullcode "전체 코드 — turtle_drive/src/wall_stop.cpp (4단계 · v4. CMakeLists.txt·package.xml 은 20회 v3 그대로)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive wall_stop"
+       l21_srv_param/steps/step4/turtle_drive/src/wall_stop.cpp as turtle_drive/src/wall_stop.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — turtle_drive/src/wall_stop.cpp (4단계 · v4. CMakeLists.txt·package.xml 은 20회 v3 그대로)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive wall_stop</code></p>
+  <div class="codefile"><div class="fname">turtle_drive/src/wall_stop.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 21회 벽 앞 정지 — v4 (4단계: declare_parameter · get_parameter — 속도와 여유 거리를 파라미터로)
+#include &lt;algorithm&gt;
+#include &lt;chrono&gt;
+#include &lt;cmath&gt;
+#include &lt;limits&gt;
+#include &lt;memory&gt;
+
+#include &quot;rclcpp/rclcpp.hpp&quot;
+#include &quot;geometry_msgs/msg/twist.hpp&quot;
+#include &quot;turtlesim/msg/pose.hpp&quot;
+
+using namespace std::chrono_literals;
+
+class WallStop : public rclcpp::Node
+{
+public:
+  WallStop()
+  : Node(&quot;wall_stop&quot;)
+  {
+    // 파라미터를 선언한다 — 이름과 기본값. 타입은 기본값에서 정해진다 (1.0 이므로 double)
+    this-&gt;declare_parameter(&quot;speed&quot;, 1.0);
+    this-&gt;declare_parameter(&quot;wall_margin&quot;, 1.0);
+    // 지금 값을 읽어 멤버에 넣는다
+    speed_ = this-&gt;get_parameter(&quot;speed&quot;).as_double();
+    wall_margin_ = this-&gt;get_parameter(&quot;wall_margin&quot;).as_double();
+
+    cmd_pub_ = this-&gt;create_publisher&lt;geometry_msgs::msg::Twist&gt;(&quot;/turtle1/cmd_vel&quot;, 10);
+    pose_sub_ = this-&gt;create_subscription&lt;turtlesim::msg::Pose&gt;(
+      &quot;/turtle1/pose&quot;, 10,
+      [this](turtlesim::msg::Pose::ConstSharedPtr msg) { on_pose(msg); });
+    timer_ = this-&gt;create_wall_timer(100ms, [this]() { on_timer(); });
+    RCLCPP_INFO(this-&gt;get_logger(), &quot;speed = %.2f m/s, wall_margin = %.2f m&quot;, speed_, wall_margin_);
+  }
+
+private:
+  // /turtle1/pose 가 올 때마다 불린다 — 받은 것을 들고 있기만 한다
+  void on_pose(turtlesim::msg::Pose::ConstSharedPtr msg)
+  {
+    pose_ = msg;
+  }
+
+  // 타이머가 0.1초마다 부른다 — 판단하고 명령을 보낸다
+  void on_timer()
+  {
+    if (!pose_) {                    // 아직 자세를 한 번도 못 받았다
+      return;
+    }
+    const double front = front_distance(*pose_);
+    const bool near_wall = front &lt; wall_margin_;
+    if (near_wall &amp;&amp; !stopped_) {
+      RCLCPP_INFO(this-&gt;get_logger(), &quot;앞 벽까지 %.2f m — 섭니다 (x = %.2f, y = %.2f)&quot;,
+                  front, pose_-&gt;x, pose_-&gt;y);
+    }
+    stopped_ = near_wall;
+
+    geometry_msgs::msg::Twist cmd;   // 여섯 칸이 전부 0 — 이대로 보내면 「서라」
+    if (!near_wall) {
+      cmd.linear.x = speed_;
+    }
+    cmd_pub_-&gt;publish(cmd);
+  }
+
+  // 지금 바라보는 방향으로 곧장 가면 벽까지 몇 m 남았나
+  double front_distance(const turtlesim::msg::Pose &amp; p) const
+  {
+    const double c = std::cos(p.theta);
+    const double s = std::sin(p.theta);
+    double d = std::numeric_limits&lt;double&gt;::infinity();
+    if (c &gt; 1e-6)  { d = std::min(d, (world_size_ - p.x) / c); }   // 오른쪽 벽
+    if (c &lt; -1e-6) { d = std::min(d, (0.0 - p.x) / c); }           // 왼쪽 벽
+    if (s &gt; 1e-6)  { d = std::min(d, (world_size_ - p.y) / s); }   // 위쪽 벽
+    if (s &lt; -1e-6) { d = std::min(d, (0.0 - p.y) / s); }           // 아래쪽 벽
+    return d;
+  }
+
+  double speed_ = 0.0;                // 파라미터 speed 에서 읽는다 (m/s)
+  double wall_margin_ = 0.0;          // 파라미터 wall_margin 에서 읽는다 (m)
+  const double world_size_ = 11.0889; // turtlesim 창 한 변의 길이 (m) — 바꿀 일이 없어 그대로 둔다
+  bool stopped_ = false;
+
+  rclcpp::Publisher&lt;geometry_msgs::msg::Twist&gt;::SharedPtr cmd_pub_;
+  rclcpp::Subscription&lt;turtlesim::msg::Pose&gt;::SharedPtr pose_sub_;
+  rclcpp::TimerBase::SharedPtr timer_;
+  turtlesim::msg::Pose::ConstSharedPtr pose_;   // 마지막으로 받은 자세 (처음에는 비어 있다)
+};
+
+int main(int argc, char ** argv)
+{
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared&lt;WallStop&gt;();
+  rclcpp::spin(node);            // 타이머·구독 콜백은 이 안에서 불린다
+  rclcpp::shutdown();
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <!-- ── ③ v5 ── -->
+  <h2 id="v5">③ <code>ros2 param set</code>과 파라미터를 읽는 시점 (v5) <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <h3>개념 — 저장소의 값과 멤버의 값은 따로 있다</h3>
+  <p>
+    시작할 때 값을 주는 것은 됐다. 그럼 <strong>달리는 도중에</strong> 바꾸면 어떨까? v4를 띄우자마자 다른 터미널에서 속도를 0.3으로 바꿨다.
+  </p>
+  <pre class="lang-sh"><code>$ ros2 param set /wall_stop speed 0.3
+Set parameter successful
+$ ros2 param get /wall_stop speed
+Double value is: 0.3
+$ ros2 topic echo --once /turtle1/pose
+x: 9.032444953918457
+linear_velocity: 1.0</code></pre>
+  <p>
+    <code>set</code>은 성공했고 <code>get</code>도 0.3이라고 답한다. 그런데 거북이의 <code>linear_velocity</code>는 <strong>1.0 그대로</strong>다.
+    거북이가 선 뒤에 여유 거리를 0.5로 줄여 봐도 마찬가지였다 — 0.5 m 앞까지 더 가야 하는데 꼼짝하지 않는다(<code>x: 10.15…</code>, <code>linear_velocity: 0.0</code>).
+  </p>
+  <p>
+    이유는 v4 코드에 그대로 있다. <code>get_parameter</code>를 <strong>생성자에서 한 번</strong> 불러 그 값을 멤버에 <strong>복사</strong>해 두었다.
+    <code>param set</code>이 바꾼 것은 파라미터 <strong>저장소</strong>의 값이고, 타이머가 쓰는 것은 <strong>멤버</strong> <code>speed_</code>다. 둘을 다시 이어 주는 줄이 어디에도 없다.
+    「성공」은 「저장소에 넣었다」는 뜻이지 「노드가 그 값으로 움직인다」는 뜻이 아니다. 18회에서 <code>publish</code>가 「보냈다」일 뿐 「받았다」가 아니었던 것과 같다.
+  </p>
+  <p>
+    그러니 고칠 것은 <strong>읽는 시점</strong>이다. 방법은 둘이다.
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th></th><th>(가) 쓸 때마다 다시 읽는다</th><th>(나) 바뀔 때 알려 달라고 한다</th></tr>
+    <tr><td>모양</td><td>타이머 콜백 맨 앞에서 <code>get_parameter</code></td><td><code>add_post_set_parameters_callback</code>으로 콜백을 넘겨 두고, 그 안에서 멤버를 고친다</td></tr>
+    <tr><td>코드 양</td><td>함수 하나를 한 곳에서 더 부른다</td><td>콜백 하나와 그 핸들 멤버가 는다</td></tr>
+    <tr><td>값을 거절할 수 있나</td><td>없다 — 음수 속도도 들어온다</td><td>짝이 되는 <code>add_on_set_parameters_callback</code>으로 <strong>거절할 수 있다</strong></td></tr>
+    <tr><td>드는 비용</td><td>0.1초마다 이름으로 두 번 찾는다 — 이 노드에서는 무시할 만하다</td><td>바뀔 때만 일한다</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 오늘은 (가)로 고친다. 고치는 줄이 적고, <strong>「판단하기 직전에 최신 값을 본다」</strong>는 것이 20회의 「판단은 타이머가 최신 자세로 한다」와 같은 생각이라 읽기 쉽다.
+    (나)는 받은 코드에 자주 보이는 모양이라 「조금 더 알아두면」에 실제로 돌린 판을 실었다. 어느 쪽이든 검사할 것은 하나다 — <strong>멤버를 다시 채우는 줄이 실행 중에 불리는가.</strong>
+  </div>
+
+  <h3>예제에 적용 — 읽는 두 줄을 함수로 묶어 타이머에서도 부른다</h3>
+  <p>
+    생성자의 두 줄을 <code>read_parameters()</code>라는 멤버 함수로 옮긴다. 생성자에서 한 번 부르는 것은 그대로 두고(시작 값을 로그로 찍으려고),
+    <code>on_timer()</code>가 판단하기 직전에 한 번 더 부른다. 그러면 <code>param set</code> 뒤 다음 판단(늦어도 0.1초 뒤)부터 새 값이 쓰인다.
+  </p>
+
+  <h3>5단계 (v5) — <code>read_parameters()</code></h3>
+  <div class="codelabel bad">고치기 전 (v4) — 생성자의 읽는 두 줄, on_timer 머리</div>
+  <pre class="lang-cpp before"><code>    // 지금 값을 읽어 멤버에 넣는다
+    speed_ = this-&gt;get_parameter("speed").as_double();
+    wall_margin_ = this-&gt;get_parameter("wall_margin").as_double();
+  // …
+  void on_timer()
+  {
+    if (!pose_) {                    // 아직 자세를 한 번도 못 받았다
+      return;
+    }
+    const double front = front_distance(*pose_);</code></pre>
+  <div class="codelabel good">고친 뒤 (v5) — 생성자는 read_parameters() 한 줄, 함수 하나, on_timer 에 한 줄</div>
+  <pre class="lang-cpp after"><code>    read_parameters();
+  // …
+  // 파라미터의 지금 값을 읽어 멤버에 넣는다 — 생성자에서 한 번, 그 뒤로는 타이머가 부를 때마다
+  void read_parameters()
+  {
+    speed_ = this-&gt;get_parameter("speed").as_double();
+    wall_margin_ = this-&gt;get_parameter("wall_margin").as_double();
+  }
+  // …
+  void on_timer()
+  {
+    if (!pose_) {                    // 아직 자세를 한 번도 못 받았다
+      return;
+    }
+    read_parameters();               // 밖에서(ros2 param set) 바뀌었을 수 있으니 판단 전에 다시 읽는다
+    const double front = front_distance(*pose_);</code></pre>
+
+  <h3>실제로 나온 출력</h3>
+  <p>v4와 똑같은 순서로 쳤다. 출발 직후에 속도를 0.3으로 바꾸고, 2초 뒤 다시 1.0으로 돌리고, 선 뒤에 여유 거리를 0.5로 줄였다.</p>
+  <pre class="lang-sh"><code>$ ros2 param set /wall_stop speed 0.3
+Set parameter successful
+$ ros2 topic echo --once /turtle1/pose
+x: 6.54604434967041
+linear_velocity: 0.30000001192092896
+$ ros2 topic echo --once /turtle1/pose      # 2초 뒤
+x: 7.4436445236206055
+linear_velocity: 0.30000001192092896
+$ ros2 param set /wall_stop speed 1.0
+Set parameter successful
+$ ros2 topic echo --once /turtle1/pose      # 섰다
+x: 10.146044731140137
+linear_velocity: 0.0
+$ ros2 param set /wall_stop wall_margin 0.5
+Set parameter successful
+$ ros2 topic echo --once /turtle1/pose      # 2초 뒤
+x: 10.642045021057129
+linear_velocity: 0.0</code></pre>
+  <pre class="lang-sh"><code>$ ros2 run turtle_drive wall_stop
+[INFO] [1792276902.555805889] [wall_stop]: speed = 1.00 m/s, wall_margin = 1.00 m
+[INFO] [1792276911.156105160] [wall_stop]: 앞 벽까지 0.94 m — 섭니다 (x = 10.15, y = 5.54)
+[INFO] [1792276917.255921779] [wall_stop]: 앞 벽까지 0.45 m — 섭니다 (x = 10.64, y = 5.54)</code></pre>
+  <p>
+    이번에는 <code>linear_velocity</code>가 <strong>0.3</strong>이 됐고(0.30000001…은 거북이 쪽이 <code>float</code>로 받아서 생긴 자투리다), 2초 동안 x가 약 0.9 늘었다 — 0.3 m/s × 2초 = 0.6에 명령이 오가는 시간이 더해진 만큼이다.
+    서 있던 거북이는 여유 거리를 0.5로 줄이자 <strong>다시 출발해</strong> x = 10.64에서 한 번 더 섰다. 노드를 끄지도, 다시 빌드하지도 않았다.
+    로그의 두 「섭니다」 사이 6초가 사람이 명령을 친 시간이다.
+  </p>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    wall_stop 노드에서 get_parameter 를 부르는 줄을 전부 찾아서, 각각이 어느 함수 안에 있고 그 함수가 언제 불리는지(생성자에서 한 번 / 타이머마다 / 파라미터가 바뀔 때) 표로 보여 줘. ros2 param set 으로 바꾼 값이 실행 중에 반영되는지 그 표로 판단해 줘. 코드는 고치지 마.
+  </div>
+
+  <!-- fullcode "전체 코드 — turtle_drive/src/wall_stop.cpp (5단계 · v5)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive wall_stop"
+       l21_srv_param/steps/step5/turtle_drive/src/wall_stop.cpp as turtle_drive/src/wall_stop.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — turtle_drive/src/wall_stop.cpp (5단계 · v5)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive wall_stop</code></p>
+  <div class="codefile"><div class="fname">turtle_drive/src/wall_stop.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 21회 벽 앞 정지 — v5 (5단계: 파라미터를 타이머 콜백에서 매번 다시 읽는다 — ros2 param set 이 바로 먹는다)
+#include &lt;algorithm&gt;
+#include &lt;chrono&gt;
+#include &lt;cmath&gt;
+#include &lt;limits&gt;
+#include &lt;memory&gt;
+
+#include &quot;rclcpp/rclcpp.hpp&quot;
+#include &quot;geometry_msgs/msg/twist.hpp&quot;
+#include &quot;turtlesim/msg/pose.hpp&quot;
+
+using namespace std::chrono_literals;
+
+class WallStop : public rclcpp::Node
+{
+public:
+  WallStop()
+  : Node(&quot;wall_stop&quot;)
+  {
+    // 파라미터를 선언한다 — 이름과 기본값. 타입은 기본값에서 정해진다 (1.0 이므로 double)
+    this-&gt;declare_parameter(&quot;speed&quot;, 1.0);
+    this-&gt;declare_parameter(&quot;wall_margin&quot;, 1.0);
+    read_parameters();
+
+    cmd_pub_ = this-&gt;create_publisher&lt;geometry_msgs::msg::Twist&gt;(&quot;/turtle1/cmd_vel&quot;, 10);
+    pose_sub_ = this-&gt;create_subscription&lt;turtlesim::msg::Pose&gt;(
+      &quot;/turtle1/pose&quot;, 10,
+      [this](turtlesim::msg::Pose::ConstSharedPtr msg) { on_pose(msg); });
+    timer_ = this-&gt;create_wall_timer(100ms, [this]() { on_timer(); });
+    RCLCPP_INFO(this-&gt;get_logger(), &quot;speed = %.2f m/s, wall_margin = %.2f m&quot;, speed_, wall_margin_);
+  }
+
+private:
+  // 파라미터의 지금 값을 읽어 멤버에 넣는다 — 생성자에서 한 번, 그 뒤로는 타이머가 부를 때마다
+  void read_parameters()
+  {
+    speed_ = this-&gt;get_parameter(&quot;speed&quot;).as_double();
+    wall_margin_ = this-&gt;get_parameter(&quot;wall_margin&quot;).as_double();
+  }
+
+  // /turtle1/pose 가 올 때마다 불린다 — 받은 것을 들고 있기만 한다
+  void on_pose(turtlesim::msg::Pose::ConstSharedPtr msg)
+  {
+    pose_ = msg;
+  }
+
+  // 타이머가 0.1초마다 부른다 — 판단하고 명령을 보낸다
+  void on_timer()
+  {
+    if (!pose_) {                    // 아직 자세를 한 번도 못 받았다
+      return;
+    }
+    read_parameters();               // 밖에서(ros2 param set) 바뀌었을 수 있으니 판단 전에 다시 읽는다
+    const double front = front_distance(*pose_);
+    const bool near_wall = front &lt; wall_margin_;
+    if (near_wall &amp;&amp; !stopped_) {
+      RCLCPP_INFO(this-&gt;get_logger(), &quot;앞 벽까지 %.2f m — 섭니다 (x = %.2f, y = %.2f)&quot;,
+                  front, pose_-&gt;x, pose_-&gt;y);
+    }
+    stopped_ = near_wall;
+
+    geometry_msgs::msg::Twist cmd;   // 여섯 칸이 전부 0 — 이대로 보내면 「서라」
+    if (!near_wall) {
+      cmd.linear.x = speed_;
+    }
+    cmd_pub_-&gt;publish(cmd);
+  }
+
+  // 지금 바라보는 방향으로 곧장 가면 벽까지 몇 m 남았나
+  double front_distance(const turtlesim::msg::Pose &amp; p) const
+  {
+    const double c = std::cos(p.theta);
+    const double s = std::sin(p.theta);
+    double d = std::numeric_limits&lt;double&gt;::infinity();
+    if (c &gt; 1e-6)  { d = std::min(d, (world_size_ - p.x) / c); }   // 오른쪽 벽
+    if (c &lt; -1e-6) { d = std::min(d, (0.0 - p.x) / c); }           // 왼쪽 벽
+    if (s &gt; 1e-6)  { d = std::min(d, (world_size_ - p.y) / s); }   // 위쪽 벽
+    if (s &lt; -1e-6) { d = std::min(d, (0.0 - p.y) / s); }           // 아래쪽 벽
+    return d;
+  }
+
+  double speed_ = 0.0;                // 파라미터 speed 에서 읽는다 (m/s)
+  double wall_margin_ = 0.0;          // 파라미터 wall_margin 에서 읽는다 (m)
+  const double world_size_ = 11.0889; // turtlesim 창 한 변의 길이 (m) — 바꿀 일이 없어 그대로 둔다
+  bool stopped_ = false;
+
+  rclcpp::Publisher&lt;geometry_msgs::msg::Twist&gt;::SharedPtr cmd_pub_;
+  rclcpp::Subscription&lt;turtlesim::msg::Pose&gt;::SharedPtr pose_sub_;
+  rclcpp::TimerBase::SharedPtr timer_;
+  turtlesim::msg::Pose::ConstSharedPtr pose_;   // 마지막으로 받은 자세 (처음에는 비어 있다)
+};
+
+int main(int argc, char ** argv)
+{
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared&lt;WallStop&gt;();
+  rclcpp::spin(node);            // 타이머·구독 콜백은 이 안에서 불린다
+  rclcpp::shutdown();
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>모양</th><th>쓸 때</th><th>안 쓸 때</th></tr>
+    <tr><td>파라미터로 꺼낸다</td><td>속도·거리·이득처럼 <strong>로봇 앞에서 바꿔 볼 값</strong></td><td>창 크기 같은 물리 상수, 토픽 이름처럼 바뀌면 노드가 다시 연결해야 하는 값(시작할 때만 읽는 것이 맞다)</td></tr>
+    <tr><td>쓸 때마다 다시 읽는다 (가)</td><td>타이머 주기가 수십 ms 이상이고 파라미터가 몇 개일 때</td><td>값을 거절하거나 바뀌는 순간 무엇을 해야 할 때 — (나)</td></tr>
+    <tr><td>생성자에서 한 번만 읽는다</td><td>「시작할 때 정하고 바꾸지 않는다」가 맞는 값 (위 「안 쓸 때」의 것들)</td><td>튜닝할 값. <code>param set</code>이 <strong>성공한다고 답하면서 안 먹는다</strong></td></tr>
+  </table>
+  </div>
+
+  <!-- ── ④ YAML ── -->
+  <h2 id="yaml">④ YAML 파라미터 파일 — <code>ros2 param dump</code> · <code>--params-file</code> <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <h3>개념 — 튜닝한 값을 파일로 남기고, 켤 때 읽게 한다</h3>
+  <p>
+    여유 거리를 0.5로 줄여 보니 마음에 들었다. 그런데 노드를 껐다 켜면 어떻게 될까? 18회 함정 상자에서 본 대로 <strong><code>param set</code>으로 바꾼 값은 노드를 끄면 사라진다.</strong>
+    다시 켜면 기본값 1.0으로 돌아간다. 매번 <code>-p</code>를 붙여 치는 것도 파라미터가 몇 개 넘으면 실수가 나온다.
+  </p>
+  <p>
+    그래서 값을 <strong>파일</strong>에 적어 두고, 노드를 켤 때 그 파일을 읽게 한다. 이 파일을 <strong>파라미터 파일</strong>이라고 하고, 형식은 YAML이다.
+    18회 <code>ros2 param dump</code>가 찍어 준 모양이 바로 그 형식이라, 지금 노드가 가진 값을 그대로 받아 적으면 된다.
+  </p>
+  <pre class="lang-sh"><code>$ ros2 param dump /wall_stop
+/wall_stop:
+  ros__parameters:
+    qos_overrides:
+      /parameter_events:
+        publisher:
+          depth: 1000
+          durability: volatile
+          history: keep_last
+          reliability: reliable
+    speed: 1.0
+    start_type_description_service: true
+    use_sim_time: false
+    wall_margin: 0.5</code></pre>
+  <p>
+    ③절에서 0.5로 바꾼 값이 그대로 찍혔다. 이것을 3회의 <code>&gt;</code>로 파일에 받고(<code>ros2 param dump /wall_stop &gt; wall_stop.yaml</code>), 우리가 고른 두 줄만 남기면 파라미터 파일이 된다.
+    나머지는 모든 노드에 있는 기본 파라미터라 파일에 둘 이유가 없다.
+  </p>
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 파일 형식에서 처음 나오는 것</p>
+    <dl>
+      <dt>YAML (와이엠엘)</dt>
+      <dd>「이름: 값」을 줄마다 적고, <strong>들여쓰기로 안에 든 것을 나타내는</strong> 설정 파일 형식이다. 중괄호 대신 공백 두 칸이 「이 안에 있다」는 뜻이라 들여쓰기가 틀리면 뜻이 바뀐다(탭 문자는 쓰지 않는다). <code>#</code> 뒤는 주석이다.</dd>
+      <dt>/wall_stop: → ros__parameters:</dt>
+      <dd>맨 위는 <strong>노드 이름</strong>, 그 아래 <code>ros__parameters:</code>(밑줄 <strong>두 개</strong>)는 「이 아래가 파라미터다」라는 정해진 표시, 그 아래가 「파라미터 이름: 값」이다. 노드 이름 자리에 <code>/**</code>를 쓰면 「모든 노드」라는 뜻이 되는데, 이 과목에서는 노드 이름을 적는다.</dd>
+      <dt>--ros-args --params-file 파일</dt>
+      <dd>②절 <code>-p</code>의 파일 판이다. 파일 안에서 <strong>이 노드 이름</strong> 아래 적힌 값들로 파라미터를 선언한다.</dd>
+    </dl>
+  </div>
+
+  <h3>예제에 적용 — 패키지 안 <code>config/wall_stop.yaml</code></h3>
+  <p>
+    파일은 패키지 안에 <code>config/</code> 폴더를 만들어 둔다. 노드와 그 노드의 설정값이 같은 패키지에 있어야 git으로 함께 관리되고, 나중에 launch 파일이 찾을 수 있다(⑧절).
+    값은 튜닝해서 찾았다고 치고 속도 0.8, 여유 거리 1.5로 적었다 — 기본값(1.0·1.0)과 달라야 파일이 먹었는지 눈으로 구별된다. 이 두 숫자는 이 자료에서 둔 가정이다.
+    코드는 v5 그대로다. 파일을 읽는 것은 rclcpp가 <code>declare_parameter</code> 안에서 해 준다.
+  </p>
+  <div class="codelabel good">turtle_drive/config/wall_stop.yaml (새 파일)</div>
+  <pre class="after"><code># 21회 — wall_stop 노드의 파라미터 (ros2 param dump /wall_stop 의 출력에서 우리 파라미터 두 줄만 남겼다)
+/wall_stop:
+  ros__parameters:
+    speed: 0.8
+    wall_margin: 1.5</code></pre>
+
+  <h3>실제로 나온 출력</h3>
+  <p>작업공간 최상위(<code>~/ros2_ws</code>)에서, 파일의 상대 경로를 주고 띄운다.</p>
+  <pre class="lang-sh"><code>$ ros2 run turtle_drive wall_stop --ros-args --params-file src/turtle_drive/config/wall_stop.yaml
+[INFO] [1792276925.161958094] [wall_stop]: speed = 0.80 m/s, wall_margin = 1.50 m
+[INFO] [1792276930.462076037] [wall_stop]: 앞 벽까지 1.46 m — 섭니다 (x = 9.63, y = 5.54)</code></pre>
+  <pre class="lang-sh"><code>$ ros2 param get /wall_stop speed
+Double value is: 0.8
+$ ros2 param get /wall_stop wall_margin
+Double value is: 1.5</code></pre>
+  <p>
+    첫 로그 줄과 <code>param get</code>이 파일의 값과 같다. 거북이는 x = 9.63, 벽 앞 1.46 m에서 섰다. 속도가 0.8이라 판정 주기 동안 0.08 m만 가므로 20회의 「1.00이 아니라 0.95」보다 덜 넘어갔다.
+  </p>
+
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 노드 이름을 틀리게 적으면 아무 말 없이 기본값으로 돈다</div>
+    <p>파일 맨 윗줄을 <code>/wallstop:</code>(밑줄 하나 빠짐)으로 적고 똑같이 띄웠다.</p>
+    <pre class="lang-sh"><code>$ ros2 run turtle_drive wall_stop --ros-args --params-file src/turtle_drive/config/wall_stop.yaml
+[INFO] [1792276942.318673318] [wall_stop]: speed = 1.00 m/s, wall_margin = 1.00 m
+[INFO] [1792276947.118795892] [wall_stop]: 앞 벽까지 0.94 m — 섭니다 (x = 10.15, y = 5.54)
+$ ros2 param get /wall_stop wall_margin
+Double value is: 1.0</code></pre>
+    <p>
+      오류도 경고도 없다. 파일 안에 <code>/wall_stop</code>이라는 노드가 없으니 rclcpp는 「이 노드에 줄 값은 없다」고 보고 기본값으로 선언한다.
+      파라미터 이름을 틀리게 적어도(<code>wall_marign</code>) 같은 일이 생긴다 — 그 이름의 파라미터를 선언하는 코드가 없으니 쓰이지 않는다.
+      그래서 파일을 바꾼 뒤에는 <strong>첫 로그 줄이나 <code>param get</code>으로 값이 실제로 들어갔는지</strong> 한 번 본다. 이 노드가 시작할 때 값을 찍게 해 둔 이유가 이것이다.
+    </p>
+  </div>
+  <div class="box trap">
+    <div class="boxtitle">⚠️ YAML에서도 <code>2</code>와 <code>2.0</code>은 다르다</div>
+    <pre><code>/wall_stop:
+  ros__parameters:
+    speed: 0.8
+    wall_margin: 2</code></pre>
+    <pre class="lang-sh"><code>$ ros2 run turtle_drive wall_stop --ros-args --params-file src/turtle_drive/config/wall_stop.yaml
+terminate called after throwing an instance of 'rclcpp::exceptions::InvalidParameterTypeException'
+  what():  parameter 'wall_margin' has invalid type: Wrong parameter type, parameter {wall_margin} is of type {double}, setting it to {integer} is not allowed.
+[ros2run]: Aborted</code></pre>
+    <p>②절의 <code>-p wall_margin:=2</code>와 같은 오류다. 이쪽은 적어도 크게 터져서 알아채기 쉽다. 손으로 고친 숫자에 소수점이 있는지 본다.</p>
+  </div>
+  <div class="tablewrap">
+  <table>
+    <tr><th>값을 주는 방법</th><th>언제 정해지나</th><th>노드를 끄면</th><th>이럴 때</th></tr>
+    <tr><td><code>declare_parameter</code>의 기본값</td><td>빌드할 때</td><td>그대로</td><td>아무것도 안 줬을 때의 안전한 값</td></tr>
+    <tr><td><code>-p 이름:=값</code></td><td>켤 때</td><td>사라진다 (명령에만 있다)</td><td>한두 번 시험해 볼 때</td></tr>
+    <tr><td><code>--params-file</code></td><td>켤 때</td><td><strong>파일에 남는다</strong></td><td>찾은 값을 기록하고 매번 같은 값으로 시작할 때 — 보고서의 근거</td></tr>
+    <tr><td><code>ros2 param set</code></td><td>실행 중</td><td>사라진다</td><td>로봇을 세우지 않고 값을 찾을 때. 찾으면 <code>dump</code>로 파일에 옮긴다</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 튜닝의 흐름은 아래 두 줄을 오간다 — <strong><code>param set</code>으로 찾고, <code>dump</code>해서 파일에 남기고, 다음에는 파일로 켠다.</strong>
+    프로젝트에서 「속도 0.15에서 콘을 안 쳤다」를 보고서에 쓸 때 그 근거가 이 파일이다. git에 함께 올리면 언제 어떤 값으로 바꿨는지도 남는다.
+  </div>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    지금 떠 있는 /wall_stop 노드의 파라미터를 ros2 param dump 로 받아서, speed 와 wall_margin 두 개만 남긴 ~/ros2_ws/src/turtle_drive/config/wall_stop.yaml 을 만들어 줘. 맨 윗줄 노드 이름은 /wall_stop 그대로 두고, 실수 값에는 소수점을 붙여 줘. 다 만들면 파일 내용을 그대로 보여 줘.
+  </div>
+
+  <!-- fullcode "전체 코드 — turtle_drive/config/wall_stop.yaml (v5 와 함께 쓰는 새 파일)" build="cd ~/ros2_ws && ros2 run turtle_drive wall_stop --ros-args --params-file src/turtle_drive/config/wall_stop.yaml"
+       l21_srv_param/steps/step5/turtle_drive/config/wall_stop.yaml as turtle_drive/config/wall_stop.yaml
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — turtle_drive/config/wall_stop.yaml (v5 와 함께 쓰는 새 파일)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; ros2 run turtle_drive wall_stop --ros-args --params-file src/turtle_drive/config/wall_stop.yaml</code></p>
+  <div class="codefile"><div class="fname">turtle_drive/config/wall_stop.yaml</div><button onclick="copyCode(this)">복사</button><pre class=""><code># 21회 — wall_stop 노드의 파라미터 (ros2 param dump /wall_stop 의 출력에서 우리 파라미터 두 줄만 남겼다)
+/wall_stop:
+  ros__parameters:
+    speed: 0.8
+    wall_margin: 1.5</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <!-- ── ⑤ v6 ── -->
+  <h2 id="v6">⑤ 서비스 서버 — <code>create_service</code>와 <code>std_srvs/srv/SetBool</code> (v6) <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <h3>개념 — 요청을 받아 일하고 응답을 채우는 콜백</h3>
+  <p>
+    거북이를 잠깐 세웠다가 다시 달리게 하고 싶다. 노드를 끄면 되지 않을까? 20회 ⑨절에서 본 대로 끄면 마지막 명령으로 1초쯤 더 가고, 다시 켜면 파라미터를 다시 줘야 한다.
+    토픽으로 「서라」를 보내는 것도 어색하다 — 받았는지, 정말 섰는지 답을 못 듣는다.
+    17회 ⑥절의 고르는 질문으로 보면 「계속 새로 나오는가? 아니다. 오래 걸리나? 아니다」 → <strong>서비스</strong>다.
+  </p>
+  <p>
+    18회에서는 turtlesim이 가진 서비스(<code>/spawn</code>·<code>/clear</code>)를 <strong>부르기만</strong> 했다. 이번에는 우리 노드가 <strong>서비스 서버</strong>가 된다.
+    서버는 서비스 이름과 타입으로 만들고, <strong>요청이 올 때마다 불릴 콜백</strong>을 넘긴다. 구독자와 같은 모양인데, 콜백이 인자를 둘 받는다 — 읽을 <strong>요청</strong>과 채울 <strong>응답</strong>.
+    콜백이 끝나면 rclcpp가 채워진 응답을 요청한 쪽에 돌려보낸다.
+  </p>
+  <pre class="lang-cpp"><code>srv_ = this-&gt;create_service&lt;서비스타입&gt;(
+  "서비스 이름",
+  [this](const 서비스타입::Request::SharedPtr req,     // 읽기만 한다
+         서비스타입::Response::SharedPtr res) {        // 여기에 답을 채운다
+    /* req-&gt;… 를 보고 일을 한 뒤 res-&gt;… 를 채운다 */
+  });</code></pre>
+  <p>타입은 새로 만들지 않고 ROS 2에 이미 있는 것을 쓴다. 「켜기·끄기」에 맞춰 만들어진 것이 있다.</p>
+  <pre class="lang-sh"><code>$ ros2 interface show std_srvs/srv/SetBool
+bool data # e.g. for hardware enabling / disabling
+---
+bool success   # indicate successful run of triggered service
+string message # informational, e.g. for error messages</code></pre>
+  <p>
+    18회에서 본 대로 <code>---</code> 위가 요청, 아래가 응답이다. 요청은 bool 하나(<code>data</code> — 주석에 「하드웨어를 켜고 끄는 데」라고 적혀 있다),
+    응답은 성공 여부(<code>success</code>)와 사람이 읽을 문장(<code>message</code>)이다. <code>/clear</code>의 <code>std_srvs/srv/Empty</code>와 같은 <code>std_srvs</code> 패키지에 들어 있다.
+  </p>
+
+  <h3>예제에 적용 — <code>enabled_</code> 하나와 판정 한 줄</h3>
+  <p>
+    노드에 「주행이 켜져 있나」를 뜻하는 <code>enabled_</code>(처음에는 켜짐)를 두고, 서비스 콜백은 그 값만 바꾼다. 실제로 세우는 일은 지금처럼 <strong>타이머 콜백</strong>이 한다 —
+    「벽 앞이거나 <strong>꺼져 있으면</strong> 선다」로 판정 한 줄을 넓힌다. 서비스 콜백에서 직접 0인 <code>Twist</code>를 보내도 되지만, 그러면 다음 타이머가 0.1초 뒤에 또 「가라」를 보낸다.
+    명령을 보내는 곳은 한 곳으로 두는 것이 20회 ⑧절 표의 「누가 그 토픽의 주인인지」와 같은 이야기다.
+    로그도 왜 섰는지 보이게 바꿨다.
+  </p>
+
+  <h3>6단계 (v6) — <code>~/enable</code></h3>
+  <div class="codelabel bad">고치기 전 (v5) — 생성자의 타이머 줄, on_timer 의 판정</div>
+  <pre class="lang-cpp before"><code>    timer_ = this-&gt;create_wall_timer(100ms, [this]() { on_timer(); });
+  // …
+    const double front = front_distance(*pose_);
+    const bool near_wall = front &lt; wall_margin_;
+    if (near_wall &amp;&amp; !stopped_) {
+      RCLCPP_INFO(this-&gt;get_logger(), "앞 벽까지 %.2f m — 섭니다 (x = %.2f, y = %.2f)",
+                  front, pose_-&gt;x, pose_-&gt;y);
+    }
+    stopped_ = near_wall;
+
+    geometry_msgs::msg::Twist cmd;   // 여섯 칸이 전부 0 — 이대로 보내면 「서라」
+    if (!near_wall) {
+      cmd.linear.x = speed_;
+    }</code></pre>
+  <div class="codelabel good">고친 뒤 (v6) — 맨 위에 #include "std_srvs/srv/set_bool.hpp", 멤버 enabled_ 와 enable_srv_ 도 더한다</div>
+  <pre class="lang-cpp after"><code>    enable_srv_ = this-&gt;create_service&lt;std_srvs::srv::SetBool&gt;(
+      "~/enable",
+      [this](const std_srvs::srv::SetBool::Request::SharedPtr req,
+             std_srvs::srv::SetBool::Response::SharedPtr res) { on_enable(req, res); });
+    timer_ = this-&gt;create_wall_timer(100ms, [this]() { on_timer(); });
+  // …
+  // ~/enable 서비스가 불릴 때마다 — 요청의 data 가 true 면 달리고 false 면 선다
+  void on_enable(const std_srvs::srv::SetBool::Request::SharedPtr req,
+                 std_srvs::srv::SetBool::Response::SharedPtr res)
+  {
+    enabled_ = req-&gt;data;
+    res-&gt;success = true;
+    res-&gt;message = enabled_ ? "주행을 켭니다" : "주행을 끕니다";
+    RCLCPP_INFO(this-&gt;get_logger(), "~/enable 요청: %s", res-&gt;message.c_str());
+  }
+  // …
+    const double front = front_distance(*pose_);
+    const bool near_wall = front &lt; wall_margin_;
+    const bool stop = near_wall || !enabled_;   // 벽 앞이거나, 주행이 꺼졌으면 선다
+    if (stop &amp;&amp; !stopped_) {
+      RCLCPP_INFO(this-&gt;get_logger(), "섭니다 — %s (앞 벽까지 %.2f m, x = %.2f)",
+                  near_wall ? "벽 앞" : "주행 꺼짐", front, pose_-&gt;x);
+    }
+    stopped_ = stop;
+
+    geometry_msgs::msg::Twist cmd;   // 여섯 칸이 전부 0 — 이대로 보내면 「서라」
+    if (!stop) {
+      cmd.linear.x = speed_;
+    }
+  // … 멤버
+  bool enabled_ = true;               // ~/enable 서비스로 바뀐다. 처음에는 켜져 있다
+  rclcpp::Service&lt;std_srvs::srv::SetBool&gt;::SharedPtr enable_srv_;</code></pre>
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>this-&gt;create_service&lt;T&gt;("이름", 콜백)</dt>
+      <dd>T 타입 서비스의 서버를 만든다. 요청이 올 때마다 콜백이 <code>spin</code> 안에서 불린다(20회 ②절 규칙 그대로). 여기서는 받은 요청과 응답 포인터를 <code>on_enable</code>에 넘긴다.</dd>
+      <dt>"~/enable"</dt>
+      <dd>이름 앞의 <code>~</code>는 「<strong>이 노드의 이름</strong>」으로 바뀐다. 노드 이름이 <code>wall_stop</code>이니 실제 서비스 이름은 <strong><code>/wall_stop/enable</code></strong>이다. 노드 이름을 17회처럼 바꿔 띄우면 서비스 이름도 따라 바뀌어서, 같은 노드를 둘 띄워도 서비스가 부딪히지 않는다.</dd>
+      <dt>SetBool::Request::SharedPtr · SetBool::Response::SharedPtr</dt>
+      <dd>요청·응답 메시지를 가리키는 <code>shared_ptr</code>의 타입 별칭(11회). 서비스 타입마다 <code>Request</code>와 <code>Response</code> 두 구조체가 만들어져 있고, 필드는 <code>interface show</code>의 <code>---</code> 위아래 그대로다 — <code>req-&gt;data</code>, <code>res-&gt;success</code>, <code>res-&gt;message</code>.</dd>
+      <dt>조건 ? 참일 때 : 거짓일 때</dt>
+      <dd>조건 연산자. <code>if</code>/<code>else</code>를 값 하나로 줄인 것이다. <code>enabled_</code>가 참이면 앞의 문장, 거짓이면 뒤의 문장이 <code>message</code>에 들어간다.</dd>
+      <dt>rclcpp::Service&lt;T&gt;::SharedPtr</dt>
+      <dd>서버를 들고 있는 멤버의 타입. 발행자·구독자처럼 멤버여야 한다 — 이것이 사라지면 서비스도 목록에서 빠진다.</dd>
+    </dl>
+  </div>
+  <p>
+    서비스 타입이 <code>std_srvs</code> 패키지에 있으니 의존성이 하나 는다. 20회 ⑦절 규칙대로 <strong>두 파일 양쪽</strong>에 넣는다.
+  </p>
+  <div class="codelabel good">고친 뒤 (v6) — CMakeLists.txt 의 바뀐 줄 · package.xml 의 더한 줄</div>
+  <pre class="lang-cmake after"><code>find_package(std_srvs REQUIRED)
+# …
+# 21회 — SetBool(std_srvs) 서비스를 받는다
+add_executable(wall_stop src/wall_stop.cpp)
+target_link_libraries(wall_stop PRIVATE
+  rclcpp::rclcpp ${geometry_msgs_TARGETS} ${turtlesim_TARGETS} ${std_srvs_TARGETS})</code></pre>
+  <pre class="after"><code>  &lt;depend&gt;std_srvs&lt;/depend&gt;</code></pre>
+
+  <h3>실제로 나온 출력</h3>
+  <p><code>wall_stop</code>을 띄우고 거북이가 달리는 동안 다른 터미널에서 서비스를 찾고, 부른다.</p>
+  <pre class="lang-sh"><code>$ ros2 service list -t | grep wall_stop
+/wall_stop/describe_parameters [rcl_interfaces/srv/DescribeParameters]
+/wall_stop/enable [std_srvs/srv/SetBool]
+/wall_stop/get_parameter_types [rcl_interfaces/srv/GetParameterTypes]
+/wall_stop/get_parameters [rcl_interfaces/srv/GetParameters]
+/wall_stop/get_type_description [type_description_interfaces/srv/GetTypeDescription]
+/wall_stop/list_parameters [rcl_interfaces/srv/ListParameters]
+/wall_stop/set_parameters [rcl_interfaces/srv/SetParameters]
+/wall_stop/set_parameters_atomically [rcl_interfaces/srv/SetParametersAtomically]
+$ ros2 service call /wall_stop/enable std_srvs/srv/SetBool '{data: false}'
+waiting for service to become available...
+requester: making request: std_srvs.srv.SetBool_Request(data=False)
+
+response:
+std_srvs.srv.SetBool_Response(success=True, message='주행을 끕니다')
+
+$ ros2 topic echo --once /turtle1/pose     # 1초 뒤
+x: 8.440444946289062
+linear_velocity: 0.0
+$ ros2 topic echo --once /turtle1/pose     # 3초 뒤
+x: 8.440444946289062
+linear_velocity: 0.0
+$ ros2 service call /wall_stop/enable std_srvs/srv/SetBool '{data: true}'
+waiting for service to become available...
+requester: making request: std_srvs.srv.SetBool_Request(data=True)
+
+response:
+std_srvs.srv.SetBool_Response(success=True, message='주행을 켭니다')</code></pre>
+  <pre class="lang-sh"><code>$ ros2 run turtle_drive wall_stop
+[INFO] [1792276964.497346557] [wall_stop]: speed = 1.00 m/s, wall_margin = 1.00 m
+[INFO] [1792276967.812242027] [wall_stop]: ~/enable 요청: 주행을 끕니다
+[INFO] [1792276967.897453282] [wall_stop]: 섭니다 — 주행 꺼짐 (앞 벽까지 2.65 m, x = 8.44)
+[INFO] [1792276973.529986241] [wall_stop]: ~/enable 요청: 주행을 켭니다
+[INFO] [1792276975.297496921] [wall_stop]: 섭니다 — 벽 앞 (앞 벽까지 0.95 m, x = 10.14)</code></pre>
+  <p>
+    <code>~/enable</code>이 목록에 <code>/wall_stop/enable</code>로 들어갔다. 그 아래위의 여섯 개는 ②절에서 말한 파라미터 창구다 — <code>ros2 param</code>이 실제로 부르는 서비스들이 이것이다.
+    <code>false</code>를 보내자 응답에 우리가 채운 <code>message</code>가 돌아왔고, 다음 타이머(0.085초 뒤)에 거북이가 섰다. 2초가 지나도 x는 8.44 그대로다. <code>true</code>로 다시 켜자 달려서 벽 앞에서 섰다.
+  </p>
+  <p>
+    서비스 응답은 「요청을 받아 처리했다」는 뜻이고, 거북이가 섰는지는 <code>topic echo</code>의 <code>linear_velocity: 0.0</code>으로 따로 본다.
+    18회에서 <code>/spawn</code>이 실패를 「빈 이름」으로 알렸던 것처럼, 응답의 칸을 무엇으로 채울지는 서버를 만든 사람이 정한다. 우리 서버는 언제나 <code>success=True</code>라고 답한다.
+  </p>
+
+  <!-- fullcode "전체 코드 — turtle_drive/ (6단계 · v6. config/wall_stop.yaml 은 v5 그대로)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive wall_stop"
+       l21_srv_param/steps/step6/turtle_drive/src/wall_stop.cpp as turtle_drive/src/wall_stop.cpp
+       l21_srv_param/steps/step6/turtle_drive/CMakeLists.txt as turtle_drive/CMakeLists.txt
+       l21_srv_param/steps/step6/turtle_drive/package.xml as turtle_drive/package.xml
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — turtle_drive/ (6단계 · v6. config/wall_stop.yaml 은 v5 그대로)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive wall_stop</code></p>
+  <div class="codefile"><div class="fname">turtle_drive/src/wall_stop.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 21회 벽 앞 정지 — v6 (6단계: create_service — ~/enable 서비스(std_srvs/srv/SetBool)로 주행을 켜고 끈다)
+#include &lt;algorithm&gt;
+#include &lt;chrono&gt;
+#include &lt;cmath&gt;
+#include &lt;limits&gt;
+#include &lt;memory&gt;
+
+#include &quot;rclcpp/rclcpp.hpp&quot;
+#include &quot;geometry_msgs/msg/twist.hpp&quot;
+#include &quot;turtlesim/msg/pose.hpp&quot;
+#include &quot;std_srvs/srv/set_bool.hpp&quot;
+
+using namespace std::chrono_literals;
+
+class WallStop : public rclcpp::Node
+{
+public:
+  WallStop()
+  : Node(&quot;wall_stop&quot;)
+  {
+    // 파라미터를 선언한다 — 이름과 기본값. 타입은 기본값에서 정해진다 (1.0 이므로 double)
+    this-&gt;declare_parameter(&quot;speed&quot;, 1.0);
+    this-&gt;declare_parameter(&quot;wall_margin&quot;, 1.0);
+    read_parameters();
+
+    cmd_pub_ = this-&gt;create_publisher&lt;geometry_msgs::msg::Twist&gt;(&quot;/turtle1/cmd_vel&quot;, 10);
+    pose_sub_ = this-&gt;create_subscription&lt;turtlesim::msg::Pose&gt;(
+      &quot;/turtle1/pose&quot;, 10,
+      [this](turtlesim::msg::Pose::ConstSharedPtr msg) { on_pose(msg); });
+    enable_srv_ = this-&gt;create_service&lt;std_srvs::srv::SetBool&gt;(
+      &quot;~/enable&quot;,
+      [this](const std_srvs::srv::SetBool::Request::SharedPtr req,
+             std_srvs::srv::SetBool::Response::SharedPtr res) { on_enable(req, res); });
+    timer_ = this-&gt;create_wall_timer(100ms, [this]() { on_timer(); });
+    RCLCPP_INFO(this-&gt;get_logger(), &quot;speed = %.2f m/s, wall_margin = %.2f m&quot;, speed_, wall_margin_);
+  }
+
+private:
+  // 파라미터의 지금 값을 읽어 멤버에 넣는다 — 생성자에서 한 번, 그 뒤로는 타이머가 부를 때마다
+  void read_parameters()
+  {
+    speed_ = this-&gt;get_parameter(&quot;speed&quot;).as_double();
+    wall_margin_ = this-&gt;get_parameter(&quot;wall_margin&quot;).as_double();
+  }
+
+  // /turtle1/pose 가 올 때마다 불린다 — 받은 것을 들고 있기만 한다
+  void on_pose(turtlesim::msg::Pose::ConstSharedPtr msg)
+  {
+    pose_ = msg;
+  }
+
+  // ~/enable 서비스가 불릴 때마다 — 요청의 data 가 true 면 달리고 false 면 선다
+  void on_enable(const std_srvs::srv::SetBool::Request::SharedPtr req,
+                 std_srvs::srv::SetBool::Response::SharedPtr res)
+  {
+    enabled_ = req-&gt;data;
+    res-&gt;success = true;
+    res-&gt;message = enabled_ ? &quot;주행을 켭니다&quot; : &quot;주행을 끕니다&quot;;
+    RCLCPP_INFO(this-&gt;get_logger(), &quot;~/enable 요청: %s&quot;, res-&gt;message.c_str());
+  }
+
+  // 타이머가 0.1초마다 부른다 — 판단하고 명령을 보낸다
+  void on_timer()
+  {
+    if (!pose_) {                    // 아직 자세를 한 번도 못 받았다
+      return;
+    }
+    read_parameters();               // 밖에서(ros2 param set) 바뀌었을 수 있으니 판단 전에 다시 읽는다
+    const double front = front_distance(*pose_);
+    const bool near_wall = front &lt; wall_margin_;
+    const bool stop = near_wall || !enabled_;   // 벽 앞이거나, 주행이 꺼졌으면 선다
+    if (stop &amp;&amp; !stopped_) {
+      RCLCPP_INFO(this-&gt;get_logger(), &quot;섭니다 — %s (앞 벽까지 %.2f m, x = %.2f)&quot;,
+                  near_wall ? &quot;벽 앞&quot; : &quot;주행 꺼짐&quot;, front, pose_-&gt;x);
+    }
+    stopped_ = stop;
+
+    geometry_msgs::msg::Twist cmd;   // 여섯 칸이 전부 0 — 이대로 보내면 「서라」
+    if (!stop) {
+      cmd.linear.x = speed_;
+    }
+    cmd_pub_-&gt;publish(cmd);
+  }
+
+  // 지금 바라보는 방향으로 곧장 가면 벽까지 몇 m 남았나
+  double front_distance(const turtlesim::msg::Pose &amp; p) const
+  {
+    const double c = std::cos(p.theta);
+    const double s = std::sin(p.theta);
+    double d = std::numeric_limits&lt;double&gt;::infinity();
+    if (c &gt; 1e-6)  { d = std::min(d, (world_size_ - p.x) / c); }   // 오른쪽 벽
+    if (c &lt; -1e-6) { d = std::min(d, (0.0 - p.x) / c); }           // 왼쪽 벽
+    if (s &gt; 1e-6)  { d = std::min(d, (world_size_ - p.y) / s); }   // 위쪽 벽
+    if (s &lt; -1e-6) { d = std::min(d, (0.0 - p.y) / s); }           // 아래쪽 벽
+    return d;
+  }
+
+  double speed_ = 0.0;                // 파라미터 speed 에서 읽는다 (m/s)
+  double wall_margin_ = 0.0;          // 파라미터 wall_margin 에서 읽는다 (m)
+  const double world_size_ = 11.0889; // turtlesim 창 한 변의 길이 (m) — 바꿀 일이 없어 그대로 둔다
+  bool stopped_ = false;
+  bool enabled_ = true;               // ~/enable 서비스로 바뀐다. 처음에는 켜져 있다
+
+  rclcpp::Publisher&lt;geometry_msgs::msg::Twist&gt;::SharedPtr cmd_pub_;
+  rclcpp::Subscription&lt;turtlesim::msg::Pose&gt;::SharedPtr pose_sub_;
+  rclcpp::Service&lt;std_srvs::srv::SetBool&gt;::SharedPtr enable_srv_;
+  rclcpp::TimerBase::SharedPtr timer_;
+  turtlesim::msg::Pose::ConstSharedPtr pose_;   // 마지막으로 받은 자세 (처음에는 비어 있다)
+};
+
+int main(int argc, char ** argv)
+{
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared&lt;WallStop&gt;();
+  rclcpp::spin(node);            // 타이머·구독 콜백은 이 안에서 불린다
+  rclcpp::shutdown();
+  return 0;
+}</code></pre></div>
+  <div class="codefile"><div class="fname">turtle_drive/CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre class="lang-cmake"><code>cmake_minimum_required(VERSION 3.8)
+project(turtle_drive)
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES &quot;Clang&quot;)
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+# find dependencies
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(turtlesim REQUIRED)
+find_package(std_srvs REQUIRED)
+
+# 19회 — 실행 파일 hello_node 를 만들고 rclcpp 를 붙인다 (8회와 같은 두 줄)
+add_executable(hello_node src/hello_node.cpp)
+target_link_libraries(hello_node PRIVATE rclcpp::rclcpp)
+
+# 20회 — 실행 파일 wall_stop. Twist(geometry_msgs)를 보내고 Pose(turtlesim)를 받는다
+# 21회 — SetBool(std_srvs) 서비스를 받는다
+add_executable(wall_stop src/wall_stop.cpp)
+target_link_libraries(wall_stop PRIVATE
+  rclcpp::rclcpp ${geometry_msgs_TARGETS} ${turtlesim_TARGETS} ${std_srvs_TARGETS})
+
+# 만든 실행 파일을 ros2 run 이 찾는 자리에 설치한다
+install(TARGETS hello_node wall_stop
+  DESTINATION lib/${PROJECT_NAME})
+
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  # the following line skips the linter which checks for copyrights
+  # comment the line when a copyright and license is added to all source files
+  set(ament_cmake_copyright_FOUND TRUE)
+  # the following line skips cpplint (only works in a git repo)
+  # comment the line when this package is in a git repo and when
+  # a copyright and license is added to all source files
+  set(ament_cmake_cpplint_FOUND TRUE)
+  ament_lint_auto_find_test_dependencies()
+endif()
+
+ament_package()</code></pre></div>
+  <div class="codefile"><div class="fname">turtle_drive/package.xml</div><button onclick="copyCode(this)">복사</button><pre class=""><code>&lt;?xml version=&quot;1.0&quot;?&gt;
+&lt;?xml-model href=&quot;http://download.ros.org/schema/package_format3.xsd&quot; schematypens=&quot;http://www.w3.org/2001/XMLSchema&quot;?&gt;
+&lt;package format=&quot;3&quot;&gt;
+  &lt;name&gt;turtle_drive&lt;/name&gt;
+  &lt;version&gt;0.0.0&lt;/version&gt;
+  &lt;description&gt;로봇공학 3부 실습 — turtlesim 거북이를 움직이는 노드를 모은 패키지&lt;/description&gt;
+  &lt;maintainer email=&quot;student@example.com&quot;&gt;Student Name&lt;/maintainer&gt;
+  &lt;license&gt;MIT&lt;/license&gt;
+
+  &lt;buildtool_depend&gt;ament_cmake&lt;/buildtool_depend&gt;
+
+  &lt;depend&gt;rclcpp&lt;/depend&gt;
+  &lt;depend&gt;geometry_msgs&lt;/depend&gt;
+  &lt;depend&gt;turtlesim&lt;/depend&gt;
+  &lt;depend&gt;std_srvs&lt;/depend&gt;
+
+  &lt;test_depend&gt;ament_lint_auto&lt;/test_depend&gt;
+  &lt;test_depend&gt;ament_lint_common&lt;/test_depend&gt;
+
+  &lt;export&gt;
+    &lt;build_type&gt;ament_cmake&lt;/build_type&gt;
+  &lt;/export&gt;
+&lt;/package&gt;</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <!-- ── ⑥ v7 ── -->
+  <h2 id="v7">⑥ 서비스 클라이언트 — <code>create_client</code>와 <code>async_send_request</code> (v7) <span class="badge b-red">🔴 사람이 한다</span></h2>
+
+  <h3>개념 — 요청을 보내 두고, 응답은 콜백으로 받는다</h3>
+  <p>
+    이번에는 반대 방향이다. 우리 노드가 <strong>남의 서비스</strong>를 부른다. turtlesim에는 거북이가 그리는 선의 색과 굵기를 바꾸는 서비스가 있다.
+  </p>
+  <pre class="lang-sh"><code>$ ros2 interface show turtlesim/srv/SetPen
+uint8 r
+uint8 g
+uint8 b
+uint8 width
+uint8 off
+---
+$ ros2 service call /turtle1/set_pen turtlesim/srv/SetPen '{r: 255, g: 0, b: 0, width: 3}'
+waiting for service to become available...
+requester: making request: turtlesim.srv.SetPen_Request(r=255, g=0, b=0, width=3, off=0)
+
+response:
+turtlesim.srv.SetPen_Response()</code></pre>
+  <p>
+    요청은 색(<code>r</code>·<code>g</code>·<code>b</code>, 0~255)과 굵기(<code>width</code>), 펜을 들지(<code>off</code>가 1이면 선을 안 그린다)이고, <code>---</code> 아래 응답은 <strong>비어 있다.</strong>
+    그래도 응답은 돌아온다 — <code>SetPen_Response()</code>가 찍혔다. 빈 응답이 「처리했다」는 신호다.
+  </p>
+  <p>
+    코드에서 서비스를 부르는 쪽을 <strong>서비스 클라이언트</strong>라고 한다. 서비스 이름과 타입으로 만들고, 요청 메시지를 채워 보낸다.
+    여기서 하나를 정해야 한다. 보낸 뒤 <strong>응답이 올 때까지 그 자리에서 기다릴까?</strong> 우리 노드에서 요청을 보내는 곳은 타이머 콜백 안이다.
+    20회 ②절의 둘째 규칙 — 기본 <code>spin</code>은 콜백을 <strong>한 번에 하나씩</strong> 부른다 — 을 떠올리면, 콜백 안에서 기다리는 동안에는 다른 콜백이 하나도 불리지 않는다.
+    그런데 응답을 받아 넘겨주는 일도 <code>spin</code>이 한다. 그래서 rclcpp 클라이언트는 <strong>보내고 바로 돌아오는</strong> 함수 하나만 준다.
+  </p>
+  <pre class="lang-cpp"><code>pen_client_ = this-&gt;create_client&lt;turtlesim::srv::SetPen&gt;("/turtle1/set_pen");   // 만들 때 (생성자)
+
+auto req = std::make_shared&lt;turtlesim::srv::SetPen::Request&gt;();                   // 보낼 때
+req-&gt;r = 255;
+pen_client_-&gt;async_send_request(req, [this](rclcpp::Client&lt;turtlesim::srv::SetPen&gt;::SharedFuture) {
+  /* 응답이 오면 spin 이 이 콜백을 부른다 */
+});</code></pre>
+  <div class="tablewrap">
+  <table>
+    <tr><th></th><th>터미널의 <code>ros2 service call</code></th><th>코드의 <code>async_send_request</code></th></tr>
+    <tr><td>보낸 뒤</td><td>응답이 올 때까지 기다렸다가 찍고 끝난다</td><td><strong>바로 다음 줄로 간다</strong></td></tr>
+    <tr><td>응답은</td><td><code>response:</code> 아래에 찍힌다</td><td>넘겨 둔 콜백이 <code>spin</code> 안에서 불릴 때 받는다</td></tr>
+    <tr><td>상대가 없으면</td><td><code>waiting for service…</code>에서 계속 기다린다 (18회 함정)</td><td><code>service_is_ready()</code>로 먼저 보고, 없으면 보내지 않는다</td></tr>
+  </table>
+  </div>
+
+  <h3>예제에 적용 — 설 때마다 펜 색을 다음 색으로</h3>
+  <p>
+    거북이가 <strong>서는 순간</strong>(앞 단계의 「섭니다」 로그가 찍히는 그 자리)에 <code>change_pen()</code>을 부른다. 색은 빨강 → 초록 → 노랑 순서로 돌린다.
+    펜 색은 선 채로는 보이지 않고 <strong>다시 달리기 시작할 때</strong> 그 색으로 선이 그려진다. 그래서 화면에서 <strong>선 색이 바뀐 자리 = 거북이가 섰던 자리</strong>가 된다.
+    v6의 <code>~/enable</code>로 세웠다 켜거나, v5의 <code>param set</code>으로 여유 거리를 줄이면 거북이가 다시 출발하므로 그것을 눈으로 확인할 수 있다.
+  </p>
+
+  <h3>7단계 (v7) — <code>change_pen()</code></h3>
+  <div class="codelabel bad">고치기 전 (v6) — on_timer 의 「섭니다」 자리</div>
+  <pre class="lang-cpp before"><code>    if (stop &amp;&amp; !stopped_) {
+      RCLCPP_INFO(this-&gt;get_logger(), "섭니다 — %s (앞 벽까지 %.2f m, x = %.2f)",
+                  near_wall ? "벽 앞" : "주행 꺼짐", front, pose_-&gt;x);
+    }</code></pre>
+  <div class="codelabel good">고친 뒤 (v7) — 맨 위에 #include &lt;cstdint&gt; · &lt;vector&gt; · "turtlesim/srv/set_pen.hpp", 생성자에 pen_client_ 한 줄</div>
+  <pre class="lang-cpp after"><code>    pen_client_ = this-&gt;create_client&lt;turtlesim::srv::SetPen&gt;("/turtle1/set_pen");   // 생성자
+  // …
+    if (stop &amp;&amp; !stopped_) {
+      RCLCPP_INFO(this-&gt;get_logger(), "섭니다 — %s (앞 벽까지 %.2f m, x = %.2f)",
+                  near_wall ? "벽 앞" : "주행 꺼짐", front, pose_-&gt;x);
+      change_pen();
+    }
+  // …
+  // /turtle1/set_pen 에 다음 펜 색을 요청한다 — 다시 달리기 시작하면 그 색으로 선이 그려진다
+  void change_pen()
+  {
+    if (!pen_client_-&gt;service_is_ready()) {   // 서버(turtlesim)가 아직 없으면 이번에는 건너뛴다
+      RCLCPP_WARN(this-&gt;get_logger(), "/turtle1/set_pen 서비스가 아직 없습니다");
+      return;
+    }
+    const PenColor c = pen_colors_[stop_count_ % pen_colors_.size()];
+    ++stop_count_;
+
+    auto req = std::make_shared&lt;turtlesim::srv::SetPen::Request&gt;();
+    req-&gt;r = c.r;
+    req-&gt;g = c.g;
+    req-&gt;b = c.b;
+    req-&gt;width = 5;                  // 선 굵기 (기본은 3)
+    // 보내고 바로 돌아온다. 응답이 오면 spin 이 이 람다를 불러 준다
+    pen_client_-&gt;async_send_request(
+      req, [this, c](rclcpp::Client&lt;turtlesim::srv::SetPen&gt;::SharedFuture) {
+        RCLCPP_INFO(this-&gt;get_logger(), "펜 색을 (%d, %d, %d) 로 바꿨습니다", c.r, c.g, c.b);
+      });
+  }
+  // … 멤버
+  struct PenColor { std::uint8_t r; std::uint8_t g; std::uint8_t b; };
+  const std::vector&lt;PenColor&gt; pen_colors_ = {{255, 70, 70}, {60, 220, 60}, {255, 210, 0}};   // 빨강 → 초록 → 노랑
+  std::size_t stop_count_ = 0;        // 지금까지 선 횟수 — 다음 색을 고르는 데 쓴다
+  rclcpp::Client&lt;turtlesim::srv::SetPen&gt;::SharedPtr pen_client_;</code></pre>
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>this-&gt;create_client&lt;T&gt;("이름")</dt>
+      <dd>T 타입 서비스를 부르는 클라이언트를 만든다. 만드는 것만으로는 아무것도 보내지 않는다. 멤버 타입은 <code>rclcpp::Client&lt;T&gt;::SharedPtr</code>.</dd>
+      <dt>pen_client_-&gt;service_is_ready()</dt>
+      <dd>그 이름의 서버가 지금 떠 있으면 <code>true</code>. <strong>기다리지 않고</strong> 바로 답한다. turtlesim이 아직 안 떴거나 꺼졌을 때 보내지 않으려고 썼다.</dd>
+      <dt>async_send_request(req, 콜백)</dt>
+      <dd>요청을 보내고 <strong>바로 돌아온다</strong>(async = 비동기, 「기다리지 않는다」). 응답이 도착하면 <code>spin</code>이 둘째 인자의 콜백을 부른다. 여기서는 응답이 오면 로그 한 줄을 찍는다.</dd>
+      <dt>rclcpp::Client&lt;T&gt;::SharedFuture</dt>
+      <dd>응답 콜백이 받는 인자. 「나중에 채워질 응답」을 담는 상자(future)이고, 콜백이 불릴 때는 이미 채워져 있어 <code>.get()</code>으로 응답을 꺼낼 수 있다. <code>SetPen</code>은 응답이 비어 있어서 꺼내지 않았다.</dd>
+      <dt>[this, c]</dt>
+      <dd>14회의 캡처 목록에 <code>this</code>와 지역 변수 <code>c</code>를 함께 적은 것. <code>c</code>는 <strong>값으로 복사</strong>되어 람다 안에 들어간다 — 응답이 올 때는 <code>change_pen()</code>이 이미 끝나 지역 변수 <code>c</code>가 사라진 뒤라서, 참조(<code>&amp;c</code>)로 잡으면 사라진 변수를 가리키게 된다.</dd>
+    </dl>
+  </div>
+  <p>
+    <code>PenColor</code>는 색 세 칸을 묶은 구조체(<code>struct</code>)를 클래스 안에 둔 것이고, <code>pen_colors_</code>는 12회의 <code>std::vector</code>를 중괄호 목록으로 채운 것이다. <code>std::uint8_t</code>(<code>&lt;cstdint&gt;</code>)는 0~255를 담는 부호 없는 8비트 정수로, <code>SetPen</code>의 <code>uint8</code> 필드와 같은 타입이다.
+    <code>stop_count_ % pen_colors_.size()</code>는 0, 1, 2, 0, 1, …로 돌아서 세 색을 차례로 고른다.
+    <code>SetPen</code>은 이미 의존성에 있는 <code>turtlesim</code> 패키지의 타입이라 <code>CMakeLists.txt</code>·<code>package.xml</code>은 그대로다.
+  </p>
+
+  <h3>실제로 나온 출력</h3>
+  <p>띄우고 3초 뒤 <code>~/enable</code>을 <code>false</code>, 2초 뒤 <code>true</code>로 불렀다.</p>
+  <pre class="lang-sh"><code>$ ros2 run turtle_drive wall_stop
+[INFO] [1792276997.094665456] [wall_stop]: speed = 1.00 m/s, wall_margin = 1.00 m
+[INFO] [1792277000.514731264] [wall_stop]: ~/enable 요청: 주행을 끕니다
+[INFO] [1792277000.594783000] [wall_stop]: 섭니다 — 주행 꺼짐 (앞 벽까지 2.54 m, x = 8.55)
+[INFO] [1792277000.608609960] [wall_stop]: 펜 색을 (255, 70, 70) 로 바꿨습니다
+[INFO] [1792277003.251754724] [wall_stop]: ~/enable 요청: 주행을 켭니다
+[INFO] [1792277004.894785715] [wall_stop]: 섭니다 — 벽 앞 (앞 벽까지 0.94 m, x = 10.15)
+[INFO] [1792277004.896515351] [wall_stop]: 펜 색을 (60, 220, 60) 로 바꿨습니다</code></pre>
+  <p>
+    「섭니다」 바로 뒤에 「펜 색을 … 바꿨습니다」가 따라온다. 시각을 보면 첫 번째는 <strong>0.014초</strong>, 두 번째는 <strong>0.002초</strong> 뒤다.
+    그 사이 <code>change_pen()</code>은 요청을 보내고 곧바로 돌아왔고, 타이머 콜백이 끝난 뒤 <code>spin</code>이 turtlesim의 응답을 받아 우리 람다를 불렀다.
+    로그 순서가 「보냈다 → (다른 일) → 응답 왔다」라는 비동기의 모양을 그대로 보여 준다.
+  </p>
+
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 콜백 안에서 응답을 기다리면 노드 전체가 멈춘다</div>
+    <p>
+      「응답을 받은 뒤에 로그를 찍고 싶다」는 생각으로 <code>change_pen()</code>의 끝을 이렇게 바꾸는 코드를 AI에게서 자주 받는다. 빌드는 된다.
+    </p>
+    <pre class="lang-cpp before"><code>    // 보내고, 응답이 올 때까지 여기서 기다린다
+    auto future = pen_client_-&gt;async_send_request(req);
+    future.wait();
+    RCLCPP_INFO(this-&gt;get_logger(), "펜 색을 (%d, %d, %d) 로 바꿨습니다", c.r, c.g, c.b);</code></pre>
+    <p>돌리면 거북이가 벽 앞에서 서는 데까지는 같다. 그 뒤로 노드가 <strong>아무것도 하지 않는다.</strong></p>
+    <pre class="lang-sh"><code>$ ros2 run turtle_drive wall_stop
+[INFO] [1792277025.225500176] [wall_stop]: speed = 1.00 m/s, wall_margin = 1.00 m
+[INFO] [1792277030.025622512] [wall_stop]: 섭니다 — 벽 앞 (앞 벽까지 0.95 m, x = 10.14)
+(「펜 색을 … 바꿨습니다」가 끝내 안 나온다)
+
+$ ros2 topic hz /turtle1/cmd_vel                 # 다른 터미널 — 3초 동안 한 줄도 안 찍힌다
+$ ros2 service call /wall_stop/enable std_srvs/srv/SetBool '{data: false}'
+waiting for service to become available...
+requester: making request: std_srvs.srv.SetBool_Request(data=False)
+(응답이 끝내 안 온다)
+
+(wall_stop 터미널에서 Ctrl+C)
+[INFO] [1792277039.042247913] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+(프롬프트가 돌아오지 않는다 — 검증에서는 4초 뒤 프로세스를 강제로 끝냈다)</code></pre>
+    <p>
+      <code>future.wait()</code>가 타이머 콜백 <strong>안에서</strong> 응답을 기다린다. 응답은 컴퓨터에 도착했지만, 그것을 꺼내 future를 채워 주는 일은 <code>spin</code>이 하고, <code>spin</code>은 지금 이 콜백이 끝나기를 기다리고 있다.
+      서로가 서로를 기다리는 이 상태를 <strong>교착</strong>(deadlock)이라고 한다. Ctrl+C는 <code>signal_handler</code> 줄이 찍히듯 받아들여지지만, <code>spin</code>이 돌아오려면 지금 도는 콜백이 먼저 끝나야 해서 프로그램이 끝나지 않는다(여러분 터미널에서 이렇게 되면 그 터미널 창을 닫는다). 타이머도 다시 안 불리니 <code>cmd_vel</code>이 끊기고(<code>hz</code>가 조용하다), <code>~/enable</code> 요청도 처리되지 않는다.
+      서비스 이름이 맞는데(<code>service list</code>에 있는데) <code>call</code>이 응답 없이 서 있으면, 18회의 「이름을 틀렸다」가 아니라 <strong>서버 노드가 막혀 있는</strong> 것이다.
+    </p>
+    <p>
+      공식 튜토리얼의 클라이언트 예제를 보고 <code>rclcpp::spin_until_future_complete(…)</code>로 기다리게 짠 코드도 흔하다. 그 예제는 <code>main</code>에서 부르는 것이라 맞지만, 우리처럼 콜백 안에서 부르면 이번에는 바로 죽는다.
+    </p>
+    <pre><code>[INFO] [1792277060.608603378] [wall_stop]: 섭니다 — 벽 앞 (앞 벽까지 0.94 m, x = 10.15)
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  Node '/wall_stop' has already been added to an executor.
+[ros2run]: Aborted</code></pre>
+    <p>
+      「이 노드는 이미 다른 실행기(<code>spin</code>)가 돌리고 있다」는 뜻이다. 둘 다 원인은 같다 — <strong>콜백 안에서 응답을 기다렸다.</strong>
+      고치는 법도 같다. 기다리는 줄을 지우고, 응답을 받은 뒤 할 일은 <code>async_send_request</code>의 둘째 인자(콜백)로 넘긴다. v7이 그 모양이다.
+      turtlesim에서는 노드가 멈춘 것으로 끝나지만, 실물 로봇에서 주행 노드의 콜백이 이렇게 멈추면 마지막 속도 명령이 남은 채로 1초쯤(20회 ⑨절) 가거나, 구동 노드에 따라서는 계속 간다.
+    </p>
+  </div>
+
+  <!-- fullcode "전체 코드 — turtle_drive/src/wall_stop.cpp (7단계 · v7. CMakeLists.txt·package.xml 은 v6 그대로)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive wall_stop"
+       l21_srv_param/steps/step7/turtle_drive/src/wall_stop.cpp as turtle_drive/src/wall_stop.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — turtle_drive/src/wall_stop.cpp (7단계 · v7. CMakeLists.txt·package.xml 은 v6 그대로)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive wall_stop</code></p>
+  <div class="codefile"><div class="fname">turtle_drive/src/wall_stop.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 21회 벽 앞 정지 — v7 (7단계: create_client · async_send_request — 설 때마다 /turtle1/set_pen 으로 펜 색을 바꾼다)
+#include &lt;algorithm&gt;
+#include &lt;chrono&gt;
+#include &lt;cmath&gt;
+#include &lt;cstdint&gt;
+#include &lt;limits&gt;
+#include &lt;memory&gt;
+#include &lt;vector&gt;
+
+#include &quot;rclcpp/rclcpp.hpp&quot;
+#include &quot;geometry_msgs/msg/twist.hpp&quot;
+#include &quot;turtlesim/msg/pose.hpp&quot;
+#include &quot;std_srvs/srv/set_bool.hpp&quot;
+#include &quot;turtlesim/srv/set_pen.hpp&quot;
+
+using namespace std::chrono_literals;
+
+class WallStop : public rclcpp::Node
+{
+public:
+  WallStop()
+  : Node(&quot;wall_stop&quot;)
+  {
+    // 파라미터를 선언한다 — 이름과 기본값. 타입은 기본값에서 정해진다 (1.0 이므로 double)
+    this-&gt;declare_parameter(&quot;speed&quot;, 1.0);
+    this-&gt;declare_parameter(&quot;wall_margin&quot;, 1.0);
+    read_parameters();
+
+    cmd_pub_ = this-&gt;create_publisher&lt;geometry_msgs::msg::Twist&gt;(&quot;/turtle1/cmd_vel&quot;, 10);
+    pose_sub_ = this-&gt;create_subscription&lt;turtlesim::msg::Pose&gt;(
+      &quot;/turtle1/pose&quot;, 10,
+      [this](turtlesim::msg::Pose::ConstSharedPtr msg) { on_pose(msg); });
+    enable_srv_ = this-&gt;create_service&lt;std_srvs::srv::SetBool&gt;(
+      &quot;~/enable&quot;,
+      [this](const std_srvs::srv::SetBool::Request::SharedPtr req,
+             std_srvs::srv::SetBool::Response::SharedPtr res) { on_enable(req, res); });
+    pen_client_ = this-&gt;create_client&lt;turtlesim::srv::SetPen&gt;(&quot;/turtle1/set_pen&quot;);
+    timer_ = this-&gt;create_wall_timer(100ms, [this]() { on_timer(); });
+    RCLCPP_INFO(this-&gt;get_logger(), &quot;speed = %.2f m/s, wall_margin = %.2f m&quot;, speed_, wall_margin_);
+  }
+
+private:
+  // 파라미터의 지금 값을 읽어 멤버에 넣는다 — 생성자에서 한 번, 그 뒤로는 타이머가 부를 때마다
+  void read_parameters()
+  {
+    speed_ = this-&gt;get_parameter(&quot;speed&quot;).as_double();
+    wall_margin_ = this-&gt;get_parameter(&quot;wall_margin&quot;).as_double();
+  }
+
+  // /turtle1/pose 가 올 때마다 불린다 — 받은 것을 들고 있기만 한다
+  void on_pose(turtlesim::msg::Pose::ConstSharedPtr msg)
+  {
+    pose_ = msg;
+  }
+
+  // ~/enable 서비스가 불릴 때마다 — 요청의 data 가 true 면 달리고 false 면 선다
+  void on_enable(const std_srvs::srv::SetBool::Request::SharedPtr req,
+                 std_srvs::srv::SetBool::Response::SharedPtr res)
+  {
+    enabled_ = req-&gt;data;
+    res-&gt;success = true;
+    res-&gt;message = enabled_ ? &quot;주행을 켭니다&quot; : &quot;주행을 끕니다&quot;;
+    RCLCPP_INFO(this-&gt;get_logger(), &quot;~/enable 요청: %s&quot;, res-&gt;message.c_str());
+  }
+
+  // 타이머가 0.1초마다 부른다 — 판단하고 명령을 보낸다
+  void on_timer()
+  {
+    if (!pose_) {                    // 아직 자세를 한 번도 못 받았다
+      return;
+    }
+    read_parameters();               // 밖에서(ros2 param set) 바뀌었을 수 있으니 판단 전에 다시 읽는다
+    const double front = front_distance(*pose_);
+    const bool near_wall = front &lt; wall_margin_;
+    const bool stop = near_wall || !enabled_;   // 벽 앞이거나, 주행이 꺼졌으면 선다
+    if (stop &amp;&amp; !stopped_) {
+      RCLCPP_INFO(this-&gt;get_logger(), &quot;섭니다 — %s (앞 벽까지 %.2f m, x = %.2f)&quot;,
+                  near_wall ? &quot;벽 앞&quot; : &quot;주행 꺼짐&quot;, front, pose_-&gt;x);
+      change_pen();
+    }
+    stopped_ = stop;
+
+    geometry_msgs::msg::Twist cmd;   // 여섯 칸이 전부 0 — 이대로 보내면 「서라」
+    if (!stop) {
+      cmd.linear.x = speed_;
+    }
+    cmd_pub_-&gt;publish(cmd);
+  }
+
+  // /turtle1/set_pen 에 다음 펜 색을 요청한다 — 다시 달리기 시작하면 그 색으로 선이 그려진다
+  void change_pen()
+  {
+    if (!pen_client_-&gt;service_is_ready()) {   // 서버(turtlesim)가 아직 없으면 이번에는 건너뛴다
+      RCLCPP_WARN(this-&gt;get_logger(), &quot;/turtle1/set_pen 서비스가 아직 없습니다&quot;);
+      return;
+    }
+    const PenColor c = pen_colors_[stop_count_ % pen_colors_.size()];
+    ++stop_count_;
+
+    auto req = std::make_shared&lt;turtlesim::srv::SetPen::Request&gt;();
+    req-&gt;r = c.r;
+    req-&gt;g = c.g;
+    req-&gt;b = c.b;
+    req-&gt;width = 5;                  // 선 굵기 (기본은 3)
+    // 보내고 바로 돌아온다. 응답이 오면 spin 이 이 람다를 불러 준다
+    pen_client_-&gt;async_send_request(
+      req, [this, c](rclcpp::Client&lt;turtlesim::srv::SetPen&gt;::SharedFuture) {
+        RCLCPP_INFO(this-&gt;get_logger(), &quot;펜 색을 (%d, %d, %d) 로 바꿨습니다&quot;, c.r, c.g, c.b);
+      });
+  }
+
+  // 지금 바라보는 방향으로 곧장 가면 벽까지 몇 m 남았나
+  double front_distance(const turtlesim::msg::Pose &amp; p) const
+  {
+    const double c = std::cos(p.theta);
+    const double s = std::sin(p.theta);
+    double d = std::numeric_limits&lt;double&gt;::infinity();
+    if (c &gt; 1e-6)  { d = std::min(d, (world_size_ - p.x) / c); }   // 오른쪽 벽
+    if (c &lt; -1e-6) { d = std::min(d, (0.0 - p.x) / c); }           // 왼쪽 벽
+    if (s &gt; 1e-6)  { d = std::min(d, (world_size_ - p.y) / s); }   // 위쪽 벽
+    if (s &lt; -1e-6) { d = std::min(d, (0.0 - p.y) / s); }           // 아래쪽 벽
+    return d;
+  }
+
+  double speed_ = 0.0;                // 파라미터 speed 에서 읽는다 (m/s)
+  double wall_margin_ = 0.0;          // 파라미터 wall_margin 에서 읽는다 (m)
+  const double world_size_ = 11.0889; // turtlesim 창 한 변의 길이 (m) — 바꿀 일이 없어 그대로 둔다
+  bool stopped_ = false;
+  bool enabled_ = true;               // ~/enable 서비스로 바뀐다. 처음에는 켜져 있다
+
+  struct PenColor { std::uint8_t r; std::uint8_t g; std::uint8_t b; };
+  const std::vector&lt;PenColor&gt; pen_colors_ = {{255, 70, 70}, {60, 220, 60}, {255, 210, 0}};   // 빨강 → 초록 → 노랑
+  std::size_t stop_count_ = 0;        // 지금까지 선 횟수 — 다음 색을 고르는 데 쓴다
+
+  rclcpp::Publisher&lt;geometry_msgs::msg::Twist&gt;::SharedPtr cmd_pub_;
+  rclcpp::Subscription&lt;turtlesim::msg::Pose&gt;::SharedPtr pose_sub_;
+  rclcpp::Service&lt;std_srvs::srv::SetBool&gt;::SharedPtr enable_srv_;
+  rclcpp::Client&lt;turtlesim::srv::SetPen&gt;::SharedPtr pen_client_;
+  rclcpp::TimerBase::SharedPtr timer_;
+  turtlesim::msg::Pose::ConstSharedPtr pose_;   // 마지막으로 받은 자세 (처음에는 비어 있다)
+};
+
+int main(int argc, char ** argv)
+{
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared&lt;WallStop&gt;();
+  rclcpp::spin(node);            // 타이머·구독 콜백은 이 안에서 불린다
+  rclcpp::shutdown();
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+  <!-- fullcode "전체 코드 — turtle_drive/src/wall_stop.cpp (v7 변형 · 콜백 안에서 future.wait() — 빌드는 되고 첫 정지에서 멈춘다)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive wall_stop"
+       l21_srv_param/steps/variants/sync_wait/turtle_drive/src/wall_stop.cpp as turtle_drive/src/wall_stop.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — turtle_drive/src/wall_stop.cpp (v7 변형 · 콜백 안에서 future.wait() — 빌드는 되고 첫 정지에서 멈춘다)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive wall_stop</code></p>
+  <div class="codefile"><div class="fname">turtle_drive/src/wall_stop.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 21회 벽 앞 정지 — v7 변형 (응답을 타이머 콜백 안에서 기다리는 판 · 빌드는 되고 첫 정지에서 멈춘다)
+#include &lt;algorithm&gt;
+#include &lt;chrono&gt;
+#include &lt;cmath&gt;
+#include &lt;cstdint&gt;
+#include &lt;limits&gt;
+#include &lt;memory&gt;
+#include &lt;vector&gt;
+
+#include &quot;rclcpp/rclcpp.hpp&quot;
+#include &quot;geometry_msgs/msg/twist.hpp&quot;
+#include &quot;turtlesim/msg/pose.hpp&quot;
+#include &quot;std_srvs/srv/set_bool.hpp&quot;
+#include &quot;turtlesim/srv/set_pen.hpp&quot;
+
+using namespace std::chrono_literals;
+
+class WallStop : public rclcpp::Node
+{
+public:
+  WallStop()
+  : Node(&quot;wall_stop&quot;)
+  {
+    // 파라미터를 선언한다 — 이름과 기본값. 타입은 기본값에서 정해진다 (1.0 이므로 double)
+    this-&gt;declare_parameter(&quot;speed&quot;, 1.0);
+    this-&gt;declare_parameter(&quot;wall_margin&quot;, 1.0);
+    read_parameters();
+
+    cmd_pub_ = this-&gt;create_publisher&lt;geometry_msgs::msg::Twist&gt;(&quot;/turtle1/cmd_vel&quot;, 10);
+    pose_sub_ = this-&gt;create_subscription&lt;turtlesim::msg::Pose&gt;(
+      &quot;/turtle1/pose&quot;, 10,
+      [this](turtlesim::msg::Pose::ConstSharedPtr msg) { on_pose(msg); });
+    enable_srv_ = this-&gt;create_service&lt;std_srvs::srv::SetBool&gt;(
+      &quot;~/enable&quot;,
+      [this](const std_srvs::srv::SetBool::Request::SharedPtr req,
+             std_srvs::srv::SetBool::Response::SharedPtr res) { on_enable(req, res); });
+    pen_client_ = this-&gt;create_client&lt;turtlesim::srv::SetPen&gt;(&quot;/turtle1/set_pen&quot;);
+    timer_ = this-&gt;create_wall_timer(100ms, [this]() { on_timer(); });
+    RCLCPP_INFO(this-&gt;get_logger(), &quot;speed = %.2f m/s, wall_margin = %.2f m&quot;, speed_, wall_margin_);
+  }
+
+private:
+  // 파라미터의 지금 값을 읽어 멤버에 넣는다 — 생성자에서 한 번, 그 뒤로는 타이머가 부를 때마다
+  void read_parameters()
+  {
+    speed_ = this-&gt;get_parameter(&quot;speed&quot;).as_double();
+    wall_margin_ = this-&gt;get_parameter(&quot;wall_margin&quot;).as_double();
+  }
+
+  // /turtle1/pose 가 올 때마다 불린다 — 받은 것을 들고 있기만 한다
+  void on_pose(turtlesim::msg::Pose::ConstSharedPtr msg)
+  {
+    pose_ = msg;
+  }
+
+  // ~/enable 서비스가 불릴 때마다 — 요청의 data 가 true 면 달리고 false 면 선다
+  void on_enable(const std_srvs::srv::SetBool::Request::SharedPtr req,
+                 std_srvs::srv::SetBool::Response::SharedPtr res)
+  {
+    enabled_ = req-&gt;data;
+    res-&gt;success = true;
+    res-&gt;message = enabled_ ? &quot;주행을 켭니다&quot; : &quot;주행을 끕니다&quot;;
+    RCLCPP_INFO(this-&gt;get_logger(), &quot;~/enable 요청: %s&quot;, res-&gt;message.c_str());
+  }
+
+  // 타이머가 0.1초마다 부른다 — 판단하고 명령을 보낸다
+  void on_timer()
+  {
+    if (!pose_) {                    // 아직 자세를 한 번도 못 받았다
+      return;
+    }
+    read_parameters();               // 밖에서(ros2 param set) 바뀌었을 수 있으니 판단 전에 다시 읽는다
+    const double front = front_distance(*pose_);
+    const bool near_wall = front &lt; wall_margin_;
+    const bool stop = near_wall || !enabled_;   // 벽 앞이거나, 주행이 꺼졌으면 선다
+    if (stop &amp;&amp; !stopped_) {
+      RCLCPP_INFO(this-&gt;get_logger(), &quot;섭니다 — %s (앞 벽까지 %.2f m, x = %.2f)&quot;,
+                  near_wall ? &quot;벽 앞&quot; : &quot;주행 꺼짐&quot;, front, pose_-&gt;x);
+      change_pen();
+    }
+    stopped_ = stop;
+
+    geometry_msgs::msg::Twist cmd;   // 여섯 칸이 전부 0 — 이대로 보내면 「서라」
+    if (!stop) {
+      cmd.linear.x = speed_;
+    }
+    cmd_pub_-&gt;publish(cmd);
+  }
+
+  // /turtle1/set_pen 에 다음 펜 색을 요청한다 — 다시 달리기 시작하면 그 색으로 선이 그려진다
+  void change_pen()
+  {
+    if (!pen_client_-&gt;service_is_ready()) {   // 서버(turtlesim)가 아직 없으면 이번에는 건너뛴다
+      RCLCPP_WARN(this-&gt;get_logger(), &quot;/turtle1/set_pen 서비스가 아직 없습니다&quot;);
+      return;
+    }
+    const PenColor c = pen_colors_[stop_count_ % pen_colors_.size()];
+    ++stop_count_;
+
+    auto req = std::make_shared&lt;turtlesim::srv::SetPen::Request&gt;();
+    req-&gt;r = c.r;
+    req-&gt;g = c.g;
+    req-&gt;b = c.b;
+    req-&gt;width = 5;                  // 선 굵기 (기본은 3)
+    // 보내고, 응답이 올 때까지 여기서 기다린다
+    auto future = pen_client_-&gt;async_send_request(req);
+    future.wait();
+    RCLCPP_INFO(this-&gt;get_logger(), &quot;펜 색을 (%d, %d, %d) 로 바꿨습니다&quot;, c.r, c.g, c.b);
+  }
+
+  // 지금 바라보는 방향으로 곧장 가면 벽까지 몇 m 남았나
+  double front_distance(const turtlesim::msg::Pose &amp; p) const
+  {
+    const double c = std::cos(p.theta);
+    const double s = std::sin(p.theta);
+    double d = std::numeric_limits&lt;double&gt;::infinity();
+    if (c &gt; 1e-6)  { d = std::min(d, (world_size_ - p.x) / c); }   // 오른쪽 벽
+    if (c &lt; -1e-6) { d = std::min(d, (0.0 - p.x) / c); }           // 왼쪽 벽
+    if (s &gt; 1e-6)  { d = std::min(d, (world_size_ - p.y) / s); }   // 위쪽 벽
+    if (s &lt; -1e-6) { d = std::min(d, (0.0 - p.y) / s); }           // 아래쪽 벽
+    return d;
+  }
+
+  double speed_ = 0.0;                // 파라미터 speed 에서 읽는다 (m/s)
+  double wall_margin_ = 0.0;          // 파라미터 wall_margin 에서 읽는다 (m)
+  const double world_size_ = 11.0889; // turtlesim 창 한 변의 길이 (m) — 바꿀 일이 없어 그대로 둔다
+  bool stopped_ = false;
+  bool enabled_ = true;               // ~/enable 서비스로 바뀐다. 처음에는 켜져 있다
+
+  struct PenColor { std::uint8_t r; std::uint8_t g; std::uint8_t b; };
+  const std::vector&lt;PenColor&gt; pen_colors_ = {{255, 70, 70}, {60, 220, 60}, {255, 210, 0}};   // 빨강 → 초록 → 노랑
+  std::size_t stop_count_ = 0;        // 지금까지 선 횟수 — 다음 색을 고르는 데 쓴다
+
+  rclcpp::Publisher&lt;geometry_msgs::msg::Twist&gt;::SharedPtr cmd_pub_;
+  rclcpp::Subscription&lt;turtlesim::msg::Pose&gt;::SharedPtr pose_sub_;
+  rclcpp::Service&lt;std_srvs::srv::SetBool&gt;::SharedPtr enable_srv_;
+  rclcpp::Client&lt;turtlesim::srv::SetPen&gt;::SharedPtr pen_client_;
+  rclcpp::TimerBase::SharedPtr timer_;
+  turtlesim::msg::Pose::ConstSharedPtr pose_;   // 마지막으로 받은 자세 (처음에는 비어 있다)
+};
+
+int main(int argc, char ** argv)
+{
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared&lt;WallStop&gt;();
+  rclcpp::spin(node);            // 타이머·구독 콜백은 이 안에서 불린다
+  rclcpp::shutdown();
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>모양</th><th>쓸 때</th><th>안 쓸 때</th></tr>
+    <tr><td><code>async_send_request(req, 콜백)</code></td><td><strong>노드의 콜백 안에서 서비스를 부를 때 — 이 과목에서는 언제나</strong></td><td>—</td></tr>
+    <tr><td><code>async_send_request(req)</code> + <code>spin_until_future_complete</code></td><td><code>main</code>에서 서비스를 한 번 부르고 끝나는 짧은 프로그램 (공식 튜토리얼의 모양)</td><td>타이머·구독·서비스 콜백 안 — 위 함정</td></tr>
+    <tr><td>콜백 안의 <code>future.wait()</code> · <code>future.get()</code></td><td>—</td><td>기본 <code>spin</code>을 쓰는 노드에서는 <strong>언제나 교착</strong></td></tr>
+    <tr><td>서비스 서버 만들기</td><td>켜기·끄기·초기화처럼 <strong>한 번의 부탁</strong>을 받을 때</td><td>계속 바뀌는 값 — 그것은 토픽. 설정값 — 그것은 파라미터</td></tr>
+  </table>
+  </div>
+
+  <!-- ── ⑦ v8 launch ── -->
+  <h2 id="v8">⑦ launch 파일 — <code>ros2 launch</code>와 <code>.launch.py</code> (v8) <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+
+  <h3>개념 — 무엇을 어떤 설정으로 띄울지 적어 둔 파일</h3>
+  <p>
+    지금 <code>wall_stop</code>을 시험하려면 무엇을 쳐야 할까? 터미널 1에서 turtlesim, 터미널 2에서 <code>source install/setup.bash</code>를 하고 <code>wall_stop</code>을 <code>--params-file</code>과 함께.
+    두 개라 아직 할 만하다. 그런데 기말 프로젝트에서는 로봇 쪽 bringup, 내 주행 노드, rviz2까지 셋이 넘고, 그것을 시험할 때마다 친다.
+    한 번이라도 파라미터 파일을 빠뜨리고 띄우면 <strong>기본값으로 달린다</strong> — ④절에서 본 대로 아무 말 없이.
+    「매번 같은 것을 같은 순서로 친다」는 것은 스크립트로 적어 둘 일이라는 신호다(3회의 쉘 스크립트와 같은 생각).
+  </p>
+  <p>
+    ROS 2에서 그 역할을 하는 것이 <strong>launch 파일</strong>이다. 「어느 패키지의 어느 실행 파일을, 어떤 이름과 파라미터로 띄울지」를 노드마다 적어 두면
+    <code>ros2 launch 패키지 파일</code> 한 줄이 그 노드들을 한꺼번에 띄우고, Ctrl+C 한 번에 한꺼번에 끈다.
+    launch 파일은 파이썬·XML·YAML 세 형식으로 쓸 수 있는데, 공식 문서의 예제와 AI가 주는 답은 대부분 <strong>파이썬(<code>.launch.py</code>)</strong>이다.
+    이 과목에서는 파이썬을 배우지 않았으니 <strong>쓰는 것은 에이전트에게 맡기고, 우리는 읽고 검사한다.</strong> 읽는 데 필요한 것은 아래 몇 줄이면 된다.
+  </p>
+
+  <h3>예제에 적용 — turtlesim과 <code>wall_stop</code>을 한 파일로</h3>
+  <div class="codelabel good">turtle_drive/launch/wall_stop.launch.py (새 파일)</div>
+  <pre class="lang-py after"><code># 21회 — turtlesim 과 wall_stop 을 한 번에 띄운다. wall_stop 은 config/wall_stop.yaml 의 파라미터로 시작한다
+import os
+
+from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription
+from launch_ros.actions import Node
+
+
+def generate_launch_description():
+    params = os.path.join(
+        get_package_share_directory('turtle_drive'), 'config', 'wall_stop.yaml')
+
+    return LaunchDescription([
+        Node(
+            package='turtlesim',
+            executable='turtlesim_node',
+            name='turtlesim',
+        ),
+        Node(
+            package='turtle_drive',
+            executable='wall_stop',
+            name='wall_stop',
+            parameters=[params],
+            output='screen',
+        ),
+    ])</code></pre>
+  <p class="readme-first">무엇을 먼저 볼지: <strong><code>Node(</code> … <code>)</code> 덩어리 두 개</strong>가 「노드 둘을 띄운다」이다. 위의 다섯 줄은 그 준비다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>줄</th><th>C++로 치면</th><th>이 파일에서 하는 일</th></tr>
+    <tr><td><code>import os</code> · <code>from … import …</code></td><td><code>#include</code></td><td>쓸 이름을 가져온다. <code>Node</code>는 <code>launch_ros.actions</code>에서, <code>LaunchDescription</code>은 <code>launch</code>에서 온다</td></tr>
+    <tr><td><code>def generate_launch_description():</code></td><td>함수 정의 <code>… generate_launch_description() {</code></td><td><code>ros2 launch</code>가 <strong>이 이름의 함수를 찾아 부른다.</strong> 이름이 다르면 못 찾는다</td></tr>
+    <tr><td><code>params = os.path.join(…)</code></td><td><code>auto params = 경로1 + "/" + 경로2 + …;</code></td><td>설치된 YAML 파일의 경로를 만든다 — <code>…/share/turtle_drive/config/wall_stop.yaml</code></td></tr>
+    <tr><td><code>return LaunchDescription([ … ])</code></td><td><code>return std::vector{ … };</code></td><td>「띄울 것들의 목록」을 돌려준다. 대괄호 <code>[ ]</code>가 목록이다</td></tr>
+    <tr><td><code>Node(package=…, executable=…, name=…)</code></td><td>(이름 붙은 인자로 부르는 생성자)</td><td><code>ros2 run 패키지 실행파일</code> 한 번. <code>name</code>은 17회 <code>-r __node:=</code>와 같다</td></tr>
+    <tr><td><code>parameters=[params]</code></td><td>—</td><td><code>--ros-args --params-file 그 경로</code></td></tr>
+    <tr><td><code>output='screen'</code></td><td>—</td><td>그 노드의 로그를 이 터미널에 보인다</td></tr>
+  </table>
+  </div>
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 파일에서 처음 나오는 것 (파이썬을 읽는 데 필요한 만큼)</p>
+    <dl>
+      <dt>들여쓰기 · 콜론 <code>:</code></dt>
+      <dd>파이썬에는 중괄호가 없다. <code>def …:</code> 다음 줄부터 <strong>들여 쓴 줄들이 그 함수의 몸</strong>이다. 그래서 들여쓰기를 바꾸면 뜻이 바뀐다 — ④절 YAML과 같은 규칙이다.</dd>
+      <dt>이름=값 (keyword argument)</dt>
+      <dd>인자를 순서가 아니라 <strong>이름</strong>으로 넘긴다. <code>Node(package='turtlesim', …)</code>는 「<code>package</code> 칸에 <code>'turtlesim'</code>」이다. 순서를 바꿔 적어도 같다. 마지막 인자 뒤의 쉼표는 있어도 된다.</dd>
+      <dt>'문자열' · [목록]</dt>
+      <dd>작은따옴표도 큰따옴표처럼 문자열이다. 대괄호는 목록(C++의 <code>vector</code>와 비슷)이다 — <code>parameters=[params]</code>는 원소 하나짜리 목록이다. 파라미터 파일을 여럿 줄 수 있어서 목록을 받는다.</dd>
+      <dt>get_package_share_directory('turtle_drive')</dt>
+      <dd>그 패키지의 <strong>설치된 <code>share/</code> 폴더</strong> 경로를 돌려준다. 16회의 <code>ros2 pkg prefix</code>가 찾던 자리 아래의 <code>share/turtle_drive</code>다. 그 폴더에 YAML이 <strong>설치돼 있어야</strong> 이 경로가 의미가 있다 — ⑧절.</dd>
+      <dt>os.path.join(a, b, c)</dt>
+      <dd>폴더 이름들을 <code>/</code>로 이어 경로 하나를 만든다.</dd>
+    </dl>
+    <p class="later">파이썬 자체는 이 과목에서 다루지 않는다. launch 파일은 이 표 수준으로 읽을 수 있으면 된다.</p>
+  </div>
+
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    이 launch 파일을 줄마다 읽어 줘. 표로 「줄 · 하는 일 · 같은 일을 터미널에서 하면 어떤 명령인가」를 적어 줘. 특히 각 Node 가 실제로 어떤 ros2 run … --ros-args … 명령이 되는지, parameters 로 주는 YAML 파일의 실제 경로가 어디인지, 그 파일이 지금 install/ 아래에 정말 있는지 ls 로 확인해서 보여 줘.
+  </div>
+
+  <h3>8단계 (v8) — 파일 둘을 설치하고, launch 실행 의존성을 적는다</h3>
+  <p>
+    launch 파일을 만들었다고 바로 <code>ros2 launch turtle_drive wall_stop.launch.py</code>가 되지는 않는다. <code>ros2 launch</code>는 그 파일을 <strong>설치된 자리</strong>(<code>install/turtle_drive/share/turtle_drive/</code>)에서 찾기 때문이다.
+    19회 「조금 더 알아두면」에서 예고한 <code>install()</code>의 두 번째 모양이 여기서 나온다. 그리고 launch는 실행할 때만 필요한 도구라 <code>package.xml</code>에 <code>exec_depend</code>로 적는다.
+  </p>
+  <div class="codelabel bad">고치기 전 (v7) — CMakeLists.txt 의 install 부분 · package.xml 의 의존성</div>
+  <pre class="lang-cmake before"><code># 만든 실행 파일을 ros2 run 이 찾는 자리에 설치한다
+install(TARGETS hello_node wall_stop
+  DESTINATION lib/${PROJECT_NAME})</code></pre>
+  <pre class="before"><code>  &lt;depend&gt;std_srvs&lt;/depend&gt;</code></pre>
+  <div class="codelabel good">고친 뒤 (v8)</div>
+  <pre class="lang-cmake after"><code># 만든 실행 파일을 ros2 run 이 찾는 자리에 설치한다
+install(TARGETS hello_node wall_stop
+  DESTINATION lib/${PROJECT_NAME})
+
+# 21회 — 빌드하지 않는 파일(launch 파일·파라미터 파일)은 share/ 아래로 복사한다
+install(DIRECTORY launch config
+  DESTINATION share/${PROJECT_NAME})</code></pre>
+  <pre class="after"><code>  &lt;depend&gt;std_srvs&lt;/depend&gt;
+
+  &lt;exec_depend&gt;ros2launch&lt;/exec_depend&gt;</code></pre>
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 파일에서 처음 나오는 것</p>
+    <dl>
+      <dt>install(DIRECTORY 폴더… DESTINATION share/${PROJECT_NAME})</dt>
+      <dd><code>install(TARGETS …)</code>가 빌드 결과물을 옮겼다면 이것은 <strong>폴더를 통째로</strong> 옮긴다. <code>launch/</code>와 <code>config/</code>가 <code>install/turtle_drive/share/turtle_drive/launch/</code>·<code>…/config/</code>로 복사된다. 실행 파일은 <code>lib/</code>, 나머지 파일은 <code>share/</code>다.</dd>
+      <dt>&lt;exec_depend&gt;ros2launch&lt;/exec_depend&gt;</dt>
+      <dd><code>&lt;depend&gt;</code>는 「빌드할 때도 실행할 때도 필요」, <code>&lt;exec_depend&gt;</code>는 「<strong>실행할 때만</strong> 필요」다. <code>ros2launch</code>는 <code>ros2 launch</code> 명령이 든 패키지다. 이 패키지의 launch 파일을 쓰려면 다른 컴퓨터에도 그것이 깔려 있어야 한다는 선언이다.</dd>
+    </dl>
+  </div>
+
+  <h3>실제로 나온 출력</h3>
+  <pre class="lang-sh"><code>$ cd ~/ros2_ws
+$ colcon build --packages-select turtle_drive
+Starting &gt;&gt;&gt; turtle_drive
+Finished &lt;&lt;&lt; turtle_drive [7.81s]
+
+Summary: 1 package finished [7.89s]
+$ source install/setup.bash
+$ ls install/turtle_drive/share/turtle_drive/launch install/turtle_drive/share/turtle_drive/config
+install/turtle_drive/share/turtle_drive/config:
+wall_stop.yaml
+
+install/turtle_drive/share/turtle_drive/launch:
+wall_stop.launch.py</code></pre>
+  <p>두 파일이 <code>share/</code> 아래로 복사됐다. 이제 터미널 하나에서 띄운다.</p>
+  <pre class="lang-sh"><code>$ ros2 launch turtle_drive wall_stop.launch.py
+[INFO] [launch]: All log files can be found below /home/ubuntu/.ros/log/2026-10-17-22-44-43-129289-humpback-2148
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [turtlesim_node-1]: process started with pid [2151]
+[INFO] [wall_stop-2]: process started with pid [2152]
+[turtlesim_node-1] QStandardPaths: XDG_RUNTIME_DIR not set, defaulting to '/tmp/runtime-ubuntu'
+[wall_stop-2] [INFO] [1792277083.205490484] [wall_stop]: speed = 0.80 m/s, wall_margin = 1.50 m
+[turtlesim_node-1] [INFO] [1792277083.224295974] [turtlesim]: Starting turtlesim with node name /turtlesim
+[turtlesim_node-1] [INFO] [1792277083.228425424] [turtlesim]: Spawning turtle [turtle1] at x=[5.544445], y=[5.544445], theta=[0.000000]
+[wall_stop-2] [INFO] [1792277088.505595368] [wall_stop]: 섭니다 — 벽 앞 (앞 벽까지 1.46 m, x = 9.63)
+[wall_stop-2] [INFO] [1792277088.516677313] [wall_stop]: 펜 색을 (255, 70, 70) 로 바꿨습니다</code></pre>
+  <p>
+    줄 머리의 <code>[turtlesim_node-1]</code>·<code>[wall_stop-2]</code>가 「어느 노드가 찍은 줄인가」다. 두 노드의 로그가 한 터미널에 섞여 나오므로 이 머리로 가른다.
+    <code>wall_stop</code>의 첫 줄이 <strong><code>speed = 0.80</code>, <code>wall_margin = 1.50</code></strong> — 파라미터 파일이 들어갔다. 그 아래에서 거북이가 1.46 m 앞에서 서고 펜이 빨강이 됐다.
+    <code>QStandardPaths: XDG_RUNTIME_DIR not set</code>은 검증한 컨테이너 환경 때문에 나오는 줄이라 여러분 WSL에서는 안 보일 수 있다. 사용자 이름(<code>ubuntu</code>)과 로그 폴더 이름도 다르게 보인다.
+  </p>
+  <pre class="lang-sh"><code>$ ros2 node list
+/turtlesim
+/wall_stop
+$ ros2 param get /wall_stop wall_margin
+Double value is: 1.5</code></pre>
+  <p>Ctrl+C를 누르면 launch가 두 노드에 차례로 끝내라는 신호를 보낸다.</p>
+  <pre><code>[WARNING] [launch]: user interrupted with ctrl-c (SIGINT)
+[INFO] [wall_stop-2]: sending signal 'SIGINT' to process[wall_stop-2]
+[INFO] [turtlesim_node-1]: sending signal 'SIGINT' to process[turtlesim_node-1]
+[wall_stop-2] [INFO] [1792277096.902566204] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[turtlesim_node-1] [INFO] [1792277096.902615839] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[turtlesim_node-1] [INFO] [1792277096.904155387] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[ERROR] [wall_stop-2]: process has died [pid 2152, exit code -2, cmd '/home/ubuntu/ros2_ws/install/turtle_drive/lib/turtle_drive/wall_stop --ros-args -r __node:=wall_stop --params-file /home/ubuntu/ros2_ws/install/turtle_drive/share/turtle_drive/config/wall_stop.yaml'].
+[INFO] [turtlesim_node-1]: process has finished cleanly [pid 2151]</code></pre>
+  <p>
+    마지막에서 둘째 줄의 <code>cmd '…'</code>가 볼 만하다. launch가 실제로 친 명령이 <strong><code>wall_stop --ros-args -r __node:=wall_stop --params-file …/share/turtle_drive/config/wall_stop.yaml</code></strong>이다.
+    ②·④절에서 손으로 치던 <code>--ros-args</code>를 launch가 <code>name=</code>·<code>parameters=</code>에서 만들어 붙인 것이다. 받은 launch 파일이 무엇을 하는지 모르겠으면 이 줄을 보면 된다.
+    <code>[ERROR] … exit code -2</code>는 그 프로세스가 <strong>신호 2번(SIGINT)으로 끝났다</strong>는 기록이다. 끝내라고 해서 끝난 것이라 고장은 아니다. 같은 Ctrl+C에 turtlesim은 「cleanly」로, 우리 노드는 이렇게 찍혔다.
+  </p>
+  <figure>
+    <img src="assets/img/21_launch_pen.png" width="350"
+         alt="turtlesim 창의 가운데 줄 부분. 가운데에서 오른쪽으로 곧은 선이 그려져 있는데, 왼쪽 짧은 구간은 연한 보라색, 가운데 긴 구간은 빨간색, 오른쪽 짧은 구간은 초록색이다. 오른쪽 벽 가까이에 거북이가 서 있다">
+    <figcaption><code>ros2 launch</code>로 띄운 뒤 <code>~/enable</code>을 껐다 켜고, 벽 앞에서 선 뒤 <code>wall_margin</code>을 0.5로 줄인 화면(창의 가운데 줄만 잘랐다).
+      선 색이 <strong>바뀐 두 자리가 거북이가 섰던 자리</strong>다 — 연보라(turtlesim 기본 펜) → 빨강은 서비스로 끈 x = 6.91, 빨강 → 초록은 파일의 여유 거리 1.5 m에서 선 x = 9.63.
+      초록 끝(x = 10.66)에서 세 번째로 서며 펜이 노랑이 됐지만 그 뒤로 움직이지 않아 노랑 선은 없다.</figcaption>
+  </figure>
+  <figure>
+    <img src="assets/img/21_rqt_graph.png" width="640"
+         alt="rqt_graph 화면. /turtle1 묶음 안에 /turtle1/pose 와 /turtle1/cmd_vel 이 있고, /turtle1/pose 에서 /wall_stop 으로, /wall_stop 에서 /turtle1/cmd_vel 로, /turtle1/cmd_vel 에서 /turtlesim 으로, /turtlesim 에서 /turtle1/pose 로 화살표가 이어진다">
+    <figcaption>같은 launch를 띄운 채 연 <code>rqt_graph</code>(Nodes/Topics (active)). 터미널 둘로 띄운 20회 그림과 <strong>똑같은 한 바퀴</strong>다 — launch는 띄우는 방법만 바꿨지 노드와 토픽은 그대로다.
+      <code>~/enable</code>·<code>set_pen</code> 같은 <strong>서비스는 rqt_graph에 그려지지 않는다</strong>(17회). 서비스 연결은 <code>ros2 node info /wall_stop</code>의 <code>Service Servers</code>·<code>Service Clients</code>로 본다.</figcaption>
+  </figure>
+
+  <!-- fullcode "전체 코드 — turtle_drive/ (8단계 · v8 완성본. wall_stop.cpp 는 v7 과 같고 첫 줄 주석만 다르다. 22회가 이 패키지에 이어 붙인다)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 launch turtle_drive wall_stop.launch.py"
+       l21_srv_param/steps/step8/turtle_drive/launch/wall_stop.launch.py as turtle_drive/launch/wall_stop.launch.py
+       l21_srv_param/steps/step8/turtle_drive/config/wall_stop.yaml as turtle_drive/config/wall_stop.yaml
+       l21_srv_param/steps/step8/turtle_drive/CMakeLists.txt as turtle_drive/CMakeLists.txt
+       l21_srv_param/steps/step8/turtle_drive/package.xml as turtle_drive/package.xml
+       l21_srv_param/steps/step8/turtle_drive/src/wall_stop.cpp as turtle_drive/src/wall_stop.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — turtle_drive/ (8단계 · v8 완성본. wall_stop.cpp 는 v7 과 같고 첫 줄 주석만 다르다. 22회가 이 패키지에 이어 붙인다)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 launch turtle_drive wall_stop.launch.py</code></p>
+  <div class="codefile"><div class="fname">turtle_drive/launch/wall_stop.launch.py</div><button onclick="copyCode(this)">복사</button><pre class="lang-py"><code># 21회 — turtlesim 과 wall_stop 을 한 번에 띄운다. wall_stop 은 config/wall_stop.yaml 의 파라미터로 시작한다
+import os
+
+from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription
+from launch_ros.actions import Node
+
+
+def generate_launch_description():
+    params = os.path.join(
+        get_package_share_directory(&#x27;turtle_drive&#x27;), &#x27;config&#x27;, &#x27;wall_stop.yaml&#x27;)
+
+    return LaunchDescription([
+        Node(
+            package=&#x27;turtlesim&#x27;,
+            executable=&#x27;turtlesim_node&#x27;,
+            name=&#x27;turtlesim&#x27;,
+        ),
+        Node(
+            package=&#x27;turtle_drive&#x27;,
+            executable=&#x27;wall_stop&#x27;,
+            name=&#x27;wall_stop&#x27;,
+            parameters=[params],
+            output=&#x27;screen&#x27;,
+        ),
+    ])</code></pre></div>
+  <div class="codefile"><div class="fname">turtle_drive/config/wall_stop.yaml</div><button onclick="copyCode(this)">복사</button><pre class=""><code># 21회 — wall_stop 노드의 파라미터 (ros2 param dump /wall_stop 의 출력에서 우리 파라미터 두 줄만 남겼다)
+/wall_stop:
+  ros__parameters:
+    speed: 0.8
+    wall_margin: 1.5</code></pre></div>
+  <div class="codefile"><div class="fname">turtle_drive/CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre class="lang-cmake"><code>cmake_minimum_required(VERSION 3.8)
+project(turtle_drive)
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES &quot;Clang&quot;)
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+# find dependencies
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(turtlesim REQUIRED)
+find_package(std_srvs REQUIRED)
+
+# 19회 — 실행 파일 hello_node 를 만들고 rclcpp 를 붙인다 (8회와 같은 두 줄)
+add_executable(hello_node src/hello_node.cpp)
+target_link_libraries(hello_node PRIVATE rclcpp::rclcpp)
+
+# 20회 — 실행 파일 wall_stop. Twist(geometry_msgs)를 보내고 Pose(turtlesim)를 받는다
+# 21회 — SetBool(std_srvs) 서비스를 받는다
+add_executable(wall_stop src/wall_stop.cpp)
+target_link_libraries(wall_stop PRIVATE
+  rclcpp::rclcpp ${geometry_msgs_TARGETS} ${turtlesim_TARGETS} ${std_srvs_TARGETS})
+
+# 만든 실행 파일을 ros2 run 이 찾는 자리에 설치한다
+install(TARGETS hello_node wall_stop
+  DESTINATION lib/${PROJECT_NAME})
+
+# 21회 — 빌드하지 않는 파일(launch 파일·파라미터 파일)은 share/ 아래로 복사한다
+install(DIRECTORY launch config
+  DESTINATION share/${PROJECT_NAME})
+
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  # the following line skips the linter which checks for copyrights
+  # comment the line when a copyright and license is added to all source files
+  set(ament_cmake_copyright_FOUND TRUE)
+  # the following line skips cpplint (only works in a git repo)
+  # comment the line when this package is in a git repo and when
+  # a copyright and license is added to all source files
+  set(ament_cmake_cpplint_FOUND TRUE)
+  ament_lint_auto_find_test_dependencies()
+endif()
+
+ament_package()</code></pre></div>
+  <div class="codefile"><div class="fname">turtle_drive/package.xml</div><button onclick="copyCode(this)">복사</button><pre class=""><code>&lt;?xml version=&quot;1.0&quot;?&gt;
+&lt;?xml-model href=&quot;http://download.ros.org/schema/package_format3.xsd&quot; schematypens=&quot;http://www.w3.org/2001/XMLSchema&quot;?&gt;
+&lt;package format=&quot;3&quot;&gt;
+  &lt;name&gt;turtle_drive&lt;/name&gt;
+  &lt;version&gt;0.0.0&lt;/version&gt;
+  &lt;description&gt;로봇공학 3부 실습 — turtlesim 거북이를 움직이는 노드를 모은 패키지&lt;/description&gt;
+  &lt;maintainer email=&quot;student@example.com&quot;&gt;Student Name&lt;/maintainer&gt;
+  &lt;license&gt;MIT&lt;/license&gt;
+
+  &lt;buildtool_depend&gt;ament_cmake&lt;/buildtool_depend&gt;
+
+  &lt;depend&gt;rclcpp&lt;/depend&gt;
+  &lt;depend&gt;geometry_msgs&lt;/depend&gt;
+  &lt;depend&gt;turtlesim&lt;/depend&gt;
+  &lt;depend&gt;std_srvs&lt;/depend&gt;
+
+  &lt;exec_depend&gt;ros2launch&lt;/exec_depend&gt;
+
+  &lt;test_depend&gt;ament_lint_auto&lt;/test_depend&gt;
+  &lt;test_depend&gt;ament_lint_common&lt;/test_depend&gt;
+
+  &lt;export&gt;
+    &lt;build_type&gt;ament_cmake&lt;/build_type&gt;
+  &lt;/export&gt;
+&lt;/package&gt;</code></pre></div>
+  <div class="codefile"><div class="fname">turtle_drive/src/wall_stop.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 21회 벽 앞 정지 — v8 (8단계: launch 파일로 turtlesim 과 함께 띄운다. 이 파일은 v7 과 같다)
+#include &lt;algorithm&gt;
+#include &lt;chrono&gt;
+#include &lt;cmath&gt;
+#include &lt;cstdint&gt;
+#include &lt;limits&gt;
+#include &lt;memory&gt;
+#include &lt;vector&gt;
+
+#include &quot;rclcpp/rclcpp.hpp&quot;
+#include &quot;geometry_msgs/msg/twist.hpp&quot;
+#include &quot;turtlesim/msg/pose.hpp&quot;
+#include &quot;std_srvs/srv/set_bool.hpp&quot;
+#include &quot;turtlesim/srv/set_pen.hpp&quot;
+
+using namespace std::chrono_literals;
+
+class WallStop : public rclcpp::Node
+{
+public:
+  WallStop()
+  : Node(&quot;wall_stop&quot;)
+  {
+    // 파라미터를 선언한다 — 이름과 기본값. 타입은 기본값에서 정해진다 (1.0 이므로 double)
+    this-&gt;declare_parameter(&quot;speed&quot;, 1.0);
+    this-&gt;declare_parameter(&quot;wall_margin&quot;, 1.0);
+    read_parameters();
+
+    cmd_pub_ = this-&gt;create_publisher&lt;geometry_msgs::msg::Twist&gt;(&quot;/turtle1/cmd_vel&quot;, 10);
+    pose_sub_ = this-&gt;create_subscription&lt;turtlesim::msg::Pose&gt;(
+      &quot;/turtle1/pose&quot;, 10,
+      [this](turtlesim::msg::Pose::ConstSharedPtr msg) { on_pose(msg); });
+    enable_srv_ = this-&gt;create_service&lt;std_srvs::srv::SetBool&gt;(
+      &quot;~/enable&quot;,
+      [this](const std_srvs::srv::SetBool::Request::SharedPtr req,
+             std_srvs::srv::SetBool::Response::SharedPtr res) { on_enable(req, res); });
+    pen_client_ = this-&gt;create_client&lt;turtlesim::srv::SetPen&gt;(&quot;/turtle1/set_pen&quot;);
+    timer_ = this-&gt;create_wall_timer(100ms, [this]() { on_timer(); });
+    RCLCPP_INFO(this-&gt;get_logger(), &quot;speed = %.2f m/s, wall_margin = %.2f m&quot;, speed_, wall_margin_);
+  }
+
+private:
+  // 파라미터의 지금 값을 읽어 멤버에 넣는다 — 생성자에서 한 번, 그 뒤로는 타이머가 부를 때마다
+  void read_parameters()
+  {
+    speed_ = this-&gt;get_parameter(&quot;speed&quot;).as_double();
+    wall_margin_ = this-&gt;get_parameter(&quot;wall_margin&quot;).as_double();
+  }
+
+  // /turtle1/pose 가 올 때마다 불린다 — 받은 것을 들고 있기만 한다
+  void on_pose(turtlesim::msg::Pose::ConstSharedPtr msg)
+  {
+    pose_ = msg;
+  }
+
+  // ~/enable 서비스가 불릴 때마다 — 요청의 data 가 true 면 달리고 false 면 선다
+  void on_enable(const std_srvs::srv::SetBool::Request::SharedPtr req,
+                 std_srvs::srv::SetBool::Response::SharedPtr res)
+  {
+    enabled_ = req-&gt;data;
+    res-&gt;success = true;
+    res-&gt;message = enabled_ ? &quot;주행을 켭니다&quot; : &quot;주행을 끕니다&quot;;
+    RCLCPP_INFO(this-&gt;get_logger(), &quot;~/enable 요청: %s&quot;, res-&gt;message.c_str());
+  }
+
+  // 타이머가 0.1초마다 부른다 — 판단하고 명령을 보낸다
+  void on_timer()
+  {
+    if (!pose_) {                    // 아직 자세를 한 번도 못 받았다
+      return;
+    }
+    read_parameters();               // 밖에서(ros2 param set) 바뀌었을 수 있으니 판단 전에 다시 읽는다
+    const double front = front_distance(*pose_);
+    const bool near_wall = front &lt; wall_margin_;
+    const bool stop = near_wall || !enabled_;   // 벽 앞이거나, 주행이 꺼졌으면 선다
+    if (stop &amp;&amp; !stopped_) {
+      RCLCPP_INFO(this-&gt;get_logger(), &quot;섭니다 — %s (앞 벽까지 %.2f m, x = %.2f)&quot;,
+                  near_wall ? &quot;벽 앞&quot; : &quot;주행 꺼짐&quot;, front, pose_-&gt;x);
+      change_pen();
+    }
+    stopped_ = stop;
+
+    geometry_msgs::msg::Twist cmd;   // 여섯 칸이 전부 0 — 이대로 보내면 「서라」
+    if (!stop) {
+      cmd.linear.x = speed_;
+    }
+    cmd_pub_-&gt;publish(cmd);
+  }
+
+  // /turtle1/set_pen 에 다음 펜 색을 요청한다 — 다시 달리기 시작하면 그 색으로 선이 그려진다
+  void change_pen()
+  {
+    if (!pen_client_-&gt;service_is_ready()) {   // 서버(turtlesim)가 아직 없으면 이번에는 건너뛴다
+      RCLCPP_WARN(this-&gt;get_logger(), &quot;/turtle1/set_pen 서비스가 아직 없습니다&quot;);
+      return;
+    }
+    const PenColor c = pen_colors_[stop_count_ % pen_colors_.size()];
+    ++stop_count_;
+
+    auto req = std::make_shared&lt;turtlesim::srv::SetPen::Request&gt;();
+    req-&gt;r = c.r;
+    req-&gt;g = c.g;
+    req-&gt;b = c.b;
+    req-&gt;width = 5;                  // 선 굵기 (기본은 3)
+    // 보내고 바로 돌아온다. 응답이 오면 spin 이 이 람다를 불러 준다
+    pen_client_-&gt;async_send_request(
+      req, [this, c](rclcpp::Client&lt;turtlesim::srv::SetPen&gt;::SharedFuture) {
+        RCLCPP_INFO(this-&gt;get_logger(), &quot;펜 색을 (%d, %d, %d) 로 바꿨습니다&quot;, c.r, c.g, c.b);
+      });
+  }
+
+  // 지금 바라보는 방향으로 곧장 가면 벽까지 몇 m 남았나
+  double front_distance(const turtlesim::msg::Pose &amp; p) const
+  {
+    const double c = std::cos(p.theta);
+    const double s = std::sin(p.theta);
+    double d = std::numeric_limits&lt;double&gt;::infinity();
+    if (c &gt; 1e-6)  { d = std::min(d, (world_size_ - p.x) / c); }   // 오른쪽 벽
+    if (c &lt; -1e-6) { d = std::min(d, (0.0 - p.x) / c); }           // 왼쪽 벽
+    if (s &gt; 1e-6)  { d = std::min(d, (world_size_ - p.y) / s); }   // 위쪽 벽
+    if (s &lt; -1e-6) { d = std::min(d, (0.0 - p.y) / s); }           // 아래쪽 벽
+    return d;
+  }
+
+  double speed_ = 0.0;                // 파라미터 speed 에서 읽는다 (m/s)
+  double wall_margin_ = 0.0;          // 파라미터 wall_margin 에서 읽는다 (m)
+  const double world_size_ = 11.0889; // turtlesim 창 한 변의 길이 (m) — 바꿀 일이 없어 그대로 둔다
+  bool stopped_ = false;
+  bool enabled_ = true;               // ~/enable 서비스로 바뀐다. 처음에는 켜져 있다
+
+  struct PenColor { std::uint8_t r; std::uint8_t g; std::uint8_t b; };
+  const std::vector&lt;PenColor&gt; pen_colors_ = {{255, 70, 70}, {60, 220, 60}, {255, 210, 0}};   // 빨강 → 초록 → 노랑
+  std::size_t stop_count_ = 0;        // 지금까지 선 횟수 — 다음 색을 고르는 데 쓴다
+
+  rclcpp::Publisher&lt;geometry_msgs::msg::Twist&gt;::SharedPtr cmd_pub_;
+  rclcpp::Subscription&lt;turtlesim::msg::Pose&gt;::SharedPtr pose_sub_;
+  rclcpp::Service&lt;std_srvs::srv::SetBool&gt;::SharedPtr enable_srv_;
+  rclcpp::Client&lt;turtlesim::srv::SetPen&gt;::SharedPtr pen_client_;
+  rclcpp::TimerBase::SharedPtr timer_;
+  turtlesim::msg::Pose::ConstSharedPtr pose_;   // 마지막으로 받은 자세 (처음에는 비어 있다)
+};
+
+int main(int argc, char ** argv)
+{
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared&lt;WallStop&gt;();
+  rclcpp::spin(node);            // 타이머·구독 콜백은 이 안에서 불린다
+  rclcpp::shutdown();
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <!-- ── ⑧ install ── -->
+  <h2 id="install">⑧ <code>install(DIRECTORY)</code>과 <code>share/</code> — <code>ros2 launch</code>가 파일을 못 찾을 때 <span class="badge b-red">🔴 사람이 한다</span></h2>
+  <p>
+    AI에게 「launch 파일을 만들어 줘」라고 하면 <code>launch/wall_stop.launch.py</code>는 거의 언제나 잘 만들어 온다. 자주 빠지는 것은 <strong><code>CMakeLists.txt</code>의 <code>install(DIRECTORY …)</code></strong>다.
+    v8에서 그 세 줄만 지우고 <strong>새 작업공간</strong>에서 빌드했다.
+  </p>
+  <pre class="lang-sh"><code>$ colcon build --packages-select turtle_drive
+Starting &gt;&gt;&gt; turtle_drive
+Finished &lt;&lt;&lt; turtle_drive [7.75s]
+
+Summary: 1 package finished [7.83s]
+$ ros2 launch turtle_drive wall_stop.launch.py
+file 'wall_stop.launch.py' was not found in the share directory of package 'turtle_drive' which is at '/home/ubuntu/ros2_ws/install/turtle_drive/share/turtle_drive'</code></pre>
+  <p>
+    빌드는 성공한다. 빌드는 C++만 보기 때문이다. 오류 문장이 친절하게 <strong>어디서 찾았는지</strong>까지 알려 준다 — <code>…/install/turtle_drive/share/turtle_drive</code>.
+    그 폴더를 <code>ls</code>해 보면 <code>launch/</code>도 <code>config/</code>도 없다. 파일은 <code>src/</code>에 멀쩡히 있는데 <strong>설치가 안 됐다.</strong>
+    19회의 <code>No executable found</code>(<code>install(TARGETS)</code> 누락)와 같은 모양의 실수가 파일 쪽에서 난 것이다.
+  </p>
+  <p>
+    그럼 launch 파일을 <code>src/</code>의 경로로 직접 주면 어떨까? <code>ros2 launch</code>는 파일 경로도 받는다. 실제로 노드 둘이 뜬다. 그런데 출력의 셋째 줄을 보면 이렇다.
+  </p>
+  <pre class="lang-sh"><code>$ ros2 launch src/turtle_drive/launch/wall_stop.launch.py
+[INFO] [launch]: All log files can be found below /home/ubuntu/.ros/log/2026-10-17-22-45-07-944425-humpback-2382
+[INFO] [launch]: Default logging verbosity is set to INFO
+[WARNING] [launch_ros.actions.node]: Parameter file path is not a file: /home/ubuntu/ros2_ws/install/turtle_drive/share/turtle_drive/config/wall_stop.yaml
+[INFO] [turtlesim_node-1]: process started with pid [2385]
+[INFO] [wall_stop-2]: process started with pid [2386]
+(…)
+[wall_stop-2] [INFO] [1792277108.020243059] [wall_stop]: speed = 1.00 m/s, wall_margin = 1.00 m</code></pre>
+  <p>
+    launch 파일은 찾았지만 그 안의 <code>get_package_share_directory</code>가 만든 YAML 경로에 파일이 없다. 경고 한 줄을 남기고 <strong>파라미터 없이</strong> 띄웠고, <code>wall_stop</code>은 기본값 1.0으로 달린다.
+    ④절의 「아무 말 없이 기본값」이 여기서 한 번 더 나온다 — 이번에는 경고 한 줄이 있으니 그것을 읽으면 된다.
+  </p>
+
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 설치 줄을 지워도 옛 파일이 <code>install/</code>에 남아 있다</div>
+    <p>
+      위 실험은 <strong>새 작업공간</strong>에서 했다. v8을 한 번 빌드해 둔 작업공간에서 <code>install(DIRECTORY)</code>을 지우고 다시 빌드하면 결과가 다르다.
+    </p>
+    <pre class="lang-sh"><code>$ colcon build --packages-select turtle_drive
+Summary: 1 package finished [0.75s]
+$ ls install/turtle_drive/share/turtle_drive/launch
+wall_stop.launch.py
+$ ros2 launch turtle_drive wall_stop.launch.py
+[INFO] [turtlesim_node-1]: process started with pid [575]
+[INFO] [wall_stop-2]: process started with pid [576]</code></pre>
+    <p>
+      잘 뜬다. 앞의 빌드가 복사해 둔 파일을 <code>colcon build</code>가 지우지 않기 때문이다. 그래서 <strong>내 컴퓨터에서는 되고, 패키지를 처음 받아 빌드한 사람(조교·팀원·다른 컴퓨터)에게서 터진다.</strong>
+      19회 ⑩절에서 의존성이 「남의 컴퓨터에서 처음 터진다」고 한 것과 같은 구조다.
+      설치 규칙을 확인하려면 그 패키지의 빌드 결과를 지우고 처음부터 빌드한다.
+    </p>
+    <pre class="lang-sh"><code>$ rm -rf build/turtle_drive install/turtle_drive
+$ colcon build --packages-select turtle_drive
+$ ros2 launch turtle_drive wall_stop.launch.py
+file 'wall_stop.launch.py' was not found in the share directory of package 'turtle_drive' which is at '/home/ubuntu/ros2_ws/install/turtle_drive/share/turtle_drive'</code></pre>
+    <p><code>rm -rf</code>는 3회에서 본 대로 되돌릴 수 없으니 경로를 두 번 확인하고 친다. <code>~/ros2_ws</code>에서 <code>build/turtle_drive</code>·<code>install/turtle_drive</code> 두 폴더만 지운다.</p>
+  </div>
+  <div class="box trap">
+    <div class="boxtitle">⚠️ <code>src/</code>의 YAML을 고치면 다시 빌드해야 먹는다</div>
+    <p>반대 방향의 함정도 있다. 설치는 <strong>복사</strong>라서, <code>src/turtle_drive/config/wall_stop.yaml</code>을 고쳐도 launch가 읽는 <code>install/</code> 쪽은 옛 값 그대로다.</p>
+    <pre class="lang-sh"><code>$ grep wall_margin src/turtle_drive/config/wall_stop.yaml install/turtle_drive/share/turtle_drive/config/wall_stop.yaml
+src/turtle_drive/config/wall_stop.yaml:    wall_margin: 0.5
+install/turtle_drive/share/turtle_drive/config/wall_stop.yaml:    wall_margin: 1.5
+$ ros2 param get /wall_stop wall_margin      # launch 로 띄운 뒤 — 다시 빌드하기 전
+Double value is: 1.5
+$ colcon build --packages-select turtle_drive
+$ ros2 param get /wall_stop wall_margin      # 다시 빌드하고 launch 로 띄운 뒤
+Double value is: 0.5</code></pre>
+    <p>
+      C++ 코드가 아니니 빌드는 1초도 안 걸린다. <strong>YAML·launch 파일을 고쳤으면 <code>colcon build</code></strong>를 한 줄 습관으로 붙인다.
+      19회 「조금 더」의 <code>--symlink-install</code>을 쓰면 복사 대신 링크가 걸려 이 빌드가 필요 없어진다. 이 과목에서는 쓰지 않고, 받은 명령에 붙어 있으면 그 뜻으로 읽는다.
+    </p>
+  </div>
+
+  <p>
+    <code>exec_depend ros2launch</code>는 실제로 필요한지 확인했다. 그 줄을 빼고 빌드해도 <code>ros2 launch</code>는 똑같이 돌았다 — <code>ros-jazzy-desktop</code>에 <code>ros2launch</code>가 이미 들어 있기 때문이다.
+    달라지는 것은 <code>colcon info</code>의 <code>run:</code> 줄뿐이다.
+  </p>
+  <pre class="lang-sh"><code>$ colcon info turtle_drive          # exec_depend 가 있을 때 (v8)
+    build: ament_cmake geometry_msgs rclcpp std_srvs turtlesim
+    run: geometry_msgs rclcpp ros2launch std_srvs turtlesim
+$ colcon info turtle_drive          # 그 줄을 뺐을 때
+    build: ament_cmake geometry_msgs rclcpp std_srvs turtlesim
+    run: geometry_msgs rclcpp std_srvs turtlesim</code></pre>
+  <div class="interp">
+    <strong>해석:</strong> 19·20회의 <code>package.xml</code> 결론이 그대로다. <strong>내 컴퓨터에서는 빠져도 아무 일이 없고</strong>, 다른 컴퓨터에서 rosdep으로 필요한 것을 깔 때 이 목록이 쓰인다.
+    그래서 빌드나 실행으로는 확인되지 않고, 사람이 「launch 파일이 있으면 <code>ros2launch</code>가 run 목록에 있나」를 본다.
+  </div>
+  <div class="tablewrap">
+  <table>
+    <tr><th>빠진 것</th><th>빌드</th><th>증상</th><th>보는 곳</th></tr>
+    <tr><td><code>install(DIRECTORY launch …)</code></td><td>된다</td><td><code>ros2 launch</code>가 <code>was not found in the share directory</code></td><td>오류의 경로를 <code>ls</code></td></tr>
+    <tr><td><code>share/</code>에 <code>config/</code>가 없다 (위의 파일 경로 실험)</td><td>된다</td><td>launch는 뜨고 <code>Parameter file path is not a file</code> 경고 → <strong>기본값으로 달린다</strong></td><td>launch 출력 앞부분의 <code>WARNING</code> · 노드의 첫 로그</td></tr>
+    <tr><td>(설치 줄을 지웠는데) 옛 <code>install/</code></td><td>된다</td><td><strong>아무 증상 없음</strong> — 처음 받은 사람에게서 터진다</td><td><code>build/</code>·<code>install/</code>의 그 패키지를 지우고 다시 빌드</td></tr>
+    <tr><td><code>src/</code>의 YAML을 고치고 빌드 안 함</td><td>—</td><td>옛 값으로 달린다</td><td><code>param get</code> · 노드의 첫 로그</td></tr>
+    <tr><td><code>&lt;exec_depend&gt;ros2launch</code></td><td>된다</td><td>내 컴퓨터에서는 없음</td><td><code>colcon info</code>의 <code>run:</code></td></tr>
+  </table>
+  </div>
+
+  <!-- ── ⑨ review ── -->
+  <h2 id="review">⑨ 받은 코드 검사 목록 — 파라미터·서비스·launch <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+  <p>
+    여기까지 만든 것을 에이전트에게 한 번에 시키면 어떻게 될까? 「turtlesim 거북이를 벽 앞에서 세우는 노드에 속도·여유 거리 파라미터, 주행 켜고 끄는 서비스, launch 파일을 붙여 줘」라고 하면 몇 초 만에 파일 서너 개가 온다.
+    오늘 본 함정은 전부 <strong>그 파일들이 빌드되고 뜨는데도</strong> 남아 있을 수 있는 것들이었다. 그래서 받은 뒤에 이 목록으로 훑는다.
+  </p>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>「돌려서 확인하는 법」 열</strong>. 코드를 읽어서 잡히는 줄도 있지만, 3·4·6번은 돌려 봐야 확실하다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th></th><th>검사할 것</th><th>흔히 받는 모양</th><th>돌려서 확인하는 법</th><th>오늘 어디서</th></tr>
+    <tr><td>1</td><td>튜닝할 숫자가 파라미터로 나와 있나</td><td>속도·거리가 <code>const</code> 멤버나 코드 한가운데 숫자로 남아 있다</td><td><code>ros2 param list /노드</code>에 그 이름이 있다</td><td>②</td></tr>
+    <tr><td>2</td><td>실수 파라미터의 기본값에 소수점이 있나</td><td><code>declare_parameter("speed", 1)</code> — 정수 파라미터가 된다</td><td><code>ros2 param describe</code>의 <code>Type: double</code></td><td>②</td></tr>
+    <tr><td>3</td><td><strong>실행 중에 다시 읽나</strong></td><td>생성자에서만 <code>get_parameter</code></td><td><code>param set</code> 뒤 <code>topic echo</code>의 값이 <strong>실제로</strong> 바뀐다</td><td>③</td></tr>
+    <tr><td>4</td><td>YAML 맨 윗줄 노드 이름이 실제 노드 이름과 같나</td><td>실행 파일 이름이나 옛 이름이 적혀 있다</td><td>노드의 첫 로그·<code>param get</code>이 파일의 값이다</td><td>④</td></tr>
+    <tr><td>5</td><td><strong>콜백 안에서 응답을 기다리지 않나</strong></td><td><code>future.wait()</code> · <code>spin_until_future_complete</code> · <code>while (!…wait_for_service(1s))</code></td><td>서비스를 부른 뒤에도 <code>topic hz</code>가 그대로다</td><td>⑥</td></tr>
+    <tr><td>6</td><td><code>launch</code>·<code>config</code>가 <code>install(DIRECTORY …)</code>에 있나</td><td>launch 파일만 만들고 설치 줄이 없다</td><td>그 패키지의 <code>build/</code>·<code>install/</code>을 지우고 빌드한 뒤 <code>ros2 launch</code></td><td>⑧</td></tr>
+    <tr><td>7</td><td>새 의존성이 두 파일에 있나</td><td><code>std_srvs</code>를 <code>#include</code>만 했다 · <code>ros2launch</code>가 없다</td><td><code>colcon info</code>의 <code>build:</code>·<code>run:</code></td><td>⑤ · ⑧</td></tr>
+    <tr><td>8</td><td>launch의 <code>package</code>·<code>executable</code>·<code>name</code>이 맞나</td><td>실행 파일 이름 오타, <code>name</code>이 YAML의 노드 이름과 다르다</td><td><code>ros2 pkg executables</code> · <code>ros2 node list</code></td><td>⑦</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 3번과 5번이 오늘의 🔴다. 둘 다 <strong>명령은 「성공」이라고 답하는데</strong> 로봇은 다르게 움직인다 — 3번은 값이 안 먹고, 5번은 노드가 통째로 선다.
+    나머지는 에이전트에게 「이 목록으로 검사해 줘」라고 하면 대체로 찾아 준다. 3·5번의 마지막 확인은 <code>topic echo</code>와 <code>topic hz</code>로 여러분이 합니다.
+  </div>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    ~/ros2_ws/src/turtle_drive 패키지를 아래 여덟 기준으로 검사해 줘. 고치지는 말고, 기준마다 「통과/어긋남」과 근거가 되는 파일·줄을 표로 보여 줘.
+    ① 속도·거리 같은 튜닝 값이 declare_parameter 로 선언돼 있다 ② 실수 파라미터의 기본값에 소수점이 있다 ③ get_parameter 가 생성자뿐 아니라 실행 중(타이머 콜백 등)에도 불리거나 파라미터 콜백으로 멤버가 갱신된다 ④ config/*.yaml 맨 윗줄 노드 이름이 노드 생성자의 이름·launch 의 name 과 같다 ⑤ 어떤 콜백 안에도 future.wait, future.get, spin_until_future_complete, wait_for_service 반복이 없다 ⑥ CMakeLists.txt 에 install(DIRECTORY launch config DESTINATION share/${PROJECT_NAME}) 가 있다 ⑦ #include 하는 ROS 패키지가 package.xml 과 CMakeLists.txt 양쪽에 있고 launch 파일이 있으면 exec_depend ros2launch 가 있다 ⑧ launch 파일의 package·executable 이 실제 패키지·실행 파일 이름과 같다.
+  </div>
+
+  <!-- ── 🧪 실습 ── -->
+  <h2 id="lab">🧪 실습 — ros2 launch · ros2 param set · install(DIRECTORY) <span class="badge b-red">🔴 사람이 한다</span></h2>
+  <div class="lab-block">
+    <p class="boxtitle">🧪 이걸 해 보면 무엇을 알게 되나</p>
+    <p>
+      <strong>값을 바꾸는 세 가지 길</strong>(파일·<code>param set</code>·서비스)이 실제로 거북이를 바꾸는지를 화면의 선 색과 <code>topic echo</code>로 맞춰 본다.
+      그리고 「빌드는 되는데 안 되는 것」 둘 — 설치 줄 누락, 콜백 안에서 기다리기 — 을 직접 만들어 증상을 본다.
+    </p>
+
+    <p class="boxtitle">준비물</p>
+    <ul>
+      <li>WSL 터미널 셋 (16회에 <code>.bashrc</code>에 넣은 <code>source /opt/ros/jazzy/setup.bash</code>가 걸린 상태)</li>
+      <li>20회 실습까지 끝낸 <code>~/ros2_ws/src/turtle_drive</code></li>
+      <li>⑦절 끝의 📄 「8단계 · v8 완성본」(파일 다섯), ⑥절의 📄 「v7 변형 · future.wait()」</li>
+    </ul>
+
+    <p class="boxtitle">절차</p>
+    <ol>
+      <li><strong>(4분)</strong> v8 완성본의 다섯 파일을 패키지에 같은 경로로 넣는다 — <code>launch/</code>와 <code>config/</code>는 새 폴더다(<code>mkdir</code>). 작업공간 최상위에서 빌드하고 설치된 파일을 본다 (터미널 1).
+        <pre class="lang-sh"><code>$ cd ~/ros2_ws
+$ colcon build --packages-select turtle_drive
+$ source install/setup.bash
+$ ls install/turtle_drive/share/turtle_drive/launch install/turtle_drive/share/turtle_drive/config</code></pre>
+        <code>wall_stop.launch.py</code>와 <code>wall_stop.yaml</code>이 보이면 된다.</li>
+      <li><strong>(3분)</strong> 터미널 2에 아래 명령을 <strong>미리 쳐 두고 Enter만 남긴다.</strong> 터미널 1에서 <code>ros2 launch turtle_drive wall_stop.launch.py</code>를 치고, 거북이가 출발하면 곧바로 터미널 2에서 Enter. 응답이 오면 이어서 <code>data: true</code>로 한 번 더.
+        <pre class="lang-sh"><code>$ ros2 service call /wall_stop/enable std_srvs/srv/SetBool '{data: false}'</code></pre>
+        launch 터미널의 <code>wall_stop</code> 첫 줄이 <code>speed = 0.80 m/s, wall_margin = 1.50 m</code>인지, 「섭니다 — 주행 꺼짐」 뒤에 「펜 색을 (255, 70, 70) 로 바꿨습니다」가 오는지 본다.</li>
+      <li><strong>(3분)</strong> 거북이가 벽 앞 약 1.5 m에서 서면 터미널 2에서 <code>ros2 param set /wall_stop wall_margin 0.5</code>. 거북이가 다시 출발해 초록 선을 그리며 벽 앞 0.5 m 언저리에서 서는지 본다. 화면이 ⑦절 그림과 같은 세 색이면 된다.</li>
+      <li><strong>(4분)</strong> 찾은 값을 남긴다. 터미널 2에서 <code>ros2 param dump /wall_stop</code>으로 <code>wall_margin: 0.5</code>를 확인하고, <code>src/turtle_drive/config/wall_stop.yaml</code>의 <code>wall_margin</code>을 <code>0.5</code>로 고친다.
+        launch를 Ctrl+C로 끄고 <strong>빌드하지 않고</strong> 다시 띄워 첫 줄을 본다(1.50 그대로일 것이다). 끄고 <code>colcon build --packages-select turtle_drive</code> 뒤 다시 띄워 <code>wall_margin = 0.50</code>이 되는지 본다.</li>
+      <li><strong>(4분)</strong> 설치를 고장 낸다. <code>CMakeLists.txt</code>에서 <code>install(DIRECTORY launch config …)</code> 두 줄을 지우고 빌드 → <code>ros2 launch</code>가 <strong>여전히 되는지</strong> 본다. 그다음 <code>rm -rf build/turtle_drive install/turtle_drive</code>(경로를 두 번 확인한다) → 빌드 → <code>source install/setup.bash</code> → <code>ros2 launch</code>가 <code>was not found in the share directory</code>로 바뀌는지 본다. 두 줄을 되살리고 다시 빌드한다.</li>
+      <li><strong>(3분)</strong> <code>wall_stop.cpp</code>를 ⑥절의 「v7 변형 · <code>future.wait()</code>」로 바꿔 빌드하고 launch로 띄운다. 거북이가 처음 선 뒤 터미널 2에서 <code>ros2 topic hz /turtle1/cmd_vel</code>(아무것도 안 나온다)과 <code>ros2 service call /wall_stop/enable …</code>(응답이 안 온다)을 쳐 본다. launch 터미널을 Ctrl+C로 끝내 보고, 안 끝나면 창을 닫는다. v8로 되돌리고 빌드한다.</li>
+    </ol>
+
+    <p class="boxtitle">이렇게 되면 성공이다</p>
+    <pre class="lang-sh"><code>$ ros2 launch turtle_drive wall_stop.launch.py
+(…)
+[wall_stop-2] [INFO] [1792276806.096967202] [wall_stop]: speed = 0.80 m/s, wall_margin = 1.50 m
+[wall_stop-2] [INFO] [1792276807.899923851] [wall_stop]: ~/enable 요청: 주행을 끕니다
+[wall_stop-2] [INFO] [1792276807.997088116] [wall_stop]: 섭니다 — 주행 꺼짐 (앞 벽까지 4.17 m, x = 6.91)
+[wall_stop-2] [INFO] [1792276808.012136910] [wall_stop]: 펜 색을 (255, 70, 70) 로 바꿨습니다
+[wall_stop-2] [INFO] [1792276809.636381749] [wall_stop]: ~/enable 요청: 주행을 켭니다
+[wall_stop-2] [INFO] [1792276813.097085726] [wall_stop]: 섭니다 — 벽 앞 (앞 벽까지 1.46 m, x = 9.63)
+[wall_stop-2] [INFO] [1792276813.099798368] [wall_stop]: 펜 색을 (60, 220, 60) 로 바꿨습니다
+[wall_stop-2] [INFO] [1792276818.497041814] [wall_stop]: 섭니다 — 벽 앞 (앞 벽까지 0.42 m, x = 10.66)
+[wall_stop-2] [INFO] [1792276818.507828749] [wall_stop]: 펜 색을 (255, 210, 0) 로 바꿨습니다</code></pre>
+    <p>
+      화면은 ⑦절의 첫 그림처럼 <strong>선 색이 두 번 바뀌어</strong> 있어야 하고, 바뀐 자리의 x가 로그의 「섭니다」 x와 맞아야 한다(창 한 변 11.09 m에서 6.91은 왼쪽에서 62%쯤).
+      2번에서 Enter를 누르는 때에 따라 「주행 꺼짐」의 x는 달라진다. 이 로그는 ⑦절 그림을 찍을 때 받은 것이다.
+      <span style="color:var(--muted)">확인한 곳: 컨테이너(우분투 24.04, ROS 2 Jazzy, colcon). 그림을 찍을 때만 창 자리를 정하려고 turtlesim에 <code>-geometry</code> 인자를 더한 launch 파일을 썼다. 노드와 파라미터는 v8과 같다.</span>
+    </p>
+  </div>
+
+  <!-- ── 📝 연습문제 ── -->
+  <h2 id="exercise">📝 연습문제 — 파라미터·서비스·launch 추가 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+  <p>
+    아래는 20회 연습문제와 같은 일을 하는 노드 <code>wall_watch</code>(패키지 <code>turtle_watch</code>)를 20회 검사 목록대로 짜고 <strong>경고 한 줄</strong>을 더한 것이다. 0.5초마다 가장 가까운 벽까지의 거리를 알리고, 1.5 m보다 가까우면 <code>WARN</code>으로 찍는다.
+    20회 검사 목록은 다 통과한다. 대신 오늘 배운 것이 하나도 없다 — 경고 거리를 바꾸려면 다시 빌드해야 하고, 띄우려면 터미널 둘이 필요하다.
+  </p>
+  <pre class="lang-sh"><code>$ cd ~/ros2_ws
+$ colcon build --packages-select turtle_watch
+Starting &gt;&gt;&gt; turtle_watch
+Finished &lt;&lt;&lt; turtle_watch [6.35s]
+
+Summary: 1 package finished [6.43s]
+$ source install/setup.bash
+$ ros2 run turtle_watch wall_watch
+[INFO] [1792277146.919038941] [wall_watch]: 가장 가까운 벽까지 5.54 m
+[INFO] [1792277147.419035198] [wall_watch]: 가장 가까운 벽까지 5.54 m
+[INFO] [1792277147.919010445] [wall_watch]: 가장 가까운 벽까지 5.54 m</code></pre>
+  <!-- fullcode open "연습문제 — 오늘 배운 것이 없는 원본 (turtle_watch/)" build="cd ~/ros2_ws && colcon build --packages-select turtle_watch && source install/setup.bash && ros2 run turtle_watch wall_watch"
+       l21_srv_param/steps/exercise_old/turtle_watch/src/wall_watch.cpp as turtle_watch/src/wall_watch.cpp
+       l21_srv_param/steps/exercise_old/turtle_watch/CMakeLists.txt as turtle_watch/CMakeLists.txt
+       l21_srv_param/steps/exercise_old/turtle_watch/package.xml as turtle_watch/package.xml
+  -->
+<details class="fullcode" open>
+  <summary>연습문제 — 오늘 배운 것이 없는 원본 (turtle_watch/)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_watch &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_watch wall_watch</code></p>
+  <div class="codefile"><div class="fname">turtle_watch/src/wall_watch.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 21회 연습문제 — wall_watch 원본 (파라미터·서비스·launch 가 없다. 숫자를 바꾸려면 다시 빌드해야 한다)
+#include &lt;algorithm&gt;
+#include &lt;chrono&gt;
+#include &lt;memory&gt;
+
+#include &quot;rclcpp/rclcpp.hpp&quot;
+#include &quot;turtlesim/msg/pose.hpp&quot;
+
+using namespace std::chrono_literals;
+
+class WallWatch : public rclcpp::Node
+{
+public:
+  WallWatch()
+  : Node(&quot;wall_watch&quot;)
+  {
+    pose_sub_ = this-&gt;create_subscription&lt;turtlesim::msg::Pose&gt;(
+      &quot;/turtle1/pose&quot;, 10,
+      [this](turtlesim::msg::Pose::ConstSharedPtr msg) { pose_ = msg; });
+    timer_ = this-&gt;create_wall_timer(500ms, [this]() { on_timer(); });
+  }
+
+private:
+  // 0.5초마다 가장 가까운 벽까지 거리를 알린다. warn_distance_ 보다 가까우면 경고로 찍는다
+  void on_timer()
+  {
+    if (!pose_) {
+      return;
+    }
+    const double nearest = std::min(std::min(pose_-&gt;x, world_size_ - pose_-&gt;x),
+                                    std::min(pose_-&gt;y, world_size_ - pose_-&gt;y));
+    if (nearest &lt; warn_distance_) {
+      RCLCPP_WARN(this-&gt;get_logger(), &quot;벽이 가깝습니다: %.2f m&quot;, nearest);
+    } else {
+      RCLCPP_INFO(this-&gt;get_logger(), &quot;가장 가까운 벽까지 %.2f m&quot;, nearest);
+    }
+  }
+
+  const double warn_distance_ = 1.5;  // 이보다 가까우면 경고 (m)
+  const float world_size_ = 11.0889f;  // turtlesim 창 한 변의 길이 (m)
+  rclcpp::Subscription&lt;turtlesim::msg::Pose&gt;::SharedPtr pose_sub_;
+  rclcpp::TimerBase::SharedPtr timer_;
+  turtlesim::msg::Pose::ConstSharedPtr pose_;
+};
+
+int main(int argc, char ** argv)
+{
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared&lt;WallWatch&gt;();
+  rclcpp::spin(node);
+  rclcpp::shutdown();
+  return 0;
+}</code></pre></div>
+  <div class="codefile"><div class="fname">turtle_watch/CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre class="lang-cmake"><code>cmake_minimum_required(VERSION 3.8)
+project(turtle_watch)
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES &quot;Clang&quot;)
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(turtlesim REQUIRED)
+
+add_executable(wall_watch src/wall_watch.cpp)
+target_link_libraries(wall_watch PRIVATE rclcpp::rclcpp ${turtlesim_TARGETS})
+
+install(TARGETS wall_watch
+  DESTINATION lib/${PROJECT_NAME})
+
+ament_package()</code></pre></div>
+  <div class="codefile"><div class="fname">turtle_watch/package.xml</div><button onclick="copyCode(this)">복사</button><pre class=""><code>&lt;?xml version=&quot;1.0&quot;?&gt;
+&lt;?xml-model href=&quot;http://download.ros.org/schema/package_format3.xsd&quot; schematypens=&quot;http://www.w3.org/2001/XMLSchema&quot;?&gt;
+&lt;package format=&quot;3&quot;&gt;
+  &lt;name&gt;turtle_watch&lt;/name&gt;
+  &lt;version&gt;0.0.0&lt;/version&gt;
+  &lt;description&gt;21회 연습문제 — 거북이가 벽에 얼마나 가까운지 알려 주는 노드&lt;/description&gt;
+  &lt;maintainer email=&quot;student@example.com&quot;&gt;Student Name&lt;/maintainer&gt;
+  &lt;license&gt;MIT&lt;/license&gt;
+
+  &lt;buildtool_depend&gt;ament_cmake&lt;/buildtool_depend&gt;
+
+  &lt;depend&gt;rclcpp&lt;/depend&gt;
+  &lt;depend&gt;turtlesim&lt;/depend&gt;
+
+  &lt;export&gt;
+    &lt;build_type&gt;ament_cmake&lt;/build_type&gt;
+  &lt;/export&gt;
+&lt;/package&gt;</code></pre></div>
+</details>
+<!-- /fullcode -->
+  <p>20회 연습문제를 이미 했으면 <code>~/ros2_ws/src/turtle_watch/</code>의 파일을 이 세 파일로 바꾼다. 거북이는 다른 터미널의 <code>ros2 run turtlesim turtle_teleop_key</code>(17회)로 벽 쪽으로 몰아 본다.</p>
+
+  <h3>할 일</h3>
+  <div class="tablewrap">
+  <table>
+    <tr><th>고칠 것</th><th>오늘 어디서 했나</th><th>확인하는 법</th></tr>
+    <tr><td><code>warn_distance_</code>를 파라미터 <code>warn_distance</code>(double, 기본 1.5)로</td><td>②</td><td><code>ros2 param describe /wall_watch warn_distance</code>가 <code>Type: double</code></td></tr>
+    <tr><td>실행 중에 바꾼 값이 바로 먹게</td><td>③</td><td>벽 가까이 둔 채 <code>ros2 param set /wall_watch warn_distance 0.5</code> → 다음 줄부터 <code>WARN</code>이 <code>INFO</code>로 바뀐다</td></tr>
+    <tr><td><code>config/wall_watch.yaml</code> — <code>warn_distance: 2.0</code></td><td>④</td><td>launch로 띄운 뒤 <code>ros2 param get /wall_watch warn_distance</code>가 2.0</td></tr>
+    <tr><td>서비스 <code>~/mute</code>(<code>std_srvs/srv/SetBool</code>) — <code>true</code>면 알림을 멈추고 <code>false</code>면 다시</td><td>⑤</td><td><code>ros2 service call /wall_watch/mute …</code>의 응답에 <code>success=True</code>, 그 뒤로 로그가 멈춘다</td></tr>
+    <tr><td><code>launch/wall_watch.launch.py</code> — turtlesim과 <code>wall_watch</code>(+파라미터 파일)</td><td>⑦</td><td><code>ros2 launch turtle_watch wall_watch.launch.py</code> 한 줄로 둘이 뜬다</td></tr>
+    <tr><td>설치와 의존성 — <code>install(DIRECTORY …)</code>, <code>std_srvs</code> 두 곳, <code>exec_depend ros2launch</code></td><td>⑤ · ⑧</td><td><code>build/turtle_watch</code>·<code>install/turtle_watch</code>를 지우고 빌드해도 launch가 뜬다. <code>colcon info turtle_watch</code>의 <code>run:</code>에 <code>ros2launch std_srvs</code></td></tr>
+  </table>
+  </div>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    ~/ros2_ws/src/turtle_watch 패키지를 고쳐 줘. 고치기 전에 아래 기준마다 지금 어느 파일·줄을 바꿀지 표로 먼저 보여 줘. 기준: warn_distance_ 상수를 double 파라미터 warn_distance(기본값 1.5)로 바꾸고 타이머 콜백에서 매번 읽을 것, config/wall_watch.yaml 에 /wall_watch 노드의 warn_distance: 2.0, std_srvs/srv/SetBool 서비스 ~/mute(true 면 로그를 멈추고 false 면 다시), launch/wall_watch.launch.py 로 turtlesim 과 wall_watch 를 함께 띄우고 wall_watch 에는 설치된 config/wall_watch.yaml 을 parameters 로 줄 것, CMakeLists.txt 에 install(DIRECTORY launch config DESTINATION share/${PROJECT_NAME}), std_srvs 는 package.xml 과 CMakeLists.txt 양쪽에, package.xml 에 exec_depend ros2launch. 어떤 콜백 안에서도 응답을 기다리지 말 것. 빌드는 ~/ros2_ws 에서 colcon build --packages-select turtle_watch 로 해 줘. 확인은 내가 할게.
+  </div>
+  <p>
+    정답은 하나가 아니다. <strong>위 표의 「확인하는 법」이 전부 통과하면</strong> 된 것이다.
+    둘째 줄은 돌려 봐야 안다 — 받은 코드가 경고 거리를 생성자에서 한 번만 읽고 있으면 <code>param set</code>이 성공한다고 답하면서도 <code>WARN</code>이 계속 찍힌다.
+  </p>
+
+  <!-- ── 프롬프트 모음 ── -->
+  <h2 id="prompts">🤖 오늘 나온 프롬프트 모음 <span class="badge b-green">🟢 맡긴다</span></h2>
+  <div class="tablewrap">
+  <table>
+    <tr><th>이럴 때</th><th>이렇게 말한다</th></tr>
+    <tr><td>숫자를 파라미터로 꺼낼 때</td><td>"이 노드의 speed_ 와 wall_margin_ 을 double 파라미터 speed·wall_margin 으로 바꿔 줘. 기본값은 소수점을 붙여 1.0 으로, 생성자 맨 위에서 declare_parameter 하고, ros2 param set 으로 바꾼 값이 바로 먹도록 타이머 콜백에서 판단 전에 다시 읽어 줘."</td></tr>
+    <tr><td>튜닝한 값을 파일로 남길 때</td><td>④절 프롬프트 — <code>param dump</code>로 받아 우리 파라미터만 남기고, 노드 이름은 그대로, 실수에는 소수점</td></tr>
+    <tr><td>서비스 서버를 달 때</td><td>"std_srvs/srv/SetBool 서비스 ~/enable 을 만들어 줘. 콜백에서는 enabled_ 만 바꾸고 응답의 success·message 를 채워 줘. 속도 명령은 지금처럼 타이머 콜백에서만 보내고, std_srvs 는 package.xml 과 CMakeLists.txt 양쪽에 넣어 줘."</td></tr>
+    <tr><td>남의 서비스를 부를 때</td><td>"/turtle1/set_pen 을 부르는 클라이언트를 멤버로 만들고, 부를 때는 service_is_ready() 로 먼저 보고 async_send_request(요청, 응답 콜백) 으로 보내 줘. 어떤 콜백 안에서도 future.wait·spin_until_future_complete 로 기다리지 마."</td></tr>
+    <tr><td>launch 파일을 받을 때</td><td>"turtlesim_node 와 turtle_drive 의 wall_stop 을 함께 띄우는 launch/wall_stop.launch.py 를 만들어 줘. wall_stop 에는 get_package_share_directory 로 찾은 config/wall_stop.yaml 을 parameters 로 주고 output='screen'. CMakeLists.txt 에 install(DIRECTORY launch config DESTINATION share/${PROJECT_NAME}) 를, package.xml 에 exec_depend ros2launch 를 더해 줘. 줄마다 무엇을 하는지 주석으로 짧게 달아 줘."</td></tr>
+    <tr><td>받은 패키지를 검사할 때</td><td>⑨절의 여덟 기준 프롬프트 — 고치지 말고 표로 먼저</td></tr>
+    <tr><td>노드가 서비스 호출 뒤 멈춘 것 같을 때</td><td>"이 노드가 처음 서비스를 부른 뒤로 타이머가 안 도는 것 같아. 콜백 함수들 안에서 future.wait, future.get, spin_until_future_complete, wait_for_service 를 쓰는 줄을 전부 찾아서 보여 주고, async_send_request 의 응답 콜백으로 바꾸는 방법을 제안해 줘."</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 프롬프트마다 <strong>「무엇을 하지 마」</strong>가 한 줄씩 들어 있다 — 생성자에서만 읽지 마, 콜백 안에서 기다리지 마, 설치 줄을 빼지 마. 오늘의 함정이 전부 「돌아가는 코드」에 숨어 있었기 때문이다.
+    값이 정말 바뀌었는지, 노드가 멈추지 않았는지는 여러분이 <code>topic echo</code>·<code>topic hz</code>와 화면으로 확인합니다.
+  </div>
+
+  <!-- ── ✅ 점검 ── -->
+  <h2 id="check">✅ 오늘의 점검</h2>
+  <ul class="check">
+    <li><input type="checkbox" id="c1"><label for="c1"><code>declare_parameter("speed", 1)</code>과 <code>declare_parameter("speed", 1.0)</code>이 어떻게 다른지, 그 차이가 <code>-p</code>·YAML·<code>param set</code>에서 어떤 오류로 나타나는지 말할 수 있나?</label></li>
+    <li><input type="checkbox" id="c2"><label for="c2"><code>param set</code>이 <code>Set parameter successful</code>인데 거북이가 그대로인 이유를 「저장소의 값과 멤버의 값」으로 설명할 수 있나?</label></li>
+    <li><input type="checkbox" id="c3"><label for="c3">튜닝한 값을 <code>param dump</code> → <code>config/wall_stop.yaml</code> → <code>--params-file</code>(또는 launch)로 이어 봤나? 파일의 노드 이름이 틀리면 무슨 일이 생기는지 말할 수 있나?</label></li>
+    <li><input type="checkbox" id="c4"><label for="c4"><code>~/enable</code>이 실제로 <code>/wall_stop/enable</code>이 되는 것을 <code>ros2 service list</code>로 봤나?</label></li>
+    <li><input type="checkbox" id="c5"><label for="c5">콜백 안에서 서비스 응답을 기다리면 왜 노드 전체가 멈추는지 「<code>spin</code>은 콜백을 하나씩 부른다」로 설명할 수 있나?</label></li>
+    <li><input type="checkbox" id="c6"><label for="c6"><code>install(DIRECTORY launch config …)</code>이 빠졌을 때의 오류 문장을 봤나? 옛 <code>install/</code> 때문에 그 오류가 <strong>안 보일 수 있다</strong>는 것을 알고, 확인하는 법을 말할 수 있나?</label></li>
+    <li><input type="checkbox" id="c7"><label for="c7">launch 출력의 <code>cmd '…'</code> 줄에서 launch가 실제로 붙인 <code>--ros-args</code>를 읽을 수 있나?</label></li>
+  </ul>
+
+  <!-- ── 조금 더 ── -->
+  <h2 id="more">조금 더 알아두면 <span class="badge b-lv">시험 범위 아님</span></h2>
+  <details>
+    <summary>파라미터 콜백 — 바뀔 때만 검사하고 멤버에 넣는 방법 (③절의 (나))</summary>
+    <p>
+      ③절 표의 (나)를 v4에 붙여 빌드·실행했다. 콜백을 두 개 넘긴다. <code>add_on_set_parameters_callback</code>은 값을 <strong>바꾸기 전에</strong> 불려 받아들일지 정하고,
+      <code>add_post_set_parameters_callback</code>은 <strong>바뀐 뒤에</strong> 불려 멤버를 고친다. 첫째에서 거절하면 <code>param set</code>이 실패한다.
+    </p>
+    <pre class="lang-cpp"><code>    // ① 바꾸기 전에 불린다 — 받아들일 값인지 검사만 한다. successful = false 면 set 이 실패한다
+    on_set_handle_ = this-&gt;add_on_set_parameters_callback(
+      [](const std::vector&lt;rclcpp::Parameter&gt; &amp; params) {
+        rcl_interfaces::msg::SetParametersResult result;
+        result.successful = true;
+        for (const auto &amp; p : params) {
+          if ((p.get_name() == "speed" || p.get_name() == "wall_margin") &amp;&amp; p.as_double() &lt; 0.0) {
+            result.successful = false;
+            result.reason = p.get_name() + " 은 0 이상이어야 합니다";
+          }
+        }
+        return result;
+      });
+    // ② 바뀐 뒤에 불린다 — 새 값을 멤버에 넣는다
+    post_set_handle_ = this-&gt;add_post_set_parameters_callback(
+      [this](const std::vector&lt;rclcpp::Parameter&gt; &amp; params) {
+        for (const auto &amp; p : params) {
+          if (p.get_name() == "speed") { speed_ = p.as_double(); }
+          if (p.get_name() == "wall_margin") { wall_margin_ = p.as_double(); }
+          RCLCPP_INFO(this-&gt;get_logger(), "%s = %.2f 로 바뀌었습니다", p.get_name().c_str(), p.as_double());
+        }
+      });
+  // … 멤버 — 이 핸들이 사라지면 콜백도 풀린다
+  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr on_set_handle_;
+  rclcpp::node_interfaces::PostSetParametersCallbackHandle::SharedPtr post_set_handle_;</code></pre>
+    <pre class="lang-sh"><code>$ ros2 param set /wall_stop speed -1.0
+Setting parameter failed: speed 은 0 이상이어야 합니다
+$ ros2 param set /wall_stop speed 0.3
+Set parameter successful
+$ ros2 topic echo --once /turtle1/pose
+x: 9.323644638061523
+linear_velocity: 0.30000001192092896</code></pre>
+    <p>
+      노드 로그에는 <code>speed = 0.30 로 바뀌었습니다</code>가 한 번 찍혔다. 음수는 거절됐고, 0.3은 받아들여져 바로 먹었다.
+      받은 코드에 <code>add_on_set_parameters_callback</code> <strong>하나만</strong> 있고 그 안에서 멤버를 고치는 모양도 흔하다. 돌아가기는 한다. 다만 그 콜백은 「아직 바뀌기 전」에 불리는 자리라서,
+      rclcpp 헤더(<code>rclcpp/node.hpp</code>)의 설명은 그것을 <strong>검사(validate)</strong>에, <code>add_post_set_parameters_callback</code>을 <strong>멤버 갱신</strong>에 쓰는 예를 따로 든다. 위 코드가 그 나눔을 따른 것이다.
+    </p>
+    <!-- fullcode "전체 코드 — turtle_drive/src/wall_stop.cpp (v5 다른 판 · 파라미터 콜백)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive wall_stop"
+         l21_srv_param/steps/variants/param_callback/turtle_drive/src/wall_stop.cpp as turtle_drive/src/wall_stop.cpp
+    -->
+<details class="fullcode">
+  <summary>전체 코드 — turtle_drive/src/wall_stop.cpp (v5 다른 판 · 파라미터 콜백)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive wall_stop</code></p>
+  <div class="codefile"><div class="fname">turtle_drive/src/wall_stop.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 21회 벽 앞 정지 — v5 다른 판 (파라미터 콜백 — 바뀔 때만 검사하고 멤버에 넣는다)
+#include &lt;algorithm&gt;
+#include &lt;chrono&gt;
+#include &lt;cmath&gt;
+#include &lt;limits&gt;
+#include &lt;memory&gt;
+#include &lt;vector&gt;
+
+#include &quot;rclcpp/rclcpp.hpp&quot;
+#include &quot;geometry_msgs/msg/twist.hpp&quot;
+#include &quot;turtlesim/msg/pose.hpp&quot;
+
+using namespace std::chrono_literals;
+
+class WallStop : public rclcpp::Node
+{
+public:
+  WallStop()
+  : Node(&quot;wall_stop&quot;)
+  {
+    // 파라미터를 선언한다 — 이름과 기본값. 타입은 기본값에서 정해진다 (1.0 이므로 double)
+    this-&gt;declare_parameter(&quot;speed&quot;, 1.0);
+    this-&gt;declare_parameter(&quot;wall_margin&quot;, 1.0);
+    // 지금 값을 읽어 멤버에 넣는다
+    speed_ = this-&gt;get_parameter(&quot;speed&quot;).as_double();
+    wall_margin_ = this-&gt;get_parameter(&quot;wall_margin&quot;).as_double();
+
+    // ① 바꾸기 전에 불린다 — 받아들일 값인지 검사만 한다. successful = false 면 set 이 실패한다
+    on_set_handle_ = this-&gt;add_on_set_parameters_callback(
+      [](const std::vector&lt;rclcpp::Parameter&gt; &amp; params) {
+        rcl_interfaces::msg::SetParametersResult result;
+        result.successful = true;
+        for (const auto &amp; p : params) {
+          if ((p.get_name() == &quot;speed&quot; || p.get_name() == &quot;wall_margin&quot;) &amp;&amp; p.as_double() &lt; 0.0) {
+            result.successful = false;
+            result.reason = p.get_name() + &quot; 은 0 이상이어야 합니다&quot;;
+          }
+        }
+        return result;
+      });
+    // ② 바뀐 뒤에 불린다 — 새 값을 멤버에 넣는다
+    post_set_handle_ = this-&gt;add_post_set_parameters_callback(
+      [this](const std::vector&lt;rclcpp::Parameter&gt; &amp; params) {
+        for (const auto &amp; p : params) {
+          if (p.get_name() == &quot;speed&quot;) { speed_ = p.as_double(); }
+          if (p.get_name() == &quot;wall_margin&quot;) { wall_margin_ = p.as_double(); }
+          RCLCPP_INFO(this-&gt;get_logger(), &quot;%s = %.2f 로 바뀌었습니다&quot;, p.get_name().c_str(), p.as_double());
+        }
+      });
+
+    cmd_pub_ = this-&gt;create_publisher&lt;geometry_msgs::msg::Twist&gt;(&quot;/turtle1/cmd_vel&quot;, 10);
+    pose_sub_ = this-&gt;create_subscription&lt;turtlesim::msg::Pose&gt;(
+      &quot;/turtle1/pose&quot;, 10,
+      [this](turtlesim::msg::Pose::ConstSharedPtr msg) { on_pose(msg); });
+    timer_ = this-&gt;create_wall_timer(100ms, [this]() { on_timer(); });
+    RCLCPP_INFO(this-&gt;get_logger(), &quot;speed = %.2f m/s, wall_margin = %.2f m&quot;, speed_, wall_margin_);
+  }
+
+private:
+  // /turtle1/pose 가 올 때마다 불린다 — 받은 것을 들고 있기만 한다
+  void on_pose(turtlesim::msg::Pose::ConstSharedPtr msg)
+  {
+    pose_ = msg;
+  }
+
+  // 타이머가 0.1초마다 부른다 — 판단하고 명령을 보낸다
+  void on_timer()
+  {
+    if (!pose_) {                    // 아직 자세를 한 번도 못 받았다
+      return;
+    }
+    const double front = front_distance(*pose_);
+    const bool near_wall = front &lt; wall_margin_;
+    if (near_wall &amp;&amp; !stopped_) {
+      RCLCPP_INFO(this-&gt;get_logger(), &quot;앞 벽까지 %.2f m — 섭니다 (x = %.2f, y = %.2f)&quot;,
+                  front, pose_-&gt;x, pose_-&gt;y);
+    }
+    stopped_ = near_wall;
+
+    geometry_msgs::msg::Twist cmd;   // 여섯 칸이 전부 0 — 이대로 보내면 「서라」
+    if (!near_wall) {
+      cmd.linear.x = speed_;
+    }
+    cmd_pub_-&gt;publish(cmd);
+  }
+
+  // 지금 바라보는 방향으로 곧장 가면 벽까지 몇 m 남았나
+  double front_distance(const turtlesim::msg::Pose &amp; p) const
+  {
+    const double c = std::cos(p.theta);
+    const double s = std::sin(p.theta);
+    double d = std::numeric_limits&lt;double&gt;::infinity();
+    if (c &gt; 1e-6)  { d = std::min(d, (world_size_ - p.x) / c); }   // 오른쪽 벽
+    if (c &lt; -1e-6) { d = std::min(d, (0.0 - p.x) / c); }           // 왼쪽 벽
+    if (s &gt; 1e-6)  { d = std::min(d, (world_size_ - p.y) / s); }   // 위쪽 벽
+    if (s &lt; -1e-6) { d = std::min(d, (0.0 - p.y) / s); }           // 아래쪽 벽
+    return d;
+  }
+
+  double speed_ = 0.0;                // 파라미터 speed 에서 읽는다 (m/s)
+  double wall_margin_ = 0.0;          // 파라미터 wall_margin 에서 읽는다 (m)
+  const double world_size_ = 11.0889; // turtlesim 창 한 변의 길이 (m) — 바꿀 일이 없어 그대로 둔다
+  bool stopped_ = false;
+
+  rclcpp::Publisher&lt;geometry_msgs::msg::Twist&gt;::SharedPtr cmd_pub_;
+  rclcpp::Subscription&lt;turtlesim::msg::Pose&gt;::SharedPtr pose_sub_;
+  rclcpp::TimerBase::SharedPtr timer_;
+  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr on_set_handle_;
+  rclcpp::node_interfaces::PostSetParametersCallbackHandle::SharedPtr post_set_handle_;
+  turtlesim::msg::Pose::ConstSharedPtr pose_;   // 마지막으로 받은 자세 (처음에는 비어 있다)
+};
+
+int main(int argc, char ** argv)
+{
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared&lt;WallStop&gt;();
+  rclcpp::spin(node);            // 타이머·구독 콜백은 이 안에서 불린다
+  rclcpp::shutdown();
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+  </details>
+  <details>
+    <summary>파라미터에 범위 붙이기 — <code>describe</code>의 <code>Constraints</code></summary>
+    <p>
+      18회 turtlesim의 <code>background_r</code>은 <code>describe</code>에 <code>Min value: 0</code>·<code>Max value: 255</code>가 있었고, 범위 밖의 값은 <code>param set</code>이 거절했다.
+      우리 파라미터의 <code>Constraints</code>가 비어 있는 것은 그것을 정하지 않았기 때문이다. <code>declare_parameter</code>에 셋째 인자로 <strong>파라미터 설명</strong>(<code>rcl_interfaces::msg::ParameterDescriptor</code>)을 주면
+      설명 문장과 실수 범위(<code>floating_point_range</code>)를 붙일 수 있다. 위의 「바꾸기 전 콜백」으로 거절하는 것과 같은 일을 선언 한 자리에서 하는 셈이다. 필요해지면 에이전트에게 「이 파라미터에 0.0~2.0 범위를 붙여 줘」라고 시키고 <code>describe</code>로 확인한다.
+    </p>
+  </details>
+  <details>
+    <summary>XML·YAML launch 파일, launch 인자</summary>
+    <p>
+      같은 내용을 XML로도 쓸 수 있다. 아래 파일을 <code>ros2 launch</code>에 경로로 주어 띄워 보니 v8과 똑같이 <code>speed = 0.80 m/s, wall_margin = 1.50 m</code>로 시작했다.</p>
+    <pre><code>&lt;launch&gt;
+  &lt;node pkg="turtlesim" exec="turtlesim_node" name="turtlesim"/&gt;
+  &lt;node pkg="turtle_drive" exec="wall_stop" name="wall_stop" output="screen"&gt;
+    &lt;param from="$(find-pkg-share turtle_drive)/config/wall_stop.yaml"/&gt;
+  &lt;/node&gt;
+&lt;/launch&gt;</code></pre>
+    <p>
+      <code>$(find-pkg-share 패키지)</code>가 파이썬 판의 <code>get_package_share_directory</code>다. 파이썬보다 짧고 읽기 쉽다.
+      다만 인터넷 예제와 AI의 답이 대부분 파이썬이라 이 과목은 파이썬 판을 본으로 했다. 어느 형식이든 <code>ros2 launch</code>로 띄우고, <code>install(DIRECTORY launch …)</code>이 필요한 것도 같다.
+    </p>
+    <p>
+      프로젝트에서는 「시뮬레이터로 띄울지, 실물 로봇에 붙을지」를 launch를 칠 때 고르고 싶어진다. 이것을 <strong>launch 인자</strong>라고 하고, <code>ros2 launch 패키지 파일 이름:=값</code> 모양으로 준다.
+      launch 파일 쪽 코드(<code>DeclareLaunchArgument</code>)는 에이전트에게 맡기고, 받은 뒤 <code>ros2 launch 패키지 파일 --show-args</code>로 어떤 인자가 있는지 확인하면 된다. 오늘의 v8에 쳐 보면 인자가 없으니 <code>No arguments.</code>가 나온다.
+    </p>
+  </details>
+  <details>
+    <summary>같은 노드를 둘 띄우면 — <code>~/</code>와 노드 이름</summary>
+    <p>
+      launch 파일에서 같은 실행 파일을 <code>name</code>만 바꿔 두 번 띄울 수 있다(17회의 <code>-r __node:=</code>와 같다). 그러면 파라미터 저장소도 노드마다 따로 생기고, <code>~/enable</code>은 각각 <code>/이름1/enable</code>·<code>/이름2/enable</code>이 된다.
+      서비스 이름을 <code>"/enable"</code>처럼 <code>/</code>로 시작하게 적어 두었다면 두 노드가 같은 이름을 쓰려다 부딪힌다. 그래서 「이 노드의 것」인 서비스에는 <code>~/</code>를 붙인다.
+      대신 YAML 파일의 맨 윗줄도 노드 이름을 따라 둘로 적어야 한다(④절 함정).
+    </p>
+  </details>
+
+
+  <footer>
+    로봇공학 · 순천향대학교 전자정보공학과 ·
+    다음 회차: <a href="robotics_22.html">22회 QoS와 콜백 처리 시간, 디버깅 도구</a>
+  </footer>
+</main>
+</div>
+
+<script src="../assets/site.js" defer></script>
+</body>
+</html>

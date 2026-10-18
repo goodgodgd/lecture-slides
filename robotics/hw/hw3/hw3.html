@@ -1,0 +1,1266 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HW3 · 프롬프트로 설계를 하나씩 입힌다 | 로봇공학</title>
+<script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}})();</script>
+<link rel="stylesheet" href="../../../assets/site.css">
+<link rel="stylesheet" href="../../assets/lecture.css">
+</head>
+<body>
+<header class="bar">
+  <div class="barin wide">
+    <a class="up" href="../../index.html" aria-label="로봇공학 회차 목록"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a>
+    <nav class="crumb" aria-label="경로">
+      <a href="../../../index.html">강의자료</a><span class="sep">/</span><a href="../../index.html">로봇공학</a><span class="sep">/</span><span class="here">HW3 · 클래스·스마트 포인터·STL</span>
+    </nav>
+    <span class="spacer"></span>
+    <div class="seg" data-theme-switch role="group" aria-label="밝기">
+      <button type="button" data-mode="auto" aria-pressed="true">자동</button>
+      <button type="button" data-mode="light" aria-pressed="false">밝게</button>
+      <button type="button" data-mode="dark" aria-pressed="false">어둡게</button>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="toc-title">이 과제</div>
+  <a href="#why">왜 이걸 하나요</a>
+  <a href="#topic">무엇을 만드나요 — HW2를 이어도, 새로 해도</a>
+  <a href="#steps">다섯 단계와 요구하는 것</a>
+  <a href="#example">예시 — 스타크래프트를 다섯 단계로</a>
+  <a href="#ex1">1단계 · 요구하는 기능</a>
+  <a href="#ex2">2단계 · 클래스 상속 구조</a>
+  <a href="#ex3">3단계 · 스마트 포인터</a>
+  <a href="#ex4">4단계 · 컨테이너</a>
+  <a href="#ex5">5단계 · STL 알고리즘</a>
+  <a href="#exfull">예시의 완성본</a>
+  <a href="#ai">AI와 함께 만들 때</a>
+  <a href="#form">보고서 양식</a>
+  <a href="#submit">제출 방법과 점수</a>
+</nav>
+
+<main>
+
+  <div class="lec-no">로봇공학 · HW3</div>
+  <h1>프롬프트로 설계를 하나씩 입힌다 — 클래스·스마트 포인터·컨테이너·STL</h1>
+
+  <!-- ▼ 마감일은 이 한 줄만 고치면 된다 ▼ -->
+  <p class="deadline">📅 제출 마감 — <strong>2026년 11월 1일 (일) 23:59</strong></p>
+
+  <div class="questions">
+    <span class="lab">이 과제가 묻는 것</span>
+    <ol>
+      <li>서로 다른 종류의 객체를 <strong>한 목록에 담아 같은 이름의 함수로</strong> 부르려면 무엇이 필요할까요?</li>
+      <li>이 객체는 <strong>누가 지울 책임을 지나요?</strong> 그 답에 따라 <code>unique_ptr</code> · <code>shared_ptr</code> · 원시 포인터 · 참조 중 하나가 정해집니다.</li>
+      <li>이 자리에서 하는 일이 <strong>뒤에 넣기인가, 앞에서 빼기인가, 중간에서 지우기인가</strong> — <code>vector</code> · <code>list</code> · <code>deque</code>는 그 질문으로 고릅니다.</li>
+    </ol>
+  </div>
+
+  <h2 id="why">왜 이걸 하나요</h2>
+  <p>
+    HW2에서는 구조체와 함수로 프로그램 하나를 세웠습니다. 그 뒤 다섯 번의 수업에서
+    <a href="../../robotics_09.html">클래스</a> · <a href="../../robotics_10.html">상속과 다형성</a> ·
+    <a href="../../robotics_11.html">스마트 포인터</a> · <a href="../../robotics_12.html">컨테이너</a> ·
+    <a href="../../robotics_13.html">STL 알고리즘</a>을 배웠습니다.
+    그런데 이것들은 문법을 아는 것만으로는 쓸 수가 없습니다. <strong>어느 자리에 무엇을 쓸지 고르는 일</strong>이 남기 때문입니다.
+  </p>
+  <p>
+    코드는 AI가 몇 초 만에 써 줍니다. 그러면 여러분이 할 일은 무엇일까요?
+    「메모리를 안전하게 관리해 줘」라고만 하면 AI는 대개 <code>shared_ptr</code>을 줍니다. 돌아가고 새지도 않지만,
+    <a href="../../robotics_11.html#shared">11회 ⑤절</a>에서 봤듯이 대부분은 필요 없는 선택입니다.
+    <strong>무엇을 쓸지는 여러분이 정하고, AI에게는 그 결정을 프롬프트로 지시하는 것</strong> — 이것이 이 과제의 알맹이입니다.
+  </p>
+  <div class="box">
+    <p class="boxtitle">이 과제에서 여러분이 하는 일 — <strong>단계마다 고르고, 고른 것을 프롬프트로 시키고, 이유를 적는 것</strong></p>
+    <p>
+      프로그램 하나에 설계를 <strong>다섯 단계로 하나씩</strong> 입혀 갑니다. 단계마다
+      ① 그 자리에 무엇이 맞을지 고르고, ② 그 선택을 담아 AI에게 시키고, ③ 받은 코드가 시킨 대로인지 확인합니다.
+      보고서에는 단계마다 <strong>왜 그렇게 골랐는지</strong>와 <strong>무엇이 바뀌었는지</strong>를 적습니다.
+    </p>
+    <p>
+      무엇을 골라야 할지 모르겠으면 <strong>AI에게 먼저 물어봐도 됩니다.</strong>
+      「이 자리에는 무엇이 맞을까? 이유와 함께 추천만 해 줘. 코드는 아직 고치지 마」처럼 물어서 선택지를 받아 보고,
+      그중 무엇을 고를지는 여러분이 정하면 됩니다. 그렇게 알아 가는 과정도 이 과제의 일부입니다.
+    </p>
+  </div>
+
+  <h2 id="topic">무엇을 만드나요 — HW2를 이어도, 새로 해도</h2>
+  <p>출발점은 둘 중 하나를 고릅니다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>출발점</th><th>어떻게 하나</th><th>1단계</th></tr>
+    <tr><td><strong>HW2의 내 프로그램을 잇는다</strong></td><td>HW2에서 만든 구조체+함수 프로그램을 9~13회 내용으로 고쳐 간다</td><td>생략할 수 있다 — HW2의 세 줄(등장하는 것·자체 동작·상호작용)을 옮기고, 더하거나 바꾼 것만 적는다</td></tr>
+    <tr><td><strong>새 주제로 새로 만든다</strong></td><td>주제를 새로 골라 1단계부터 시작한다</td><td>한다</td></tr>
+  </table>
+  </div>
+  <p>
+    어느 쪽이든 결과물은 <strong>여러 종류의 객체가 등장하고, 각자 하는 일이 있고, 서로 주고받는 일이 있는 프로그램</strong>입니다.
+    상속을 쓰려면 <strong>같은 계열인데 하는 일이 조금씩 다른 것</strong>이 둘 이상 있어야 합니다 —
+    유닛과 그 종류들, 센서와 그 종류들, 악기와 그 종류들, 손님과 그 종류들처럼요.
+  </p>
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 수업 예제와 아래 예시는 주제로 쓰지 않습니다</div>
+    <p>
+      <strong>9~13회 수업 예제(라이다 필터 · 센서 상속 · 센서 켜고 끄기 · 스캔과 바퀴 속도 · 라이다 알고리즘)</strong>와
+      <strong>HW2·HW3 공지의 스타크래프트 예시</strong>는 빼고 고릅니다. 이름만 바꾼 것도 같은 것으로 봅니다.
+      <strong>여러분 자신의 HW2 프로그램을 잇는 것은 물론 괜찮습니다.</strong>
+    </p>
+    <p><strong>친구 것을 베낀 것은 보여 준 사람과 베낀 사람 모두 0점</strong>입니다.</p>
+  </div>
+
+  <h2 id="steps">다섯 단계와 요구하는 것</h2>
+  <p>
+    단계는 <strong>수업 순서 그대로</strong>입니다. 한 단계를 끝내고 빌드·실행까지 확인한 다음 다음 단계로 넘어가면,
+    무엇이 무엇 때문에 바뀌었는지 보고서에 적기가 쉬워집니다.
+    표의 번호(A-1, B-2 …)는 보고서 양식의 절 제목에 그대로 붙어 있습니다.
+  </p>
+
+  <h3 id="req-a">1단계 — 요구하는 기능 (A)</h3>
+  <div class="tablewrap">
+  <table>
+    <tr><th>#</th><th>있어야 하는 것</th><th>수업의 어디</th></tr>
+    <tr><td>A-1</td><td><strong>객체 구성</strong> — 무엇이 등장하나. 같은 계열이면서 하는 일이 다른 종류가 둘 이상</td><td>HW2 · <a href="../../robotics_10.html#inherit">10회 ②</a></td></tr>
+    <tr><td>A-2</td><td><strong>객체 단일 동작</strong> — 객체 하나가 자기 상태를 바꾸는 일</td><td>HW2 (자체 동작)</td></tr>
+    <tr><td>A-3</td><td><strong>객체 상호 작용</strong> — 한 객체가 다른 객체를 바꾸는 일</td><td>HW2 (상호작용)</td></tr>
+  </table>
+  </div>
+  <p>
+    이 단계에서는 <strong>코드를 쓰지 않습니다.</strong> 무엇을 만들지를 말로 정리하는 단계입니다.
+    AI에게 시킬 때도 「아직 코드는 쓰지 말고 정리만 해 줘」라고 하면 설계와 구현이 섞이지 않습니다.
+    HW2를 이으면 이 단계는 생략할 수 있습니다.
+  </p>
+
+  <h3 id="req-b">2단계 — 클래스 상속 구조 (B)</h3>
+  <div class="tablewrap">
+  <table>
+    <tr><th>#</th><th>있어야 하는 것</th><th>이렇게 확인합니다</th><th>수업의 어디</th></tr>
+    <tr><td>B-1</td><td><strong>기반 클래스 하나 + 파생 클래스 둘 이상</strong> (<code>: public 기반</code>)</td><td>보고서에 상속 구조를 트리로 그린다</td><td><a href="../../robotics_10.html#inherit">10회 ②</a></td></tr>
+    <tr><td>B-2</td><td><strong>가상 함수</strong> — 종류마다 다르게 하는 일을 <code>virtual</code>(또는 순수 가상 <code>= 0</code>)로 두고 파생 클래스에서 <code>override</code></td><td>기반 클래스 포인터·참조로 불러도 실제 종류의 함수가 불린다</td><td><a href="../../robotics_10.html#virtual">10회 ③</a>·<a href="../../robotics_10.html#override">④</a></td></tr>
+    <tr><td>B-3</td><td><strong>가상 소멸자</strong> — 기반 클래스의 소멸자에 <code>virtual</code></td><td><code>virtual ~기반()</code>이 헤더에 있다</td><td><a href="../../robotics_10.html#dtor">10회 ⑤</a></td></tr>
+    <tr><td>B-4</td><td><strong>멤버 변수는 <code>private</code></strong> · 생성자는 <strong>멤버 초기화 리스트</strong> · 값을 안 바꾸는 멤버 함수에 <strong><code>const</code></strong></td><td>클래스 밖에서 멤버 변수를 직접 고치는 줄이 없다</td><td><a href="../../robotics_09.html#initlist">9회 ④</a>·<a href="../../robotics_09.html#access">⑤</a>·<a href="../../robotics_09.html#constfn">⑥</a></td></tr>
+    <tr><td>B-5</td><td><strong>클래스 선언은 헤더, 함수 내용은 소스</strong>. 파일 구조와 <code>CMakeLists.txt</code>는 HW2 그대로(<code>add_library</code> + <code>target_include_directories(… PUBLIC include)</code> + <code>add_executable</code> + <code>target_link_libraries(… PRIVATE …)</code>)</td><td>헤더에 함수 본문이 없다</td><td><a href="../../robotics_09.html#header">9회 ⑦</a> · <a href="../../robotics_08.html#project">8회 ③</a></td></tr>
+  </table>
+  </div>
+
+  <h3 id="req-c">3단계 — 스마트 포인터 (C)</h3>
+  <p>
+    포인터·참조가 쓰이는 자리마다 먼저 하나를 묻습니다 — <strong>이 자리는 객체를 소유하나, 잠깐 빌려 쓰나?</strong>
+    <a href="../../robotics_11.html#shared">11회 ⑤절</a>의 고르는 순서를 그대로 쓰면 됩니다.
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>그 자리는</th><th>고를 것</th><th>함수에 넘길 때</th></tr>
+    <tr><td>소유자가 하나이고, 만든 곳과 갖는 곳이 다르다</td><td><code>std::unique_ptr</code> + <code>std::make_unique</code></td><td>소유권을 넘기면 <code>f(std::unique_ptr&lt;T&gt; p)</code> + 부르는 쪽 <code>std::move</code></td></tr>
+    <tr><td>소유자가 여럿이고, 누가 마지막까지 쓸지 모른다</td><td><code>std::shared_ptr</code> + <code>std::make_shared</code></td><td>값으로 넘기면 소유자가 하나 는다</td></tr>
+    <tr><td>소유하지 않고 잠깐 쓴다 — 반드시 있다</td><td>참조 <code>T &amp;</code> · 읽기만 하면 <code>const T &amp;</code></td><td><code>f(*p)</code></td></tr>
+    <tr><td>소유하지 않고 가리킨다 — 없을 수도 있다</td><td>원시 포인터 <code>T *</code> + <code>nullptr</code> 검사</td><td><code>f(p.get())</code></td></tr>
+  </table>
+  </div>
+  <div class="tablewrap">
+  <table>
+    <tr><th>#</th><th>있어야 하는 것</th><th>수업의 어디</th></tr>
+    <tr><td>C-1</td><td><strong>소유하는 자리는 <code>unique_ptr</code></strong>(소유자가 여럿이면 <code>shared_ptr</code>)로, <code>make_unique</code>(<code>make_shared</code>)로 만든다. <strong><code>new</code>·<code>delete</code>를 직접 쓰지 않는다</strong></td><td><a href="../../robotics_11.html#unique">11회 ④</a></td></tr>
+    <tr><td>C-2</td><td><strong>소유권을 넘기는 곳</strong>이 하나 이상 있고 거기서 <code>std::move</code>를 쓴다</td><td>11회 ④</td></tr>
+    <tr><td>C-3</td><td><strong>빌려 쓰는 자리</strong>는 참조(<code>&amp;</code>·<code>const &amp;</code>) 또는 원시 포인터. 원시 포인터는 <code>nullptr</code>을 먼저 본다</td><td>11회 ④의 표 · <a href="../../robotics_07.html#arrow">7회 ⑨</a></td></tr>
+    <tr><td>C-4</td><td><strong><code>shared_ptr</code>을 썼다면 소유자가 누구누구인지</strong>, 안 썼다면 <strong>왜 필요 없었는지</strong>를 보고서에 적는다</td><td><a href="../../robotics_11.html#shared">11회 ⑤</a></td></tr>
+  </table>
+  </div>
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 <code>shared_ptr</code>을 일부러 넣지 않아도 됩니다</p>
+    <p>
+      네 가지를 다 써야 점수가 나오는 것이 아닙니다. <strong>보는 것은 자리마다 맞게 골랐는가</strong>입니다.
+      소유자가 하나뿐인 프로그램에서는 <code>shared_ptr</code>이 없는 것이 맞는 답이고, C-4에 그 이유를 한두 줄 적으면 됩니다.
+    </p>
+  </div>
+
+  <h3 id="req-d">4단계 — 컨테이너 (D)</h3>
+  <p><a href="../../robotics_12.html#listdeque">12회 ⑥절</a>의 기준입니다. <strong>그 자리에서 무슨 일을 자주 하는지</strong>로 고릅니다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>그 자리에서 자주 하는 일</th><th>고를 것</th></tr>
+    <tr><td>뒤에 넣고, 처음부터 끝까지 돌고, <code>[i]</code>로 꺼낸다</td><td><code>std::vector</code> — 기본값. 고민되면 이것</td></tr>
+    <tr><td>앞에서 뺀다 (뒤에 넣고 앞에서 빼는 대기열)</td><td><code>std::deque</code></td></tr>
+    <tr><td>중간에 자주 넣고 뺀다 (<code>[i]</code>는 필요 없다)</td><td><code>std::list</code></td></tr>
+  </table>
+  </div>
+  <div class="tablewrap">
+  <table>
+    <tr><th>#</th><th>있어야 하는 것</th><th>수업의 어디</th></tr>
+    <tr><td>D-1</td><td><strong>컨테이너를 쓰는 자리 둘 이상</strong>. 자리마다 <code>vector</code>·<code>list</code>·<code>deque</code> 중 무엇을 골랐고, <strong>다른 둘을 왜 안 골랐는지</strong> 적는다. 앞에서 빼거나 중간에서 넣는 자리가 없으면 그런 상황을 하나 더해도 된다</td><td><a href="../../robotics_12.html#container">12회 ②</a>·<a href="../../robotics_12.html#listdeque">⑥</a></td></tr>
+    <tr><td>D-2</td><td><strong>돌면서 지우는 곳이 있으면</strong> 반복자를 다시 받는다 — <code>it = v.erase(it);</code>. 범위 <code>for</code>는 <code>const auto &amp;</code>(고칠 거면 <code>auto &amp;</code>)</td><td><a href="../../robotics_12.html#invalidation">12회 ⑧</a>·<a href="../../robotics_12.html#rangefor">⑤</a></td></tr>
+  </table>
+  </div>
+
+  <h3 id="req-e">5단계 — STL 알고리즘 (E)</h3>
+  <div class="tablewrap">
+  <table>
+    <tr><th>#</th><th>있어야 하는 것</th><th>수업의 어디</th></tr>
+    <tr><td>E-1</td><td><strong>STL 알고리즘을 쓰는 곳 둘 이상</strong> — 원래 있던 <code>for</code>문을 바꾼 곳이거나, 쓸 만한 상황을 새로 더한 곳</td><td><a href="../../robotics_13.html#summary">13회 한 장 요약</a></td></tr>
+    <tr><td>E-2</td><td>바꾼 곳은 <strong>바꾸기 전 <code>for</code>문</strong>을, 더한 곳은 <strong>무슨 상황인지</strong>를 보고서에 적는다</td><td>13회 ①~④</td></tr>
+  </table>
+  </div>
+  <p>
+    먼저 <strong>지금 코드에서 찾아봅니다.</strong> 「가장 가까운 것 찾기」 「조건에 맞는 개수 세기」 「합계 내기」 같은 <code>for</code>문이 이미 있을 가능성이 큽니다.
+    찾아도 없으면 <strong>쓸 만한 상황을 더합니다</strong> — 매 턴 전체 점수의 합을 찍는다, 끝나고 순위를 매긴다, 하나라도 조건에 맞으면 경고한다처럼요.
+  </p>
+
+  <h2 id="example">예시 — 스타크래프트를 다섯 단계로</h2>
+  <p>
+    HW2 공지의 「마린 둘과 질럿 하나」(구조체+함수, 파일 넷)에서 출발해 다섯 단계를 차례로 밟은 예시입니다.
+    단계마다 <strong>그 단계에서 보낸 프롬프트</strong>, <strong>고른 것과 이유</strong>, <strong>바뀐 코드</strong>, <strong>실제로 나온 출력</strong>을 붙였습니다.
+    여러분 보고서의 단계별 절이 바로 이 모양입니다.
+  </p>
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 예시의 프롬프트는 스타크래프트용입니다</div>
+    <p>
+      프롬프트를 그대로 복사하면 스타크래프트가 나옵니다. 보려는 것은 문장이 아니라 <strong>프롬프트 안에 결정이 들어 있는 모양</strong>입니다 —
+      「무엇을 쓸지」와 「왜」가 프롬프트에 적혀 있으면 AI는 그대로 만들고, 비어 있으면 AI가 대신 정합니다.
+      여러분의 프롬프트는 여러분 주제와 여러분의 결정으로 씁니다.
+    </p>
+  </div>
+
+  <!-- ── 1단계 ── -->
+  <h3 id="ex1">1단계 · 요구하는 기능 — 코드 없이 정리만</h3>
+  <p>HW2 예시에는 마린과 질럿, 두 종류뿐이었고 둘의 차이는 능력치 숫자뿐이었습니다. 상속을 쓸 만하게 <strong>때리는 방식이 다른 종류</strong>를 더했습니다.</p>
+  <div class="prompt example">
+    HW2에서 만든 마린·질럿 전투를 클래스로 업그레이드하려고 해. 아직 코드는 쓰지 말고 아래 내용을 「객체 구성 / 단일 동작 / 상호 작용」 표로 정리만 해 줘.
+    등장하는 것은 테란의 마린·파이어뱃, 프로토스의 질럿. 단일 동작은 목표 쪽으로 한 칸 움직이기와 피해를 받아 체력이 주는 것.
+    상호 작용은 가장 가까운 적에게 다가가 사거리 안이면 공격하는 것인데, 때리는 방식이 종류마다 달라 — 마린은 총 한 발(6), 파이어뱃은 화염(16, 사거리 1), 질럿은 칼 두 번(8×2).
+  </div>
+  <div class="tablewrap">
+  <table>
+    <tr><th>정리된 것</th><th>내용</th></tr>
+    <tr><td>객체 구성</td><td>마린 · 파이어뱃(테란) · 질럿(프로토스) — 셋 다 「유닛」이다</td></tr>
+    <tr><td>단일 동작</td><td>목표 쪽으로 한 칸 이동 · 피해를 받아 체력이 준다 — <strong>종류와 상관없이 같다</strong></td></tr>
+    <tr><td>상호 작용</td><td>가장 가까운 적에게 다가가 사거리 안이면 공격 — <strong>때리는 방식만 종류마다 다르다</strong></td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>이 표에 이미 2단계의 답이 들어 있습니다.</strong> 「종류와 상관없이 같다」는 기반 클래스로, 「종류마다 다르다」는 가상 함수로 갑니다.
+    1단계에서 같은 것과 다른 것을 갈라 두면 2단계 프롬프트가 쉬워집니다.
+  </div>
+
+  <!-- ── 2단계 ── -->
+  <h3 id="ex2">2단계 · 클래스 상속 구조</h3>
+  <div class="prompt example">
+    위 정리대로 HW2 코드를 클래스로 바꿔 줘. Unit을 기반 클래스로 두고 Marine·Firebat·Zealot이 public으로 상속해.
+    때리는 방식(attack)만 종류마다 다르니까 Unit에 순수 가상 함수로 두고 파생 클래스에서 override 해.
+    이동·피해 받기·사거리 판단(engage)은 모두 같으니 Unit에 한 번만 둬. Unit의 소멸자는 virtual로.
+    멤버 변수는 전부 private, 생성자는 멤버 초기화 리스트로, 값을 안 바꾸는 멤버 함수는 const로 해 줘.
+    클래스 선언은 units.hpp, 함수 내용은 units.cpp에. 유닛은 main의 지역 변수로 만들고 진영은 std::vector&lt;Unit *&gt;에 주소만 담아 줘.
+    스마트 포인터는 다음 단계에서 할 거니까 아직 쓰지 마.
+  </div>
+  <pre><code>Unit  (기반 · 추상 클래스)   name_ hp_ range_ speed_ pos_  — 전부 private
+ │      move_toward · take_damage · engage      ← 모두 같다. Unit 에 한 번만
+ │      virtual void attack(Unit &amp;) = 0         ← 종류마다 다르다
+ │      virtual ~Unit()
+ ├── Marine    attack() override   총 한 발 (6),  사거리 4
+ ├── Firebat   attack() override   화염 (16),     사거리 1
+ └── Zealot    attack() override   칼 두 번 (8×2), 사거리 1</code></pre>
+  <div class="tablewrap">
+  <table>
+    <tr><th>고른 것</th><th>이유</th></tr>
+    <tr><td><code>attack</code>을 순수 가상 함수로</td><td>「유닛」 자체는 때리는 방식이 없다. 종류가 정해져야 정해진다. 그래서 <code>Unit</code>으로는 객체를 못 만들게 했다</td></tr>
+    <tr><td><code>engage</code>는 가상이 아닌 보통 멤버 함수로</td><td>「다가가다가 사거리 안이면 때린다」는 순서는 모두 같다. 그 안에서 부르는 <code>attack</code>만 종류마다 달라진다</td></tr>
+    <tr><td>진영을 <code>std::vector&lt;Unit *&gt;</code>로</td><td>마린과 파이어뱃을 <strong>한 목록</strong>에 담으려면 기반 클래스 포인터여야 한다. 유닛은 <code>main</code>의 지역 변수가 갖고 있으니 목록은 주소만 든다</td></tr>
+  </table>
+  </div>
+  <div class="codelabel good">바뀐 코드 — 헤더의 기반 클래스와 파생 클래스 하나 (전체는 아래 완성본)</div>
+<pre><code>// 모든 유닛에 공통인 것. attack 이 순수 가상이라 Unit 으로는 객체를 만들 수 없다
+class Unit {
+public:
+  Unit(const std::string &amp; name, int hp, float range, float speed, Point pos);
+  virtual ~Unit();                          // 기반 클래스로 지워도 파생 클래스까지 정리되게
+
+  const std::string &amp; name() const;
+  int hp() const;
+  bool is_alive() const;
+  const Point &amp; pos() const;
+
+  void move_toward(const Point &amp; target);   // 단일 동작 — 목표 쪽으로 한 칸
+  void take_damage(int amount);             // 단일 동작 — 체력이 준다
+  void engage(Unit * target);               // 상호작용 — 사거리 밖이면 다가가고, 안이면 attack
+  virtual void attack(Unit &amp; target) = 0;   // 때리는 방식은 종류마다 다르다
+
+private:
+  std::string name_;
+  int hp_;                                  // 체력
+  float range_;                             // 사거리
+  float speed_;                             // 한 프레임에 움직이는 거리
+  Point pos_;
+};
+
+class Marine : public Unit {                // 총 한 발 (6)
+public:
+  Marine(const std::string &amp; name, Point pos);
+  void attack(Unit &amp; target) override;
+};
+// Firebat · Zealot 도 같은 모양이다</code></pre>
+  <p>
+    <code>engage</code>가 <code>attack(*target)</code>을 부르는 자리가 다형성이 일어나는 곳입니다.
+    <code>engage</code>는 <code>Unit</code>의 함수인데, 실제로는 <code>Marine</code>·<code>Firebat</code>·<code>Zealot</code>의 <code>attack</code>이 불립니다.
+  </p>
+<pre><code>void Unit::engage(Unit * target)
+{
+  if (target == nullptr) return;               // 공격할 상대가 없다
+  if (!target-&gt;is_alive()) return;
+  if (distance(pos_, target-&gt;pos()) &gt; range_) {
+    move_toward(target-&gt;pos());                // 사거리 밖이면 다가간다
+    return;
+  }
+  attack(*target);                             // 실제 종류(Marine·Zealot …)의 attack 이 불린다
+  if (!target-&gt;is_alive()) std::cout &lt;&lt; "  " &lt;&lt; target-&gt;name() &lt;&lt; " is KILLED\n";
+}</code></pre>
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 <code>Marine(…) : Unit(name, 40, 4.0f, 1.0f, pos)</code> — 기반 클래스의 생성자를 부른다</p>
+    <p>
+      파생 클래스의 멤버 초기화 리스트 맨 앞에 <strong>기반 클래스 이름(인자…)</strong>을 적으면 기반 클래스 부분을 그 생성자로 만든다.
+      <code>Unit</code>의 멤버는 <code>private</code>이라 <code>Marine</code>이 직접 채울 수 없으니 이 길로 넘긴다.
+    </p>
+  </div>
+  <details class="fullcode">
+    <summary>실제로 나온 출력 — 2단계: 질럿 둘이 이긴다</summary>
+<pre><code>marine1: You wanna piece of me, boy?
+marine2: You wanna piece of me, boy?
+firebat: Need a light?
+zealot1: My life for Aiur!
+zealot2: My life for Aiur!
+  …
+--- frame 9
+  marine1 shoots zealot1 (hp 32)
+  marine2 shoots zealot2 (hp 64)
+  zealot1 slashes marine1 twice (hp 0)
+  marine1 is KILLED
+  zealot2 -&gt; (3.14, 1.40)
+--- frame 10
+  marine2 shoots zealot2 (hp 58)
+  zealot1 -&gt; (3.02, 1.21)
+  zealot2 slashes marine2 twice (hp 24)
+--- frame 11
+  marine2 shoots zealot2 (hp 52)
+  zealot1 slashes marine2 twice (hp 8)
+  zealot2 slashes marine2 twice (hp 0)
+  marine2 is KILLED
+terran 0 alive, protoss 2 alive
+  [zealot2 removed]
+  [zealot1 removed]
+  [firebat removed]
+  [marine2 removed]
+  [marine1 removed]</code></pre>
+  </details>
+  <div class="interp">
+    <strong>출력 맨 끝 다섯 줄을 보세요.</strong> 파이어뱃은 6프레임에, 마린 둘은 9·11프레임에 죽었는데 <code>[… removed]</code>는 전투가 다 끝난 뒤에야 찍힙니다.
+    유닛이 <code>main</code>의 지역 변수라 <code>main</code>이 끝나야 사라지기 때문입니다. 그동안 진영 목록에는 죽은 유닛이 그대로 들어 있어서
+    <code>nearest_enemy</code>·<code>alive_count</code>가 매번 <code>is_alive()</code>로 걸러야 합니다. 3단계가 이것을 고칩니다.
+  </div>
+
+  <!-- ── 3단계 ── -->
+  <h3 id="ex3">3단계 · 스마트 포인터 — 누가 지울 책임을 지나</h3>
+  <p>무엇을 골라야 할지 바로 정하기 어려워서 <strong>먼저 물어봤습니다.</strong></p>
+  <div class="prompt example">
+    지금 코드에서 포인터나 참조가 쓰이는 자리를 전부 찾아서, 각 자리가 객체를 「소유」하는지 「잠깐 빌려 쓰는지」 표로 정리해 줘.
+    자리마다 unique_ptr, shared_ptr, 원시 포인터, 참조 중 무엇이 맞을지 이유와 함께 추천만 해 줘. 코드는 아직 고치지 마.
+  </div>
+  <p>추천을 받아 읽어 보고, 아래처럼 정해서 시켰습니다.</p>
+  <div class="prompt example">
+    유닛은 진영이 소유하게 해 줘. 진영을 std::vector&lt;std::unique_ptr&lt;Unit&gt;&gt;로 바꾸고 using으로 Army라는 이름을 붙여.
+    유닛은 make_unique로 만들고, 진영에 넣는 deploy 함수는 unique_ptr를 값으로 받아서 std::move로 넣어.
+    죽은 유닛은 그 자리에서 진영에서 erase 해서 바로 지워지게 해 줘.
+    공격 대상은 소유하지 않고 없을 수도 있으니 지금처럼 원시 포인터 Unit *로 두고 nullptr 검사를 유지해.
+    nearest_enemy는 진영을 const &amp;로 받아서 .get()으로 주소만 돌려줘. shared_ptr는 소유자가 여럿인 곳이 없으니 쓰지 마.
+  </div>
+  <div class="tablewrap">
+  <table>
+    <tr><th>자리</th><th>소유? 빌림?</th><th>고른 것</th><th>이유</th></tr>
+    <tr><td>진영이 유닛을 갖는다</td><td>소유</td><td><code>std::vector&lt;std::unique_ptr&lt;Unit&gt;&gt;</code></td><td>유닛의 주인은 자기 진영 하나다. 진영에서 빠지면(<code>erase</code>) 그 자리에서 지워진다</td></tr>
+    <tr><td>유닛을 만들어 진영에 넣는다</td><td>소유권 이동</td><td><code>make_unique</code> → <code>deploy(Army &amp;, std::unique_ptr&lt;Unit&gt;)</code> 안에서 <code>std::move</code></td><td>만드는 곳(<code>main</code>)과 갖는 곳(진영)이 다르다</td></tr>
+    <tr><td><code>engage(Unit * target)</code></td><td>빌림</td><td>원시 포인터</td><td>소유하지 않는다. 적이 하나도 없으면 <code>nullptr</code> — 「없을 수 있다」를 나타내야 한다</td></tr>
+    <tr><td><code>attack(Unit &amp; target)</code></td><td>빌림</td><td>참조</td><td>잠깐 쓰고, 부를 때는 상대가 반드시 있다(<code>engage</code>가 이미 확인했다)</td></tr>
+    <tr><td><code>nearest_enemy(const Unit &amp;, const Army &amp;)</code></td><td>빌림</td><td><code>const &amp;</code></td><td>읽기만 한다</td></tr>
+    <tr><td><code>shared_ptr</code></td><td>—</td><td><strong>안 썼다</strong></td><td>한 유닛을 동시에 소유하는 곳이 둘 이상인 자리가 없다. 공격 대상은 가리키기만 한다</td></tr>
+  </table>
+  </div>
+  <div class="codelabel bad">고치기 전 — 진영이 주소만 든다. 유닛은 main 이 끝나야 사라진다</div>
+<pre><code>  // 유닛은 main 의 지역 변수다. 진영 목록에는 주소만 담는다
+  Marine  marine1("marine1", {0.0f, 0.0f});
+  Marine  marine2("marine2", {0.0f, 2.0f});
+  Firebat firebat("firebat", {0.0f, 1.0f});
+  Zealot  zealot1("zealot1", {8.0f, 0.5f});
+  Zealot  zealot2("zealot2", {8.0f, 1.5f});
+  std::vector&lt;Unit *&gt; terran{&amp;marine1, &amp;marine2, &amp;firebat};
+  std::vector&lt;Unit *&gt; protoss{&amp;zealot1, &amp;zealot2};</code></pre>
+  <div class="codelabel good">고친 뒤 — 진영이 소유한다. 만들자마자 진영에 넘긴다</div>
+<pre><code>  // 유닛은 진영(Army)이 소유한다. 만들자마자 진영에 넘긴다
+  Army terran;
+  Army protoss;
+  deploy(terran, std::make_unique&lt;Marine&gt;("marine1", Point{0.0f, 0.0f}));
+  deploy(terran, std::make_unique&lt;Marine&gt;("marine2", Point{0.0f, 2.0f}));
+  deploy(terran, std::make_unique&lt;Firebat&gt;("firebat", Point{0.0f, 1.0f}));
+  deploy(protoss, std::make_unique&lt;Zealot&gt;("zealot1", Point{8.0f, 0.5f}));
+  deploy(protoss, std::make_unique&lt;Zealot&gt;("zealot2", Point{8.0f, 1.5f}));</code></pre>
+<pre><code>void deploy(Army &amp; army, std::unique_ptr&lt;Unit&gt; unit)
+{
+  army.push_back(std::move(unit));             // 소유권이 매개변수에서 진영으로 간다
+}
+
+void remove_dead(Army &amp; army)
+{
+  for (auto it = army.begin(); it != army.end(); ) {
+    if (!(*it)-&gt;is_alive()) {
+      it = army.erase(it);                     // unique_ptr 가 사라지며 유닛도 지워진다
+    } else {
+      ++it;
+    }
+  }
+}</code></pre>
+  <div class="tablewrap">
+  <table>
+    <tr><th>주요 변경 사항</th></tr>
+    <tr><td>헤더에 <code>#include &lt;memory&gt;</code>와 <code>using Army = std::vector&lt;std::unique_ptr&lt;Unit&gt;&gt;;</code></td></tr>
+    <tr><td><code>deploy</code>(소유권을 받아 진영에 넣는다) · <code>remove_dead</code>(죽은 유닛을 <code>erase</code>) 추가</td></tr>
+    <tr><td><code>nearest_enemy</code>가 <code>Army</code>를 받고 <code>e.get()</code>으로 주소만 돌려준다. 죽은 유닛이 목록에 없으니 <code>is_alive()</code> 거르기가 빠졌다</td></tr>
+    <tr><td><code>alive_count</code>를 지웠다 — 진영에는 산 유닛만 있으니 <code>terran.size()</code>가 곧 생존자 수다</td></tr>
+  </table>
+  </div>
+  <details class="fullcode">
+    <summary>실제로 나온 출력 — 3단계: 죽는 순간 지워진다 (6프레임)</summary>
+<pre><code>--- frame 6
+  marine1 shoots zealot1 (hp 66)
+  marine2 shoots zealot2 (hp 82)
+  firebat burns zealot1 (hp 50)
+  zealot1 slashes firebat twice (hp 2)
+  zealot2 slashes firebat twice (hp 0)
+  firebat is KILLED
+  [firebat removed]</code></pre>
+  </details>
+  <div class="interp">
+    전투 결과는 2단계와 똑같습니다. 달라진 것은 <code>[firebat removed]</code>가 <strong><code>firebat is KILLED</code> 바로 다음 줄</strong>에 찍힌다는 것 하나입니다.
+    <code>erase</code>로 <code>unique_ptr</code>가 사라지는 순간 소멸자가 불렸습니다. <code>delete</code>는 어디에도 없습니다.
+  </div>
+
+  <!-- ── 4단계 ── -->
+  <h3 id="ex4">4단계 · 컨테이너 — 그 자리에서 무슨 일을 자주 하나</h3>
+  <p>지금 컨테이너는 진영 하나(<code>vector</code>)뿐입니다. 먼저 진영이 <code>vector</code>로 괜찮은지 물었습니다.</p>
+  <div class="prompt example">
+    진영(Army)은 유닛이 죽으면 중간에서 빠지는 일이 잦은데 vector, list, deque 중 무엇이 맞을까?
+    유닛 수는 10개 안쪽이고 매 프레임 처음부터 끝까지 돌아. 그리고 배럭 생산 대기열을 만들려는데 거기엔 무엇이 맞을지도 알려 줘. 코드는 아직 고치지 마.
+  </div>
+  <p>
+    중간에서 빼는 일만 보면 <code>list</code>가 떠오릅니다. 그런데 10개 안쪽에서는 차이가 없고, 5단계에서 쓸 <code>std::sort</code>는 <code>list</code>에 쓸 수 없습니다.
+    그래서 진영은 그대로 두고, <strong>앞에서 빼는 자리</strong>인 생산 대기열을 새로 만들었습니다. 원래 프로그램에 없던 상황을 하나 더한 것입니다.
+  </p>
+  <div class="prompt example">
+    진영은 vector 그대로 둬. Barracks 클래스를 추가해 줘 — 생산 대기열은 std::deque&lt;std::string&gt;이고, train()은 대기열 뒤에 넣고,
+    tick()은 3프레임마다 맨 앞 것을 꺼내 그 종류의 유닛을 unique_ptr로 돌려줘(나올 게 없으면 nullptr).
+    main에서는 받은 유닛을 deploy(terran, std::move(…))로 테란 진영에 넣어. 마린, 마린, 파이어뱃 순서로 예약해 둬.
+  </div>
+  <div class="tablewrap">
+  <table>
+    <tr><th>자리</th><th>거기서 하는 일</th><th>고른 것</th><th>다른 둘을 안 고른 이유</th></tr>
+    <tr><td>진영 <code>Army</code></td><td>뒤에 넣기 · 매 프레임 처음부터 끝까지 돌기 · 가끔 중간에서 지우기 · 정렬</td><td><code>vector</code> (그대로)</td><td><code>list</code>는 중간 삭제가 빠르지만 10개 안쪽에선 차이가 안 보이고 <code>std::sort</code>·<code>[i]</code>를 못 쓴다. 앞에서 빼는 일이 없으니 <code>deque</code>도 이유가 없다</td></tr>
+    <tr><td>배럭 생산 대기열</td><td>뒤에 넣기(<code>train</code>) · 앞에서 빼기(<code>tick</code>)</td><td><code>deque</code></td><td><code>vector</code>는 앞에서 빼면 나머지를 한 칸씩 당긴다. 중간에 넣고 빼는 일이 없으니 <code>list</code>도 이유가 없다</td></tr>
+  </table>
+  </div>
+  <div class="codelabel good">바뀐 코드 — 헤더에 배럭 클래스, 소스에 tick()</div>
+<pre><code>// 배럭 — 생산 대기열은 뒤에 넣고 앞에서 꺼낸다
+class Barracks {
+public:
+  Barracks(Point rally);
+  void train(const std::string &amp; kind);     // 대기열 맨 뒤에 넣는다 ("marine" · "firebat")
+  std::unique_ptr&lt;Unit&gt; tick();             // 한 프레임 진행. 다 만든 유닛을 내보내고, 없으면 nullptr
+
+private:
+  std::deque&lt;std::string&gt; queue_;           // 생산 대기열
+  int progress_;                            // 맨 앞 유닛을 만든 지 몇 프레임째인가
+  int made_;                                // 지금까지 만든 수 — 이름 번호로 쓴다
+  Point rally_;                             // 나온 유닛이 서는 곳
+};</code></pre>
+<pre><code>std::unique_ptr&lt;Unit&gt; Barracks::tick()
+{
+  const int build_frames = 3;                  // 한 기를 만드는 데 걸리는 프레임
+  if (queue_.empty()) return nullptr;
+  if (++progress_ &lt; build_frames) return nullptr;
+  progress_ = 0;
+  const std::string kind = queue_.front();     // 맨 앞 것이 먼저 나온다
+  queue_.pop_front();
+  ++made_;
+  const std::string name = kind + "#" + std::to_string(made_);   // 증원은 marine#1 처럼 # 을 붙인다
+  if (kind == "firebat") return std::make_unique&lt;Firebat&gt;(name, rally_);
+  return std::make_unique&lt;Marine&gt;(name, rally_);
+}</code></pre>
+  <div class="codelabel good">main — 매 프레임 배럭을 한 번 돌리고, 나온 유닛을 진영으로 넘긴다</div>
+<pre><code>    std::unique_ptr&lt;Unit&gt; fresh = barracks.tick();
+    if (fresh != nullptr) deploy(terran, std::move(fresh));   // 배럭에서 진영으로 소유권이 간다</code></pre>
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 <code>std::to_string(made_)</code> — 정수를 글자로</p>
+    <p><code>std::string</code>끼리는 <code>+</code>로 이어 붙일 수 있지만 정수는 바로 붙지 않습니다. <code>std::to_string</code>으로 먼저 글자로 바꿉니다(<code>&lt;string&gt;</code>에 있습니다).</p>
+  </div>
+  <details class="fullcode">
+    <summary>실제로 나온 출력 — 4단계: 3·6·9프레임에 증원이 나오고, 이번엔 테란이 이긴다</summary>
+<pre><code>--- frame 3
+marine#1: You wanna piece of me, boy?
+  marine1 -&gt; (2.99, 0.19)
+  marine2 -&gt; (2.99, 1.81)
+  firebat -&gt; (2.99, 0.74)
+  marine#1 -&gt; (-1.00, 0.92)
+  zealot1 -&gt; (5.01, 0.31)
+  zealot2 -&gt; (5.01, 1.69)
+  …
+--- frame 9
+firebat#3: Need a light?
+  marine1 shoots zealot1 (hp 8)
+  marine2 shoots zealot2 (hp 64)
+  marine#1 shoots zealot1 (hp 2)
+  marine#2 shoots zealot1 (hp 0)
+  zealot1 is KILLED
+  [zealot1 removed]
+  firebat#3 -&gt; (-1.00, 0.90)
+  zealot2 slashes marine1 twice (hp 0)
+  marine1 is KILLED
+  [marine1 removed]
+  …
+--- frame 13
+  marine2 shoots zealot2 (hp 4)
+  marine#1 shoots zealot2 (hp 0)
+  zealot2 is KILLED
+  [zealot2 removed]
+terran 4 alive, protoss 0 alive
+  [marine2 removed]
+  [marine#1 removed]
+  [marine#2 removed]
+  [firebat#3 removed]</code></pre>
+  </details>
+  <div class="interp">
+    2단계·3단계에서는 질럿 둘이 이겼습니다. 대기열에서 나온 <code>marine#1</code>·<code>marine#2</code>가 9프레임에 <code>zealot1</code>을 같이 잡으면서 결과가 뒤집혔습니다.
+    대기열 맨 앞의 마린이 먼저, 맨 뒤의 파이어뱃이 마지막에 나온 것도 출력에 그대로 보입니다.
+  </div>
+
+  <!-- ── 5단계 ── -->
+  <h3 id="ex5">5단계 · STL 알고리즘 — 찾아보고, 없으면 더한다</h3>
+  <div class="prompt example">
+    13회에서 배운 STL 알고리즘(min_element, count_if, find_if, accumulate, sort, any_of …)으로 바꿀 수 있는 for문이 지금 코드에 있으면 찾아 줘. 아직 고치지 마.
+  </div>
+  <p>
+    찾은 것은 하나 — <code>nearest_enemy</code>의 「가장 가까운 것을 찾는 루프」입니다. 하나로는 모자라서 <strong>쓸 만한 상황을 둘 더했습니다.</strong>
+    <code>remove_dead</code>의 <code>erase</code> 반복문도 바꿀 수 있다는 답이 왔지만(<code>std::remove_if</code>), 수업에서 다루지 않은 것이라 그대로 두었습니다.
+  </p>
+  <div class="prompt example">
+    nearest_enemy의 최솟값 찾는 for문을 std::min_element로 바꿔 줘. 그리고 상황 둘을 추가해 줘 —
+    매 프레임 머리 줄에 양쪽 진영의 유닛 수와 체력 합을 찍는데 체력 합은 std::accumulate로 구하고,
+    전투가 끝나면 살아남은 테란을 체력이 많은 순서로 std::sort 해서 찍어 줘. remove_dead의 erase 반복문은 그대로 둬.
+  </div>
+  <div class="tablewrap">
+  <table>
+    <tr><th>자리</th><th>알고리즘</th><th>찾았나 · 더했나</th><th>바꾸기 전 / 무슨 상황인가</th></tr>
+    <tr><td><code>nearest_enemy</code></td><td><code>std::min_element</code></td><td>찾았다</td><td><code>best_dist</code>를 <code>1e9f</code>로 두고 더 가까우면 바꾸던 <code>for</code>문</td></tr>
+    <tr><td><code>total_hp</code></td><td><code>std::accumulate</code></td><td>더했다</td><td>매 프레임 머리 줄에 양쪽 체력 합을 찍어 전세가 어느 쪽으로 기우는지 보인다</td></tr>
+    <tr><td><code>sort_by_hp</code></td><td><code>std::sort</code></td><td>더했다</td><td>끝나고 살아남은 유닛을 체력 순으로 찍는다</td></tr>
+  </table>
+  </div>
+  <div class="codelabel bad">고치기 전 — 가장 가까운 것을 찾는 for문</div>
+<pre><code>Unit * nearest_enemy(const Unit &amp; me, const Army &amp; enemies)
+{
+  Unit * best = nullptr;
+  float best_dist = 1e9f;
+  for (const auto &amp; e : enemies) {
+    const float d = distance(me.pos(), e-&gt;pos());
+    if (d &lt; best_dist) {
+      best_dist = d;
+      best = e.get();                          // 주소만 빌려준다. 소유권은 진영에 그대로
+    }
+  }
+  return best;
+}</code></pre>
+  <div class="codelabel good">고친 뒤 — min_element 하나. 더한 함수 둘도 같은 모양이다</div>
+<pre><code>Unit * nearest_enemy(const Unit &amp; me, const Army &amp; enemies)
+{
+  if (enemies.empty()) return nullptr;
+  const auto it = std::min_element(enemies.begin(), enemies.end(),
+      [&amp;me](const std::unique_ptr&lt;Unit&gt; &amp; a, const std::unique_ptr&lt;Unit&gt; &amp; b) {
+        return distance(me.pos(), a-&gt;pos()) &lt; distance(me.pos(), b-&gt;pos());
+      });
+  return it-&gt;get();                            // 주소만 빌려준다. 소유권은 진영에 그대로
+}
+
+int total_hp(const Army &amp; army)
+{
+  return std::accumulate(army.begin(), army.end(), 0,
+      [](int sum, const std::unique_ptr&lt;Unit&gt; &amp; u) { return sum + u-&gt;hp(); });
+}</code></pre>
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 <code>[&amp;me](…) { … }</code> — 람다가 바깥 변수를 쓴다</p>
+    <p>
+      13회에서 본 람다는 <code>[](float r) { … }</code>처럼 대괄호가 비어 있었습니다. 여기서는 「누구에게서 가까운가」를 알아야 해서 바깥의 <code>me</code>를 대괄호에 적었습니다.
+      대괄호에 무엇을 적느냐는 <a href="../../robotics_14.html">14회</a>에서 제대로 다룹니다.
+    </p>
+  </div>
+  <div class="interp">
+    전투 과정은 4단계와 한 줄도 다르지 않습니다(<code>min_element</code>도 거리가 같으면 앞의 것을 고른다). 바뀐 것은 머리 줄과 맨 끝 순위뿐입니다 — 출력은 아래 완성본에 있습니다.
+  </div>
+
+  <!-- ── 완성본 ── -->
+  <h3 id="exfull">예시의 완성본 — 파일 넷, 약 300줄</h3>
+  <pre><code>starcraft/
+├── CMakeLists.txt       ← HW2 그대로
+├── include/
+│   └── units.hpp        ← Point · Unit(기반) · Marine · Firebat · Zealot · Army · Barracks
+└── src/
+    ├── units.cpp        ← 함수의 내용
+    └── main.cpp         ← 진영을 세우고 프레임을 돌린다</code></pre>
+  <p>
+    이 정도면 됩니다. 그런데 <strong>여기서 멈출 이유도 없습니다.</strong> 메딕이 다친 아군을 치료하게 하고(상대가 적이 아니라 아군인 상호작용),
+    질럿에게 실드를 달아 피해를 받는 방식까지 종류마다 다르게 하고, 프로토스에도 게이트웨이를 줘서 양쪽이 증원하게 해 보세요.
+    단계마다 「무엇을 쓸지」를 정해 주기만 하면 AI가 몇 분 만에 만들어 줍니다.
+  </p>
+  <details class="fullcode">
+    <summary>CMakeLists.txt</summary>
+<pre><code>cmake_minimum_required(VERSION 3.16)
+project(starcraft CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# ① 유닛 규칙을 라이브러리로 묶는다
+add_library(units src/units.cpp)
+target_include_directories(units PUBLIC include)
+
+# ② 전투를 돌리는 실행 파일에 ①을 붙인다
+add_executable(battle src/main.cpp)
+target_link_libraries(battle PRIVATE units)</code></pre>
+  </details>
+  <details class="fullcode">
+    <summary>include/units.hpp — 선언만 있다</summary>
+<pre><code>// units.hpp — 유닛의 상속 구조: Unit(기반) ← Marine · Firebat · Zealot
+#ifndef UNITS_HPP_
+#define UNITS_HPP_
+#include &lt;deque&gt;
+#include &lt;memory&gt;
+#include &lt;string&gt;
+#include &lt;vector&gt;
+
+namespace starcraft {
+
+struct Point {                  // 2차원 위치
+  float x;
+  float y;
+};
+
+float distance(const Point &amp; a, const Point &amp; b);
+
+// 모든 유닛에 공통인 것. attack 이 순수 가상이라 Unit 으로는 객체를 만들 수 없다
+class Unit {
+public:
+  Unit(const std::string &amp; name, int hp, float range, float speed, Point pos);
+  virtual ~Unit();                          // 기반 클래스로 지워도 파생 클래스까지 정리되게
+
+  const std::string &amp; name() const;
+  int hp() const;
+  bool is_alive() const;
+  const Point &amp; pos() const;
+
+  void move_toward(const Point &amp; target);   // 단일 동작 — 목표 쪽으로 한 칸
+  void take_damage(int amount);             // 단일 동작 — 체력이 준다
+  void engage(Unit * target);               // 상호작용 — 사거리 밖이면 다가가고, 안이면 attack
+  virtual void attack(Unit &amp; target) = 0;   // 때리는 방식은 종류마다 다르다
+
+private:
+  std::string name_;
+  int hp_;                                  // 체력
+  float range_;                             // 사거리
+  float speed_;                             // 한 프레임에 움직이는 거리
+  Point pos_;
+};
+
+class Marine : public Unit {                // 총 한 발 (6)
+public:
+  Marine(const std::string &amp; name, Point pos);
+  void attack(Unit &amp; target) override;
+};
+
+class Firebat : public Unit {               // 화염 (16) — 세지만 사거리가 짧다
+public:
+  Firebat(const std::string &amp; name, Point pos);
+  void attack(Unit &amp; target) override;
+};
+
+class Zealot : public Unit {                // 칼 두 번 (8 × 2)
+public:
+  Zealot(const std::string &amp; name, Point pos);
+  void attack(Unit &amp; target) override;
+};
+
+// 진영 — 유닛을 소유한다. 진영에서 빠지는 순간 유닛도 지워진다
+using Army = std::vector&lt;std::unique_ptr&lt;Unit&gt;&gt;;
+
+void deploy(Army &amp; army, std::unique_ptr&lt;Unit&gt; unit);   // 소유권을 받아 진영에 넣는다
+void remove_dead(Army &amp; army);                          // 죽은 유닛을 빼낸다(= 지운다)
+
+// 배럭 — 생산 대기열은 뒤에 넣고 앞에서 꺼낸다
+class Barracks {
+public:
+  Barracks(Point rally);
+  void train(const std::string &amp; kind);     // 대기열 맨 뒤에 넣는다 ("marine" · "firebat")
+  std::unique_ptr&lt;Unit&gt; tick();             // 한 프레임 진행. 다 만든 유닛을 내보내고, 없으면 nullptr
+
+private:
+  std::deque&lt;std::string&gt; queue_;           // 생산 대기열
+  int progress_;                            // 맨 앞 유닛을 만든 지 몇 프레임째인가
+  int made_;                                // 지금까지 만든 수 — 이름 번호로 쓴다
+  Point rally_;                             // 나온 유닛이 서는 곳
+};
+
+// 가장 가까운 적을 가리키기만 한다(소유하지 않는다). 적이 없으면 nullptr
+Unit * nearest_enemy(const Unit &amp; me, const Army &amp; enemies);
+
+int  total_hp(const Army &amp; army);                       // 진영의 체력 합
+void sort_by_hp(Army &amp; army);                           // 체력이 많은 순서로 줄 세운다
+
+}  // namespace starcraft
+#endif</code></pre>
+  </details>
+  <details class="fullcode">
+    <summary>src/units.cpp — 함수의 내용</summary>
+<pre><code>// units.cpp — 함수의 내용
+#include "units.hpp"
+#include &lt;algorithm&gt;
+#include &lt;cmath&gt;
+#include &lt;iostream&gt;
+#include &lt;numeric&gt;
+
+namespace starcraft {
+
+float distance(const Point &amp; a, const Point &amp; b)
+{
+  const float dx = a.x - b.x;
+  const float dy = a.y - b.y;
+  return std::sqrt(dx * dx + dy * dy);
+}
+
+// ---- Unit — 모든 유닛에 공통인 부분 ----
+Unit::Unit(const std::string &amp; name, int hp, float range, float speed, Point pos)
+  : name_(name), hp_(hp), range_(range), speed_(speed), pos_(pos)
+{
+}
+
+Unit::~Unit()
+{
+  std::cout &lt;&lt; "  [" &lt;&lt; name_ &lt;&lt; " removed]\n";
+}
+
+const std::string &amp; Unit::name() const { return name_; }
+int Unit::hp() const { return hp_; }
+bool Unit::is_alive() const { return hp_ &gt; 0; }
+const Point &amp; Unit::pos() const { return pos_; }
+
+void Unit::move_toward(const Point &amp; target)
+{
+  const float dist = distance(pos_, target);
+  if (dist &lt; 0.01f) return;                    // 이미 도착했다
+  const float step = std::min(speed_, dist);   // 목표를 지나치지 않는다
+  pos_.x += (target.x - pos_.x) / dist * step;
+  pos_.y += (target.y - pos_.y) / dist * step;
+  std::cout &lt;&lt; "  " &lt;&lt; name_ &lt;&lt; " -&gt; (" &lt;&lt; pos_.x &lt;&lt; ", " &lt;&lt; pos_.y &lt;&lt; ")\n";
+}
+
+void Unit::take_damage(int amount)
+{
+  hp_ -= amount;
+  if (hp_ &lt; 0) hp_ = 0;
+}
+
+void Unit::engage(Unit * target)
+{
+  if (target == nullptr) return;               // 공격할 상대가 없다
+  if (!target-&gt;is_alive()) return;
+  if (distance(pos_, target-&gt;pos()) &gt; range_) {
+    move_toward(target-&gt;pos());                // 사거리 밖이면 다가간다
+    return;
+  }
+  attack(*target);                             // 실제 종류(Marine·Zealot …)의 attack 이 불린다
+  if (!target-&gt;is_alive()) std::cout &lt;&lt; "  " &lt;&lt; target-&gt;name() &lt;&lt; " is KILLED\n";
+}
+
+// ---- 파생 클래스 — 능력치와 때리는 방식만 다르다 ----
+Marine::Marine(const std::string &amp; name, Point pos) : Unit(name, 40, 4.0f, 1.0f, pos)
+{
+  std::cout &lt;&lt; name &lt;&lt; ": You wanna piece of me, boy?\n";
+}
+
+void Marine::attack(Unit &amp; target)
+{
+  target.take_damage(6);
+  std::cout &lt;&lt; "  " &lt;&lt; name() &lt;&lt; " shoots " &lt;&lt; target.name() &lt;&lt; " (hp " &lt;&lt; target.hp() &lt;&lt; ")\n";
+}
+
+Firebat::Firebat(const std::string &amp; name, Point pos) : Unit(name, 50, 1.0f, 1.0f, pos)
+{
+  std::cout &lt;&lt; name &lt;&lt; ": Need a light?\n";
+}
+
+void Firebat::attack(Unit &amp; target)
+{
+  target.take_damage(16);
+  std::cout &lt;&lt; "  " &lt;&lt; name() &lt;&lt; " burns " &lt;&lt; target.name() &lt;&lt; " (hp " &lt;&lt; target.hp() &lt;&lt; ")\n";
+}
+
+Zealot::Zealot(const std::string &amp; name, Point pos) : Unit(name, 100, 1.0f, 1.0f, pos)
+{
+  std::cout &lt;&lt; name &lt;&lt; ": My life for Aiur!\n";
+}
+
+void Zealot::attack(Unit &amp; target)
+{
+  target.take_damage(8);                       // 칼 두 번
+  target.take_damage(8);
+  std::cout &lt;&lt; "  " &lt;&lt; name() &lt;&lt; " slashes " &lt;&lt; target.name() &lt;&lt; " twice (hp " &lt;&lt; target.hp() &lt;&lt; ")\n";
+}
+
+// ---- Barracks ----
+Barracks::Barracks(Point rally) : progress_(0), made_(0), rally_(rally)
+{
+}
+
+void Barracks::train(const std::string &amp; kind)
+{
+  queue_.push_back(kind);
+}
+
+std::unique_ptr&lt;Unit&gt; Barracks::tick()
+{
+  const int build_frames = 3;                  // 한 기를 만드는 데 걸리는 프레임
+  if (queue_.empty()) return nullptr;
+  if (++progress_ &lt; build_frames) return nullptr;
+  progress_ = 0;
+  const std::string kind = queue_.front();     // 맨 앞 것이 먼저 나온다
+  queue_.pop_front();
+  ++made_;
+  const std::string name = kind + "#" + std::to_string(made_);   // 증원은 marine#1 처럼 # 을 붙인다
+  if (kind == "firebat") return std::make_unique&lt;Firebat&gt;(name, rally_);
+  return std::make_unique&lt;Marine&gt;(name, rally_);
+}
+
+// ---- 진영을 다루는 함수 ----
+void deploy(Army &amp; army, std::unique_ptr&lt;Unit&gt; unit)
+{
+  army.push_back(std::move(unit));             // 소유권이 매개변수에서 진영으로 간다
+}
+
+void remove_dead(Army &amp; army)
+{
+  for (auto it = army.begin(); it != army.end(); ) {
+    if (!(*it)-&gt;is_alive()) {
+      it = army.erase(it);                     // unique_ptr 가 사라지며 유닛도 지워진다
+    } else {
+      ++it;
+    }
+  }
+}
+
+Unit * nearest_enemy(const Unit &amp; me, const Army &amp; enemies)
+{
+  if (enemies.empty()) return nullptr;
+  const auto it = std::min_element(enemies.begin(), enemies.end(),
+      [&amp;me](const std::unique_ptr&lt;Unit&gt; &amp; a, const std::unique_ptr&lt;Unit&gt; &amp; b) {
+        return distance(me.pos(), a-&gt;pos()) &lt; distance(me.pos(), b-&gt;pos());
+      });
+  return it-&gt;get();                            // 주소만 빌려준다. 소유권은 진영에 그대로
+}
+
+int total_hp(const Army &amp; army)
+{
+  return std::accumulate(army.begin(), army.end(), 0,
+      [](int sum, const std::unique_ptr&lt;Unit&gt; &amp; u) { return sum + u-&gt;hp(); });
+}
+
+void sort_by_hp(Army &amp; army)
+{
+  std::sort(army.begin(), army.end(),
+      [](const std::unique_ptr&lt;Unit&gt; &amp; a, const std::unique_ptr&lt;Unit&gt; &amp; b) {
+        return a-&gt;hp() &gt; b-&gt;hp();
+      });
+}
+
+}  // namespace starcraft</code></pre>
+  </details>
+  <details class="fullcode">
+    <summary>src/main.cpp — 진영을 세우고 프레임을 돌린다</summary>
+<pre><code>// main.cpp — 테란 셋(마린 둘 · 파이어뱃 하나)과 질럿 둘이 만날 때까지 프레임을 돌린다
+#include "units.hpp"
+#include &lt;iostream&gt;
+
+int main()
+{
+  using namespace starcraft;
+  std::cout.precision(2);
+  std::cout &lt;&lt; std::fixed;
+
+  // 유닛은 진영(Army)이 소유한다. 만들자마자 진영에 넘긴다
+  Army terran;
+  Army protoss;
+  deploy(terran, std::make_unique&lt;Marine&gt;("marine1", Point{0.0f, 0.0f}));
+  deploy(terran, std::make_unique&lt;Marine&gt;("marine2", Point{0.0f, 2.0f}));
+  deploy(terran, std::make_unique&lt;Firebat&gt;("firebat", Point{0.0f, 1.0f}));
+  deploy(protoss, std::make_unique&lt;Zealot&gt;("zealot1", Point{8.0f, 0.5f}));
+  deploy(protoss, std::make_unique&lt;Zealot&gt;("zealot2", Point{8.0f, 1.5f}));
+
+  // 배럭에 증원 셋을 예약해 둔다 — 3프레임마다 하나씩 나온다
+  Barracks barracks(Point{-2.0f, 1.0f});
+  barracks.train("marine");
+  barracks.train("marine");
+  barracks.train("firebat");
+
+  const int max_frames = 30;                 // 이보다 오래 끌면 무승부
+  for (int frame = 1; frame &lt;= max_frames; ++frame) {
+    std::cout &lt;&lt; "--- frame " &lt;&lt; frame &lt;&lt; "  terran " &lt;&lt; terran.size() &lt;&lt; " (hp " &lt;&lt; total_hp(terran)
+              &lt;&lt; ") vs protoss " &lt;&lt; protoss.size() &lt;&lt; " (hp " &lt;&lt; total_hp(protoss) &lt;&lt; ")\n";
+    std::unique_ptr&lt;Unit&gt; fresh = barracks.tick();
+    if (fresh != nullptr) deploy(terran, std::move(fresh));   // 배럭에서 진영으로 소유권이 간다
+    for (const auto &amp; u : terran) {
+      u-&gt;engage(nearest_enemy(*u, protoss));
+      remove_dead(protoss);                  // 죽은 적은 바로 빠진다
+    }
+    for (const auto &amp; u : protoss) {
+      u-&gt;engage(nearest_enemy(*u, terran));
+      remove_dead(terran);
+    }
+    if (terran.empty() || protoss.empty()) break;
+  }
+
+  std::cout &lt;&lt; "terran " &lt;&lt; terran.size() &lt;&lt; " alive, protoss "
+            &lt;&lt; protoss.size() &lt;&lt; " alive\n";
+  sort_by_hp(terran);                        // 살아남은 쪽을 체력 순서로 찍는다
+  for (const auto &amp; u : terran) std::cout &lt;&lt; "  " &lt;&lt; u-&gt;name() &lt;&lt; " hp " &lt;&lt; u-&gt;hp() &lt;&lt; "\n";
+  return 0;
+}</code></pre>
+  </details>
+  <details class="fullcode">
+    <summary>실제로 나온 출력 — 13프레임, 테란 넷이 남는다</summary>
+<pre><code>$ cmake -S . -B build
+$ cmake --build build
+[ 25%] Building CXX object CMakeFiles/units.dir/src/units.cpp.o
+[ 50%] Linking CXX static library libunits.a
+[ 50%] Built target units
+[ 75%] Building CXX object CMakeFiles/battle.dir/src/main.cpp.o
+[100%] Linking CXX executable battle
+[100%] Built target battle
+$ ./build/battle
+marine1: You wanna piece of me, boy?
+marine2: You wanna piece of me, boy?
+firebat: Need a light?
+zealot1: My life for Aiur!
+zealot2: My life for Aiur!
+--- frame 1  terran 3 (hp 130) vs protoss 2 (hp 200)
+  marine1 -&gt; (1.00, 0.06)
+  marine2 -&gt; (1.00, 1.94)
+  firebat -&gt; (1.00, 0.94)
+  zealot1 -&gt; (7.00, 0.44)
+  zealot2 -&gt; (7.00, 1.56)
+--- frame 2  terran 3 (hp 130) vs protoss 2 (hp 200)
+  marine1 -&gt; (2.00, 0.12)
+  marine2 -&gt; (2.00, 1.88)
+  firebat -&gt; (1.99, 0.85)
+  zealot1 -&gt; (6.00, 0.38)
+  zealot2 -&gt; (6.00, 1.62)
+--- frame 3  terran 3 (hp 130) vs protoss 2 (hp 200)
+marine#1: You wanna piece of me, boy?
+  marine1 -&gt; (2.99, 0.19)
+  marine2 -&gt; (2.99, 1.81)
+  firebat -&gt; (2.99, 0.74)
+  marine#1 -&gt; (-1.00, 0.92)
+  zealot1 -&gt; (5.01, 0.31)
+  zealot2 -&gt; (5.01, 1.69)
+  …
+--- frame 9  terran 4 (hp 128) vs protoss 2 (hp 84)
+firebat#3: Need a light?
+  marine1 shoots zealot1 (hp 8)
+  marine2 shoots zealot2 (hp 64)
+  marine#1 shoots zealot1 (hp 2)
+  marine#2 shoots zealot1 (hp 0)
+  zealot1 is KILLED
+  [zealot1 removed]
+  firebat#3 -&gt; (-1.00, 0.90)
+  zealot2 slashes marine1 twice (hp 0)
+  marine1 is KILLED
+  [marine1 removed]
+  …
+--- frame 13  terran 4 (hp 138) vs protoss 1 (hp 10)
+  marine2 shoots zealot2 (hp 4)
+  marine#1 shoots zealot2 (hp 0)
+  zealot2 is KILLED
+  [zealot2 removed]
+terran 4 alive, protoss 0 alive
+  firebat#3 hp 50
+  marine#1 hp 40
+  marine#2 hp 40
+  marine2 hp 8
+  [firebat#3 removed]
+  [marine#1 removed]
+  [marine#2 removed]
+  [marine2 removed]</code></pre>
+  </details>
+
+  <div class="interp">
+    <strong>이 예시에서 요소를 찾아보세요.</strong>
+    기반 클래스 <code>Unit</code>과 파생 셋(B-1) · <code>virtual void attack(Unit &amp;) = 0</code>과 <code>override</code>(B-2) · <code>virtual ~Unit()</code>(B-3) ·
+    <code>private</code> 멤버와 초기화 리스트와 <code>hp() const</code>(B-4) · <code>Army</code>와 <code>make_unique</code>(C-1) · <code>deploy</code>의 <code>std::move</code>(C-2) ·
+    <code>engage(Unit *)</code>의 <code>nullptr</code> 검사와 <code>attack(Unit &amp;)</code>(C-3) · 진영 <code>vector</code>와 대기열 <code>deque</code>(D-1) ·
+    <code>it = army.erase(it)</code>(D-2) · <code>min_element</code>·<code>accumulate</code>·<code>sort</code>(E-1).
+  </div>
+
+  <h2 id="ai">AI와 함께 만들 때</h2>
+  <p>
+    코드를 에이전트에게 받아도 됩니다. 1회차의 규칙은 그대로입니다 — <strong>설명하지 못하는 코드는 내지 않습니다.</strong>
+    보고서의 「이유」 칸은 <strong>여러분의 말로</strong> 적고, 퀴즈는 그 이유에서 나옵니다.
+  </p>
+  <h3 id="ai-step">한 단계에 프롬프트 한두 개 — 물어보고, 정하고, 시킨다</h3>
+  <p>예시가 단계마다 밟은 순서는 같습니다.</p>
+  <ol>
+    <li><strong>물어본다</strong> (선택) — 「이 자리에 무엇이 맞을까? 추천만 해 줘. 코드는 아직 고치지 마.」 선택지와 이유를 받아 봅니다.</li>
+    <li><strong>정한다</strong> — 받은 추천을 수업 내용과 맞춰 보고 여러분이 고릅니다. 추천과 다르게 골라도 됩니다. 이유가 있으면 됩니다.</li>
+    <li><strong>시킨다</strong> — 고른 것을 프롬프트에 <strong>이름으로</strong> 적습니다. 「안전하게」·「효율적으로」 대신 「<code>unique_ptr</code>로」·「<code>deque</code>로」·「<code>min_element</code>로」.</li>
+    <li><strong>확인한다</strong> — 빌드하고 돌려 보고, 받은 코드가 시킨 대로인지 봅니다. 시키지 않은 것을 바꿨으면 되돌리라고 합니다.</li>
+  </ol>
+  <h3 id="ai-review">받은 코드에서 먼저 볼 자리</h3>
+  <ul>
+    <li>기반 클래스의 소멸자에 <code>virtual</code>이 있는가 — 빠져도 오류가 안 나서 놓치기 쉽습니다 (10회 ⑤)</li>
+    <li>재정의한 함수에 <code>override</code>가 붙어 있는가 (10회 ④)</li>
+    <li>시키지 않았는데 <code>shared_ptr</code>을 쓰지 않았는가 — 쓰였다면 소유자가 정말 여럿인지 묻습니다 (11회 ⑤)</li>
+    <li><code>new</code>·<code>delete</code>가 남아 있지 않은가 (11회 ④)</li>
+    <li>돌면서 지우는 곳에서 <code>erase</code>의 반환값을 받는가 (12회 ⑧)</li>
+    <li>헤더에 함수 본문이 들어 있지 않은가 — 클래스 안에 짧은 함수를 적어 주는 경우가 많습니다 (9회 ⑦)</li>
+  </ul>
+  <h3 id="ai-log">세션을 끝내기 전에 — 대화 요약을 받아 둡니다</h3>
+  <p>
+    보고서 맨 뒤 9절에는 <strong>AI와 주고받은 대화의 요약</strong>을 붙입니다. HW2와 같습니다 —
+    세션을 닫기 전에 아래 글을 그대로 보내고, 출력을 <strong>고치지 않고 그대로</strong> 붙여 넣습니다. 세션을 여러 번 열었으면 세션마다 받아 이어 붙입니다.
+  </p>
+  <div class="copyform">
+    <button onclick="copyPrompt(this)">복사</button>
+<pre><code>이 세션을 끝내기 전에 지금까지의 대화를 아래 규칙대로 정리해 줘.
+- 내가 보낸 메시지는 요약하지 말고 순서대로 원문 그대로 적어. 한 글자도 바꾸지 마.
+- 네 대답은 중간 과정(탐색·시도·설명·되묻기)을 빼고, 그 요청으로 실제로 만들거나 고친 것만 두세 줄로 요약해.
+  만들거나 고친 파일 이름과 함수 이름을 적고, 요청과 다르게 한 것이 있으면 그것도 적어.
+  내가 추천만 해 달라고 한 질문에는 네가 추천한 것을 한 줄로 적어.
+- 대화 순서대로 번호를 붙여 아래 형식으로 써. 이 형식 밖의 말은 붙이지 마.
+
+### 1
+**나:** (원문 그대로)
+**AI:** (구현하거나 수정한 것 요약)
+
+### 2
+**나:** …
+**AI:** …</code></pre>
+  </div>
+
+  <h2 id="form">보고서 양식</h2>
+  <p class="readme-first">
+    아래 <strong>「복사」 버튼</strong>을 누르면 양식이 통째로 복사됩니다.
+    보고서에 붙여 넣고 <strong>괄호 안 안내 글은 지우고</strong> 빈 칸을 채우면 됩니다. <strong>절 번호와 제목은 그대로 둡니다.</strong>
+  </p>
+  <p>
+    1~5절이 다섯 단계입니다. 단계마다 <strong>고른 것과 이유 · 보낸 프롬프트 · 주요 변경 사항 · 코드 조각</strong>을 적습니다.
+    코드 조각은 <strong>그 단계에서 바뀐 부분만</strong> 붙이고, 전체 코드는 8절에 한 번만 넣습니다. 터미널 출력은 <strong>글자로</strong> 붙입니다.
+  </p>
+
+  <div class="copyform">
+    <button onclick="copyPrompt(this)">복사</button>
+<pre><code># HW3 보고서 — 이름 ______  학번 ______
+
+**출발점:** HW2의 내 프로그램을 이어서 / 새 주제로  (하나만 남기고 지웁니다)
+
+## 1. 1단계 — 요구하는 기능 (A-1~3)
+(HW2를 이으면 HW2의 세 줄을 옮기고, 이번에 더하거나 바꾼 것만 적습니다. 1-2·1-3은 「생략」이라고 적어도 됩니다)
+- 객체 구성 (A-1):
+- 단일 동작 (A-2):
+- 상호 작용 (A-3):
+
+### 1-2. 보낸 프롬프트 (원문)
+
+### 1-3. 주요 변경 사항
+
+## 2. 2단계 — 클래스 상속 구조 (B-1~5)
+
+### 2-1. 상속 구조 (B-1)
+(기반 클래스와 파생 클래스를 트리로. 클래스마다 가상 함수와 override를 적습니다)
+```
+기반 클래스
+ ├── 파생 클래스 1
+ └── 파생 클래스 2
+```
+
+### 2-2. 고른 것과 이유
+- 기반 클래스에 둔 것과 이유:
+- 가상 함수로 둔 것(종류마다 다른 것)과 이유 (B-2):
+
+### 2-3. 보낸 프롬프트 (원문)
+
+### 2-4. 주요 변경 사항
+(3~6줄)
+
+### 2-5. 코드 조각 — 기반 클래스 선언 (B-2·3·4가 보이게)
+```cpp
+
+```
+
+## 3. 3단계 — 스마트 포인터 (C-1~4)
+
+### 3-1. 자리마다 고른 것 (C-1·2·3)
+| 자리 (함수·멤버 이름) | 소유? 빌림? | 고른 것 | 이유 |
+|---|---|---|---|
+| | | | |
+| | | | |
+| | | | |
+
+### 3-2. shared_ptr (C-4)
+(썼으면 한 객체를 소유하는 곳이 누구누구인지, 안 썼으면 왜 필요 없었는지 — 한두 줄)
+
+### 3-3. 보낸 프롬프트 (원문)
+
+### 3-4. 주요 변경 사항
+(3~6줄)
+
+### 3-5. 코드 조각 — make_unique와 std::move가 보이는 곳
+```cpp
+
+```
+
+## 4. 4단계 — 컨테이너 (D-1·2)
+
+### 4-1. 자리마다 고른 것 (D-1)
+| 자리 | 거기서 하는 일 (넣기·빼기·돌기·지우기) | 고른 것 | 다른 둘을 안 고른 이유 |
+|---|---|---|---|
+| | | | |
+| | | | |
+
+### 4-2. 보낸 프롬프트 (원문)
+
+### 4-3. 주요 변경 사항
+(3~6줄. 상황을 새로 더했으면 무슨 상황인지)
+
+### 4-4. 코드 조각 — 컨테이너 선언과 넣고 빼는 곳 (D-2: 돌면서 지우는 곳이 있으면 그 부분도)
+```cpp
+
+```
+
+## 5. 5단계 — STL 알고리즘 (E-1·2)
+
+### 5-1. 쓴 곳 (E-1·2)
+| 자리 | 알고리즘 | 찾았나 · 더했나 | 바꾸기 전 for문 요약 / 무슨 상황인가 |
+|---|---|---|---|
+| | | | |
+| | | | |
+
+### 5-2. 보낸 프롬프트 (원문)
+
+### 5-3. 주요 변경 사항
+(3~6줄)
+
+### 5-4. 코드 조각 — 바꾸기 전과 바꾼 뒤
+```cpp
+// 바꾸기 전
+
+// 바꾼 뒤
+
+```
+
+## 6. 빌드와 실행 — 화면에 나온 것 그대로
+
+### 6-1. cmake -S . -B build
+```
+
+```
+
+### 6-2. cmake --build build
+```
+
+```
+
+### 6-3. ./build/실행파일
+```
+
+```
+
+## 7. 후기 (선택)
+(어려웠던 것, AI의 추천과 다르게 고른 것이 있으면 그 이야기. 쓸 말이 없으면 비워 두되 제목은 지우지 않습니다)
+
+
+## 8. 전체 소스 코드
+(CMakeLists.txt · 헤더 · 소스 전부. 파일마다 이름을 적고 그 아래 코드를 붙입니다)
+
+### CMakeLists.txt
+```cmake
+
+```
+
+### include/______.hpp
+```cpp
+
+```
+
+### src/main.cpp
+```cpp
+
+```
+
+### src/______.cpp
+```cpp
+
+```
+
+## 9. AI와의 대화 요약
+(세션을 끝내기 전에 「AI와 함께 만들 때」의 요약 프롬프트를 보내고, 받은 출력을 고치지 않고 그대로 붙입니다. 세션이 여럿이면 이어 붙입니다.
+AI를 쓰지 않았으면 그렇게 적고 어떻게 만들었는지 두 줄)
+
+### 1
+**나:**
+**AI:**
+</code></pre>
+  </div>
+
+  <h2 id="submit">제출 방법과 점수</h2>
+  <p>
+    채운 보고서를 <strong>PDF 한 개</strong>로 만들어 LMS에 올립니다.
+    파일 이름은 <strong><code>HW3_이름_학번.pdf</code></strong>로,
+    <code>HW3_홍길동_20251234.pdf</code>처럼 자기 이름과 학번을 넣으면 됩니다.
+  </p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>무엇</th><th>점수</th><th>어떻게 봅니다</th></tr>
+    <tr><td>제출</td><td><strong>10점</strong></td><td>기한 안에 냈으면 받습니다</td></tr>
+    <tr><td>보고서</td><td><strong>25점</strong></td><td>아래 세 가지를 봅니다. <strong>프로그램이 얼마나 크고 훌륭한지는 채점하지 않습니다</strong></td></tr>
+    <tr><td>확인 퀴즈</td><td><strong>15점</strong></td><td>제출 후 다음 수업 시간에 짧게 봅니다. 객관식이고 <strong>정답은 그 자리에서 공개합니다</strong></td></tr>
+    <tr><td><strong>합계</strong></td><td><strong>50점</strong></td><td></td></tr>
+  </table>
+  </div>
+
+  <p><strong>보고서 25점은 이 세 가지로 봅니다</strong></p>
+  <ol>
+    <li><strong>빌드가 되고 실행이 됩니다</strong> — 6절의 세 출력이 그 증거입니다. 안 되면 제출 점수만 받습니다.</li>
+    <li><strong>A~E의 요소가 코드에 들어 있습니다</strong> — 빠진 요소가 있으면 그만큼 뺍니다. 8절 전체 소스로 봅니다.</li>
+    <li><strong>단계마다 고른 것의 이유와 주요 변경 사항이 채워져 있습니다</strong> — 특히 2-2 · 3-1 · 3-2 · 4-1 · 5-1의 이유, 그리고 9절의 AI 대화 요약.</li>
+  </ol>
+
+  <div class="interp">
+    <strong>퀴즈는 여러분이 단계마다 고르며 마주친 장면에서 나옵니다.</strong>
+    이 자리는 왜 <code>unique_ptr</code>이고 저 자리는 왜 원시 포인터인가, 왜 여기는 <code>deque</code>인가, 가상 소멸자가 없으면 무엇이 안 불리나 —
+    「이유」 칸을 <strong>여러분 말로</strong> 적었다면 따로 준비할 것이 없습니다.
+  </div>
+
+  <footer>
+    로봇공학 · 순천향대학교 전자정보공학과 ·
+    같이 볼 것: <a href="../../robotics_09.html">클래스</a> ·
+    <a href="../../robotics_10.html">상속과 다형성</a> ·
+    <a href="../../robotics_11.html">RAII와 스마트 포인터</a> ·
+    <a href="../../robotics_12.html">컨테이너</a> ·
+    <a href="../../robotics_13.html">STL 알고리즘</a>
+  </footer>
+</main>
+</div>
+
+<script src="../../../assets/site.js" defer></script>
+</body>
+</html>
