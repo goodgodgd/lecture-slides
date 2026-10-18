@@ -38,7 +38,6 @@
   <a href="#block6">⑥ std::optional</a>
   <a href="#block7">⑦ 구조적 바인딩과 if 안 선언</a>
   <a href="#lab">🧪 실습</a>
-  <a href="#hw">📝 HW4</a>
   <a href="#prompts">🤖 프롬프트 모음</a>
   <a href="#skill">🛠 2부를 스킬 하나로 굳힌다</a>
   <a href="#check">✅ 점검</a>
@@ -2103,7 +2102,7 @@ int main()
       <li><strong>(5분)</strong> AI에게 변형 폴더의 <code>main.cpp</code>를 통째로 주고
         <strong>"이 코드에 문제가 있나?"</strong>라고만 물어본다.
         문제를 찾아내는가? 못 찾으면 <strong>"람다가 저장돼서 나중에 불리는데 캡처가 안전한가?"</strong>라고 다시 묻는다.
-        <strong>두 답이 어떻게 달랐는지 적어 둔다</strong> — 그것이 HW4의 재료다.</li>
+        <strong>두 답이 어떻게 달랐는지 적어 둔다.</strong></li>
     </ol>
 
     <p class="boxtitle">이렇게 되면 성공이다</p>
@@ -2153,31 +2152,6 @@ int main()
       8번에서 AI가 처음에는 못 찾았다면 그것도 성공이다 — <strong>그게 오늘의 요점이다.</strong>
       <span style="color:var(--muted)">확인한 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0 <code>-O2</code>)</span>
     </p>
-  </div>
-
-  <!-- ── HW4 ── -->
-  <h2 id="hw">📝 HW4 — 프롬프트를 고쳐 더 나은 코드를 받아낸다 <span class="badge b-red">🔴 사람이 한다</span></h2>
-
-  <p>
-    <strong>같은 요구를 세 번 다르게 해서 받은 코드 셋과, 무엇이 달라졌는지 적는다.</strong>
-    코드를 잘 짜는 것이 아니라 <strong>요구를 잘 쓰는 것</strong>이 과제다.
-  </p>
-
-  <div class="tablewrap">
-  <table>
-    <tr><th>제출물</th><th>무엇을 적나</th><th>배점</th></tr>
-    <tr><td>① 처음 요구와 받은 코드</td><td>막연하게 물어본 것. "라이다 값에서 가장 가까운 거리를 구해 줘" 정도</td><td></td></tr>
-    <tr><td>② 두 번째 요구와 받은 코드</td><td>"효율적으로 짜 줘" 같은 <strong>막연한 개선 요구</strong>를 붙인 것</td><td></td></tr>
-    <tr><td>③ 세 번째 요구와 받은 코드</td><td><strong>무엇이 문제인지 짚은 요구.</strong> "<code>inf</code>·<code>NaN</code>을 걸러 줘", "실패하면 <code>optional</code>로 돌려줘", "콜백은 <code>const</code> 참조로 받아 줘"</td><td></td></tr>
-    <tr><td>④ <strong>무엇이 달라졌는지 세 줄</strong> ← 여기가 점수다</td><td>①→②와 ②→③에서 <strong>코드의 어느 줄이 바뀌었나.</strong> 바뀐 이유를 자기 말로</td><td></td></tr>
-    <tr><td>⑤ AI가 끝까지 안 고친 것 ← 가점</td><td>세 번 물어도 안 고쳐진 것이 있으면 그것과 이유</td><td>가점</td></tr>
-  </table>
-  </div>
-  <div class="interp">
-    <strong>해석:</strong> ④가 점수인 이유가 있다.
-    연구에 따르면 막연한 요구("효율적으로 짜 줘")는 효율 점수를 0.294 → 0.342로 올렸지만,
-    <strong>무엇이 문제인지 짚은 요구는 0.385까지 올렸다</strong>(만점 1.0 기준, 31% 개선).
-    <strong>"더 잘해 줘"는 명세가 아니다.</strong> ③에서 그 차이를 직접 만들어 보는 것이 이 과제다.
   </div>
 
   <!-- ── 프롬프트 모음 ── -->

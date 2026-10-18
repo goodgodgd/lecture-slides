@@ -942,7 +942,6 @@ lrwxrwxrwx root/root         0 2026-07-31 04:44 ./etc/apt/sources.list.d/ros2.so
     <p>
       키 파일 하나(크기가 ②절에서 받은 것과 같은 1167바이트다)와 저장소 설정 파일 하나다.
       다른 점은 <strong>키가 바뀌면 <code>apt upgrade</code>로 같이 바뀐다</strong>는 것이다. 손으로 받은 키는 바뀌어도 그대로 남는다.
-      실제로 2025년에 ROS 저장소 키의 유효 기간이 끝나 손으로 키를 받았던 컴퓨터들이 한꺼번에 <code>apt update</code> 오류를 낸 일이 있었다.
       이 강의의 방식으로 깐 뒤 언젠가 <code>apt update</code>에서 ROS 저장소 쪽에 서명 오류가 나면, 4번 줄(키 받기)을 한 번 더 치면 된다.
     </p>
   </details>
