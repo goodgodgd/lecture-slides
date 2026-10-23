@@ -159,3 +159,14 @@ footer { margin-top: 4rem; padding-top: 1.2rem; border-top: 1px solid var(--line
 footer a { color: var(--accent); }
 .backlink { display: inline-block; margin-bottom: 1.5rem; font-size: .85rem; color: var(--muted); text-decoration: none; }
 .backlink:hover { color: var(--accent); }
+
+/* ── 코드 색상 — site.js 의 highlightCode 가 pre.lang-cpp / lang-cmake / lang-sh / lang-py 안에 붙인다 ── */
+.hl-kw { color: var(--hl-kw); font-weight: 600; }
+.hl-type { color: var(--hl-type); }
+.hl-ns { color: var(--hl-ns); }
+.hl-str { color: var(--hl-str); }
+.hl-num { color: var(--hl-num); }
+.hl-pre { color: var(--hl-pre); }
+.hl-cmt { color: var(--hl-cmt); font-style: italic; }
+.hl-fn { color: var(--hl-ns); }
+.hl-prompt { color: var(--muted); }
