@@ -262,7 +262,7 @@
     <strong>유클리드 공간은 하나인데 그것을 표현하는 좌표계는 무한히 많다.</strong>
     그래서 SLAM에서 「위치」라고 말할 때는 <strong>반드시 어느 좌표계에서 본 것인지를 함께 말해야</strong> 하고,
     그것을 말하지 않아도 되게 만드는 장치가 ⑦절의 표기 규약이다.
-    <strong>13회의 게이지 자유도(gauge freedom)도 결국 이 이야기다</strong> —
+    <strong>8회의 게이지 자유도(gauge freedom)도 결국 이 이야기다</strong> —
     월드 좌표계를 어디에 둘지는 <strong>정해지지 않으며, 우리가 정하는 것</strong>이다.
   </div>
 
@@ -339,7 +339,7 @@
   <div class="box trap">
     <p class="boxtitle">⚠️ \(\det R = 1\) 조건은 실전에서 생각보다 자주 걸린다</p>
     <p style="margin:0">
-      SVD로 회전을 구하는 알고리즘 — <strong>5회의 에피폴라 분해, 9회의 궤적 정렬, ②절의 재직교화</strong> —
+      SVD로 회전을 구하는 알고리즘 — <strong>5회의 에피폴라 분해, 13회의 궤적 정렬, ②절의 재직교화</strong> —
       에서 <strong>부호를 안 맞추면 \(\det R = -1\)인 행렬이 그대로 나온다.</strong>
       그 상태로도 프로그램은 돌고, <strong>재구성된 점들이 카메라 뒤에 생긴다.</strong>
       「점이 하나도 안 보인다」는 증상이 나오면 여기부터 본다.
@@ -531,7 +531,7 @@ Sophus::SE3d T_BW = T_WB.inverse();</pre>
       값이 커지긴 하는데 발산하지는 않아서, <strong>「필터가 조금 이상하다」로만 보인다.</strong>
       <span class="mono">Sophus::SE3d</span>의 <span class="mono">operator*</span>는 점으로 취급하므로
       <strong>방향 벡터에는 <span class="mono">.so3() * v</span> 또는 <span class="mono">.rotationMatrix() * v</span>를 쓴다.</strong>
-      11회에서 속도를 상태에 넣을 때 이 구별이 그대로 필요해진다.
+      10회에서 IMU로 속도를 적분하고 12회에서 속도를 상태에 넣을 때 이 구별이 그대로 필요해진다.
     </p>
   </div>
 
@@ -556,8 +556,7 @@ Sophus::SE3d T_BW = T_WB.inverse();</pre>
     <img src="assets/img/02_three_frames.png"
          alt="세 좌표계 F0, F1, F2가 이어져 있고 각각의 이동 벡터와 회전축, 회전각이 표시되어 있다. 점 p를 F1과 F2에서 본 좌표가 함께 그려져 있다">
     <figcaption>좌표계가 셋 이상이 되면 사슬이 길어진다.
-      <strong>화살표 방향과 아래첨자 순서가 맞는지</strong>만 보면 된다.
-      이 그림은 8회 중간고사에도 그대로 나온다.</figcaption>
+      <strong>화살표 방향과 아래첨자 순서가 맞는지</strong>만 보면 된다.</figcaption>
   </figure>
 
   <h3>passive와 active — 같은 행렬의 두 가지 읽기 🔴</h3>
@@ -655,7 +654,7 @@ int64_t 나노초. double 초로 바꾸지 않는다.
 
 ## 아직 정하지 않은 것
 - perturbation 방향 (3회에서 정한다 → right 로 통일하게 된다)
-- 상태 벡터의 구성 (10~11회에서 정한다)</pre>
+- 상태 벡터의 구성 (10~12회에서 정한다)</pre>
 
   <div class="interp">
     <strong>해석:</strong> 마지막 「아직 정하지 않은 것」 절이 이 파일에서 두 번째로 중요하다.
@@ -980,7 +979,7 @@ rr.log("world/points",   rr.Points3D(P_W, radii=0.01))</pre>
     <li><input type="checkbox" id="c12"><label for="c12">1단 시험 일곱 개를 돌렸고 전부 기준 안에 들었다</label></li>
   </ul>
 
-  <h2 id="more">조금 더 알아두면 <span class="badge b-lv">시험 범위 아님</span></h2>
+  <h2 id="more">조금 더 알아두면 <span class="badge b-lv">참고</span></h2>
 
   <details class="story">
     <summary>동차좌표의 마지막 칸이 0이면 무엇인가 — 무한히 먼 점</summary>

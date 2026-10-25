@@ -91,7 +91,7 @@
 
   <p>
     <strong>이 회차가 이 강의를 3D Vision에서 SLAM으로 넘기는 지점이다.</strong>
-    9회의 번들조정, 11회의 오차상태 필터, 12회의 사전적분이 전부 오늘 식을 다시 쓴다.
+    7회의 오차상태 필터, 8회의 번들조정, 10회의 사전적분이 전부 오늘 식을 다시 쓴다.
   </p>
 
   <h2 id="summary">한 장 요약 — 표현 네 가지 <span class="badge b-lv">학기 내내 본다</span></h2>
@@ -226,7 +226,7 @@
   <p>
     \(\mathbf{v}' = R\mathbf{v}\)다. 곱셈 9번, 덧셈 6번.
     <strong>네 표현 중 가장 싸다.</strong> 점을 수천 개 돌려야 하는 자리
-    (4회의 점군 오버레이, 9회의 재투영)에서는 무조건 회전행렬로 바꿔 놓고 돌린다.
+    (4회의 점군 오버레이, 8회의 재투영)에서는 무조건 회전행렬로 바꿔 놓고 돌린다.
   </p>
 
   <h3>⚠️ 곱을 반복하면 회전이 아니게 된다</h3>
@@ -672,7 +672,7 @@
   <div class="interp">
     <strong>해석:</strong> <strong>무한급수가 닫힌 형태로 접히는 것</strong>이 로드리게스 공식의 다른 얼굴이다.
     그리고 접히는 이유는 \([\mathbf{u}]_\times^3 = -[\mathbf{u}]_\times\) 한 줄이다.
-    이 성질은 나중에 \(J_r\)(⑩절)과 사전적분(12회)에서도 같은 방식으로 다시 쓰인다 —
+    이 성질은 나중에 \(J_r\)(⑩절)과 사전적분(10회)에서도 같은 방식으로 다시 쓰인다 —
     <strong>\([\cdot]_\times\)가 들어간 급수는 대체로 닫힌다.</strong>
     그래서 <strong>「급수가 나왔다」고 겁먹지 않아도 되는 자리</strong>가 이 강의에 여러 번 나온다.
   </div>
@@ -718,7 +718,7 @@
   <div class="interp">
     <strong>해석:</strong> \(\theta = \pi\)는 「거의 반 바퀴 돌아간 자세」다.
     이 강의의 데이터에서는 잘 안 나오지만(V1_01_easy는 손으로 들고 걷는 정도다),
-    <strong>루프 클로징에서 반대 방향으로 되돌아온 프레임을 비교할 때</strong>는 실제로 나온다(14회).
+    <strong>루프 클로징에서 반대 방향으로 되돌아온 프레임을 비교할 때</strong>는 실제로 나온다(13회).
     라이브러리는 이 갈래를 다 갖고 있다. <strong>직접 짤 때만 문제가 된다</strong> —
     그래서 이 강의는 Sophus를 쓴다.
   </div>
@@ -873,14 +873,14 @@ q 와 −q 가 같은 회전인가      = 0.000e+00      ← 이중 덮개</pre>
       거의 같은 두 자세인데 하나는 \(q\), 다른 하나는 \(-q\)로 저장돼 있으면
       <strong>단순 평균이 엉뚱한 회전</strong>이 되고, 두 점을 잇는 보간은 <strong>먼 쪽으로 한 바퀴 돈다.</strong>
       보통 <span class="mono">q0</span>가 음수면 부호를 뒤집어 통일한다.
-      <strong>루프 클로징(14회)에서 자세를 비교할 때, 그리고 궤적 파일을 읽을 때</strong> 실제로 나온다.
+      <strong>루프 클로징(13회)에서 자세를 비교할 때, 그리고 궤적 파일을 읽을 때</strong> 실제로 나온다.
     </p>
   </div>
 
   <h3>보간 — 두 자세 사이를 잇는다 (SLERP)</h3>
 
   <p>
-    두 자세 <strong>사이</strong>의 자세가 필요한 일이 자주 생긴다. 대표적인 자리가 12회다 —
+    두 자세 <strong>사이</strong>의 자세가 필요한 일이 자주 생긴다. 대표적인 자리가 10회다 —
     카메라가 영상을 찍은 시각과 IMU가 값을 낸 시각이 어긋나 있어서,
     <strong>그 사이 어느 순간의 자세를 앞뒤 두 자세로부터 만들어 내야</strong> 한다.
   </p>
@@ -932,7 +932,7 @@ q 와 −q 가 같은 회전인가      = 0.000e+00      ← 이중 덮개</pre>
     자세가 도는 <strong>속도</strong>로 보면 LERP는 처음과 끝에서 81.1°, 가운데서 94.9°로
     <strong>최대와 최소의 비가 1.17배(17 %)</strong>다.
     <strong>보간한 자세를 그대로 쓸 때는 티가 안 나고, 그것으로 각속도를 재는 순간 17 % 틀린다</strong>는 뜻이다.
-    12회에서 하려는 일이 정확히 그것이라 <strong>여기서는 이 차이가 그냥 넘어갈 것이 아니다.</strong>
+    10회에서 하려는 일이 정확히 그것이라 <strong>여기서는 이 차이가 그냥 넘어갈 것이 아니다.</strong>
   </div>
 
   <p>
@@ -1199,7 +1199,7 @@ q 와 −q 가 같은 회전인가      = 0.000e+00      ← 이중 덮개</pre>
     <li><strong>Sophus</strong> — \(\mathbf{SO}(3)\)·\(\mathbf{SE}(3)\)를 다루는 C++ 라이브러리.
       <strong>이름이 Sophus Lie에서 왔다.</strong> SLAM 코드 어디서나 보인다</li>
     <li><strong>Forster 외 (2015 · 2017)</strong> — IMU 사전적분을 \(\mathbf{SO}(3)\) 위에서 다시 쓴 논문.
-      <strong>12회에서 이 식을 그대로 구현한다</strong></li>
+      <strong>10회에서 이 식을 그대로 구현한다</strong></li>
     <li><strong>Solà · Deray · Atchuthan (2018)</strong> — <em>A micro Lie theory for state estimation in robotics</em>.
       <strong>이 강의의 표기가 대체로 이 문서와 같다</strong></li>
   </ul>
@@ -1438,7 +1438,7 @@ q 와 −q 가 같은 회전인가      = 0.000e+00      ← 이중 덮개</pre>
     사실은 <strong>각속도가 사는 곳</strong>이었다.
     <strong>②</strong> 각속도를 회전으로 바꾸는 연산이 바로 \(\mathrm{Exp}\)다.
     <strong>10회에서 IMU를 적분할 때 쓰는 식이 이 한 줄</strong>이고,
-    12회 사전적분의 \(\Delta R\)도 여기서 나온다.
+    같은 회차 사전적분의 \(\Delta R\)도 여기서 나온다.
     <strong>\(\mathrm{Exp}\)는 수학적 장식이 아니라 자이로 값을 자세로 바꾸는 함수다.</strong>
   </div>
 
@@ -1472,7 +1472,7 @@ q 와 −q 가 같은 회전인가      = 0.000e+00      ← 이중 덮개</pre>
     앞의 표에 있던 도구 넷이 전부 다시 돌아간다.</strong>
     최적화는 \(R \boxplus \delta\)로 갱신하고, 오차는 \(\hat{R} \boxminus R\)로 재고,
     공분산은 \(\boldsymbol\delta\)의 공분산으로 둔다.
-    <strong>11회의 오차상태 칼만필터가 정확히 이 아이디어 하나로 만들어져 있다.</strong>
+    <strong>7회의 오차상태 칼만필터(ESKF)가 정확히 이 아이디어 하나로 만들어져 있다.</strong>
   </div>
 
   <h3 id="algebra">Lie algebra — 정의는 무엇이고 어디까지가 그것인가</h3>
@@ -1626,11 +1626,11 @@ q 와 −q 가 같은 회전인가      = 0.000e+00      ← 이중 덮개</pre>
   <table class="summary-table">
     <tr><th style="width:22%">무엇</th><th>이 강의에서 하는 일</th><th>어느 회차</th></tr>
     <tr><td>\(\mathbf{SO}(3)\)</td><td>회전. 자세의 회전 부분</td><td>2회~</td></tr>
-    <tr><td>\(\mathfrak{so}(3)\)</td><td><strong>각속도가 사는 곳.</strong> 최적화 변수, 오차 상태</td><td>3 · 9 · 11 · 12회</td></tr>
-    <tr><td>\(\mathrm{Exp}\) · \(\mathrm{Log}\)</td><td>각속도 → 회전 / 자세 차이 → 벡터</td><td>3 · 10 · 12회</td></tr>
-    <tr><td>\(\boxplus\) · \(\boxminus\)</td><td>최적화 갱신, 오차 정의, 수치 야코비안</td><td>3 · 9 · 11회</td></tr>
-    <tr><td><strong>right Jacobian</strong> \(J_r\)</td><td>바이어스가 바뀌었을 때 사전적분 보정</td><td>⑩절 · <strong>12회</strong></td></tr>
-    <tr><td><strong>Adjoint</strong> \(\mathrm{Ad}_R = R\)</td><td>left ↔ right 변환, 공분산 옮기기</td><td>⑧절 · 12 · 13회</td></tr>
+    <tr><td>\(\mathfrak{so}(3)\)</td><td><strong>각속도가 사는 곳.</strong> 최적화 변수, 오차 상태</td><td>3 · 7 · 8 · 10 · 12회</td></tr>
+    <tr><td>\(\mathrm{Exp}\) · \(\mathrm{Log}\)</td><td>각속도 → 회전 / 자세 차이 → 벡터</td><td>3 · 8 · 10회</td></tr>
+    <tr><td>\(\boxplus\) · \(\boxminus\)</td><td>최적화 갱신, 오차 정의, 수치 야코비안</td><td>3 · 7 · 8 · 12회</td></tr>
+    <tr><td><strong>right Jacobian</strong> \(J_r\)</td><td>바이어스가 바뀌었을 때 사전적분 보정</td><td>⑩절 · <strong>10회</strong></td></tr>
+    <tr><td><strong>Adjoint</strong> \(\mathrm{Ad}_R = R\)</td><td>left ↔ right 변환, 공분산 옮기기</td><td>⑧절 · 8 · 10 · 12회</td></tr>
     <tr><td>Lie bracket</td><td><strong>개념만.</strong> algebra라는 이름의 근거이고, BCH가 왜 그렇게 생겼는지 설명할 때</td><td>⑩절</td></tr>
     <tr><td>\(\mathbf{SE}(3)\) · \(\mathfrak{se}(3)\)</td><td><strong>이름만.</strong> 이 강의는 위치와 회전을 나눠 다룬다</td><td>「조금 더」</td></tr>
   </table>
@@ -1638,7 +1638,7 @@ q 와 −q 가 같은 회전인가      = 0.000e+00      ← 이중 덮개</pre>
 
   <div class="interp">
     <strong>해석:</strong> 표의 위 네 줄이 <strong>오늘 손으로 만드는 것</strong>이고,
-    가운데 두 줄이 <strong>12~13회에서 회수되는 것</strong>이다.
+    가운데 두 줄이 <strong>8·10·12회에서 회수되는 것</strong>이다.
     맨 아래 두 줄은 알아만 둔다. <strong>Lie 이론을 「공부」할 필요는 없고,
     이 여덟 줄이 무엇을 하는지만 알면 이 강의가 끝까지 간다.</strong>
     더 깊이 보고 싶으면 「조금 더」에 읽을거리를 적어 두었다.
@@ -1757,7 +1757,7 @@ for (int i = 0; i &lt; N; ++i) {
       <dt><span class="mono">boxplus(x, e)</span> — \(x \boxplus e\) (⑦절)</dt>
       <dd>변수가 보통 벡터면 \(x + e\)이고, <strong>회전이면 \(R\,\mathrm{Exp}(e)\)</strong>다.
         <strong>여기서는 유한차분을 회전 위에서 하기 위해 썼다.</strong>
-        상태에 위치·속도·회전이 섞여 있으면 <strong>성분마다 다르게 처리한다</strong> — 11회에서 그렇게 된다.</dd>
+        상태에 위치·속도·회전이 섞여 있으면 <strong>성분마다 다르게 처리한다</strong> — 7회의 ESKF와 10회의 사전적분에서 그렇게 된다.</dd>
       <dt><span class="mono">eps = 1e-6</span></dt>
       <dd>너무 크면 근사 오차가, 너무 작으면 반올림 오차가 커진다.
         <span class="mono">double</span>에서는 <span class="mono">1e-6</span> 근처가 무난하다.
@@ -1774,7 +1774,7 @@ for (int i = 0; i &lt; N; ++i) {
     <strong>검증 사다리 2단</strong>이 바로 이것이고, 오늘이 그 2단을 처음 밟는 날이다.
   </div>
 
-  <h2 id="jr">⑩ right Jacobian과 BCH — 오늘 해 두면 12회가 반으로 준다</h2>
+  <h2 id="jr">⑩ right Jacobian과 BCH — 오늘 해 두면 10회가 반으로 준다</h2>
 
   <p>
     ④절에서 <strong>축-각은 더할 수 없다</strong>고 했다. 그럼 \(\mathrm{Exp}(\mathbf{a})\mathrm{Exp}(\mathbf{b})\)는
@@ -1838,7 +1838,7 @@ for (int i = 0; i &lt; N; ++i) {
   </div>
 
   <p>
-    <strong>12회에서 이 식이 그대로 다시 나온다.</strong> IMU 바이어스가 조금 바뀌었을 때
+    <strong>10회에서 이 식이 그대로 다시 나온다.</strong> IMU 바이어스가 조금 바뀌었을 때
     수백 개의 샘플을 다시 적분하지 않고 <strong>보정만 하는</strong> 자리다.
     오늘 해 두면 그때는 「아, 그 식」으로 넘어간다.
   </p>
@@ -1955,7 +1955,7 @@ for (int i = 0; i &lt; N; ++i) {
     <p class="boxtitle">⛔ 2단을 통과하지 못한 야코비안을 최적화에 넣지 않는다</p>
     <p style="margin:0">
       넣어도 <strong>돌아간다.</strong> 그게 문제다.
-      9회에서 번들조정이 이상하게 수렴할 때, 원인이 오늘 만든 야코비안인지
+      11회에서 번들조정이 이상하게 수렴할 때, 원인이 오늘 만든 야코비안인지
       그때 짠 팩터인지 <strong>가릴 방법이 없어진다.</strong>
       사다리의 규칙은 하나다 — <strong>아래 단을 통과하지 못한 것은 위로 올리지 않는다.</strong>
     </p>
@@ -1994,7 +1994,7 @@ for (int i = 0; i &lt; N; ++i) {
     <li><input type="checkbox" id="c13"><label for="c13">규약 문서에 「right perturbation으로 통일한다」 한 줄을 추가했다</label></li>
   </ul>
 
-  <h2 id="more">조금 더 알아두면 <span class="badge b-lv">시험 범위 아님</span></h2>
+  <h2 id="more">조금 더 알아두면 <span class="badge b-lv">참고</span></h2>
 
   <details class="story">
     <summary>미소 회전을 「그냥 더하면」 실제로 얼마나 망가지나 — 재 봤다</summary>
@@ -2039,7 +2039,7 @@ for (int i = 0; i &lt; N; ++i) {
     </p>
     <p>
       <strong>이 강의는 위치와 회전을 나눠 다룬다.</strong> 이유는 실용적이다 —
-      IMU 상태에는 위치·회전 말고도 <strong>속도와 바이어스 두 개</strong>가 더 들어간다(11회).
+      IMU 상태에는 위치·회전 말고도 <strong>속도와 바이어스 두 개</strong>가 더 들어간다(10회).
       \(\mathbf{SE}(3)\)로 묶어도 나머지 셋은 어차피 성분별로 다뤄야 하므로,
       <strong>처음부터 성분별로 두는 편이 코드가 단순하다.</strong>
       다만 논문에는 \(\mathbf{SE}(3)\) 표기가 많으니 <strong>읽을 수는 있어야 한다.</strong>

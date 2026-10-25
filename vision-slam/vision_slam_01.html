@@ -31,7 +31,7 @@
   <a href="#what">① 무엇을 만드나</a>
   <a href="#why">② 왜 카메라와 IMU를 같이 쓰나</a>
   <a href="#data">③ EuRoC 한 줄 읽기</a>
-  <a href="#map">④ 14회의 지도</a>
+  <a href="#map">④ 14회의 지도 — 세 부</a>
   <a href="#classic">⑤ 왜 고전 SLAM인가</a>
   <a href="#ai">⑥ 코드를 맡기면 무엇이 남나</a>
   <a href="#ai" class="sub">신호등 · 코드와 프롬프트</a>
@@ -83,7 +83,7 @@
     <tr><th>데이터</th><td>EuRoC MAV (ETH Zürich). <strong>클라우드 드라이브로 배포합니다.</strong>
       한 시퀀스가 1.15 GB쯤 됩니다</td></tr>
     <tr><th>개발환경</th><td>C++17 · Eigen · OpenCV · Sophus · Rerun. <strong>ROS는 쓰지 않습니다</strong> · ⑨절</td></tr>
-    <tr><th>평가</th><td>중간고사와 개인 프로젝트로 봅니다. <strong>세부는 학기 중에 안내합니다</strong></td></tr>
+    <tr><th>평가</th><td>과제와 개인 프로젝트로 봅니다. <strong>세부는 학기 중에 안내합니다</strong></td></tr>
     <tr><th>진행</th><td>주 1회 · 100분 · 14회. <strong>최종 발표는 14회가 끝난 뒤 따로 합니다</strong></td></tr>
   </table>
   </div>
@@ -143,18 +143,18 @@
   <table class="summary-table">
     <tr><th style="width:8%">덩이</th><th>하는 일</th><th>언제 만드나</th></tr>
     <tr><td>①</td><td><strong>데이터 소스</strong> — 파일을 읽어 영상과 IMU를 시각 맞춰 내놓는다</td><td>1~2회</td></tr>
-    <tr><td>②</td><td><strong>특징 추적</strong> — 영상에서 「무엇이 무엇과 같은 점인가」를 뽑는다</td><td>5·7회</td></tr>
-    <tr><td>③</td><td><strong>IMU 사전적분</strong> — 영상 사이의 IMU를 하나로 묶는다</td><td>10·12회</td></tr>
-    <tr><td>④</td><td><strong>백엔드</strong> — 관측을 모아 위치와 지도를 푼다. <strong>두 벌 만든다</strong></td><td>11·13회</td></tr>
-    <tr><td>⑤</td><td><strong>루프 클로징</strong> — 예전에 온 곳을 알아보고 과거를 고친다</td><td>14회</td></tr>
+    <tr><td>②</td><td><strong>특징 추적</strong> — 영상에서 「무엇이 무엇과 같은 점인가」를 뽑는다</td><td>5·9회</td></tr>
+    <tr><td>③</td><td><strong>IMU 사전적분</strong> — 영상 사이의 IMU를 하나로 묶는다</td><td>10회</td></tr>
+    <tr><td>④</td><td><strong>백엔드</strong> — 관측을 모아 위치와 지도를 푼다. 초기화(11회)와 슬라이딩 윈도우(12회)</td><td>이론 7·8회 · 구현 11·12회</td></tr>
+    <tr><td>⑤</td><td><strong>루프 클로징</strong> — 예전에 온 곳을 알아보고 과거를 고친다</td><td>13회</td></tr>
     <tr><td>⑥</td><td><strong>평가</strong> — 얼마나 맞는지 숫자로 낸다</td><td>내내</td></tr>
   </table>
   </div>
 
   <div class="interp">
-    <strong>해석:</strong> ④번이 <strong>두 벌</strong>인 것에 주목한다.
-    필터로 한 번 완주하고, 최적화로 다시 만든다.
-    프론트엔드는 그대로 두고 <strong>백엔드만 갈아 끼워 같은 데이터에서 숫자를 비교</strong>하기 위해서다.
+    <strong>해석:</strong> ④번 백엔드에는 <strong>두 가지 틀</strong>이 있다 — 필터와 최적화.
+    둘 다 7·8회에서 식으로 세우고, 구현은 VINS-Mono처럼 최적화(슬라이딩 윈도우)로 한다.
+    프론트엔드는 그대로 두고 <strong>백엔드만 갈아 끼우면 같은 데이터에서 두 틀을 숫자로 비교</strong>할 수 있다.
     <strong>그러려면 처음부터 갈아 끼워지도록 설계돼 있어야 한다</strong> —
     이것이 이 강의가 「설계」에 시간을 쓰는 이유이고, 2회에서 바로 시작한다.
   </div>
@@ -269,7 +269,7 @@
 
   <p>
     기체는 <strong>아직 멈춰 있다.</strong> 그런데 세 숫자 모두 0이 아니다.
-    <strong>왜 그런지가 이 강의의 3부 전체</strong>이고, 지금은 세 가지만 짚어 둔다.
+    <strong>왜 그런지가 3부 IMU 회차들(10·11회)의 출발점</strong>이고, 지금은 세 가지만 짚어 둔다.
   </p>
 
   <div class="tablewrap">
@@ -325,8 +325,8 @@ b_w_RS_S_{x,y,z}, b_a_RS_S_{x,y,z}</pre>
   <table>
     <tr><th style="width:22%">들어 있는 것</th><th>이 강의에서 무엇에 쓰나</th></tr>
     <tr><td>위치와 자세</td><td>궤적 오차(ATE) 평가. <strong>4회</strong> 점군 오버레이</td></tr>
-    <tr><td><strong>속도</strong></td><td><strong>11~12회.</strong> 필터 상태에 속도가 들어가는데, 그 정답을 알 수 있다</td></tr>
-    <tr><td><strong>IMU 바이어스</strong></td><td><strong>10·12회.</strong> 「바이어스를 정답으로 넣으면 어떻게 되나」가 가능해진다</td></tr>
+    <tr><td><strong>속도</strong></td><td><strong>11~12회.</strong> 추정 상태에 속도가 들어가는데, 그 정답을 알 수 있다</td></tr>
+    <tr><td><strong>IMU 바이어스</strong></td><td><strong>10~12회.</strong> 「바이어스를 정답으로 넣으면 어떻게 되나」가 가능해진다</td></tr>
   </table>
   </div>
 
@@ -348,12 +348,13 @@ b_w_RS_S_{x,y,z}, b_a_RS_S_{x,y,z}</pre>
     </p>
   </div>
 
-  <h2 id="map">④ 14회의 지도 <span class="badge b-lv">전체 그림</span></h2>
+  <h2 id="map">④ 14회의 지도 — 세 부 <span class="badge b-lv">전체 그림</span></h2>
 
   <p>
-    14회를 네 부로 나눠 두었다. 앞의 두 부는 <strong>영상에서 3차원을 꺼내는 법</strong>이고,
-    뒤의 두 부는 <strong>거기에 IMU를 묶어 하나의 추정 문제로 만드는 법</strong>이다.
-    한 부가 끝날 때마다 「이제 이건 돌아간다」가 하나씩 늘어나도록 놓았습니다.
+    14회를 세 부로 나눠 두었다. 1부는 <strong>영상에서 3차원을 꺼내는 기하</strong>이고,
+    2부는 모든 SLAM이 서 있는 <strong>두 가지 수학적 틀 — 확률적 필터와 최적화</strong>를 처음부터 세우는 이론이다.
+    3부에서 그 위에 <strong>VINS-Mono라는 실제 시스템을 모듈 순서대로 뜯어 가며</strong> 시각-관성 SLAM 하나를 끝까지 만든다.
+    한 부가 끝날 때마다 「이제 이건 할 수 있다」가 하나씩 늘어나도록 놓았습니다.
   </p>
 
   <div class="tablewrap">
@@ -362,19 +363,14 @@ b_w_RS_S_{x,y,z}, b_a_RS_S_{x,y,z}</pre>
     <tr><td><strong>1부</strong><br>3차원 기하</td><td>1~5</td>
       <td>좌표계와 표기 규약, 회전과 Lie 이론, 카메라 모델과 왜곡, 에피폴라 기하와 삼각측량</td>
       <td>사진 두 장에서 3차원 점을 만들고, 그 점이 영상 어디에 찍혀야 하는지 계산할 수 있다</td></tr>
-    <tr><td><strong>2부</strong><br>프론트엔드</td><td>6~9</td>
-      <td>SLAM 30년의 지도, 특징점 검출·추적·매칭, 아웃라이어 제거, 번들조정</td>
-      <td>영상에서 믿을 수 있는 대응점을 뽑고, 재투영 오차를 최소화해 다듬을 수 있다</td></tr>
-    <tr><td><strong>3부</strong><br>IMU와 상태추정</td><td>10~12</td>
-      <td>IMU 측정 모델과 바이어스, 베이즈 필터·칼만필터·오차상태 필터, IMU 사전적분과 초기화</td>
-      <td>불확실한 값을 확률로 다루고, 영상과 IMU를 하나의 문제로 묶을 수 있다</td></tr>
-    <tr><td><strong>4부</strong><br>백엔드와 시스템</td><td>13~14</td>
-      <td>그래프 SLAM과 marginalization, 루프 클로징, 전체 시스템과 평가</td>
+    <tr><td><strong>2부</strong><br>SLAM 이론 기초</td><td>6~8</td>
+      <td>SLAM의 역사와 학습 지도, 베이즈 필터·칼만필터·EKF와 그 변형들, GraphSLAM·자세그래프·번들조정</td>
+      <td>SLAM 논문의 식을 「필터의 어느 식」 「최적화의 어느 식」으로 읽을 수 있다</td></tr>
+    <tr><td><strong>3부</strong><br>VINS-Mono로 읽는<br>시각-관성 SLAM</td><td>9~14</td>
+      <td>시각 프론트엔드, IMU 측정 모델과 사전적분, 시각-관성 초기화, 슬라이딩 윈도우와 marginalization, 루프 클로징과 평가 — 회차마다 다른 시스템의 방식도 함께 보고, 마지막 14회는 <strong>다른 방향과 최신 SLAM</strong>을 모아 본다</td>
       <td>완성한 시스템을 정답 궤적과 비교해 <strong>숫자로</strong> 평가할 수 있다</td></tr>
   </table>
   </div>
-
-  <p class="readme-first">중간고사는 8회입니다. 1부와 2부 앞쪽에서 다룬 기하가 범위입니다.</p>
 
   <div class="interp">
     <strong>해석:</strong> 1부가 다섯 회로 가장 길다. 좌표계와 회전에 그만큼 시간을 쓰는 이유가 있다 —
@@ -521,10 +517,10 @@ b_w_RS_S_{x,y,z}, b_a_RS_S_{x,y,z}</pre>
       <td><strong>4회</strong></td></tr>
     <tr><td>5</td><td><strong>잡음 켜기</strong> — 합성 데이터에 잡음을 단계적으로 넣는다</td>
       <td>오차가 잡음에 비례해 늘어나는가</td><td>잘못 설정한 잡음 값</td>
-      <td><strong>11회</strong></td></tr>
+      <td><strong>10회</strong></td></tr>
     <tr><td>6</td><td><strong>실제 데이터 평가</strong> — EuRoC + ATE</td>
       <td>궤적 오차와 일관성 지표</td><td>나머지 전부</td>
-      <td><strong>13회</strong></td></tr>
+      <td><strong>12회</strong></td></tr>
   </table>
   </div>
 
@@ -659,8 +655,8 @@ b_w_RS_S_{x,y,z}, b_a_RS_S_{x,y,z}</pre>
         파이썬 쪽은 <span class="mono">pip</span> 한 줄. ⑧절</td></tr>
     <tr><td>evo</td><td>최신 (파이썬)</td><td>궤적 오차 평가. <span class="mono">pip</span> 한 줄</td></tr>
     <tr><td><strong>Ceres Solver</strong></td><td><strong>2.2.0</strong></td>
-      <td>번들조정과 슬라이딩 윈도우. <strong>9회에 가서 깔면 됩니다</strong></td></tr>
-    <tr><td>GTSAM</td><td>4.2.2</td><td>팩터그래프. 사전적분 정답 대조용. <strong>12회에 깔면 됩니다</strong></td></tr>
+      <td>번들조정과 슬라이딩 윈도우. <strong>11회에 가서 깔면 됩니다</strong></td></tr>
+    <tr><td>GTSAM</td><td>4.2.2</td><td>팩터그래프. 사전적분 정답 대조용. <strong>10회에 깔면 됩니다</strong></td></tr>
   </table>
   </div>
 
@@ -670,7 +666,7 @@ b_w_RS_S_{x,y,z}, b_a_RS_S_{x,y,z}</pre>
       인터넷의 Ceres 예제 대부분이 <span class="mono">LocalParameterization</span>을 씁니다.
       <strong>2.2에서 그 클래스는 없습니다.</strong> <span class="mono">Manifold</span>로 바뀌었습니다.
       빌드 오류로 바로 드러나긴 하는데, <strong>「왜 예제가 안 되지」에서 시간을 버리기 쉬운 자리</strong>라
-      9회 자료에도 다시 적어 둡니다.
+      11회 자료에도 다시 적어 둡니다.
       <strong>의뢰서의 [함정] 칸에 이런 것을 미리 적는 연습</strong>이 🤖절에서 하는 일입니다.
     </p>
   </div>
@@ -817,7 +813,7 @@ b_w_RS_S_{x,y,z}, b_a_RS_S_{x,y,z}</pre>
   <ul class="check">
     <li><input type="checkbox" id="c1"><label for="c1">이 수업에서 무엇을 만드는지 입력과 출력으로 말할 수 있다</label></li>
     <li><input type="checkbox" id="c2"><label for="c2">IMU만 쓰면 왜 안 되는지, 카메라만 쓰면 왜 안 되는지 각각 한 문장으로 말할 수 있다</label></li>
-    <li><input type="checkbox" id="c3"><label for="c3">14회가 네 부로 어떻게 나뉘는지 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c3"><label for="c3">14회가 세 부로 어떻게 나뉘는지 말할 수 있다</label></li>
     <li><input type="checkbox" id="c4"><label for="c4">「SLAM에서 틀린 코드는 죽지 않는다」가 무슨 뜻인지 설명할 수 있다</label></li>
     <li><input type="checkbox" id="c5"><label for="c5">검증 사다리에서 3단이 무엇이고 왜 중요한지 말할 수 있다</label></li>
     <li><input type="checkbox" id="c6"><label for="c6">의뢰서 여섯 칸을 대고, 그중 [검증] 칸에 무엇을 적는지 말할 수 있다</label></li>
@@ -827,7 +823,7 @@ b_w_RS_S_{x,y,z}, b_a_RS_S_{x,y,z}</pre>
     <li><input type="checkbox" id="c7"><label for="c7">도커 이미지를 받아 컨테이너가 뜨는 것을 확인했고, 데이터도 받아 두었다</label></li>
   </ul>
 
-  <h2 id="more">조금 더 알아두면 <span class="badge b-lv">시험 범위 아님</span></h2>
+  <h2 id="more">조금 더 알아두면 <span class="badge b-lv">참고</span></h2>
 
   <p>
     다음 시간(2회)에는 <strong>좌표계와 표기 규약</strong>을 다룹니다.
