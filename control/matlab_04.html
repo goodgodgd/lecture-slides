@@ -1,0 +1,1398 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>04회 · 전달함수와 시간응답 | 제어공학 MATLAB 실습</title>
+<script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}})();</script>
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="assets/lecture.css">
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['$$','$$']]},
+  options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+<header class="bar">
+  <div class="barin wide">
+    <a class="up" href="index.html" aria-label="제어공학 MATLAB 실습 회차 목록"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a>
+    <nav class="crumb" aria-label="경로">
+      <a href="../index.html">강의자료</a><span class="sep">/</span><a href="index.html">제어공학 MATLAB 실습</a><span class="sep">/</span><span class="here">04회 · 전달함수와 시간응답</span>
+    </nav>
+    <span class="spacer"></span>
+    <div class="navlinks"><a class="navlink" href="matlab_03.html" aria-label="이전 회차"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a><a class="navlink" href="matlab_05.html" aria-label="다음 회차"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></a></div>
+    <div class="seg" data-theme-switch role="group" aria-label="밝기">
+      <button type="button" data-mode="auto" aria-pressed="true">자동</button>
+      <button type="button" data-mode="light" aria-pressed="false">밝게</button>
+      <button type="button" data-mode="dark" aria-pressed="false">어둡게</button>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="toc-title">이 회차 목차</div>
+  <a href="#summary">한 장 요약</a>
+  <a href="#tf">① 전달함수 만들기 — tf</a>
+  <a href="#feedback">② 피드백 시스템 — feedback</a>
+  <a href="#pz">③ 극점과 영점 — pole · zero · pzmap</a>
+  <a href="#step">④ 단위계단응답 — step</a>
+  <a href="#lsim">⑤ 경사·포물선 응답 — lsim</a>
+  <a href="#sse">⑥ 정상상태 오차 — dcgain · evalfr</a>
+  <a href="#damp">⑦ 2차 시스템의 파라미터 — damp</a>
+  <a href="#stepinfo">⑧ 과도응답 성능 — stepinfo</a>
+  <a href="#formula">⑨ 공식으로 직접 계산하기</a>
+  <a href="#function">⑩ 함수 파일 — function</a>
+  <a href="#stability">⑪ 안정도 — isstable · if</a>
+  <a href="#lab">🧪 실습</a>
+  <a href="#exercise">📝 연습문제</a>
+  <a href="#check">✅ 점검</a>
+  <a href="#more">조금 더 알아두면</a>
+</nav>
+
+<main>
+
+  <div class="lec-no">제어공학 MATLAB 실습 · 04회 · 2부 시간영역 해석과 근궤적</div>
+  <h1>전달함수와 시간응답</h1>
+
+  <div class="questions">
+    <span class="lab">오늘 답할 질문</span>
+    <ol>
+      <li>교재에 적힌 전달함수를 MATLAB에서는 어떻게 만드나? 두 가지 입력 방법은 무엇이 다른가?</li>
+      <li>피드백 시스템의 폐루프 전달함수를 손으로 정리하지 않고 얻을 수 있나?</li>
+      <li>계단·경사·포물선 입력을 넣었을 때 출력은 어떻게 생겼고, 그 정상상태 오차는 교재의 공식과 맞는가?</li>
+      <li>상승시간·정착시간·첨두시간·최대초과를 MATLAB은 어떻게 재나? 교재 공식으로 구한 값과 왜 조금씩 다른가?</li>
+      <li>시스템이 안정한지는 무엇을 보고 판별하나?</li>
+    </ol>
+  </div>
+
+  <p>
+    3회까지는 숫자와 행렬을 다루고 그래프를 그렸다. 그 도구들로 제어공학 문제를 풀 수도 있다.
+    분모 다항식을 <code>roots</code>로 풀면 극점이 나오고, 응답 식을 손으로 구해 <code>plot</code>으로 그리면 된다.
+    그런데 시스템이 세 개만 이어져도 손으로 식을 정리하는 데 시간이 다 간다.
+  </p>
+  <p>
+    오늘부터는 <strong>Control System Toolbox</strong>를 쓴다. 이 도구상자는 <strong>전달함수를 하나의 변수</strong>로 다룬다.
+    전달함수끼리 곱하고, 피드백으로 묶고, 계단 입력을 넣어 응답을 그리는 일이 한 줄씩이다.
+    순서는 전달함수 만들기 → 응답 구하기 → 과도응답 성능 → 안정도다.
+  </p>
+  <p>
+    그리고 이 계산들을 함수 세 개(<code>draw_step_response</code>, <code>transient_response</code>, <code>stability_check</code>)로 묶어
+    <strong>함수 파일</strong>로 만들면서 MATLAB에서 함수를 만드는 법과 <code>if</code> 문을 배운다.
+    함수 안의 코드를 한 줄씩 읽어 두면, 나중에 같은 계산이 필요할 때 필요한 줄만 골라 쓸 수 있다.
+  </p>
+
+  <!-- ── 한 장 요약 ── -->
+  <h2 id="summary">한 장 요약</h2>
+  <p class="readme-first">읽는 법: 오른쪽 열이 교재의 어느 장면인지를 먼저 본다. 함수 이름은 그 장면에서 꺼내 쓰는 도구다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>함수</th><th>하는 일</th><th>제어공학에서 쓰는 자리</th></tr>
+    <tr><td><code>tf(num, den)</code> · <code>s = tf('s')</code></td><td>전달함수 객체를 만든다</td><td>블록선도의 블록 하나</td></tr>
+    <tr><td><code>feedback(G, H)</code></td><td>\(G/(1+GH)\)를 약분까지 해서 돌려준다</td><td>폐루프 전달함수</td></tr>
+    <tr><td><code>pole</code> · <code>zero</code> · <code>pzmap</code></td><td>극점·영점을 구하고 s 평면에 찍는다</td><td>응답의 모양과 안정도를 읽는 출발점</td></tr>
+    <tr><td><code>[y, t] = step(sys)</code></td><td>단위계단응답을 계산한다</td><td>과도응답 · 정상상태</td></tr>
+    <tr><td><code>[y, t] = lsim(sys, u, t)</code></td><td>아무 입력에 대한 응답을 계산한다</td><td>경사·포물선 입력, 정상상태 오차</td></tr>
+    <tr><td><code>dcgain</code> · <code>evalfr</code></td><td>\(s=0\)(또는 임의의 \(s\))에서 전달함수의 값</td><td>최종값 정리 · 정적 오차 상수 \(K_p, K_v, K_a\)</td></tr>
+    <tr><td><code>[wn, zeta, p] = damp(sys)</code></td><td>극점마다 고유주파수와 제동비</td><td>2차 표준형 \(\omega_n, \zeta\)</td></tr>
+    <tr><td><code>S = stepinfo(sys)</code></td><td>상승·정착·첨두시간, 최대초과를 잰다</td><td>과도응답 성능 지표</td></tr>
+    <tr><td><code>isstable(sys)</code> · <code>all</code></td><td>안정한지 참/거짓으로 답한다</td><td>모든 극점이 좌반면에 있나</td></tr>
+    <tr><td><code>function</code> · <code>if/else</code></td><td>함수 파일을 만들고, 조건에 따라 갈라진다</td><td>같은 분석을 여러 시스템에 되풀이</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 오늘 함수의 절반은 <strong>교재에서 손으로 하던 계산 하나와 짝</strong>을 이룬다 —
+    <code>feedback</code>은 블록선도 정리, <code>damp</code>는 2차 표준형에 맞춰 \(\omega_n\)·\(\zeta\) 읽기,
+    <code>stepinfo</code>는 성능 공식, <code>dcgain</code>은 최종값 정리다.
+    그래서 이 회차는 <strong>MATLAB 결과를 손계산과 숫자로 맞춰 보는 것</strong>으로 진행한다.
+  </div>
+
+  <!-- ── ① tf ── -->
+  <h2 id="tf">① 전달함수 만들기 — <code>tf</code></h2>
+  <p>
+    전달함수(transfer function)는 초기값이 0일 때 출력의 라플라스 변환을 입력의 라플라스 변환으로 나눈 것이다.
+    \(s\)에 대한 다항식의 비이므로 <strong>분자 다항식과 분모 다항식</strong> 두 개가 있으면 정해진다.
+    2회에서 다항식을 <strong>계수 벡터</strong>로 적는 법을 배웠다. \(s^2+3s+2\)는 <code>[1 3 2]</code>였다.
+    그러면 전달함수는 계수 벡터 두 개로 만들 수 있을 것이다.
+  </p>
+  <p>예를 들어 다음 전달함수를 만들어 본다.</p>
+  $$
+  T(s) = \frac{s+4}{s^2+3s+2}
+  $$
+
+<!-- mcode 04/b01_tf_coef -->
+<div class="mcode">
+<pre class="lang-matlab"><code>clc; clear
+% 전달함수 식의 계수로 전달함수 객체 생성
+T = tf([1 4], [1 3 2])</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>T =
+
+      s + 4
+  -------------
+  s^2 + 3 s + 2
+
+Continuous-time transfer function.
+Model Properties</code></pre>
+</div>
+<!-- /mcode -->
+
+  <p>
+    출력은 숫자가 아니라 <strong>분수 모양의 식</strong>이다. <code>T</code>는 숫자 배열이 아니라
+    <strong>전달함수 객체</strong>(transfer function object)라서, 화면에 찍을 때 사람이 읽기 좋은 식 모양으로 보여 준다.
+    마지막 줄 <code>Continuous-time transfer function.</code>은 연속시간(\(s\) 영역) 전달함수라는 뜻이다.
+    <code>Model Properties</code>는 명령 창에서 누르면 이 객체의 속성 목록을 보여 주는 링크다.
+  </p>
+
+  <p>
+    계수 벡터로 만드는 법은 분모가 \((s+1)(s+2)\)처럼 <strong>인수분해된 모양</strong>일 때 불편하다.
+    손으로 전개해서 계수를 뽑아야 한다. 그래서 MATLAB은 <strong>\(s\) 자체를 전달함수로 만들어 두고 식처럼 쓰는 방법</strong>을 준다.
+  </p>
+  $$
+  G(s) = \frac{s+3}{(s+1)(s+2)}
+  $$
+
+<!-- mcode 04/b02_tf_s -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 전달함수 수식 입력
+s = tf('s');
+G = (s+3)/((s+1)*(s+2))</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>G =
+
+      s + 3
+  -------------
+  s^2 + 3 s + 2
+
+Continuous-time transfer function.
+Model Properties</code></pre>
+</div>
+<!-- /mcode -->
+
+  <p>
+    분모를 \((s+1)(s+2)\)로 적었는데 MATLAB은 전개한 \(s^2+3s+2\)로 보여 준다.
+    <code>s</code>가 전달함수 \(s/1\)이고, 전달함수끼리의 <code>+</code> <code>*</code> <code>/</code>가 다항식 계산을 대신 해 주기 때문이다.
+    <strong>교재의 식을 그대로 옮겨 적을 수 있다</strong>는 것이 이 방법의 장점이다. 이 과목의 코드는 대부분 이 방법을 쓴다.
+  </p>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>sys = tf(num, den)</dt>
+      <dd>분자 계수 벡터 <code>num</code>과 분모 계수 벡터 <code>den</code>으로 전달함수 객체를 만든다.
+          계수는 \(s\)의 차수가 높은 것부터 적는다. 여기서는 <code>[1 4]</code>가 \(s+4\), <code>[1 3 2]</code>가 \(s^2+3s+2\)다.</dd>
+      <dt>s = tf('s')</dt>
+      <dd>전달함수 \(s\) 하나를 만든다. 이 변수로 <code>(s+3)/((s+1)*(s+2))</code>처럼 교재의 식을 그대로 적으면
+          <code>+</code> <code>*</code> <code>/</code> <code>^</code>가 전달함수끼리의 연산으로 계산된다. 줄 끝의 <code>;</code>는 출력을 숨긴다(1회).</dd>
+      <dt>G1*G2 · G1+G2</dt>
+      <dd>전달함수의 곱은 <strong>직렬 연결</strong>, 합은 <strong>병렬 연결</strong>이다. 블록선도의 두 블록을 이어 붙이는 것과 같다.</dd>
+    </dl>
+  </div>
+
+  <!-- ── ② feedback ── -->
+  <h2 id="feedback">② 피드백 시스템 — <code>feedback</code></h2>
+  <p>
+    전방 경로에 \(G(s)\), 되먹임 경로에 \(H(s)\)가 있고 되먹임이 빼기(−)로 들어가는 시스템을 생각한다.
+    입력 \(R\)에서 출력 \(C\)까지의 전달함수, 즉 <strong>폐루프 전달함수</strong>(closed-loop transfer function)는 무엇인가?
+  </p>
+
+  <div class="box theory">
+    <p class="boxtitle">📐 이론과 잇기 — 폐루프 전달함수 \(G/(1+GH)\)</p>
+    <p>오차 신호 \(E\)는 입력에서 되먹임 신호를 뺀 것이고, 출력은 \(E\)에 \(G\)를 곱한 것이다.</p>
+    $$
+    \begin{aligned}
+    E(s) &= R(s) - H(s)\,C(s) \\
+    C(s) &= G(s)\,E(s)
+    \end{aligned}
+    $$
+    <p>둘째 식에 첫째 식을 넣어 \(C\)를 한쪽으로 모은다.</p>
+    $$
+    \begin{aligned}
+    C &= G R - G H C \\
+    C\,(1 + GH) &= G R \\
+    \frac{C(s)}{R(s)} &= \frac{G(s)}{1 + G(s)H(s)}
+    \end{aligned}
+    $$
+    <p>숫자를 넣는다. \(G = \dfrac{s+3}{(s+1)(s+2)}\), \(H = 4\)이면 분모·분자에 \((s+1)(s+2)\)를 곱해서</p>
+    $$
+    \frac{C}{R}
+    = \frac{s+3}{(s+1)(s+2) + 4(s+3)}
+    = \frac{s+3}{s^2+3s+2 + 4s+12}
+    = \frac{s+3}{s^2+7s+14}
+    $$
+  </div>
+
+  <p>MATLAB에서는 <code>feedback</code> 한 줄이다.</p>
+
+<!-- mcode 04/b03_feedback -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 피드백 시스템의 전달함수
+% H: feedback gain
+H = 4;
+F = feedback(G, H)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>F =
+
+      s + 3
+  --------------
+  s^2 + 7 s + 14
+
+Continuous-time transfer function.
+Model Properties</code></pre>
+</div>
+<!-- /mcode -->
+
+  <p>손으로 정리한 \(\dfrac{s+3}{s^2+7s+14}\)와 같다. <code>H</code>는 숫자 4인데, 숫자는 상수 전달함수로 알아서 바뀐다.</p>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>T = feedback(G, H)</dt>
+      <dd>전방 경로 <code>G</code>와 되먹임 경로 <code>H</code>로 음의 되먹임 폐루프 전달함수 \(G/(1+GH)\)를 만든다.
+          <code>H</code>를 생략할 수 없으므로 단위 되먹임이면 <code>feedback(G, 1)</code>로 쓴다.
+          양의 되먹임이면 세 번째 인자로 <code>+1</code>을 준다(<code>feedback(G, H, +1)</code>).</dd>
+    </dl>
+  </div>
+
+  <h3>공식을 그대로 쳐도 되나</h3>
+  <p>
+    \(G/(1+GH)\)라는 공식을 알고 있으니 <code>feedback</code> 없이 공식을 그대로 쳐도 될 것 같다. 해 본다.
+  </p>
+
+<!-- mcode 04/b04_by_hand -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 공식 G/(1+GH) 를 그대로 계산하면?
+F2 = G/(1 + G*H)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>F2 =
+
+       s^3 + 6 s^2 + 11 s + 6
+  ---------------------------------
+  s^4 + 10 s^3 + 37 s^2 + 56 s + 28
+
+Continuous-time transfer function.
+Model Properties</code></pre>
+</div>
+<!-- /mcode -->
+
+  <p>
+    분모가 4차가 됐다. 2차여야 하는 시스템인데 차수가 두 배다.
+    극점과 영점을 구해 보면 무슨 일이 일어났는지 보인다.
+  </p>
+
+<!-- mcode 04/b05_compare -->
+<div class="mcode">
+<pre class="lang-matlab"><code>pole(F)
+pole(F2)
+zero(F2)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>ans =
+
+  -3.5000 + 1.3229i
+  -3.5000 - 1.3229i
+
+
+ans =
+
+  -3.5000 + 1.3229i
+  -3.5000 - 1.3229i
+  -2.0000 + 0.0000i
+  -1.0000 + 0.0000i
+
+
+ans =
+
+   -3.0000
+   -2.0000
+   -1.0000</code></pre>
+</div>
+<!-- /mcode -->
+
+  <p>
+    <code>F2</code>의 극점 넷 중 둘(\(-3.5 \pm j1.3229\))은 <code>F</code>의 극점과 같다.
+    나머지 \(-2\)와 \(-1\)은 <strong>영점에도 똑같이 있다.</strong> 분자·분모에 \((s+1)(s+2)\)가 함께 들어 있는데 약분되지 않은 것이다.
+    MATLAB은 <code>G/(1+G*H)</code>를 계산할 때 \(G\)의 분모를 분자와 분모 양쪽에 곱하기만 하고 약분은 하지 않는다.
+  </p>
+
+  <div class="box trap">
+    <p class="boxtitle">⚠️ 폐루프는 <code>feedback</code>으로 만든다</p>
+    <p>
+      <code>G/(1+G*H)</code>로 만든 전달함수는 <strong>같은 위치의 극점과 영점이 짝으로 남아 있다.</strong>
+      계단응답은 같게 나오지만, <code>pole</code>로 극점을 세거나 다음 회차의 근궤적을 그리면 없어야 할 극점이 끼어든다.
+      <code>feedback</code>은 이런 약분을 내부에서 정리해 준다. 이미 공식으로 만든 것이 있으면 <code>minreal</code>(⑥절)로 약분할 수 있다.
+    </p>
+  </div>
+
+  <!-- ── ③ pole zero pzmap ── -->
+  <h2 id="pz">③ 극점과 영점 — <code>pole</code> · <code>zero</code> · <code>pzmap</code></h2>
+  <p>
+    극점(pole)은 전달함수의 분모를 0으로 만드는 \(s\), 영점(zero)은 분자를 0으로 만드는 \(s\)다.
+    2회에서 분모 계수 벡터에 <code>roots</code>를 써서 극점을 구했다. 전달함수 객체가 있으면 <code>pole</code>이 같은 일을 한다.
+    폐루프 <code>F</code>의 분모 \(s^2+7s+14\)를 근의 공식으로 풀면
+  </p>
+  $$
+  s = \frac{-7 \pm \sqrt{49 - 56}}{2} = -3.5 \pm j\frac{\sqrt{7}}{2} = -3.5 \pm j1.3229
+  $$
+  <p>로 위 출력의 <code>pole(F)</code>와 같다. 이번에는 영점을 구하고 둘을 s 평면에 찍어 본다.</p>
+
+<!-- mcode 04/b06_pzmap -->
+<div class="mcode">
+<pre class="lang-matlab"><code>zero(F)
+pzmap(F)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>ans =
+
+    -3</code></pre>
+</div>
+<!-- /mcode -->
+
+  <figure>
+    <img src="assets/img/04_pzmap.png" width="520" alt="Pole-Zero Map. 실수부 -3.5, 허수부 ±1.32 에 x 표시 두 개, 실수축 -3 에 o 표시 하나">
+    <figcaption>× 가 극점, ○ 가 영점이다. <code>F</code>의 극점 둘은 실수부 −3.5에서 위아래로 짝을 이루고, 영점은 실수축 −3에 있다.
+      복소 극점은 언제나 <strong>실수축에 대해 대칭</strong>으로 짝을 지어 나온다. 뒤의 바퀴살 같은 회색 선은 <code>pzmap</code>이 기본으로 깔아 주는 보조선이다.</figcaption>
+  </figure>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>p = pole(sys) · z = zero(sys)</dt>
+      <dd>전달함수의 극점·영점을 열 벡터로 돌려준다. 복소수 극점은 <code>-3.5000 + 1.3229i</code>처럼 찍힌다(2회의 복소수).
+          여기서는 <code>F</code>와 <code>F2</code>의 극점을 비교해 약분되지 않은 극점을 찾는 데 썼다.</dd>
+      <dt>pzmap(sys) · pzmap(sys1, sys2)</dt>
+      <dd>극점(×)과 영점(○)을 s 평면 그림에 찍는다. 시스템을 여러 개 주면 색을 달리해 한 그림에 겹친다(⑪절에서 쓴다).</dd>
+    </dl>
+  </div>
+
+  <!-- ── ④ step ── -->
+  <h2 id="step">④ 단위계단응답 — <code>step</code></h2>
+  <p>
+    시스템이 어떻게 움직이는지 볼 때 가장 먼저 넣어 보는 입력이 <strong>단위계단</strong>(unit step)이다.
+    \(t=0\)에 0에서 1로 바뀌고 그 뒤로 1에 머무는 입력이다. 출력이 1을 얼마나 빨리, 얼마나 넘치며, 얼마나 정확히 따라가는지를 보면
+    그 시스템의 성격이 거의 다 드러난다.
+  </p>
+  <p>여기서는 다음 시스템을 단위 되먹임으로 묶어 쓴다. 이 시스템을 ④~⑥절 내내 쓴다.</p>
+  $$
+  G(s) = \frac{4(s+2)}{s(s+3)(s+7)}, \qquad H(s) = 1
+  $$
+
+<!-- mcode 04/b07_system -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 시스템 전달함수 정의
+s = tf('s');
+G_s = 4*(s+2)/(s*(s+3)*(s+7))
+% 단위 귀환 시스템의 전달함수
+sys = feedback(G_s, 1)
+pole(sys)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>G_s =
+
+        4 s + 8
+  -------------------
+  s^3 + 10 s^2 + 21 s
+
+Continuous-time transfer function.
+Model Properties
+
+sys =
+
+          4 s + 8
+  -----------------------
+  s^3 + 10 s^2 + 25 s + 8
+
+Continuous-time transfer function.
+Model Properties
+
+ans =
+
+   -6.1413
+   -3.4849
+   -0.3738</code></pre>
+</div>
+<!-- /mcode -->
+
+  <p>
+    손으로도 확인된다. 분모는 \(s(s+3)(s+7) + 4(s+2) = s^3+10s^2+21s + 4s+8 = s^3+10s^2+25s+8\)이다.
+    극점은 셋 다 음의 실수다. 그중 <strong>\(-0.3738\)이 원점에 가장 가깝다</strong> — 이 극점이 응답을 느리게 만든다는 것을 아래 그래프에서 본다.
+  </p>
+  <p>이제 계단응답을 계산해 입력과 함께 그린다.</p>
+
+<!-- mcode 04/b08_step -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 단위 계단 응답 계산 y=출력, t=시간
+[y, t] = step(sys);
+% 입력데이터 만들기: 출력시간의 길이만큼 1의 배열 생성
+u = ones(size(t));
+% 입력(u)과 출력(y) 그리기
+plot(t, u, 'r-', t, y, 'b-')
+axis([0 15 0 1.1])
+xlabel('Time(sec)')
+ylabel('Amplitude')
+title('Step response')
+legend('input', 'response')
+grid
+size(t)
+t(end)
+y(end)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>ans =
+
+        1243           1
+
+
+ans =
+
+   18.6266
+
+
+ans =
+
+    0.9991</code></pre>
+</div>
+<!-- /mcode -->
+
+  <figure>
+    <img src="assets/img/04_step.png" width="560" alt="빨간 수평선(입력 1)과 파란 곡선(출력). 출력은 진동 없이 천천히 올라가 15초 근처에서 1에 거의 붙는다">
+    <figcaption>파란 출력이 <strong>넘치지 않고</strong> 1로 다가간다. 극점이 모두 실수라 진동이 없다.
+      5초에 약 0.85, 10초에 약 0.98 — 느린 이유는 \(-0.3738\) 극점의 시정수 \(1/0.3738 \approx 2.7\)초 때문이다.</figcaption>
+  </figure>
+
+  <p>
+    출력 읽기: <code>size(t)</code>가 <code>1243 1</code>이니 <code>step</code>은 시간 점 1243개를 골라 계산했다.
+    끝 시간 <code>t(end)</code>는 18.6초로, 우리가 정하지 않았는데 <strong>MATLAB이 응답이 거의 다 가라앉는 시간을 보고 스스로 고른 것</strong>이다.
+    그 시점의 출력 <code>y(end)</code>가 0.9991이다. 1에 거의 닿았지만 아직 1은 아니다. 정말로 1로 가는지는 ⑥절에서 확인한다.
+  </p>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>[y, t] = step(sys) · y = step(sys, t)</dt>
+      <dd>단위계단응답을 계산해 출력 <code>y</code>와 시간 <code>t</code>를 열 벡터로 돌려준다. 시간을 안 주면 MATLAB이 고르고,
+          <code>t</code>를 주면 그 시간 점에서 계산한다. 여기서는 받은 <code>t</code>와 같은 길이의 입력 <code>u</code>를 만들어 함께 그리는 데 썼다.</dd>
+      <dt>step(sys)</dt>
+      <dd>출력 인자 없이 부르면 계산하지 않고 <strong>바로 그림을 그린다</strong>(⑪절에서 쓴다). 숫자가 필요하면 위처럼 <code>[y, t] =</code>로 받는다.</dd>
+    </dl>
+  </div>
+
+  <!-- ── ⑤ lsim ── -->
+  <h2 id="lsim">⑤ 경사·포물선 응답 — <code>lsim</code></h2>
+  <p>
+    계단 말고 다른 입력에는 어떻게 반응할까? 시간에 비례해 커지는 <strong>단위경사</strong>(ramp) \(r(t)=t\)와
+    시간의 제곱으로 커지는 <strong>단위포물선</strong>(parabola) \(r(t)=\tfrac12 t^2\)은 교재에서 정상상태 오차를 따질 때 쓰는 표준 입력이다.
+    <code>step</code>처럼 전용 함수가 없으므로, <strong>입력 신호를 직접 배열로 만들어</strong> 넣어 주는 <code>lsim</code>을 쓴다.
+  </p>
+
+<!-- mcode 04/b09_ramp -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 단위 램프 응답 계산 t=시간, u=입력, y=출력
+t = 0:0.1:100;
+u = t;
+[y, t] = lsim(sys, u, t);
+
+% 입력(u)과 출력(y) 그리기
+plot(t, u, 'r-', t, y, 'b-')
+xlabel('Time(sec)')
+ylabel('Amplitude')
+title('Ramp response')
+legend('input', 'response')
+grid</code></pre>
+<button onclick="copyCode(this)">복사</button>
+</div>
+<!-- /mcode -->
+
+  <figure>
+    <img src="assets/img/04_ramp.png" width="560" alt="0초에서 100초까지 빨간 직선 입력과 파란 출력이 거의 겹쳐 보인다">
+    <figcaption>100초까지 그리면 입력과 출력이 겹쳐 보인다. 하지만 <strong>겹친 것이 아니라 간격이 작아 보이는 것</strong>이다. 끝부분을 확대한다.</figcaption>
+  </figure>
+
+<!-- mcode 04/b10_ramp_zoom -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 끝부분 확대 — 입력과 출력의 간격을 본다
+plot(t, u, 'r-', t, y, 'b-')
+axis([90 100 85 100])
+xlabel('Time(sec)')
+ylabel('Amplitude')
+title('Ramp response (t = 90~100 s)')
+legend('input', 'response', 'Location', 'northwest')
+grid
+e_ramp = u(end) - y(end)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>e_ramp =
+
+    2.6250</code></pre>
+</div>
+<!-- /mcode -->
+
+  <figure>
+    <img src="assets/img/04_ramp_zoom.png" width="560" alt="90~100초 구간. 빨간 입력과 파란 출력이 평행한 두 직선이고 간격이 약 2.6이다">
+    <figcaption>두 직선이 <strong>평행</strong>하다. 출력은 입력과 같은 속도로 올라가지만 일정한 거리만큼 뒤처진다.
+      그 거리가 <code>e_ramp</code> = 2.6250이다. 이 값이 어디서 나오는지는 ⑥절에서 공식으로 맞춰 본다.</figcaption>
+  </figure>
+
+  <p>포물선 입력도 같은 방식이다. 입력 배열만 \(\tfrac12 t^2\)로 바꾼다.</p>
+
+<!-- mcode 04/b11_parabola -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 포물선 입력 응답 계산 t=시간, u=입력, y=출력
+t = 0:0.1:100;
+u = 0.5*t.*t;
+[y, t] = lsim(sys, u, t);
+
+% 입력(u)과 출력(y) 그리기
+plot(t, u, 'r-', t, y, 'b-')
+xlabel('Time(sec)')
+ylabel('Amplitude')
+title('Parabolic response')
+legend('input', 'response')
+grid
+e_parabola = u(end) - y(end)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>e_parabola =
+
+  255.5460</code></pre>
+</div>
+<!-- /mcode -->
+
+  <figure>
+    <img src="assets/img/04_parabola.png" width="560" alt="빨간 포물선 입력과 파란 출력. 시간이 갈수록 두 곡선의 간격이 벌어진다">
+    <figcaption>이번에는 간격이 <strong>계속 벌어진다</strong>. 100초에서 이미 255가 차이 난다. 시간을 더 늘리면 더 벌어진다 — 오차가 무한대로 간다는 뜻이다.</figcaption>
+  </figure>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>[y, t] = lsim(sys, u, t)</dt>
+      <dd>시간 배열 <code>t</code>의 각 점에서 입력 값 <code>u</code>를 넣었을 때의 출력을 계산한다(linear simulation).
+          <code>u</code>와 <code>t</code>의 길이가 같아야 한다. 여기서는 <code>u = t</code>로 경사 입력, <code>u = 0.5*t.*t</code>로 포물선 입력을 만들었다.
+          <code>.*</code>는 원소끼리의 곱이다(2회).</dd>
+      <dt>legend(…, 'Location', 'northwest')</dt>
+      <dd>범례를 놓을 자리를 정한다. 기본은 오른쪽 위(<code>northeast</code>)인데, 확대 그림에서는 그 자리를 선이 지나가서 왼쪽 위로 옮겼다.</dd>
+    </dl>
+  </div>
+
+  <div class="box trap">
+    <p class="boxtitle">⚠️ 시간 간격이 거칠면 <code>lsim</code> 결과도 거칠다</p>
+    <p>
+      <code>lsim</code>은 주어진 시간 점 사이에서 입력이 직선으로 변한다고 보고 계산한다.
+      <code>t = 0:0.1:100</code>의 간격 0.1초는 이 시스템의 가장 빠른 극점 \(-6.14\)(시정수 약 0.16초)보다 조금 짧은 정도다.
+      응답이 더 빠른 시스템이면 간격을 줄여야 앞부분의 모양이 제대로 나온다.
+    </p>
+  </div>
+
+  <!-- ── ⑥ sse ── -->
+  <h2 id="sse">⑥ 정상상태 오차 — <code>dcgain</code> · <code>evalfr</code></h2>
+  <p>
+    ④·⑤절의 결과를 모으면 이렇다 — 계단에는 오차가 0으로 가는 것 같고, 경사에는 2.625가 남고, 포물선에는 무한히 벌어진다.
+    이 세 결과는 그래프를 그리기 전에 <strong>개루프 전달함수만 보고</strong> 미리 알 수 있다.
+  </p>
+
+  <div class="box theory">
+    <p class="boxtitle">📐 이론과 잇기 — 시스템 형(type)과 정적 오차 상수</p>
+    <p>단위 되먹임에서 오차 \(E = R - C\)의 전달함수는 \(E/R = 1/(1+G)\)이다. 최종값 정리를 쓰면</p>
+    $$
+    e_{ss} = \lim_{t\to\infty} e(t) = \lim_{s\to 0} s\,E(s) = \lim_{s\to 0} \frac{s\,R(s)}{1 + G(s)}
+    $$
+    <p>표준 입력 셋의 라플라스 변환은 \(1/s\), \(1/s^2\), \(1/s^3\)이다. 넣어서 정리하면 상수 셋이 나온다.</p>
+    $$
+    \begin{aligned}
+    \text{계단: } e_{ss} &= \frac{1}{1 + K_p}, & K_p &= \lim_{s\to0} G(s) \\
+    \text{경사: } e_{ss} &= \frac{1}{K_v}, & K_v &= \lim_{s\to0} s\,G(s) \\
+    \text{포물선: } e_{ss} &= \frac{1}{K_a}, & K_a &= \lim_{s\to0} s^2 G(s)
+    \end{aligned}
+    $$
+    <p>
+      \(G(s) = \dfrac{4(s+2)}{s(s+3)(s+7)}\)은 분모에 \(s\)가 한 번 곱해져 있다(원점의 극점 하나 = <strong>1형 시스템</strong>).
+      숫자를 넣는다.
+    </p>
+    $$
+    \begin{aligned}
+    K_p &= \lim_{s\to0} \frac{4(s+2)}{s(s+3)(s+7)} = \infty &&\Rightarrow\; e_{ss} = 0 \\
+    K_v &= \lim_{s\to0} \frac{4(s+2)}{(s+3)(s+7)} = \frac{4\cdot2}{3\cdot7} = \frac{8}{21} = 0.3810 &&\Rightarrow\; e_{ss} = \frac{21}{8} = 2.625 \\
+    K_a &= \lim_{s\to0} \frac{4s(s+2)}{(s+3)(s+7)} = 0 &&\Rightarrow\; e_{ss} = \infty
+    \end{aligned}
+    $$
+    <p>⑤절에서 <code>lsim</code>으로 잰 <code>e_ramp</code> = 2.6250과 같다.</p>
+  </div>
+
+  <p>
+    \(s \to 0\)의 극한은 \(s=0\)에서의 값이다. 전달함수의 \(s=0\) 값을 <strong>DC 이득</strong>(DC gain)이라고 하고,
+    MATLAB에서는 <code>dcgain</code>으로 구한다. \(s\,G(s)\)는 분자와 분모에 \(s\)가 함께 들어 있어서,
+    그대로 \(s=0\)을 넣으면 \(0/0\)이 된다. 그래서 먼저 <code>minreal</code>로 약분한다.
+  </p>
+
+<!-- mcode 04/b12_static_error -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 정적 오차 상수: Kp = lim G(s), Kv = lim s*G(s), Ka = lim s^2*G(s)  (s -&gt; 0)
+Kv = dcgain(minreal(s*G_s))
+Ka = dcgain(minreal(s^2*G_s))
+e_ramp_theory = 1/Kv
+% 폐루프의 최종값 = 계단 입력의 정상상태 출력
+dcgain(sys)
+evalfr(sys, 0)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>Kv =
+
+    0.3810
+
+
+Ka =
+
+     0
+
+
+e_ramp_theory =
+
+    2.6250
+
+
+ans =
+
+     1
+
+
+ans =
+
+     1</code></pre>
+</div>
+<!-- /mcode -->
+
+  <p>
+    출력 읽기: <code>Kv</code> 0.3810은 \(8/21\), <code>e_ramp_theory</code> 2.6250은 \(21/8\)로 위의 손계산과 같다.
+    마지막 두 줄은 <strong>폐루프</strong> <code>sys</code>의 \(s=0\) 값이 정확히 1이라는 뜻이다.
+    계단 입력의 최종값 정리는 \(\lim_{s\to0} s \cdot T(s) \cdot \tfrac1s = T(0)\)이므로, 출력은 결국 1로 간다.
+    ④절의 <code>y(end)</code> = 0.9991은 18.6초에서 계산을 멈췄을 뿐이고, 오차는 0으로 간다.
+  </p>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>k = dcgain(sys)</dt>
+      <dd>전달함수의 \(s=0\) 값(DC 이득)이다. 안정한 시스템이면 <strong>단위계단응답의 최종값</strong>과 같다.
+          여기서는 \(K_v\), \(K_a\)와 폐루프의 최종값을 구하는 데 썼다.</dd>
+      <dt>v = evalfr(sys, s0)</dt>
+      <dd>전달함수에 \(s = s_0\)를 넣은 값을 돌려준다(evaluate frequency response). \(s_0\)는 복소수여도 된다 —
+          7회에서 목표 극점의 위상과 크기를 잴 때 이 함수를 다시 쓴다. 여기서는 <code>evalfr(sys, 0)</code>이 <code>dcgain(sys)</code>와 같다는 것을 봤다.</dd>
+      <dt>sysr = minreal(sys)</dt>
+      <dd>분자·분모에 같이 있는 인수를 약분한다(minimal realization). 여기서는 \(s\,G(s)\)의 \(s\)를 지워 \(0/0\)을 피했다.
+          ②절의 <code>F2</code>에 쓰면 <code>F</code>와 같은 2차 전달함수가 된다.</dd>
+    </dl>
+  </div>
+
+  <!-- ── ⑦ damp ── -->
+  <h2 id="damp">⑦ 2차 시스템의 파라미터 — <code>damp</code></h2>
+  <p>
+    이제 진동이 있는 시스템을 다룬다. 교재의 과도응답 공식(상승시간·첨두시간·최대초과·정착시간)은
+    모두 <strong>2차 표준형</strong>의 \(\omega_n\)과 \(\zeta\)로 적혀 있다. 그러니 공식을 쓰기 전에 두 값을 알아야 한다.
+  </p>
+
+  <div class="box theory">
+    <p class="boxtitle">📐 이론과 잇기 — 2차 표준형과 극점</p>
+    <p>2차 표준형은 고유주파수(natural frequency) \(\omega_n\)과 제동비(damping ratio) \(\zeta\)로 쓴다.</p>
+    $$
+    M(s) = \frac{\omega_n^2}{s^2 + 2\zeta\omega_n s + \omega_n^2}
+    $$
+    <p>\(0 < \zeta < 1\)(부족제동)이면 분모의 근, 즉 극점은 복소수 한 쌍이다.</p>
+    $$
+    s = -\zeta\omega_n \pm j\,\omega_n\sqrt{1-\zeta^2} = -\sigma \pm j\,\omega_d
+    $$
+    <p>실수부 크기 \(\sigma = \zeta\omega_n\)는 진동이 줄어드는 빠르기, 허수부 \(\omega_d = \omega_n\sqrt{1-\zeta^2}\)는 실제로 진동하는 각주파수(감쇠진동주파수)다.
+       원점에서 극점까지의 거리는 \(\sqrt{\sigma^2+\omega_d^2} = \omega_n\)이다.</p>
+    <p>\(M(s) = \dfrac{9}{s^2+3s+9}\)에 맞춰 본다.</p>
+    $$
+    \begin{aligned}
+    \omega_n^2 &= 9 &&\Rightarrow\; \omega_n = 3 \\
+    2\zeta\omega_n &= 3 &&\Rightarrow\; \zeta = \frac{3}{2\cdot3} = 0.5 \\
+    s &= -0.5\cdot3 \pm j\,3\sqrt{1-0.25} &&= -1.5 \pm j\,2.5981
+    \end{aligned}
+    $$
+  </div>
+
+<!-- mcode 04/b13_second_order -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 부족제동 시스템
+s = tf('s');
+M = 9/(s^2+3*s+9)
+[omega, zeta, poles] = damp(M)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>M =
+
+        9
+  -------------
+  s^2 + 3 s + 9
+
+Continuous-time transfer function.
+Model Properties
+
+omega =
+
+     3
+     3
+
+
+zeta =
+
+    0.5000
+    0.5000
+
+
+poles =
+
+  -1.5000 + 2.5981i
+  -1.5000 - 2.5981i</code></pre>
+</div>
+<!-- /mcode -->
+
+  <p>
+    손으로 구한 \(\omega_n = 3\), \(\zeta = 0.5\), \(-1.5 \pm j2.5981\)과 같다.
+    눈여겨볼 것은 <code>omega</code>와 <code>zeta</code>가 <strong>값이 두 개인 벡터</strong>라는 점이다.
+    <code>damp</code>는 <strong>극점마다</strong> 고유주파수와 제동비를 하나씩 돌려준다. 켤레 극점 한 쌍은 같은 값을 가지므로 같은 숫자가 두 번 나온다.
+    그래서 공식에 넣을 때는 <code>omega(1)</code>, <code>zeta(1)</code>처럼 하나만 꺼내 쓴다. 이것이 ⑨절의 버그와 이어진다.
+  </p>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>[wn, zeta, p] = damp(sys)</dt>
+      <dd>극점 <code>p</code>와, 각 극점의 고유주파수 \(\omega_n = |p|\)와 제동비 \(\zeta = -\mathrm{Re}(p)/|p|\)를 열 벡터로 돌려준다.
+          여기서는 2차 표준형에 손으로 맞추지 않고 \(\omega_n\)·\(\zeta\)를 읽는 데 썼다. 출력 인자 없이 <code>damp(M)</code>만 치면 표로 찍어 준다.</dd>
+    </dl>
+  </div>
+
+  <!-- ── ⑧ stepinfo ── -->
+  <h2 id="stepinfo">⑧ 과도응답 성능 — <code>stepinfo</code></h2>
+  <p>
+    계단응답 그래프에서 <strong>얼마나 빨리 올라가나</strong>(상승시간), <strong>언제 꼭대기에 닿나</strong>(첨두시간),
+    <strong>얼마나 넘치나</strong>(최대초과), <strong>언제 가라앉나</strong>(정착시간)를 숫자로 잰 것이 과도응답 성능 지표다.
+    <code>stepinfo</code>는 계단응답을 계산한 뒤 이 값들을 <strong>그래프에서 직접 잰다</strong>.
+  </p>
+
+<!-- mcode 04/b14_stepinfo -->
+<div class="mcode">
+<pre class="lang-matlab"><code>S = stepinfo(M)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>S =
+
+  struct with fields:
+
+         RiseTime: 0.5463
+    TransientTime: 2.6920
+     SettlingTime: 2.6920
+      SettlingMin: 0.9315
+      SettlingMax: 1.1629
+        Overshoot: 16.2929
+       Undershoot: 0
+             Peak: 1.1629
+         PeakTime: 1.1973</code></pre>
+</div>
+<!-- /mcode -->
+
+  <p class="readme-first">출력을 읽는 법 — <code>S</code>는 이름 붙은 칸(field) 여러 개를 가진 <strong>구조체</strong>다. 교재의 지표와 짝을 지으면 이렇다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>칸</th><th>값</th><th>뜻</th><th>교재 기호</th></tr>
+    <tr><td><code>RiseTime</code></td><td>0.5463 s</td><td>최종값의 10%에서 90%까지 올라가는 시간</td><td>\(T_r\)</td></tr>
+    <tr><td><code>SettlingTime</code></td><td>2.6920 s</td><td>최종값의 ±2% 안에 들어와 다시 나가지 않는 시간</td><td>\(T_s\)</td></tr>
+    <tr><td><code>Overshoot</code></td><td>16.2929 %</td><td>최종값을 넘친 정도(백분율)</td><td>\(\%OS\)</td></tr>
+    <tr><td><code>Peak</code> · <code>PeakTime</code></td><td>1.1629 · 1.1973 s</td><td>출력의 최대값과 그때의 시간</td><td>\(c_{max}\) · \(T_p\)</td></tr>
+    <tr><td><code>SettlingMin</code> · <code>SettlingMax</code></td><td>0.9315 · 1.1629</td><td>상승이 끝난 뒤 출력의 최소·최대</td><td>—</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> <code>Peak</code> 1.1629는 최종값 1을 16.29% 넘친 값이라 <code>Overshoot</code>와 같은 이야기다.
+    <code>TransientTime</code>은 이 버전(R2026b)의 출력에 함께 나오는 칸으로, 이 시스템에서는 <code>SettlingTime</code>과 같다.
+    MATLAB 버전에 따라 이 칸이 없을 수도 있다.
+  </div>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>S = stepinfo(sys)</dt>
+      <dd>계단응답의 성능 지표를 구조체로 돌려준다. 칸 하나는 <code>S.Overshoot</code>처럼 점(<code>.</code>)으로 꺼낸다.
+          여기서는 ⑨절의 공식 값과 비교할 기준으로 썼다.</dd>
+      <dt>구조체(struct)</dt>
+      <dd>이름 붙은 칸에 값을 담는 변수다. 출력의 <code>struct with fields:</code>가 그 표시다. <code>S.PeakTime</code>을 치면 1.1973만 나온다.</dd>
+    </dl>
+  </div>
+
+  <!-- ── ⑨ formula ── -->
+  <h2 id="formula">⑨ 공식으로 직접 계산하기</h2>
+  <p>
+    교재에는 이 지표들을 \(\omega_n\)과 \(\zeta\)로 계산하는 공식이 있다. 공식으로 구한 값을 <code>stepinfo</code> 결과와 나란히 놓아 본다.
+    공식이 어디서 나오는지부터 본다.
+  </p>
+
+  <div class="box theory">
+    <p class="boxtitle">📐 이론과 잇기 — 첨두시간·최대초과·정착시간 공식</p>
+    <p>부족제동 2차 시스템의 단위계단응답은 다음과 같다(\(\sigma=\zeta\omega_n\), \(\omega_d=\omega_n\sqrt{1-\zeta^2}\)).</p>
+    $$
+    c(t) = 1 - e^{-\sigma t}\left(\cos\omega_d t + \frac{\zeta}{\sqrt{1-\zeta^2}}\sin\omega_d t\right)
+    $$
+    <p><strong>첨두시간</strong> — 미분해서 0이 되는 첫 시간이다. 미분하면 \(\cos\) 항이 지워지고 \(\sin\) 하나만 남는다.</p>
+    $$
+    \begin{aligned}
+    \dot c(t) &= \frac{\omega_n}{\sqrt{1-\zeta^2}}\, e^{-\sigma t} \sin\omega_d t = 0 \\
+    \omega_d T_p &= \pi \;\Rightarrow\; T_p = \frac{\pi}{\omega_d} = \frac{\pi}{2.5981} = 1.2092\ \text{s}
+    \end{aligned}
+    $$
+    <p><strong>최대초과</strong> — \(t = T_p\)를 \(c(t)\)에 넣는다. \(\cos\pi = -1\), \(\sin\pi = 0\)이므로</p>
+    $$
+    \begin{aligned}
+    c(T_p) &= 1 + e^{-\sigma\pi/\omega_d} = 1 + e^{-\zeta\pi/\sqrt{1-\zeta^2}} \\
+    \%OS &= e^{-\zeta\pi/\sqrt{1-\zeta^2}} \times 100 = e^{-0.5\pi/0.8660}\times100 = e^{-1.8138}\times 100 = 16.30\%
+    \end{aligned}
+    $$
+    <p><strong>정착시간</strong> — 진동은 포락선 \(1 \pm e^{-\sigma t}/\sqrt{1-\zeta^2}\) 안에서 일어난다. 포락선이 ±2% 안에 들어오는 시간은</p>
+    $$
+    \begin{aligned}
+    \frac{e^{-\sigma T_s}}{\sqrt{1-\zeta^2}} &= 0.02 \\
+    T_s &= \frac{-\ln\!\left(0.02\sqrt{1-\zeta^2}\right)}{\sigma} \approx \frac{4}{\sigma} = \frac{4}{1.5} = 2.6667\ \text{s}
+    \end{aligned}
+    $$
+    <p>\(-\ln(0.02) = 3.91\)이고 \(\sqrt{1-\zeta^2}\) 항은 \(\zeta\)가 작으면 거의 1이라서, 교재는 이것을 \(4/\sigma\)로 줄여 쓴다.</p>
+    <p><strong>상승시간</strong> — 10%·90%가 되는 시간은 깔끔한 식으로 풀리지 않는다. 그래서 여기서는 선형 근사식 \(T_r \approx (0.8 + 2.5\zeta)/\omega_n\)을 쓴다.</p>
+  </div>
+
+  <p>네 공식을 그대로 코드로 옮겨 돌린다. 정착시간 줄에 <code>abs</code>가 붙은 이유는 아래 ⚠️에서 설명한다.</p>
+
+<!-- mcode 04/b15_manual -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 수동으로 계산 — 교재의 2차 시스템 공식
+rise_time = (0.8 + 2.5*zeta(1)) / omega(1)
+settling_time = 4 / abs(real(poles(1)))
+peak_time = pi / imag(poles(1))
+over_shoot = exp(-pi*zeta(1)/sqrt(1-zeta(1)^2)) * 100</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>rise_time =
+
+    0.6833
+
+
+settling_time =
+
+    2.6667
+
+
+peak_time =
+
+    1.2092
+
+
+over_shoot =
+
+   16.3034</code></pre>
+</div>
+<!-- /mcode -->
+
+  <p class="readme-first">두 결과를 나란히 놓는다. 왼쪽은 그래프에서 잰 값, 오른쪽은 공식 값이다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>지표</th><th><code>stepinfo</code></th><th>공식</th><th>차이가 나는 이유</th></tr>
+    <tr><td>최대초과</td><td>16.2929 %</td><td>16.3034 %</td><td>공식은 정확하다. <code>stepinfo</code>는 계산한 시간 점 중 가장 높은 점을 고르므로 진짜 꼭대기를 살짝 비껴 잰다</td></tr>
+    <tr><td>첨두시간</td><td>1.1973 s</td><td>1.2092 s</td><td>같은 이유. 꼭대기 근처는 평평해서 시간 점 하나만 어긋나도 시간이 0.01초 단위로 달라진다</td></tr>
+    <tr><td>정착시간</td><td>2.6920 s</td><td>2.6667 s</td><td>공식은 \(\ln\)을 4로 줄인 근사이고 포락선 기준이다. 실제 곡선은 포락선보다 안쪽에서 먼저 2% 안에 들어온다</td></tr>
+    <tr><td>상승시간</td><td>0.5463 s</td><td>0.6833 s</td><td>공식이 거친 선형 근사다. 차이가 25%로 가장 크다</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 첨두시간·최대초과 공식은 <strong>근사가 아니다</strong> — 차이는 <code>stepinfo</code>가 연속 곡선을 점으로 재서 생긴 것이다.
+    정착시간과 상승시간 공식은 <strong>근사식</strong>이라 차이가 원래 있다. 근사를 덜 하면 얼마나 가까워지는지 확인해 본다.
+  </div>
+
+<!-- mcode 04/b23_refine -->
+<div class="mcode">
+<pre class="lang-matlab"><code>z = zeta(1); w = omega(1);
+% 상승시간(10%→90%)의 다항식 근사
+rise_time_poly = (1.768*z^3 - 0.417*z^2 + 1.039*z + 1) / w
+% 포락선이 2% 안으로 들어오는 시간 (근사하지 않은 식)
+settling_time_envelope = -log(0.02*sqrt(1 - z^2)) / (z*w)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>rise_time_poly =
+
+    0.5454
+
+
+settling_time_envelope =
+
+    2.7039</code></pre>
+</div>
+<!-- /mcode -->
+
+  <p>
+    상승시간은 3차 다항식 근사로 바꾸면 0.5454초로 <code>stepinfo</code>의 0.5463초와 거의 같다.
+    정착시간은 근사하지 않은 포락선 식이 2.7039초로, 오히려 <code>stepinfo</code>(2.6920초)보다 <strong>길다</strong>.
+    포락선은 「이 안에서만 움직인다」는 바깥 한계라서, 실제 곡선은 그보다 조금 일찍 2% 띠 안에 자리를 잡는다.
+    <strong>4/σ는 그 두 값 사이에 있는 편리한 숫자</strong>인 셈이다.
+  </p>
+
+  <h3>오류 없이 틀린 값을 찍는 두 가지 실수</h3>
+  <p>
+    값을 찍거나 공식을 코드로 옮길 때 이렇게 쓰기 쉬운 줄이 둘 있다. 둘 다 MATLAB이 오류를 내지 않아서 그냥 지나가기 쉽다.
+    첫째는 <code>damp</code>가 돌려준 벡터를 그대로 <code>sprintf</code>에 넣는 것이다.
+  </p>
+
+<!-- mcode 04/b16_sprintf_vec -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% omega, zeta 를 그대로 넣으면 — 둘 다 원소 두 개짜리 벡터다
+sprintf("omega: %1.4f, zeta: %1.4f", omega, zeta)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>ans =
+
+    "omega: 3.0000, zeta: 3.0000omega: 0.5000, zeta: 0.5000"</code></pre>
+</div>
+<!-- /mcode -->
+
+  <p>둘째는 정착시간을 구할 때 극점의 실수부로 바로 나누는 것이다.</p>
+
+<!-- mcode 04/b17_sign_bug -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 극점의 실수부로 바로 나누면
+settling_time = 4 / real(poles(1))</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>settling_time =
+
+   -2.6667</code></pre>
+</div>
+<!-- /mcode -->
+
+  <div class="box trap">
+    <p class="boxtitle">⚠️ 두 줄이 틀린 이유와 고치는 법</p>
+    <p>
+      <strong>① 벡터를 서식 문자열에 넣으면 서식이 되풀이된다.</strong> <code>sprintf</code>·<code>fprintf</code>는 인자를 전부 한 줄로 펴서
+      <code>[omega(1) omega(2) zeta(1) zeta(2)]</code> = <code>[3 3 0.5 0.5]</code> 순서로 <code>%1.4f</code> 자리에 채운다.
+      그래서 「zeta: 3.0000」이라는 틀린 글자가 찍혔다. 하나만 꺼내서 <code>omega(1)</code>, <code>zeta(1)</code>로 넣는다.
+    </p>
+    <p>
+      <strong>② 안정한 극점의 실수부는 음수다.</strong> \(T_s = 4/\sigma\)의 \(\sigma\)는 실수부의 <strong>크기</strong>다.
+      <code>real(poles(1))</code>은 −1.5이므로 그대로 나누면 −2.6667초라는 있을 수 없는 시간이 나온다. <code>abs(real(…))</code>로 크기를 쓴다.
+      첨두시간도 같은 이유로 <code>abs(imag(…))</code>를 쓰면 켤레 중 어느 쪽이 먼저 나와도 안전하다.
+    </p>
+  </div>
+
+  <!-- ── ⑩ function ── -->
+  <h2 id="function">⑩ 함수 파일 — <code>function</code></h2>
+  <p>
+    ⑦~⑨절의 코드를 다른 시스템에도 써 보려면 <code>M</code>만 바꿔서 같은 줄들을 다시 붙여 넣어야 한다.
+    시스템이 다섯 개면 다섯 번이다. 이렇게 <strong>같은 계산을 입력만 바꿔 되풀이</strong>할 때 함수를 만든다.
+  </p>
+  <p>
+    MATLAB의 함수는 보통 <strong>함수 파일</strong>(function file)로 만든다. 규칙은 셋이다.
+  </p>
+  <ol>
+    <li>파일의 첫 줄이 <code>function 출력 = 이름(입력)</code>이다. 마지막 줄은 <code>end</code>다.</li>
+    <li><strong>파일 이름이 함수 이름과 같아야 한다.</strong> <code>transient_response</code> 함수는 <code>transient_response.m</code>에 저장한다.</li>
+    <li>그 파일이 <strong>현재 폴더</strong>(1회)에 있어야 스크립트에서 부를 수 있다.</li>
+  </ol>
+  <p>
+    함수 안의 변수는 함수 안에서만 산다. 스크립트에서 만든 <code>omega</code>가 있어도 함수 안의 <code>omega</code>와는 별개다.
+    함수가 바깥과 주고받는 것은 <strong>입력 인자와 출력 인자뿐</strong>이다.
+    함수는 스크립트 파일 맨 끝에 붙여 둘 수도 있다(<strong>로컬 함수</strong>). 단, 그러면 그 스크립트 안에서만 부를 수 있다. 여기서는 여러 스크립트에서 부를 수 있게 각각 파일로 만든다.
+  </p>
+  <p>먼저 그림을 그리는 함수다. ④절의 그리기 코드에 <code>step(M, t)</code>로 시간을 정해 주는 것만 다르다.</p>
+
+<!-- mcode 04/draw_step_response.m file -->
+<div class="mcode">
+<div class="fname">draw_step_response.m</div>
+<pre class="lang-matlab"><code>function draw_step_response(M)
+% 시스템 M 의 단위계단응답을 입력(빨간 선)과 함께 0~5초 동안 그린다.
+Tfinal = 5;
+t = 0:0.01:Tfinal;
+y = step(M, t);
+u = ones(size(t));
+plot(t, u, 'r-', t, y, 'b-')
+axis([0 Tfinal 0 1.2])
+xlabel('Time(sec)')
+ylabel('Amplitude')
+title('Step response')
+legend('input', 'response')
+grid
+end</code></pre>
+<button onclick="copyCode(this)">복사</button>
+</div>
+<!-- /mcode -->
+
+  <p>
+    출력 인자가 없는 함수다. 첫 줄이 <code>function draw_step_response(M)</code>로, 등호 앞이 비어 있다.
+    다음은 성능을 계산하는 함수다. ⑨절에서 고친 두 줄이 들어간 판이다.
+  </p>
+
+<!-- mcode 04/transient_response.m file -->
+<div class="mcode">
+<div class="fname">transient_response.m</div>
+<pre class="lang-matlab"><code>function S = transient_response(M)
+% 2차 시스템 M 의 파라미터와 과도응답 성능을 stepinfo() 와 교재 공식으로 각각 구해 찍는다.
+[omega, zeta, poles] = damp(M);
+fprintf("omega: %1.4f, zeta: %1.4f\n", omega(1), zeta(1))
+fprintf("pole: %1.4f +- j%1.4f\n", real(poles(1)), abs(imag(poles(1))))
+% 과도응답 성능 계산
+disp('Performance indices from stepinfo()')
+S = stepinfo(M)
+% 수동으로 계산
+disp('Manually computed performance indices')
+rise_time = (0.8 + 2.5*zeta(1)) / omega(1)
+settling_time = 4 / abs(real(poles(1)))
+peak_time = pi / abs(imag(poles(1)))
+over_shoot = exp(-pi*zeta(1)/sqrt(1-zeta(1)^2)) * 100
+end</code></pre>
+<button onclick="copyCode(this)">복사</button>
+</div>
+<!-- /mcode -->
+
+  <p>
+    <code>stepinfo</code> 결과를 바깥에서도 쓸 수 있게 <code>S</code>를 돌려준다.
+    부를 때 <code>S = transient_response(M)</code>로 받아도 되고, <code>transient_response(M);</code>처럼 받지 않아도 된다.
+    두 파일을 저장했으면 스크립트에서 부른다.
+  </p>
+
+<!-- mcode 04/b18_draw_transient -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 시스템의 단위 계단 응답 그리기
+draw_step_response(M);
+% 시스템 파라미터와 성능 계산
+transient_response(M);</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>omega: 3.0000, zeta: 0.5000
+pole: -1.5000 +- j2.5981
+Performance indices from stepinfo()
+
+S =
+
+  struct with fields:
+
+         RiseTime: 0.5463
+    TransientTime: 2.6920
+     SettlingTime: 2.6920
+      SettlingMin: 0.9315
+      SettlingMax: 1.1629
+        Overshoot: 16.2929
+       Undershoot: 0
+             Peak: 1.1629
+         PeakTime: 1.1973
+
+Manually computed performance indices
+
+rise_time =
+
+    0.6833
+
+
+settling_time =
+
+    2.6667
+
+
+peak_time =
+
+    1.2092
+
+
+over_shoot =
+
+   16.3034</code></pre>
+</div>
+<!-- /mcode -->
+
+  <figure>
+    <img src="assets/img/04_draw_transient.png" width="560" alt="0~5초 계단응답. 파란 출력이 1.2초쯤 1.16까지 올라갔다가 2.4초쯤 0.97로 내려가고 1로 가라앉는다">
+    <figcaption>꼭대기가 1.2초 근처, 높이 약 1.16 — <code>PeakTime</code> 1.1973, <code>Peak</code> 1.1629와 맞는다.
+      2.7초 뒤로는 0.98~1.02 띠를 벗어나지 않는다(<code>SettlingTime</code> 2.6920).</figcaption>
+  </figure>
+
+  <p>
+    출력 읽기: 함수 안의 <code>S = stepinfo(M)</code>처럼 <strong>세미콜론이 없는 줄은 함수 안에서도 값을 찍는다.</strong>
+    그래서 <code>S</code>와 <code>rise_time</code> 등이 명령 창에 나왔다. 반면 부르는 쪽 <code>transient_response(M);</code>의 세미콜론은
+    <strong>돌려받은 값</strong>을 찍지 말라는 뜻이라, 함수가 돌려준 <code>S</code>가 <code>ans</code>로 한 번 더 찍히지는 않았다.
+  </p>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>function 출력 = 이름(입력) … end</dt>
+      <dd>함수의 머리줄과 끝이다. 출력이 여럿이면 <code>function [a, b] = f(x)</code>, 없으면 <code>function f(x)</code>.
+          여기서는 그리는 함수(출력 없음)와 성능을 계산해 <code>S</code>를 돌려주는 함수를 만들었다.</dd>
+      <dt>fprintf("… %1.4f …\n", 값)</dt>
+      <dd>2회에서 본 서식 출력이다. 큰따옴표(<code>"…"</code>, string)로 서식을 써도 작은따옴표와 똑같이 동작한다.
+          여기서는 벡터가 아니라 <code>omega(1)</code>처럼 값 하나씩 넣었다.</dd>
+    </dl>
+  </div>
+
+  <!-- ── ⑪ stability ── -->
+  <h2 id="stability">⑪ 안정도 — <code>isstable</code> · <code>if</code></h2>
+  <p>
+    지금까지 본 시스템은 모두 출력이 어떤 값에 가라앉았다. 그렇지 않은 시스템도 있다. 어떤 시스템이 <strong>안정</strong>한지는 무엇으로 정하나?
+  </p>
+
+  <div class="box theory">
+    <p class="boxtitle">📐 이론과 잇기 — 극점이 모두 좌반면에 있어야 안정하다</p>
+    <p>전달함수를 부분분수로 나누면 응답은 극점마다 하나씩 붙은 지수함수의 합이다.</p>
+    $$
+    c(t) = \sum_i A_i\, e^{p_i t}, \qquad p_i = \sigma_i + j\omega_i
+    $$
+    <p>
+      \(|e^{p_i t}| = e^{\sigma_i t}\)이므로 실수부 \(\sigma_i\)가 음수인 항은 시간이 가면 0으로 줄고, 양수인 항은 끝없이 커진다.
+      그래서 <strong>모든 극점의 실수부가 음수(s 평면의 왼쪽 반면)</strong>일 때만 입력이 끝나면 출력이 가라앉는다.
+      이것을 안정하다고 한다. 실수부가 정확히 0인 극점이 있으면 진동이 줄지도 늘지도 않는다(임계안정).
+    </p>
+  </div>
+
+  <p>
+    극점을 구해서 실수부의 부호를 보면 판별이 된다. 아래 <code>stability_check</code>는 이것을 두 가지 방법으로 한다 —
+    MATLAB 내장 함수 <code>isstable</code>로 한 번, 극점의 실수부를 직접 검사해서 한 번.
+    결과에 따라 다른 문장을 찍어야 하므로 <strong>조건문 <code>if</code></strong>가 필요하다.
+  </p>
+
+<!-- mcode 04/stability_check.m file -->
+<div class="mcode">
+<div class="fname">stability_check.m</div>
+<pre class="lang-matlab"><code>function stability_check(M)
+% 시스템 M 이 안정한지 두 가지 방법(isstable, 극점의 실수부)으로 판별해 찍는다.
+if isstable(M)
+    disp("This system is determined to be STABLE by 'isstable()' function.")
+else
+    disp("This system is determined to be UNSTABLE by 'isstable()' function.")
+end
+
+poles = pole(M);
+pole_real = real(poles)
+if all(pole_real &lt; 0)
+    disp("This system is STABLE. All poles are on the left side.")
+else
+    disp("This system is UNSTABLE. Some poles are NOT on the left side.")
+end
+end</code></pre>
+<button onclick="copyCode(this)">복사</button>
+</div>
+<!-- /mcode -->
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>if 조건 … else … end</dt>
+      <dd>조건이 참이면 <code>if</code> 아래를, 거짓이면 <code>else</code> 아래를 실행한다. 조건이 여럿이면 <code>elseif</code>를 이어 붙인다.
+          블록의 끝은 언제나 <code>end</code>다. 여기서는 안정·불안정에 따라 다른 문장을 찍었다.</dd>
+      <dt>tf = isstable(sys)</dt>
+      <dd>시스템이 안정하면 참(1), 아니면 거짓(0)을 돌려준다. 여기서는 <code>if</code>의 조건으로 바로 썼다.</dd>
+      <dt>pole_real &lt; 0 · all(v) · any(v)</dt>
+      <dd>벡터에 비교 연산을 하면 원소마다 참/거짓이 담긴 논리 벡터가 된다. <code>all</code>은 원소가 <strong>전부</strong> 참이면,
+          <code>any</code>는 <strong>하나라도</strong> 참이면 참이다. 여기서는 「실수부가 모두 음수인가」를 <code>all(pole_real &lt; 0)</code> 한 줄로 물었다.</dd>
+    </dl>
+  </div>
+
+  <p>안정할 것으로 보이는 3차 시스템 \(M_1\)부터 넣어 본다.</p>
+  $$
+  M_1(s) = \frac{12}{s^3+4s^2+8s+12}
+  $$
+
+<!-- mcode 04/b19_stability -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 시스템 안정도 판별 (안정 시스템)
+s = tf('s');
+M1 = 12/(s^3+4*s^2+8*s+12)
+stability_check(M1);</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>M1 =
+
+            12
+  ----------------------
+  s^3 + 4 s^2 + 8 s + 12
+
+Continuous-time transfer function.
+Model Properties
+This system is determined to be STABLE by 'isstable()' function.
+
+pole_real =
+
+   -2.6850
+   -0.6575
+   -0.6575
+
+This system is STABLE. All poles are on the left side.</code></pre>
+</div>
+<!-- /mcode -->
+
+  <p>세 실수부가 −2.6850, −0.6575, −0.6575로 모두 음수다. 같은 값이 둘인 것은 켤레 복소 극점 한 쌍이라서다. 다음은 4차 시스템 \(M_2\)다.</p>
+  $$
+  M_2(s) = \frac{3}{s^4+s^3+2s^2+2s+3}
+  $$
+
+<!-- mcode 04/b20_unstable -->
+<div class="mcode">
+<pre class="lang-matlab"><code>M2 = 3/(s^4+s^3+2*s^2+2*s+3)
+stability_check(M2);</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>M2 =
+
+               3
+  ---------------------------
+  s^4 + s^3 + 2 s^2 + 2 s + 3
+
+Continuous-time transfer function.
+Model Properties
+This system is determined to be UNSTABLE by 'isstable()' function.
+
+pole_real =
+
+    0.4057
+    0.4057
+   -0.9057
+   -0.9057
+
+This system is UNSTABLE. Some poles are NOT on the left side.</code></pre>
+</div>
+<!-- /mcode -->
+
+  <p>
+    \(M_2\)의 분모 계수는 1, 1, 2, 2, 3으로 <strong>전부 양수</strong>다. 그런데도 불안정하다.
+    「계수가 모두 양수」는 안정의 <strong>필요조건일 뿐 충분조건이 아니다.</strong>
+    교재의 Routh-Hurwitz 판별법이 필요한 이유가 이것이다 — 이 분모로 Routh 표를 만들면 셋째 줄 첫 칸이 0이 되는 특수한 경우가 나온다.
+    MATLAB으로는 극점을 직접 구해 보는 것으로 끝난다. 두 시스템의 극점을 한 그림에 찍는다.
+  </p>
+
+<!-- mcode 04/b21_pole_m2 -->
+<div class="mcode">
+<pre class="lang-matlab"><code>pole(M2)
+pzmap(M1, M2)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>ans =
+
+   0.4057 + 1.2928i
+   0.4057 - 1.2928i
+  -0.9057 + 0.9020i
+  -0.9057 - 0.9020i</code></pre>
+</div>
+<!-- /mcode -->
+
+  <figure>
+    <img src="assets/img/04_pole_m2.png" width="520" alt="Pole-Zero Map. 파란 x 세 개(M1)는 모두 허수축 왼쪽, 주황 x 네 개(M2) 중 두 개가 허수축 오른쪽 0.41 근처에 있다">
+    <figcaption>파란 ×가 \(M_1\), 주황 ×가 \(M_2\)의 극점이다. 세로 점선(허수축) <strong>오른쪽에 있는 주황 × 두 개</strong>가 \(M_2\)를 불안정하게 만든다.</figcaption>
+  </figure>
+
+  <p>불안정한 시스템의 계단응답은 어떻게 생겼을까. <code>step</code>을 출력 인자 없이 불러 바로 그린다.</p>
+
+<!-- mcode 04/b22_unstable_step -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 불안정한 M2 의 계단응답은 어떻게 생겼나
+step(M2, 0:0.01:30)
+grid on</code></pre>
+<button onclick="copyCode(this)">복사</button>
+</div>
+<!-- /mcode -->
+
+  <figure>
+    <img src="assets/img/04_unstable_step.png" width="560" alt="0~30초 계단응답. 15초까지는 거의 0처럼 보이다가 진동하며 폭이 커져 30초에 -9만에 이른다">
+    <figcaption>세로축 단위가 \(\times10^4\)다. 진동하면서 폭이 지수적으로 커진다.
+      봉우리 사이 간격이 약 4.9초인데, 불안정 극점의 허수부로 계산한 주기 \(2\pi/1.2928 = 4.86\)초와 같다.
+      폭이 커지는 빠르기는 실수부 0.4057이 정한다 — 4.86초마다 \(e^{0.4057\times4.86} \approx 7.2\)배.</figcaption>
+  </figure>
+
+  <!-- ── 🧪 실습 ── -->
+  <h2 id="lab">🧪 실습</h2>
+  <div class="lab-block">
+    <p class="boxtitle">이걸 해 보면 무엇을 알게 되나 — 제동비가 성능 지표를 어떻게 바꾸는지 숫자로 본다</p>
+    <p><strong>준비물:</strong> MATLAB, 이 회차의 함수 파일 세 개(<code>draw_step_response.m</code>, <code>transient_response.m</code>, <code>stability_check.m</code>)를 저장한 폴더.</p>
+    <ol>
+      <li>새 스크립트 <code>lab04.m</code>을 함수 파일과 <strong>같은 폴더</strong>에 만든다. 현재 폴더가 그 폴더인지 확인한다. (3분)</li>
+      <li>\(\omega_n = 3\)으로 두고 \(\zeta = 0.3\)인 2차 표준형 <code>M</code>을 <code>s = tf('s')</code> 방식으로 만든다. (5분)</li>
+      <li><code>draw_step_response(M);</code>와 <code>transient_response(M);</code>를 부른다. (3분)</li>
+      <li>\(\zeta\)를 0.5, 0.7로 바꿔 같은 것을 되풀이하고, <code>Overshoot</code>·<code>PeakTime</code>·<code>SettlingTime</code>을 표로 적는다. (10분)</li>
+      <li>각 \(\zeta\)에서 <code>stepinfo</code> 값과 공식 값의 차이가 가장 큰 지표가 무엇인지 적는다. (5분)</li>
+      <li><code>stability_check(M);</code>로 셋 다 안정한지 확인한다. (2분)</li>
+    </ol>
+    <p><strong>이렇게 되면 성공이다:</strong> \(\zeta = 0.5\)에서 <code>Overshoot</code>가 이 자료와 같은 16.2929가 나오고,
+      \(\zeta\)가 커질수록 최대초과가 줄어드는 것이 표에서 보인다. 그래프의 꼭대기 높이가 <code>Peak</code> 값과 맞으면 된다.</p>
+  </div>
+
+  <!-- ── 📝 연습문제 ── -->
+  <h2 id="exercise">📝 연습문제</h2>
+  <p>답은 싣지 않는다. 각 문제마다 <strong>손으로 먼저 구한 값</strong>을 적고, MATLAB으로 확인한다.</p>
+  <ol>
+    <li>
+      개루프 \(G(s) = \dfrac{10}{s(s+2)}\)를 단위 되먹임으로 묶는다.
+      (가) 폐루프 전달함수를 손으로 구하고 <code>feedback</code> 결과와 비교하라.
+      (나) \(\omega_n\)·\(\zeta\)를 손으로 구하고 <code>damp</code>로 확인하라.
+      (다) 단위경사 입력의 정상상태 오차를 \(K_v\)로 구하고, <code>lsim</code>으로 그린 곡선의 끝 간격과 비교하라.
+    </li>
+    <li>
+      ②절의 <code>F2 = G/(1 + G*H)</code>에 <code>minreal</code>을 써서 <code>F</code>와 같은 전달함수가 되는지 확인하라.
+      두 전달함수의 계단응답을 한 그래프에 그리면 어떻게 보이는가?
+    </li>
+    <li>
+      <code>stability_check</code>를 고쳐서, 불안정할 때 <strong>오른쪽 반면에 있는 극점만</strong> 찍도록 하라.
+      (힌트: 논리 벡터로 인덱싱할 수 있다 — <code>poles(real(poles) &gt; 0)</code>.) \(M_2\)로 확인하라.
+    </li>
+    <li>
+      ⑥절의 시스템에서 이득 4를 바꿔 \(G(s) = \dfrac{K(s+2)}{s(s+3)(s+7)}\)로 둔다. 경사 입력의 정상상태 오차를 1 이하로 만드는 \(K\)의 최소값을 손으로 구하고,
+      그 \(K\)에서 폐루프가 여전히 안정한지 <code>stability_check</code>로 확인하라.
+    </li>
+  </ol>
+
+  <!-- ── ✅ 점검 ── -->
+  <h2 id="check">✅ 점검</h2>
+  <ul class="check">
+    <li><input type="checkbox" id="c1"><label for="c1">같은 전달함수를 <code>tf(num, den)</code>와 <code>s = tf('s')</code> 두 방법으로 만들 수 있다</label></li>
+    <li><input type="checkbox" id="c2"><label for="c2">폐루프는 <code>G/(1+G*H)</code>가 아니라 <code>feedback(G, H)</code>로 만드는 이유를 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c3"><label for="c3"><code>step</code>과 <code>lsim</code>의 차이(입력을 누가 정하나)를 알고, 경사 입력 응답을 그릴 수 있다</label></li>
+    <li><input type="checkbox" id="c4"><label for="c4">시스템 형을 보고 계단·경사·포물선 입력의 정상상태 오차가 0·유한·무한 중 무엇인지 그래프 전에 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c5"><label for="c5"><code>damp</code>가 극점마다 값을 돌려준다는 것을 알고 <code>omega(1)</code>처럼 꺼내 쓴다</label></li>
+    <li><input type="checkbox" id="c6"><label for="c6"><code>stepinfo</code>와 교재 공식의 값이 다른 이유를 지표별로 하나씩 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c7"><label for="c7">함수 파일의 이름 규칙과 저장 위치를 알고, <code>if</code>·<code>all</code>로 안정도를 판별하는 함수를 읽을 수 있다</label></li>
+  </ul>
+
+  <!-- ── 조금 더 ── -->
+  <h2 id="more">조금 더 알아두면</h2>
+  <details class="fold">
+    <summary>극점·영점 모양으로 보고 싶을 때 — <code>zpk</code></summary>
+    <p>
+      <code>tf</code>는 언제나 다항식을 전개한 모양으로 보여 준다. 인수분해된 모양 \(\dfrac{(s+3)}{(s+1)(s+2)}\)으로 보고 싶으면
+      <code>zpk(G)</code>를 쓴다. 영점(zero)·극점(pole)·이득(gain)으로 적는 표현이라는 뜻이다. 계산 결과는 같고 보여 주는 모양만 다르다.
+    </p>
+  </details>
+  <details class="fold">
+    <summary>정착시간 기준을 5%로 바꾸려면</summary>
+    <p>
+      교재에 따라 정착시간을 ±5% 기준으로 정의하기도 한다. 그때 공식은 \(T_s \approx 3/\sigma\)가 된다(\(-\ln 0.05 \approx 3\)).
+      <code>stepinfo(M, 'SettlingTimeThreshold', 0.05)</code>로 기준을 바꿔 잴 수 있다. 상승시간 기준도 <code>'RiseTimeLimits', [0.1 0.9]</code>처럼 바꿀 수 있다.
+    </p>
+  </details>
+  <details class="fold">
+    <summary>임펄스 응답과 초기값 응답</summary>
+    <p>
+      <code>impulse(sys)</code>는 단위임펄스 입력에 대한 응답이다. 전달함수의 역라플라스 변환 그 자체라서, 각 극점의 \(e^{p_i t}\) 항이 가장 잘 드러난다.
+      상태공간 모델에서는 <code>initial</code>로 입력 없이 초기 상태에서 출발하는 응답을 본다.
+    </p>
+  </details>
+  <details class="fold">
+    <summary>함수 도움말 달기</summary>
+    <p>
+      함수 파일의 첫 줄(<code>function …</code>) 바로 아래 주석 줄은 그 함수의 도움말이 된다.
+      이 회차의 함수 파일을 저장하고 명령 창에 <code>help transient_response</code>를 치면 「2차 시스템 M 의 파라미터와 …」 문장이 나온다.
+      나중에 내가 만든 함수가 무엇을 하는지 잊었을 때 이 한 줄이 쓸모 있다.
+    </p>
+  </details>
+
+  <footer>
+    <a href="matlab_03.html">← 03회 그래프 그리기</a> · <a href="index.html">회차 목록</a> · <a href="matlab_05.html">05회 근궤적 그리기 →</a>
+  </footer>
+</main>
+</div>
+<script src="../assets/site.js" defer></script>
+</body>
+</html>

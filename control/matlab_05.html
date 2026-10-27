@@ -1,0 +1,1448 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>05회 · 근궤적 그리기 — rlocus와 root_locus 함수 | 제어공학 MATLAB 실습</title>
+<script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}})();</script>
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="assets/lecture.css">
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['$$','$$']]},
+  options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+<header class="bar">
+  <div class="barin wide">
+    <a class="up" href="index.html" aria-label="제어공학 MATLAB 실습 회차 목록"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a>
+    <nav class="crumb" aria-label="경로">
+      <a href="../index.html">강의자료</a><span class="sep">/</span><a href="index.html">제어공학 MATLAB 실습</a><span class="sep">/</span><span class="here">05회 · 근궤적 그리기</span>
+    </nav>
+    <span class="spacer"></span>
+    <div class="navlinks"><a class="navlink" href="matlab_04.html" aria-label="이전 회차"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a><a class="navlink" href="matlab_06.html" aria-label="다음 회차"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></a></div>
+    <div class="seg" data-theme-switch role="group" aria-label="밝기">
+      <button type="button" data-mode="auto" aria-pressed="true">자동</button>
+      <button type="button" data-mode="light" aria-pressed="false">밝게</button>
+      <button type="button" data-mode="dark" aria-pressed="false">어둡게</button>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="toc-title">이 회차 목차</div>
+  <a href="#summary">한 장 요약</a>
+  <a href="#s1">① 근궤적 — <code>rlocus</code></a>
+  <a href="#s2">② 각도 조건과 크기 조건</a>
+  <a href="#s3">③ 근궤적 작도 규칙</a>
+  <a class="sub" href="#s3-real">실수축 구간</a>
+  <a class="sub" href="#s3-plan">규칙마다 함수 하나</a>
+  <a href="#s4">④ 점근선 — <code>find_asymptote</code></a>
+  <a href="#s5">⑤ 분기점 — <code>find_break_point</code></a>
+  <a href="#s6">⑥ 허수축 교차 — Routh 표</a>
+  <a href="#s7">⑦ 출발각 · 도착각 — <code>find_start_angle</code></a>
+  <a href="#s8">⑧ 규칙을 한데 묶기 — <code>root_locus</code></a>
+  <a href="#s9">⑨ 근궤적 모양 모음</a>
+  <a href="#lab">🧪 실습</a>
+  <a href="#exercise">📝 연습문제</a>
+  <a href="#check">✅ 점검</a>
+  <a href="#more">조금 더 알아두면</a>
+</nav>
+
+<main>
+
+  <div class="lec-no">제어공학 MATLAB 실습 · 05회 · 2부 시간영역 해석과 근궤적</div>
+  <h1>근궤적 그리기 — rlocus와 root_locus 함수</h1>
+
+  <div class="questions">
+    <span class="lab">오늘 답할 질문</span>
+    <ol>
+      <li>근궤적 그림의 선 하나하나는 정확히 무엇을 그린 것인가?</li>
+      <li>점근선·분기점·출발각 같은 작도 규칙은 어떤 식에서 나오고, MATLAB 함수로 어떻게 계산하나?</li>
+      <li>근궤적이 허수축을 넘는 \(K\)는 Routh 표로 어떻게 구하나?</li>
+      <li>규칙마다 만든 함수를 하나로 묶어 근궤적 그림 위에 겹쳐 그리려면?</li>
+      <li>극점이나 영점을 하나 더하면 근궤적의 모양은 어떻게 바뀌나?</li>
+    </ol>
+  </div>
+
+  <p>
+    4회에서는 전달함수를 만들고 <code>feedback</code>으로 폐루프를 만든 뒤, <code>pole</code>로 극점을 구해 안정도와 응답을 판단했다.
+    그런데 거기서는 이득이 늘 정해진 숫자였다. 실제 설계에서는 <strong>이득 \(K\)를 얼마로 할지</strong>가 질문이다.
+    \(K\)를 0에서 무한대까지 바꿔 가면 폐루프 극점이 s 평면 위를 움직이는데, 그 자취를 그린 것이 <strong>근궤적</strong>(root locus)이다.
+  </p>
+  <p>
+    앞부분에서는 <code>rlocus</code>로 근궤적을 그리고, 그 선이 정말 폐루프 극점의 자취인지 숫자로 확인한다.
+    가운데에서는 근궤적 작도 규칙(점근선·분기점·허수축 교차·출발각)을 하나씩 식으로 세우고, <strong>규칙마다 그 계산을 하는 함수 파일</strong>을 만든다.
+    마지막에 그 함수들을 한데 묶은 <code>root_locus</code> 함수로 근궤적 위에 결과를 겹쳐 그리고, 극점·영점을 바꿔 가며 근궤적 모양이 어떻게 달라지는지 본다.
+  </p>
+
+  <h2 id="summary">한 장 요약</h2>
+  <p class="readme-first">왼쪽은 이 회차에서 쓰는 함수, 오른쪽은 그 함수가 이어지는 근궤적 규칙이다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>함수</th><th>하는 일</th><th>제어공학에서 쓰는 자리</th></tr>
+    <tr><td><code>rlocus(GH)</code></td><td>개루프 전달함수 \(G(s)H(s)\)의 근궤적을 그린다</td><td>\(1+KG(s)H(s)=0\)의 근이 \(K\)에 따라 움직이는 자취</td></tr>
+    <tr><td><code>evalfr(GH, s0)</code> · <code>angle</code> · <code>abs</code></td><td>한 점에서 \(G(s_0)H(s_0)\)의 값·각도·크기</td><td><strong>각도 조건</strong>과 <strong>크기 조건</strong></td></tr>
+    <tr><td><code>find_asymptote(GH)</code></td><td>점근선의 중심과 각도</td><td>\(\sigma_a = (\sum p - \sum z)/(n-m)\), \(\theta_k = (2k+1)180^\circ/(n-m)\)</td></tr>
+    <tr><td><code>tfdata</code> · <code>polyder</code> · <code>roots</code> → <code>find_break_point(GH)</code></td><td>\(D'N - DN' = 0\)의 근 중 \(K>0\)인 것</td><td><strong>분기점</strong> \(dK/ds=0\)</td></tr>
+    <tr><td><code>syms</code> · <code>solve</code> · <code>subs</code> → <code>routh_table(c)</code></td><td>\(K\)가 들어간 특성방정식의 Routh 표</td><td><strong>허수축 교차</strong> — 안정 한계 \(K\)와 교차 주파수 \(\omega\)</td></tr>
+    <tr><td><code>find_start_angle(GH)</code></td><td>복소·겹친 극점의 출발각, 복소·겹친 영점의 도착각</td><td>각도 조건을 극점 바로 옆에 쓴 것</td></tr>
+    <tr><td><code>root_locus(GH, asymptote=1, break_point=1, start_angle=1)</code></td><td><code>rlocus</code> 그림 위에 점근선·분기점·출발각을 겹쳐 그린다</td><td>손으로 작도한 결과를 MATLAB 그림과 맞대 보는 도구</td></tr>
+  </table>
+  </div>
+  <div class="interp"><strong>해석:</strong> <code>rlocus</code> 한 줄이면 그림은 나온다. 그러나 시험과 설계에서 필요한 것은
+    <strong>점근선이 어디서 만나는지, 어느 \(K\)에서 실수축을 떠나는지, 어느 \(K\)에서 불안정해지는지</strong> 같은 숫자다.
+    이 회차에서는 그 숫자를 규칙마다 함수로 계산하고, 마지막에 <code>root_locus</code> 함수로 그림 위에 겹쳐 본다.</div>
+
+  <!-- ─────────────── ① ─────────────── -->
+  <h2 id="s1">① 근궤적 — <code>rlocus</code></h2>
+  <p>
+    단위 피드백 루프에 이득 \(K\)를 넣으면 폐루프 전달함수와 그 특성방정식은 다음과 같다.
+  </p>
+  $$
+  T(s) = \frac{K\,G(s)}{1 + K\,G(s)H(s)}
+  $$
+  $$
+  1 + K\,G(s)H(s) = 0
+  $$
+  <p>
+    폐루프 극점은 이 특성방정식의 근이다. \(K\)가 바뀌면 근이 바뀐다. 이 근들이 \(K = 0 \to \infty\) 동안 그리는 곡선이 근궤적이다.
+    MATLAB에서는 개루프 전달함수 \(G(s)H(s)\)만 넘겨 주면 된다.
+  </p>
+
+<!-- mcode 05/b01_rlocus_first -->
+<div class="mcode">
+<pre class="lang-matlab"><code>s = tf('s');
+GH = 1/((s+1)*(s+2));      % 개루프 전달함수 G(s)H(s)
+rlocus(GH)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+</div>
+<!-- /mcode -->
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>rlocus(GH)</dt>
+      <dd>개루프 전달함수 <code>GH</code>를 받아 \(1+K\,GH=0\)의 근궤적을 그린다. \(K\)는 함수가 알아서 0부터 충분히 큰 값까지 고른다.
+        여기서는 \(1/((s+1)(s+2))\)의 근궤적을 그렸다. <code>×</code>는 개루프 극점(\(K=0\)인 출발점), <code>○</code>는 개루프 영점이다.</dd>
+    </dl>
+  </div>
+
+  <figure>
+    <img src="assets/img/05_rlocus_first.png" width="560" alt="1/((s+1)(s+2)) 의 근궤적. -1과 -2의 극점에서 출발한 두 가지가 -1.5에서 만나 위아래로 갈라진다">
+    <figcaption><strong>-1과 -2의 ×에서 출발한 두 가지</strong>가 가운데 -1.5에서 만나 위아래 수직선으로 갈라진다. 이 그림만으로는 각 점이 어느 \(K\)인지 보이지 않는다 — 바로 아래 코드로 확인한다.</figcaption>
+  </figure>
+
+  <p>
+    그림의 선이 정말 폐루프 극점의 자취인지는 4회의 함수로 직접 확인할 수 있다. \(K\)를 몇 개 골라 <code>feedback</code>으로 폐루프를 만들고 <code>pole</code>로 극점을 구한다.
+  </p>
+
+<!-- mcode 05/b02_closed_poles -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% K 를 바꿔 가며 폐루프 T(s) = K*GH / (1 + K*GH) 의 극점을 직접 구한다
+for K = [0.01 0.1 0.25 1 5]
+    p = pole(feedback(K*GH, 1));
+    fprintf('K = %.2f  극점 = ', K)
+    fprintf('%.4f%+.4fj   ', [real(p) imag(p)].')
+    fprintf('\n')
+end</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>K = 0.01  극점 = -1.9899+0.0000j   -1.0101+0.0000j
+K = 0.10  극점 = -1.8873+0.0000j   -1.1127+0.0000j
+K = 0.25  극점 = -1.5000+0.0000j   -1.5000+0.0000j
+K = 1.00  극점 = -1.5000+0.8660j   -1.5000-0.8660j
+K = 5.00  극점 = -1.5000+2.1794j   -1.5000-2.1794j</code></pre>
+</div>
+<!-- /mcode -->
+
+  <p>
+    출력을 위에서부터 읽으면 근궤적이 그대로 보인다. \(K=0.01\)에서는 극점이 원래 자리(-1, -2) 바로 옆에 있다.
+    \(K=0.1\)에서 둘이 가운데로 다가가고, <strong>\(K=0.25\)에서 둘 다 -1.5가 되어 만난다</strong>.
+    그 뒤로는 실수부가 -1.5로 고정된 채 허수부만 커진다 — 그림의 수직선이다.
+    처음 줄에 \(K=0\)을 쓰지 않은 데는 이유가 있다. <code>feedback(0*GH, 1)</code>은 전달함수가 통째로 0이 되어 극점이 하나도 나오지 않는다.
+  </p>
+
+  <!-- ─────────────── ② ─────────────── -->
+  <h2 id="s2">② 각도 조건과 크기 조건</h2>
+  <p>
+    그렇다면 s 평면의 어떤 점 \(s_0\)가 근궤적 위에 있는지는 어떻게 판정할까? 특성방정식을 고쳐 쓰면 된다.
+  </p>
+  $$
+  1 + K\,G(s_0)H(s_0) = 0
+  \quad\Longleftrightarrow\quad
+  K\,G(s_0)H(s_0) = -1
+  $$
+  <p>
+    \(K\)는 양의 실수이고 \(-1\)은 크기 1, 각도 180°인 복소수다. 그래서 위 식은 두 조건으로 나뉜다.
+  </p>
+  $$
+  \angle G(s_0)H(s_0) = (2k+1)\cdot 180^\circ \qquad \text{(각도 조건)}
+  $$
+  $$
+  K = \frac{1}{\lvert G(s_0)H(s_0)\rvert} \qquad \text{(크기 조건)}
+  $$
+  <p>
+    <strong>각도 조건이 근궤적의 모양을 정하고, 크기 조건이 그 위의 눈금(\(K\))을 정한다.</strong>
+    \(G(s)H(s) = N(s)/D(s)\)를 영점 \(z_i\)와 극점 \(p_j\)로 인수분해하면 각도는 벡터 각의 합과 차가 된다.
+  </p>
+  $$
+  \angle G(s_0)H(s_0) = \sum_{i=1}^{m} \angle (s_0 - z_i) \;-\; \sum_{j=1}^{n} \angle (s_0 - p_j)
+  $$
+  <p>
+    \(s_0 = -1.5 + j2\)를 넣어 보자. \(s_0+1 = -0.5+j2\), \(s_0+2 = 0.5+j2\)이므로
+  </p>
+  $$
+  (s_0+1)(s_0+2) = (-0.5+j2)(0.5+j2) = -0.25 - j1 + j1 + j^2 4 = -4.25
+  $$
+  $$
+  G(s_0)H(s_0) = \frac{1}{-4.25} = -0.2353,
+  \qquad \angle = 180^\circ,
+  \qquad K = \frac{1}{0.2353} = 4.25
+  $$
+  <p>각도가 180°이므로 이 점은 근궤적 위에 있고, 그 점에 극점을 두려면 \(K=4.25\)여야 한다. MATLAB으로 같은 계산을 한다.</p>
+
+<!-- mcode 05/b03_conditions -->
+<div class="mcode">
+<pre class="lang-matlab"><code>s0 = -1.5 + 2j;            % 근궤적 위에 있는지 알아볼 점
+G0 = evalfr(GH, s0)        % 그 점에서 GH(s0) 의 값 (복소수)
+phase_deg = rad2deg(angle(G0))   % 각도 조건: 180도 (의 홀수 배) 인가
+K0 = 1/abs(G0)             % 크기 조건: |K*GH(s0)| = 1 이 되는 K
+pole(feedback(K0*GH, 1))   % 그 K 로 피드백을 걸면 s0 가 정말 극점인가</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>G0 =
+
+   -0.2353
+
+
+phase_deg =
+
+   180
+
+
+K0 =
+
+    4.2500
+
+
+ans =
+
+  -1.5000 + 2.0000i
+  -1.5000 - 2.0000i</code></pre>
+</div>
+<!-- /mcode -->
+
+  <p>
+    <code>G0</code>가 -0.2353, <code>phase_deg</code>가 180, <code>K0</code>가 4.25 — 손계산과 같다.
+    마지막 줄에서 \(K=4.25\)로 피드백을 걸었더니 폐루프 극점이 정확히 \(-1.5 \pm j2\)로 나왔다.
+    <code>evalfr</code>와 <code>angle</code>은 4회와 2회에서 쓴 함수다. 여기서는 <strong>근궤적의 정의를 숫자로 확인하는 도구</strong>로 쓰였다.
+  </p>
+
+  <div class="box theory">
+    <p class="boxtitle">📐 이론과 잇기 — 각도 조건이 모양을, 크기 조건이 \(K\)를</p>
+    <p>시험에서 「점 \(s_0\)가 근궤적 위에 있는가」를 물으면 각도 조건만 확인하면 된다. 「그 점에서의 \(K\)는?」을 물으면 크기 조건을 쓴다.
+      MATLAB 한 줄씩으로 옮기면 <code>rad2deg(angle(evalfr(GH, s0)))</code>가 ±180이 나오는지, <code>1/abs(evalfr(GH, s0))</code>가 얼마인지다.
+      6회에서 성능 조건을 만족하는 점을 고른 뒤 그 점의 \(K\)를 구할 때 바로 이 두 줄을 다시 쓴다.</p>
+  </div>
+
+  <!-- ─────────────── ③ ─────────────── -->
+  <h2 id="s3">③ 근궤적 작도 규칙</h2>
+  <p>
+    MATLAB이 없던 시절에는 각도 조건을 만족하는 점을 하나하나 찾을 수 없었으니, 각도 조건에서 <strong>모양을 빨리 그리는 규칙</strong>을 끌어냈다.
+    지금도 이 규칙은 쓸모가 있다. 그림을 보고 <strong>왜 그런 모양인지</strong> 설명하는 말이 되고,
+    극점·영점을 어디에 더해야 근궤적이 원하는 쪽으로 휘는지 짐작하게 해 준다(7회 PID 설계가 바로 이 짐작에서 출발한다).
+  </p>
+  <p>
+    예제는 \(G(s)H(s) = \dfrac{1}{(s+1)(s+2)(s+3)}\) 하나로 끝까지 간다. 극점 셋(-1, -2, -3), 영점 없음, 즉 \(n=3,\ m=0\)이다.
+  </p>
+  <p>
+    <strong>시작과 끝.</strong> 근궤적의 가지는 \(n\)개다. \(K=0\)에서는 \(D(s)+K\,N(s)=D(s)=0\)이므로 <strong>개루프 극점에서 출발</strong>하고,
+    \(K\to\infty\)에서는 \(N(s)=0\)에 다가가므로 <strong>개루프 영점에서 끝난다</strong>. 영점이 \(m\)개뿐이니 남은 \(n-m\)개 가지는 무한대로 간다.
+  </p>
+
+  <h3 id="s3-real">실수축 구간</h3>
+  <p>
+    실수축 위의 점 \(\sigma\)에서 각도를 따지면 이렇게 된다. 복소 극점·영점은 켤레 쌍이라 각도가 \(+\theta\)와 \(-\theta\)로 서로 지운다.
+    \(\sigma\)보다 왼쪽의 실수 극점·영점은 벡터 \(\sigma - p\)가 오른쪽을 향하므로 0°다. 오른쪽에 있는 것만 180°씩 보탠다.
+    그래서 <strong>오른쪽에 있는 실수 극점과 영점의 개수 합이 홀수인 구간</strong>만 각도 조건을 만족한다.
+  </p>
+  <p>
+    예제에서는 \(-1\)과 \(-2\) 사이(오른쪽에 극점 1개), 그리고 \(-3\)보다 왼쪽(오른쪽에 3개)이 근궤적이다. \(-2\)와 \(-3\) 사이는 오른쪽에 2개라 근궤적이 아니다.
+  </p>
+
+  <h3 id="s3-plan">규칙마다 함수 하나</h3>
+  <p>
+    나머지 규칙은 숫자를 계산해야 한다. 이 회차에서는 규칙 하나마다 <strong>식을 세우고, 그 식을 계산하는 함수 파일을 하나씩</strong> 만든다.
+    함수 파일은 4회에서처럼 파일 이름을 함수 이름과 같게 해서 현재 폴더에 저장한다. 마지막 ⑧절에서 이 함수들을 한데 묶어 근궤적 그림 위에 겹쳐 그린다.
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>절</th><th>규칙</th><th>함수 파일</th><th>돌려주는 값</th></tr>
+    <tr><td>④</td><td>점근선</td><td><code>find_asymptote.m</code></td><td>점근선 중심 \(\sigma_a\), 각도 \(\theta_k\)</td></tr>
+    <tr><td>⑤</td><td>분기점</td><td><code>find_break_point.m</code></td><td>분기점 위치와 그때의 \(K\)</td></tr>
+    <tr><td>⑥</td><td>허수축 교차</td><td><code>routh_table.m</code></td><td>Routh 표 — 안정 한계 \(K\)와 교차 주파수 \(\omega\)</td></tr>
+    <tr><td>⑦</td><td>출발각 · 도착각</td><td><code>find_start_angle.m</code></td><td>복소 극점의 출발각, 복소 영점의 도착각</td></tr>
+    <tr><td>⑧</td><td>한데 묶기</td><td><code>root_locus.m</code></td><td>근궤적 위에 ④⑤⑦의 결과를 그린 그림</td></tr>
+  </table>
+  </div>
+
+  <!-- ─────────────── ④ ─────────────── -->
+  <h2 id="s4">④ 점근선 — <code>find_asymptote</code></h2>
+  <p>
+    무한대로 가는 \(n-m\)개의 가지는 멀리 가면 어떤 모양이 될까? 직선에 붙는다. 그 직선이 <strong>점근선</strong>이고,
+    실수축 위 한 점에서 출발해 일정한 각도로 뻗는다.
+  </p>
+  $$
+  \sigma_a = \frac{\sum p_j - \sum z_i}{n - m},
+  \qquad
+  \theta_k = \frac{(2k+1)\cdot 180^\circ}{n - m},\quad k = 0, 1, \dots, n-m-1
+  $$
+  <p>예제에 넣으면 다음과 같다.</p>
+  $$
+  \sigma_a = \frac{(-1) + (-2) + (-3) - 0}{3 - 0} = -2,
+  \qquad
+  \theta = 60^\circ,\ 180^\circ,\ 300^\circ
+  $$
+  <p>
+    300°는 -60°와 같은 방향이다. 두 식을 그대로 함수 파일로 옮긴다. 극점과 영점은 4회의 <code>pole</code>·<code>zero</code>로 구한다.
+  </p>
+
+<!-- mcode lib/find_asymptote.m file -->
+<div class="mcode">
+<div class="fname">find_asymptote.m</div>
+<pre class="lang-matlab"><code>function [sigma, ang] = find_asymptote(GH)
+% 근궤적의 점근선 — 실수축과 만나는 점 sigma 와 각도 ang(deg)를 구한다 (5회).
+%   sigma = (극점의 합 - 영점의 합) / (n - m)
+%   ang   = (2k+1) * 180 / (n - m),   k = 0, 1, ..., n-m-1
+p = pole(GH);
+z = zero(GH);
+q = numel(p) - numel(z);            % 무한대로 가는 가지의 수 n - m
+if q == 0
+    sigma = [];
+    ang = [];
+    fprintf('점근선: 없다 (극점 수 = 영점 수 — 모든 가지가 영점에서 끝난다)\n')
+    return
+end
+sigma = real(sum(p) - sum(z)) / q;
+ang = (2*(0:q-1) + 1) * 180 / q;
+fprintf('점근선: %d개, 중심 = %.4f, 각도 = %s deg\n', q, sigma, num2str(ang))
+end</code></pre>
+<button onclick="copyCode(this)">복사</button>
+</div>
+<!-- /mcode -->
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>numel(x)</dt>
+      <dd>원소의 개수(number of elements). 여기서는 극점 수 \(n\)과 영점 수 \(m\)을 셌다. 벡터에서는 <code>length</code>와 같다.</dd>
+      <dt>return</dt>
+      <dd>함수를 그 자리에서 끝내고 돌아간다. 여기서는 극점 수와 영점 수가 같아 점근선이 없을 때, 0으로 나누기 전에 빠져나왔다.</dd>
+      <dt>num2str(x)</dt>
+      <dd>숫자(벡터도 된다)를 글자로 바꾼다. 개수가 정해지지 않은 각도 목록을 <code>fprintf</code>의 <code>%s</code> 자리에 한 번에 넣으려고 썼다.</dd>
+    </dl>
+  </div>
+
+  <p>예제에 돌린다. 이 절부터 ⑥절까지는 같은 <code>GH3</code>를 이어 쓴다.</p>
+
+<!-- mcode 05/b04_asymptote -->
+<div class="mcode">
+<pre class="lang-matlab"><code>GH3 = 1/((s+1)*(s+2)*(s+3));    % 극점 셋 -1, -2, -3 · 영점 없음
+[sigma, ang] = find_asymptote(GH3);</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>점근선: 3개, 중심 = -2.0000, 각도 = 60  180  300 deg</code></pre>
+</div>
+<!-- /mcode -->
+
+  <p>
+    함수가 찍은 한 줄을 식과 맞대 본다. 점근선이 <strong>3개</strong>(\(n-m=3\)), 중심이 <strong>-2</strong>, 각도가 <strong>60·180·300</strong>이다.
+    값은 출력 변수 <code>sigma</code>와 <code>ang</code>에도 들어 있어서 뒤에서 그림을 그릴 때 쓸 수 있다.
+  </p>
+
+  <!-- ─────────────── ⑤ ─────────────── -->
+  <h2 id="s5">⑤ 분기점 — <code>find_break_point</code></h2>
+  <p>
+    \(-1\)과 \(-2\)에서 출발한 두 가지는 실수축 위에서 서로 다가오다 한 점에서 만나 위아래로 갈라진다. 이 점이 <strong>분기점</strong>(breakaway point)이다.
+    그 점은 어디일까? 특성방정식을 \(K\)에 대해 풀면 실수축 위에서 \(K\)는 \(s\)의 함수가 된다.
+  </p>
+  $$
+  K(s) = -\frac{D(s)}{N(s)}
+  $$
+  <p>
+    두 극점 사이에서 \(K\)는 0에서 올라갔다 다시 0으로 내려온다. 가지가 갈라지는 곳은 그 꼭대기, 즉 \(dK/ds = 0\)인 점이다.
+    분수의 미분 공식을 쓰면 분모 \(N^2\)은 0이 될 수 없으니 분자만 0이면 된다.
+  </p>
+  $$
+  \frac{dK}{ds} = -\frac{D'(s)N(s) - D(s)N'(s)}{N(s)^2} = 0
+  \quad\Longleftrightarrow\quad
+  D'(s)N(s) - D(s)N'(s) = 0
+  $$
+  <p>예제에서는 \(N=1\), \(D = s^3+6s^2+11s+6\)이므로</p>
+  $$
+  D'(s) = 3s^2 + 12s + 11 = 0
+  \quad\Longrightarrow\quad
+  s = -2 \pm \frac{1}{\sqrt{3}} = -1.4226,\ -2.5774
+  $$
+  $$
+  K(-1.4226) = 0.3849 > 0,
+  \qquad
+  K(-2.5774) = -0.3849 < 0
+  $$
+  <p>
+    두 후보 중 \(K\)가 양수인 \(-1.4226\)만 분기점이다. \(-2.5774\)는 \(-2\)와 \(-3\) 사이 — 앞에서 근궤적이 아니라고 한 구간 — 에 있고, 그래서 \(K\)가 음수로 나온다.
+    <strong>\(dK/ds=0\)의 근이 전부 분기점은 아니다</strong>. 후보마다 \(K\)를 다시 계산해서 양의 실수인지 확인해야 한다.
+  </p>
+  <p>
+    함수는 이 순서를 그대로 따른다. 다항식 \(D\)와 \(N\)의 계수를 꺼내고, \(D'N - DN'\)을 만들어 그 근(후보)을 구한 뒤, 후보마다 \(K\)를 계산해 걸러 낸다.
+    다항식 함수 <code>roots</code>와 <code>polyval</code>은 2회에서 나왔다.
+  </p>
+
+<!-- mcode lib/find_break_point.m file -->
+<div class="mcode">
+<div class="fname">find_break_point.m</div>
+<pre class="lang-matlab"><code>function [sb, Kb] = find_break_point(GH)
+% 근궤적의 분기점 — 실수축 위에서 dK/ds = 0 이고 K &gt; 0 인 점 sb 와 그때의 이득 Kb (5회).
+%   1 + K*N(s)/D(s) = 0  이므로  K(s) = -D(s)/N(s)
+%   dK/ds = 0  &lt;=&gt;  D'(s)N(s) - D(s)N'(s) = 0
+[num, den] = tfdata(GH, 'v');
+num = num(find(num ~= 0, 1):end);       % tfdata 가 분자 앞에 채운 0 을 뗀다
+[dnum, ~] = polyder(den, num);          % d/ds (D/N) 의 분자 = D'N - DN'
+cand = roots(dnum);                     % 분기점 후보
+sb = [];
+Kb = [];
+for k = 1:numel(cand)
+    s0 = cand(k);
+    if abs(imag(s0)) &gt; 1e-6             % 복소수 후보 — 실수축 위가 아니다
+        continue
+    end
+    s0 = real(s0);
+    K0 = -polyval(den, s0) / polyval(num, s0);
+    if abs(K0) &lt; 1e-9
+        fprintf('  후보 s = %.4f : K = 0 — 겹친 극점 자리다 (출발각으로 본다)\n', s0)
+    elseif K0 &lt; 0
+        fprintf('  후보 s = %.4f : K = %.4f &lt; 0 — 근궤적 위가 아니다\n', s0, K0)
+    else
+        fprintf('분기점: s = %.4f, K = %.4f\n', s0, K0)
+        sb(end+1, 1) = s0;
+        Kb(end+1, 1) = K0;
+    end
+end
+if isempty(sb)
+    fprintf('분기점: 없다\n')
+end
+end</code></pre>
+<button onclick="copyCode(this)">복사</button>
+</div>
+<!-- /mcode -->
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>[num, den] = tfdata(GH, 'v')</dt>
+      <dd>전달함수에서 분자·분모 계수를 꺼낸다. <code>'v'</code>를 붙이면 <strong>보통 행 벡터</strong>로 준다.
+        분자는 분모와 길이를 맞추느라 앞에 0을 채워 주므로(<code>[0 0 0 1]</code>), 여기서는 앞의 0을 떼어 \(N(s)=1\)만 남겼다.</dd>
+      <dt>find(x, 1)</dt>
+      <dd>조건이 참인 원소의 인덱스를 찾는다. 두 번째 인자 1은 <strong>첫 번째 하나만</strong> 찾으라는 뜻이다. 여기서는 처음으로 0이 아닌 계수의 자리를 찾았다.</dd>
+      <dt>[q, d] = polyder(b, a)</dt>
+      <dd>인자가 하나면 다항식의 미분, <strong>둘이면 분수 \(b/a\)의 미분</strong>을 분자 <code>q</code>·분모 <code>d</code>로 준다.
+        여기서는 <code>polyder(den, num)</code>으로 \(\frac{d}{ds}(D/N)\)의 분자 \(D'N - DN'\)을 구했다 — 분기점 식의 좌변 그대로다.</dd>
+      <dt>[dnum, ~] = …</dt>
+      <dd>출력 자리에 <code>~</code>를 쓰면 그 출력은 받지 않고 버린다. 분기점에는 분자만 필요해서 분모를 버렸다.</dd>
+      <dt>continue</dt>
+      <dd>반복문 안에서 이번 차례의 나머지를 건너뛰고 다음 차례로 넘어간다. 여기서는 복소수 후보(실수축 위가 아닌 점)를 건너뛰었다.</dd>
+      <dt>sb(end+1, 1) = s0 · isempty(sb)</dt>
+      <dd><code>end+1</code> 자리에 넣으면 벡터 끝에 원소가 하나 붙는다. 분기점이 몇 개일지 모르니 빈 벡터 <code>[]</code>에서 시작해 찾을 때마다 붙였다.
+        <code>isempty</code>는 비어 있으면 참이다 — 하나도 못 찾았을 때 「없다」고 찍는 데 썼다.</dd>
+    </dl>
+  </div>
+
+<!-- mcode 05/b05_break -->
+<div class="mcode">
+<pre class="lang-matlab"><code>[sb, Kb] = find_break_point(GH3);</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>  후보 s = -2.5774 : K = -0.3849 &lt; 0 — 근궤적 위가 아니다
+분기점: s = -1.4226, K = 0.3849</code></pre>
+</div>
+<!-- /mcode -->
+
+  <p>
+    두 줄이 손계산의 두 후보다. -2.5774는 \(K = -0.3849\)라 버렸다는 줄이 들여쓰기로 남고, -1.4226만 <strong>분기점</strong>으로 찍혔다.
+  </p>
+  <div class="box trap">
+    <p class="boxtitle">⚠️ 계산으로 구한 값을 <code>== 0</code>으로 비교하지 않는다</p>
+    <p>
+      후보가 실수인지 볼 때 <code>imag(s0) == 0</code>으로 쓰고 싶어질 수 있다. 그런데 <code>roots</code>는 수치 계산이라 실수인 근에도
+      \(10^{-16}\) 같은 아주 작은 허수부가 붙어 나올 수 있다. 그러면 진짜 분기점이 「복소수」로 밀려나 버린다.
+      그래서 함수에서는 <code>abs(imag(s0)) &gt; 1e-6</code>처럼 <strong>충분히 작으면 0으로 본다</strong>. 계산으로 구한 값끼리 같은지 볼 때는 늘 이렇게 여유를 둔다.
+    </p>
+  </div>
+
+  <!-- ─────────────── ⑥ ─────────────── -->
+  <h2 id="s6">⑥ 허수축 교차 — Routh 표</h2>
+  <p>
+    점근선이 ±60°이니 위아래 두 가지는 \(K\)를 키우면 언젠가 허수축을 넘어 오른쪽 반평면으로 간다.
+    넘는 순간의 \(K\)가 <strong>안정 한계</strong>다. 그 \(K\)는 어떻게 구할까? 폐루프 특성방정식에 <strong>Routh 판별법</strong>을 쓰면 된다.
+  </p>
+  <p>예제의 특성방정식은 다음과 같다.</p>
+  $$
+  1 + K\,G(s)H(s) = 0
+  \quad\Longleftrightarrow\quad
+  (s+1)(s+2)(s+3) + K = 0
+  $$
+  $$
+  s^3 + 6s^2 + 11s + (6 + K) = 0
+  $$
+  <p>
+    Routh 표는 계수를 두 행에 번갈아 적는 데서 시작한다. 첫 행(\(s^3\))에는 \(s^3\)·\(s^1\)의 계수 1, 11을, 둘째 행(\(s^2\))에는 \(s^2\)·\(s^0\)의 계수 6, \(6+K\)를 적는다.
+    셋째 행부터는 <strong>바로 위 두 행</strong>으로 계산한다.
+  </p>
+  $$
+  b_1 = \frac{6 \cdot 11 - 1 \cdot (6 + K)}{6} = \frac{60 - K}{6}
+  $$
+  $$
+  c_1 = \frac{b_1 \cdot (6 + K) - 6 \cdot 0}{b_1} = 6 + K
+  $$
+  <div class="tablewrap">
+  <table>
+    <tr><th>행</th><th>첫 열</th><th>둘째 열</th></tr>
+    <tr><td>\(s^3\)</td><td>1</td><td>11</td></tr>
+    <tr><td>\(s^2\)</td><td>6</td><td>\(6 + K\)</td></tr>
+    <tr><td>\(s^1\)</td><td>\(\dfrac{60 - K}{6}\)</td><td>0</td></tr>
+    <tr><td>\(s^0\)</td><td>\(6 + K\)</td><td></td></tr>
+  </table>
+  </div>
+  <p>
+    Routh 판별법에 따르면 <strong>첫 열의 부호가 바뀌는 횟수가 오른쪽 반평면에 있는 극점의 수</strong>다.
+    첫 열 \(1,\ 6,\ \frac{60-K}{6},\ 6+K\)가 모두 양수이려면 \(K < 60\)이어야 한다(\(K>0\)이므로 \(6+K\)는 늘 양수다).
+    \(K > 60\)이면 \(s^1\) 행이 음수가 되어 부호가 두 번 바뀌므로, 극점 두 개가 오른쪽 반평면에 있다.
+  </p>
+  <p>
+    경계인 \(K = 60\)에서는 \(s^1\) 행이 통째로 0이 된다. 이때 바로 위 \(s^2\) 행의 계수로 만든 식을 <strong>보조방정식</strong>이라고 하고, 그 근이 허수축 위의 극점이다.
+  </p>
+  $$
+  6s^2 + (6 + 60) = 6s^2 + 66 = 0
+  \quad\Longrightarrow\quad
+  s = \pm j\sqrt{11} = \pm j3.3166
+  $$
+  <p>정리하면 근궤적은 \(K = 60\)에서 \(\omega = 3.3166\)으로 허수축을 넘는다. \(K < 60\)이면 안정, \(K > 60\)이면 불안정이다.</p>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 처음 나오는 이름 — Routh</p>
+    <p>Routh(라우스)는 사람 이름이다. 19세기 영국 수학자 Edward John Routh가 1876년에 이 표를 만드는 방법을 내놓았다.
+      비슷한 시기에 독일의 Adolf Hurwitz(후르비츠)가 같은 조건을 행렬식으로 정리해서 두 이름을 붙여 <strong>Routh-Hurwitz 판별법</strong>이라고도 한다.</p>
+  </div>
+
+  <p>
+    표 계산을 함수 파일로 만든다. 행을 하나씩 내려가며 같은 계산을 되풀이하므로 반복문 두 개면 된다.
+    문제는 계수에 \(K\) 같은 <strong>문자</strong>가 들어간다는 점이다. 숫자만 다루는 보통 변수로는 \(\frac{60-K}{6}\)을 담을 수 없으므로,
+    기호 계산을 하는 <strong>Symbolic Math Toolbox</strong>(1회 설치 목록)를 쓴다.
+  </p>
+
+<!-- mcode lib/routh_table.m file -->
+<div class="mcode">
+<div class="fname">routh_table.m</div>
+<pre class="lang-matlab"><code>function R = routh_table(c)
+% 특성방정식의 계수 c = [a_n ... a_1 a_0] (높은 차수부터)로 Routh 표를 만든다 (5회).
+%   R 의 첫 행이 s^n 행, 마지막 행이 s^0 행이다.
+%   c 에 syms 로 만든 기호(K 등)가 들어 있으면 표도 기호로 나온다.
+%   첫 열에 0 이 생기는 특수한 경우는 다루지 않는다.
+n = numel(c) - 1;                       % 차수
+cols = ceil((n + 1) / 2);               % 열의 수
+R = zeros(n + 1, cols) * c(1);          % c 가 기호이면 R 도 기호 행렬이 되게 c(1)을 곱해 둔다
+R(1, 1:numel(c(1:2:end))) = c(1:2:end); % s^n     행: a_n, a_(n-2), ...
+R(2, 1:numel(c(2:2:end))) = c(2:2:end); % s^(n-1) 행: a_(n-1), a_(n-3), ...
+for i = 3:n+1
+    for j = 1:cols-1
+        % 바로 위 두 행으로 만든 2x2 행렬식을 위 행의 첫 원소로 나눈다
+        R(i, j) = (R(i-1, 1)*R(i-2, j+1) - R(i-2, 1)*R(i-1, j+1)) / R(i-1, 1);
+    end
+end
+if isa(R, 'sym')
+    R = simplify(R);
+end
+end</code></pre>
+<button onclick="copyCode(this)">복사</button>
+</div>
+<!-- /mcode -->
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>c(1:2:end)</dt>
+      <dd>1번째부터 <strong>하나 건너</strong> 끝까지(1, 3, 5, …번째) 원소. <code>c(2:2:end)</code>는 2, 4, 6, …번째다. 계수를 두 행에 번갈아 적는 일을 이 두 줄로 했다.</dd>
+      <dt>ceil(x)</dt>
+      <dd>올림. 3차식이면 계수가 4개라 열이 \(4/2 = 2\)개, 4차식이면 계수 5개라 \(\lceil 5/2 \rceil = 3\)개다.</dd>
+      <dt>zeros(…) * c(1)</dt>
+      <dd>0으로 채운 표에 첫 계수를 곱해 둔 것이다. 값은 그대로 0이지만, <code>c</code>가 기호면 표도 <strong>기호 행렬</strong>이 되어 \(K\)가 들어간 식을 칸에 담을 수 있다.</dd>
+      <dt>isa(R, 'sym') · simplify(R)</dt>
+      <dd><code>isa</code>는 변수의 종류를 묻는다. 표가 기호 행렬일 때만 <code>simplify</code>로 각 칸의 식을 정리했다. 숫자 표에는 정리할 것이 없다.</dd>
+    </dl>
+  </div>
+
+  <p>
+    예제의 특성방정식 계수는 <code>tfdata</code>로 바로 만든다. <code>tfdata</code>는 분자 앞에 0을 채워 분모와 길이를 맞춰 주므로(⑤절)
+    \(D(s) + K\,N(s)\)의 계수는 <code>den + K*num</code> 한 줄이다.
+  </p>
+
+<!-- mcode 05/b06_routh -->
+<div class="mcode">
+<pre class="lang-matlab"><code>syms K                            % K 를 숫자가 아닌 기호로 둔다
+[num, den] = tfdata(GH3, 'v')     % 분자는 앞에 0 을 채워 분모와 길이가 같다
+c = den + K*num                   % 특성방정식 D(s) + K N(s) = 0 의 계수
+R = routh_table(c)
+K_cross = solve(R(3,1) == 0, K)   % s^1 행의 첫 원소가 0 이 되는 K
+aux = subs(R(2,:), K, K_cross)    % 그때의 s^2 행 → 보조방정식 6 s^2 + 66 = 0
+w_cross = roots(double([aux(1) 0 aux(2)]))
+pole(feedback(double(K_cross)*GH3, 1))   % 그 K 로 피드백을 걸면 극점이 허수축 위에 있나</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>num =
+
+     0     0     0     1
+
+
+den =
+
+     1     6    11     6
+
+
+c =
+
+[1, 6, 11, K + 6]
+
+
+R =
+
+[       1,    11]
+[       6, K + 6]
+[10 - K/6,     0]
+[   K + 6,     0]
+
+
+K_cross =
+
+60
+
+
+aux =
+
+[6, 66]
+
+
+w_cross =
+
+   0.0000 + 3.3166i
+   0.0000 - 3.3166i
+
+
+ans =
+
+  -6.0000 + 0.0000i
+  -0.0000 + 3.3166i
+  -0.0000 - 3.3166i</code></pre>
+</div>
+<!-- /mcode -->
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것 — Symbolic Math Toolbox</p>
+    <dl>
+      <dt>syms K</dt>
+      <dd>숫자가 아니라 <strong>기호</strong>로 다루는 변수 <code>K</code>를 만든다. 이후 <code>K</code>가 들어간 계산은 값이 아니라 식으로 남는다.
+        여기서는 <code>den + K*num</code>이 <code>[1, 6, 11, K + 6]</code>이라는 식의 벡터가 되었다.</dd>
+      <dt>solve(식 == 0, K)</dt>
+      <dd>방정식을 <code>K</code>에 대해 푼다. <code>==</code>는 「같다」는 방정식을 만드는 기호다. 여기서는 \(s^1\) 행 첫 원소 \(10 - K/6 = 0\)을 풀어 60을 얻었다.</dd>
+      <dt>subs(식, K, 값)</dt>
+      <dd>식의 <code>K</code>에 값을 넣는다. 여기서는 \(s^2\) 행 <code>[6, K + 6]</code>에 60을 넣어 보조방정식의 계수 <code>[6, 66]</code>을 만들었다.</dd>
+      <dt>double(x)</dt>
+      <dd>기호로 된 숫자를 보통 숫자로 바꾼다. <code>roots</code>와 <code>feedback</code>은 보통 숫자를 받으므로 넘기기 전에 바꿨다.</dd>
+    </dl>
+  </div>
+
+  <p>
+    출력을 손계산과 맞대 본다. <code>c</code>가 특성방정식 계수 \([1,\ 6,\ 11,\ K+6]\)이고, <code>R</code>이 위의 Routh 표다.
+    셋째 행의 <code>10 - K/6</code>은 \(\frac{60-K}{6}\)을 풀어 쓴 것이다. <code>K_cross</code>가 <strong>60</strong>,
+    보조방정식 \(6s^2 + 66 = 0\)의 근 <code>w_cross</code>가 <strong>\(\pm j3.3166\)</strong>이다.
+    마지막 줄에서 \(K = 60\)으로 피드백을 걸었더니 폐루프 극점 두 개가 정확히 허수축 위에 놓였다.
+  </p>
+  <p>
+    보조방정식을 <code>[aux(1) 0 aux(2)]</code>로 만든 것은 \(s^2\) 행의 두 칸이 \(s^2\)과 \(s^0\)의 계수라서 \(s^1\) 자리에 0을 끼워야 하기 때문이다.
+    이 모양은 보조방정식이 \(s^2\) 행에서 나오는 3차 특성방정식에서만 맞다. 차수가 다르면 0이 된 행의 바로 위 행으로 같은 일을 한다.
+  </p>
+
+  <!-- ─────────────── ⑦ ─────────────── -->
+  <h2 id="s7">⑦ 출발각 · 도착각 — <code>find_start_angle</code></h2>
+  <p>
+    복소 극점에서는 가지가 어느 방향으로 출발하는지가 모양을 크게 바꾼다. 그 방향은 어떻게 구할까?
+    극점 \(p_d\)에 아주 가까운 점에 각도 조건을 쓰면, 다른 극점·영점에서 본 각도는 \(p_d\)에서 본 것과 거의 같고,
+    \(p_d\) 자신이 만드는 각도만 미지수(출발각 \(\theta_d\))로 남는다.
+  </p>
+  $$
+  \sum_i \angle(p_d - z_i) - \sum_{j \ne d} \angle(p_d - p_j) - \theta_d = 180^\circ
+  \quad\Longrightarrow\quad
+  \theta_d = \sum_i \angle(p_d - z_i) - \sum_{j \ne d} \angle(p_d - p_j) - 180^\circ
+  $$
+  <p>영점 \(z_a\)로 들어오는 도착각 \(\theta_a\)는 같은 논리로 부호만 바뀐다.</p>
+  $$
+  \theta_a = 180^\circ + \sum_{j} \angle(z_a - p_j) - \sum_{i \ne a} \angle(z_a - z_i)
+  $$
+  <p>
+    지금까지의 예제에는 복소 극점이 없으니 다른 시스템을 쓴다.
+    \(G(s)H(s) = \dfrac{s^2+10s+40}{(s^2+4s+13)(s^2+10s+24)}\)이고, 극점은 \(-2\pm j3\), \(-4\), \(-6\), 영점은 \(-5\pm j3.873\)이다.
+    극점 \(-2+j3\)에서의 출발각을 위 식대로 하나씩 계산한다.
+  </p>
+
+<!-- mcode 05/b07_depart_hand -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 극점 -2+j3 에서의 출발각을 각도 조건으로 손계산하듯 구한다
+GH4 = (s^2+10*s+40)/((s^2+4*s+13)*(s^2+10*s+24));
+p = pole(GH4)
+z = zero(GH4)
+p0 = -2 + 3j;                                   % 출발각을 구할 극점
+zero_ang = rad2deg(angle(p0 - z))               % 영점 → p0 벡터의 각
+others = p(abs(p - p0) &gt; 1e-6);                 % p0 를 뺀 나머지 극점
+pole_ang = rad2deg(angle(p0 - others))          % 나머지 극점 → p0 벡터의 각
+theta = sum(zero_ang) - sum(pole_ang) - 180     % 각도 조건에서 출발각
+theta = mod(theta + 180, 360) - 180             % -180 ~ 180 사이로 접기</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>p =
+
+  -6.0000 + 0.0000i
+  -2.0000 + 3.0000i
+  -2.0000 - 3.0000i
+  -4.0000 + 0.0000i
+
+
+z =
+
+  -5.0000 + 3.8730i
+  -5.0000 - 3.8730i
+
+
+zero_ang =
+
+  -16.2247
+   66.4191
+
+
+pole_ang =
+
+   36.8699
+   90.0000
+   56.3099
+
+
+theta =
+
+ -312.9854
+
+
+theta =
+
+   47.0146</code></pre>
+</div>
+<!-- /mcode -->
+
+  <p>출력의 각도를 식에 넣으면 다음과 같다.</p>
+  $$
+  \theta_d = \underbrace{(-16.22^\circ + 66.42^\circ)}_{\text{영점 둘}} - \underbrace{(36.87^\circ + 90.00^\circ + 56.31^\circ)}_{\text{나머지 극점 셋}} - 180^\circ
+  = -312.99^\circ \;\equiv\; 47.01^\circ
+  $$
+  <p>
+    \(-312.99^\circ\)와 \(47.01^\circ\)는 360°만큼 차이 나는 같은 방향이다. 마지막 줄의 <code>mod(theta + 180, 360) - 180</code>이 각도를 \(-180^\circ\)~\(180^\circ\)로 접었다.
+  </p>
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>mod(a, 360)</dt>
+      <dd>\(a\)를 360으로 나눈 나머지. 음수도 0~360 사이로 돌려준다. 180을 더해 접고 다시 빼면 \(-180\)~\(180\) 사이가 된다 — \(-312.99 + 180 = -132.99\), 나머지 227.01, 빼면 47.01.</dd>
+    </dl>
+  </div>
+
+  <p>
+    이 계산을 모든 복소 극점과 복소 영점에 되풀이하는 함수를 만든다. 한 파일 안에 함수를 여러 개 둘 수 있고,
+    <strong>맨 위 함수만 밖에서 부를 수 있다</strong>. 아래쪽의 <code>angle_deg</code>, <code>wrap180</code> 같은 것은 이 파일 안에서만 쓰는 <strong>로컬 함수</strong>다.
+    <code>group_roots</code>가 하는 일은 바로 아래 ⚠️ 상자에서 본다.
+  </p>
+
+<!-- mcode lib/find_start_angle.m file -->
+<div class="mcode">
+<div class="fname">find_start_angle.m</div>
+<pre class="lang-matlab"><code>function [dep, arr] = find_start_angle(GH)
+% 복소 극점의 출발각과 복소 영점의 도착각을 구한다 (5회).
+%   dep = [극점, 출발각(deg)],  arr = [영점, 도착각(deg)] — 한 줄에 하나씩
+%   출발각:  r*th = (영점에서 본 각의 합) - (다른 극점에서 본 각의 합) - 180 - 360k
+%   도착각:  r*th = (극점에서 본 각의 합) - (다른 영점에서 본 각의 합) + 180 + 360k
+%   r 은 그 자리에 겹친 근의 수, k = 0, ..., r-1 (r = 1 이면 k = 0 하나)
+[pu, pm] = group_roots(pole(GH));       % 겹친 근은 한 자리로 묶고 겹친 수를 센다
+[zu, zm] = group_roots(zero(GH));
+dep = zeros(0, 2);
+arr = zeros(0, 2);
+
+for i = 1:numel(pu)
+    if imag(pu(i)) == 0 &amp;&amp; pm(i) == 1   % 실수축 위 홑극점은 실수축을 따라 출발한다
+        continue
+    end
+    other = [1:i-1, i+1:numel(pu)];
+    a = sum(angle_deg(pu(i) - zu) .* zm) - sum(angle_deg(pu(i) - pu(other)) .* pm(other)) - 180;
+    for k = 0:pm(i)-1
+        th = wrap180((a - 360*k) / pm(i));
+        fprintf('출발각: 극점 %s → %.2f deg\n', label(pu(i), pm(i)), th)
+        dep(end+1, :) = [pu(i), th];
+    end
+end
+
+for i = 1:numel(zu)
+    if imag(zu(i)) == 0 &amp;&amp; zm(i) == 1   % 실수축 위 홑영점은 실수축을 따라 들어온다
+        continue
+    end
+    other = [1:i-1, i+1:numel(zu)];
+    a = sum(angle_deg(zu(i) - pu) .* pm) - sum(angle_deg(zu(i) - zu(other)) .* zm(other)) + 180;
+    for k = 0:zm(i)-1
+        th = wrap180((a + 360*k) / zm(i));
+        fprintf('도착각: 영점 %s → %.2f deg\n', label(zu(i), zm(i)), th)
+        arr(end+1, :) = [zu(i), th];
+    end
+end
+end
+
+
+function a = angle_deg(v)
+% 복소수 v 의 각도(deg)
+a = rad2deg(angle(v));
+end
+
+
+function a = wrap180(a)
+% 각도를 -180 ~ 180 사이로 접는다 (-312.99 → 47.01)
+a = mod(a + 180, 360) - 180;
+if abs(a + 180) &lt; 1e-9, a = 180; end    % -180 과 180 은 같은 방향 — 180 으로 쓴다
+if abs(a) &lt; 1e-9, a = 0; end            % -0.00 이 찍히지 않게
+end
+
+
+function [u, m] = group_roots(r)
+% 계산으로 구한 겹친 근은 -2 ± 1e-8j 처럼 조금씩 흩어진다.
+% 아주 가까운 근끼리 묶어 자리 u 와 겹친 수 m 을 돌려준다.
+u = [];
+m = [];
+used = false(numel(r), 1);
+for i = 1:numel(r)
+    if used(i), continue, end
+    same = ~used &amp; abs(r - r(i)) &lt; 1e-4 * max(1, abs(r(i)));
+    used = used | same;
+    u(end+1, 1) = mean(r(same));
+    m(end+1, 1) = sum(same);
+end
+on_axis = abs(imag(u)) &lt; 1e-6 * max(1, abs(u));
+u(on_axis) = real(u(on_axis));          % 실수축 위의 근은 허수부를 정확히 0 으로
+end
+
+
+function str = label(r, m)
+% 근 r 을 글자로 — 실수면 「-2.0000」, 복소수면 「-2.0000+3.0000j」, 겹쳤으면 「 (2중)」을 붙인다
+if imag(r) == 0
+    str = sprintf('%.4f', r);
+else
+    str = sprintf('%.4f%+.4fj', real(r), imag(r));
+end
+if m &gt; 1
+    str = sprintf('%s (%d중)', str, m);
+end
+end</code></pre>
+<button onclick="copyCode(this)">복사</button>
+</div>
+<!-- /mcode -->
+
+<!-- mcode 05/b08_depart_func -->
+<div class="mcode">
+<pre class="lang-matlab"><code>[dep, arr] = find_start_angle(GH4);</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>출발각: 극점 -2.0000+3.0000j → 47.01 deg
+출발각: 극점 -2.0000-3.0000j → -47.01 deg
+도착각: 영점 -5.0000+3.8730j → -172.64 deg
+도착각: 영점 -5.0000-3.8730j → 172.64 deg</code></pre>
+</div>
+<!-- /mcode -->
+
+  <p>
+    첫 줄의 <strong>47.01</strong>이 위에서 한 줄씩 구한 값과 같다. 켤레 극점 \(-2-j3\)은 거울에 비친 듯 -47.01°로 출발하고,
+    복소 영점 \(-5\pm j3.873\)으로는 ∓172.64° — 거의 수평으로 — 들어온다. 값은 <code>dep</code>, <code>arr</code>에 [위치, 각도] 한 줄씩 담겨 있다.
+  </p>
+
+  <div class="box trap">
+    <p class="boxtitle">⚠️ 겹친 극점 — 계산으로 구하면 아주 작은 허수부가 붙는다</p>
+    <p>
+      \(G(s)H(s) = \dfrac{s+1}{(s+3)(s+2)^2}\)는 \(-2\)에 극점이 두 개 겹쳐 있다. 실수축 구간 규칙으로 보면 \(-1\)과 \(-2\) 사이(오른쪽에 영점 1개)와
+      \(-2\)와 \(-3\) 사이(오른쪽에 3개)가 모두 근궤적이므로, \(-2\)의 두 가지는 <strong>실수축을 따라 왼쪽(180°)과 오른쪽(0°)으로</strong> 출발해야 한다.
+    </p>
+<!-- mcode 05/b09_double_pole -->
+<div class="mcode">
+<pre class="lang-matlab"><code>GHd = (s+1)/((s+3)*(s+2)^2);      % s = -2 에 극점이 두 개 겹쳐 있다
+p = pole(GHd)
+imag(p)                           % 허수부만 찍어 본다
+dep = find_start_angle(GHd)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>p =
+
+  -3.0000 + 0.0000i
+  -2.0000 + 0.0000i
+  -2.0000 - 0.0000i
+
+
+ans =
+
+   1.0e-07 *
+
+         0
+    0.8993
+   -0.8993
+
+출발각: 극점 -2.0000 (2중) → 0.00 deg
+출발각: 극점 -2.0000 (2중) → 180.00 deg
+
+dep =
+
+   -2.0000         0
+   -2.0000  180.0000</code></pre>
+</div>
+<!-- /mcode -->
+    <p>
+      <code>pole(GHd)</code>는 \(-2\)를 <code>-2.0000 + 0.0000i</code>, <code>-2.0000 - 0.0000i</code>로 찍는다. 그런데 <code>imag(p)</code>로 허수부만 보면
+      \(\pm 0.9\times10^{-7}\)이다. <strong>화면에는 0.0000으로 보이지만 0이 아니다</strong>. 겹친 근은 수치 계산에서 이렇게 조금씩 흩어진다.
+      복소 극점을 <code>imag(p) ~= 0</code>으로 가리면 이 둘을 「\(-2 \pm j10^{-7}\)인 복소 극점 한 쌍」으로 보고, 서로가 바로 위아래에 있으니 출발각을 ±90°로 내 버린다.
+    </p>
+    <p>
+      그래서 <code>group_roots</code>는 아주 가까운 근끼리 묶어 <strong>자리 하나와 겹친 수 \(r\)</strong>로 바꾼다. \(r\)개가 겹친 근에서는 각도 조건에 \(\theta_d\)가 \(r\)번 들어가고,
+      \(r\)개의 가지가 \(360^\circ/r\) 간격으로 나뉜다.
+    </p>
+    $$
+    r\,\theta_d = \sum_i \angle(p_d - z_i) - \sum_{j \ne d} \angle(p_d - p_j) - 180^\circ - 360^\circ k,
+    \qquad k = 0, \dots, r-1
+    $$
+    <p>이 예에서 \(p_d=-2\), \(r=2\)이면 영점 \(-1\)에서 본 각은 180°, 극점 \(-3\)에서 본 각은 0°이므로</p>
+    $$
+    \theta_d = \frac{180^\circ - 0^\circ - 180^\circ - 360^\circ k}{2} = 0^\circ,\ -180^\circ(=180^\circ)
+    $$
+    <p>출력의 0.00과 180.00이 이 두 값이다.</p>
+  </div>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>angle_deg(pu(i) - zu) .* zm</dt>
+      <dd>극점에서 본 영점들의 각도에 각 영점의 <strong>겹친 수를 원소마다 곱한</strong> 것이다(<code>.*</code>는 2회). 2중 영점이면 그 각도가 두 번 들어간다.</dd>
+      <dt>other = [1:i-1, i+1:numel(pu)]</dt>
+      <dd>\(i\)번째만 빼고 나머지 인덱스. \(\sum_{j \ne d}\)의 「자기 자신을 뺀 나머지」를 이렇게 골랐다.</dd>
+      <dt>false(n, 1) · used | same · ~used &amp; …</dt>
+      <dd><code>false</code>는 거짓으로 채운 배열, <code>|</code>·<code>&amp;</code>는 원소마다 OR·AND, <code>~</code>는 NOT이다. <code>group_roots</code>에서 「이미 묶은 근」을 표시해 두고 아직 안 묶은 근만 고르는 데 썼다.</dd>
+    </dl>
+  </div>
+
+  <!-- ─────────────── ⑧ ─────────────── -->
+  <h2 id="s8">⑧ 규칙을 한데 묶기 — <code>root_locus</code></h2>
+  <p>
+    ④~⑦의 함수는 숫자를 낸다. 그 숫자가 그림의 어디에 해당하는지는 근궤적 위에 겹쳐 그려 봐야 한눈에 보인다.
+    그래서 <code>rlocus</code>로 근궤적을 그리고, 그 위에 점근선·분기점·출발각을 겹쳐 그리는 함수 <code>root_locus</code>를 만든다.
+    어느 규칙을 그릴지는 부를 때 <strong><code>asymptote=0</code>처럼 이름과 값으로</strong> 고른다. 아무것도 주지 않으면 셋 다 그린다.
+  </p>
+
+<!-- mcode lib/root_locus.m file -->
+<div class="mcode">
+<div class="fname">root_locus.m</div>
+<pre class="lang-matlab"><code>function root_locus(GH, opt)
+% 근궤적을 그리고, 작도 규칙으로 구한 값을 그 위에 겹쳐 그린다 (5회).
+%
+%   root_locus(GH)                                  세 규칙을 모두 그린다
+%   root_locus(GH, asymptote=0)                     점근선만 빼고 그린다
+%   root_locus(GH, asymptote=0, start_angle=0)      분기점만 그린다
+%
+%   asymptote    점근선      find_asymptote    → 초록 점선
+%   break_point  분기점      find_break_point  → 빨간 마름모
+%   start_angle  출발·도착각 find_start_angle  → 자홍 실선
+arguments
+    GH
+    opt.asymptote   (1,1) logical = true
+    opt.break_point (1,1) logical = true
+    opt.start_angle (1,1) logical = true
+end
+
+fprintf('── 근궤적: 극점 %d개 · 영점 %d개\n', numel(pole(GH)), numel(zero(GH)))
+rlocus(GH)
+hold on
+xl = xlim;                              % rlocus 가 고른 축 범위 — 긴 점근선을 그은 뒤 되돌린다
+yl = ylim;
+keep = [];                              % 축 안에 꼭 보여야 할 실수축 위의 점
+
+if opt.asymptote
+    [sigma, ang] = find_asymptote(GH);
+    for a = ang
+        plot([sigma, sigma + 100*cosd(a)], [0, 100*sind(a)], 'g--')   % 화면 밖까지 가는 선
+    end
+    keep = [keep; sigma];
+end
+
+if opt.break_point
+    [sb, ~] = find_break_point(GH);
+    plot(sb, zeros(size(sb)), 'rd', 'MarkerFaceColor', 'r')
+    keep = [keep; sb];
+end
+
+if opt.start_angle
+    [dep, arr] = find_start_angle(GH);
+    L = 0.12 * diff(xl);                % 짧은 선의 길이 — 축 폭의 12%
+    da = [dep; arr];
+    for k = 1:size(da, 1)
+        r = da(k, 1);
+        th = real(da(k, 2));
+        plot(real(r) + [0, L*cosd(th)], imag(r) + [0, L*sind(th)], 'm-', 'LineWidth', 1.5)
+    end
+end
+
+if ~isempty(keep)                       % 점근선 중심·분기점이 축 밖이면 축을 조금 넓힌다
+    pad = 0.1 * diff(xl);
+    xl = [min([xl(1); keep - pad]), max([xl(2); keep + pad])];
+end
+axis([xl yl])
+hold off
+fprintf('\n')
+end</code></pre>
+<button onclick="copyCode(this)">복사</button>
+</div>
+<!-- /mcode -->
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>arguments … end</dt>
+      <dd>함수의 입력을 검사하는 블록이다. 함수 첫머리에 두고 입력마다 한 줄씩 쓴다.
+        <code>opt.asymptote (1,1) logical = true</code>는 「<code>asymptote</code>라는 이름의 입력은 1×1 참·거짓 값이고, 주지 않으면 참」이라는 뜻이다.</dd>
+      <dt>root_locus(GH, asymptote=0, start_angle=0)</dt>
+      <dd><strong>이름=값</strong> 입력. <code>arguments</code>에서 <code>opt.이름</code>으로 적은 입력은 부를 때 <code>이름=값</code>으로 넘기고, 함수 안에서는 <code>opt.이름</code>으로 꺼낸다.
+        순서는 상관없고 빠진 것은 기본값이 된다. 0·1을 주면 <code>logical</code>로 바뀌어 거짓·참이 된다. R2021a 이후 MATLAB에서 쓸 수 있다.</dd>
+      <dt>cosd(a) · sind(a)</dt>
+      <dd>각도를 <strong>도(degree)</strong>로 받는 삼각함수. 점근선 각도가 도로 나오므로 <code>deg2rad</code>를 거치지 않고 바로 썼다.</dd>
+      <dt>xl = xlim · diff(xl)</dt>
+      <dd>인자 없이 부른 <code>xlim</code>은 지금 그림의 \(x\)축 범위 <code>[왼쪽 오른쪽]</code>을 돌려준다. <code>diff</code>는 이웃한 원소의 차이라 원소 둘이면 축의 폭이 된다.
+        길이 100짜리 점근선을 그으면 축이 그만큼 늘어나므로, <code>rlocus</code>가 고른 범위를 미리 기억했다가 끝에서 <code>axis</code>로 되돌렸다.</dd>
+    </dl>
+  </div>
+
+  <p>③절부터 써 온 예제를 그린다.</p>
+
+<!-- mcode 05/b10_root_locus -->
+<div class="mcode">
+<pre class="lang-matlab"><code>close all
+root_locus(GH3)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>── 근궤적: 극점 3개 · 영점 0개
+점근선: 3개, 중심 = -2.0000, 각도 = 60  180  300 deg
+  후보 s = -2.5774 : K = -0.3849 &lt; 0 — 근궤적 위가 아니다
+분기점: s = -1.4226, K = 0.3849</code></pre>
+</div>
+<!-- /mcode -->
+
+  <figure>
+    <img src="assets/img/05_root_locus.png" width="560" alt="1/((s+1)(s+2)(s+3)) 의 근궤적 위에 초록 점선 점근선 셋과 빨간 마름모 분기점이 그려져 있다">
+    <figcaption><strong>초록 점선</strong>이 -2에서 출발하는 점근선 셋(60°·180°·300°), <strong>빨간 마름모</strong>가 분기점 -1.4226이다.
+      위아래 가지는 점근선에 붙으며 허수축을 넘는데, 넘는 점이 ⑥절의 \(\pm j3.3166\)(\(K=60\))이다.</figcaption>
+  </figure>
+
+  <p>⑦절의 예제는 복소 극점·영점이 있어 출발각과 도착각이 그려진다. 점근선은 빼 본다.</p>
+
+<!-- mcode 05/b11_example4 -->
+<div class="mcode">
+<pre class="lang-matlab"><code>close all
+root_locus(GH4, asymptote=0)      % 점근선은 빼고 분기점과 출발·도착각만</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>── 근궤적: 극점 4개 · 영점 2개
+분기점: s = -5.1527, K = 1.2313
+출발각: 극점 -2.0000+3.0000j → 47.01 deg
+출발각: 극점 -2.0000-3.0000j → -47.01 deg
+도착각: 영점 -5.0000+3.8730j → -172.64 deg
+도착각: 영점 -5.0000-3.8730j → 172.64 deg</code></pre>
+</div>
+<!-- /mcode -->
+
+  <figure>
+    <img src="assets/img/05_example4.png" width="560" alt="(s^2+10s+40)/((s^2+4s+13)(s^2+10s+24)) 의 근궤적. -2±j3 극점에서 자홍 선이 47도로 출발하고, -5±j3.87 영점으로 가지가 들어온다">
+    <figcaption><strong>\(-2+j3\)의 자홍 선(47.01°)</strong>을 따라 가지가 출발한다. 왼쪽에서는 \(-4\)와 \(-6\)에서 나온 가지가 분기점 -5.1527에서 갈라져 영점 \(-5\pm j3.873\)으로 들어온다 — 도착각 ∓172.64°는 거의 수평으로 들어온다는 뜻이다.</figcaption>
+  </figure>
+
+  <!-- ─────────────── ⑨ ─────────────── -->
+  <h2 id="s9">⑨ 근궤적 모양 모음</h2>
+  <p>
+    극점이나 영점을 하나 더하거나 옮기면 근궤적은 어떻게 바뀔까? 네 묶음으로 본다. 묶음마다 하나만 바꿔 가며 비교하도록 짜여 있다.
+    그림은 <code>subplot(2,2,k)</code>로 넷을 한 창에 모았다(3회). <strong>그림의 왼쪽 위가 <code>sys1</code>, 오른쪽 위가 <code>sys2</code>, 왼쪽 아래가 <code>sys3</code>, 오른쪽 아래가 <code>sys4</code></strong>다.
+    명령 창 출력은 길어서 접어 두었다. 그림을 보고 궁금한 숫자가 있으면 펼쳐 본다.
+  </p>
+
+  <h3>실수 극점만 있는 경우 — 극점이 하나씩 늘면</h3>
+<!-- mcode 05/b12_gallery_real code -->
+<div class="mcode">
+<pre class="lang-matlab"><code>close all
+sys1 = 1/(s+1);
+sys2 = 1/((s+1)*(s+2));
+sys3 = 1/((s+1)*(s+2)*(s+3));
+sys4 = 1/((s+1)*(s+2)*(s+3)*(s+4));
+
+subplot(2,2,1)
+root_locus(sys1)
+subplot(2,2,2)
+root_locus(sys2)
+subplot(2,2,3)
+root_locus(sys3)
+subplot(2,2,4)
+root_locus(sys4)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+</div>
+<!-- /mcode -->
+  <figure>
+    <img src="assets/img/05_gallery_real.png" width="760" alt="극점 1~4개짜리 근궤적 네 개. 극점이 늘수록 점근선이 1, 2, 3, 4개로 늘고 가지가 허수축 쪽으로 휜다">
+    <figcaption>극점이 1개면 왼쪽으로 곧장(180°), 2개면 위아래 수직(±90°), 3개면 ±60°, 4개면 ±45°·±135°. <strong>극점이 하나 늘 때마다 점근선 각도가 좁아져 가지가 허수축을 넘기 쉬워진다</strong> — 극점 셋부터는 \(K\)를 키우면 불안정해진다.</figcaption>
+  </figure>
+  <details class="fold">
+    <summary>명령 창 출력</summary>
+<!-- mcode 05/b12_gallery_real out -->
+<div class="mcode">
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>── 근궤적: 극점 1개 · 영점 0개
+점근선: 1개, 중심 = -1.0000, 각도 = 180 deg
+분기점: 없다
+
+── 근궤적: 극점 2개 · 영점 0개
+점근선: 2개, 중심 = -1.5000, 각도 = 90  270 deg
+분기점: s = -1.5000, K = 0.2500
+
+── 근궤적: 극점 3개 · 영점 0개
+점근선: 3개, 중심 = -2.0000, 각도 = 60  180  300 deg
+  후보 s = -2.5774 : K = -0.3849 &lt; 0 — 근궤적 위가 아니다
+분기점: s = -1.4226, K = 0.3849
+
+── 근궤적: 극점 4개 · 영점 0개
+점근선: 4개, 중심 = -2.5000, 각도 = 45  135  225  315 deg
+분기점: s = -3.6180, K = 1.0000
+  후보 s = -2.5000 : K = -0.5625 &lt; 0 — 근궤적 위가 아니다
+분기점: s = -1.3820, K = 1.0000</code></pre>
+</div>
+<!-- /mcode -->
+  </details>
+
+  <h3>겹친 극점과 복소 극점</h3>
+<!-- mcode 05/b13_gallery_complex code -->
+<div class="mcode">
+<pre class="lang-matlab"><code>close all
+sys1 = 1/((s+3)*(s^2+4*s+4));
+sys2 = 1/((s+1)*(s^2+4*s+4));
+sys3 = 1/((s+3)*(s^2+4*s+8));
+sys4 = 1/((s+1)*(s^2+4*s+8));
+
+subplot(2,2,1)
+root_locus(sys1)
+subplot(2,2,2)
+root_locus(sys2)
+subplot(2,2,3)
+root_locus(sys3)
+subplot(2,2,4)
+root_locus(sys4)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+</div>
+<!-- /mcode -->
+  <figure>
+    <img src="assets/img/05_gallery_complex.png" width="760" alt="겹친 극점과 복소 극점이 있는 근궤적 네 개">
+    <figcaption>위 두 그림은 -2에 겹친 극점이 있다. <strong>왼쪽 위</strong>는 오른쪽에 아무것도 없어 겹친 극점에서 바로 위아래(±90°)로 갈라지고, <strong>오른쪽 위</strong>는 -1 극점이 오른쪽에 있어 실수축을 따라 좌우(0°·180°)로 출발한다.
+      아래 두 그림은 겹친 극점을 \(-2\pm j2\) 복소 극점으로 바꾼 것이다 — 출발각이 각각 26.57°, -26.57°로 서로 반대쪽으로 꺾인다.</figcaption>
+  </figure>
+  <details class="fold">
+    <summary>명령 창 출력</summary>
+<!-- mcode 05/b13_gallery_complex out -->
+<div class="mcode">
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>── 근궤적: 극점 3개 · 영점 0개
+점근선: 3개, 중심 = -2.3333, 각도 = 60  180  300 deg
+  후보 s = -2.6667 : K = -0.1481 &lt; 0 — 근궤적 위가 아니다
+  후보 s = -2.0000 : K = 0 — 겹친 극점 자리다 (출발각으로 본다)
+분기점: 없다
+출발각: 극점 -2.0000 (2중) → -90.00 deg
+출발각: 극점 -2.0000 (2중) → 90.00 deg
+
+── 근궤적: 극점 3개 · 영점 0개
+점근선: 3개, 중심 = -1.6667, 각도 = 60  180  300 deg
+  후보 s = -2.0000 : K = 0 — 겹친 극점 자리다 (출발각으로 본다)
+분기점: s = -1.3333, K = 0.1481
+출발각: 극점 -2.0000 (2중) → 180.00 deg
+출발각: 극점 -2.0000 (2중) → 0.00 deg
+
+── 근궤적: 극점 3개 · 영점 0개
+점근선: 3개, 중심 = -2.3333, 각도 = 60  180  300 deg
+분기점: 없다
+출발각: 극점 -2.0000+2.0000j → 26.57 deg
+출발각: 극점 -2.0000-2.0000j → -26.57 deg
+
+── 근궤적: 극점 3개 · 영점 0개
+점근선: 3개, 중심 = -1.6667, 각도 = 60  180  300 deg
+분기점: 없다
+출발각: 극점 -2.0000+2.0000j → -26.57 deg
+출발각: 극점 -2.0000-2.0000j → 26.57 deg</code></pre>
+</div>
+<!-- /mcode -->
+  </details>
+
+  <h3>영점을 더하면</h3>
+<!-- mcode 05/b14_gallery_zero code -->
+<div class="mcode">
+<pre class="lang-matlab"><code>close all
+sys1 = (s+2)/((s+1)*(s+3)*(s+4));
+sys2 = (s+5)/((s+1)*(s+3)*(s+4));
+sys3 = (s+1)/((s+2)*(s^2+6*s+10));
+sys4 = (s+4)/((s+2)*(s^2+6*s+10));
+
+subplot(2,2,1)
+root_locus(sys1)
+subplot(2,2,2)
+root_locus(sys2)
+subplot(2,2,3)
+root_locus(sys3)
+subplot(2,2,4)
+root_locus(sys4)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+</div>
+<!-- /mcode -->
+  <figure>
+    <img src="assets/img/05_gallery_zero.png" width="760" alt="영점이 하나 있는 근궤적 네 개. 영점이 가지를 왼쪽으로 끌어당긴다">
+    <figcaption>영점이 하나 생기면 \(n-m\)이 2가 되어 점근선이 ±90°로 바뀐다. <strong>영점 위치에 따라 점근선 중심이 움직인다</strong> — 위 두 그림에서 영점이 -2일 때 중심 -3, -5일 때 -1.5. 영점이 극점들보다 왼쪽에 멀리 있을수록 가지를 덜 당긴다.
+      아래 두 그림은 복소 극점의 출발각이 영점 위치에 따라 108.43°(위로 꺾임)와 0°(실수축과 평행)로 크게 달라지는 것을 보여 준다.</figcaption>
+  </figure>
+  <details class="fold">
+    <summary>명령 창 출력</summary>
+<!-- mcode 05/b14_gallery_zero out -->
+<div class="mcode">
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>── 근궤적: 극점 3개 · 영점 1개
+점근선: 2개, 중심 = -3.0000, 각도 = 90  270 deg
+분기점: s = -3.4656, K = 0.4186
+
+── 근궤적: 극점 3개 · 영점 1개
+점근선: 2개, 중심 = -1.5000, 각도 = 90  270 deg
+  후보 s = -5.9483 : K = -29.9735 &lt; 0 — 근궤적 위가 아니다
+  후보 s = -3.6294 : K = -0.4475 &lt; 0 — 근궤적 위가 아니다
+분기점: s = -1.9223, K = 0.6710
+
+── 근궤적: 극점 3개 · 영점 1개
+점근선: 2개, 중심 = -3.5000, 각도 = 90  270 deg
+  후보 s = -0.1377 : K = -19.8535 &lt; 0 — 근궤적 위가 아니다
+분기점: 없다
+출발각: 극점 -3.0000+1.0000j → 108.43 deg
+출발각: 극점 -3.0000-1.0000j → -108.43 deg
+
+── 근궤적: 극점 3개 · 영점 1개
+점근선: 2개, 중심 = -2.0000, 각도 = 90  270 deg
+  후보 s = -4.8393 : K = -14.8275 &lt; 0 — 근궤적 위가 아니다
+분기점: 없다
+출발각: 극점 -3.0000+1.0000j → 0.00 deg
+출발각: 극점 -3.0000-1.0000j → 0.00 deg</code></pre>
+</div>
+<!-- /mcode -->
+  </details>
+
+  <h3>복소 극점 두 쌍과 여러 영점</h3>
+<!-- mcode 05/b15_gallery_misc code -->
+<div class="mcode">
+<pre class="lang-matlab"><code>close all
+sys1 = (s+2)/((s^2+2*s+4)*(s^2+6*s+10));
+sys2 = (s+5)/((s^2+2*s+4)*(s^2+6*s+10));
+sys3 = s*(s+2)/((s^2+2*s+4)*(s^2+6*s+10));
+sys4 = (s^2+4*s+10)/((s^2+2*s+4)*(s^2+8*s+30));
+
+subplot(2,2,1)
+root_locus(sys1)
+subplot(2,2,2)
+root_locus(sys2)
+subplot(2,2,3)
+root_locus(sys3)
+subplot(2,2,4)
+root_locus(sys4)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+</div>
+<!-- /mcode -->
+  <figure>
+    <img src="assets/img/05_gallery_misc.png" width="760" alt="복소 극점 두 쌍과 영점이 있는 근궤적 네 개">
+    <figcaption>같은 극점 네 개(\(-1\pm j1.732\), \(-3\pm j1\))에 영점만 바꿨다. <strong>왼쪽 위(영점 -2)</strong>와 <strong>오른쪽 위(영점 -5)</strong>를 비교하면 영점이 멀어질수록 오른쪽 가지가 더 빨리 허수축을 넘는다.
+      <strong>오른쪽 아래</strong>는 복소 영점 \(-2\pm j2.449\)가 위쪽 극점에서 나온 가지를 받아 짧은 고리로 끝낸다 — 도착각 17.02°가 그 고리가 영점에 들어오는 방향이다.</figcaption>
+  </figure>
+  <details class="fold">
+    <summary>명령 창 출력</summary>
+<!-- mcode 05/b15_gallery_misc out -->
+<div class="mcode">
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>── 근궤적: 극점 4개 · 영점 1개
+점근선: 3개, 중심 = -2.0000, 각도 = 60  180  300 deg
+분기점: s = -3.1547, K = 6.7772
+  후보 s = -0.8453 : K = -14.7772 &lt; 0 — 근궤적 위가 아니다
+출발각: 극점 -3.0000+1.0000j → -101.31 deg
+출발각: 극점 -3.0000-1.0000j → 101.31 deg
+출발각: 극점 -1.0000+1.7321j → 76.10 deg
+출발각: 극점 -1.0000-1.7321j → -76.10 deg
+
+── 근궤적: 극점 4개 · 영점 1개
+점근선: 3개, 중심 = -1.0000, 각도 = 60  180  300 deg
+분기점: s = -6.0586, K = 279.6567
+  후보 s = -2.3202 : K = -2.5878 &lt; 0 — 근궤적 위가 아니다
+출발각: 극점 -3.0000+1.0000j → 150.26 deg
+출발각: 극점 -3.0000-1.0000j → -150.26 deg
+출발각: 극점 -1.0000+1.7321j → 39.52 deg
+출발각: 극점 -1.0000-1.7321j → -39.52 deg
+
+── 근궤적: 극점 4개 · 영점 2개
+점근선: 2개, 중심 = -3.0000, 각도 = 90  270 deg
+  후보 s = 1.4688 : K = -37.4336 &lt; 0 — 근궤적 위가 아니다
+  후보 s = -3.2848 : K = -2.1058 &lt; 0 — 근궤적 위가 아니다
+분기점: s = -1.3068, K = 13.2080
+출발각: 극점 -3.0000+1.0000j → 60.26 deg
+출발각: 극점 -3.0000-1.0000j → -60.26 deg
+출발각: 극점 -1.0000+1.7321j → -163.90 deg
+출발각: 극점 -1.0000-1.7321j → 163.90 deg
+
+── 근궤적: 극점 4개 · 영점 2개
+점근선: 2개, 중심 = -3.0000, 각도 = 90  270 deg
+  후보 s = -0.9488 : K = -9.8509 &lt; 0 — 근궤적 위가 아니다
+분기점: 없다
+출발각: 극점 -4.0000+3.7417j → 80.13 deg
+출발각: 극점 -4.0000-3.7417j → -80.13 deg
+출발각: 극점 -1.0000+1.7321j → 103.44 deg
+출발각: 극점 -1.0000-1.7321j → -103.44 deg
+도착각: 영점 -2.0000+2.4495j → 17.02 deg
+도착각: 영점 -2.0000-2.4495j → -17.02 deg</code></pre>
+</div>
+<!-- /mcode -->
+  </details>
+
+  <h3>더 많은 예</h3>
+  <p>규칙마다 옵션을 골라 그린 예 넷이다. 그리지 않을 규칙은 <code>이름=0</code>으로 껐다.</p>
+<!-- mcode 05/b16_more_examples code -->
+<div class="mcode">
+<pre class="lang-matlab"><code>close all
+ex1 = (s^2+8*s+20)/(s^3+9*s^2+25*s+25);   % 예 1
+ex2 = 1/((s+2)*(s+4)*(s+6));               % 예 2
+ex3 = 1/((s+2)*(s^2+8*s+25));              % 예 3
+ex4 = 1/(s*(s+1)*(s+3)*(s+4));             % 예 4
+
+subplot(2,2,1)
+root_locus(ex1, break_point=0)
+subplot(2,2,2)
+root_locus(ex2, break_point=0, start_angle=0)
+subplot(2,2,3)
+root_locus(ex3, break_point=0)
+subplot(2,2,4)
+root_locus(ex4)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+</div>
+<!-- /mcode -->
+  <figure>
+    <img src="assets/img/05_more_examples.png" width="760" alt="예 1~4 의 근궤적 네 개">
+    <figcaption><strong>왼쪽 위(예 1)</strong>는 극점 3개·영점 2개라 점근선이 하나(180°)뿐이다. 복소 극점에서 101.31°로 출발한 가지가 복소 영점으로 70.56°로 들어간다.
+      <strong>오른쪽 아래(예 4)</strong>는 극점 넷이 실수축에 있어 분기점이 두 개(-0.4189, -3.5811)이고, 두 분기점의 \(K\)가 똑같이 2.25다 — 극점 배치가 -2를 중심으로 대칭이기 때문이다.</figcaption>
+  </figure>
+  <details class="fold">
+    <summary>명령 창 출력</summary>
+<!-- mcode 05/b16_more_examples out -->
+<div class="mcode">
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>── 근궤적: 극점 3개 · 영점 2개
+점근선: 1개, 중심 = -1.0000, 각도 = 180 deg
+출발각: 극점 -2.0000+1.0000j → 101.31 deg
+출발각: 극점 -2.0000-1.0000j → -101.31 deg
+도착각: 영점 -4.0000+2.0000j → 70.56 deg
+도착각: 영점 -4.0000-2.0000j → -70.56 deg
+
+── 근궤적: 극점 3개 · 영점 0개
+점근선: 3개, 중심 = -4.0000, 각도 = 60  180  300 deg
+
+── 근궤적: 극점 3개 · 영점 0개
+점근선: 3개, 중심 = -3.3333, 각도 = 60  180  300 deg
+출발각: 극점 -4.0000+3.0000j → -33.69 deg
+출발각: 극점 -4.0000-3.0000j → 33.69 deg
+
+── 근궤적: 극점 4개 · 영점 0개
+점근선: 4개, 중심 = -2.0000, 각도 = 45  135  225  315 deg
+분기점: s = -3.5811, K = 2.2500
+  후보 s = -2.0000 : K = -4.0000 &lt; 0 — 근궤적 위가 아니다
+분기점: s = -0.4189, K = 2.2500</code></pre>
+</div>
+<!-- /mcode -->
+  </details>
+
+  <!-- ─────────────── 실습 ─────────────── -->
+  <h2 id="lab">🧪 실습</h2>
+  <div class="lab-block">
+    <p class="boxtitle">손으로 작도한 근궤적을 MATLAB으로 맞춰 보기</p>
+    <p>이걸 해 보면 작도 규칙 하나하나가 실제 그림의 어디에 해당하는지 손에 익는다.</p>
+    <ol>
+      <li>④~⑧절의 함수 파일 다섯 개(<code>find_asymptote.m</code> · <code>find_break_point.m</code> · <code>routh_table.m</code> · <code>find_start_angle.m</code> · <code>root_locus.m</code>)를 복사해 현재 폴더에 저장한다. 파일 이름은 함수 이름과 같아야 한다 (3분)</li>
+      <li>\(G(s)H(s) = \dfrac{1}{s(s+2)(s+5)}\)의 실수축 구간, 점근선 중심·각도, 분기점을 <strong>종이에</strong> 구한다 (10분)</li>
+      <li>같은 시스템의 특성방정식으로 Routh 표를 <strong>종이에</strong> 세우고, 허수축을 넘는 \(K\)와 그때의 \(\omega\)를 구한다 (10분)</li>
+      <li><code>find_asymptote</code> · <code>find_break_point</code>로 2번을, ⑥절의 코드(<code>syms K</code> → <code>routh_table</code> → <code>solve</code>)로 3번을 확인한다 (7분)</li>
+      <li><code>root_locus(GH)</code>로 그려, 3번에서 구한 \(\pm j\omega\)가 그림에서 가지가 허수축을 넘는 자리와 같은지 본다 (3분)</li>
+      <li>영점 \((s+1)\)을 분자에 넣고 다시 그려, 점근선 개수와 가지의 휘는 방향이 어떻게 바뀌는지 한 줄로 적는다 (5분)</li>
+    </ol>
+    <p><strong>이렇게 되면 성공이다:</strong> 종이의 점근선 중심 \(-7/3\), 각도 60°·180°·300°가 명령 창과 같고,
+      Routh 표의 \(s^1\) 행 \(\frac{70-K}{7}\)에서 \(K = 70\), 보조방정식 \(7s^2 + 70 = 0\)에서 \(\omega = \sqrt{10} = 3.1623\)이 나온다. 영점을 넣으면 점근선이 90°·270° 두 개로 바뀐다.</p>
+  </div>
+
+  <!-- ─────────────── 연습문제 ─────────────── -->
+  <h2 id="exercise">📝 연습문제</h2>
+  <ol>
+    <li>\(G(s)H(s) = \dfrac{s+3}{s(s+1)(s+2)(s+4)}\)의 실수축 구간, 점근선, 분기점을 손으로 구하고 <code>find_asymptote</code> · <code>find_break_point</code> · <code>root_locus</code>로 확인하시오.</li>
+    <li>\(G(s)H(s) = \dfrac{1}{(s+1)(s^2+2s+5)}\)에서 복소 극점 \(-1+j2\)의 출발각을 ⑦절처럼 <code>angle</code>로 한 줄씩 계산하고, 결과가 <code>find_start_angle</code>의 값과 같은지 보이시오.</li>
+    <li>2번 시스템이 허수축을 넘는 \(K\)와 \(\omega\)를 Routh 표로 손으로 구하고, <code>routh_table</code>로 확인하시오.</li>
+    <li><code>root_locus</code>에 허수축 교차점을 표시하는 입력 <code>cross</code>를 더하시오. <code>cross=1</code>이면 Routh 표로 교차 \(K\)와 \(\omega\)를 구해 명령 창에 찍고, 그림의 \(\pm j\omega\) 자리에 점을 찍는다.
+      (힌트: 3차 특성방정식이면 ⑥절처럼 \(s^1\) 행의 첫 원소가 0이 되는 \(K\)를 구하면 된다.)</li>
+  </ol>
+
+  <!-- ─────────────── 점검 ─────────────── -->
+  <h2 id="check">✅ 점검</h2>
+  <ul class="check">
+    <li><input type="checkbox" id="c1"><label for="c1">근궤적이 \(1+K\,G(s)H(s)=0\)의 근이 \(K\)에 따라 움직인 자취라는 것을 <code>feedback</code>·<code>pole</code>로 확인할 수 있다</label></li>
+    <li><input type="checkbox" id="c2"><label for="c2">한 점이 근궤적 위인지 <code>angle(evalfr(GH, s0))</code>로, 그 점의 \(K\)를 <code>1/abs(evalfr(GH, s0))</code>로 구할 수 있다</label></li>
+    <li><input type="checkbox" id="c3"><label for="c3">점근선 중심·각도 식을 쓰고 숫자를 넣을 수 있다</label></li>
+    <li><input type="checkbox" id="c4"><label for="c4">\(dK/ds=0\)의 근 중에서 \(K\)가 양의 실수인 것만 분기점이라는 것을 안다</label></li>
+    <li><input type="checkbox" id="c5"><label for="c5">\(K\)가 들어간 특성방정식으로 Routh 표를 세우고, 0이 되는 행에서 안정 한계 \(K\)를, 그 위 행의 보조방정식에서 교차 주파수를 구할 수 있다</label></li>
+    <li><input type="checkbox" id="c6"><label for="c6">수치로 구한 겹친 근에 아주 작은 허수부가 붙을 수 있고, <code>== 0</code> 비교가 위험하다는 것을 안다</label></li>
+    <li><input type="checkbox" id="c7"><label for="c7"><code>arguments</code> 블록으로 <code>이름=값</code> 입력을 받는 함수를 읽고 부를 수 있다</label></li>
+    <li><input type="checkbox" id="c8"><label for="c8">극점·영점을 더하면 점근선 개수와 중심이 어떻게 바뀌는지 갤러리 그림으로 설명할 수 있다</label></li>
+  </ul>
+
+  <!-- ─────────────── 조금 더 ─────────────── -->
+  <h2 id="more">조금 더 알아두면</h2>
+  <p>
+    <strong><code>[r, K] = rlocus(GH)</code>.</strong> 출력을 받으면 그림 대신 숫자를 준다. <code>r</code>은 행 하나가 가지 하나, 열 하나가 \(K\) 하나인 극점 행렬이고 <code>K</code>는 그때의 이득들이다.
+    \(K\)를 직접 정해 주려면 <code>rlocus(GH, Kgrid)</code>로 넘긴다.
+  </p>
+  <p>
+    <strong>그림 위에서 \(K\) 읽기.</strong> MATLAB 그림 창에서 근궤적 위를 클릭하면 데이터 팁이 떠서 그 점의 Gain(\(K\)), Pole, Damping, Overshoot, Frequency를 보여 준다.
+    클릭은 손이 떨리면 값이 흔들리므로, 6회에서는 같은 값을 <code>rlocfind</code>로 구하는 법을 함께 본다.
+  </p>
+  <p>
+    <strong>Routh 표의 특수한 경우.</strong> <code>routh_table</code>은 첫 열에 0이 생기는 경우를 다루지 않는다.
+    한 행이 통째로 0이면(⑥절의 \(K=60\)처럼) 바로 위 행의 보조방정식을 미분한 계수로 그 행을 채우고 계속 내려간다.
+    첫 원소만 0이면 그 자리에 아주 작은 양수 \(\varepsilon\)을 넣고 계산한 뒤 \(\varepsilon \to 0\)으로 보낸다. 교재의 Routh 판별법 절에 두 경우가 모두 나온다.
+  </p>
+  <p>
+    <strong>음의 \(K\).</strong> 이 회차의 규칙은 모두 \(K>0\)을 가정했다. \(K<0\)이면 각도 조건이 \(360^\circ k\)로 바뀌어 실수축 구간이 반대가 된다(「상보 근궤적」). <code>rlocus(-GH)</code>로 그려 볼 수 있다.
+  </p>
+
+  <footer>
+    <a href="matlab_04.html">← 04회 전달함수와 시간응답</a> · <a href="index.html">회차 목록</a> · <a href="matlab_06.html">06회 근궤적으로 이득 범위 정하기 →</a>
+  </footer>
+</main>
+</div>
+<script src="../assets/site.js" defer></script>
+</body>
+</html>

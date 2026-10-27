@@ -1,0 +1,1085 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>08회 · 보드 선도와 주파수응답 | 제어공학 MATLAB 실습</title>
+<script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}})();</script>
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="assets/lecture.css">
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['$$','$$']]},
+  options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+<header class="bar">
+  <div class="barin wide">
+    <a class="up" href="index.html" aria-label="제어공학 MATLAB 실습 회차 목록"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a>
+    <nav class="crumb" aria-label="경로">
+      <a href="../index.html">강의자료</a><span class="sep">/</span><a href="index.html">제어공학 MATLAB 실습</a><span class="sep">/</span><span class="here">08회 · 보드 선도와 주파수응답</span>
+    </nav>
+    <span class="spacer"></span>
+    <div class="navlinks"><a class="navlink" href="matlab_07.html" aria-label="이전 회차"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a></div>
+    <div class="seg" data-theme-switch role="group" aria-label="밝기">
+      <button type="button" data-mode="auto" aria-pressed="true">자동</button>
+      <button type="button" data-mode="light" aria-pressed="false">밝게</button>
+      <button type="button" data-mode="dark" aria-pressed="false">어둡게</button>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="toc-title">이 회차 목차</div>
+  <a href="#summary">한 장 요약</a>
+  <a href="#s1">① 주파수응답</a>
+  <a href="#s2">② 보드 선도 그리기 — <code>bode</code></a>
+  <a class="sub" href="#s2-2">여러 시스템 겹쳐 그리기</a>
+  <a href="#s3">③ 기본 요소의 합으로 보는 보드 선도</a>
+  <a href="#s4">④ <code>bode</code>의 출력값 — <code>reshape</code>·<code>squeeze</code></a>
+  <a href="#s5">⑤ 직접 그리기 — <code>semilogx</code></a>
+  <a href="#s6">⑥ 점근선 근사</a>
+  <a class="sub" href="#s6-2">2차 요소와 제동비</a>
+  <a href="#s7">⑦ 주파수응답 사양</a>
+  <a class="sub" href="#s7-2"><code>bandwidth</code> · <code>getPeakGain</code></a>
+  <a class="sub" href="#s7-3">공식으로 직접 계산</a>
+  <a class="sub" href="#s7-4">보드 선도에 사양 표시</a>
+  <a href="#s8">⑧ 이득 여유와 위상 여유 — <code>margin</code></a>
+  <a href="#lab">🧪 실습</a>
+  <a href="#exercise">📝 연습문제</a>
+  <a href="#check">✅ 점검</a>
+  <a href="#more">조금 더 알아두면</a>
+</nav>
+
+<main>
+
+  <div class="lec-no">제어공학 MATLAB 실습 · 08회 · 3부 주파수응답</div>
+  <h1>보드 선도와 주파수응답</h1>
+
+  <div class="questions">
+    <span class="lab">오늘 답할 질문</span>
+    <ol>
+      <li>보드 선도의 두 그래프는 각각 무엇을 그린 것인가? 왜 가로축은 로그, 세로축은 dB인가?</li>
+      <li>전달함수가 여러 요소의 <strong>곱</strong>이면 보드 선도는 왜 그 요소들의 <strong>합</strong>이 되나?</li>
+      <li><code>bode</code>가 돌려주는 값을 직접 꺼내 그리려면 무엇을 조심해야 하나?</li>
+      <li>대역폭·공진 첨두값·공진주파수를 MATLAB 함수와 교재 공식으로 각각 구하면 같은 값이 나오나?</li>
+      <li>개루프 보드 선도 한 장으로 폐루프가 얼마나 안정한지 어떻게 읽나?</li>
+    </ol>
+  </div>
+
+  <p>
+    지난 네 회차(4~7회)는 전부 <strong>시간영역</strong>이었다. 계단 입력을 넣고 출력이 시간에 따라 어떻게 움직이는지 보고,
+    극점을 s 평면 어디에 두면 원하는 응답이 나오는지 근궤적으로 찾았다.
+    오늘은 같은 시스템을 다른 쪽에서 본다. 입력을 계단이 아니라 <strong>사인파</strong>로 넣고,
+    주파수를 바꿔 가며 출력이 얼마나 커지고 얼마나 늦어지는지를 잰다. 그 결과를 그린 것이 <strong>보드 선도</strong>(Bode plot)다.
+  </p>
+  <p>
+    오늘 할 일은 크게 둘이다. ②~⑤절은 <code>bode</code> 함수의 사용법과 「기본 요소의 합」을 숫자로 확인하는 것,
+    ⑦절은 2차 시스템의 주파수응답 사양(대역폭·공진)을 함수와 공식으로 각각 구해 맞춰 보는 것이다.
+    그 사이 ⑥절에서 보드 선도를 손으로 그릴 때 쓰는 <strong>점근선</strong>을, 마지막 ⑧절에서 보드 선도의 가장 흔한 쓰임인
+    <strong>이득 여유·위상 여유</strong>를 다룬다.
+  </p>
+
+  <h2 id="summary">한 장 요약</h2>
+  <p class="readme-first">왼쪽 함수 이름보다 <strong>오른쪽 열</strong>을 먼저 본다. 그 함수가 교재의 어느 개념을 계산하는지가 거기 있다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>함수</th><th>하는 일</th><th>제어공학에서 쓰는 자리</th></tr>
+    <tr><td><code>bode(G)</code></td><td>크기(dB)와 위상(deg)을 로그 주파수축에 그린다</td><td>보드 선도 — \(|G(j\omega)|\), \(\angle G(j\omega)\)</td></tr>
+    <tr><td><code>[mag, phase, w] = bode(G, w)</code></td><td>그리지 않고 값만 돌려준다. <strong>크기는 dB가 아니다</strong></td><td>특정 주파수에서의 이득·위상을 숫자로</td></tr>
+    <tr><td><code>reshape</code> · <code>squeeze</code></td><td>1×1×N 배열을 벡터로 편다</td><td><code>bode</code> 출력을 그래프·계산에 쓰기 위해</td></tr>
+    <tr><td><code>20*log10(mag)</code></td><td>크기를 데시벨로</td><td>곱을 합으로 바꾸는 단위</td></tr>
+    <tr><td><code>semilogx</code> · <code>logspace</code></td><td>가로축만 로그인 그래프 · 로그 간격 주파수</td><td>보드 선도를 직접 그리기</td></tr>
+    <tr><td><code>bandwidth(G)</code></td><td>DC 이득에서 3 dB 떨어지는 주파수</td><td>대역폭 \(\omega_B\) — 응답 속도</td></tr>
+    <tr><td><code>[gpk, wpk] = getPeakGain(G)</code></td><td>크기의 최댓값과 그 주파수</td><td>공진 첨두값 \(M_r\) · 공진주파수 \(\omega_r\) — 최대초과</td></tr>
+    <tr><td><code>margin(L)</code> · <code>allmargin(L)</code></td><td>이득 여유·위상 여유와 교차 주파수</td><td>개루프로 읽는 폐루프 안정도</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 이 회차의 함수는 모두 같은 값 하나에서 나온다 — \(s\) 자리에 \(j\omega\)를 넣은 복소수 \(G(j\omega)\).
+    <code>bode</code>는 그 크기와 각도를 주파수마다 계산하고, 나머지 함수는 그 곡선에서 특정한 점(최댓값, −3 dB 점, 0 dB 점, −180° 점)을 찾아 준다.
+  </div>
+
+  <!-- ───────────────────────── ① ───────────────────────── -->
+  <h2 id="s1">① 주파수응답</h2>
+  <p>
+    안정한 선형 시스템에 사인파를 넣으면 무엇이 나올까? 처음 잠깐은 과도응답이 섞이지만,
+    그것이 사라지고 나면 <strong>같은 주파수의 사인파</strong>가 나온다. 바뀌는 것은 두 가지뿐이다 — 크기와 위상.
+  </p>
+  <div class="box theory">
+    <p class="boxtitle">📐 이론과 잇기 — 사인파를 넣으면 무엇이 나오나</p>
+    <p>입력이 \(u(t) = \sin(\omega t)\)이면 정상상태 출력은</p>
+    $$
+    y_{ss}(t) = M(\omega)\,\sin\!\big(\omega t + \phi(\omega)\big)
+    $$
+    <p>이고, 크기와 위상은 전달함수의 \(s\) 자리에 \(j\omega\)를 넣은 복소수에서 바로 나온다.</p>
+    $$
+    M(\omega) = |G(j\omega)|, \qquad \phi(\omega) = \angle G(j\omega)
+    $$
+    <p>보드 선도는 이 두 값을 주파수 \(\omega\)에 대해 그린 것이다. 위 칸이 크기, 아래 칸이 위상이다.
+      크기는 데시벨(dB)로 적는다.</p>
+    $$
+    |G(j\omega)|_{\text{dB}} = 20\log_{10}|G(j\omega)|
+    $$
+    <p><strong>숫자를 넣어 본다.</strong> \(G_4(s) = \dfrac{1}{s+5}\)에 \(\omega = 5\) rad/s를 넣으면</p>
+    $$
+    G_4(j5) = \frac{1}{5 + j5}, \qquad
+    |G_4(j5)| = \frac{1}{\sqrt{5^2 + 5^2}} = \frac{1}{5\sqrt2} = 0.1414
+    $$
+    $$
+    20\log_{10}(0.1414) = -16.99\ \text{dB}, \qquad
+    \angle G_4(j5) = -\tan^{-1}\frac{5}{5} = -45^\circ
+    $$
+    <p>즉 5 rad/s 사인파를 넣으면 크기가 0.14배로 줄고 위상이 45° 늦어진 사인파가 나온다.
+      ⑥절에서 MATLAB이 같은 두 값(−16.99 dB, −45.0°)을 찍는다.</p>
+  </div>
+  <p>
+    가로축을 로그로 잡는 이유는 관심 있는 주파수가 0.1 rad/s부터 1000 rad/s까지 <strong>몇 자릿수에 걸쳐</strong> 있기 때문이다.
+    로그축에서는 10배 간격(<strong>decade</strong>, 디케이드)이 같은 길이로 그려진다.
+    세로축을 dB로 잡는 이유는 ③절에서 본다 — 곱이 합이 된다.
+  </p>
+
+  <!-- ───────────────────────── ② ───────────────────────── -->
+  <h2 id="s2">② 보드 선도 그리기 — <code>bode</code></h2>
+  <p>
+    먼저 기본 요소 네 개를 따로 만들고 곱해서 하나의 전달함수를 만든다.
+    상수, 1차 영점, 적분기, 1차 극점 — 보드 선도를 손으로 그릴 때 쪼개는 바로 그 단위들이다.
+  </p>
+  $$
+  G(s) = \underbrace{10}_{G_1}\cdot\underbrace{(s+2)}_{G_2}\cdot\underbrace{\frac{1}{s}}_{G_3}\cdot\underbrace{\frac{1}{s+5}}_{G_4}
+       = \frac{10s + 20}{s^2 + 5s}
+  $$
+
+<!-- mcode 08/b01_bode_single -->
+<div class="mcode">
+<pre class="lang-matlab"><code>clc; clear; close all
+% 전달함수 만들기 — 기본 요소 네 개의 곱
+s = tf('s');
+G1 = tf(10);        % 상수
+G2 = s + 2;         % 1차 영점
+G3 = 1/s;           % 적분기
+G4 = 1/(s + 5);     % 1차 극점
+G = G1*G2*G3*G4
+% bode plot 그리기
+figure(1)
+bode(G)
+grid on</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>G =
+
+  10 s + 20
+  ---------
+  s^2 + 5 s
+
+Continuous-time transfer function.
+Model Properties</code></pre>
+</div>
+<!-- /mcode -->
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>bode(sys)</dt>
+      <dd>전달함수 <code>sys</code>의 보드 선도(크기·위상 두 칸)를 그린다. 주파수 범위는 극점·영점 위치를 보고 MATLAB이 알아서 고른다.
+        여기서는 \(G(s)\)의 보드 선도를 그렸다.</dd>
+      <dt>tf(10)</dt>
+      <dd>숫자 하나도 전달함수 객체로 만들 수 있다(정적 이득). 4회에서 본 <code>tf</code>에 계수 대신 숫자 하나를 준 것이다.
+        여기서는 <code>G1</code>을 다른 요소들과 같은 종류로 맞춰 곱하고 겹쳐 그리기 위해 썼다.</dd>
+    </dl>
+  </div>
+
+  <figure>
+    <img src="assets/img/08_bode_single.png" width="560" alt="G(s)=10(s+2)/(s(s+5))의 보드 선도. 크기는 낮은 주파수에서 왼쪽 위로 높고 오른쪽으로 갈수록 내려간다. 위상은 -90도 근처에서 시작해 중간에 -67도까지 올라갔다가 다시 -90도로 돌아온다">
+    <figcaption><strong>위 칸 크기</strong>는 낮은 주파수에서 기울기가 −20 dB/decade(적분기 \(1/s\) 때문)이고, 중간에 잠깐 완만해졌다가 다시 −20 dB/decade로 내려간다.
+      <strong>아래 칸 위상</strong>은 −90°에서 시작해 영점(2)과 극점(5) 사이에서 위로 솟았다가 −90°로 돌아온다. 왜 그런지는 ③절에서 숫자로 본다.</figcaption>
+  </figure>
+
+  <p>
+    그래프 읽는 법을 정리해 둔다. 가로축 Frequency의 눈금은 \(10^{-1}, 10^0, 10^1, 10^2\) — 한 칸이 10배다.
+    크기 칸의 0 dB는 「크기 1배」, +20 dB는 10배, −20 dB는 0.1배, +6 dB는 약 2배다.
+    위상 칸의 −90°는 출력이 입력보다 1/4 주기 늦다는 뜻이다.
+  </p>
+
+  <h3 id="s2-2">여러 시스템 겹쳐 그리기</h3>
+  <p>
+    <code>bode</code>에 전달함수를 여러 개 넘기면 한 그림에 겹쳐 그린다. 3회의 <code>plot(x1, y1, x2, y2)</code>처럼
+    순서대로 색이 바뀌고, <code>legend</code>의 이름도 같은 순서로 붙는다.
+  </p>
+
+<!-- mcode 08/b02_bode_multi -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% bode plot 여러 개 동시에 그리기
+figure(1)
+bode(G1, G2, G3, G4, G)
+legend('G1', 'G2', 'G3', 'G4', 'G')
+grid on</code></pre>
+<button onclick="copyCode(this)">복사</button>
+</div>
+<!-- /mcode -->
+
+  <figure>
+    <img src="assets/img/08_bode_multi.png" width="560" alt="G1~G4와 G를 겹쳐 그린 보드 선도. G1은 20dB 수평선, G2는 6dB에서 시작해 올라가는 선, G3는 기울기 -20dB/decade 직선, G4는 -14dB에서 시작해 꺾여 내려가는 선, G는 그 합">
+    <figcaption>초록 선 \(G\)가 나머지 네 선의 <strong>세로 방향 합</strong>이다. 예를 들어 \(\omega = 0.1\)에서 크기 칸을 위아래로 읽으면
+      20(파랑) + 6(주황) + 20(노랑) − 14(보라) ≈ 32(초록)이다. 위상 칸도 마찬가지로 더해진다.</figcaption>
+  </figure>
+
+  <!-- ───────────────────────── ③ ───────────────────────── -->
+  <h2 id="s3">③ 기본 요소의 합으로 보는 보드 선도</h2>
+  <p>
+    그림에서 「합인 것 같다」를 봤으니 숫자로 확인한다. 왜 합이 되는지부터 세운다.
+  </p>
+  <div class="box theory">
+    <p class="boxtitle">📐 이론과 잇기 — 곱이 왜 합이 되나</p>
+    <p>복소수의 곱은 <strong>크기끼리 곱하고 각도끼리 더한다.</strong> \(G = G_1G_2G_3G_4\)이면</p>
+    $$
+    |G(j\omega)| = |G_1(j\omega)|\,|G_2(j\omega)|\,|G_3(j\omega)|\,|G_4(j\omega)|
+    $$
+    $$
+    \angle G(j\omega) = \angle G_1(j\omega) + \angle G_2(j\omega) + \angle G_3(j\omega) + \angle G_4(j\omega)
+    $$
+    <p>위상은 그대로 합이다. 크기는 곱인데, 로그를 씌우면 곱이 합이 된다(\(\log ab = \log a + \log b\)).</p>
+    $$
+    20\log_{10}|G| = 20\log_{10}|G_1| + 20\log_{10}|G_2| + 20\log_{10}|G_3| + 20\log_{10}|G_4|
+    $$
+    <p>그래서 보드 선도는 <strong>dB와 도(degree)로 그리면 요소별 그림을 위아래로 쌓기만 하면 된다.</strong>
+      손으로 보드 선도를 그리는 방법 전체가 이 한 줄 위에 서 있다.</p>
+  </div>
+  <p>
+    이 식을 숫자로 확인해 본다. 주파수를 <strong>여섯 개</strong>(0.1~100 rad/s) 골라 요소마다 dB와 도를 구하고, 네 요소의 값을 더한다.
+    주파수를 많이 고르면 4×N 행렬이 명령 창을 몇 화면씩 넘겨 읽기 어려우니, 확인용으로는 이 정도면 충분하다.
+  </p>
+
+<!-- mcode 08/b03_sum_check -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 주파수 몇 개만 골라서 기본 요소의 gain(dB)과 phase(deg)를 숫자로 확인한다
+w = [0.1 1 2 5 10 100];
+G_list = [G1, G2, G3, G4];
+wlen = length(w);
+gain_list = zeros(4, wlen);
+phase_list = zeros(4, wlen);
+for i = 1:4
+    [mag, phase, wout] = bode(G_list(i), w);
+    gain_list(i, :) = 20*log10(mag);
+    phase_list(i, :) = phase;
+end
+gain_list
+gain_sum = sum(gain_list, 1)
+phase_list
+phase_sum = sum(phase_list, 1)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>gain_list =
+
+   20.0000   20.0000   20.0000   20.0000   20.0000   20.0000
+    6.0314    6.9897    9.0309   14.6240   20.1703   40.0017
+   20.0000         0   -6.0206  -13.9794  -20.0000  -40.0000
+  -13.9811  -14.1497  -14.6240  -16.9897  -20.9691  -40.0108
+
+
+gain_sum =
+
+   32.0503   12.8400    8.3863    3.6549   -0.7988  -20.0091
+
+
+phase_list =
+
+         0         0         0         0         0         0
+    2.8624   26.5651   45.0000   68.1986   78.6901   88.8542
+  -90.0000  -90.0000  -90.0000  -90.0000  -90.0000  -90.0000
+   -1.1458  -11.3099  -21.8014  -45.0000  -63.4349  -87.1376
+
+
+phase_sum =
+
+  -88.2834  -74.7449  -66.8014  -66.8014  -74.7449  -88.2834</code></pre>
+</div>
+<!-- /mcode -->
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>[mag, phase, wout] = bode(sys, w)</dt>
+      <dd>출력 인자를 받으면 <strong>그리지 않고</strong> 값만 돌려준다. <code>w</code>를 주면 그 주파수에서만 계산한다.
+        <code>mag</code>는 <strong>배율</strong>(dB 아님), <code>phase</code>는 도(degree) 단위다.
+        여기서는 요소 하나씩 꺼내 여섯 주파수의 크기·위상을 표로 모았다.</dd>
+      <dt>G_list = [G1, G2, G3, G4]</dt>
+      <dd>전달함수 객체도 대괄호로 묶어 배열로 만들 수 있다. <code>G_list(i)</code>가 i번째 전달함수다.
+        여기서는 <code>for</code> 문으로 네 요소를 차례로 돌기 위해 묶었다.</dd>
+      <dt>sum(A, 1)</dt>
+      <dd>행렬을 1번 차원(세로) 방향으로 더한다 — 열마다 합 하나. 여기서는 주파수(열)마다 네 요소의 dB·deg를 더했다.</dd>
+    </dl>
+  </div>
+
+  <p>
+    <strong>출력 읽는 법.</strong> <code>gain_list</code>의 각 행이 요소 하나, 각 열이 주파수 하나다.
+    둘째 열(\(\omega = 1\))을 세로로 읽으면 \(20 + 6.99 + 0 - 14.15 = 12.84\) — <code>gain_sum</code>의 둘째 값 <strong>12.8400</strong>과 같다.
+    <code>phase_list</code>도 둘째 열이 \(0 + 26.57 - 90 - 11.31 = -74.74\) → <code>phase_sum</code>의 <strong>−74.7449</strong>.
+  </p>
+  <p>각 줄이 어디서 나왔는지 \(\omega = 1\)에서 손으로 짚어 본다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>요소</th><th>\(G_i(j1)\)</th><th>크기 → dB</th><th>위상</th></tr>
+    <tr><td>\(G_1 = 10\)</td><td>\(10\)</td><td>\(20\log_{10}10 = 20\)</td><td>\(0^\circ\)</td></tr>
+    <tr><td>\(G_2 = s+2\)</td><td>\(2 + j1\)</td><td>\(20\log_{10}\sqrt5 = 6.99\)</td><td>\(\tan^{-1}(1/2) = 26.57^\circ\)</td></tr>
+    <tr><td>\(G_3 = 1/s\)</td><td>\(1/(j1) = -j\)</td><td>\(20\log_{10}1 = 0\)</td><td>\(-90^\circ\)</td></tr>
+    <tr><td>\(G_4 = 1/(s+5)\)</td><td>\(1/(5 + j1)\)</td><td>\(-20\log_{10}\sqrt{26} = -14.15\)</td><td>\(-\tan^{-1}(1/5) = -11.31^\circ\)</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 손으로 낸 네 줄이 <code>gain_list</code>·<code>phase_list</code>의 둘째 열과 소수 둘째 자리까지 같다.
+    <code>phase_sum</code>이 \(\omega = 2\)와 \(\omega = 5\)에서 똑같이 −66.80°인 것도 눈여겨볼 만하다.
+    영점 2와 극점 5가 만드는 위상 「봉우리」는 두 값의 기하평균 \(\sqrt{2\cdot5} = 3.16\) rad/s를 중심으로 좌우 대칭이다 — ②절 그림에서 위상이 가장 높이 솟은 자리다.
+  </div>
+
+  <!-- ───────────────────────── ④ ───────────────────────── -->
+  <h2 id="s4">④ <code>bode</code>의 출력값 — <code>reshape</code>·<code>squeeze</code></h2>
+  <p>
+    이번에는 전체 시스템 \(G\)에 대해 같은 값을 직접 구한다. 요소별 합과 같은 숫자가 나와야 한다.
+    그런데 여기서 한 번 걸리는 것이 있다 — <code>bode</code>가 돌려주는 <code>mag</code>는 벡터가 아니다.
+  </p>
+
+<!-- mcode 08/b04_bode_outputs -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 전체 시스템 G의 gain, phase를 같은 주파수에서 구한다
+[mag_G, phase_G, wout] = bode(G, w);
+size(mag_G)
+mag_G = reshape(mag_G, [1, length(w)]);
+gain_G = 20*log10(mag_G)
+phase_G = reshape(phase_G, [1, length(w)])</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>ans =
+
+     1     1     6
+
+
+gain_G =
+
+   32.0503   12.8400    8.3863    3.6549   -0.7988  -20.0091
+
+
+phase_G =
+
+  -88.2834  -74.7449  -66.8014  -66.8014  -74.7449  -88.2834</code></pre>
+</div>
+<!-- /mcode -->
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>reshape(A, [m, n])</dt>
+      <dd>원소 개수는 그대로 두고 배열의 모양만 m×n으로 바꾼다. 여기서는 1×1×6 배열을 1×6 행 벡터로 폈다.</dd>
+    </dl>
+  </div>
+
+  <p>
+    <code>size(mag_G)</code>의 출력 <strong><code>1 1 6</code></strong>이 핵심이다. <code>mag</code>는 <strong>3차원 배열</strong>이다.
+    앞의 두 차원은 「출력 개수 × 입력 개수」이고 셋째 차원이 주파수다.
+    입력·출력이 여럿인 시스템(MIMO)이면 주파수마다 행렬 하나가 나오기 때문에 이 모양으로 통일해 둔 것이다.
+    이 과목의 시스템은 전부 입력 하나·출력 하나라서 앞의 두 차원이 늘 1×1이다.
+    그대로 <code>plot</code>에 넣으면 그래프가 그려지지 않거나 오류가 나므로, 벡터로 펴는 한 줄이 필요하다.
+  </p>
+  <p>
+    <code>gain_G</code>와 <code>phase_G</code>는 ③절의 <code>gain_sum</code>·<code>phase_sum</code>과 <strong>여섯 자리 모두 같다.</strong>
+    요소별로 구해 더한 값과 전체를 한 번에 구한 값이 같다 — ③절의 식이 숫자로 확인된 것이다.
+  </p>
+
+  <div class="box trap">
+    <p class="boxtitle">⚠️ <code>mag</code>는 dB가 아니다</p>
+    <p>
+      <code>bode(G)</code>가 그리는 그림은 dB인데, <code>[mag, phase] = bode(G, w)</code>가 돌려주는 <code>mag</code>는 <strong>배율</strong>이다.
+      그래서 dB로 보려면 반드시 <code>20*log10(mag)</code>을 거친다. 이 줄을 빠뜨리고 <code>mag</code>를 그대로 그리면
+      모양이 전혀 다른 곡선이 나오는데, 오류는 나지 않아 눈치채기 어렵다.
+      반대로 위상 <code>phase</code>는 그림과 같은 <strong>도(degree)</strong>다. 라디안이 아니다.
+    </p>
+  </div>
+
+  <!-- ───────────────────────── ⑤ ───────────────────────── -->
+  <h2 id="s5">⑤ 직접 그리기 — <code>semilogx</code></h2>
+  <p>
+    값을 꺼냈으면 직접 그릴 수 있다. 보드 선도의 가로축은 로그이므로 <code>plot</code> 대신 <strong>가로축만 로그</strong>인 <code>semilogx</code>를 쓴다.
+    앞의 여섯 개 주파수처럼 점이 듬성듬성하면 곡선이 꺾은선처럼 보인다.
+    그래서 <code>logspace</code>로 로그 간격 200개를 만들어 매끈하게 그렸다.
+  </p>
+
+<!-- mcode 08/b05_semilogx_self -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% gain, phase를 이용해 직접 bode plot 그리기 — 주파수를 촘촘하게
+w = logspace(-1, 2, 200);
+[mag_G, phase_G] = bode(G, w);
+gain_G = 20*log10(squeeze(mag_G));
+phase_G = squeeze(phase_G);
+figure(1)
+subplot(2,1,1)
+semilogx(w, gain_G)
+title('gain')
+ylabel('dB')
+grid on
+subplot(2,1,2)
+semilogx(w, phase_G)
+title('phase')
+ylabel('deg')
+xlabel('\omega (rad/s)')
+grid on</code></pre>
+<button onclick="copyCode(this)">복사</button>
+</div>
+<!-- /mcode -->
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>logspace(a, b, n)</dt>
+      <dd>\(10^a\)부터 \(10^b\)까지 <strong>로그 간격</strong>으로 n개의 수를 만든다. 2회의 <code>:</code>(등차)와 달리 10배 구간마다 같은 개수의 점이 들어간다.
+        여기서는 0.1~100 rad/s를 200개로 나눴다.</dd>
+      <dt>squeeze(A)</dt>
+      <dd>크기가 1인 차원을 모두 없앤다. 1×1×200 배열이 200×1 열 벡터가 된다. <code>reshape</code>와 달리 크기를 적어 줄 필요가 없다.
+        여기서는 <code>mag_G</code>·<code>phase_G</code>를 벡터로 펴는 데 썼다.</dd>
+      <dt>semilogx(x, y)</dt>
+      <dd><code>plot</code>과 같은데 가로축만 로그 눈금이다. 선 스타일·<code>title</code>·<code>grid</code>는 <code>plot</code>과 똑같이 붙는다.
+        여기서는 크기(dB)와 위상(deg)을 주파수에 대해 그렸다.</dd>
+      <dt>xlabel('\omega (rad/s)')</dt>
+      <dd>글자 안의 <code>\omega</code>는 그리스 문자 ω로 그려진다(TeX 표기). <code>\zeta</code>도 같은 방식이다.</dd>
+    </dl>
+  </div>
+
+  <figure>
+    <img src="assets/img/08_semilogx_self.png" width="560" alt="semilogx로 직접 그린 G의 크기(dB)와 위상(deg). bode 함수가 그린 그림과 같은 모양이다">
+    <figcaption>②절의 <code>bode(G)</code> 그림과 <strong>모양이 같은지</strong> 본다. 크기 칸에서 \(\omega = 0.1\)일 때 약 32 dB, \(\omega = 10\)일 때 0 dB 바로 아래(−0.80 dB) — ③절 표의 값이다.</figcaption>
+  </figure>
+
+  <!-- ───────────────────────── ⑥ ───────────────────────── -->
+  <h2 id="s6">⑥ 점근선 근사</h2>
+  <p>
+    MATLAB이 없던 시절에는 보드 선도를 어떻게 그렸을까? 각 요소를 <strong>직선 몇 개</strong>로 근사해 그리고 ③절대로 더했다.
+    이 직선을 <strong>점근선</strong>(asymptote)이라 하고, 직선이 꺾이는 주파수를 <strong>꺾임 주파수</strong>(corner frequency)라 한다.
+    지금도 이 근사가 쓸모 있는 이유는, 전달함수만 보고 보드 선도의 모양을 <strong>머릿속에서</strong> 그려 볼 수 있게 해 주기 때문이다.
+  </p>
+  <p>기본 요소 다섯 종류의 점근선을 표로 모은다. \(a\)는 꺾임 주파수다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>요소</th><th>크기 점근선</th><th>위상 점근선</th></tr>
+    <tr><td>상수 \(K\)</td><td>\(20\log_{10}K\) 수평선</td><td>\(0^\circ\) (\(K>0\))</td></tr>
+    <tr><td>미분기 \(s\)</td><td>+20 dB/decade, \(\omega = 1\)에서 0 dB</td><td>\(+90^\circ\)</td></tr>
+    <tr><td>적분기 \(1/s\)</td><td>−20 dB/decade, \(\omega = 1\)에서 0 dB</td><td>\(-90^\circ\)</td></tr>
+    <tr><td>1차 영점 \(s/a + 1\)</td><td>\(\omega < a\): 0 dB · \(\omega > a\): +20 dB/decade</td><td>\(a/10\)까지 0° → \(10a\)까지 +90°로 직선 (\(a\)에서 +45°)</td></tr>
+    <tr><td>1차 극점 \(1/(s/a + 1)\)</td><td>\(\omega < a\): 0 dB · \(\omega > a\): −20 dB/decade</td><td>\(a/10\)까지 0° → \(10a\)까지 −90°로 직선 (\(a\)에서 −45°)</td></tr>
+    <tr><td>2차 극점 \(\dfrac{\omega_n^2}{s^2 + 2\zeta\omega_n s + \omega_n^2}\)</td><td>\(\omega < \omega_n\): 0 dB · \(\omega > \omega_n\): −40 dB/decade</td><td>0° → −180°, \(\omega_n\)에서 −90°. \(\zeta\)가 작을수록 가파르다</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 1차 요소는 꺾임 주파수에서 기울기가 20 dB/decade씩 바뀐다. 영점이면 올라가고 극점이면 내려간다.
+    \(1/(s+5)\)처럼 \(s + a\) 꼴로 쓰인 요소는 먼저 \(\dfrac{1}{a}\cdot\dfrac{1}{s/a + 1}\)로 바꿔 상수와 표준형으로 나눈다 —
+    \(1/(s+5)\)는 상수 \(1/5\)(−13.98 dB)와 꺾임 주파수 5인 1차 극점의 곱이다.
+  </div>
+
+  <p>
+    점근선이 실제 곡선과 얼마나 다른지 \(G_4 = 1/(s+5)\) 하나로 확인한다. 점근선은 위 표의 규칙을 그대로 코드로 옮긴 것이다.
+  </p>
+
+<!-- mcode 08/b06_asymptote -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 1차 극점 1/(s+5)의 점근선과 실제 곡선 비교
+w = logspace(-1, 3, 300);
+[mag4, phase4] = bode(G4, w);
+gain4 = 20*log10(squeeze(mag4));
+phase4 = squeeze(phase4);
+% 점근선 — 꺾임 주파수 5 rad/s
+wc = 5;
+gain_asym = -20*log10(wc) * ones(size(w));            % 낮은 주파수: 1/5 → -14 dB
+high = w &gt; wc;
+gain_asym(high) = -20*log10(w(high));                 % 높은 주파수: 1/w → -20 dB/dec
+phase_asym = zeros(size(w));                          % wc/10 까지 0도
+mid = w &gt; wc/10 &amp; w &lt; wc*10;
+phase_asym(mid) = -45*(log10(w(mid)) - log10(wc/10)); % 두 decade 동안 -90도까지
+phase_asym(w &gt;= wc*10) = -90;
+figure(1)
+subplot(2,1,1)
+semilogx(w, gain4, 'b-', w, gain_asym, 'r--')
+legend('실제', '점근선')
+ylabel('dB')
+title('1/(s+5) gain')
+grid on
+subplot(2,1,2)
+semilogx(w, phase4, 'b-', w, phase_asym, 'r--')
+legend('실제', '점근선')
+ylabel('deg')
+xlabel('\omega (rad/s)')
+title('1/(s+5) phase')
+grid on
+% 꺾임 주파수에서 실제 값과 점근선의 차이
+[m5, p5] = bode(G4, wc);
+fprintf('w = %g 에서 실제 gain = %.2f dB, 점근선 = %.2f dB, 차이 = %.2f dB\n', ...
+        wc, 20*log10(m5), -20*log10(wc), 20*log10(m5) + 20*log10(wc))
+fprintf('w = %g 에서 실제 phase = %.1f deg\n', wc, p5)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>w = 5 에서 실제 gain = -16.99 dB, 점근선 = -13.98 dB, 차이 = -3.01 dB
+w = 5 에서 실제 phase = -45.0 deg</code></pre>
+</div>
+<!-- /mcode -->
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>high = w &gt; wc</dt>
+      <dd>비교 연산을 벡터에 쓰면 원소마다 참(1)·거짓(0)인 <strong>논리 배열</strong>이 나온다. <code>gain_asym(high) = …</code>처럼 인덱스 자리에 넣으면 참인 원소만 고친다(논리 인덱싱).
+        여기서는 꺾임 주파수보다 높은 쪽만 −20 dB/decade 직선으로 바꿨다. <code>&amp;</code>는 두 논리 배열의 원소별 「그리고」다.</dd>
+    </dl>
+  </div>
+
+  <figure>
+    <img src="assets/img/08_asymptote.png" width="560" alt="1/(s+5)의 실제 보드 선도(파란 실선)와 점근선(빨간 점선). 크기는 5 rad/s에서 꺾이고, 위상은 0.5에서 50 rad/s 사이를 직선으로 내려간다">
+    <figcaption>점근선과 실제 곡선이 가장 많이 벌어지는 곳이 <strong>꺾임 주파수 5 rad/s</strong>다. 거기서 실제 크기가 점근선보다 3 dB 아래에 있다(출력의 −3.01 dB).
+      위상은 꺾임 주파수에서 정확히 −45°로 만나고, 0.5와 50 근처에서 약 6°씩 어긋난다.</figcaption>
+  </figure>
+  <p>
+    출력 둘째 줄의 <strong>−45.0°</strong>와 첫 줄의 <strong>−16.99 dB</strong>는 ①절에서 손으로 구한 값과 같다.
+    차이 −3.01 dB는 \(20\log_{10}(1/\sqrt2)\)다 — 꺾임 주파수에서는 실수부와 허수부가 같아 크기가 \(\sqrt2\)배로 나뉘기 때문이다.
+    이 「3 dB」는 ⑦절의 대역폭 정의에 다시 나온다.
+  </p>
+
+  <h3 id="s6-2">2차 요소와 제동비</h3>
+  <p>
+    1차 요소는 점근선에서 많아야 3 dB 벗어난다. 2차 요소는 다르다. 제동비 \(\zeta\)가 작으면 꺾임 주파수 근처에서 곡선이 점근선 <strong>위로</strong> 솟는다.
+    \(\omega_n = 5\)로 두고 \(\zeta\)만 바꿔 겹쳐 그린다.
+  </p>
+
+<!-- mcode 08/b07_zeta_family -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 2차 요소 wn^2/(s^2 + 2*zeta*wn*s + wn^2) — 제동비에 따라 공진 봉우리가 달라진다
+wn = 5;
+zetas = [0.1 0.2 0.5 0.707 1];
+figure(1)
+hold on
+for k = 1:length(zetas)
+    z = zetas(k);
+    bode(tf(wn^2, [1 2*z*wn wn^2]))
+end
+hold off
+legend('\zeta = 0.1', '\zeta = 0.2', '\zeta = 0.5', '\zeta = 0.707', '\zeta = 1')
+grid on</code></pre>
+<button onclick="copyCode(this)">복사</button>
+</div>
+<!-- /mcode -->
+
+  <figure>
+    <img src="assets/img/08_zeta_family.png" width="560" alt="제동비 0.1, 0.2, 0.5, 0.707, 1인 2차 시스템의 보드 선도. 제동비가 작을수록 5 rad/s 근처의 크기 봉우리가 높고 위상이 가파르게 떨어진다">
+    <figcaption>크기 칸의 <strong>봉우리 높이</strong>를 본다. \(\zeta = 0.1\)이면 14 dB 가까이 솟고, \(\zeta = 0.707\) 이상이면 봉우리가 없다.
+      위상은 모든 \(\zeta\)에서 \(\omega_n = 5\)에서 −90°를 지나고, \(\zeta\)가 작을수록 그 자리에서 가파르게 떨어진다. 높은 주파수의 −40 dB/decade 직선은 모두 같다.</figcaption>
+  </figure>
+  <p>
+    이 봉우리가 <strong>공진</strong>(resonance)이다. 4회에서 \(\zeta\)가 작을수록 계단응답의 최대초과가 커진다는 것을 봤다.
+    주파수영역에서는 같은 사실이 「봉우리가 높다」로 보인다. 봉우리의 높이와 위치를 재는 것이 다음 절이다.
+  </p>
+
+  <!-- ───────────────────────── ⑦ ───────────────────────── -->
+  <h2 id="s7">⑦ 주파수응답 사양</h2>
+  <p>
+    6회에서 계단응답의 모양을 최대초과·첨두시간·정착시간 같은 숫자 몇 개로 요약했다.
+    주파수응답에도 같은 역할을 하는 숫자가 있다. 여기서는 2차 시스템 하나로 셋을 구한다.
+  </p>
+  $$
+  G_s(s) = \frac{25}{s^2 + 2s + 25}
+  \quad\Rightarrow\quad
+  \omega_n^2 = 25,\ \ 2\zeta\omega_n = 2
+  \quad\Rightarrow\quad
+  \omega_n = 5,\ \ \zeta = 0.2
+  $$
+  <div class="tablewrap">
+  <table>
+    <tr><th>사양</th><th>정의</th><th>무엇과 이어지나</th></tr>
+    <tr><td><strong>대역폭</strong> \(\omega_B\) (bandwidth)</td><td>크기가 DC 이득의 \(1/\sqrt2\)(−3 dB)로 떨어지는 주파수</td><td>클수록 응답이 빠르다 (상승시간이 짧다)</td></tr>
+    <tr><td><strong>공진 첨두값</strong> \(M_r\) (resonant peak)</td><td>크기 \(|G(j\omega)|\)의 최댓값</td><td>클수록 최대초과가 크다</td></tr>
+    <tr><td><strong>공진주파수</strong> \(\omega_r\) (resonant frequency)</td><td>최댓값이 나오는 주파수</td><td>감쇠진동주파수 \(\omega_d\)와 가깝다</td></tr>
+  </table>
+  </div>
+
+  <p>먼저 \(G_s\)의 보드 선도를 그린다. 이번에는 <code>w</code>를 주지 않아 MATLAB이 주파수를 골랐다.</p>
+
+<!-- mcode 08/b08_gs_bode -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 2차 시스템의 주파수 응답 구하기
+Gs = 25 / (s^2 + 2*s + 25)
+[mag_G, phase_G, wout] = bode(Gs);
+figure(2)
+% gain 그리기
+mag_G = reshape(mag_G, [length(wout), 1]);
+gain_G = 20*log10(mag_G);
+subplot(2,1,1)
+semilogx(wout, gain_G)
+title('gain')
+grid on
+% phase 그리기
+phase_G = reshape(phase_G, [length(wout), 1]);
+subplot(2,1,2)
+semilogx(wout, phase_G)
+title('phase')
+grid on</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>Gs =
+
+        25
+  --------------
+  s^2 + 2 s + 25
+
+Continuous-time transfer function.
+Model Properties</code></pre>
+</div>
+<!-- /mcode -->
+
+  <figure>
+    <img src="assets/img/08_gs_bode.png" width="560" alt="Gs=25/(s^2+2s+25)의 크기와 위상. 크기는 0dB에서 시작해 5 rad/s 근처에서 약 8dB 봉우리를 지나 -40dB/decade로 떨어진다">
+    <figcaption>\(\zeta = 0.2\)라서 ⑥절 그림의 주황 선과 같은 모양이다. 봉우리가 약 8 dB, 위상은 5 rad/s 근처에서 0°에서 −180°로 가파르게 떨어진다.</figcaption>
+  </figure>
+
+  <h3 id="s7-2"><code>bandwidth</code> · <code>getPeakGain</code></h3>
+
+<!-- mcode 08/b09_specs_matlab -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 대역폭(bandwidth)
+fb = bandwidth(Gs)
+% 첨두공진값(resonant peak), 공진주파수(resonant frequency)
+[gpeak, fpeak] = getPeakGain(Gs)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>fb =
+
+    7.5450
+
+
+gpeak =
+
+    2.5515
+
+
+fpeak =
+
+    4.7980</code></pre>
+</div>
+<!-- /mcode -->
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>fb = bandwidth(sys)</dt>
+      <dd>DC 이득에서 3 dB 떨어지는 첫 주파수(rad/s)를 돌려준다. 여기서는 \(G_s\)의 대역폭 7.5450 rad/s를 구했다.</dd>
+      <dt>[gpeak, fpeak] = getPeakGain(sys)</dt>
+      <dd>크기의 최댓값(<strong>배율</strong>, dB 아님)과 그 주파수(rad/s)를 돌려준다. 여기서는 공진 첨두값 2.5515와 공진주파수 4.7980을 구했다.</dd>
+    </dl>
+  </div>
+  <p>
+    변수 이름 <code>fb</code>·<code>fpeak</code>는 f(주파수)로 시작하지만 단위는 Hz가 아니라 <strong>rad/s</strong>다.
+    공진 첨두값 2.5515배는 dB로 \(20\log_{10}2.5515 = 8.14\) dB — 그림의 봉우리 높이다.
+  </p>
+
+  <h3 id="s7-3">공식으로 직접 계산</h3>
+  <p>
+    같은 세 값을 교재 공식으로 구해 맞춰 본다. 공식부터 유도한다.
+  </p>
+  <div class="box theory">
+    <p class="boxtitle">📐 이론과 잇기 — 2차 시스템의 공진과 대역폭</p>
+    <p>\(G(s) = \dfrac{\omega_n^2}{s^2 + 2\zeta\omega_n s + \omega_n^2}\)에 \(s = j\omega\)를 넣으면 \((j\omega)^2 = -\omega^2\)이므로</p>
+    $$
+    G(j\omega) = \frac{\omega_n^2}{(\omega_n^2 - \omega^2) + j\,2\zeta\omega_n\omega}
+    $$
+    <p>크기의 제곱은 분모의 실수부·허수부 제곱합으로 나눈 것이다. 분자·분모를 \(\omega_n^4\)로 나누고 \(u = (\omega/\omega_n)^2\)로 두면</p>
+    $$
+    |G(j\omega)|^2 = \frac{\omega_n^4}{(\omega_n^2 - \omega^2)^2 + (2\zeta\omega_n\omega)^2}
+                   = \frac{1}{(1-u)^2 + 4\zeta^2 u}
+                   = \frac{1}{D(u)}
+    $$
+    <p><strong>공진주파수</strong> — 크기가 최대인 곳은 \(D(u)\)가 최소인 곳이다. \(D\)를 \(u\)로 미분해 0으로 놓는다.</p>
+    $$
+    \frac{dD}{du} = -2(1-u) + 4\zeta^2 = 0
+    \quad\Rightarrow\quad
+    u_r = 1 - 2\zeta^2
+    \quad\Rightarrow\quad
+    \omega_r = \omega_n\sqrt{1 - 2\zeta^2}
+    $$
+    <p>\(u_r > 0\)이어야 하므로 \(\zeta < 1/\sqrt2 = 0.707\)일 때만 봉우리가 있다 — ⑥절 그림에서 \(\zeta = 0.707\)과 1의 선에 봉우리가 없던 이유다.</p>
+    <p><strong>공진 첨두값</strong> — \(u_r\)을 \(D\)에 다시 넣는다.</p>
+    $$
+    D(u_r) = (2\zeta^2)^2 + 4\zeta^2(1 - 2\zeta^2) = 4\zeta^4 + 4\zeta^2 - 8\zeta^4 = 4\zeta^2(1 - \zeta^2)
+    $$
+    $$
+    M_r = \frac{1}{\sqrt{D(u_r)}} = \frac{1}{2\zeta\sqrt{1 - \zeta^2}}
+    $$
+    <p><strong>대역폭</strong> — 크기가 \(1/\sqrt2\)이면 \(|G|^2 = 1/2\), 즉 \(D(u) = 2\)이다.</p>
+    $$
+    (1-u)^2 + 4\zeta^2 u = 2
+    \quad\Rightarrow\quad
+    u^2 - (2 - 4\zeta^2)\,u - 1 = 0
+    $$
+    <p>근의 공식에서 양수인 근만 남긴다.</p>
+    $$
+    u_B = (1 - 2\zeta^2) + \sqrt{(1 - 2\zeta^2)^2 + 1} = 1 - 2\zeta^2 + \sqrt{4\zeta^4 - 4\zeta^2 + 2}
+    $$
+    $$
+    \omega_B = \omega_n\sqrt{1 - 2\zeta^2 + \sqrt{4\zeta^4 - 4\zeta^2 + 2}}
+    $$
+    <p><strong>숫자를 넣어 본다</strong> (\(\omega_n = 5\), \(\zeta = 0.2\)).</p>
+    $$
+    \omega_r = 5\sqrt{1 - 0.08} = 5\sqrt{0.92} = 4.7958
+    $$
+    $$
+    M_r = \frac{1}{2(0.2)\sqrt{1 - 0.04}} = \frac{1}{0.4 \times 0.97980} = 2.5516
+    $$
+    $$
+    \omega_B = 5\sqrt{0.92 + \sqrt{0.0064 - 0.16 + 2}} = 5\sqrt{0.92 + 1.35882} = 5 \times 1.50958 = 7.5479
+    $$
+  </div>
+  <p>코드는 이 세 식을 그대로 옮긴 것이다. 공진 첨두값은 공식과 \(|G_s(j\omega_r)|\) 두 가지로 구했다.</p>
+
+<!-- mcode 08/b10_specs_formula -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 제동비와 고유주파수로 직접 계산
+[wn, zeta] = damp(Gs);
+wn = wn(1); zeta = zeta(1);
+fprintf('damping ratio = %1.1f, natural frequency = %1.1f\n', zeta, wn)
+fpeak_myself = wn*sqrt(1 - 2*zeta^2)
+% 공식으로 구한 첨두공진값과 G(j*w_peak)의 크기
+gpeak_formula = 1 / (2*zeta*sqrt(1 - zeta^2))
+gpeak_myself = abs(evalfr(Gs, 1i*fpeak_myself))
+fb_myself = wn*sqrt(1 - 2*zeta^2 + sqrt(4*zeta^4 - 4*zeta^2 + 2))</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>damping ratio = 0.2, natural frequency = 5.0
+
+fpeak_myself =
+
+    4.7958
+
+
+gpeak_formula =
+
+    2.5516
+
+
+gpeak_myself =
+
+    2.5516
+
+
+fb_myself =
+
+    7.5479</code></pre>
+</div>
+<!-- /mcode -->
+
+  <p>
+    공식으로 구한 세 값 4.7958 · 2.5516 · 7.5479가 바로 위 유도의 숫자와 같다.
+    그런데 <code>bandwidth</code>·<code>getPeakGain</code>의 결과(7.5450 · 2.5515 · 4.7980)와 비교하면 <strong>소수 셋째 자리부터 조금씩 다르다.</strong>
+    공식이 틀렸나, 함수가 틀렸나?
+  </p>
+
+  <div class="box trap">
+    <p class="boxtitle">⚠️ 함수의 기본 설정이 공식과 다르다</p>
+    <p>
+      둘 다 틀리지 않았다. 함수의 <strong>기본값</strong>이 공식의 정의와 조금 다를 뿐이다.
+    </p>
+    <ul>
+      <li><code>bandwidth</code>는 기본적으로 <strong>정확히 −3 dB</strong> 떨어지는 점을 찾는다. 공식은 \(1/\sqrt2\), 즉 \(-10\log_{10}2 = -3.0103\) dB 점이다. 0.01 dB 차이가 주파수에서 0.003 rad/s 차이를 만든다.</li>
+      <li><code>getPeakGain</code>은 계산 시간을 아끼려고 기본적으로 <strong>상대 오차 1%</strong> 안에서 봉우리를 찾고 멈춘다.</li>
+    </ul>
+    <p>둘째 인자로 기준을 공식과 똑같이 주면 값도 똑같아진다.</p>
+<!-- mcode 08/b11_specs_exact -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 기준을 공식과 똑같이 맞추면 값도 똑같아진다
+fb_exact = bandwidth(Gs, -10*log10(2))      % -3 dB 대신 1/sqrt(2) = -3.0103 dB
+[gpeak_exact, fpeak_exact] = getPeakGain(Gs, 1e-6)   % 상대 오차 허용치 1% → 1e-6</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>fb_exact =
+
+    7.5479
+
+
+gpeak_exact =
+
+    2.5516
+
+
+fpeak_exact =
+
+    4.7958</code></pre>
+</div>
+<!-- /mcode -->
+    <p>세 값이 이제 공식(7.5479 · 2.5516 · 4.7958)과 표시된 자리까지 같다. MATLAB 함수의 결과가 손계산과 어긋나면
+      <strong>그 함수의 기본 인자</strong>를 먼저 의심하면 덜 헤맨다. <code>doc bandwidth</code>에 둘째 인자 <code>dbdrop</code>이 설명돼 있다.</p>
+  </div>
+
+  <div class="box theory">
+    <p class="boxtitle">📐 이론과 잇기 — 공진 첨두값과 최대초과</p>
+    <p>같은 \(\zeta = 0.2\)로 4회의 최대초과 공식을 계산하면</p>
+    $$
+    \%OS = e^{-\zeta\pi/\sqrt{1-\zeta^2}} \times 100 = e^{-0.6283/0.97980} \times 100 = e^{-0.6413}\times 100 = 52.7\%
+    $$
+    <p>\(M_r\)과 \(\%OS\)는 둘 다 \(\zeta\) 하나로만 정해지는 값이다. 그래서 「봉우리가 8 dB나 솟는 시스템은 계단응답이 절반 넘게 튀어 오른다」처럼
+      주파수영역의 숫자를 시간영역의 모양으로 옮겨 읽을 수 있다. 공진주파수 4.80 rad/s도 감쇠진동주파수
+      \(\omega_d = \omega_n\sqrt{1-\zeta^2} = 4.90\) rad/s와 가깝다 — 계단응답이 출렁이는 빠르기다.</p>
+  </div>
+
+  <h3 id="s7-4">보드 선도에 사양 표시</h3>
+  <p>
+    구한 두 점을 그림에 찍는다. 크기 칸이 dB이므로 공진 첨두값도 <code>20*log10</code>을 거쳐 찍고,
+    대역폭 점은 세로 위치를 \(-10\log_{10}2\) dB(= \(1/\sqrt2\))에 둔다.
+  </p>
+
+<!-- mcode 08/b12_mark -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% bode plot에 사양 표시
+figure(2)
+subplot(2,1,1)
+hold on
+plot(fpeak, 20*log10(gpeak), 'ro')
+plot(fb, -10*log10(2), 'rx')    % 1/sqrt(2) 를 dB로
+hold off
+legend('gain', '공진 첨두', '대역폭 (-3 dB)')</code></pre>
+<button onclick="copyCode(this)">복사</button>
+</div>
+<!-- /mcode -->
+
+  <figure>
+    <img src="assets/img/08_mark.png" width="560" alt="Gs의 크기 그래프에 공진 첨두(빨간 원, 약 4.8 rad/s에서 8.1dB)와 대역폭 점(빨간 x, 약 7.5 rad/s에서 -3dB)을 표시한 그림">
+    <figcaption>빨간 원이 <strong>봉우리 꼭대기</strong>에, 빨간 ×가 0 dB에서 3 dB 내려온 자리에 정확히 얹혔는지 본다.
+      대역폭은 봉우리보다 오른쪽에 있다 — 봉우리를 지나 떨어지다가 −3 dB를 지나는 곳이다.</figcaption>
+  </figure>
+
+  <!-- ───────────────────────── ⑧ ───────────────────────── -->
+  <h2 id="s8">⑧ 이득 여유와 위상 여유 — <code>margin</code></h2>
+  <p>
+    지금까지는 폐루프 전달함수 \(G_s\)의 보드 선도를 봤다. 보드 선도가 설계에서 가장 많이 쓰이는 자리는 따로 있다 —
+    <strong>개루프</strong> 전달함수 \(KG(s)\)의 보드 선도 한 장으로 <strong>폐루프가 얼마나 안정한지</strong>를 읽는 것이다.
+  </p>
+  <div class="box theory">
+    <p class="boxtitle">📐 이론과 잇기 — −1이 되는 점</p>
+    <p>단위 피드백 폐루프의 특성방정식은 \(1 + KG(s) = 0\), 즉 \(KG(s) = -1\)이다. 5회 근궤적의 각도·크기 조건과 같은 식이다.
+      \(-1\)은 크기가 1(0 dB)이고 각도가 −180°인 복소수다. 극점이 허수축 위 \(s = j\omega\)에 오면 폐루프가 안정의 경계에 서는데,
+      그때 보드 선도 위에서 <strong>크기 0 dB와 위상 −180°가 같은 주파수에서</strong> 동시에 일어난다. 이 경계까지 얼마나 남았는지를 두 숫자로 잰다.</p>
+    <ul>
+      <li><strong>이득 여유</strong> GM (gain margin) — 위상이 −180°인 주파수 \(\omega_{pc}\)에서 크기가 1이 되려면 이득을 몇 배 더 키울 수 있나: \(\ \mathrm{GM} = 1/|KG(j\omega_{pc})|\)</li>
+      <li><strong>위상 여유</strong> PM (phase margin) — 크기가 1(0 dB)인 주파수 \(\omega_{gc}\)에서 위상이 −180°까지 얼마나 남았나: \(\ \mathrm{PM} = 180^\circ + \angle KG(j\omega_{gc})\)</li>
+    </ul>
+    <p>둘 다 양수면 폐루프가 안정하다(이 과목에서 다루는 개루프가 안정한 시스템의 경우).</p>
+  </div>
+  <p>
+    예제는 7회의 플랜트 \(G(s) = \dfrac{1}{(s+3)(s+5)(s+10)}\)에 비례 이득 \(K = 242\)를 건 것이다.
+    7회 Simulink 모델(<code>simulink_pid_design.slx</code>)의 P 제어 블록에 들어 있는 이득이다.
+  </p>
+
+<!-- mcode 08/b13_margin -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 개루프 전달함수 K*G(s) — 7회 예제의 플랜트에 비례 이득 K = 242
+otf = 1/((s+3)*(s+5)*(s+10));
+K = 242;
+figure(3)
+margin(K*otf)
+grid on
+[Gm, Pm, Wcg, Wcp] = margin(K*otf)
+Gm_dB = 20*log10(Gm)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>Gm =
+
+    6.4479
+
+
+Pm =
+
+   92.8820
+
+
+Wcg =
+
+    9.7479
+
+
+Wcp =
+
+    2.7672
+
+
+Gm_dB =
+
+   16.1884</code></pre>
+</div>
+<!-- /mcode -->
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>margin(L)</dt>
+      <dd>출력 인자 없이 부르면 개루프 <code>L</code>의 보드 선도를 그리고 이득 여유·위상 여유를 제목에 적고, 두 교차점을 표시한다.</dd>
+      <dt>[Gm, Pm, Wcg, Wcp] = margin(L)</dt>
+      <dd>그리지 않고 값만 돌려준다. <code>Gm</code>은 <strong>배율</strong>(dB 아님), <code>Pm</code>은 도, <code>Wcg</code>는 위상 −180° 교차 주파수(\(\omega_{pc}\)),
+        <code>Wcp</code>는 0 dB 교차 주파수(\(\omega_{gc}\))다. 여기서는 \(K = 242\)일 때의 여유를 구했다.</dd>
+    </dl>
+  </div>
+
+  <figure>
+    <img src="assets/img/08_margin.png" width="560" alt="242/((s+3)(s+5)(s+10))의 margin 그림. 제목에 Gm=16.2dB(9.75rad/s), Pm=92.9deg(2.77rad/s). 크기 칸 9.75rad/s에 점, 위상 칸 2.77rad/s에 점과 -180도 기준선이 있다">
+    <figcaption>위 칸의 점은 <strong>위상이 −180°인 주파수(9.75 rad/s)에서의 크기</strong>다. 0 dB 선까지 16.2 dB가 남았다 — 이것이 이득 여유다.
+      아래 칸의 점은 <strong>크기가 0 dB인 주파수(2.77 rad/s)에서의 위상</strong>이다. −180° 선까지 92.9°가 남았다 — 이것이 위상 여유다.</figcaption>
+  </figure>
+
+  <p>
+    <strong>출력 읽는 법.</strong> <code>Gm = 6.4479</code>는 「이득을 6.45배까지 키워도 된다」는 뜻이고, dB로 바꾼 <code>Gm_dB = 16.1884</code>가 그림 제목의 16.2 dB다.
+    이 숫자가 맞는지 4회에서 배운 안정도 판별(Routh)로 따로 확인해 본다.
+  </p>
+  <div class="box theory">
+    <p class="boxtitle">📐 이론과 잇기 — Routh 판별과 맞춰 보기</p>
+    <p>폐루프 특성방정식은</p>
+    $$
+    (s+3)(s+5)(s+10) + K = s^3 + 18s^2 + 95s + (150 + K) = 0
+    $$
+    <p>3차식 \(s^3 + a_2 s^2 + a_1 s + a_0\)이 안정하려면 모든 계수가 양수이고 \(a_2a_1 > a_0\)이어야 한다(Routh 표의 \(s^1\) 행).</p>
+    $$
+    18 \times 95 > 150 + K \quad\Rightarrow\quad K < 1710 - 150 = 1560
+    $$
+    <p>경계 \(K = 1560\)에서 Routh 표의 \(s^2\) 행이 보조방정식 \(18s^2 + 1710 = 0\)을 주므로 극점은 \(s = \pm j\sqrt{95} = \pm j9.7468\)이다.
+      이득 여유는 \(1560/242 = 6.4463\)배 = 16.19 dB.</p>
+    <p>MATLAB의 <code>Wcg = 9.7479</code>, <code>Gm = 6.4479</code>와 상대 차이 0.03% 안에서 맞는다.
+      손계산은 정확한 값이고, 남은 작은 차이는 <code>margin</code>이 교차점을 수치 계산으로 찾는 데서 오는 것으로 보인다.</p>
+  </div>
+
+  <p>
+    이득 여유만큼 이득을 키우면 정말 경계에 서는지, 폐루프 극점을 직접 구해 본다. <code>allmargin</code>은 여유 값을 구조체 하나로 모두 돌려준다.
+  </p>
+
+<!-- mcode 08/b14_margin_check -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 이득 여유만큼 K를 키우면 폐루프가 안정 경계에 선다
+K_limit = K * Gm
+pole(feedback(K_limit*otf, 1))
+% allmargin 은 여유를 구조체 하나로 모두 돌려준다
+mg = allmargin(K*otf);
+disp(mg)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>K_limit =
+
+   1.5604e+03
+
+
+ans =
+
+ -18.0010 + 0.0000i
+   0.0005 + 9.7477i
+   0.0005 - 9.7477i
+
+     GainMargin: 6.4479
+    GMFrequency: 9.7479
+    PhaseMargin: 92.8820
+    PMFrequency: 2.7672
+    DelayMargin: 0.5858
+    DMFrequency: 2.7672
+         Stable: 1</code></pre>
+</div>
+<!-- /mcode -->
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>mg = allmargin(L)</dt>
+      <dd>이득 여유·위상 여유·지연 여유와 각각의 주파수, 폐루프 안정 여부(<code>Stable</code>)를 <strong>구조체</strong> 하나에 담아 돌려준다.
+        교차점이 여러 개면 전부 담는다(<code>margin</code>은 가장 작은 여유 하나만). 여기서는 \(K = 242\)의 여유를 한 번에 봤다.</dd>
+      <dt>disp(mg)</dt>
+      <dd>구조체를 <code>disp</code>로 찍으면 「필드 이름: 값」이 한 줄씩 나온다. 필드 하나는 <code>mg.GainMargin</code>처럼 점(<code>.</code>)으로 꺼낸다.</dd>
+    </dl>
+  </div>
+  <p>
+    <strong>출력 읽는 법.</strong> <code>K_limit = 1.5604e+03</code>(1560.4)로 폐루프를 만들면 극점 셋 중 둘이 <strong>0.0005 ± j9.7477</strong>이다.
+    실수부가 사실상 0, 허수부가 \(\sqrt{95}\) — 허수축 위에 올라앉은 것이다. 이득 여유가 「안정의 경계까지 남은 이득 배수」라는 정의가 극점으로 확인됐다.
+    <code>allmargin</code>의 <code>Stable: 1</code>은 \(K = 242\)의 폐루프가 안정하다는 뜻이고,
+    <code>DelayMargin: 0.5858</code>은 루프 안에 0.59초까지의 시간 지연이 생겨도 견딘다는 뜻이다(위상 여유 92.9°를 \(\omega_{gc}\)로 나눠 초로 바꾼 값).
+  </p>
+
+  <div class="box trap">
+    <p class="boxtitle">⚠️ <code>margin</code>에는 개루프를 넣는다</p>
+    <p>
+      여유는 <strong>개루프</strong> \(KG(s)\)의 보드 선도에서 읽는 값이다. <code>feedback(K*otf, 1)</code>로 이미 닫은 폐루프를 <code>margin</code>에 넣으면
+      오류 없이 숫자가 나오지만, 그것은 「그 폐루프를 한 번 더 피드백으로 감았을 때」의 여유라서 지금 시스템과 상관이 없다.
+      ⑦절의 대역폭·공진은 반대로 <strong>폐루프</strong>의 사양이다. 무엇을 넣는지가 함수마다 다르다.
+    </p>
+  </div>
+
+  <!-- ───────────────────────── 실습 ───────────────────────── -->
+  <h2 id="lab">🧪 실습</h2>
+  <div class="lab-block">
+    <p class="boxtitle">제동비를 바꾸면 주파수응답 사양이 어떻게 움직이나 · 이득을 키우면 여유가 어떻게 줄어드나</p>
+    <p><strong>이걸 해 보면 무엇을 알게 되나:</strong> ⑦절의 공식과 MATLAB 함수가 다른 \(\zeta\)에서도 맞는지,
+      그리고 이득 여유가 정말 「이득을 몇 배 더 키울 수 있나」인지를 직접 확인한다.</p>
+    <p><strong>준비물:</strong> MATLAB, 이 회차의 코드 조각. 스크립트 파일(<code>lab08.m</code>) 하나에 이어서 쓴다.</p>
+    <ol>
+      <li>(5분) <code>Gs = 25/(s^2 + 2*zeta*5*s + 25)</code> 꼴로 \(\zeta = 0.1\)인 시스템을 만들고 <code>bode</code>로 그린다.</li>
+      <li>(10분) ⑦절의 세 공식으로 \(\omega_r\), \(M_r\), \(\omega_B\)를 계산하고, <code>bandwidth(Gs, -10*log10(2))</code>와 <code>getPeakGain(Gs, 1e-6)</code>의 결과와 나란히 <code>fprintf</code>로 찍는다.</li>
+      <li>(5분) 같은 것을 \(\zeta = 0.5\)로 반복한다. \(\omega_r\)과 \(M_r\)의 공식이 여전히 쓸 수 있는 범위인지(\(\zeta < 0.707\)) 확인한다.</li>
+      <li>(5분) ⑧절의 <code>otf</code>에 \(K = 500\), \(1000\), \(1500\)을 차례로 넣어 <code>[Gm, Pm] = margin(K*otf)</code>를 구하고, <code>K*Gm</code>을 함께 찍는다.</li>
+      <li>(5분) \(K = 1500\)과 \(K = 1600\)으로 <code>step(feedback(K*otf, 1))</code>을 그려 비교한다.</li>
+    </ol>
+    <p><strong>이렇게 되면 성공이다:</strong> 2·3단계에서 공식과 함수의 값이 표시된 자리까지 같다.
+      4단계의 <code>K*Gm</code>이 세 경우 모두 약 1560으로 같고, \(K\)가 커질수록 <code>Gm</code>과 <code>Pm</code>이 함께 줄어든다.
+      5단계에서 \(K = 1500\)은 오래 출렁이다가 결국 가라앉고, \(K = 1600\)은 출렁임이 점점 커진다.</p>
+  </div>
+
+  <!-- ───────────────────────── 연습문제 ───────────────────────── -->
+  <h2 id="exercise">📝 연습문제</h2>
+  <p>답은 싣지 않는다. 손으로 먼저 구하고 MATLAB으로 확인해 보세요.</p>
+  <ol>
+    <li>
+      \(G(s) = \dfrac{100(s+1)}{s(s+10)(s+20)}\)를 상수와 표준형(\(s/a+1\) 꼴)의 곱으로 고쳐 쓰고, 크기 점근선의 꺾임 주파수와 각 구간의 기울기(dB/decade)를 적으세요.
+      \(\omega = 0.1\)에서 점근선 값(dB)을 손으로 구한 뒤 <code>bode(G, 0.1)</code>로 얻은 크기와 비교하세요.
+    </li>
+    <li>
+      ③절의 <code>for</code> 문을 그대로 써서 연습문제 1의 \(G\)를 기본 요소 네 개(상수, \(s+1\), \(1/s\), \(1/((s+10)(s+20))\))로 쪼개고,
+      \(\omega = 1, 10, 100\)에서 요소별 dB 합이 <code>bode(G, w)</code>의 결과와 같은지 확인하는 코드를 쓰세요.
+    </li>
+    <li>
+      \(\omega_n = 10\)인 2차 시스템에서 공진 첨두값이 \(M_r = 1.5\)가 되는 \(\zeta\)를 공식으로 구하고, 그 시스템을 만들어 <code>getPeakGain</code>으로 확인하세요.
+      같은 \(\zeta\)로 최대초과(%)도 계산해 보세요.
+    </li>
+    <li>
+      ⑧절의 <code>otf</code>에서 위상 여유가 45°가 되는 \(K\)를 찾고 싶다. 위상이 −135°가 되는 주파수를 <code>bode</code>의 출력에서 찾고,
+      그 주파수에서 크기가 1이 되도록 \(K\)를 정하는 코드를 쓰세요. 구한 \(K\)를 <code>margin</code>에 넣어 PM이 45°인지 확인하세요.
+    </li>
+  </ol>
+
+  <!-- ───────────────────────── 점검 ───────────────────────── -->
+  <h2 id="check">✅ 점검</h2>
+  <ul class="check">
+    <li><input type="checkbox" id="c1"><label for="c1">보드 선도의 두 칸이 \(|G(j\omega)|\)(dB)와 \(\angle G(j\omega)\)(deg)라는 것을 설명할 수 있다</label></li>
+    <li><input type="checkbox" id="c2"><label for="c2">전달함수의 곱이 dB·deg에서 합이 되는 이유를 로그의 성질로 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c3"><label for="c3"><code>[mag, phase, w] = bode(G, w)</code>의 <code>mag</code>가 1×1×N 배율이라 <code>squeeze</code>와 <code>20*log10</code>을 거쳐야 한다는 것을 안다</label></li>
+    <li><input type="checkbox" id="c4"><label for="c4">1차 극점의 점근선을 그리고, 꺾임 주파수에서 실제 값이 3 dB 아래라는 것을 안다</label></li>
+    <li><input type="checkbox" id="c5"><label for="c5">대역폭·공진 첨두값·공진주파수를 공식과 함수로 구하고, 값이 다를 때 함수의 기본 인자를 확인할 수 있다</label></li>
+    <li><input type="checkbox" id="c6"><label for="c6"><code>margin</code>에 개루프를 넣어 이득 여유·위상 여유를 구하고, 이득 여유를 Routh 경계 이득과 맞춰 볼 수 있다</label></li>
+  </ul>
+
+  <!-- ───────────────────────── 조금 더 ───────────────────────── -->
+  <h2 id="more">조금 더 알아두면</h2>
+  <details class="fold">
+    <summary>보드 선도를 Hz로, 또는 크기를 배율로 그리고 싶을 때 — <code>bodeplot</code></summary>
+    <p><code>bode</code>는 언제나 rad/s · dB · deg로 그린다. 단위를 바꾸려면 <code>bodeplot</code>으로 그리고 옵션 객체를 넘긴다.</p>
+    <pre class="lang-matlab"><code>opts = bodeoptions;
+opts.FreqUnits = 'Hz';      % 가로축을 Hz로
+opts.MagUnits = 'abs';      % 세로축을 배율로
+bodeplot(G, opts)</code></pre>
+    <p>실험실에서 함수 발생기로 재는 주파수는 보통 Hz이므로, 측정값과 비교할 때 쓸모가 있다. \(\omega = 2\pi f\)를 잊지 않는다.</p>
+  </details>
+  <details class="fold">
+    <summary>나이퀴스트 선도 — <code>nyquist</code></summary>
+    <p>보드 선도는 크기와 위상을 두 그래프로 나눠 그렸다. 같은 \(G(j\omega)\)를 복소평면 위의 점 하나로 찍고 \(\omega\)를 0에서 ∞로 움직이면 곡선 하나가 된다.
+      이것이 나이퀴스트 선도이고, <code>nyquist(K*otf)</code>로 그린다. ⑧절의 「−1이 되는 점」이 이 그림에서는 말 그대로 점 \((-1, 0)\)이다.
+      곡선이 그 점을 얼마나 멀리 돌아가는지가 이득 여유·위상 여유다. 개루프가 불안정하거나 교차가 여러 번 일어나는 시스템은 보드 선도보다 나이퀴스트 선도로 판단하는 것이 안전하다.</p>
+  </details>
+
+  <footer>
+    <a href="matlab_07.html">← 07회 근궤적을 이용한 PID 제어기 설계</a> · <a href="index.html">회차 목록</a>
+  </footer>
+</main>
+</div>
+<script src="../assets/site.js" defer></script>
+</body>
+</html>
