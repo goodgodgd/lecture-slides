@@ -231,14 +231,15 @@
   <h3 id="s3-products">설치할 제품</h3>
   <p>
     설치 프로그램의 제품 선택 화면에는 툴박스가 수십 개 나온다. 전부 고르면 용량이 크게 늘고 설치 시간도 길어진다.
-    이 실습에 필요한 것은 아래 다섯 개다.
+    이 실습에 필요한 것은 아래 여섯 개다.
   </p>
   <div class="tablewrap">
   <table>
     <tr><th>제품</th><th>필요한가</th><th>어디서 쓰나</th></tr>
     <tr><td><strong>MATLAB</strong></td><td>필수</td><td>전부</td></tr>
     <tr><td><strong>Control System Toolbox</strong></td><td>필수</td><td>04~08회 — <code>tf</code> · <code>step</code> · <code>rlocus</code> · <code>bode</code></td></tr>
-    <tr><td><strong>Simulink</strong></td><td>필수</td><td>07회 — PID 제어기를 블록선도로 시뮬레이션</td></tr>
+    <tr><td><strong>Simulink</strong></td><td>필수</td><td>07 · 09~11회 — 블록 선도로 시뮬레이션</td></tr>
+    <tr><td><strong>Simscape</strong></td><td>필수</td><td>10 · 11회 — 질량 · 스프링 · 모터 같은 부품을 이어 물리 모델을 만든다</td></tr>
     <tr><td>Symbolic Math Toolbox</td><td>권장</td><td>05회 — Routh 표를 \(K\)가 들어간 식으로 세울 때 쓴다</td></tr>
     <tr><td>Simulink Control Design</td><td>선택</td><td>Simulink 모델에서 PID 이득을 자동으로 맞출 때</td></tr>
   </table>
@@ -277,24 +278,22 @@
     아래는 스크립트 하나를 실행한 직후의 모습이다. 무엇이 어디에 있는지부터 보자.
   </p>
   <figure>
-    <a href="assets/img/01_desktop.png"><img src="assets/img/01_desktop.png" alt="MATLAB R2026b 데스크톱. 위에 툴스트립, 왼쪽에 Files와 Workspace, 가운데 위에 Editor, 오른쪽 위에 Figures, 아래에 Command Window가 있다"></a>
+    <a href="assets/img/01_desktop.png"><img src="assets/img/01_desktop.png" alt="MATLAB R2026b 데스크톱. 번호 1 툴스트립, 2 주소 막대, 3 Files, 4 Workspace, 5 Editor, 6 Figures, 7 Command Window에 빨간 상자가 있다"></a>
     <figcaption>
-      왼쪽 위 <strong>Files</strong>(현재 폴더의 파일), 왼쪽 아래 <strong>Workspace</strong>(변수 목록), 가운데 위 <strong>Editor</strong>(스크립트 편집기),
-      오른쪽 위 <strong>Figures</strong>(그림 창), 아래 <strong>Command Window</strong>(명령 창).
-      명령 창의 <code>&gt;&gt; first_script</code> 줄이 편집기의 파일을 실행한 기록이고, 그 아래가 실행 결과다.
+      번호는 아래 표의 번호와 같다. 명령 창의 <code>&gt;&gt; first_script</code> 줄이 편집기의 파일을 실행한 기록이고, 그 아래가 실행 결과다.
       그림을 누르면 크게 보인다. 주소 막대의 경로는 리눅스 경로다 — 윈도우에서는 <code>C:\Users\이름\Documents\MATLAB</code>처럼 보인다.
     </figcaption>
   </figure>
   <div class="tablewrap">
   <table>
     <tr><th>창</th><th>하는 일</th><th>어떻게 쓰나</th></tr>
-    <tr><td><strong>툴스트립</strong> (맨 위 탭과 버튼)</td><td>HOME · PLOTS · APPS · EDITOR 같은 탭에 기능이 모여 있다</td><td>지금 무엇을 선택했느냐에 따라 탭이 바뀐다 — 그림을 누르면 FIGURE 탭이 뜬다</td></tr>
-    <tr><td><strong>주소 막대</strong> (툴스트립 아래)</td><td><strong>현재 폴더</strong>(current folder)의 경로</td><td>MATLAB은 이 폴더에 있는 스크립트를 이름만으로 실행할 수 있다 (⑦절)</td></tr>
-    <tr><td><strong>Files</strong></td><td>현재 폴더 안의 파일 목록</td><td>파일을 두 번 누르면 편집기에서 열린다</td></tr>
-    <tr><td><strong>Workspace</strong></td><td>지금 메모리에 있는 변수의 이름 · 값 · 크기 · 종류</td><td>코드가 만든 변수가 기대한 모양인지 확인한다</td></tr>
-    <tr><td><strong>Editor</strong></td><td>스크립트·함수 파일을 쓰고 고친다</td><td>코드는 여기에 쓰고 저장한다</td></tr>
-    <tr><td><strong>Command Window</strong></td><td><code>&gt;&gt;</code> 뒤에 명령을 치면 바로 실행하고 결과를 찍는다</td><td>짧은 계산, 변수 값 확인, 도움말</td></tr>
-    <tr><td><strong>Figures</strong></td><td><code>plot</code>·<code>step</code> 등이 그린 그림</td><td>처음에는 따로 떨어진 창으로 뜬다. 창 오른쪽 위 버튼으로 데스크톱 안에 붙일 수 있다</td></tr>
+    <tr><td><span class="mk">1</span> <strong>툴스트립</strong> (맨 위 탭과 버튼)</td><td>HOME · PLOTS · APPS · EDITOR 같은 탭에 기능이 모여 있다</td><td>지금 무엇을 선택했느냐에 따라 탭이 바뀐다 — 그림을 누르면 FIGURE 탭이 뜬다</td></tr>
+    <tr><td><span class="mk">2</span> <strong>주소 막대</strong> (툴스트립 아래)</td><td><strong>현재 폴더</strong>(current folder)의 경로</td><td>MATLAB은 이 폴더에 있는 스크립트를 이름만으로 실행할 수 있다 (⑦절)</td></tr>
+    <tr><td><span class="mk">3</span> <strong>Files</strong></td><td>현재 폴더 안의 파일 목록</td><td>파일을 두 번 누르면 편집기에서 열린다</td></tr>
+    <tr><td><span class="mk">4</span> <strong>Workspace</strong></td><td>지금 메모리에 있는 변수의 이름 · 값 · 크기 · 종류</td><td>코드가 만든 변수가 기대한 모양인지 확인한다</td></tr>
+    <tr><td><span class="mk">5</span> <strong>Editor</strong></td><td>스크립트·함수 파일을 쓰고 고친다</td><td>코드는 여기에 쓰고 저장한다</td></tr>
+    <tr><td><span class="mk">6</span> <strong>Figures</strong></td><td><code>plot</code>·<code>step</code> 등이 그린 그림</td><td>처음에는 따로 떨어진 창으로 뜬다. 창 오른쪽 위 버튼으로 데스크톱 안에 붙일 수 있다</td></tr>
+    <tr><td><span class="mk">7</span> <strong>Command Window</strong></td><td><code>&gt;&gt;</code> 뒤에 명령을 치면 바로 실행하고 결과를 찍는다</td><td>짧은 계산, 변수 값 확인, 도움말</td></tr>
   </table>
   </div>
   <div class="interp">
@@ -305,12 +304,16 @@
 
   <p>맨 위 <strong>HOME</strong> 탭에는 처음에 자주 누르는 버튼이 모여 있다.</p>
   <figure>
-    <img src="assets/img/01_home_tab.png" alt="HOME 탭의 툴스트립. New Script, New Live Script, New, Open, Import Data, Save Workspace, Clean Data, New Variable, Favorites, Run and Time, Simulink, Layout, Set Path, Add-Ons, Settings, Help 버튼이 보인다">
-    <figcaption>
-      왼쪽 끝 <strong>New Script</strong>(새 스크립트 <code>.m</code>)와 <strong>New Live Script</strong>(새 라이브 스크립트 <code>.mlx</code>),
-      가운데 <strong>Simulink</strong>(07회), 오른쪽 <strong>Add-Ons</strong>(툴박스 추가 설치)와 <strong>Layout</strong>(창 배치를 기본값으로 되돌리기)을 본다.
-    </figcaption>
+    <img src="assets/img/01_home_tab.png" alt="HOME 탭의 툴스트립. 번호 1 New Script, 2 New Live Script, 3 Simulink, 4 Layout, 5 Add-Ons에 빨간 상자가 있다">
+    <figcaption>HOME 탭. 나머지 버튼은 쓸 일이 생길 때 그 회차에서 소개한다.</figcaption>
   </figure>
+  <ol class="marks">
+    <li><span class="mk">1</span><strong>New Script</strong> — 새 스크립트(<code>.m</code>)를 편집기에 연다. ⑦절에서 쓴다.</li>
+    <li><span class="mk">2</span><strong>New Live Script</strong> — 새 라이브 스크립트(<code>.mlx</code>)를 연다. ⑧절에서 쓴다.</li>
+    <li><span class="mk">3</span><strong>Simulink</strong> — 블록 선도로 시뮬레이션하는 Simulink를 연다. 07회와 09회부터 쓴다.</li>
+    <li><span class="mk">4</span><strong>Layout</strong> — 창 배치를 고른다. 창을 끌다가 배치가 엉켰으면 여기서 기본 배치로 되돌릴 수 있다.</li>
+    <li><span class="mk">5</span><strong>Add-Ons</strong> — 빠뜨린 툴박스를 나중에 더 설치한다 (③절).</li>
+  </ol>
 
   <!-- ── ⑤ ── -->
   <h2 id="s5">⑤ 명령 창과 변수</h2>
@@ -462,6 +465,18 @@ whos</code></pre>
     <code>Bytes</code> 8은 실수 하나(<code>double</code>)가 차지하는 크기이고, <code>Class</code>는 변수의 종류다.
     <code>sqrt</code>가 목록에 없으니 이제 <code>sqrt(16)</code>은 다시 제곱근 함수로 돈다.
   </p>
+  <p>같은 목록이 데스크톱 왼쪽 아래 Workspace 창(④절 <span class="mk">4</span>)에도 떠 있다. 명령을 치지 않아도 변수가 생기고 바뀌는 것을 바로 볼 수 있다.</p>
+  <figure class="dlg">
+    <img src="assets/img/01_workspace.png" alt="Workspace 창. a 10, ans 7, b 20, c 30, x 3, y 10이 모두 1×1 double로 보인다. Name, Value, Size, Class 열에 번호 1~4가 붙어 있다">
+    <figcaption>위 <code>whos</code>를 친 순간의 Workspace 창.</figcaption>
+  </figure>
+  <ol class="marks">
+    <li><span class="mk">1</span><strong>Name</strong> — 변수 이름. <code>whos</code>의 <code>Name</code>과 같다.</li>
+    <li><span class="mk">2</span><strong>Value</strong> — 지금 들어 있는 값. <code>whos</code>에는 없는 열이라, 값을 훑어볼 때는 이 창이 더 빠르다.
+      값이 길면 줄여서 보이는데, 줄을 두 번 누르면 <strong>Variables</strong> 창이 열려 행렬 전체를 표처럼 볼 수 있다.</li>
+    <li><span class="mk">3</span><strong>Size</strong> — 몇 행 몇 열인지. <code>whos</code>의 <code>Size</code>와 같다.</li>
+    <li><span class="mk">4</span><strong>Class</strong> — 변수의 종류. 실수는 <code>double</code>이다.</li>
+  </ol>
 <!-- mcode 01/b07_clear -->
 <div class="mcode">
 <pre class="lang-matlab"><code>clear x          % x 하나만 지운다
@@ -501,21 +516,25 @@ a    ans  b    c    y</code></pre>
     명령 창은 한 줄씩 확인하기에 좋지만, 열 줄짜리 계산을 고쳐서 다시 돌리려면 열 줄을 다시 쳐야 한다. 무엇을 쳤는지 기록도 남지 않는다.
     그래서 실제 작업은 명령을 <strong>파일에 모아 두고 한 번에 실행</strong>한다. 이 파일을 <strong>스크립트</strong>(script)라고 하고, 확장자는 <code>.m</code>이다.
   </p>
-  <div class="tablewrap">
-  <table>
-    <tr><th>하는 일</th><th>어떻게</th><th>단축키</th></tr>
-    <tr><td>새 스크립트 만들기</td><td>HOME → <strong>New Script</strong></td><td><kbd>Ctrl</kbd>+<kbd>N</kbd></td></tr>
-    <tr><td>저장</td><td>EDITOR → <strong>Save</strong>. 처음 저장할 때 파일 이름을 정한다</td><td><kbd>Ctrl</kbd>+<kbd>S</kbd></td></tr>
-    <tr><td>전체 실행</td><td>EDITOR → <strong>Run</strong> (초록 삼각형). 저장하지 않았으면 저장부터 한다</td><td><kbd>F5</kbd></td></tr>
-    <tr><td>섹션 하나만 실행</td><td>커서를 섹션 안에 두고 EDITOR → <strong>Run Section</strong></td><td><kbd>Ctrl</kbd>+<kbd>Enter</kbd></td></tr>
-    <tr><td>명령 창에서 실행</td><td>파일 이름을 확장자 없이 친다 — <code>first_script</code></td><td>—</td></tr>
-    <tr><td>실행 멈추기</td><td>무한 반복 등으로 끝나지 않을 때 명령 창을 누르고</td><td><kbd>Ctrl</kbd>+<kbd>C</kbd></td></tr>
-  </table>
-  </div>
   <p>
-    ④절 화면의 편집기에 열려 있는 <code>first_script.m</code>이 스크립트의 예다. 맨 윗줄처럼 <strong><code>%%</code>로 시작하는 줄은 섹션(section)의 시작</strong>이다.
-    섹션을 나눠 두면 긴 스크립트에서 <strong>고친 부분만</strong> <kbd>Ctrl</kbd>+<kbd>Enter</kbd>로 다시 돌릴 수 있다.
-    섹션 제목 줄은 편집기에서 굵게 보이고, 섹션 사이에 가로줄이 그어진다.
+    스크립트는 어디서 만들고 어떻게 돌리나? HOME 탭의 <strong>New Script</strong>(④절 HOME 탭 그림의 <span class="mk">1</span>)를 누르거나 <kbd>Ctrl</kbd>+<kbd>N</kbd>을 치면
+    빈 파일이 편집기에 열리고, 툴스트립에 <strong>EDITOR</strong> 탭이 생긴다. 아래는 ④절 화면의 <code>first_script.m</code>을 편집기에 연 모습이다.
+  </p>
+  <figure>
+    <a href="assets/img/01_editor_tab.png"><img src="assets/img/01_editor_tab.png" alt="편집기에 first_script.m이 열려 있고 툴스트립은 EDITOR 탭이다. 번호 1 EDITOR 탭, 2 Save, 3 Run, 4 %%로 시작하는 첫 줄, 5 Run Section, 6 Section Break에 빨간 상자가 있다"></a>
+    <figcaption>EDITOR 탭. 저장 → 실행 순서로 <span class="mk">2</span> → <span class="mk">3</span>을 누르면 된다.</figcaption>
+  </figure>
+  <ol class="marks">
+    <li><span class="mk">1</span><strong>EDITOR 탭</strong> — 편집기에서 스크립트를 고르면 툴스트립이 이 탭으로 바뀐다.</li>
+    <li><span class="mk">2</span><strong>Save</strong> (<kbd>Ctrl</kbd>+<kbd>S</kbd>) — 처음 저장할 때 파일 이름을 정한다. 이름 짓는 규칙은 아래 「파일 이름과 현재 폴더」에 있다.</li>
+    <li><span class="mk">3</span><strong>Run</strong> (<kbd>F5</kbd>) — 파일 전체를 실행한다. 저장하지 않았으면 저장부터 한다.</li>
+    <li><span class="mk">4</span><strong><code>%%</code>로 시작하는 줄</strong> — <strong>섹션</strong>(section)의 시작이다. 섹션 제목 줄은 굵게 보이고, 섹션 사이에는 가로줄이 그어진다.</li>
+    <li><span class="mk">5</span><strong>Run Section</strong> (<kbd>Ctrl</kbd>+<kbd>Enter</kbd>) — 커서가 있는 섹션 하나만 실행한다.</li>
+    <li><span class="mk">6</span><strong>Section Break</strong> — 커서 자리에 <code>%%</code> 줄을 넣어 섹션을 나눈다. <code>%%</code>를 직접 쳐도 같다.</li>
+  </ol>
+  <p>
+    섹션을 나눠 두면 긴 스크립트에서 <strong>고친 부분만</strong> <span class="mk">5</span>로 다시 돌릴 수 있다.
+    버튼 말고 명령 창에서 파일 이름을 확장자 없이 쳐도(<code>first_script</code>) 실행된다. 무한 반복 등으로 실행이 끝나지 않으면 명령 창을 누르고 <kbd>Ctrl</kbd>+<kbd>C</kbd>를 치면 멈춘다.
   </p>
   <p>
     스크립트를 실행하면 명령 창에는 <strong>세미콜론이 없는 줄의 결과</strong>가 위에서부터 차례로 찍히고, 만들어진 변수는 Workspace에 남는다.
@@ -564,10 +583,32 @@ y =
   </div>
   <p>
     MATLAB이 파일을 찾는 곳은 기본적으로 <strong>현재 폴더</strong>(④절 주소 막대에 보이는 폴더)다.
-    다른 폴더에 저장한 스크립트를 Run으로 실행하면 MATLAB이 <strong>「현재 폴더를 바꿀지(Change Folder), 경로에 더할지(Add to Path)」</strong>를 묻는다.
-    보통은 Change Folder를 누르면 된다. 이 실습에서는 <code>Documents\MATLAB</code> 아래에 실습용 폴더(예: <code>control_lab</code>)를 하나 만들고,
+    그래서 이 실습에서는 <code>Documents\MATLAB</code> 아래에 실습용 폴더(예: <code>control_lab</code>)를 하나 만들고,
     <strong>회차마다 스크립트를 그 폴더에 모아 두기를 권한다</strong>. 04회부터는 직접 만든 함수 파일도 같은 폴더에 둬야 불러 쓸 수 있다.
+    폴더는 MATLAB 안에서 바로 만들 수 있다.
   </p>
+  <figure>
+    <a href="assets/img/01_new_folder.png"><img src="assets/img/01_new_folder.png" alt="주소 막대가 Documents › MATLAB을 가리키고, Files 창의 빈 곳을 오른쪽 클릭해 연 메뉴에서 New › Folder가 보인다. 번호 1~5가 붙어 있다"></a>
+    <figcaption>현재 폴더를 <code>Documents\MATLAB</code>으로 옮긴 뒤 그 안에 새 폴더를 만드는 순서.</figcaption>
+  </figure>
+  <ol class="marks">
+    <li><span class="mk">1</span><strong>Browse For Folder</strong> — 폴더를 고르는 창을 연다. <code>Documents\MATLAB</code>을 골라 현재 폴더로 삼는다.</li>
+    <li><span class="mk">2</span><strong>주소 막대</strong> — 지금의 현재 폴더. 경로 가운데 폴더 이름을 누르면 그 폴더로 바로 올라간다.</li>
+    <li><span class="mk">3</span>Files 창의 <strong>빈 곳을 오른쪽 클릭</strong>한다.</li>
+    <li><span class="mk">4</span><strong>New</strong>에 마우스를 올린다.</li>
+    <li><span class="mk">5</span><strong>Folder</strong>를 누르고 이름을 <code>control_lab</code>으로 짓는다. 만든 폴더를 Files 창에서 두 번 누르면 그 안으로 들어가고, 주소 막대도 따라 바뀐다.</li>
+  </ol>
+  <p>
+    현재 폴더가 아닌 곳에 저장한 스크립트를 Run으로 실행하면 MATLAB이 이런 창을 띄운다.
+    「이 파일은 현재 폴더에도, MATLAB이 찾는 경로에도 없다 — 현재 폴더를 바꾸거나 경로에 더하라」는 뜻이다.
+  </p>
+  <figure class="dlg">
+    <img src="assets/img/01_change_folder.png" alt="MATLAB Editor 알림 창. File /home/gorilla/Documents/MATLAB/control_lab/first_script.m is not found in the current folder or on the MATLAB path. 아래에 Change Folder, Add to Path, Cancel 버튼이 있고 Change Folder에 번호 1이 붙어 있다">
+    <figcaption>
+      <span class="mk">1</span> 보통은 <strong>Change Folder</strong>를 누르면 된다 — 현재 폴더를 그 파일이 있는 폴더로 옮기고 실행한다.
+      <strong>Add to Path</strong>는 현재 폴더는 그대로 두고 그 폴더를 MATLAB이 찾는 곳 목록에 더한다.
+    </figcaption>
+  </figure>
 
   <!-- ── ⑧ ── -->
   <h2 id="s8">⑧ 라이브 스크립트 (<code>.mlx</code>)</h2>
@@ -576,13 +617,24 @@ y =
     <strong>라이브 스크립트</strong>(live script)는 이 셋 — 코드, 출력, 그림 — 을 <strong>한 문서 안에 나란히</strong> 보여 준다.
     서식 있는 글과 수식도 같이 쓸 수 있어서 보고서나 수업 자료처럼 쓸 수 있다. 확장자는 <code>.mlx</code>다.
   </p>
+  <p>
+    HOME 탭의 <strong>New Live Script</strong>(④절 HOME 탭 그림의 <span class="mk">2</span>)를 누르면 빈 라이브 스크립트가 열리고, 툴스트립에 <strong>LIVE EDITOR</strong> 탭이 생긴다.
+    아래는 ④절의 <code>first_script.m</code>을 라이브 스크립트로 옮겨 실행한 화면이다.
+  </p>
   <figure>
-    <img src="assets/img/01_live_script.png" alt="라이브 편집기 화면. 왼쪽에 제목·설명 글과 코드 6줄, 오른쪽에 전달함수 G와 극점 p의 출력, 그 아래 계단응답 그래프가 있다">
+    <a href="assets/img/01_live_editor.png"><img src="assets/img/01_live_editor.png" alt="라이브 편집기 화면. 왼쪽에 주황색 제목과 설명 글, 회색 상자 안의 코드 6줄, 오른쪽에 전달함수 G와 극점 p의 출력과 계단응답 그래프가 있다. 번호 1 LIVE EDITOR 탭, 2 Text, 3 Code, 4 Run, 5 오른쪽 끝 세로 아이콘 세 개에 빨간 상자가 있다"></a>
     <figcaption>
-      ④절의 <code>first_script.m</code>을 라이브 스크립트로 바꿔 실행한 화면. <code>%%</code> 줄은 <strong>주황색 제목</strong>으로, 그 아래 주석은 <strong>본문 글</strong>로 바뀌었다.
+      <code>%%</code> 줄은 <strong>주황색 제목</strong>으로, 그 아래 주석은 <strong>본문 글</strong>로 바뀌었다.
       회색 상자가 코드이고, 오른쪽에 <strong>그 코드가 낸 출력과 그림</strong>이 바로 붙는다.
     </figcaption>
   </figure>
+  <ol class="marks">
+    <li><span class="mk">1</span><strong>LIVE EDITOR 탭</strong> — 라이브 스크립트를 고르면 툴스트립이 이 탭으로 바뀐다.</li>
+    <li><span class="mk">2</span><strong>Text</strong> — 커서 자리에 글을 쓰는 줄을 넣는다.</li>
+    <li><span class="mk">3</span><strong>Code</strong> — 커서 자리에 코드 상자를 넣는다.</li>
+    <li><span class="mk">4</span><strong>Run</strong> (<kbd>F5</kbd>) — 문서 전체를 실행한다. 출력은 명령 창이 아니라 문서 안에 붙는다.</li>
+    <li><span class="mk">5</span><strong>출력 자리</strong> — 위에서부터 「출력을 오른쪽에」 · 「출력을 코드 바로 아래에」 · 「코드를 숨기고 글과 출력만」. 그림은 첫째 것을 고른 모습이다.</li>
+  </ol>
   <div class="tablewrap">
   <table>
     <tr><th></th><th>스크립트 <code>.m</code></th><th>라이브 스크립트 <code>.mlx</code></th></tr>
@@ -642,7 +694,7 @@ y =
       <dt>help 함수이름</dt>
       <dd>그 함수의 짧은 설명을 명령 창에 찍는다. 여기서는 <code>sqrt</code>의 호출 모양과 입력 종류를 확인했다.</dd>
       <dt>doc 함수이름</dt>
-      <dd>같은 함수의 <strong>전체 문서</strong>를 도움말 창으로 연다. 예제 코드와 그림이 들어 있어 <code>help</code>보다 길고 자세하다. 편집기에서 함수 이름에 커서를 두고 <kbd>F1</kbd>을 눌러도 된다.</dd>
+      <dd>같은 함수의 <strong>전체 문서</strong>를 연다. 예제 코드와 그림이 들어 있어 <code>help</code>보다 길고 자세하다. 문서를 컴퓨터에 따로 설치하지 않았으면 웹 브라우저에 MathWorks 사이트의 문서가 열린다 — 보통은 이쪽이다. 편집기에서 함수 이름에 커서를 두고 <kbd>F1</kbd>을 눌러도 된다.</dd>
     </dl>
   </div>
   <div class="interp">
@@ -657,10 +709,10 @@ y =
     <p>내 노트북에서 MATLAB이 돌고, 스크립트를 저장해 실행하는 흐름이 손에 익는다. 다음 회차부터 자료의 코드를 그대로 따라 칠 준비가 된다.</p>
     <p><strong>준비물:</strong> 노트북, 학교 메일 계정</p>
     <ol>
-      <li>③절 순서대로 MATLAB과 다섯 제품을 설치하고, 명령 창에 <code>version</code>과 <code>ver</code>를 쳐서 Control System Toolbox·Simulink가 목록에 있는지 본다. (설치 시간 제외 3분)</li>
-      <li><code>Documents\MATLAB</code> 아래에 <code>control_lab</code> 폴더를 만들고, 주소 막대에서 그 폴더로 들어간다. (2분)</li>
+      <li>③절 순서대로 MATLAB과 제품 표의 제품을 설치하고, 명령 창에 <code>version</code>과 <code>ver</code>를 쳐서 Control System Toolbox·Simulink가 목록에 있는지 본다. (설치 시간 제외 3분)</li>
+      <li><code>Documents\MATLAB</code> 아래에 <code>control_lab</code> 폴더를 만들고 그 안으로 들어간다 — ⑦절 폴더 그림의 <span class="mk">1</span>~<span class="mk">5</span>. (2분)</li>
       <li>명령 창에서 ⑤절의 <code>x = 3</code> · <code>y = x^2 + 1</code> · <code>3 + 4</code>를 쳐 보고 Workspace 창에 변수가 생기는지 본다. (3분)</li>
-      <li>New Script로 새 파일을 열고 ⑤절에서 친 세 줄(<code>x = 3</code> · <code>y = x^2 + 1</code> · <code>3 + 4</code>)을 붙여 넣은 뒤 <code>first_script.m</code>으로 저장한다. <kbd>F5</kbd>로 실행한다. (5분)</li>
+      <li>New Script로 새 파일을 열고(⑦절) ⑤절에서 친 세 줄(<code>x = 3</code> · <code>y = x^2 + 1</code> · <code>3 + 4</code>)을 붙여 넣은 뒤 <code>first_script.m</code>으로 저장한다. <kbd>F5</kbd>로 실행한다. (5분)</li>
       <li>코드 맨 위에 <code>clc; clear; close all</code> 한 줄을 넣고 다시 실행해 본다. 명령 창과 그림이 깨끗하게 새로 나오는지 본다. (2분)</li>
       <li>HOME → New Live Script로 라이브 스크립트를 만들어 같은 코드를 붙여 넣고 실행한다. 출력이 어디에 나오는지 스크립트와 비교한다. (5분)</li>
     </ol>

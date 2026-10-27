@@ -198,3 +198,14 @@ mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; max-width:
 /* ── 📐 이론과 잇기 — 코드가 교재의 어느 식인지 ── */
 .theory { background: var(--card); border: 1px solid var(--accent); }
 .theory .boxtitle { color: var(--accent); }
+
+/* ── 화면 캡처의 빨간 번호와 본문을 잇는 표시 — src/annotate_shots.py 가 그림에 같은 번호를 그린다 ── */
+.mk { display: inline-flex; align-items: center; justify-content: center; width: 1.45em; height: 1.45em;
+      border-radius: 50%; background: #e53935; color: #fff; font-size: .74em; font-weight: 700;
+      margin-right: .3em; vertical-align: .12em; font-family: var(--sans, inherit); text-indent: 0; line-height: 1; }
+ol.marks { list-style: none; padding-left: .2rem; }
+ol.marks > li { margin: .45rem 0; padding-left: 1.9em; text-indent: -1.9em; }
+figure.dlg img { max-width: min(100%, 480px); }
+/* 그림 대신 쓰는 개념도(인라인 SVG) — 색은 테마를 따른다 */
+svg.diagram { display: block; width: 100%; height: auto; max-width: 720px; margin: 0 auto; color: var(--fg); }
+svg.diagram text { font-family: inherit; fill: currentColor; }
