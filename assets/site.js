@@ -41,6 +41,56 @@ function copyPrompt(btn) {
   });
 }
 
+// 서식판 보고서 양식의 「복사」 버튼. 워드·한글에 붙이면 제목·표가 서식째 들어가도록 text/html 로 복사한다.
+// 화면의 색(어두운 테마)이 따라가지 않게 검은 글자·흰 바탕의 HTML 을 새로 만들고,
+// 화면에서 h3·h4·h5 로 쓴 제목은 문서의 제목 1·2·3 으로 올린다.
+function copyRich(btn) {
+  var src = btn.parentElement.querySelector('.richform');
+  if (!src) return;
+  var box = src.cloneNode(true);
+  var LEVEL = { H3: 'h1', H4: 'h2', H5: 'h3' };
+  box.querySelectorAll('h3, h4, h5').forEach(function (h) {
+    var n = document.createElement(LEVEL[h.tagName]);
+    n.innerHTML = h.innerHTML;
+    h.replaceWith(n);
+  });
+  box.querySelectorAll('table').forEach(function (t) {
+    var slot = t.classList.contains('slot'), code = t.classList.contains('code');
+    t.setAttribute('border', '1');
+    t.style.cssText = 'border-collapse:collapse;width:100%';
+    t.querySelectorAll('th, td').forEach(function (c) {
+      c.style.cssText += ';border:1px solid #000;padding:4pt 6pt;vertical-align:top;text-align:left' +
+        (c.tagName === 'TH' ? ';background:#eee' : '') +
+        (slot ? ';height:48pt;color:#888' : '') + (code ? ';font-family:Consolas,monospace' : '');
+    });
+  });
+  box.querySelectorAll('[class]').forEach(function (e) { e.removeAttribute('class'); });
+  var html = '<div style="color:#000;background:#fff">' + box.innerHTML + '</div>';
+  function done() {
+    var old = btn.textContent;
+    btn.textContent = '복사됨';
+    setTimeout(function () { btn.textContent = old; }, 1200);
+  }
+  function fallback() {   // ClipboardItem 이 없는 브라우저 — 화면 밖에 잠깐 놓고 선택해 복사한다
+    var tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    tmp.style.cssText = 'position:fixed;left:-9999px;top:0';
+    document.body.appendChild(tmp);
+    var r = document.createRange(), sel = window.getSelection();
+    r.selectNodeContents(tmp);
+    sel.removeAllRanges();
+    sel.addRange(r);
+    try { if (document.execCommand('copy')) done(); }
+    finally { sel.removeAllRanges(); tmp.remove(); }
+  }
+  if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+    navigator.clipboard.write([new ClipboardItem({
+      'text/html': new Blob([html], { type: 'text/html' }),
+      'text/plain': new Blob([box.textContent], { type: 'text/plain' })
+    })]).then(done, fallback);
+  } else fallback();
+}
+
 // 📄 전체 코드 상자의 「복사」 버튼. 같은 .codefile 안의 <pre> 내용만 복사한다.
 function copyCode(btn) {
   var pre = btn.parentElement.querySelector('pre');

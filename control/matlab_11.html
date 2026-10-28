@@ -41,7 +41,7 @@
   <a class="sub" href="#s5-2">서브시스템으로 묶기</a>
   <a href="#s6">⑥ 속도 제어 루프와 실행</a>
   <a href="#s7">⑦ Simscape 모델과 식의 비교</a>
-  <a href="#s8">⑧ 원판이 도는 모습 보기</a>
+  <a href="#s8">⑧ 원판을 3차원 물체로 — Simscape Multibody</a>
   <a href="#s9">⑨ 원판 질량을 바꾸면 — 포화와 와인드업</a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
@@ -69,7 +69,7 @@
     9회에서는 Simulink로 블록 선도를 그리고 제어기를 끼웠고, 10회에서는 Simscape로 부품을 이어 물리 모델을 만들었다.
     오늘은 둘을 합친다. 실제로 흔히 쓰는 장치 — <strong>원판을 돌리는 DC 모터</strong> — 를 골라
     제어공학 4장의 방법으로 식을 세우고, 그 식으로 속도 제어기를 설계하고, Simscape로 조립한 모터에 붙여 검증한다.
-    마지막에는 시뮬레이션 결과로 원판이 실제로 도는 모습을 그려 본다.
+    마지막에는 원판을 모양과 질량이 있는 3차원 물체로 바꿔 실제로 도는 모습을 본다.
   </p>
 
   <h2 id="summary">한 장 요약</h2>
@@ -84,7 +84,7 @@
     <tr><td>⑤ Simscape 조립</td><td>Controlled Voltage Source · Resistor · Inductor · Rotational Electromechanical Converter · Inertia · Rotational Damper · Ideal Torque Source · Ideal Rotational Motion Sensor</td><td>식을 적지 않은 모터 모델</td></tr>
     <tr><td>⑥ 제어 루프</td><td>Step · Sum · PID Controller(PI) · Saturation(±12 V) · Subsystem · Scope</td><td>400 rpm 추종, 브레이크를 이겨 냄</td></tr>
     <tr><td>⑦ 검증</td><td><code>lsim</code>으로 식의 응답 · Simscape와 겹치기</td><td>두 곡선이 겹친다 — 모델링이 맞다</td></tr>
-    <tr><td>⑧ 보기</td><td><code>animate_disc</code> (오늘 만드는 함수)</td><td>원판이 도는 애니메이션</td></tr>
+    <tr><td>⑧ 3D로 보기</td><td>Simscape Multibody — World Frame · Rigid Transform · Revolute Joint · Cylindrical Solid · Inertia · Rotational Multibody Interface · Multibody Explorer</td><td>원판이 3D로 돈다, 관성 \(\tfrac12 mr^2\)을 모양에서 구한다</td></tr>
     <tr><td>⑨ 한계</td><td>원판 질량을 바꿔 가며 <code>sim</code></td><td>무거우면 전압 포화 → 와인드업</td></tr>
   </table>
   </div>
@@ -587,115 +587,114 @@ fprintf('두 곡선의 가장 큰 차이 %.2f rpm\n', max(abs(rpm_ssc - w_lin*to
   </p>
 
   <!-- ─────────────────────────── ⑧ ─────────────────────────── -->
-  <h2 id="s8">⑧ 원판이 도는 모습 보기</h2>
+  <h2 id="s8">⑧ 원판을 3차원 물체로 — Simscape Multibody</h2>
   <p>
-    rpm 그래프만으로는 원판이 실제로 어떻게 도는지 잘 그려지지 않는다. 시뮬레이션은 각도 \(\theta(t)\)도 기록해 두었으니(<code>angle</code> 출력), 그 각도대로 원판을 돌려 그려 본다.
-    400 rpm은 1초에 6.7바퀴라 눈으로 따라가기 어렵다. <strong>10배 느리게</strong> 보여 주는 함수를 만든다.
+    rpm 그래프만으로는 원판이 실제로 어떻게 도는지 잘 그려지지 않는다. 그런데 지금 모델에 원판의 모양은 어디에도 없다.
+    <code>JL (disc)</code> 블록에 들어 있는 것은 「관성 0.00125 kg·m²」라는 숫자 하나뿐이니, 화면에 그릴 거리도 없다.
   </p>
-  <p>새 함수 파일 <code>animate_disc.m</code>을 만들어 아래 내용을 저장한다. 4회처럼 스크립트와 같은 폴더에 둔다.</p>
-<!-- mcode 11/animate_disc.m file -->
-<div class="mcode">
-<div class="fname">animate_disc.m</div>
-<pre class="lang-matlab"><code>function animate_disc(t, theta, rpm, opts)
-% 시뮬레이션 결과로 원판이 도는 모습을 그린다.
-%   t, theta, rpm : 시간[s], 회전각[rad], 회전속도[rpm] (같은 길이의 열벡터)
-%   opts.slow     : 몇 배 느리게 보여 줄지 (기본 10)
-%   opts.rpm_ref  : 목표 속도 — 오른쪽 그래프에 점선으로 (기본 [])
-%   opts.t_brake  : 브레이크를 거는 시각 — 그 뒤로 원판 옆에 브레이크 패드를 그린다 (기본 Inf)
-%   opts.gif      : 파일 이름을 주면 GIF 로도 저장한다 (기본 '')
-arguments
-    t (:,1) double
-    theta (:,1) double
-    rpm (:,1) double
-    opts.slow (1,1) double = 10
-    opts.rpm_ref = []
-    opts.t_brake (1,1) double = Inf
-    opts.gif (1,:) char = ''
-end
-fps = 15;                                   % 1초에 그리는 장면 수
-tq = (t(1) : 1/(fps*opts.slow) : t(end))';  % 장면마다 보여 줄 시뮬레이션 시각
-th = interp1(t, theta, tq);
-w  = interp1(t, rpm, tq);
-
-fig = figure('Color', 'w', 'Position', [100 100 760 360]);
-% 왼쪽 — 위에서 내려다본 원판
-ax1 = subplot(1, 2, 1);
-hold(ax1, 'on'); axis(ax1, 'equal', 'off'); axis(ax1, [-1.3 1.3 -1.3 1.3]);
-a = linspace(0, 2*pi, 100);
-fill(ax1, cos(a), sin(a), [0.85 0.88 0.92], 'EdgeColor', [0.3 0.3 0.35], 'LineWidth', 1.5);
-spokes = plot(ax1, nan, nan, 'Color', [0.3 0.3 0.35], 'LineWidth', 2);
-mark = plot(ax1, nan, nan, 'o', 'MarkerSize', 14, 'MarkerFaceColor', [0.85 0.2 0.15], 'MarkerEdgeColor', 'none');
-pad = fill(ax1, [1.02 1.22 1.22 1.02], [-0.25 -0.25 0.25 0.25], [0.2 0.2 0.2], 'Visible', 'off');
-brk = text(ax1, 1.12, -0.42, '브레이크', 'HorizontalAlignment', 'center', 'Visible', 'off');
-plot(ax1, 0, 0, 'k.', 'MarkerSize', 18);    % 모터 축
-label = title(ax1, '');
-% 오른쪽 — 회전속도 그래프
-ax2 = subplot(1, 2, 2);
-hold(ax2, 'on'); grid(ax2, 'on');
-plot(ax2, t, rpm, 'Color', [0.8 0.8 0.85]);                 % 전체 결과 (흐리게)
-if ~isempty(opts.rpm_ref), yline(ax2, opts.rpm_ref, 'k--'); end
-trace = plot(ax2, nan, nan, 'b', 'LineWidth', 2);
-dot = plot(ax2, nan, nan, 'bo', 'MarkerFaceColor', 'b');
-xlabel(ax2, '시간 (s)'); ylabel(ax2, '회전속도 (rpm)');
-xlim(ax2, [t(1) t(end)]); ylim(ax2, [0 1.15*max(rpm)]);
-
-for k = 1:numel(tq)
-    c = th(k);                                % 지금 회전각
-    ang = c + [0, 2*pi/3, 4*pi/3];            % 바퀴살 세 개
-    xs = [zeros(1,3); cos(ang); nan(1,3)];  ys = [zeros(1,3); sin(ang); nan(1,3)];
-    set(spokes, 'XData', xs(:), 'YData', ys(:));
-    set(mark, 'XData', 0.75*cos(c), 'YData', 0.75*sin(c));
-    set([pad brk], 'Visible', tq(k) &gt;= opts.t_brake);
-    label.String = sprintf('t = %.2f s   %.0f rpm   (%g배 느리게)', tq(k), w(k), opts.slow);
-    set(trace, 'XData', tq(1:k), 'YData', w(1:k));
-    set(dot, 'XData', tq(k), 'YData', w(k));
-    drawnow
-    if ~isempty(opts.gif)
-        img = frame2im(getframe(fig));
-        [A, map] = rgb2ind(img, 64);
-        if k == 1
-            imwrite(A, map, opts.gif, 'gif', 'LoopCount', Inf, 'DelayTime', 1/fps);
-        else
-            imwrite(A, map, opts.gif, 'gif', 'WriteMode', 'append', 'DelayTime', 1/fps);
-        end
-    else
-        pause(1/fps);
-    end
-end
-end</code></pre>
-<button onclick="copyCode(this)">복사</button>
-</div>
-<!-- /mcode -->
+  <p>
+    <strong>Simscape Multibody</strong>는 물체를 <strong>모양과 질량</strong>으로 적고 관절로 이어 3차원 기계를 만드는 Simscape의 한 부분이다(1회 제품 표).
+    실행하면 <strong>Multibody Explorer</strong> 창이 열리고 그 물체가 3D로 움직인다.
+    모터 모델을 처음부터 다시 만들 필요는 없다. 전기 회로 · 댐퍼 · 브레이크 · 센서 · 바깥 루프는 그대로 두고, <strong>축에 달린 관성 두 개(Jm · JL)만</strong> Multibody 블록으로 바꾼다.
+  </p>
+  <ol>
+    <li><code>motor_speed</code>를 연 채로 SIMULATION 탭의 <strong>Save › Save As</strong>로 <code>motor_speed_3d.slx</code>라는 이름으로 저장한다. ⑥~⑦의 모델은 그대로 남는다.</li>
+    <li><code>DC Motor + Disc</code> 서브시스템에 들어가 <code>Jm (rotor)</code>와 <code>JL (disc)</code> 블록을 지운다(블록을 고르고 Delete). 끊긴 선 조각도 지운다.</li>
+    <li>아래 표의 블록을 놓고 그림처럼 잇는다.</li>
+  </ol>
+  <div class="tablewrap">
+  <table>
+    <tr><th>블록 (Library Browser 위치)</th><th>하는 일</th></tr>
+    <tr><td><strong>World Frame</strong> (Simscape › Multibody › Frames and Transforms)</td><td>움직이지 않는 바닥의 좌표계. Multibody 모델은 모두 여기서 출발한다</td></tr>
+    <tr><td><strong>Rigid Transform</strong> × 2 (Frames and Transforms)</td><td>좌표계를 정해진 만큼 옮긴다 — 바닥에서 축 끝까지, 원판 중심에서 가장자리까지</td></tr>
+    <tr><td><strong>Revolute Joint</strong> (Joints)</td><td>한 축(z) 둘레로 도는 것만 허락하는 관절 — 모터의 베어링</td></tr>
+    <tr><td><strong>Cylindrical Solid</strong> × 2 (Body Elements)</td><td>원통 모양의 물체. 반지름 · 두께 · 질량을 주면 <strong>관성을 스스로 계산한다</strong> — 원판, 모터 몸체</td></tr>
+    <tr><td><strong>Inertia</strong> (Body Elements)</td><td>모양 없이 질량과 관성만 있는 물체 — 회전자 \(J_m\)</td></tr>
+    <tr><td><strong>Graphic</strong> (Body Elements)</td><td>질량 없이 화면에 그림만 그린다 — 원판 위의 빨간 점</td></tr>
+    <tr><td><strong>Rotational Multibody Interface</strong> (Simscape › Foundation Library › Mechanical › Multibody Interfaces)</td><td>지금까지 쓴 축(초록 선)과 Multibody 관절을 잇는다</td></tr>
+  </table>
+  </div>
+  <figure>
+    <a href="assets/img/11_motor_sub3d.png"><img src="assets/img/11_motor_sub3d.png" alt="Multibody로 바꾼 서브시스템의 오른쪽 위 부분. World에서 Motor Body와 Shaft End로 회색 선이 가고, Shaft End가 Revolute Joint의 B로, Joint의 F에서 Rotor (Jm), Disc, Mark Offset으로 회색 선이 갈라진다. Mark Offset 뒤에 Mark가 있다. 아래의 Multibody Interface는 t와 w 신호선으로 Joint와 이어지고, R은 초록 축 선에, C는 Ref MB에 붙어 있다"></a>
+    <figcaption><code>motor_speed_3d</code>의 서브시스템에서 바뀐 부분. 회색 선은 Multibody의 <strong>프레임 연결</strong>이다.</figcaption>
+  </figure>
+  <ol class="marks">
+    <li><span class="mk">1</span><strong>World</strong>(World Frame) — 바닥. 모터 몸체와 축 끝이 여기에 붙는다.</li>
+    <li><span class="mk">2</span><strong>Motor Body</strong>(Cylindrical Solid) — 반지름 2 cm, 길이 5 cm의 짙은 회색 원통. 바닥에 붙어 움직이지 않으니 <strong>그림에만</strong> 쓰인다.</li>
+    <li><span class="mk">3</span><strong>Shaft End</strong>(Rigid Transform) — Translation을 Standard Axis +Z, 0.035 m로. 바닥 좌표계를 3.5 cm 위로 옮긴 자리가 축 끝이다.</li>
+    <li><span class="mk">4</span><strong>Revolute Joint</strong> — B(base)는 축 끝, F(follower)는 도는 쪽. F가 B에 대해 z축 둘레로 돈다. 설정은 아래 그림.</li>
+    <li><span class="mk">5</span><strong>Rotor (Jm)</strong>(Inertia) — Inertia Type을 Custom으로, Moments of Inertia에 <code>[Jm Jm Jm]</code>. 도는 축이 z이므로 세 번째 값만 결과에 쓰인다. 질량 칸(0.1 kg)은 축 위에 있어 회전에 영향이 없다.</li>
+    <li><span class="mk">6</span><strong>Disc</strong>(Cylindrical Solid) — 원판. 반지름 <code>r_disc</code>, 두께 0.01 m, 질량 <code>m_disc</code>. 설정은 아래 그림.</li>
+    <li><span class="mk">7</span><strong>Mark Offset</strong> · <strong>Mark</strong> — 고른 원판은 돌아도 돈 것이 보이지 않는다. 원판 중심에서 <code>[0.8*r_disc 0 0.006]</code> m 옮긴 자리(가장자리 쪽, 윗면 바로 위)에 빨간 점을 찍었다.</li>
+    <li><span class="mk">8</span><strong>Multibody Interface</strong> — 관절이 잰 각속도를 <strong>w</strong>로 받고, 축에 걸린 토크를 <strong>t</strong>로 관절에 넘긴다. <strong>R은 축(초록 선)에, C는 바닥(Ref MB)에</strong> 붙인다. 지운 Jm · JL이 붙어 있던 자리에 이 블록 하나가 대신 붙는 셈이다.</li>
+  </ol>
   <div class="box firstseen">
-    <p class="boxtitle">🆕 이 함수에서 처음 나오는 것</p>
+    <p class="boxtitle">🆕 이 절에서 처음 나오는 것</p>
     <dl>
-      <dt>opts.slow (1,1) double = 10</dt>
-      <dd>5회의 <code>arguments</code> 블록에서 <code>opts.</code>로 시작하는 이름은 「이름=값」 입력이 된다. 부를 때 <code>slow=20</code>처럼 준다. 여기서는 느리게 보일 배수와 목표선 · 브레이크 시각 · GIF 파일 이름을 받았다.</dd>
-      <dt>interp1(t, theta, tq)</dt>
-      <dd>7회에서 본 선형 보간. 시뮬레이션은 시간 간격이 고르지 않으므로, 화면에 그릴 시각 <code>tq</code>마다 각도와 속도를 다시 읽었다.</dd>
-      <dt>set(핸들, 'XData', …, 'YData', …)</dt>
-      <dd>이미 그린 선의 좌표만 바꾼다. 매 장면을 새로 그리는 것보다 빠르다. 여기서는 바퀴살 · 빨간 점 · 그래프 선을 움직였다.</dd>
-      <dt>drawnow · pause(1/fps)</dt>
-      <dd><code>drawnow</code>는 바뀐 그림을 화면에 바로 반영하고, <code>pause</code>는 다음 장면까지 기다린다. 둘이 반복되면 애니메이션이 된다.</dd>
-      <dt>getframe · rgb2ind · imwrite(…, 'gif', 'WriteMode', 'append')</dt>
-      <dd>그림 창을 이미지로 찍어 GIF 파일에 한 장씩 덧붙인다. <code>gif='disc.gif'</code>를 주었을 때만 쓴다.</dd>
+      <dt>프레임(frame) 연결 — 회색 선</dt>
+      <dd>Multibody 블록끼리 잇는 선은 「이 두 블록의 좌표계가 같은 자리, 같은 방향에 붙어 있다」는 뜻이다. 10회의 초록 선이 「같은 속도로 움직이는 점」이었다면 회색 선은 「같은 좌표계」다.
+        그래서 관절의 F에 붙은 회전자 · 원판 · 빨간 점은 모두 한 덩어리로 같이 돈다.</dd>
+      <dt>B(base) · F(follower)</dt>
+      <dd>관절과 Rigid Transform의 두 단자. F의 좌표계가 B의 좌표계에서 어떻게 놓이는지를 블록이 정한다. Rigid Transform은 늘 같은 거리만큼 옮기고, Revolute Joint는 각도만큼 돌린다.</dd>
+      <dt>Multibody Explorer</dt>
+      <dd>Multibody 모델을 Run하면 저절로 열리는 3D 창. 예전 버전에서는 Mechanics Explorer라고 불렀다. 시뮬레이션이 끝난 뒤에도 결과를 다시 재생할 수 있다.</dd>
     </dl>
   </div>
-<!-- mcode 11/b09_animate code -->
+  <figure class="dlg">
+    <img src="assets/img/11_dlg_joint.png" alt="Block Parameters: Revolute Joint 창. Actuation 아래 Torque가 Provided by Input, Motion이 Automatically Computed. Sensing 아래 Velocity에 체크">
+    <figcaption>Revolute Joint. <span class="mk">1</span> Actuation › Torque를 <strong>Provided by Input</strong>으로 — 관절 왼쪽에 토크 입력 t가 생긴다
+      <span class="mk">2</span> Sensing › <strong>Velocity</strong>에 체크 — 오른쪽에 각속도 출력 w가 생긴다.</figcaption>
+  </figure>
+  <figure>
+    <img src="assets/img/11_dlg_disc.png" width="680" alt="Block Parameters: Disc 창. 왼쪽 설정 칸에 Geometry의 Radius r_disc(흐린 0.05), Length 0.01. Inertia의 Type Calculate from Geometry, Based On Mass, Mass m_disc(흐린 1). 오른쪽에 납작한 원판 모양 미리보기">
+    <figcaption>Disc. 오른쪽에 모양이 바로 그려진다. <span class="mk">1</span> 모양 — 반지름 <code>r_disc</code>, 두께 0.01 m
+      <span class="mk">2</span> Inertia › Type을 <strong>Calculate from Geometry</strong>, Based on을 <strong>Mass</strong>로 하고 질량 <code>m_disc</code>. 관성 칸이 따로 없다 — 모양과 질량에서 구한다.</figcaption>
+  </figure>
+  <p>⑥과 같은 변수가 작업공간에 있으니 그대로 돌리면 된다. 결과는 ⑦에서 만든 <code>rpm_ssc</code>(⑥의 모델 결과)와 비교한다.</p>
+<!-- mcode 11/b09_sim3d -->
 <div class="mcode">
-<pre class="lang-matlab"><code>% 원판이 도는 모습 — 10배 느리게 보여 준다
-ang = out.logsout.getElement('angle').Values;
-animate_disc(rpm.Time, ang.Data, rpm.Data, rpm_ref=rpm_ref, t_brake=t_brake)</code></pre>
+<pre class="lang-matlab"><code>% 원판을 Multibody 로 바꾼 모델을 같은 변수로 돌리고 ⑥의 결과와 비교한다
+out3 = sim('motor_speed_3d');                  % Multibody Explorer 창이 함께 열린다
+rpm3 = out3.logsout.getElement('rpm').Values;
+rpm3_t = interp1(rpm3.Time, rpm3.Data, tt);    % ⑦과 같은 시간축으로
+fprintf('⑥의 모델과 가장 큰 차이 %.4f rpm\n', max(abs(rpm3_t - rpm_ssc)))</code></pre>
 <button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>⑥의 모델과 가장 큰 차이 0.0000 rpm</code></pre>
 </div>
 <!-- /mcode -->
+  <div class="box theory">
+    <p class="boxtitle">📐 이론과 잇기 — Multibody가 구한 원판의 관성</p>
+    <p>두 모델의 차이가 0이다. 이번 모델 어디에도 <code>JL</code>을 적지 않았다. Disc 블록은 반지름과 질량만 받고, 원통의 관성 공식으로 관성을 스스로 계산했다.
+      그 값이 ①에서 손으로 구한 값과 같다는 뜻이다.</p>
+    $$J_L = \frac{1}{2} m r^2 = \frac{1}{2}(1)(0.05)^2 = 0.00125 \text{ kg·m}^2$$
+    <p>두께(0.01 m)는 이 축의 관성에 들어가지 않는다. 원판을 두껍게 그려도 질량이 같으면 같은 답이 나온다.</p>
+  </div>
+  <div class="box trap">
+    <p class="boxtitle">⚠️ 같은 축의 관성을 두 곳에 나누면 대수 루프 경고가 뜬다</p>
+    <p>원판만 Multibody로 바꾸고 <code>Jm (rotor)</code>는 Simscape의 Inertia 블록으로 남겨 두기 쉽다. 그러면 Run할 때 명령 창에
+      <code>contains 1 algebraic loops</code>라는 경고가 뜨고, 결과도 출발하는 순간에 3.6 rpm쯤 어긋난다.</p>
+    <p>축은 하나인데 관성이 Simscape 쪽과 Multibody 쪽에 나뉘어 있으면, 한쪽의 가속도를 구하는 데 다른 쪽의 가속도가 같은 순간에 필요해진다. Simulink는 이런 고리를 <strong>대수 루프</strong>(algebraic loop)라고 부른다.
+      <strong>축에 붙은 관성을 모두 한쪽에 모아 두면</strong> 이 경고가 사라진다. 그래서 <span class="mk">5</span>에서 회전자 관성도 Multibody의 Inertia 블록으로 옮겼다. 마찰(댐퍼)과 브레이크는 Simscape 쪽에 그대로 두어도 된다.</p>
+  </div>
+  <p>Run을 누르면 Multibody Explorer 창이 열리고 시뮬레이션이 진행되는 대로 원판이 돈다. 끝난 뒤에는 아래 재생 막대로 결과를 다시 볼 수 있다.</p>
   <figure>
-    <img src="assets/img/11_disc.webp" width="680" alt="애니메이션. 왼쪽에 위에서 본 원판이 바퀴살 셋과 빨간 점을 달고 돌아가며, 제목에 시각과 rpm이 바뀐다. 1초부터 원판 오른쪽에 검은 브레이크 패드가 나타난다. 오른쪽 그래프에 rpm 곡선이 파란 점을 따라 그려진다">
-    <figcaption>⑥의 시뮬레이션 결과를 10배 느리게 그린 것. 0.1초에 출발해 400 rpm에 이르고, 1초에 브레이크가 닿자 잠깐 느려졌다가 다시 400 rpm으로 돈다.</figcaption>
+    <a href="assets/img/11_mech_explorer.png"><img src="assets/img/11_mech_explorer.png" width="680" alt="Multibody Explorer 창. 가운데에 검은 모터 몸체 위로 푸른 원판이 있고 원판 가장자리에 빨간 점, 가운데에 작은 회색 추 모양 표시가 있다. 위쪽 도구 막대의 VIEWS 묶음과 Video Creator 버튼, 아래쪽 재생 버튼과 배속 칸에 번호 1~4"></a>
+    <figcaption>Multibody Explorer. 원판 가운데의 작은 회색 추 모양은 <span class="mk">5</span>Rotor (Jm)의 표시다.</figcaption>
+  </figure>
+  <ol class="marks">
+    <li><span class="mk">1</span><strong>VIEWS</strong> — 보는 방향. 처음에는 정면(Front)에서 보여 원판이 납작한 막대로 보인다. <strong>Iso</strong>(비스듬히 위에서)를 누르고 <strong>Fit</strong>으로 화면에 맞췄다. 마우스로 끌어 돌려 볼 수도 있다.</li>
+    <li><span class="mk">2</span><strong>Video Creator</strong> — 재생 화면을 영상 파일로 저장한다(조금 더 알아두면).</li>
+    <li><span class="mk">3</span><strong>재생 버튼</strong> — 처음으로 · 뒤로 · 재생. 시뮬레이션 결과를 다시 돌려 본다.</li>
+    <li><span class="mk">4</span><strong>배속</strong> — 1이면 실제 시간 그대로다. 400 rpm은 1초에 6.7바퀴라 눈으로 따라가기 어렵다. −를 눌러 <strong>0.1</strong>로 낮추면 10배 느리게 재생된다.</li>
+  </ol>
+  <figure>
+    <img src="assets/img/11_disc3d.webp" width="560" alt="애니메이션. 짙은 회색 모터 몸체 위의 푸른 원판이 돈다. 빨간 점이 원판 가장자리를 따라 돌고, 처음에는 빨라지다가 일정한 속도로 돈다">
+    <figcaption>⑥의 시뮬레이션을 10배 느리게 재생한 것. 0.1초에 출발해 0.5초쯤 400 rpm에 이른다.</figcaption>
   </figure>
   <p>
-    오른쪽 그래프의 흐린 선은 전체 결과, 파란 선은 지금까지의 결과다. 원판의 빨간 점이 한 바퀴 도는 데 걸리는 시간을 보면 rpm이 느껴진다 —
-    400 rpm을 10배 느리게 하면 1초에 0.67바퀴다. 브레이크가 닿은 직후 빨간 점이 아주 조금 느려지는 것도 보인다.
+    빨간 점이 한 바퀴 도는 데 걸리는 시간을 보면 rpm이 느껴진다 — 400 rpm을 10배 느리게 하면 1초에 0.67바퀴다.
+    1초에 브레이크가 걸려도 속도는 400에서 381 rpm으로 5%쯤 떨어질 뿐이라 눈으로는 거의 구별되지 않는다. 제어기가 그만큼 잘 버틴다는 뜻이기도 하다.
   </p>
 
   <!-- ─────────────────────────── ⑨ ─────────────────────────── -->
@@ -751,14 +750,14 @@ m_disc = 1;  JL = 0.5*m_disc*r_disc^2;         % 원래 값으로 되돌린다</
   <div class="lab-block">
     <p class="boxtitle">모터 모델을 직접 조립하고 목표 속도를 바꿔 본다</p>
     <p><strong>이걸 해 보면 무엇을 알게 되나:</strong> 식의 항 하나하나를 블록으로 옮기는 감각을 익히고, 설계한 제어기가 어디까지 통하는지(포화가 시작되는 지점)를 직접 찾는다.</p>
-    <p><strong>준비물:</strong> MATLAB(Simulink · Simscape · Control System Toolbox), 오늘의 함수 파일 <code>animate_disc.m</code>.</p>
+    <p><strong>준비물:</strong> MATLAB(Simulink · Simscape · Simscape Multibody · Control System Toolbox).</p>
     <ol>
       <li>스크립트 <code>motor_lab.m</code>에 ②의 변수 조각과 ④의 설계 조각을 붙여 넣고 실행한다. <code>Kp = 0.254</code>, <code>Ki = 1.202</code>가 나오는지 본다. (5분)</li>
       <li><code>ssc_new</code>로 새 모델을 열고 ⑤의 그림대로 블록을 놓고 잇는다. 블록의 값 칸에는 숫자 대신 변수 이름(<code>Ra</code> <code>La</code> <code>Km</code> <code>Jm</code> <code>JL</code> <code>Dm</code> <code>DL</code>)을 적는다. (20분)</li>
       <li>Inport · Outport를 달고 Ctrl+G로 묶은 뒤, 바깥에 ⑥의 루프를 그린다. Model Settings에서 Stop Time 2, Max step size 1e-3. (10분)</li>
       <li><code>V_max = 12; t_brake = 1; T_brake = 0.05;</code>를 실행하고 Run. Scope가 ⑥의 그림과 같은지 본다. (3분)</li>
       <li><code>rpm_ref</code>를 600, 800, 900으로 바꿔 돌린다. 전압이 12 V에 붙기 시작하는 목표값과, 그때 rpm 곡선이 어떻게 달라지는지 적는다. (7분)</li>
-      <li>마지막 결과로 <code>animate_disc</code>를 돌려 원판이 도는 모습을 본다. (2분)</li>
+      <li>⑧처럼 <code>motor_speed_3d</code>로 저장하고 Jm · JL을 Multibody 블록으로 바꾼다. <code>rpm_ref = 900</code>으로 Run해서 Multibody Explorer에서 원판이 도는 모습을 본다. (15분)</li>
     </ol>
     <p><strong>이렇게 되면 성공이다:</strong> 4번의 Scope가 0.5초에 400 rpm, 1초 뒤 381 rpm까지 내려갔다 돌아오는 곡선이고,
        5번에서 목표가 커질수록 처음 전압 \(K_p\omega_{ref}\)가 커지다가 어느 목표부터는 12 V에 평평하게 붙고 rpm이 목표를 넘쳤다 돌아온다.</p>
@@ -780,7 +779,8 @@ m_disc = 1;  JL = 0.5*m_disc*r_disc^2;         % 원래 값으로 되돌린다</
     <li><input type="checkbox" id="c5"><label for="c5">Simscape 블록 하나하나가 식의 어느 항인지 말할 수 있다.</label></li>
     <li><input type="checkbox" id="c6"><label for="c6">서브시스템을 만들고 바깥 루프에 끼울 수 있다.</label></li>
     <li><input type="checkbox" id="c7"><label for="c7">Simscape 결과와 식의 결과를 겹쳐 모델링을 검증할 수 있다.</label></li>
-    <li><input type="checkbox" id="c8"><label for="c8">포화와 적분기 와인드업이 무엇이고 언제 생기는지 설명할 수 있다.</label></li>
+    <li><input type="checkbox" id="c8"><label for="c8">Multibody로 원판을 만들고, 축의 관성을 한쪽에 모아야 하는 이유를 말할 수 있다.</label></li>
+    <li><input type="checkbox" id="c9"><label for="c9">포화와 적분기 와인드업이 무엇이고 언제 생기는지 설명할 수 있다.</label></li>
   </ul>
 
   <h2 id="more">조금 더 알아두면</h2>
@@ -790,7 +790,8 @@ m_disc = 1;  JL = 0.5*m_disc*r_disc^2;         % 원래 값으로 되돌린다</
     <li><strong>극점-영점 상쇄와 외란.</strong> ④의 설계는 목표 추종을 1차로 깔끔하게 만들지만, 지운 모터 극점 \(-a\)(시정수 0.21초)는 외란 응답에 그대로 남는다.
       ⑥에서 브레이크 뒤 400 rpm으로 돌아오는 데 0.5초 넘게 걸린 이유다. 외란을 더 빨리 이기려면 영점을 상쇄 위치에서 옮기고 근궤적(7회)으로 극점을 다시 고른다.</li>
     <li><strong>Simscape Electrical의 DC Motor 블록.</strong> 오늘 조립한 부분(저항 · 인덕터 · 변환기 · 회전자 관성 · 마찰)을 한 블록에 담은 것이 있다(별도 제품). 데이터시트 값(정격 전압 · 무부하 속도 · 정지 토크)으로 파라미터를 넣을 수 있다.</li>
-    <li><strong>3D로 보기.</strong> Simscape Multibody가 있으면 원판을 3차원 물체로 만들고 Mechanics Explorer 창에서 실제로 도는 모습을 볼 수 있다. 오늘의 <code>animate_disc</code>는 그 대신 MATLAB 그림으로 같은 정보를 보여 준 것이다.</li>
+    <li><strong>Multibody Explorer 화면을 영상으로.</strong> 창의 Video Creator 버튼, 또는 명령 <code>smwritevideo('motor_speed_3d', 'disc', 'PlaybackSpeedRatio', 0.1)</code>로 마지막 시뮬레이션 결과를 10배 느린 영상 파일로 저장한다. ⑧의 움직이는 그림도 이것으로 만들었다.
+      창에 보이는 방향 그대로 찍히니 먼저 시점을 맞춰 둔다. 명령은 다 찍기 전에 돌아오므로, Video Creator 창이 닫힌 뒤에 파일을 연다.</li>
     <li><strong>센서와 이산 제어.</strong> 실제 모터 제어기는 엔코더로 각도를 재고, 마이크로컨트롤러가 1 ms마다 PI를 계산한다. PID Controller 블록의 Time domain을 Discrete-time으로 바꾸고 Sample time을 주면 그런 디지털 제어기를 흉내 낼 수 있다.</li>
   </ul>
 

@@ -86,6 +86,15 @@ pre.after { border-left-color: var(--good); background: var(--good-soft); }
                    color: var(--accent); border-radius: 5px; cursor: pointer; }
 .copyform button:hover { background: var(--accent); color: #fff; }
 .copyform pre { margin: 0; background: transparent; border-left: 0; padding: 0; font-size: .82rem; }
+/* 워드·한글용 서식판 양식. 복사할 때는 site.js 의 copyRich 가 검은 글자·흰 바탕으로 다시 만든다 */
+.richform { font-size: .9rem; }
+.richform h3 { margin: .2rem 0 1rem; font-size: 1.1rem; }
+.richform h4 { margin: 1.6rem 0 .5rem; font-size: 1rem; color: var(--fg); }
+.richform h5 { margin: 1rem 0 .4rem; font-size: .92rem; }
+.richform p { margin: .6rem 0 .3rem; }
+.richform table { margin: .3rem 0 .6rem; }
+.richform table.slot td { height: 3.2rem; color: var(--muted); font-size: .85rem; }
+.richform table.code td { font-family: var(--mono); }
 
 /* 마감일 한 줄 — 페이지에서 가장 먼저 눈에 들어와야 한다 */
 .deadline { border: 1px solid var(--accent); border-radius: 8px; background: var(--accent-soft);

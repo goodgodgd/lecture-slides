@@ -80,15 +80,15 @@
   <div class="tablewrap">
   <table class="summary-table">
     <tr><th style="width:9%">문제</th><th>하는 일</th><th style="width:11%">배점</th></tr>
-    <tr><td>1</td><td>전달함수 \(G_1\) · \(G_2\)를 정하고 점근선 · 분기점 · 출발각을 <strong>손으로</strong> 구하기</td><td>12</td></tr>
-    <tr><td>2</td><td>MATLAB으로 두 근궤적을 그리고, 문제 1의 값으로 선과 점을 겹쳐 그려 대조하기</td><td>10</td></tr>
+    <tr><td>1</td><td>전달함수 \(G_1\) · \(G_2\)를 정하고 점근선 · 분기점 · 출발각을 <strong>손으로</strong> 구하기</td><td>11</td></tr>
+    <tr><td>2</td><td>MATLAB으로 두 근궤적을 그리고, 문제 1의 값으로 선과 점을 겹쳐 그려 대조하기</td><td>9</td></tr>
     <tr><td>3</td><td>성능 사양 두 개(최대초과 · 정착시간)를 정하고 목표 극점을 <strong>손으로</strong> 구하기</td><td>6</td></tr>
-    <tr><td>4</td><td>PD 영점(각도 조건)과 이득 \(K\)(크기 조건)를 <strong>손으로</strong> 구하고 MATLAB으로 확인하기</td><td>14</td></tr>
-    <tr><td>5</td><td>계단응답으로 사양을 확인하고, PI 제어기를 붙여 PD와 비교하기</td><td>12</td></tr>
+    <tr><td>4</td><td>PD 영점(각도 조건)과 이득 \(K\)(크기 조건)를 <strong>손으로</strong> 구하고 MATLAB으로 확인하기</td><td>13</td></tr>
+    <tr><td>5</td><td>계단응답으로 사양을 확인하고, PI 제어기를 붙여 PD와 비교하기</td><td>11</td></tr>
   </table>
   </div>
 
-  <p>기본 점수 6점(양식 · 제출)을 합쳐 <strong>총점 60점</strong>입니다.</p>
+  <p>다섯 문제가 50점이고, 보고서를 제출하면 <strong>기본 점수 10점</strong>을 받습니다. 합쳐서 <strong>총점 60점</strong>입니다.</p>
 
   <h2 id="notes">2. 이 숙제에서 특히 신경 쓸 세 가지</h2>
 
@@ -105,9 +105,9 @@
 
   <p>
     이 숙제의 계산은 전부 두 번 합니다. 한 번은 종이 위에서, 한 번은 MATLAB에서입니다.
-    MATLAB 코드에서 선과 점을 그릴 때는 <strong>손으로 구한 숫자를 코드에 적어 넣어서</strong> 그립니다.
-    그러면 손계산이 맞았는지가 그림에서 바로 보입니다 — 점근선이 근궤적과 나란히 가고,
-    분기점 표시가 가지가 갈라지는 자리에 앉아 있으면 맞은 것입니다.
+    <strong>손으로 구한 숫자를 코드에 적어 넣어서</strong> 선과 점을 그리면 손계산이 맞았는지가 그림에서 바로 보입니다 —
+    점근선이 근궤적과 나란히 가고, 분기점 표시가 가지가 갈라지는 자리에 앉아 있으면 맞은 것입니다.
+    강의자료의 함수로 그렸다면 함수가 명령 창에 찍어 준 숫자와 손계산을 나란히 놓고 보면 됩니다.
   </p>
 
   <p>
@@ -123,27 +123,22 @@
   </p>
 
   <p>
-    다만 <strong>가급적 강의자료에 나온 함수로 푸세요.</strong> 이 숙제는 1~7회 자료에 있는 함수만으로 전부 풀 수 있습니다.
-    강의자료에 없는 함수를 쓰고 싶으면 <strong>그 함수의 용도와 사용법을 부록 A에 한두 줄로 정리</strong>하면 됩니다.
-    정리하면 감점하지 않습니다. 부록 A에 적으려면 한 번은 찾아보게 됩니다. 그게 이 규칙의 목적입니다.
+    <strong>가급적 강의자료에 나온 함수로 푸세요.</strong> 이 숙제는 1~7회 자료에 있는 함수만으로 전부 풀 수 있습니다.
+    강의 중에 만든 함수 파일 — <code>root_locus</code> · <code>find_break_point</code> · <code>design_pd_controller</code> ·
+    <code>draw_overshoot_line</code> 같은 것 — 도 <strong>그대로 불러 써도 됩니다.</strong>
+    이미 만들어 둔 것 중에서 쓸 만한 것을 골라 제자리에 가져다 쓰는 것도 실력입니다.
+    다만 함수가 구해 준 값은 손계산을 <strong>확인</strong>하는 데 쓰는 것이고, 손계산 칸은 따로 채웁니다.
   </p>
 
-  <div class="box trap">
-    <div class="boxtitle">⚠️ 강의자료에서 만든 함수 파일은 그대로 부르지 않습니다</div>
-    <p>
-      <code>root_locus</code> · <code>find_asymptote</code> · <code>find_break_point</code> · <code>find_start_angle</code> ·
-      <code>design_pd_controller</code> · <code>draw_overshoot_line</code> · <code>draw_settling_time_line</code> · <code>draw_peak_time_line</code> · <code>mark_closed_pole</code>는
-      이 숙제에서 손으로 하는 계산을 통째로 대신합니다. 그래서 <strong>그대로 호출하면 감점</strong>입니다(5절).
-      함수 안의 코드를 읽고 <strong>필요한 줄만 가져다 쓰는 것은 괜찮습니다</strong> — 예를 들어 점근선을 긋는 <code>plot</code> 한 줄.
-    </p>
-    <p>
-      같은 이유로 <code>pidtune</code>처럼 제어기를 자동으로 정해 주는 함수로 설계하면 그 문제는 점수를 드리지 않습니다.
-    </p>
-  </div>
+  <p>
+    강의자료에 없는 함수를 쓰고 싶으면 <strong>그 함수의 용도와 사용법을 부록 A에 한두 줄로 정리</strong>하면 됩니다.
+    정리하면 감점하지 않습니다. 부록 A에 적으려면 한 번은 찾아보게 됩니다. 그게 이 규칙의 목적입니다.
+    단, <code>pidtune</code>처럼 제어기를 자동으로 정해 주는 함수는 이 숙제에서 하려는 설계 과정을 통째로 건너뛰므로 쓰지 않습니다.
+  </p>
 
   <h2 id="problems">3. 문제 자세히</h2>
 
-  <h3 id="p1">문제 1. 근궤적 작도 값을 손으로 구하기 (12점)</h3>
+  <h3 id="p1">문제 1. 근궤적 작도 값을 손으로 구하기 (11점)</h3>
 
   <p>
     전달함수 두 개를 정합니다. 분자는 둘 다 1로 둡니다 — 이득 \(K\)는 근궤적이 따로 다룹니다.
@@ -187,11 +182,11 @@
     <li>분기점은 후보가 둘 나옵니다. <strong>둘 중 어느 것이 근궤적 위에 있는지</strong>를 고르는 이유도 한 줄 적어 주세요.</li>
   </ul>
 
-  <h3 id="p2">문제 2. MATLAB으로 근궤적을 그리고 손계산과 겹쳐 보기 (10점)</h3>
+  <h3 id="p2">문제 2. MATLAB으로 근궤적을 그리고 손계산과 겹쳐 보기 (9점)</h3>
 
   <p>
     <code>subplot(1,2,1)</code>에 \(G_1\), <code>subplot(1,2,2)</code>에 \(G_2\)의 근궤적을 <code>rlocus</code>로 그리고,
-    그 위에 <strong>문제 1에서 손으로 구한 값으로</strong> 아래 것들을 겹쳐 그립니다.
+    그 위에 아래 것들을 겹쳐 그립니다.
   </p>
 
   <div class="tablewrap">
@@ -202,11 +197,19 @@
   </table>
   </div>
 
+  <p>겹쳐 그리는 방법은 둘 중 편한 쪽을 고르면 됩니다.</p>
+
   <ul>
-    <li>손으로 구한 값은 코드 맨 위에 변수로 적어 둡니다. 예: <code>sb = -1.918;   % 문제 1에서 손으로 구한 분기점</code></li>
-    <li><code>axis()</code>로 극점 · 분기점 · 점근선 중심이 다 보이도록 범위를 정합니다.</li>
-    <li>그리는 방법은 <a href="../../matlab_05.html#s8">5회 ⑧</a>의 <code>root_locus</code> 함수 안에 다 있습니다. 함수는 부르지 말고 필요한 줄만 가져다 쓰세요.</li>
+    <li><strong>손계산 값으로 직접 긋기</strong> — 손으로 구한 값을 코드 맨 위에 변수로 적고 <code>plot</code>으로 긋습니다.
+      예: <code>sb = -1.918;   % 문제 1에서 손으로 구한 분기점</code></li>
+    <li><strong>강의자료 함수로 한 번에 그리기</strong> — <a href="../../matlab_05.html#s8">5회 ⑧</a>의 <code>root_locus</code>를 그대로 부르면
+      점근선 · 분기점 · 출발각을 계산해 그리고, 그 값을 명령 창에 숫자로 찍어 줍니다.</li>
   </ul>
+
+  <p>
+    어느 쪽이든 <strong>보고서의 대조표에 손계산 값과 MATLAB 결과를 나란히</strong> 적습니다.
+    극점 · 분기점 · 점근선 중심이 다 보이지 않으면 <code>axis()</code>로 범위를 넓혀 주세요.
+  </p>
 
   <figure>
     <img src="../../assets/img/hw2_rlocus_pair.png" alt="왼쪽은 실수 극점 세 개의 근궤적에 초록 점선 점근선 세 개와 빨간 다이아몬드 분기점을 겹친 그림, 오른쪽은 복소 극점 한 쌍과 실수 극점 하나의 근궤적에 초록 점선 점근선과 자홍 점선 출발각을 겹친 그림" width="900">
@@ -250,7 +253,7 @@
     식은 <a href="../../matlab_06.html#s2">6회 ②</a>에 있습니다.
   </p>
 
-  <h3 id="p4">문제 4. PD 영점과 이득 K를 손으로 구하고 MATLAB으로 확인하기 (14점)</h3>
+  <h3 id="p4">문제 4. PD 영점과 이득 K를 손으로 구하고 MATLAB으로 확인하기 (13점)</h3>
 
   <p>
     <a href="../../matlab_07.html">7회</a> ③ ~ ⑤의 순서를 그대로 손으로 따라갑니다.
@@ -270,7 +273,10 @@
     </li>
   </ol>
 
-  <p>그다음 MATLAB으로 네 가지를 확인하고 표에 나란히 적습니다.</p>
+  <p>
+    그다음 MATLAB으로 네 가지를 확인하고 표에 나란히 적습니다.
+    PD 영점은 <a href="../../matlab_07.html#pd">7회 ④</a>의 <code>design_pd_controller</code>로 한 번 더 확인해 봐도 좋습니다.
+  </p>
 
   <div class="tablewrap">
   <table>
@@ -293,7 +299,8 @@
   <p>
     마지막으로 <strong>PD를 붙인 근궤적 그림</strong>을 하나 그립니다.
     <code>rlocus(Gpd)</code> 위에 문제 3의 \(\zeta\)로 구한 최대초과 경계선 두 개, \(\sigma\)로 구한 정착시간 경계선 하나,
-    목표 극점, ④에서 구한 폐루프 극점을 겹칩니다. 경계선을 긋는 법은 <a href="../../matlab_06.html#s3">6회 ③</a>에 있습니다.
+    목표 극점, ④에서 구한 폐루프 극점을 겹칩니다. 경계선을 긋는 법은 <a href="../../matlab_06.html#s3">6회 ③</a>에 있고,
+    거기서 만든 <code>draw_overshoot_line</code> · <code>draw_settling_time_line</code>을 그대로 써도 됩니다.
   </p>
 
   <figure>
@@ -301,7 +308,7 @@
     <figcaption>예시 그림 — 위 \(G_1\)에 사양 %OS 10%, \(T_s\) 1.6 s. 별(목표 극점)이 두 경계선이 만나는 자리에 있고, 근궤적이 그 별을 지나며, 파란 삼각형(폐루프 극점)이 별 위에 겹칩니다.</figcaption>
   </figure>
 
-  <h3 id="p5">문제 5. 계단응답으로 확인하고 PI 제어기 붙이기 (12점)</h3>
+  <h3 id="p5">문제 5. 계단응답으로 확인하고 PI 제어기 붙이기 (11점)</h3>
 
   <p>
     <strong>5-1. PD 결과를 사양과 비교합니다.</strong>
@@ -345,9 +352,10 @@
   </p>
 
   <ul>
-    <li><strong>워드 · 한글:</strong> 양식과 같은 제목 구조로 문서를 만들어 채우고 PDF로 변환합니다 (워드: 파일 → 내보내기 → PDF 만들기).
+    <li><strong>워드 · 한글:</strong> 6절의 「워드 · 한글용 양식」을 펼쳐 「복사」를 누르고 빈 문서에 붙여 넣으면 제목 · 표가 서식째 들어갑니다.
+      다 채우고 PDF로 변환합니다 (워드: 파일 → 내보내기 → PDF 만들기).
       MS Office가 없으면 학교 메일 주소로 <a href="https://www.microsoft.com/ko-kr/education/products/office" target="_blank" rel="noopener">교육용 Office</a>를 무료로 설치할 수 있습니다.</li>
-    <li><strong>노션:</strong> 6절의 「복사」 버튼을 눌러 노션 페이지에 붙여 넣으면 제목 · 표 · 코드 칸이 그대로 살아납니다.
+    <li><strong>노션:</strong> 6절의 「노션용 양식」을 펼쳐 「복사」를 누르고 노션 페이지에 붙여 넣으면 제목 · 표 · 코드 칸이 그대로 살아납니다.
       다 채우고 오른쪽 위 <code>···</code> → <code>내보내기</code> → 형식 <code>PDF</code>로 변환합니다.</li>
   </ul>
 
@@ -357,43 +365,167 @@
     <tr><td>기한</td><td>2026년 11월 11일 (수) 23:59</td></tr>
     <tr><td>제출처</td><td>e-class 게시판</td></tr>
     <tr><td>파일명</td><td><code>HW2_이름_학번.pdf</code> (예: <code>HW2_홍길동_20261234.pdf</code>)</td></tr>
-    <tr><td>총점</td><td>60점</td></tr>
+    <tr><td>총점</td><td>60점 (기본 10 + 문제 50)</td></tr>
   </table>
   </div>
 
   <ul>
     <li>손계산은 종이에 쓴 뒤 사진을 찍어 붙이거나 워드 수식 입력기로 씁니다. 글씨가 선명하게 보이도록 찍어주세요.</li>
-    <li><strong>코드와 명령 창 출력은 글자(텍스트)로 붙여 넣습니다.</strong> 화면 캡처 이미지는 감점입니다. 그래프만 그림으로 붙입니다.</li>
+    <li><strong>코드와 명령 창 출력은 글자(텍스트)로 붙여 넣습니다.</strong> 화면 캡처 이미지는 보고서 양식 위반입니다(5절). 그래프만 그림으로 붙입니다.</li>
     <li>코드는 명령 창에 한 줄씩 치지 말고 <strong>스크립트 파일(<code>.m</code>)로 만들어서</strong> 실행합니다.
       문제 2 ~ 5를 스크립트 하나에 이어 써도 됩니다. 보고서에는 문제마다 해당하는 부분을 나눠 붙입니다.</li>
   </ul>
 
   <h2 id="penalty">5. 감점 항목</h2>
 
-  <p>총점 60점에서 아래 항목을 따로 차감합니다. 제출했으면 총점이 0점 아래로 내려가지는 않습니다.</p>
+  <p>
+    문제별로 채점한 점수와 별도로, 아래 항목은 문제 점수(50점)에서 따로 차감합니다.
+    <strong>기본 점수 10점은 감점으로 깎이지 않습니다</strong> — 제출했으면 최소 10점은 받습니다.
+    단, 지나치게 유사한 보고서는 기본 점수까지 0점이 될 수 있습니다.
+  </p>
 
   <div class="tablewrap">
   <table>
     <tr><th>감점 사유</th><th style="width:28%">감점</th></tr>
     <tr><td>강의자료에 없는 함수를 쓰고 부록 A에 정리하지 않음</td><td>1개당 −2 (최대 −8)</td></tr>
-    <tr><td>강의자료에서 만든 함수 파일(<code>root_locus</code> · <code>find_*</code> · <code>design_pd_controller</code> 등)을 그대로 호출</td><td>−3</td></tr>
-    <tr><td>손으로 풀 계산을 계산 과정 없이 MATLAB 결과로만 채움, 또는 <code>pidtune</code> 등으로 제어기를 자동 설계</td><td>해당 문제 0점</td></tr>
     <tr><td>문제 1 · 3의 고르는 규칙 위반 (소수점 한 자리 수, 극점 간격, 사양 범위)</td><td>−2</td></tr>
-    <tr><td>코드나 출력을 이미지로 캡처해 붙임</td><td>−2</td></tr>
-    <tr><td>파일명 규칙 위반</td><td>−2</td></tr>
+    <tr><td>보고서 양식 위반 — 파일명 규칙을 어김, PDF가 아님, 코드나 명령 창 출력을 이미지로 캡처해 붙임,
+      표지 · 0장 「내가 고른 숫자」 · 부록 A · B를 비움, 양식의 항목을 빼거나 순서 · 번호를 바꿔 문제별 답을 찾기 어려움 등</td><td>1건당 −2 (최대 −6)</td></tr>
     <tr><td>두 사람 이상의 보고서가 지나치게 유사함</td><td>감점 또는 0점</td></tr>
   </table>
   </div>
 
-  <p>여기 적힌 것 말고 다른 이유로는 감점하지 않습니다.</p>
-
   <h2 id="form">6. 보고서 양식</h2>
 
-  <p class="readme-first">
-    아래 <strong>「복사」 버튼</strong>을 누르면 양식이 통째로 복사됩니다.
-    노션에 붙여 넣거나, 워드 · 한글에서 같은 제목 구조로 만들어 <strong>빈칸을 채우면</strong> 됩니다.
+  <p>
+    양식은 두 가지입니다. 내용은 같고 붙여 넣을 곳만 다릅니다. <strong>쓰는 프로그램에 맞는 것 하나만 펼쳐서</strong>
+    「복사」 버튼을 누르고 붙여 넣은 뒤 <strong>빈칸을 채우면</strong> 됩니다.
   </p>
 
+  <details class="fold" id="form-word">
+    <summary>워드 · 한글용 양식 — 제목과 표가 서식째 붙습니다</summary>
+    <p class="readme-first">
+      「복사」를 누르고 워드나 한글의 빈 문서에 붙여 넣으면 제목은 제목 스타일로, 표는 표로 들어갑니다.
+      회색 글씨로 된 안내 문구는 지우고 그 자리를 채우세요.
+    </p>
+    <div class="copyform">
+      <button onclick="copyRich(this)">복사</button>
+      <div class="richform">
+        <h3>보고서 — Homework #2 근궤적과 PID 제어기 설계</h3>
+        <table>
+          <tr><th style="width:22%">학과</th><td></td></tr>
+          <tr><th>학번</th><td></td></tr>
+          <tr><th>이름</th><td></td></tr>
+          <tr><th>제출일</th><td></td></tr>
+        </table>
+
+        <h4>0. 내가 고른 숫자</h4>
+        <table>
+          <tr><th style="width:30%"></th><th>값</th></tr>
+          <tr><td>G1(s)</td><td>1 / ((s + ___)(s + ___)(s + ___))</td></tr>
+          <tr><td>G2(s)</td><td>1 / ((s + ___)((s + ___)² + ___²))</td></tr>
+          <tr><td>최대초과 %OS</td><td>___ %</td></tr>
+          <tr><td>정착시간 Ts</td><td>___ s</td></tr>
+        </table>
+
+        <h4>1. 근궤적 작도 값 손으로 구하기 (11점)</h4>
+        <h5>1.1 결과</h5>
+        <table>
+          <tr><th></th><th>점근선 중심 σc</th><th>점근선 각도 β</th><th>분기점</th><th>출발각 (위쪽 복소 극점)</th></tr>
+          <tr><td>G1</td><td></td><td></td><td></td><td>해당없음</td></tr>
+          <tr><td>G2</td><td></td><td></td><td>해당없음</td><td></td></tr>
+        </table>
+        <h5>1.2 계산 과정</h5>
+        <table class="slot"><tr><td>(손글씨 사진 또는 수식 입력기 — 분기점 후보 둘 중 하나를 고른 이유 포함)</td></tr></table>
+
+        <h4>2. MATLAB으로 근궤적 그리고 겹쳐 보기 (9점)</h4>
+        <p><strong>코드</strong></p>
+        <table class="slot code"><tr><td>(코드를 텍스트로 붙여 넣기)</td></tr></table>
+        <p><strong>그래프</strong></p>
+        <table class="slot"><tr><td>(figure 전체를 캡처해 붙여 넣기)</td></tr></table>
+        <p><strong>대조 확인</strong></p>
+        <table>
+          <tr><th style="width:18%"></th><th>손계산</th><th>MATLAB (함수가 찍은 값, 또는 그림에서 겹치는지)</th><th style="width:14%">맞나요?</th></tr>
+          <tr><td>G1 점근선</td><td></td><td></td><td></td></tr>
+          <tr><td>G1 분기점</td><td></td><td></td><td></td></tr>
+          <tr><td>G2 점근선</td><td></td><td></td><td></td></tr>
+          <tr><td>G2 출발각</td><td></td><td></td><td></td></tr>
+        </table>
+        <p>맞지 않는 것이 있으면 어디가 틀린 것 같은지 한 줄 쓰세요. 고쳤다면 무엇을 고쳤는지 쓰세요.</p>
+        <table class="slot"><tr><td></td></tr></table>
+
+        <h4>3. 사양과 목표 극점 (6점)</h4>
+        <p><strong>P 제어의 한계</strong> 4/|s_b| = ___ s → 내가 고른 Ts = ___ s (0.7 ~ 0.9배)</p>
+        <p><strong>계산 과정</strong> (ζ, σ, ω_d)</p>
+        <table class="slot"><tr><td>(손글씨 사진 또는 수식 입력기)</td></tr></table>
+        <p><strong>목표 극점</strong> s* = ___ + j ___</p>
+
+        <h4>4. PD 영점과 이득 K (13점)</h4>
+        <h5>4.1 목표 극점에서 G1의 각도 (손계산)</h5>
+        <table class="slot"><tr><td></td></tr></table>
+        <h5>4.2 PD 영점 z_PD (손계산)</h5>
+        <table class="slot"><tr><td></td></tr></table>
+        <h5>4.3 이득 K — 크기 조건 (손계산)</h5>
+        <table class="slot"><tr><td></td></tr></table>
+        <h5>4.4 MATLAB으로 확인</h5>
+        <p><strong>코드</strong></p>
+        <table class="slot code"><tr><td>(코드를 텍스트로 붙여 넣기)</td></tr></table>
+        <p><strong>명령 창 출력</strong></p>
+        <table class="slot code"><tr><td>(출력을 텍스트로 붙여 넣기)</td></tr></table>
+        <table>
+          <tr><th style="width:30%">확인할 것</th><th>손계산</th><th>MATLAB</th><th style="width:14%">맞나요?</th></tr>
+          <tr><td>∠G1(s*)</td><td></td><td></td><td></td></tr>
+          <tr><td>∠G1(s*)(s* − z_PD)</td><td>−180°</td><td></td><td></td></tr>
+          <tr><td>K</td><td></td><td></td><td></td></tr>
+          <tr><td>폐루프 극점</td><td>s*</td><td></td><td></td></tr>
+        </table>
+        <p><strong>그래프</strong> (PD를 붙인 근궤적 + 경계선 + 목표 극점 + 폐루프 극점)</p>
+        <table class="slot"><tr><td>(figure 전체를 캡처해 붙여 넣기)</td></tr></table>
+
+        <h4>5. 계단응답으로 확인하고 PI 붙이기 (11점)</h4>
+        <h5>5.1 PD 결과와 사양</h5>
+        <p><strong>코드와 출력</strong></p>
+        <table class="slot code"><tr><td>(코드와 출력을 텍스트로 붙여 넣기)</td></tr></table>
+        <table>
+          <tr><th style="width:30%"></th><th>사양</th><th>PD (MATLAB)</th></tr>
+          <tr><td>최대초과 (%)</td><td></td><td></td></tr>
+          <tr><td>정착시간 (s)</td><td></td><td></td></tr>
+          <tr><td>최종값</td><td>1</td><td></td></tr>
+        </table>
+        <p>사양과 어긋난 것이 있으면 얼마나, 왜 그런 것 같은지 한 줄:</p>
+        <table class="slot"><tr><td></td></tr></table>
+        <h5>5.2 PI 제어기 추가</h5>
+        <p>z_PI = −σ/10 = ___ , K = ___ , PID 최종값 = ___</p>
+        <p><strong>코드</strong></p>
+        <table class="slot code"><tr><td>(코드를 텍스트로 붙여 넣기)</td></tr></table>
+        <p><strong>그래프</strong> (PD와 PID 계단응답을 한 그래프에)</p>
+        <table class="slot"><tr><td>(figure 전체를 캡처해 붙여 넣기)</td></tr></table>
+        <h5>5.3 해석 — PI를 붙여서 무엇이 좋아지고 무엇이 달라졌나 (두세 줄)</h5>
+        <table class="slot"><tr><td></td></tr></table>
+
+        <h4>부록 A. 강의자료에 없는 함수 정리</h4>
+        <p>안 썼으면 「없음」이라고 씁니다.</p>
+        <table>
+          <tr><th style="width:18%">함수</th><th style="width:24%">어디에 썼나</th><th>무엇을 하는 함수이고 어떻게 쓰는가 (한두 줄)</th></tr>
+          <tr><td></td><td></td><td></td></tr>
+        </table>
+
+        <h4>부록 B. 작업 기록</h4>
+        <p><strong>1. AI를 사용했다면, AI가 처음 쓴 것 중에서 나중에 고친 것이 있나요? 왜 고쳤나요?</strong></p>
+        <table class="slot"><tr><td></td></tr></table>
+        <p><strong>2. 이 숙제에서 가장 오래 막혔던 지점은 어디였고, 어떻게 풀었나요?</strong></p>
+        <table class="slot"><tr><td></td></tr></table>
+        <p><strong>3. AI와 대화한 내용 요약</strong> (AI를 쓰지 않았으면 「사용하지 않음」)</p>
+        <table class="slot"><tr><td>(아래 프롬프트의 결과를 붙여 넣기)</td></tr></table>
+      </div>
+    </div>
+  </details>
+
+  <details class="fold" id="form-notion">
+    <summary>노션용 양식 — 마크다운</summary>
+    <p class="readme-first">
+      「복사」를 누르고 노션 페이지에 붙여 넣으면 제목 · 표 · 코드 칸이 그대로 살아납니다.
+    </p>
   <div class="copyform">
     <button onclick="copyPrompt(this)">복사</button>
 <pre><code># 보고서 — Homework #2 근궤적과 PID 제어기 설계
@@ -416,7 +548,7 @@
 
 ---
 
-## 1. 근궤적 작도 값 손으로 구하기 (12점)
+## 1. 근궤적 작도 값 손으로 구하기 (11점)
 
 ### 1.1 결과
 
@@ -431,7 +563,7 @@
 
 ---
 
-## 2. MATLAB으로 근궤적 그리고 겹쳐 보기 (10점)
+## 2. MATLAB으로 근궤적 그리고 겹쳐 보기 (9점)
 
 **코드** (텍스트로 붙여 넣기)
 
@@ -443,14 +575,14 @@
 
 **대조 확인**
 
-| 손으로 구한 것 | 근궤적과 겹치나요? |
-|---|---|
-| G1 점근선 | |
-| G1 분기점 | |
-| G2 점근선 | |
-| G2 출발각 | |
+| | 손계산 | MATLAB (함수가 찍은 값, 또는 그림에서 겹치는지) | 맞나요? |
+|---|---|---|---|
+| G1 점근선 | | | |
+| G1 분기점 | | | |
+| G2 점근선 | | | |
+| G2 출발각 | | | |
 
-겹치지 않는 것이 있으면 어디가 틀린 것 같은지 한 줄 쓰세요. 고쳤다면 무엇을 고쳤는지 쓰세요.
+맞지 않는 것이 있으면 어디가 틀린 것 같은지 한 줄 쓰세요. 고쳤다면 무엇을 고쳤는지 쓰세요.
 
 :
 
@@ -468,7 +600,7 @@
 
 ---
 
-## 4. PD 영점과 이득 K (14점)
+## 4. PD 영점과 이득 K (13점)
 
 ### 4.1 목표 극점에서 G1의 각도 (손계산)
 
@@ -507,7 +639,7 @@
 
 ---
 
-## 5. 계단응답으로 확인하고 PI 붙이기 (12점)
+## 5. 계단응답으로 확인하고 PI 붙이기 (11점)
 
 ### 5.1 PD 결과와 사양
 
@@ -568,6 +700,7 @@ z_PI = −σ/10 = ___ ,  K = ___ ,  PID 최종값 = ___
 (여기에 붙여 넣기)
 </code></pre>
   </div>
+  </details>
 
   <p>부록 B의 3번은 AI 세션을 끝내기 전에 아래 프롬프트를 그대로 넣고 나온 결과를 붙이면 됩니다. <strong>내용으로 점수를 매기지 않습니다.</strong></p>
 
