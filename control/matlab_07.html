@@ -42,11 +42,6 @@
   <a href="#pi">⑦ PI 제어기의 영점 — 원점 가까이</a>
   <a href="#pidcheck">⑧ PID 보상 결과와 stepinfo의 정상상태 값</a>
   <a href="#gains">⑨ Kp · Ki · Kd로 읽기 — pid</a>
-  <a href="#ex2">⑩ 두 번째 예제 — 정착시간 사양</a>
-  <a class="sub" href="#ex2check">설계 검증에서 걸리는 것</a>
-  <a href="#simulink">⑪ Simulink로 확인하기</a>
-  <a class="sub" href="#slblocks">블록과 모델 만드는 법</a>
-  <a class="sub" href="#slsim">sim으로 돌리기</a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
   <a href="#check">✅ 점검</a>
@@ -65,7 +60,6 @@
       <li>PD 제어기의 영점 위치는 어떤 계산으로 정해지나? 그 계산을 MATLAB 코드로 어떻게 옮기나?</li>
       <li>PI 제어기의 영점은 왜 원점 가까이에 두나? 가까이 두면 무엇을 잃나?</li>
       <li>PID를 넣었더니 <code>stepinfo</code>가 이상한 성능값을 내놓는다. 무엇이 「이상한」 것인가?</li>
-      <li>MATLAB에서 설계한 제어기를 Simulink 블록 그림으로 옮기면 같은 응답이 나오나?</li>
     </ol>
   </div>
 
@@ -79,7 +73,7 @@
     그럴 때 하는 일이 <strong>보상</strong>(compensation)이다. 제어기에 영점과 극점을 더해
     <strong>근궤적의 모양 자체를 바꾼다.</strong> 오늘은
     PD 제어기로 근궤적을 목표 극점 위로 끌어오고, PI 제어기로 정상상태 오차를 없앤 뒤,
-    같은 문제를 풀어 둔 Simulink 모델 <code>simulink_pid_design.slx</code>로 결과를 확인한다.
+    그 결과를 \(K_p, K_i, K_d\) 세 이득으로 읽는다.
   </p>
   <p>
     계산의 알맹이는 근궤적의 두 조건 — <strong>각도 조건</strong>과 <strong>크기 조건</strong> — 이다.
@@ -99,7 +93,6 @@
     <tr><td><code>mark_closed_pole(K*otf)</code></td><td>폐루프 극점을 근궤적 위에 찍는다 (오늘 만드는 함수)</td><td>⑥ 극점이 목표에 왔는지 확인</td></tr>
     <tr><td><code>stepinfo(y, t, 1)</code></td><td>최종값을 직접 정해 주고 성능 지표를 계산한다</td><td>⑦ 사양을 만족하는지 검증</td></tr>
     <tr><td><code>pid(Kp, Ki, Kd)</code> · <code>pidtune</code></td><td>PID 제어기 객체 · 자동 조정</td><td>⑧ 이득을 Kp·Ki·Kd로 읽기, 비교</td></tr>
-    <tr><td><code>load_system</code> · <code>get_param</code> · <code>set_param</code> · <code>sim</code></td><td>Simulink 모델을 코드로 열고, 읽고, 바꾸고, 돌린다</td><td>⑨ 블록 선도로 같은 결과가 나오는지</td></tr>
   </table>
   </div>
   <div class="interp">
@@ -111,7 +104,7 @@
   <!-- ─────────────────────────── ① ─────────────────────────── -->
   <h2 id="problem">① 문제 정의 — 개루프 전달함수와 사양</h2>
   <p>
-    첫 예제는 극점이 셋인 플랜트에 단위 피드백을 건 시스템이다.
+    예제는 극점이 셋인 플랜트에 단위 피드백을 건 시스템이다.
     이 시스템에 제어기를 붙여 아래 두 사양을 만족시키는 것이 목표다.
   </p>
   <div class="tablewrap">
@@ -257,7 +250,7 @@ phase_at_target = rad2deg(angle(evalfr(otf, target_pole)))</code></pre>
   <h3 id="pdfunc">함수 파일 <code>design_pd_controller</code></h3>
   <p>
     이 계산은 <strong>함수 파일</strong>로 만들어 둔다.
-    두 번째 예제에서도 같은 계산을 하기 때문이다. 4회에서 함수 파일을 만들 때처럼
+    플랜트나 사양이 바뀌어도 같은 계산을 다시 하기 때문이다. 4회에서 함수 파일을 만들 때처럼
     <strong>파일 이름과 함수 이름을 같게</strong>(<code>design_pd_controller.m</code>) 저장하고, 스크립트와 같은 폴더에 둔다.
   </p>
 <!-- mcode 07/design_pd_controller.m file -->
@@ -539,7 +532,7 @@ final_poles =
     <li><strong>마지막 줄 −0.0085</strong> — PI가 더한 <strong>느린 극점</strong>이다. PI 영점 −0.01 바로 옆에 생겼다. 이 극점이 ⑧의 「이상한 성능값」의 원인이다.</li>
   </ul>
 
-  <p>폐루프 극점을 찍는 일도 두 예제에서 되풀이하므로 함수 파일로 만들어 둔다.</p>
+  <p>폐루프 극점을 찍는 일도 단계마다 되풀이하므로 함수 파일로 만들어 둔다.</p>
 <!-- mcode 07/mark_closed_pole.m file -->
 <div class="mcode">
 <div class="fname">mark_closed_pole.m</div>
@@ -700,7 +693,7 @@ S_long =
   <div class="interp">
     <strong>해석:</strong> 어느 쪽이 「맞는」 숫자인가는 무엇을 보려는지에 달렸다. 사람이 느끼는 응답 — 0.3초 만에 솟았다가 1초 안에 가라앉는 모양 — 은 PD 설계 그대로다.
     다만 1에 완전히 붙는 데에는 몇 분이 걸린다. <strong>PI 영점을 원점에 가까이 둘수록 빠른 부분은 덜 흐트러지지만 꼬리는 더 느려진다.</strong>
-    이 맞바꿈을 숫자로 보이는 것이 ⑩의 마지막 조각이다.
+    이 맞바꿈은 연습문제 2에서 숫자로 확인해 본다.
   </div>
 
   <div class="box trap">
@@ -767,586 +760,20 @@ difference =
     그래서 ⑧의 꼬리가 느렸다.
   </p>
 
-  <!-- ─────────────────────────── ⑩ ─────────────────────────── -->
-  <h2 id="ex2">⑩ 두 번째 예제 — 정착시간 사양</h2>
-  <p>
-    두 번째 예제는 플랜트에 <strong>복소 극점</strong> \(-1 \pm j2\)가 있고, 사양이 첨두시간 대신 <strong>정착시간</strong>이다.
-    절차는 같고, 목표 극점을 정하는 줄만 바뀐다.
-  </p>
-  <div class="tablewrap">
-  <table>
-    <tr><th>무엇</th><th>값</th></tr>
-    <tr><td>개루프 전달함수</td><td>\(\dfrac{1}{(s^2+2s+5)(s+8)}\)</td></tr>
-    <tr><td>최대초과</td><td>10% 이하 (<code>os = 0.1</code>)</td></tr>
-    <tr><td>정착시간 \(T_s\) (2% 기준)</td><td>2초 이하 (<code>ts = 2</code>)</td></tr>
-  </table>
-  </div>
-<!-- mcode 07/b11_ex2_problem -->
-<div class="mcode">
-<pre class="lang-matlab"><code>clc; clear
-% 개루프 전달함수 G(s)H(s)
-s = tf('s');
-otf = 1/((s^2+2*s+5)*(s+8))
-% 최대초과 비율
-os = 0.1;
-% 정착시간
-ts = 2;
-% 근궤적 그리기
-rlocus(otf)
-hold on</code></pre>
-<button onclick="copyCode(this)">복사</button>
-<p class="outlabel">명령 창 출력</p>
-<pre class="out"><code>otf =
-
-             1
-  ------------------------
-  s^3 + 10 s^2 + 21 s + 40
-
-Continuous-time transfer function.
-Model Properties</code></pre>
-</div>
-<!-- /mcode -->
-  <p>정착시간 경계선은 6회의 <code>draw_settling_time_line</code>이 그린다. 이번에는 <strong>실수부가 먼저 정해지고</strong>, 허수부는 ζ에서 나온다.</p>
-<!-- mcode 07/b12_ex2_target -->
-<div class="mcode">
-<pre class="lang-matlab"><code>[zeta, theta] = draw_overshoot_line(os, 'b--');
-sigma_d = draw_settling_time_line(ts, 'r--');
-wn = sigma_d/zeta;
-pole_real = -sigma_d;
-pole_imag = wn * sqrt(1 - zeta^2);
-target_pole = pole_real + 1i*pole_imag;
-fprintf('최대초과와 정착시간을 만족하는 극점의 위치 s = %.4f + j%.4f\n', ...
-        pole_real, pole_imag)
-plot(pole_real, pole_imag, 'rd')
-hold off
-axis([-25 5 -15 15])
-title('기본 근궤적과 극점 설계')</code></pre>
-<button onclick="copyCode(this)">복사</button>
-<p class="outlabel">명령 창 출력</p>
-<pre class="out"><code>%OS = 10.0%, zeta = 0.5912, theta = 53.76 deg
-Ts = 2.0000 s, 실수부 -sigma_d = -2.0000
-최대초과와 정착시간을 만족하는 극점의 위치 s = -2.0000 + j2.7288</code></pre>
-</div>
-<!-- /mcode -->
-  <div class="box theory">
-    <p class="boxtitle">📐 이론과 잇기 — 정착시간에서 목표 극점으로</p>
-    $$T_s = \frac{4}{\zeta\omega_n} \;\Rightarrow\; \sigma_d = \zeta\omega_n = \frac{4}{2} = 2$$
-    $$\omega_n = \frac{\sigma_d}{\zeta} = \frac{2}{0.5912} = 3.3832, \qquad \omega_d = \omega_n\sqrt{1-\zeta^2} = 3.3832 \times 0.8065 = 2.7288$$
-    <p>목표 극점 \(-2 + j2.7288\)이 출력과 같다.</p>
-  </div>
-  <figure>
-    <img src="assets/img/07_ex2_target.png" width="560" alt="두 번째 예제의 보상 전 근궤적. 복소 극점 −1±j2에서 출발한 가지가 오른쪽으로 휘어 허수축을 넘는다. 목표 극점 −2+j2.73에 붉은 마름모">
-    <figcaption>복소 극점 −1 ± j2에서 출발한 가지가 <strong>오른쪽(불안정 쪽)으로</strong> 휘어 나간다. 마름모는 그 가지의 왼쪽에 떨어져 있다.</figcaption>
-  </figure>
-
-  <p>PD 영점과 이득을 같은 함수로 구한다. 이번 플랜트의 극점 중 둘이 복소수라는 것만 다르다.</p>
-<!-- mcode 07/b13_ex2_pd -->
-<div class="mcode">
-<pre class="lang-matlab"><code>zero_pd = design_pd_controller(otf, target_pole);
-% PD 제어기를 반영한 근궤적
-otf_pd = otf * (s - zero_pd)
-K_pd = -1/evalfr(otf_pd, target_pole);
-K_pd = real(K_pd);
-fprintf("PD 제어기 적용 후 target pole에서의 상수 이득 K=%1.4f\n", K_pd)
-rlocus(otf_pd)
-hold on
-plot(real(target_pole), imag(target_pole), 'rd')
-hold off
-title('PD 보상 후 근궤적')
-axis([-25 5 -15 15])</code></pre>
-<button onclick="copyCode(this)">복사</button>
-<p class="outlabel">명령 창 출력</p>
-<pre class="out"><code>&gt;&gt;&gt;&gt;&gt; 근궤적이 목표 극점을 지나게 하는 PD 제어기 설계
-목표 극점에서의 개루프 전달함수 위상 계산
-극점의 위상 angle(s - (-8.000 + j0.000)) = 24.456(deg)
-극점의 위상 angle(s - (-1.000 + j2.000)) = 143.917(deg)
-극점의 위상 angle(s - (-1.000 + j-2.000)) = 101.941(deg)
-극점 s = -2.000 + j2.729 에서 G(s)의 위상 = -270.3(deg) = -4.718(rad)
-PD 제어기가 가져야할 위상 = -3.142 - (-4.718) = 1.5763(rad) = 90.313(deg)
-PD 제어기의 영점 위치 = -1.9851
-
-otf_pd =
-
-         s + 1.985
-  ------------------------
-  s^3 + 10 s^2 + 21 s + 40
-
-Continuous-time transfer function.
-Model Properties
-PD 제어기 적용 후 target pole에서의 상수 이득 K=14.4461</code></pre>
-</div>
-<!-- /mcode -->
-  <p>
-    모자란 각도가 90.31°라서 영점이 목표 극점의 <strong>거의 바로 아래</strong>(−1.9851)에 놓였다.
-    복소 극점 \(-1 + j2\)에서 목표 극점으로 가는 벡터가 143.9°로 크게 기울어 있어 각도를 많이 잡아먹은 탓이다.
-  </p>
-  <figure>
-    <img src="assets/img/07_ex2_pd.png" width="560" alt="두 번째 예제의 PD 보상 후 근궤적. 가지가 붉은 마름모를 지난다">
-    <figcaption>가지가 마름모를 지나도록 바뀌었다. 각도 조건은 맞았다.</figcaption>
-  </figure>
-
-  <h3 id="ex2check">설계 검증에서 걸리는 것</h3>
-  <p>여기서부터가 첫 예제와 다르다. PD 결과부터 확인한다.</p>
-<!-- mcode 07/b14_ex2_pd_check -->
-<div class="mcode">
-<pre class="lang-matlab"><code>% 보정된 시스템의 성능 확인
-tf_total = feedback(K_pd*otf_pd, 1);
-steady = evalfr(tf_total, 0)
-S = stepinfo(tf_total)</code></pre>
-<button onclick="copyCode(this)">복사</button>
-<p class="outlabel">명령 창 출력</p>
-<pre class="out"><code>steady =
-
-    0.4176
-
-
-S =
-
-  struct with fields:
-
-         RiseTime: 0.2887
-    TransientTime: 2.3004
-     SettlingTime: 2.3004
-      SettlingMin: 0.3861
-      SettlingMax: 0.5668
-        Overshoot: 35.7526
-       Undershoot: 0
-             Peak: 0.5668
-         PeakTime: 0.7829</code></pre>
-</div>
-<!-- /mcode -->
-  <p>사양과 대조하면 둘 다 어긋났다.</p>
-  <ul>
-    <li><strong>최대초과 35.75%</strong> — 사양 10%의 세 배가 넘는다. 목표 극점 바로 아래의 영점(−1.985)이 원인이다.
-      영점은 응답에 그 미분 성분을 더해 초과를 키우는데, 영점이 우세극점과 가까울수록 그 효과가 크다. 첫 예제의 영점(−7.05)은 목표 극점보다 1.7만큼 왼쪽이었다.</li>
-    <li><strong>정상상태 값 0.4176</strong> — \(K_p = 14.446 \times 1.985 / 40 = 0.717\)이라 \(0.717/1.717 = 0.418\)이다. 첫 예제의 0.851보다 훨씬 낮다.</li>
-  </ul>
-  <p>PI를 더한다. PI 영점은 첫 예제(−0.01)보다 열 배 먼 −0.1에 둔다.</p>
-<!-- mcode 07/b15_ex2_pid -->
-<div class="mcode">
-<pre class="lang-matlab"><code>zero_pi = -0.1;
-fprintf('PI 제어기의 영점 위치 선택: %.1f\n', zero_pi)
-% PID 제어기를 반영한 근궤적
-otf_pid = otf_pd * (s - zero_pi) / s;
-rlocus(otf_pid)
-hold on
-plot(real(target_pole), imag(target_pole), 'rd')
-K = real(-1/evalfr(otf_pid, target_pole))
-mark_closed_pole(K*otf_pid)
-hold off
-axis([-25 5 -15 15])
-title('PID 보상 후 근궤적')</code></pre>
-<button onclick="copyCode(this)">복사</button>
-<p class="outlabel">명령 창 출력</p>
-<pre class="out"><code>PI 제어기의 영점 위치 선택: -0.1
-
-K =
-
-   14.6943
-
-PID 제어기 반영하여 전체 시스템 T(s)의 극점 계산
-
-final_poles =
-
-  -5.9994 + 0.0000i
-  -1.9792 + 2.7584i
-  -1.9792 - 2.7584i
-  -0.0422 + 0.0000i</code></pre>
-</div>
-<!-- /mcode -->
-  <figure>
-    <img src="assets/img/07_ex2_pid.png" width="560" alt="두 번째 예제의 PID 보상 후 근궤적과 폐루프 극점">
-    <figcaption>복소 폐루프 극점(삼각형)은 목표에 와 있다. 원점 근처의 느린 극점 <strong>−0.0422는 PI 영점 −0.1과 꽤 떨어져 있다</strong> — 첫 예제(−0.0085와 −0.01)와 다르다.</figcaption>
-  </figure>
-<!-- mcode 07/b16_ex2_check -->
-<div class="mcode">
-<pre class="lang-matlab"><code>% 보정된 시스템의 성능 확인
-tf_total = feedback(K*otf_pid, 1);
-% PI 가 들어갔으니 정상상태 값은 1 이다 — 성능선은 이 값을 기준으로 긋는다
-steady = dcgain(tf_total)
-step(tf_total, 0:0.01:5)
-hold on
-plot([ts, ts], [0, 1.2], 'g--')                              % 정착시간 사양
-plot([0, 10], [steady, steady], 'm--')                       % 정상상태 값
-plot([0, 10], [steady*(1+os), steady*(1+os)], 'k--')         % 최대초과 한계
-hold off
-axis([0 5 0 1.2])
-[y, t] = step(tf_total, 0:0.01:200);
-S_long = stepinfo(y, t, 1)</code></pre>
-<button onclick="copyCode(this)">복사</button>
-<p class="outlabel">명령 창 출력</p>
-<pre class="out"><code>steady =
-
-     1
-
-
-S_long =
-
-  struct with fields:
-
-         RiseTime: 41.4585
-    TransientTime: 79.7531
-     SettlingTime: 79.7531
-      SettlingMin: 0.9000
-      SettlingMax: 0.9999
-        Overshoot: 0
-       Undershoot: 0
-             Peak: 0.9999
-         PeakTime: 200</code></pre>
-</div>
-<!-- /mcode -->
-  <figure>
-    <img src="assets/img/07_ex2_check.png" width="560" alt="두 번째 예제의 PID 보상 후 계단응답 0~5초. 0.6 근처에서 솟았다가 0.45 근처로 내려온 뒤 천천히 오른다. 초록 세로선이 2초, 분홍 점선이 1에 있다">
-    <figcaption>5초가 끝날 때 응답은 아직 0.53이다. 분홍 선(최종값 1)과 초록 선(정착시간 2초)을 보면 <strong>사양과 거리가 멀다.</strong></figcaption>
-  </figure>
-  <p>
-    상승시간 41초, 정착시간 80초. 이 설계는 실패다. 첫 예제와 같은 절차를 밟았는데 왜 이렇게 됐나?
-    ⑧의 해석이 그대로 답이다 — PI를 원점 가까이 두는 방법은 <strong>「빠른 부분」이 이미 1 가까이 가 있을 때</strong> 잘 듣는다.
-    첫 예제는 PD 단계에서 0.851까지 갔으니 꼬리가 메울 몫이 0.15였다. 이 예제는 PD 단계가 0.418이라 꼬리가 메울 몫이 <strong>0.58</strong>이다.
-    응답의 대부분을 느린 극점이 책임지게 된 것이다.
-  </p>
-  <p>그럼 PI 영점을 원점에서 더 멀리 두면 나아질까? <code>for</code> 문으로 세 위치를 비교한다.</p>
-<!-- mcode 07/b17_ex2_pi_zero -->
-<div class="mcode">
-<pre class="lang-matlab"><code>% PI 영점을 어디에 두느냐에 따라 응답이 어떻게 달라지나
-zero_pi_list = [-0.1, -0.5, -1.0];
-t = 0:0.01:10;
-for i = 1:length(zero_pi_list)
-    z = zero_pi_list(i);
-    otf_try = otf_pd * (s - z) / s;
-    K_try = real(-1/evalfr(otf_try, target_pole));
-    T_try = feedback(K_try*otf_try, 1);
-    y = step(T_try, t);
-    plot(t, y)
-    hold on
-    S_try = stepinfo(y, t, 1);
-    fprintf('PI 영점 %.1f: K = %.3f, 최대초과 %.1f%%, 정착시간 %.2f s\n', ...
-            z, K_try, S_try.Overshoot, S_try.SettlingTime)
-end
-plot([0 10], [1 1], 'k:')
-hold off
-legend('PI 영점 -0.1', 'PI 영점 -0.5', 'PI 영점 -1.0', 'Location', 'southeast')
-xlabel('Time (seconds)'); ylabel('Amplitude')
-title('PI 영점 위치에 따른 계단응답 (두 번째 예제)')
-grid on</code></pre>
-<button onclick="copyCode(this)">복사</button>
-<p class="outlabel">명령 창 출력</p>
-<pre class="out"><code>PI 영점 -0.1: K = 14.694, 최대초과 0.0%, 정착시간 NaN s
-PI 영점 -0.5: K = 15.564, 최대초과 0.0%, 정착시간 NaN s
-PI 영점 -1.0: K = 16.156, 최대초과 0.0%, 정착시간 7.57 s</code></pre>
-</div>
-<!-- /mcode -->
-  <figure>
-    <img src="assets/img/07_ex2_pi_zero.png" width="560" alt="PI 영점 −0.1, −0.5, −1.0 세 경우의 계단응답 0~10초. 영점이 왼쪽일수록 빨리 1에 다가간다">
-    <figcaption>PI 영점을 왼쪽으로 옮길수록(파랑 → 주황 → 노랑) 꼬리가 빨라진다. 그래도 <strong>−1.0에서조차 정착시간이 7.57초</strong>로 사양 2초에 못 미친다.</figcaption>
-  </figure>
-  <p>
-    <code>정착시간 NaN</code>은 10초 안에 2% 띠에 들어오지 못했다는 뜻이다. 영점을 왼쪽으로 옮기면 꼬리는 빨라지지만,
-    PI 영점이 목표 극점(실수부 −2)에 가까워질수록 「원점 가까이 두어 각도를 상쇄시킨다」는 전제가 무너진다 — 목표 극점에서 본 PI 극점과 영점의 각도가 더 이상 비슷하지 않다.
-    <strong>이 문제에서 남은 길은 PD 단계의 정상상태 값 자체를 올리는 것</strong> — 곧 영점 위치나 목표 극점(사양의 여유)을 다시 잡는 것이다.
-    이것이 연습문제 3번이다.
-  </p>
-
-  <div class="box trap">
-    <p class="boxtitle">⚠️ 앞 예제의 코드를 복사해 올 때 — <code>clear</code> 뒤에 남은 변수</p>
-    <ul>
-      <li><strong>지워진 변수를 쓰기 쉽다.</strong> 두 번째 예제는 <code>clc; clear</code>로 시작한다. 첫 예제의 성능선 코드를 그대로 복사해 오면
-        첫 예제의 <code>tp</code>와 PD 단계의 <code>steady</code>를 쓰게 되는데, <code>clear</code>가 둘을 지웠으므로 「Unrecognized function or variable」로 멈춘다.
-        그래서 위에서는 PD 결과를 확인하는 조각에서 <code>steady</code>를 새로 구하고, 성능선은 이 예제의 사양 <code>ts</code>로 그었다.</li>
-      <li><strong>주석도 같이 고친다.</strong> 복사해 온 줄의 주석이 「첨두시간」으로 남아 있으면 <code>ts = 2;</code>가 무엇인지 헷갈린다. 이 예제의 사양은 <strong>정착시간</strong>이다.</li>
-      <li><strong>위에서부터 한 번에 돌려 보는 것</strong>이 이런 오류를 잡는 가장 빠른 방법이다. 스크립트를 절마다 따로 실행하면
-        앞 예제의 변수가 작업공간에 남은 채로 뒤 절이 돌아서 오류가 가려진다.</li>
-    </ul>
-  </div>
-
-  <!-- ─────────────────────────── ⑪ ─────────────────────────── -->
-  <h2 id="simulink">⑪ Simulink로 확인하기</h2>
-  <p>
-    지금까지는 전달함수를 곱하고 <code>feedback</code>으로 닫는 <strong>식</strong>으로 시스템을 만들었다.
-    Simulink는 같은 시스템을 <strong>블록 선도</strong>로 그려서 시뮬레이션하는 도구다(MATLAB과 함께 설치된다).
-    교재의 블록 선도를 그대로 옮겨 그리므로 신호가 어디로 흐르는지 눈에 보이고,
-    나중에 포화·지연·비선형 요소처럼 전달함수로 쓰기 어려운 것을 끼워 넣기도 쉽다.
-  </p>
-  <p>
-    실습 파일 <code>simulink_pid_design.slx</code>는 첫 예제와 같은 플랜트(교재 예제 8-3)에 P·PD·PID 제어기를 각각 붙인 모델이다.
-  </p>
-  <figure>
-    <img src="assets/img/07_sl_model.png" width="620" alt="Simulink 모델. 위에 보상 전 시스템, 아래에 이득 242 · PD(s) · PID(s) 제어기를 붙인 세 루프가 있고 세 출력이 하나의 Scope로 모인다">
-    <figcaption>맨 위가 보상 전 시스템, 아래 세 줄이 <strong>P(이득 242) · PD · PID</strong> 제어기를 붙인 루프다. 세 출력선에 붙은 이름(<code>p_control</code> 등)과 안테나 모양 표시는 「이 신호를 기록한다」는 뜻이다.</figcaption>
-  </figure>
-
-  <h3 id="slblocks">블록과 모델 만드는 법</h3>
-  <p class="readme-first">블록 이름은 Simulink Library Browser에서 검색할 때 쓰는 이름 그대로다.</p>
-  <div class="tablewrap">
-  <table>
-    <tr><th>블록</th><th>그림에서 생김새</th><th>하는 일</th><th>이 모델의 설정</th></tr>
-    <tr><td><strong>Step</strong></td><td>계단 모양 사각형</td><td>계단 입력 \(r(t)\)</td><td>0초에 0 → 1</td></tr>
-    <tr><td><strong>Sum</strong></td><td>+, − 표시가 있는 사각형</td><td>오차 \(e = r - y\)를 만든다</td><td>부호 <code>+-</code></td></tr>
-    <tr><td><strong>Gain</strong></td><td>삼각형</td><td>상수를 곱한다</td><td>앞쪽 242(P 제어기), 되먹임 1</td></tr>
-    <tr><td><strong>PID Controller</strong></td><td><code>PD(s)</code> · <code>PID(s)</code> 사각형</td><td>P·I·D 동작을 한 블록에</td><td>아래 출력 참고</td></tr>
-    <tr><td><strong>Zero-Pole</strong></td><td>분수 모양 사각형</td><td>영점·극점·이득으로 전달함수를 적는다</td><td>극점 [−3 −5 −10], 이득 1</td></tr>
-    <tr><td><strong>Scope</strong></td><td>모니터 모양</td><td>신호를 시간 그래프로 보여 준다</td><td>입력 3개</td></tr>
-  </table>
-  </div>
-  <p>모델을 처음부터 만든다면 아래 순서다.</p>
-  <ol>
-    <li>MATLAB 명령 창에 <code>simulink</code>를 치거나 홈 탭의 Simulink 버튼을 누르고, <strong>Blank Model</strong>을 고른다.</li>
-    <li>모델 창 빈 곳을 클릭하고 블록 이름(예: <code>Step</code>)을 바로 타이핑하면 검색 창이 뜬다. 고르면 그 자리에 블록이 놓인다. Library Browser에서 끌어다 놓아도 된다.</li>
-    <li>블록의 <strong>출력 포트(오른쪽 꺾쇠)에서 입력 포트로 드래그</strong>하면 신호선이 이어진다. 되먹임처럼 선에서 갈라지는 선은 기존 선 위에서 드래그를 시작한다.</li>
-    <li>블록을 <strong>더블클릭</strong>하면 설정 창이 열린다 — Sum의 부호 목록을 <code>|+-</code>로, Zero-Pole의 Poles를 <code>[-3 -5 -10]</code>으로 바꾼다.</li>
-    <li>기록할 신호선을 오른쪽 클릭하고 <strong>Log Selected Signals</strong>를 고르면 안테나 표시가 붙는다. 선을 더블클릭해 이름(<code>pid_control</code>)을 적는다.</li>
-    <li>위 툴바의 <strong>Run</strong>을 누르면 Stop Time(이 모델은 10초)까지 시뮬레이션한다. Scope를 더블클릭하면 그래프가 열린다.</li>
-  </ol>
-
-  <p>모델을 열지 않고 <strong>코드로 설정값을 읽을 수도 있다.</strong> 블록 선도의 숫자를 자료에 정확히 옮기려면 이 방법이 확실하다.</p>
-<!-- mcode 07/b19_sl_params -->
-<div class="mcode">
-<pre class="lang-matlab"><code>clc; clear
-model = 'simulink_pid_design';
-load_system(model)                           % 창을 띄우지 않고 모델을 메모리에 올린다
-get_param([model '/Gain3'], 'Gain')          % P 제어기의 이득
-pd = [model '/PID Controller'];
-fprintf('PD : Controller=%s, Form=%s, P=%s, I=%s, D=%s, N=%s\n', ...
-    get_param(pd,'Controller'), get_param(pd,'Form'), get_param(pd,'P'), ...
-    get_param(pd,'I'), get_param(pd,'D'), get_param(pd,'N'))
-pidb = [model '/PID Controller1'];
-fprintf('PID: Controller=%s, Form=%s, P=%s, I=%s, D=%s, N=%s\n', ...
-    get_param(pidb,'Controller'), get_param(pidb,'Form'), get_param(pidb,'P'), ...
-    get_param(pidb,'I'), get_param(pidb,'D'), get_param(pidb,'N'))
-get_param([model '/Zero-Pole1'], 'Poles')    % 플랜트의 극점
-get_param(model, 'StopTime')                 % 시뮬레이션 시간</code></pre>
-<button onclick="copyCode(this)">복사</button>
-<p class="outlabel">명령 창 출력</p>
-<pre class="out"><code>ans =
-
-    '242'
-
-PD : Controller=PD, Form=Parallel, P=123*7, I=1, D=123, N=100
-PID: Controller=PID, Form=Ideal, P=852, I=84, D=120, N=100
-
-ans =
-
-    '[-3 -5 -10]'
-
-
-ans =
-
-    '10.0'</code></pre>
-</div>
-<!-- /mcode -->
-  <div class="box firstseen">
-    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
-    <dl>
-      <dt>load_system(model)</dt>
-      <dd>Simulink 모델 파일(<code>.slx</code>)을 창 없이 메모리에 올린다. 창까지 띄우려면 <code>open_system</code>. 여기서는 설정값을 읽고 시뮬레이션만 하려고 썼다.</dd>
-      <dt>get_param(블록경로, '파라미터이름')</dt>
-      <dd>블록(또는 모델)의 설정값을 <strong>글자</strong>로 읽는다. 블록 경로는 <code>'모델이름/블록이름'</code>이다. 여기서는 PID 블록의 P·I·D 칸과 Zero-Pole 블록의 극점을 읽었다. 숫자 대신 <code>'123*7'</code>처럼 식이 적혀 있으면 식 그대로 나온다.</dd>
-      <dt>[model '/Gain3']</dt>
-      <dd>문자 배열 두 개를 대괄호로 이어 붙인다. 2회에서 숫자 행렬을 붙이던 것과 같은 문법이 글자에도 먹는다.</dd>
-    </dl>
-  </div>
-  <div class="box theory">
-    <p class="boxtitle">📐 이론과 잇기 — 블록의 숫자를 전달함수로</p>
-    <p>PID Controller 블록의 Parallel 형식은 \(P + I\dfrac{1}{s} + D\dfrac{N s}{s + N}\)이다. 마지막 항은 미분 \(Ds\)에 <strong>필터</strong>를 씌운 것으로, \(N\)이 클수록 순수 미분에 가깝다(N = 100이면 100 rad/s 아래에서는 거의 \(Ds\)).</p>
-    <p><strong>PD 블록</strong> (Parallel, P = 123×7, D = 123 — Controller가 PD라서 I 칸의 1은 쓰이지 않아야 한다): 필터를 무시하면</p>
-    $$861 + 123s = 123(s + 7)$$
-    <p>④~⑤에서 설계한 \(121.45(s + 7.0525)\)와 거의 같다. 교재가 숫자를 반올림했을 뿐 같은 설계다.</p>
-    <p><strong>PID 블록</strong> (P = 852, I = 84, D = 120): Parallel 식으로 읽으면</p>
-    $$852 + \frac{84}{s} + 120s = \frac{120s^2 + 852s + 84}{s} = \frac{120(s+7)(s+0.1)}{s}$$
-    <p>PD 영점 −7, PI 영점 −0.1인 제어기다. ⑦의 설계(PI 영점 −0.01)보다 PI 영점을 10배 멀리 두었다 — ⑧에서 본 느린 꼬리를 줄이는 쪽을 고른 것이다.</p>
-  </div>
-
-  <h3 id="slsim">sim으로 돌리기</h3>
-  <p>Run 버튼 대신 코드로 시뮬레이션하고, 기록된 세 신호를 한 그래프에 그린다.</p>
-<!-- mcode 07/b20_sl_sim -->
-<div class="mcode">
-<pre class="lang-matlab"><code>out = sim(model);                 % 모델을 끝까지(10초) 시뮬레이션한다
-logs = out.logsout;               % 이름 붙은 신호선이 여기 기록된다
-y_p   = logs.getElement('p_control').Values;
-y_pd  = logs.getElement('pd_control').Values;
-y_pid = logs.getElement('pid_control').Values;
-plot(y_p.Time, y_p.Data, y_pd.Time, y_pd.Data, y_pid.Time, y_pid.Data)
-legend('P (242)', 'PD', 'PID')
-xlabel('Time (seconds)'); ylabel('Amplitude')
-title('Simulink 시뮬레이션 결과')
-grid on
-fprintf('t = 10 s 에서  P: %.4f   PD: %.4f   PID: %.4f\n', ...
-    y_p.Data(end), y_pd.Data(end), y_pid.Data(end))</code></pre>
-<button onclick="copyCode(this)">복사</button>
-<p class="outlabel">명령 창 출력</p>
-<pre class="out"><code>t = 10 s 에서  P: 0.6173   PD: 0.8531   PID: 0.9374</code></pre>
-</div>
-<!-- /mcode -->
-  <div class="box firstseen">
-    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
-    <dl>
-      <dt>out = sim(model)</dt>
-      <dd>모델을 Stop Time까지 시뮬레이션하고 결과 묶음(<code>Simulink.SimulationOutput</code>)을 돌려준다. 여기서는 Run 버튼과 같은 일을 코드로 했다.</dd>
-      <dt>out.logsout.getElement('이름').Values</dt>
-      <dd><code>logsout</code>은 기록 표시(안테나)를 붙인 신호들의 모음이고, <code>getElement</code>가 신호선 이름으로 하나를 꺼낸다. <code>.Values</code>는 시계열(timeseries)이라 <code>.Time</code>과 <code>.Data</code>로 시간과 값을 꺼낸다. 여기서는 세 제어기의 출력을 꺼내 <code>plot</code>에 넣었다.</dd>
-    </dl>
-  </div>
-  <figure>
-    <img src="assets/img/07_sl_sim.png" width="560" alt="Simulink 결과. P 제어는 0.62에서 멈추고, PD는 0.85에서 멈추고, PID는 0.87에서 시작해 10초까지 천천히 오른다">
-    <figcaption>P(파랑)는 0.617, PD(주황)는 0.85 근처에서 평평해 보인다. PID(노랑)는 계속 오른다 — <strong>⑧에서 본 느린 꼬리가 Simulink에서도 그대로</strong> 보인다.</figcaption>
-  </figure>
-  <p>
-    세 숫자를 이론과 맞춰 본다. 세 루프 모두 개루프의 DC 이득이 「제어기의 DC 이득 ÷ 150」이다.
-  </p>
-  <ul>
-    <li><strong>P: 0.6173</strong> — \(242/(150+242) = 0.6173\). 맞다.</li>
-    <li><strong>PD: 0.8531</strong> — 미분 항은 DC에서 0이므로 \(861/(150+861) = 0.8516\)이어야 한다. <strong>0.0015가 남는다.</strong></li>
-    <li><strong>PID: 0.9374</strong> — 적분기가 있으니 최종값은 1이고, 10초에서는 ⑧의 느린 꼬리를 타고 오르는 중이다.</li>
-  </ul>
-  <p>먼저 P 제어기의 이득 242가 근궤적의 어디인지 확인해 둔다.</p>
-<!-- mcode 07/b21_sl_p242 -->
-<div class="mcode">
-<pre class="lang-matlab"><code>% P 제어기의 이득 242 는 근궤적의 어디인가 — 그 K 에서 폐루프 극점과 제동비를 본다
-s = tf('s');
-G = 1/((s+3)*(s+5)*(s+10));
-T_p = feedback(242*G, 1);
-damp(T_p)
-dc_p = dcgain(T_p)</code></pre>
-<button onclick="copyCode(this)">복사</button>
-<p class="outlabel">명령 창 출력</p>
-<pre class="out"><code>         Pole              Damping       Frequency      Time Constant
-                                       (rad/seconds)      (seconds)
-
- -2.49e+00 + 4.89e+00i     4.54e-01       5.49e+00         4.01e-01
- -2.49e+00 - 4.89e+00i     4.54e-01       5.49e+00         4.01e-01
- -1.30e+01                 1.00e+00       1.30e+01         7.68e-02
-
-dc_p =
-
-    0.6173</code></pre>
-</div>
-<!-- /mcode -->
-  <p>
-    제동비 0.454 — 보상 전 근궤적이 최대초과 20% 선(ζ = 0.456)과 만나는 점이 K = 242다.
-    P 제어로 최대초과는 맞출 수 있지만 그때 극점의 허수부가 4.89라 첨두시간이 \(\pi/4.89 = 0.64\)초로 사양 0.3초의 두 배가 넘는다.
-    ③의 「비례 제어의 한계」를 Simulink 그래프가 확인해 준다.
-  </p>
-  <p>
-    이제 PD의 0.0015를 따진다. 작은 차이지만 <strong>적분기가 없는 루프는 한번 멈추면 그 값에 머문다.</strong>
-    0.8516에 멈춰야 할 출력이 0.8531이라면, 정말 멈춘 것인지부터 시간을 길게 잡아 확인한다.
-  </p>
-<!-- mcode 07/b22_sl_drift -->
-<div class="mcode">
-<pre class="lang-matlab"><code>% PD 루프에는 적분기가 없으니 출력은 861/(150+861) = 0.8516 에서 멈춰야 한다 — 300초 동안 돌려 확인한다
-out3 = sim(model, 'StopTime', '300');
-y_pd3 = out3.logsout.getElement('pd_control').Values;
-fprintf('PD 출력  t = 10 s: %.4f   t = 100 s: %.4f   t = 300 s: %.4f\n', ...
-    interp1(y_pd3.Time, y_pd3.Data, 10), interp1(y_pd3.Time, y_pd3.Data, 100), y_pd3.Data(end))</code></pre>
-<button onclick="copyCode(this)">복사</button>
-<p class="outlabel">명령 창 출력</p>
-<pre class="out"><code>PD 출력  t = 10 s: 0.8531   t = 100 s: 0.8656   t = 300 s: 0.8898</code></pre>
-</div>
-<!-- /mcode -->
-  <div class="box firstseen">
-    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
-    <dl>
-      <dt>sim(model, 'StopTime', '300')</dt>
-      <dd>모델 파일의 설정을 바꾸지 않고 <strong>이번 시뮬레이션에만</strong> 정지 시간을 300초로 준다. 값은 글자로 준다.</dd>
-      <dt>interp1(x, y, xq)</dt>
-      <dd>표 (x, y) 사이를 직선으로 이어 xq에서의 값을 읽는다(선형 보간). Simulink는 시간 간격을 스스로 바꿔 가며 계산하므로 정확히 10초인 칸이 없을 수 있다. 여기서는 10초·100초에서의 출력을 읽는 데 썼다.</dd>
-    </dl>
-  </div>
-  <p>
-    <strong>PD 출력이 계속 오른다</strong> — 10초 0.8531, 100초 0.8656, 300초 0.8898. 루프 안에 적분기가 있다는 뜻이다.
-    PD 블록의 I 칸에는 1이 적혀 있었다(⑪ 첫 조각의 출력). Controller가 PD이면 그 칸은 쓰이지 않아야 하는데,
-    이 모델 파일에서는 적분 이득 1이 살아 있는 것처럼 동작한다. 같은 일이 PID 블록에도 있는지 형식(Form)을 따져 본다.
-  </p>
-<!-- mcode 07/b23_sl_fix -->
-<div class="mcode">
-<pre class="lang-matlab"><code>% PID 블록의 숫자 P=852, I=84, D=120 을 두 형식의 식에 넣어 본다 (미분 필터는 빼고)
-C_parallel = 852 + 84/s + 120*s;            % Parallel: P + I/s + D s
-C_ideal    = 852*(1 + 84/s + 120*s);         % Ideal   : P (1 + I/s + D s)
-disp('Parallel 식으로 읽은 영점'); disp(zero(C_parallel))
-disp('Ideal 식으로 읽은 영점');    disp(zero(C_ideal))
-% 블록 설정을 숫자의 뜻에 맞게 고치고 다시 돌린다 (저장하지 않는다 — 메모리 안의 모델만 바뀐다)
-set_param(pd, 'I', '0');                     % PD 블록: 적분 이득을 0으로
-set_param(pidb, 'Form', 'Parallel');         % PID 블록: Parallel 형식으로
-out2 = sim(model);
-y_pd2  = out2.logsout.getElement('pd_control').Values;
-y_pid2 = out2.logsout.getElement('pid_control').Values;
-% 같은 제어기를 MATLAB 으로 — 블록과 똑같이 미분 항에 필터 N = 100 을 씌운다
-N = 100;
-T_pd  = feedback((861 + 123*N*s/(s+N))*G, 1);
-T_pid = feedback((852 + 84/s + 120*N*s/(s+N))*G, 1);
-t = 0:0.01:10;
-y_pd_m = step(T_pd, t);
-y_pid_m = step(T_pid, t);
-plot(y_pd2.Time, y_pd2.Data, 'b-', y_pid2.Time, y_pid2.Data, 'r-', 'LineWidth', 1.5)
-hold on
-plot(t, y_pd_m, 'k:', t, y_pid_m, 'k:', 'LineWidth', 1.5)
-hold off
-legend('Simulink PD', 'Simulink PID', 'MATLAB step', 'Location', 'southeast')
-xlabel('Time (seconds)'); ylabel('Amplitude')
-title('설정을 고친 Simulink 와 MATLAB 의 폐루프 응답')
-grid on
-fprintf('t = 10 s 에서  PD  Simulink: %.4f  MATLAB: %.4f\n', y_pd2.Data(end), y_pd_m(end))
-fprintf('t = 10 s 에서  PID Simulink: %.4f  MATLAB: %.4f\n', y_pid2.Data(end), y_pid_m(end))
-close_system(model, 0);   % 바꾼 모델을 저장하지 않고 닫는다</code></pre>
-<button onclick="copyCode(this)">복사</button>
-<p class="outlabel">명령 창 출력</p>
-<pre class="out"><code>Parallel 식으로 읽은 영점
-   -7.0000
-   -0.1000
-
-Ideal 식으로 읽은 영점
-  -0.0042 + 0.8366i
-  -0.0042 - 0.8366i
-
-t = 10 s 에서  PD  Simulink: 0.8516  MATLAB: 0.8516
-t = 10 s 에서  PID Simulink: 0.9374  MATLAB: 0.9374</code></pre>
-</div>
-<!-- /mcode -->
-  <figure>
-    <img src="assets/img/07_sl_fix.png" width="560" alt="블록 설정을 고친 Simulink의 PD(파랑)·PID(빨강) 응답 위에 MATLAB 계산(검은 점선)이 정확히 겹친다">
-    <figcaption>블록 설정을 고친 뒤 Simulink(파랑·빨강)와 MATLAB(검은 점선)이 <strong>두 루프 모두 겹친다.</strong> PD는 0.8516에서 평평하고, PID만 느린 꼬리를 타고 오른다.</figcaption>
-  </figure>
-  <div class="box firstseen">
-    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
-    <dl>
-      <dt>set_param(블록경로, '파라미터이름', 값)</dt>
-      <dd><code>get_param</code>의 짝으로, 설정 창에서 값을 바꾸는 것과 같다. 값은 글자로 준다. 여기서는 PD 블록의 I를 0으로, PID 블록의 Form을 Parallel로 바꿨다. <code>save_system</code>을 부르지 않으면 파일은 그대로다.</dd>
-      <dt>close_system(model, 0)</dt>
-      <dd>모델을 메모리에서 내린다. 두 번째 인자 0은 「바뀐 것을 저장하지 않는다」. 여기서는 설정을 바꾼 모델이 저장된 <code>.slx</code> 파일에 덮어써지지 않게 하려고 썼다.</dd>
-      <dt>plot(…, 'LineWidth', 1.5)</dt>
-      <dd>선 굵기를 정하는 이름-값 인자. 여기서는 겹치는 선들이 모두 보이게 굵게 그렸다.</dd>
-    </dl>
-  </div>
-  <p>
-    MATLAB 쪽에서는 블록과 똑같이 미분 항에 필터 \(Ns/(s+N)\)를 씌웠다. 그래서 PD의 첨두도 Simulink와 같은 1.07이다.
-    필터 없이 설계한 ⑥의 첨두는 1.031이었다 — <strong>블록 선도로 옮기면 식에서 생략했던 필터가 응답에 드러난다.</strong>
-  </p>
-  <div class="box trap">
-    <p class="boxtitle">⚠️ PID 블록의 설정 — 같은 숫자, 다른 제어기</p>
-    <ul>
-      <li><strong>Form.</strong> 모델의 PID 블록은 Form이 <strong>Ideal</strong>로 저장돼 있었다. Ideal 형식은 \(P\bigl(1 + I/s + Ds\bigr)\)이라 P가 I·D에도 곱해진다.
-        같은 852·84·120을 Ideal 식에 넣으면 영점이 \(-0.0042 \pm j0.8366\)인 전혀 다른 제어기가 된다(위 출력).
-        교재의 \(120(s+7)(s+0.1)/s\)는 <strong>Parallel 식으로 읽어야</strong> 나온다. ⑨에서 구한 \(K_p\)·\(K_i\)·\(K_d\)도 Parallel 형식의 값이다.</li>
-      <li><strong>쓰지 않는 칸.</strong> PD 블록의 I 칸에 남아 있던 1이 동작에 섞여 들었다. 쓰지 않는 이득은 <strong>0으로 적어 두는 것</strong>이 안전하다.</li>
-      <li>이 파일은 고치기 전에도 PID 출력이 Parallel 식의 MATLAB 계산과 같았다(10초에서 0.9374). 대화상자의 설정과 블록의 실제 동작이 어긋나 있었던 셈이고, 그 어긋남은 <strong>결과를 이론값과 맞춰 볼 때</strong>에만 드러났다.
-        모델을 쓸 때는 PD 블록의 I를 0으로, PID 블록의 Form을 Parallel로 직접 맞춰 둔다.</li>
-    </ul>
-  </div>
-
   <!-- ─────────────────────────── 실습 ─────────────────────────── -->
   <h2 id="lab">🧪 실습</h2>
   <div class="lab-block">
-    <p class="boxtitle">사양을 바꿔 PID를 다시 설계하고, MATLAB과 Simulink로 확인한다</p>
+    <p class="boxtitle">사양을 바꿔 PID를 다시 설계하고, 계단응답으로 확인한다</p>
     <p><strong>이걸 해 보면 무엇을 알게 되나:</strong> 사양 → 목표 극점 → PD 영점 → K → PI 영점의 다섯 단계를 혼자 끝까지 밟아 보고,
-       설계 결과(K, 영점)가 모델 블록의 숫자로 어떻게 옮겨지는지 손으로 확인한다.</p>
-    <p><strong>준비물:</strong> MATLAB(Control System Toolbox · Simulink), 6회의 함수 세 개(<code>draw_*_line.m</code>), 오늘의 함수 두 개(<code>design_pd_controller.m</code> · <code>mark_closed_pole.m</code>), <code>simulink_pid_design.slx</code> — 모두 한 폴더에.</p>
+       설계 결과(K, 영점)가 \(K_p, K_i, K_d\)로 어떻게 옮겨지는지 손으로 확인한다.</p>
+    <p><strong>준비물:</strong> MATLAB(Control System Toolbox), 6회의 함수 세 개(<code>draw_*_line.m</code>), 오늘의 함수 두 개(<code>design_pd_controller.m</code> · <code>mark_closed_pole.m</code>) — 모두 한 폴더에.</p>
     <ol>
-      <li>첫 예제의 조각 ①~⑧을 스크립트 하나(<code>pid_design.m</code>)에 차례로 붙여 넣고 실행해, 자료와 같은 숫자(영점 −7.0525, K = 121.50)가 나오는지 본다. (10분)</li>
+      <li>①~⑧의 조각을 스크립트 하나(<code>pid_design.m</code>)에 차례로 붙여 넣고 실행해, 자료와 같은 숫자(영점 −7.0525, K = 121.50)가 나오는지 본다. (10분)</li>
       <li>사양을 <strong>최대초과 15%, 첨두시간 0.4초</strong>로 바꿔 다시 실행한다. 목표 극점·PD 영점·K가 각각 얼마로 바뀌는지 적는다. (10분)</li>
-      <li>⑨의 식으로 \(K_p, K_i, K_d\)를 구한다. (5분)</li>
-      <li>Simulink 모델을 열어 PID 블록의 Form을 Parallel로 바꾸고, P·I·D 칸에 3번의 값을 넣고 Run을 누른다(PD 블록의 I 칸은 0으로). Scope에서 응답을 본다. (10분)</li>
-      <li>같은 제어기로 MATLAB에서 <code>step(feedback(C*G,1))</code>을 그려 Scope의 그래프와 모양을 비교한다. (5분)</li>
+      <li>⑨의 식으로 \(K_p, K_i, K_d\)를 구하고 <code>C = pid(Kp, Ki, Kd)</code>로 제어기를 만든다. (5분)</li>
+      <li><code>[y, t] = step(feedback(C*otf, 1), 0:0.01:600)</code>로 계단응답을 구해 그리고, <code>stepinfo(y, t, 1)</code>로 첨두시간과 최대초과를 잰다. (5분)</li>
     </ol>
-    <p><strong>이렇게 되면 성공이다:</strong> 4번의 Scope 그래프와 5번의 MATLAB 그래프가 ⑪의 마지막 그림처럼 <strong>거의 겹치고</strong>,
+    <p><strong>이렇게 되면 성공이다:</strong> 4번의 응답이 ⑧의 그림처럼 빠르게 솟았다가 가라앉고,
        첨두시간이 0.4초 근처에 찍힌다. 1번에서 자료와 숫자가 다르면 6회 함수가 같은 폴더에 있는지부터 확인한다.</p>
   </div>
 
@@ -1355,11 +782,8 @@ t = 10 s 에서  PID Simulink: 0.9374  MATLAB: 0.9374</code></pre>
   <ol>
     <li><strong>영점이 있는 플랜트.</strong> \(G(s) = \dfrac{s+6}{(s+2)(s+4)(s+10)}\)에 최대초과 20%, 첨두시간 0.4초 사양으로 <code>design_pd_controller</code>를 실행해 본다.
       ④의 ⚠️ 상자처럼 <code>if</code> 안에 이름 오타가 있는 함수였다면 어디서 멈췄을지 짚고, 출력의 「영점의 위상」 줄이 각도 합에 어떻게 들어가는지 설명한다.</li>
-    <li><strong>PI 영점의 맞바꿈.</strong> 첫 예제에서 PI 영점을 −0.01, −0.1, −0.5로 바꿔 가며 ⑩의 마지막 조각처럼 <code>for</code> 문으로 비교한다.
-      각 경우의 최대초과와 정착시간(최종값 1, 시간 구간 600초)을 표로 정리하고, 교재(Simulink 모델)가 −0.1을 고른 이유를 표의 숫자로 설명한다.</li>
-    <li><strong>두 번째 예제 살리기.</strong> ⑩의 설계를 사양에 맞게 고친다. 바꿀 수 있는 것은 목표 극점(사양에 여유를 두기), PD 영점의 위치(각도 조건을 지키면서는 바꿀 수 없다는 점에 주의), PI 영점이다.
-      무엇을 바꿨는지, 그때 PD 단계의 정상상태 값이 얼마로 올랐는지, 최종 <code>stepinfo(y, t, 1)</code> 결과를 함께 적는다.</li>
-    <li><strong>필터 N의 효과.</strong> Simulink 모델의 PD 블록에서 I를 0으로 맞춘 뒤 N을 100, 20, 1000으로 바꿔 시뮬레이션하고, 첨두값이 어떻게 바뀌는지 적는다. N이 클수록 MATLAB의 ⑥ 결과(첨두 1.031)에 가까워지는지 확인한다.</li>
+    <li><strong>PI 영점의 맞바꿈.</strong> PI 영점을 −0.01, −0.1, −0.5로 바꿔 가며 <code>for</code> 문으로 비교한다.
+      영점마다 K를 크기 조건으로 다시 구하고, 최대초과와 정착시간(최종값 1, 시간 구간 600초)을 표로 정리한다. ⑧의 해석에서 말한 맞바꿈이 표의 숫자로 어떻게 드러나는지 설명한다.</li>
   </ol>
 
   <!-- ─────────────────────────── 점검 ─────────────────────────── -->
@@ -1370,8 +794,7 @@ t = 10 s 에서  PID Simulink: 0.9374  MATLAB: 0.9374</code></pre>
     <li><input type="checkbox" id="c3"><label for="c3"><code>K = -1/evalfr(otf, s0)</code>가 크기 조건이라는 것과, 허수부가 남는 이유를 설명할 수 있다.</label></li>
     <li><input type="checkbox" id="c4"><label for="c4">PI 영점을 원점 가까이 두는 이유와, 그 대가인 느린 꼬리를 응답 그래프에서 찾을 수 있다.</label></li>
     <li><input type="checkbox" id="c5"><label for="c5"><code>stepinfo(sys)</code>와 <code>stepinfo(y, t, 1)</code>의 결과가 다를 수 있는 이유를 말할 수 있다.</label></li>
-    <li><input type="checkbox" id="c6"><label for="c6">극점·영점 꼴의 PID 제어기를 \(K_p, K_i, K_d\)로 바꾸고, Simulink PID 블록의 Form을 확인해 옮겨 적을 수 있다.</label></li>
-    <li><input type="checkbox" id="c7"><label for="c7"><code>load_system</code> · <code>get_param</code> · <code>sim</code>으로 Simulink 모델을 코드에서 읽고 돌릴 수 있다.</label></li>
+    <li><input type="checkbox" id="c6"><label for="c6">극점·영점 꼴의 PID 제어기를 \(K_p, K_i, K_d\)로 바꾸고 <code>pid</code>로 만들 수 있다.</label></li>
   </ul>
 
   <!-- ─────────────────────────── 조금 더 ─────────────────────────── -->
@@ -1384,8 +807,8 @@ t = 10 s 에서  PID Simulink: 0.9374  MATLAB: 0.9374</code></pre>
 <!-- mcode 07/b24_pidtune -->
 <div class="mcode">
 <pre class="lang-matlab"><code>% 비교: 극점 배치 대신 응답 속도와 위상 여유를 기준으로 자동 조정한 PID
-C_auto = pidtune(G, 'PID')
-S_auto = stepinfo(feedback(C_auto*G, 1))</code></pre>
+C_auto = pidtune(otf, 'PID')
+S_auto = stepinfo(feedback(C_auto*otf, 1))</code></pre>
 <button onclick="copyCode(this)">복사</button>
 <p class="outlabel">명령 창 출력</p>
 <pre class="out"><code>C_auto =
@@ -1417,8 +840,8 @@ S_auto =
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
     <dl>
-      <dt>C = pidtune(G, 'PID')</dt>
-      <dd>플랜트 G에 맞는 PID 이득을 자동으로 골라 <code>pid</code> 객체로 돌려준다. 두 번째 인자로 <code>'PI'</code>·<code>'PD'</code>도 고를 수 있다. 여기서는 오늘 손으로 설계한 제어기와 비교하려고 썼다.</dd>
+      <dt>C = pidtune(sys, 'PID')</dt>
+      <dd>플랜트에 맞는 PID 이득을 자동으로 골라 <code>pid</code> 객체로 돌려준다. 두 번째 인자로 <code>'PI'</code>·<code>'PD'</code>도 고를 수 있다. 여기서는 오늘 손으로 설계한 제어기와 비교하려고 썼다.</dd>
     </dl>
   </div>
   <p>
@@ -1430,7 +853,7 @@ S_auto =
   <h3>미분 제어를 실제로 쓸 때</h3>
   <p>
     순수 미분 \(K_d s\)는 주파수가 높을수록 이득이 끝없이 커져서, 센서 잡음을 그대로 증폭한다.
-    그래서 실제 PID에는 Simulink 블록처럼 미분 항에 필터(\(Ns/(s+N)\))를 씌운다. ⑪에서 본 첨두값 차이(1.031 → 1.07)가 그 필터의 흔적이다.
+    그래서 실제 PID에는 미분 항에 필터(\(Ns/(s+N)\))를 씌운다. Simulink의 PID 블록도 그렇게 되어 있다(9회).
     N은 보통 설계한 폐루프 대역폭보다 열 배쯤 크게 잡는다.
   </p>
 

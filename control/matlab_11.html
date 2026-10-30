@@ -541,6 +541,13 @@ t = 2.0 s  399.4 rpm
 전압  최대 10.65 V,  t = 0.9 s 5.04 V,  t = 2.0 s 6.03 V</code></pre>
 </div>
 <!-- /mcode -->
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>interp1(x, y, xq)</dt>
+      <dd>표 (x, y) 사이를 직선으로 이어 xq에서의 값을 읽는다(선형 보간). Simulink는 시간 간격을 스스로 바꿔 가며 계산하므로 정확히 0.6초인 칸이 없을 수 있다. 여기서는 <code>at(rpm, 0.6)</code>처럼 원하는 시각의 값을 읽으려고 <code>at</code>으로 묶어 썼다.</dd>
+    </dl>
+  </div>
   <div class="box theory">
     <p class="boxtitle">📐 이론과 잇기 — 브레이크를 버티는 데 드는 1 V</p>
     <p>브레이크 토크 \(T_L = 0.05\) N·m를 모터가 버티려면 전류가 \(T_L/K = 0.05/0.1 = 0.5\) A 더 흘러야 하고, 그만큼 저항에서 \(R_a \times 0.5 = 1\) V가 더 든다.</p>

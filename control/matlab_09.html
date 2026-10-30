@@ -66,10 +66,9 @@
   <p>
     지금까지 시스템은 전부 <strong>식</strong>으로 다뤘다. <code>tf</code>로 전달함수를 만들고, <code>*</code>로 곱하고,
     <code>feedback</code>으로 루프를 닫은 뒤 <code>step</code>으로 응답을 그렸다.
-    7회 마지막에는 이미 만들어진 Simulink 모델을 코드로 열어 같은 결과가 나오는지 확인하기도 했다.
   </p>
   <p>
-    오늘은 그 Simulink 모델을 <strong>빈 화면에서부터 직접</strong> 만든다. 3부(9~11회)는 Simulink와 그 위에서 도는 물리 모델링 도구 Simscape를 다룬다.
+    오늘은 같은 일을 하는 Simulink 모델을 <strong>빈 화면에서부터 직접</strong> 만든다. 3부(9~11회)는 Simulink와 그 위에서 도는 물리 모델링 도구 Simscape를 다룬다.
     오늘은 마우스로 블록을 놓고 잇는 기본 사용법을 익히고, 7회에서 다룬 플랜트
     \(G(s) = \dfrac{1}{(s+3)(s+5)(s+10)}\)에 제어기를 바꿔 끼우며 응답이 어떻게 달라지는지 눈으로 본다.
   </p>
@@ -91,7 +90,7 @@
     <tr><td>Library Browser · 빠른 삽입</td><td>블록을 찾아 캔버스에 놓는다</td><td>블록 선도 그리기</td></tr>
     <tr><td>Stop Time · Run · Model Settings</td><td>시뮬레이션 시간과 계산 방법을 정하고 돌린다</td><td>미분방정식 풀기</td></tr>
     <tr><td>Log Signals · Data Inspector</td><td>신호를 기록하고, 여러 번 돌린 결과를 겹쳐 본다</td><td>제어기 비교</td></tr>
-    <tr><td><code>out = sim(model)</code> · <code>out.logsout</code></td><td>코드로 돌리고 기록된 신호를 꺼낸다 (7회)</td><td>파라미터를 바꿔 가며 반복</td></tr>
+    <tr><td><code>out = sim(model)</code> · <code>out.logsout</code></td><td>코드로 돌리고 기록된 신호를 꺼낸다</td><td>파라미터를 바꿔 가며 반복</td></tr>
   </table>
   </div>
   <div class="interp">
@@ -265,7 +264,7 @@ den = conv(conv([1 3], [1 5]), [1 10])</code></pre>
     <p class="boxtitle">🆕 이 절에서 처음 나오는 것</p>
     <dl>
       <dt>Stop Time · Run</dt>
-      <dd>시뮬레이션할 시간 길이와 실행 버튼. 여기서는 3초 동안 돌렸다. 코드로는 7회의 <code>sim(model)</code>이 Run과 같다.</dd>
+      <dd>시뮬레이션할 시간 길이와 실행 버튼. 여기서는 3초 동안 돌렸다. 코드로는 <code>sim</code>(⑥)이 Run과 같다.</dd>
       <dt>Scope 창의 MEASUREMENTS 탭</dt>
       <dd>Data Cursors(곡선 위 값 읽기) · Signal Statistics(최대·최소·평균) · Peak Finder(봉우리 찾기). 여기서는 최종값을 읽는 데 썼다.</dd>
     </dl>
@@ -339,7 +338,7 @@ fprintf('dcgain(G) = %.5f,  1/150 = %.5f\n', dcgain(G), 1/150)</code></pre>
   </figure>
   <p>
     <code>K</code>를 정하지 않고 Run을 누르면 「K가 정의되지 않았다」는 오류가 난다. 명령 창에서 <code>K = 242</code>를 먼저 실행하고 돌린다.
-    242는 7회에서 근궤적이 최대초과 20% 선과 만나는 이득으로 구했던 값이다. 코드로 돌리고 기록된 출력을 꺼내면 아래와 같다.
+    242는 보상 전 근궤적이 최대초과 20% 선(ζ = 0.456)과 만나는 이득이다. 코드로 돌리고 기록된 출력을 꺼내면 아래와 같다.
   </p>
 <!-- mcode 09/b03_open_p -->
 <div class="mcode">
@@ -353,6 +352,15 @@ fprintf('t = 3 s 의 출력 %.4f,  K/(150+K) = %.4f\n', y.Data(end), K/(150 + K)
 <pre class="out"><code>t = 3 s 의 출력 0.6172,  K/(150+K) = 0.6173</code></pre>
 </div>
 <!-- /mcode -->
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>out = sim(model)</dt>
+      <dd>모델을 Stop Time까지 시뮬레이션하고 결과 묶음(<code>Simulink.SimulationOutput</code>)을 돌려준다. 모델 이름은 글자로 준다. 여기서는 Run 버튼과 같은 일을 코드로 했다.</dd>
+      <dt>out.logsout.getElement('이름').Values</dt>
+      <dd><code>logsout</code>은 기록 표시(안테나)를 붙인 신호들의 모음이고, <code>getElement</code>가 신호선 이름으로 하나를 꺼낸다. <code>.Values</code>는 시계열(timeseries)이라 <code>.Time</code>과 <code>.Data</code>로 시간과 값을 꺼낸다. 여기서는 3초에서의 출력 <code>y.Data(end)</code>를 읽었다.</dd>
+    </dl>
+  </div>
   <div class="box theory">
     <p class="boxtitle">📐 이론과 잇기 — P 제어의 정상상태 오차</p>
     <p>폐루프 전달함수 \(T(s) = \dfrac{K G(s)}{1 + K G(s)}\)에서 최종값은 \(T(0)\)이다. \(G(0) = 1/150\)을 넣으면</p>
@@ -403,7 +411,7 @@ title('P 제어 — 이득 K 에 따른 응답')</code></pre>
   </figure>
   <ol class="marks">
     <li><span class="mk">1</span><strong>Controller</strong> — P · PI · PD · PID 중에서 고른다. 고르지 않은 항의 칸은 사라진다.</li>
-    <li><span class="mk">2</span><strong>Form</strong> — <strong>Parallel</strong>(\(P + I/s + Ds\))로 둔다. Ideal(\(P(1 + I/s + Ds)\))을 고르면 같은 숫자가 다른 제어기가 된다(7회 ⚠️).</li>
+    <li><span class="mk">2</span><strong>Form</strong> — <strong>Parallel</strong>(\(P + I/s + Ds\))로 둔다. Ideal(\(P(1 + I/s + Ds)\))을 고르면 같은 숫자가 다른 제어기가 된다.</li>
     <li><span class="mk">3</span><strong>P · I · D 칸</strong> — 변수 <code>Kp</code> <code>Ki</code> <code>Kd</code>를 적어 두고 값은 작업공간에서 바꾼다. N은 미분 항에 씌우는 필터로, 기본값 100을 그대로 쓴다.</li>
     <li><span class="mk">4</span><strong>Tune…</strong> — PID Tuner 앱을 열어 이득을 자동으로 고른다(조금 더 알아두면).</li>
     <li><span class="mk">5</span><strong>Saturation</strong> 탭 — 제어기 출력에 한계를 둘 수 있다. 11회에서 쓴다.</li>
@@ -472,7 +480,7 @@ PID   최대값 1.173 (t = 0.30 s)   t = 3 s 의 출력 0.993   오차 0.007</co
     <p class="boxtitle">🆕 이 절에서 처음 나오는 것</p>
     <dl>
       <dt>Log Signals · 안테나 표시</dt>
-      <dd>그 선의 값을 시뮬레이션 내내 저장한다. 코드에서는 <code>out.logsout.getElement('y')</code>로 꺼낸다(7회와 같은 방법). 여기서는 세 제어기의 출력을 모아 비교하는 데 썼다.</dd>
+      <dd>그 선의 값을 시뮬레이션 내내 저장한다. 코드에서는 <code>out.logsout.getElement('y')</code>로 꺼낸다(⑥). 여기서는 세 제어기의 출력을 모아 비교하는 데 썼다.</dd>
       <dt>Simulation Data Inspector</dt>
       <dd>기록된 신호를 실행별로 모아 보여 주는 창. 실행을 여러 번 하면 결과가 지워지지 않고 쌓인다. Compare 탭에서 두 실행의 차이를 그래프로 볼 수도 있다.</dd>
     </dl>
