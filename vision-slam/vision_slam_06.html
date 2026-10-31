@@ -42,8 +42,15 @@
   <a href="#ate" class="sub">EuRoC V1_01 ATE 비교</a>
   <a href="#ch7">7장 쌓아 가는 지도 — maplab</a>
   <a href="#ch8">8장 학습이 들어온다</a>
+  <a href="#droid" class="sub">DROID-SLAM 안에서는 무엇이 도나</a>
   <a href="#ch9">9장 지도가 그림이 된다 — NeRF · 3DGS</a>
+  <a href="#nerf" class="sub">NeRF는 장면을 어디에 담나</a>
+  <a href="#gs3d" class="sub">3DGS는 무엇을 바꿨나</a>
+  <a href="#render-pose" class="sub">NeRF · 3DGS에서 자세는 어떻게 구하나</a>
   <a href="#ch10">10장 한 번에 보는 신경망 — DUSt3R · VGGT</a>
+  <a href="#dust3r" class="sub">DUSt3R는 정확히 무엇을 내나</a>
+  <a href="#no-k" class="sub">카메라 내부 파라미터를 어떻게 몰라도 되나</a>
+  <a href="#after-dust3r" class="sub">MASt3R · MASt3R-SLAM · VGGT</a>
   <a href="#epilogue">에필로그 — 세 축과 바뀌지 않은 한 줄</a>
   <a href="#lineage" class="sub">계보도</a>
   <a href="#map">🗺️ SLAM 학습 지도</a>
@@ -76,6 +83,7 @@
     오늘은 <strong>식을 거의 쓰지 않는다.</strong> 대신 장마다 그림이 하나씩 있고, 그림이 이야기를 끌고 간다.
     여기서 그림으로 본 것들 — 얽힌 오차, 꽉 찬 공분산, 텅 빈 정보행렬, 키프레임, 슬라이딩 윈도우 — 은
     <strong>7회와 8회에서 식으로 처음부터 다시 세운다.</strong> 오늘은 「왜 그런 식이 필요해졌는지」만 가져가면 충분하다.
+    예외는 8~10장이다. 최신 방법들은 이 강의에서 다시 다루지 않으므로, <strong>그 안에서 무엇이 도는지</strong>를 식 몇 줄과 숫자 하나로 그 자리에서 따라가 본다.
   </p>
 
   <!-- ─────────────────────────────── 요약 ─────────────────────────────── -->
@@ -574,7 +582,17 @@
       <dt>NetVLAD — 신경망 이름 (Arandjelović 외, CVPR 2016)</dt>
       <dd>영상 한 장을 벡터 하나로 요약해 「같은 장소인가」를 고르는 신경망. DBoW2의 학습판에 해당한다.</dd>
       <dt>DROID-SLAM — 시스템 이름 (Teed &amp; Deng, NeurIPS 2021)</dt>
-      <dd>프린스턴 대학교. 학습한 광류로 대응을 내고, 그 결과로 자세와 깊이를 맞추는 <strong>미분 가능한 번들조정 층</strong>을 신경망 안에 넣었다.</dd>
+      <dd>프린스턴 대학교. 학습한 광류로 대응을 내고, 그 결과로 자세와 깊이를 맞추는 <strong>미분 가능한 번들조정 층</strong>을 신경망 안에 넣었다.
+        후속작 DPVO(Teed · Lipson · Deng, NeurIPS 2023)와 DPV-SLAM(Lipson · Teed · Deng, ECCV 2024)이 같은 연구실에서 나왔다.</dd>
+      <dt>광류 (optical flow)</dt>
+      <dd>영상 1의 픽셀마다 「영상 2에서 어디로 옮겨 갔나」를 2차원 벡터로 적은 것. 6장 VINS-Mono의 KLT가 고른 점 몇백 개의 광류를 구한다면, DROID-SLAM은 픽셀 전체의 광류를 다룬다.</dd>
+      <dt>RAFT — 광류 신경망 이름 (Teed &amp; Deng, ECCV 2020 최우수 논문)</dt>
+      <dd>DROID-SLAM의 바로 앞 연구. 아래의 상관 볼륨과 ConvGRU 구조를 DROID-SLAM에 그대로 물려줬다.</dd>
+      <dt>상관 볼륨 (correlation volume) · ConvGRU</dt>
+      <dd>상관 볼륨은 두 영상의 픽셀 모든 쌍에 대해 「두 픽셀의 특징이 얼마나 닮았나」를 미리 계산해 둔 표다. 신경망은 지금 대응 둘레만 이 표에서 찾아본다.
+        ConvGRU는 앞 반복의 기억을 이어받는 합성곱 순환 신경망으로, <strong>같은 신경망을 여러 번 돌려 조금씩 고치는</strong> 데 쓴다.</dd>
+      <dt>TartanAir — 데이터셋 이름 (Wang 외, IROS 2020)</dt>
+      <dd>카네기멜런 대학교. 게임 엔진으로 만든 학습용 대규모 합성 데이터셋. 조명 · 날씨 · 움직임이 다양하고 정답 자세 · 깊이 · 광류가 다 들어 있다.</dd>
     </dl>
   </div>
 
@@ -584,9 +602,97 @@
     <figcaption>SLAM을 이루는 모듈 블록도(맨 끝 「학습 지도」와 같은 배치)에서 신경망이 가져간 칸만 칠했다. 칠해진 칸은 대부분 <strong>「같은 것인가」를 판단하는</strong> 프론트엔드다.</figcaption>
   </figure>
 
+  <h3 id="droid">DROID-SLAM 안에서는 무엇이 도나</h3>
+
+  <p>
+    학습한 특징을 쓰는 시스템은 부품을 갈아 끼운 것이었다. 그럼 「최적화를 신경망 안에 넣었다」는 DROID-SLAM은 무엇이 다를까?
+    신경망이 영상을 받아 자세를 바로 내는 것일까?
+  </p>
+  <p>
+    그렇지는 않다. DROID-SLAM이 들고 다니는 상태는 고전 SLAM과 거의 같다 — 키프레임마다 <strong>자세 \(G_i\)</strong>,
+    그리고 영상을 1/8로 줄인 해상도에서 <strong>픽셀마다 역깊이 \(d_i\)</strong>(2장 MonoSLAM의 그 역깊이)다.
+    같은 장면을 본 키프레임끼리는 선으로 이어 그래프를 만든다. 신경망은 이 상태를 직접 내지 않는다.
+    대신 <strong>「지금 추정이 말하는 대응이 실제와 얼마나 어긋났나」</strong>를 픽셀마다 고쳐 준다.
+    한 바퀴를 픽셀 하나로 따라가 보자.
+  </p>
+
+  <figure>
+    <img src="assets/img/06_droid.png" width="760"
+         alt="두 칸. (가) 위에서 본 그림: 키프레임 i(파랑)와 0.10 m 오른쪽의 키프레임 j(검정). i의 광축 위에 지금 추정한 깊이 2.0 m의 빈 원과 실제 깊이 1.6 m의 주황 원이 있고, j에서 두 점으로 선이 그어져 있다. 아래 띠는 키프레임 j의 영상 한 줄: 영상 중심에서 왼쪽 22.93 px에 빈 원(유도한 대응), 28.67 px에 주황 원(실제로 보이는 곳), 둘 사이 빨간 화살표 「보정량 r = 5.73 px」. (나) 네 상자의 순환: ① 지금 추정(자세 G · 픽셀별 역깊이 d) → ② 유도한 대응 → ③ 신경망 ConvGRU(주황, 상관 볼륨을 보고 보정량 r · 신뢰도 w) → ④ DBA 층(보정된 대응에 맞게 G와 d를 가우스-뉴턴으로) → ①">
+    <figcaption>(가) 키프레임 i의 광축 위 픽셀 하나. 키프레임 j는 0.10 m 옆에 있고(EuRoC cam0, \(f_u = 458.65\) px), 자세는 맞다고 둔다.
+      지금 깊이 2.0 m로 다시 투영하면 영상 j에서 22.93 px 왼쪽에 떨어지는데, 그 점은 실제로 28.67 px 왼쪽에 보인다.
+      신경망이 이 차이(5.73 px)를 내면, DBA 층이 그 대응에 맞는 깊이 1.6 m를 찾는다.
+      (나) 실제로는 모든 픽셀 · 모든 키프레임 쌍에서 자세와 깊이를 함께 고치고, 이 순환을 여러 번 돈다.</figcaption>
+  </figure>
+
+  <p>
+    그림의 ②~④를 식으로 적으면 세 줄이다. 먼저 ②, <strong>지금 추정이 유도하는 대응</strong>이다.
+    \(\pi\)는 4회의 투영(카메라 좌표의 점 → 픽셀), \(\pi^{-1}(\mathbf{p}, d)\)는 그 반대(픽셀 \(\mathbf{p}\)를 역깊이 \(d\)만큼 띄운 3차원 점)다.
+  </p>
+
+  $$
+  \begin{aligned}
+  \mathbf{p}_{ij} &= \pi\big(G_{ij} \circ \pi^{-1}(\mathbf{p}_i,\ d_i)\big), \qquad G_{ij} = G_j\, G_i^{-1}
+  \end{aligned}
+  $$
+
+  <p>
+    \(\mathbf{p}_i\)는 키프레임 i의 픽셀 좌표, \(G_{ij}\)는 i에서 j로 가는 상대 자세, \(\mathbf{p}_{ij}\)는 「지금 추정이 맞다면 그 점이 영상 j의 어디에 보여야 하나」다.
+    ③에서 신경망은 두 영상의 특징을 비교한 표(상관 볼륨)에서 \(\mathbf{p}_{ij}\) 둘레를 찾아보고, 두 가지를 낸다.
+  </p>
+
+  $$
+  \begin{aligned}
+  \mathbf{p}^{*}_{ij} &= \mathbf{p}_{ij} + \mathbf{r}_{ij} &&\text{보정량 } \mathbf{r}_{ij} \text{ — 대응을 이만큼 옮겨라} \\
+  \mathbf{w}_{ij} &\in [0,\,1]^2 &&\text{신뢰도 — 이 픽셀의 보정을 얼마나 믿나}
+  \end{aligned}
+  $$
+
+  <p>
+    ④의 DBA(Dense Bundle Adjustment) 층은 보정된 대응 \(\mathbf{p}^{*}_{ij}\)에 가장 잘 맞는 자세와 깊이를 찾는다.
+    8회에서 세울 번들조정과 같은 꼴이고, 다른 점은 <strong>측정 자리에 신경망이 낸 대응이, 무게 자리에 신경망이 낸 신뢰도가</strong> 들어간다는 것뿐이다.
+  </p>
+
+  $$
+  \begin{aligned}
+  \mathbf{e}_{ij} &= \mathbf{p}^{*}_{ij} - \pi\big(G_{ij} \circ \pi^{-1}(\mathbf{p}_i,\ d_i)\big) &&\text{보정된 대응과 지금 추정의 차 (픽셀마다 2차원)} \\
+  G^{*},\, d^{*} &= \arg\min_{G,\, d}\ \sum_{(i,j)}\ \sum_{\text{픽셀}}\ \mathbf{e}_{ij}^{\top}\, \mathrm{diag}(\mathbf{w}_{ij})\, \mathbf{e}_{ij} &&\text{신뢰도가 높은 픽셀일수록 무겁게}
+  \end{aligned}
+  $$
+
+  <p>
+    그림 (가)의 숫자를 넣어 보자. 키프레임 j가 i에서 오른쪽으로 \(b = 0.10\) m 옮겨 있으면, i의 광축 위 깊이 \(z\)의 점 \((0, 0, z)\)는
+    j의 좌표로 \((-b, 0, z)\)이고, 4회의 투영 \(u = f_u X/Z + c_u\)로 영상 중심에서 \(f_u b / z\) 픽셀 왼쪽에 찍힌다.
+  </p>
+
+  $$
+  \begin{aligned}
+  \text{② 지금 깊이 } 2.0\text{ m:}\quad & 458.65 \times 0.10 / 2.0 = 22.93 \text{ px 왼쪽} \\
+  \text{③ 신경망이 본 실제 자리:}\quad & 28.67 \text{ px 왼쪽} \ \Rightarrow\ r = 5.73 \text{ px} \\
+  \text{④ 그 대응에 맞는 깊이:}\quad & 458.65 \times 0.10 / (22.93 + 5.73) = 1.600 \text{ m} \quad (\text{역깊이 } 0.500 \to 0.625)
+  \end{aligned}
+  $$
+
+  <p>
+    실제 DBA 층은 모든 픽셀에서 이것을 동시에 푼다. 깊이는 픽셀마다 따로라서 8회에서 볼 <strong>Schur 보수</strong>로 깊이를 먼저 지우고
+    자세만 남은 작은 식을 가우스-뉴턴으로 푼다. 고친 자세와 깊이로 다시 ②부터 돈다.
+    이 순환 전체가 미분 가능하므로, 정답 자세와 정답 광류에 대한 오차를 끝까지 거꾸로 흘려 신경망을 학습한다.
+  </p>
+  <p>
+    학습에는 합성 데이터셋 <strong>TartanAir</strong>의 단안 영상만 썼다(RTX 3090 네 장으로 약 일주일).
+    그런데도 EuRoC · TUM RGB-D · ETH3D에서 그대로 잘 돌았고, 실행할 때는 스테레오나 RGB-D도 받는다.
+    구조도 익숙하다 — 프론트엔드가 키프레임을 고르며 국소 BA를 돌리고, 백엔드가 모든 키프레임에 전역 BA를 따로 돌린다. 3장 PTAM의 두 스레드와 같은 나눔이다.
+  </p>
+  <p>
+    그래도 남는 것이 있다. \(\pi\)가 핀홀 모델이므로 <strong>카메라 내부 파라미터 \(f_u, f_v, c_u, c_v\)는 알아야 한다</strong>(10장의 DUSt3R와 갈리는 자리다).
+    단안이면 스케일은 여전히 모른다(6장). 그리고 무겁다 — 논문에 따르면 프론트엔드는 8 GB GPU에서 돌지만 EuRoC 전체를 돌리려면 24 GB GPU가 필요하다.
+    같은 연구실의 후속작 DPVO(2023)와 DPV-SLAM(2024)은 픽셀 전체 대신 <strong>패치 몇십 개</strong>만 따라가는 쪽으로 가볍게 만들었다.
+  </p>
+
   <div class="interp">
     <strong>해석:</strong> 학습 특징을 쓰는 시스템도 대응점을 얻은 뒤에는 여전히 재투영 오차의 제곱합을 푼다. <strong>부품을 갈아 끼운 것</strong>이다.
     DROID-SLAM은 한 걸음 더 나가 최적화 자체를 신경망 안에 넣었지만, 그 안에 든 것도 결국 번들조정이다. 학습이 기하를 없앤 것이 아니라 <strong>기하를 안에 품었다</strong>고 보는 편이 정확한 것 같다.
+    신경망이 맡은 것은 「어디가 같은 점인가」(\(\mathbf{r}\))와 「얼마나 믿나」(\(\mathbf{w}\)) — 이번에도 <strong>인식</strong>이다.
   </div>
 
   <!-- ─────────────────────────────── 9장 ─────────────────────────────── -->
@@ -602,10 +708,17 @@
     <dl>
       <dt>NeRF — 방법 이름 (Mildenhall 외, ECCV 2020)</dt>
       <dd>Neural Radiance Fields. UC 버클리 · 구글 리서치 · UC 샌디에이고 연구진. 장면을 「3차원 위치와 보는 방향을 넣으면 그 자리의 밀도와 색을 내는 신경망」 하나로 둔다.
-        픽셀의 색은 그 픽셀의 광선(4회의 역투영 광선)을 따라 밀도와 색을 쌓아서 얻는다(볼륨 렌더링).</dd>
+        픽셀의 색은 그 픽셀의 광선(4회의 역투영 광선)을 따라 밀도와 색을 쌓아서 얻는다(볼륨 렌더링). 아래 「NeRF는 장면을 어디에 담나」에서 자세히 본다.</dd>
       <dt>3D Gaussian Splatting (3DGS) — 방법 이름 (Kerbl · Kopanas · Leimkühler · Drettakis, SIGGRAPH 2023)</dt>
       <dd>프랑스 Inria · 독일 막스플랑크 정보학연구소. 장면을 신경망 대신 <strong>3차원 가우시안(타원체 모양의 흐릿한 얼룩) 수백만 개</strong>로 둔다.
         가우시안마다 위치 · 세 축의 크기 · 회전 · 불투명도 · 색을 담고, 화면에 얼룩처럼 찍어(splatting) 그린다. 1080p에서 30 fps 이상으로 그려진다.</dd>
+      <dt>Plenoxels · Instant-NGP — 방법 이름 (Fridovich-Keil 외, CVPR 2022 · Müller 외, SIGGRAPH 2022)</dt>
+      <dd>NeRF를 빠르게 만든 후속작들. Plenoxels는 UC 버클리, Instant-NGP는 NVIDIA에서 나왔다. 둘 다 <strong>격자</strong>를 다시 들여왔다(아래).</dd>
+      <dt>COLMAP — 소프트웨어 이름 (Schönberger &amp; Frahm, CVPR 2016)</dt>
+      <dd>영상 묶음에서 카메라 자세와 희소한 3차원 점을 함께 구하는 SfM(Structure from Motion) 프로그램. 취리히 연방공대 · 노스캐롤라이나 대학교. 1부에서 손으로 한 특징 매칭 · 두 시점 기하 · 삼각측량 · BA를 영상 수백 장에 대해 한 번에 해 준다.
+        NeRF · 3DGS 논문 대부분이 자세를 이것으로 미리 구해 둔다.</dd>
+      <dt>iNeRF · BARF — 방법 이름 (Yen-Chen 외, IROS 2021 · Lin 외, ICCV 2021)</dt>
+      <dd>iNeRF(MIT)는 다 만든 NeRF로 <strong>카메라 자세를 거꾸로</strong> 구했고, BARF(카네기멜런 대학교)는 NeRF와 자세를 <strong>함께</strong> 최적화했다.</dd>
       <dt>iMAP · NICE-SLAM · SplaTAM · MonoGS — SLAM 시스템 이름</dt>
       <dd>iMAP(Sucar 외, ICCV 2021)과 NICE-SLAM(Zhu 외, CVPR 2022)이 NeRF를, SplaTAM(Keetha 외, CVPR 2024)과
         MonoGS(<em>Gaussian Splatting SLAM</em>, Matsuki · Murai · Kelly · Davison, CVPR 2024)가 3DGS를 SLAM의 지도로 쓴 대표작이다.</dd>
@@ -616,15 +729,246 @@
     <img src="assets/img/06_representation.png" width="760"
          alt="네 칸. 장면: 파란 사각형, 빨간 원, 초록 삼각형. (가) 희소 점: 도형의 모서리와 윤곽에 검은 점 100개만 있다. (나) 볼륨 격자: 같은 장면을 16 px 칸의 모자이크로 칠했다. (다) 가우시안: 흐릿한 타원 46개가 겹쳐 도형 셋을 부드럽게 다시 그렸고, 그중 일부의 흰 테두리 타원이 보인다">
     <figcaption>같은 장면을 세 가지로 담았다. (가) 점 지도는 「어디에 모서리가 있나」만 안다 — 그림을 다시 그릴 수 없다.
-      (나) 볼륨 격자(KinectFusion · NeRF의 계열)는 공간을 칸으로 나눠 채운다. (다) 가우시안 46개로도 장면이 다시 그려진다 —
+      (나) 볼륨 격자(KinectFusion의 TSDF, NeRF를 빠르게 만든 Plenoxels · Instant-NGP)는 공간을 칸으로 나눠 채운다.
+      <strong>2020년의 NeRF 자체에는 칸이 없다</strong> — 바로 아래에서 본다. (다) 가우시안 46개로도 장면이 다시 그려진다 —
       실제 3DGS는 이것을 3차원에서 수백만 개로 한다. (2차원 · 적은 개수로 줄여 계산했다)</figcaption>
+  </figure>
+
+  <h3 id="nerf">NeRF는 장면을 어디에 담나</h3>
+
+  <p>
+    그림 (나)를 보면 NeRF도 공간을 칸으로 나눠 칸마다 밀도와 색을 저장한 것처럼 생각하기 쉽다. 실제로 NeRF 뒤에 그렇게 만든 방법도 나왔다.
+    그런데 2020년의 NeRF에는 칸이 없다. 장면 전체가 <strong>신경망 하나의 가중치 \(\theta\) 안에</strong> 들어 있다.
+  </p>
+
+  $$
+  F_\theta : (\mathbf{x},\ \mathbf{d}) \ \mapsto\ (\sigma,\ \mathbf{c})
+  $$
+
+  <p>
+    \(\mathbf{x}\)는 3차원 위치, \(\mathbf{d}\)는 보는 방향(단위벡터), \(\mathbf{c}\)는 RGB 색이다.
+    \(\sigma\)는 <strong>밀도</strong> — 「그 자리에서 빛이 단위 길이당 얼마나 막히나」를 1/m 단위로 잰 값이다. 투명도와 비슷하지만 같지는 않다.
+    얼마나 가리는지는 그 자리를 <strong>얼마나 길게 지나가느냐</strong>까지 들어가야 정해진다(아래 \(\alpha\)).
+    \(F_\theta\)는 8층짜리 완전연결 신경망(MLP)이고, 공간의 어느 실수 좌표를 넣어도 값이 나온다. 칸의 크기라는 것이 없다.
+    밀도는 위치에만, 색은 위치와 방향 둘 다에 따르게 만들었다 — 그래서 보는 각도에 따라 반짝이는 반사광도 담긴다.
+  </p>
+  <p>
+    그럼 픽셀 하나의 색은 어떻게 얻을까? 그 픽셀의 광선 위에 점을 촘촘히 찍고, 점마다 \(F_\theta\)에 묻고, 앞에서부터 쌓는다.
+  </p>
+
+  <figure>
+    <img src="assets/img/06_nerf_ray.png" width="760"
+         alt="두 칸. (가) 위에서 본 장면: 왼쪽 카메라에서 오른쪽으로 광선이 뻗고, 광선이 빨간 공(t = 2.4~3.6 m)과 그 뒤 파란 상자(t = 4.5~5.5 m)를 지난다. 광선 위에 표본점 60개가 있고, 빨간 공에 막 들어간 점 서너 개만 크다. 한 점에서 「F_θ(위치, 방향) → (σ, 색)」 상자로 선이 이어져 「칸에서 꺼내는 것이 아니라 신경망에 묻는다」라고 적혀 있다. (나) 위: 광선을 따라 밀도가 빨간 공 구간과 파란 상자 구간에서 8 /m. 아래: 남은 빛 T가 1에서 빨간 공에 들어가자 계단처럼 0으로 떨어지고, 몫 w 막대가 0.55, 0.25, 0.11… 로 빨간 공 앞부분에만 있다. 파란 상자에 닿을 때 T = 0.00007">
+    <figcaption>(가) 위에서 본 장면과 픽셀 하나의 광선. 표본점 60개(0.1 m 간격)마다 신경망에 묻는다. 점의 크기는 그 점이 픽셀 색에 보탠 몫이다.
+      (나) 신경망이 낸 밀도(위)와 그것으로 계산한 남은 빛 · 몫(아래). 빛은 빨간 공의 앞쪽 몇 점에서 거의 다 쓰이고, 뒤의 파란 상자까지는 거의 가지 못한다.
+      (밀도를 직접 정한 2차원 장면으로 계산했다)</figcaption>
+  </figure>
+
+  <p>
+    \(k\)번째 표본점의 밀도를 \(\sigma_k\), 다음 점까지의 간격을 \(\delta_k\), 색을 \(\mathbf{c}_k\)라 하면 픽셀의 색은 이렇다.
+  </p>
+
+  $$
+  \begin{aligned}
+  \alpha_k &= 1 - e^{-\sigma_k \delta_k} &&\text{이 구간에서 빛이 막힐 비율 (불투명도)} \\
+  T_k &= \prod_{j \lt k} \big(1 - \alpha_j\big) &&\text{여기까지 막히지 않고 살아온 빛 (남은 빛)} \\
+  \mathbf{C} &= \sum_{k} T_k\, \alpha_k\, \mathbf{c}_k &&\text{점마다 「남은 빛} \times \text{막힌 비율」만큼 그 색을 보탠다}
+  \end{aligned}
+  $$
+
+  <p>
+    그림의 숫자로 따라가 보자. 빨간 공 안에서는 \(\sigma = 8\) /m, \(\delta = 0.1\) m이다.
+  </p>
+
+  $$
+  \begin{aligned}
+  \alpha &= 1 - e^{-8 \times 0.1} = 1 - e^{-0.8} = 0.551 \\
+  T_1,\ T_2,\ T_3 &= 1,\quad 1 - 0.551 = 0.449,\quad 0.449 \times 0.449 = 0.202 \\
+  T_k \alpha_k &= 0.551,\quad 0.247,\quad 0.111 \qquad (\text{세 점의 합 } 0.909)
+  \end{aligned}
+  $$
+
+  <p>
+    빨간 공에 들어가 세 점(30 cm) 만에 빛의 91%가 쓰였다. 파란 상자에 닿을 때 남은 빛은 \(T = 0.00007\)이라, 픽셀 색은 빨간 공의 색 그대로다.
+    <strong>「앞에 있는 것이 뒤를 가린다」는 규칙을 따로 짜 넣지 않아도 이 식에서 저절로 나온다.</strong>
+  </p>
+  <p>
+    학습은 이 식을 거꾸로 쓴다. 영상들에서 광선을 무작위로 골라 \(\mathbf{C}\)를 계산하고, 실제 픽셀 색과의 차 \(\sum \lVert \mathbf{C} - \mathbf{C}_\text{관측} \rVert^2\)이 줄어들도록
+    \(\theta\)를 경사하강으로 고친다. 위의 세 줄이 모두 미분 가능하기 때문에 가능한 일이다.
+    대가는 속도였다. 픽셀 하나에 신경망을 수백 번 불러야 해서, 원 논문은 장면 하나를 학습하는 데 GPU 한 장으로 하루~이틀이 걸렸다.
+  </p>
+
+  <details class="fold">
+    <summary>좌표를 그대로 넣지 않는다 — positional encoding</summary>
+    <p>
+      MLP는 매끈한 함수를 먼저 배우는 성질이 있어서, 좌표 \((x, y, z)\)를 그대로 넣으면 흐릿한 장면밖에 나오지 않는다.
+      NeRF는 좌표 하나 \(p\)를 여러 주파수의 sin · cos로 늘려서 넣는다.
+    </p>
+    $$
+    \begin{aligned}
+    \gamma(p) = \big(\ &\sin(2^0 \pi p),\ \cos(2^0 \pi p), \\
+                      &\sin(2^1 \pi p),\ \cos(2^1 \pi p), \\
+                      &\ \ \cdots, \\
+                      &\sin(2^{L-1} \pi p),\ \cos(2^{L-1} \pi p)\ \big)
+    \end{aligned}
+    $$
+    <p>
+      위치는 \(L = 10\)(좌표 하나가 수 20개), 방향은 \(L = 4\)를 썼다. 1 cm 떨어진 두 좌표 \(p = 0.30\)과 \(0.31\)을 넣어 보면 효과가 보인다.
+    </p>
+    <div class="tablewrap">
+    <table>
+      <tr><th>\(k\)</th><th>\(\gamma\)의 \(k\)번째 짝 — \(p = 0.30\)</th><th>\(p = 0.31\)</th><th>둘의 거리</th></tr>
+      <tr><td>0</td><td>(+0.809, +0.588)</td><td>(+0.827, +0.562)</td><td>0.031</td></tr>
+      <tr><td>4</td><td>(+0.588, −0.809)</td><td>(+0.125, −0.992)</td><td>0.497</td></tr>
+      <tr><td>9</td><td>(−0.951, +0.309)</td><td>(+0.771, −0.637)</td><td><strong>1.965</strong></td></tr>
+    </table>
+    </div>
+    <p>
+      낮은 주파수에서는 거의 같은 두 점이 높은 주파수에서는 정반대 쪽에 놓인다. 신경망 입장에서는 1 cm 차이가 「큰 차이」로 보이게 되고, 그래서 가는 무늬를 배울 수 있다.
+    </p>
+  </details>
+
+  <p>
+    그럼 격자는 어디서 왔나? <strong>느린 것을 빠르게 하려고 뒤에 들어왔다.</strong>
+    Plenoxels(2022)는 신경망을 아예 빼고 격자 꼭짓점마다 밀도와 색을 저장한다 — 「칸마다 밀도와 색」은 바로 이쪽의 모양이다.
+    Instant-NGP(2022)는 여러 해상도의 격자에 짧은 특징 벡터를 저장하고, 그것을 아주 작은 MLP가 밀도와 색으로 푼다. 학습이 하루에서 몇 분으로 줄었다.
+    SLAM 쪽도 둘로 갈렸다 — iMAP은 원래 NeRF처럼 MLP 하나를, NICE-SLAM은 여러 층의 특징 격자와 작은 MLP를 쓴다.
+  </p>
+
+  <h3 id="gs3d">3DGS는 무엇을 바꿨나</h3>
+
+  <p>
+    NeRF가 느린 까닭이 픽셀마다 신경망에 수백 번 묻는 데 있다면, 묻지 않고 <strong>장면의 조각을 화면에 바로 찍을</strong> 수는 없을까?
+    3DGS는 장면을 가우시안 수백만 개로 두고, 가우시안마다 아래 59개의 수를 직접 저장한다. 신경망은 없다.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th style="width:24%">무엇</th><th style="width:10%">수 개수</th><th>뜻</th></tr>
+    <tr><td>중심 \(\boldsymbol\mu\)</td><td>3</td><td>위치</td></tr>
+    <tr><td>크기 \(\mathbf{s}\) · 회전 \(q\)</td><td>3 + 4</td><td>타원체의 세 축 길이와 방향. 회전은 3회의 단위 쿼터니언이다</td></tr>
+    <tr><td>불투명도 \(o\)</td><td>1</td><td>가우시안 중심에서 빛을 얼마나 막나 (0~1)</td></tr>
+    <tr><td>색</td><td>48</td><td>보는 방향에 따라 바뀌는 색 — 구면조화함수(spherical harmonics) 계수 16개 × RGB</td></tr>
+  </table>
+  </div>
+
+  <p>
+    크기와 회전은 공분산 하나로 묶인다. 3회에서 쿼터니언을 회전행렬로 바꾸던 식이 그대로 쓰인다.
+  </p>
+
+  $$
+  \begin{aligned}
+  \Sigma &= R\, S\, S^{\top} R^{\top}, \qquad S = \mathrm{diag}(s_1,\ s_2,\ s_3),\quad R = R(q)
+  \end{aligned}
+  $$
+
+  <p>
+    예를 들어 \(z\)축으로 30° 돌린(\(q = (0.966,\ 0,\ 0,\ 0.259)\)), 크기 \((0.30,\ 0.15,\ 0.08)\) m인 가우시안이면
+  </p>
+
+  $$
+  \begin{aligned}
+  R &= \begin{bmatrix} 0.866 & -0.5 & 0 \\ 0.5 & 0.866 & 0 \\ 0 & 0 & 1 \end{bmatrix}, \qquad
+  \Sigma = \begin{bmatrix} 0.073 & 0.029 & 0 \\ 0.029 & 0.039 & 0 \\ 0 & 0 & 0.006 \end{bmatrix} \ \text{m}^2
+  \end{aligned}
+  $$
+
+  <p>
+    이고, \(\Sigma\)의 고윳값은 \(0.09,\ 0.0225,\ 0.0064\) — 정확히 \(s_1^2, s_2^2, s_3^2\)이다. 크기를 회전으로 돌려 놓았을 뿐이기 때문이다.
+  </p>
+  <p>그리는 순서는 셋이다.</p>
+  <ol>
+    <li><strong>투영.</strong> 가우시안의 중심 \(\boldsymbol\mu\)는 4회의 투영으로 화면의 \(\boldsymbol\mu'\)에 찍힌다. 타원체 \(\Sigma\)는 화면의 타원 \(\Sigma' = J\, W \Sigma\, W^{\top} J^{\top}\)이 된다.
+      \(W\)는 세계에서 카메라로 돌리는 회전, \(J\)는 투영을 그 점 둘레에서 1차로 편 2×3 행렬이다(투영의 야코비안 — 9회에서 직접 유도한다).</li>
+    <li><strong>정렬.</strong> 화면을 16×16 픽셀 타일로 나누고, 타일마다 겹치는 가우시안을 카메라에서 가까운 순으로 줄 세운다.</li>
+    <li><strong>합성.</strong> 픽셀 \(\mathbf{u}\)마다 앞에서부터 쌓는다.
+      $$
+      \begin{aligned}
+      \alpha_k &= o_k \exp\!\Big(-\tfrac{1}{2} (\mathbf{u} - \boldsymbol\mu'_k)^{\top}\, \Sigma'^{-1}_k\, (\mathbf{u} - \boldsymbol\mu'_k)\Big) \\
+      \mathbf{C} &= \sum_k \mathbf{c}_k\, \alpha_k \prod_{j \lt k} \big(1 - \alpha_j\big)
+      \end{aligned}
+      $$
+    </li>
+  </ol>
+  <p>
+    ③의 두 번째 줄을 위의 NeRF 식과 비교해 보면 <strong>글자 하나 다르지 않다.</strong> \(\prod(1-\alpha_j)\)가 남은 빛 \(T_k\)다.
+    다른 것은 \(\alpha_k\)가 어디서 오느냐뿐이다 — NeRF는 광선 위 점마다 신경망에 물어서, 3DGS는 화면에 찍힌 타원의 모양에서 바로 얻는다.
+    예를 들어 \(o = 0.9\)인 가우시안의 화면 타원에서 1σ 떨어진 픽셀이면 \(\alpha = 0.9 \times e^{-0.5} = 0.546\)이다.
+    묻는 대신 찍으니 GPU의 래스터화(rasterization)로 빠르게 그려진다.
+  </p>
+  <p>
+    학습도 같은 방식이다. COLMAP이 낸 희소한 점마다 가우시안 하나씩을 놓고 시작해서, 그린 영상과 실제 영상의 차를 줄이도록 59개의 수를 모두 경사하강으로 고친다.
+    중간중간 덜 채워진 곳의 가우시안은 복제하거나 둘로 쪼개고, 거의 투명해진 것은 지운다. 장면 하나에 수십 분이면 된다.
+    <strong>원소가 하나하나 눈에 보이는(명시적) 지도</strong>라 더하고 지우기가 쉽다 — SLAM이 지도를 조금씩 키워 가기에 잘 맞는 성질이다.
+  </p>
+
+  <h3 id="render-pose">NeRF · 3DGS에서 자세는 어떻게 구하나</h3>
+
+  <p>
+    지금까지의 이야기에는 빠진 것이 있다. 광선을 쏘려면 <strong>카메라가 어디 있는지</strong> 알아야 한다.
+    원래의 NeRF와 3DGS는 그것을 스스로 구하지 않는다 — COLMAP으로 미리 구한 자세를 정답처럼 받아 쓰고, 3DGS는 처음 가우시안을 놓을 자리까지 COLMAP의 점에서 받는다.
+    엄밀히 말해 <strong>위치추정은 하지 않는 방법들</strong>이다. 그럼 SLAM에 쓰려면 자세를 어떻게 구할까?
+  </p>
+  <p>
+    거꾸로 돌리면 된다. <strong>지도를 고정하고, 「이 자세에서 지도를 그려 본 영상」이 실제 영상과 같아지도록 자세를 고친다.</strong>
+    iNeRF(2021)가 처음 보인 방식이다.
+  </p>
+
+  $$
+  \begin{aligned}
+  \boldsymbol\xi^{*} = \arg\min_{\boldsymbol\xi}\ \sum_{\text{픽셀 } \mathbf{u}}\
+    \big\lVert\, \mathrm{Render}\big(\mathcal{M},\ T(\boldsymbol\xi)\big)[\mathbf{u}] \;-\; I[\mathbf{u}] \,\big\rVert^{2}
+  \end{aligned}
+  $$
+
+  <p>
+    \(\mathcal{M}\)은 지도(NeRF의 \(\theta\), 또는 가우시안들), \(I\)는 지금 들어온 영상, \(T(\boldsymbol\xi)\)는 카메라 자세,
+    \(\boldsymbol\xi\)는 그 자세를 고칠 6개의 수(3회의 tangent space 위 작은 회전 3개 + 이동 3개)다.
+    \(\mathrm{Render}\)는 위의 합성 식 그 자체다. 광선의 시작점과 방향, 가우시안이 화면에 찍히는 자리가 모두 자세의 함수이므로 이 합도 자세로 미분할 수 있다.
+  </p>
+
+  <figure>
+    <img src="assets/img/06_render_track.png" width="760"
+         alt="네 칸. 관측 영상(참 자세): 파란 상자 · 빨간 공 · 초록 삼각형이 가우시안 얼룩으로 그려져 있다. 지도를 추정 자세에서 그린 것: 같은 그림이 오른쪽으로 30 px 밀려 있다. 둘의 차: 도형의 테두리를 따라 밝게 빛나는 잔차 영상. 오른쪽 그래프: 가로축 추정 자세의 어긋남 s(−120~120 px), 세로축 광도 오차 E(s). 0에서 가장 낮은 골짜기가 있고 양쪽으로 오르다가 +100 근처에 작은 골이 하나 더 있다. +10 px에서 시작 → 3번 만에 참 자세, −30 px → 13번, +60 px → 34번(초록 별에 도착), +90 px에서 시작 → 99 px에 멈춤(빨간 X)">
+    <figcaption>9장 그림의 가우시안 46개를 지도로 두고, 관측 영상은 참 자세에서 그린 것이다. 추정 자세가 옆으로 \(s\) px 어긋나 있으면 그린 영상이 밀리고, 그 차가 잔차가 된다.
+      오른쪽은 \(s\)를 가우스-뉴턴으로 고쳐 간 결과다. 가까이서 시작하면 몇 번 만에 참 자세에 닿지만, +90 px에서 시작하면 <strong>엉뚱한 골짜기(99 px)</strong>에 멈춘다.
+      (자세 6개를 영상의 가로 이동 하나로 줄여 계산했다)</figcaption>
   </figure>
 
   <p>
     무엇이 바뀌었을까? <strong>잔차의 정의</strong>가 바뀌었다. 점 지도에서는 「점이 영상의 어디에 찍혔나」(재투영 오차, 4회)를 맞췄다.
     NeRF · 3DGS에서는 「지도로 그린 영상이 실제 영상과 얼마나 같나」를 맞춘다. 그런데 이것은 5장 곁가지의 <strong>직접법</strong>과 같은 모양이다 —
+    직접법이 기준 키프레임의 픽셀 밝기와 맞췄다면, 여기서는 <strong>지도에서 그린 영상</strong>과 맞춘다.
     계보로 이어진 것은 아니지만, 잔차로 보면 「다시 그릴 수 있는 지도를 가진 직접법」에 가깝다.
   </p>
+  <p>
+    그래서 약점도 직접법과 같다. 그림의 +90 px처럼 <strong>시작이 멀면 엉뚱한 곳에 멈춘다.</strong>
+    실제 시스템이 2장 MonoSLAM의 일정속도 운동 모델처럼 「직전 속도로 계속 움직였다」고 예측한 자세에서 출발하는 것은 이 때문이다.
+    BARF(2021)는 다른 방향에서 이 문제를 다뤘다 — 처음에는 positional encoding의 낮은 주파수만 써서 오차 곡선을 매끈하게 만들어 두고(골짜기가 넓어진다), 맞아 갈수록 높은 주파수를 차례로 켠다.
+  </p>
+  <p>
+    SLAM 시스템들은 이것을 3장 PTAM처럼 둘로 나눠 번갈아 푼다.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th style="width:18%"></th><th>추적 (tracking)</th><th>지도 작성 (mapping)</th></tr>
+    <tr><td>고정하는 것</td><td>지도</td><td>자세 (시스템에 따라 키프레임 자세도 함께 고친다)</td></tr>
+    <tr><td>고치는 것</td><td>지금 영상의 자세 6개</td><td>지도 — MLP의 가중치 또는 가우시안의 수들</td></tr>
+    <tr><td>시작점</td><td>일정속도 운동 모델로 예측한 자세</td><td>지금 지도</td></tr>
+  </table>
+  </div>
+
+  <ul>
+    <li><strong>iMAP · NICE-SLAM · SplaTAM은 RGB-D 카메라를 쓴다.</strong> 색 잔차에 <strong>깊이 잔차</strong>(그린 깊이와 잰 깊이의 차)를 더해 자세를 단단히 잡는다.
+      SplaTAM은 추적할 때 <strong>실루엣</strong> — 그 픽셀이 지도에 얼마나 덮였나, 즉 위의 \(\sum_k T_k \alpha_k\) — 이 0.99를 넘는 픽셀만 쓴다.
+      아직 만들지 않은 곳에서 그린 영상은 믿을 수 없기 때문이다. 실루엣이 0.5보다 낮은 곳에는 새 가우시안을 더한다.
+      논문의 실험에서 실루엣을 빼면 추적이 실패했다.</li>
+    <li><strong>MonoGS는 단안 RGB로도 돈다.</strong> 렌더링을 카메라 자세로 미분한 <strong>해석적 야코비안을 \(\mathbf{SE}(3)\) 위에서</strong>(3회의 Lie group) 처음 유도해 넣었다.
+      노출이 바뀌는 것을 받으려고 밝기를 \(aI + b\)로 보정하는 수 두 개를 함께 고친다 — 5장 곁가지의 DSO가 노출을 보정한 것과 같은 생각이다.
+      시스템 전체는 초당 3장 정도로 돈다. 그리는 것 자체는 빠르지만, 영상마다 자세와 지도를 수십~백 번씩 고치는 반복이 무겁다.</li>
+  </ul>
+
   <p>
     그리고 바뀌지 않은 것도 많다. 지금 나와 있는 3DGS-SLAM은 상당수가 루프 클로징과 전역 일관성을 자세그래프 같은 고전 백엔드에 맡기고,
     단안일 때의 스케일은 IMU나 다른 센서에서 얻는다. <strong>지도의 표현이 바뀐 것이지 추정 문제가 바뀐 것은 아니다.</strong>
@@ -644,14 +988,176 @@
     <dl>
       <dt>pointmap</dt>
       <dd>영상의 <strong>픽셀마다 3차원 점 하나</strong>를 붙인 것. 영상과 같은 크기의 「XYZ 영상」이다. 이것만 있으면 깊이 · 대응 · 카메라 자세를 모두 거꾸로 계산할 수 있다.</dd>
-      <dt>DUSt3R · MASt3R — 신경망 이름 (Wang 외, CVPR 2024 · Leroy · Cabon · Revaud, ECCV 2024)</dt>
-      <dd>Naver Labs Europe 연구진. 영상 <strong>두 장</strong>을 넣으면 두 장의 pointmap을 같은 좌표계로 바로 낸다. 카메라 내부 파라미터도 몰라도 된다. MASt3R는 여기에 정밀한 대응(매칭)을 더했다.</dd>
+      <dt>DUSt3R · MASt3R — 신경망 이름 (Wang · Leroy · Cabon · Chidlovskii · Revaud, CVPR 2024 · Leroy · Cabon · Revaud, ECCV 2024)</dt>
+      <dd>Naver Labs Europe 연구진. 영상 <strong>두 장</strong>을 넣으면 두 장의 pointmap을 같은 좌표계로 바로 낸다. 카메라 내부 파라미터를 <strong>입력으로 받지 않는다</strong>(무슨 뜻인지는 아래에서 본다). MASt3R는 여기에 정밀한 대응(매칭)을 더했다.</dd>
+      <dt>트랜스포머 (Transformer) · ViT</dt>
+      <dd>영상을 작은 조각(패치)으로 잘라 조각마다 벡터 하나(토큰)를 만들고, 토큰끼리 서로를 들여다보게(attention) 해서 정보를 섞는 신경망 구조. ViT(Vision Transformer)는 그것을 영상에 쓴 것이다.
+        <strong>cross-attention</strong>은 한 영상의 토큰이 <strong>다른 영상</strong>의 토큰을 들여다보는 것이다.</dd>
+      <dt>Procrustes 정렬 · PnP</dt>
+      <dd>Procrustes 정렬은 짝지어진 두 3차원 점 집합을 가장 잘 겹치게 하는 회전 · 이동(· 스케일)을 닫힌 꼴로 구하는 방법이다. 이름은 손님을 침대 길이에 맞춰 늘이고 잘랐다는 그리스 신화의 인물에서 왔다.
+        PnP(Perspective-n-Point)는 3차원 점 \(n\)개와 그 점이 찍힌 픽셀 \(n\)개로 카메라 자세를 구하는 문제다. 11회 · 13회에서 다시 나온다.</dd>
+      <dt>\(\mathbf{Sim}(3)\)</dt>
+      <dd>회전 · 이동에 <strong>스케일 하나</strong>를 더한 7자유도 변환. 3회의 \(\mathbf{SE}(3)\)에 「크기를 몇 배로」를 붙인 것이다.</dd>
       <dt>MASt3R-SLAM — 시스템 이름 (Murai · Dexheimer · Davison, CVPR 2025)</dt>
       <dd>Imperial College London. MASt3R의 두 장짜리 결과를 이어 붙여 실시간(약 15 fps) 단안 밀집 SLAM을 만들었다. <strong>루프 클로징과 2차 전역 최적화</strong>는 따로 붙였다.</dd>
       <dt>VGGT — 신경망 이름 (Wang · Chen · Karaev · Vedaldi · Rupprecht · Novotny, CVPR 2025 최우수 논문)</dt>
-      <dd>Visual Geometry Grounded Transformer. 옥스퍼드 대학교 VGG와 Meta AI. 영상 <strong>여러 장</strong>을 한 번에 넣으면 카메라 자세 · 깊이 · 대응을 몇 초 안에 낸다.</dd>
+      <dd>Visual Geometry Grounded Transformer. 옥스퍼드 대학교 VGG와 Meta AI. 영상 <strong>여러 장</strong>을 한 번에 넣으면 카메라 자세 · 내부 파라미터 · 깊이 · 대응을 몇 초 안에 낸다.</dd>
     </dl>
   </div>
+
+  <h3 id="dust3r">DUSt3R는 정확히 무엇을 내나</h3>
+
+  <p>
+    「pointmap을 바로 낸다」는 것이 구체적으로 무엇일까? 그리고 카메라 내부 파라미터도 없이 어떻게 3차원 점을 낼 수 있을까?
+    구조부터 보면 단순하다. 영상 두 장 \(I^1, I^2\)를 <strong>같은 ViT 인코더</strong>에 각각 넣어 토큰을 만들고,
+    두 디코더가 cross-attention으로 <strong>서로의 토큰을 들여다보며</strong> 고친 뒤, 영상마다 헤드 하나가 픽셀별 값을 낸다. 나오는 것은 네 장이다.
+  </p>
+
+  $$
+  \begin{aligned}
+  X^{1,1} &\in \mathbb{R}^{H \times W \times 3} &&\text{영상 1의 픽셀마다 3차원 점 — 카메라 1 좌표계} \\
+  X^{2,1} &\in \mathbb{R}^{H \times W \times 3} &&\text{영상 2의 픽셀마다 3차원 점 — }\textbf{역시 카메라 1 좌표계} \\
+  C^{1,1},\ C^{2,1} &\in \mathbb{R}^{H \times W} &&\text{픽셀마다 신뢰도 (1 이상)}
+  \end{aligned}
+  $$
+
+  <p>
+    위첨자 \(X^{n,m}\)은 「영상 \(n\)의 픽셀들을 카메라 \(m\)의 좌표로」라고 읽는다. 핵심은 둘째 줄이다.
+    영상 2의 픽셀인데 좌표는 <strong>카메라 1 기준</strong>이다. 그래서 두 장의 점이 한 공간에 겹쳐 놓이고, 거기서 나머지가 다 나온다.
+  </p>
+
+  <figure>
+    <img src="assets/img/06_pointmap.png" width="760"
+         alt="두 칸. (가) 위에서 본 장면(카메라 1 좌표계): z = 2.5 m의 벽과 z = 1.2~1.5 m의 상자가 회색 띠로 있고, 원점에 카메라 1(파랑), (0.55, 0.15)에 비스듬히 돈 카메라 2(주황)가 있다. 영상 1의 픽셀들(파란 점)과 영상 2의 픽셀들(주황 X)이 벽과 상자 앞면 위에 겹쳐 놓여 있다. 「두 점 무리가 같은 표면 위에 겹친다 → 가장 가까운 점끼리 = 대응 → 둘을 겹치게 하는 변환 = 카메라 2의 자세」. (나) 가로축 pointmap의 X/Z, 세로축 u − 376인 산점도. 점들이 한 직선 위에 몰려 있고, 빨간 맞춘 직선 f* = 455.3 px와 검은 점선 참값(f = 458.7, 주점 367.2)이 거의 겹친다">
+    <figcaption>(가) 출력 두 장이 모두 카메라 1 좌표계에 놓인다. 영상 2의 점들도 같은 벽 · 같은 상자 위에 떨어지므로, 겹치는 점이 대응이고 둘을 겹치게 하는 변환이 카메라 2의 자세다.
+      (나) EuRoC cam0의 내부 파라미터로 만든 합성 pointmap(점마다 거리의 2% 오차를 섞었다)에서 초점거리를 되읽었다. 픽셀이 영상 가운데에서 떨어진 정도와 점의 기울기 \(X/Z\)는 한 직선 위에 있고, 그 기울기가 \(f\)다.
+      (2차원 · 합성 장면으로 계산했다)</figcaption>
+  </figure>
+
+  <p>
+    학습은 정답 pointmap과의 거리를 줄이는 것이다. 정답은 데이터셋의 정답 깊이 · 내부 파라미터 · 자세로 만들고, 실내 · 실외 · 물체 중심의 데이터셋 여덟 개에서
+    영상 쌍 850만 개를 뽑아 썼다. 입력은 긴 변을 512 px로 줄여 넣는다. 처음부터 학습하지 않고, 같은 연구진의 CroCo — 한 영상을 가려 놓고 다른 시점 영상을 보며 채우게 한 사전학습 — 에서 시작했다.
+  </p>
+
+  <details class="fold">
+    <summary>학습 손실 — 스케일을 어떻게 비교하나, 신뢰도는 어떻게 배우나</summary>
+    <p>
+      영상만 보고는 스케일을 알 수 없다(6장). 그래서 예측과 정답을 각각 <strong>원점까지의 평균 거리</strong> \(z\), \(\bar z\)로 나눈 뒤 비교한다.
+    </p>
+    $$
+    \begin{aligned}
+    \ell_{\text{회귀}}(v, i) &= \Big\lVert\, \frac{X^{v,1}_i}{z} - \frac{\bar X^{v,1}_i}{\bar z} \,\Big\rVert, \qquad v \in \{1, 2\},\ i = \text{픽셀} \\
+    \mathcal{L} &= \sum_{v}\ \sum_{i}\ C^{v,1}_i\ \ell_{\text{회귀}}(v, i) \;-\; \alpha \log C^{v,1}_i
+    \end{aligned}
+    $$
+    <p>
+      신뢰도 \(C\)에 정답은 없다. \(C\)를 크게 하면 그 픽셀의 오차가 크게 쳐지고, 작게 하면 \(-\alpha \log C\)가 커진다.
+      그래서 신경망은 <strong>자신 있는 픽셀에서만 \(C\)를 키우는 법</strong>을 스스로 배운다. 하늘 · 유리 · 흐릿한 곳에서 \(C\)가 낮게 나오는 이유다.
+    </p>
+  </details>
+
+  <h3 id="no-k">카메라 내부 파라미터를 어떻게 몰라도 되나</h3>
+
+  <p>
+    정답 pointmap을 만들 때는 내부 파라미터 \(K\)가 들어간다. 4회의 역투영 그대로다.
+  </p>
+
+  $$
+  \bar X(u, v) = D(u, v)\; K^{-1} \begin{bmatrix} u \\ v \\ 1 \end{bmatrix}
+  $$
+
+  <p>
+    신경망은 \(K\)를 받지 않는다. 그런데도 이 정답에 맞추려면 <strong>화각을 영상에서 짐작해야</strong> 한다 — 소실점으로 모이는 선, 익숙한 물체의 크기와 원근 같은 단서로.
+    수백만 쌍을 보며 그 짐작을 배운 것이다. 즉 \(K\)는 사라진 것이 아니라 <strong>출력 안에 녹아 있다.</strong> 그래서 거꾸로 읽어 낼 수 있다.
+  </p>
+  <p>
+    4회의 핀홀 모델은 \(u - c_u = f\, X/Z\), \(v - c_v = f\, Y/Z\)였다. 주점이 영상 가운데 \((W/2, H/2)\)에 있고 픽셀이 정사각형이라고 두면, 남는 모르는 수는 \(f\) 하나다.
+  </p>
+
+  $$
+  \begin{aligned}
+  f^{*} = \arg\min_{f}\ \sum_{i}\ C^{1,1}_i\,
+    \left\lVert
+      \begin{bmatrix} u_i - W/2 \\ v_i - H/2 \end{bmatrix}
+      - f \begin{bmatrix} X_i / Z_i \\ Y_i / Z_i \end{bmatrix}
+    \right\rVert
+  \end{aligned}
+  $$
+
+  <p>
+    제곱이 아닌 노름이라 튀는 점에 덜 휘둘린다. 가중 최소제곱을 몇 번 되풀이하는 Weiszfeld 반복으로 푼다. 그림 (나)의 합성 pointmap에 넣어 보면 이렇다.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>pointmap의 점 오차</th><th>주점 = 영상 가운데 (376, 240)</th><th>주점 = 참값 (367.2, 248.4)</th></tr>
+    <tr><td>0%</td><td>\(f^{*} = 456.2\)</td><td>458.3</td></tr>
+    <tr><td>2%</td><td><strong>455.3</strong> (그림)</td><td>456.3</td></tr>
+    <tr><td>5%</td><td>445.5</td><td>446.3</td></tr>
+  </table>
+  </div>
+
+  <p>
+    참값은 \(f_u = 458.65\), \(f_v = 457.30\)이다. 주점을 가운데로 가정한 값이 0.5%쯤, 점이 5% 흔들리면 3%쯤 작게 나온다.
+    가로축 \(X/Z\) 자체가 흔들리면 맞춘 직선이 눕기 때문이다. <strong>신경망이 화각을 잘못 짐작한 만큼이 그대로 \(f\)의 오차가 된다.</strong>
+  </p>
+  <p>나머지도 같은 출력에서 읽힌다.</p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th style="width:18%">무엇</th><th>어떻게</th></tr>
+    <tr><td>깊이</td><td>\(X^{1,1}\)의 \(Z\) 성분</td></tr>
+    <tr><td>대응</td><td>\(X^{1,1}\)과 \(X^{2,1}\)이 한 좌표계에 있으므로, <strong>3차원에서 서로가 서로의 가장 가까운 점</strong>인 짝만 고른다</td></tr>
+    <tr><td>상대 자세</td><td>순서를 바꿔 \((I^2, I^1)\)을 넣으면 \(X^{1,2}\) — 같은 영상 1의 점을 카메라 2 좌표로 — 가 나온다. \(X^{1,1}\)과 \(X^{1,2}\)를 Procrustes 정렬로 겹치면 그 변환이 상대 자세다.
+      잡음에 약해서, 구한 \(f^{*}\)로 PnP-RANSAC(5회의 RANSAC)을 풀기도 한다</td></tr>
+  </table>
+  </div>
+
+  <p>
+    영상이 여러 장이면 쌍마다 이것을 돌리고, 결과를 한 좌표계로 모은다. 쌍 \(e\)마다 스케일 \(\sigma_e\)와 강체 변환 \(P_e\)를, 영상 \(v\)마다 세계 좌표의 pointmap \(\chi^v\)를 함께 푼다.
+  </p>
+
+  $$
+  \begin{aligned}
+  \min_{\chi,\, P,\, \sigma}\ \sum_{e}\ \sum_{v \in e}\ \sum_{i}\
+    C^{v,e}_i\, \big\lVert\, \chi^{v}_i - \sigma_e\, P_e\, X^{v,e}_i \,\big\rVert,
+  \qquad \prod_e \sigma_e = 1
+  \end{aligned}
+  $$
+
+  <p>
+    마지막 조건은 모든 스케일을 0으로 줄여 버리는 답을 막는다. <strong>재투영 오차 대신 3차원 거리를 줄이는 BA</strong>라고 보면 된다.
+  </p>
+  <p>
+    정리하면, 정확히는 「\(K\)를 몰라도 된다」가 아니라 <strong>「\(K\)를 입력으로 받지 않는다」</strong>다.
+    화각을 영상에서 짐작하는 만큼 정확도에 한계가 있고, 학습 데이터와 거리가 먼 어안 렌즈처럼 핀홀에서 먼 카메라에는 약하다. 512 px로 줄여 넣는 것도 정밀도를 깎는다.
+    EuRoC처럼 캘리브레이션이 있으면 그것을 쓰는 편이 정확하다 — 아래 MASt3R-SLAM이 바로 그렇게 한다.
+  </p>
+
+  <h3 id="after-dust3r">MASt3R · MASt3R-SLAM · VGGT는 무엇을 더했나</h3>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th style="width:15%"></th><th style="width:12%">넣는 것</th><th>더한 것</th><th style="width:24%">내부 파라미터는</th></tr>
+    <tr><td><strong>MASt3R</strong> (2024)</td><td>영상 두 장</td>
+      <td>픽셀마다 <strong>매칭용 기술자</strong>를 내는 헤드 — 5장 ORB 기술자의 학습판이다. 3차원 최근접보다 정밀한 대응을 준다. 미터 단위 pointmap도 낸다</td>
+      <td>DUSt3R와 같다 — 출력에서 되읽는다</td></tr>
+    <tr><td><strong>MASt3R-SLAM</strong> (2025)</td><td>연속 영상</td>
+      <td>새 영상을 마지막 키프레임과 맞춰 <strong>\(\mathbf{Sim}(3)\) 자세</strong>를 가우스-뉴턴으로 구한다(신경망 출력끼리 스케일이 조금씩 어긋나므로 스케일까지 푼다).
+        같은 키프레임에 대한 pointmap은 신뢰도 가중 평균으로 합친다. 검색으로 루프 후보를 찾아 MASt3R로 확인하고, 전역 가우스-뉴턴을 돈다. RTX 4090에서 약 15 fps</td>
+      <td>카메라 모델을 정하지 않는다 — 「모든 광선이 한 점(카메라 중심)을 지난다」만 가정하고 pointmap을 <strong>광선 방향</strong>으로 바꿔 쓴다. 알면 넣어서 픽셀 재투영 오차로 푼다(더 정확)</td></tr>
+    <tr><td><strong>VGGT</strong> (2025)</td><td>한 장~수백 장</td>
+      <td>프레임마다 카메라(쿼터니언 4 · 이동 3 · 화각 2), 깊이 지도, pointmap, 점 추적용 특징을 한 번에 낸다. 첫 카메라가 세계 좌표계다.
+        약 12억 개의 파라미터, H100 한 장에서 10장에 0.14초, 100장에 3.1초. 원하면 출력을 BA로 한 번 더 다듬는다</td>
+      <td><strong>화각을 직접 출력한다</strong> (주점은 가운데로 가정)</td></tr>
+  </table>
+  </div>
+
+  <p>
+    VGGT 논문에는 흥미로운 결과가 하나 있다. 같은 신경망이 pointmap도 내고 깊이 + 카메라도 내는데,
+    <strong>pointmap을 그대로 쓰는 것보다 깊이를 카메라로 역투영한 점이 더 정확했다</strong>(ETH3D에서 점 구름 오차 — Chamfer 거리 — 0.709 대 0.677).
+    한 번에 다 내는 신경망 안에서도, 4회의 투영 모델을 거쳐 가는 쪽이 이긴 셈이다.
+  </p>
 
   <figure>
     <img src="assets/img/06_feedforward.png" width="760"
@@ -787,7 +1293,11 @@
     <li><input type="checkbox" id="c9"><label for="c9">IMU가 시각 SLAM에 더하는 것(스케일 · 중력 · 짧은 구간의 버팀)을 대고, VINS-Mono의 네 단계를 회차와 짝지을 수 있다</label></li>
     <li><input type="checkbox" id="c10"><label for="c10">maplab이 SLAM을 「한 번의 추정」에서 「지도의 수명 관리」로 넓혔다는 말의 뜻을 안다</label></li>
     <li><input type="checkbox" id="c11"><label for="c11">학습이 가져간 칸이 대부분 <strong>인식</strong>이고, NeRF · 3DGS가 바꾼 것은 <strong>잔차의 정의</strong>라는 것을 안다</label></li>
+    <li><input type="checkbox" id="c11b"><label for="c11b">DROID-SLAM에서 신경망이 내는 것(보정량 · 신뢰도)과 DBA 층이 푸는 것(자세 · 역깊이)을 나눠 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c11c"><label for="c11c">NeRF가 격자가 아니라 <strong>함수</strong>로 장면을 담는다는 것, 그리고 NeRF와 3DGS가 <strong>같은 합성 식</strong>을 쓴다는 것을 안다</label></li>
+    <li><input type="checkbox" id="c11d"><label for="c11d">NeRF · 3DGS로 자세를 구할 때 지도를 고정하고 「그린 영상」과 관측을 맞춘다는 것, 그것이 직접법과 같은 약점을 갖는 이유를 말할 수 있다</label></li>
     <li><input type="checkbox" id="c12"><label for="c12">DUSt3R · VGGT 계열이 대신하는 단계와, 그래도 남는 칸을 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c12b"><label for="c12b">DUSt3R의 출력 \(X^{1,1}, X^{2,1}\)이 어느 좌표계에 있는지, 거기서 초점거리 · 대응 · 자세를 어떻게 읽어 내는지 설명할 수 있다</label></li>
     <li><input type="checkbox" id="c13"><label for="c13">SLAM 설계의 세 축과 「바뀌지 않은 한 줄」을 말하고, 학습 지도에서 7 · 8회가 왜 먼저인지 설명할 수 있다</label></li>
   </ul>
 
