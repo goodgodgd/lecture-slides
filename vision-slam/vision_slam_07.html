@@ -28,6 +28,7 @@
 </header>
 <div class="wrap">
 
+
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
   <a href="#summary">한 장 요약</a>
@@ -36,27 +37,22 @@
   <a href="#rules">② 확률의 네 규칙</a>
   <a href="#bayes">③ 베이즈 필터의 유도</a>
   <a href="#grid" class="sub">격자 위에서 한 번 돌려 보기</a>
-  <a href="#gauss">④ 가우시안의 다섯 성질</a>
-  <a href="#cond" class="sub">조건부 가우시안과 Schur 보수</a>
-  <a href="#infoform" class="sub">정보 형식 — \(\Lambda\)와 \(\boldsymbol\eta\)</a>
+  <a href="#gauss">④ 가우시안 — 필터에 필요한 네 가지</a>
+  <a href="#quad" class="sub">지수 안이 이차식이면 가우시안이다</a>
   <a href="#kf">⑤ 칼만 필터(KF)</a>
-  <a href="#kf-cond" class="sub">유도 1 — 결합 가우시안의 조건부</a>
-  <a href="#kf-map" class="sub">유도 2 — MAP와 최소제곱</a>
+  <a href="#kf-map" class="sub">갱신 — 곱을 최소제곱으로</a>
+  <a href="#kf-algo" class="sub">알고리즘 — 일곱 줄과 그 뜻</a>
   <a href="#kf-num" class="sub">숫자로 한 걸음</a>
-  <a href="#kf-check" class="sub">Joseph 형 · 혁신 · 일관성</a>
+  <a href="#kf-use" class="sub">쓰는 법 — Q와 W · 측정이 없을 때 · gating</a>
+  <a href="#kf-check" class="sub">NIS · NEES · Joseph 형</a>
   <a href="#ekf">⑥ 확장 칼만 필터(EKF)</a>
+  <a href="#ekf-ex" class="sub">운동 모델과 거리-방위 측정의 야코비안</a>
+  <a href="#ekf-use" class="sub">쓰는 법 — 자주 틀리는 세 자리</a>
   <a href="#ekf-loss" class="sub">선형화가 잃는 것</a>
-  <a href="#variants">⑦ KF의 변형들</a>
-  <a href="#iekf" class="sub">IEKF — 갱신을 반복한다</a>
-  <a href="#eskf" class="sub">ESKF — 오차를 상태로 둔다</a>
-  <a href="#ukf" class="sub">UKF — 점을 보낸다</a>
-  <a href="#eif" class="sub">정보 필터</a>
-  <a href="#pf" class="sub">파티클 필터와 FastSLAM</a>
-  <a href="#compare" class="sub">한 표로 비교</a>
-  <a href="#ekfslam">⑧ EKF-SLAM</a>
+  <a href="#ekfslam">⑦ EKF-SLAM</a>
   <a href="#ekfslam-loop" class="sub">상관과 루프 클로징</a>
   <a href="#consistency" class="sub">계산량과 일관성</a>
-  <a href="#marginal">⑨ 필터가 하는 일 — 과거를 주변화한다</a>
+  <a href="#marginal">⑧ 필터가 하는 일 — 과거를 주변화한다</a>
   <a href="#handcheck">✍️ 식이 맞는지 손으로 확인하는 법</a>
   <a href="#check">✅ 오늘의 점검</a>
   <a href="#more">조금 더 알아두면</a>
@@ -64,15 +60,15 @@
 
 <main>
   <div class="lec-no mono">3D Vision &amp; SLAM · 7회 · 2부 SLAM 이론 기초</div>
-  <h1>확률적 상태추정 — 베이즈 필터에서 KF·EKF와 그 변형까지</h1>
+  <h1>확률적 상태추정 — 베이즈 필터에서 KF·EKF까지</h1>
 
   <div class="questions">
     <span class="lab">오늘 답할 질문</span>
     <ol>
       <li>SLAM을 <strong>확률로 쓰면</strong> 무엇을 구하는 문제가 되나?</li>
       <li>베이즈 필터의 <strong>예측과 갱신 두 식은 어디서</strong> 나오나? 그 사이에 어떤 가정이 들어가나?</li>
-      <li>분포가 가우시안이면 왜 그 두 식이 <strong>행렬 몇 줄</strong>(칼만 필터)로 닫히나?</li>
-      <li>모형이 비선형이면 무엇을 포기하고(EKF), 그 대가를 줄이려고 <strong>무엇을 바꿔 왔나</strong>(IEKF · ESKF · UKF · 정보 필터 · 파티클 필터)?</li>
+      <li>분포가 가우시안이면 갱신의 곱셈이 왜 <strong>최소제곱 문제</strong>가 되고, 그 답이 왜 칼만 필터의 일곱 줄인가?</li>
+      <li>칼만 필터의 <strong>각 줄은 무슨 뜻</strong>이고, 쓰는 사람은 <strong>무엇을 정해야</strong> 하나? 모형이 비선형이면(EKF) 무엇이 달라지나?</li>
       <li>지도를 상태에 넣으면(EKF-SLAM) <strong>무엇이 좋아지고 무엇이 무너지나?</strong></li>
     </ol>
   </div>
@@ -81,12 +77,12 @@
     6회에서 SLAM 40년을 이야기로 훑었다. 시스템 이름이 수십 개 나왔지만, 그 밑에 깔린 수학적 틀은 사실 <strong>두 개뿐</strong>이었다.
     하나는 <strong>지금 상태만 들고 다니며 측정이 올 때마다 고치는 틀</strong>(필터)이고,
     다른 하나는 <strong>지나온 상태를 모두 들고 한꺼번에 다시 푸는 틀</strong>(최적화)이다.
-    오늘은 첫째를, 8회에는 둘째를 처음부터 끝까지 유도한다.
+    오늘은 첫째를, 8회에는 둘째를 다룬다.
   </p>
   <p>
     3부에서 VINS-Mono를 뜯어볼 때 나오는 식은 전부 이 두 회차의 식에 무엇을 갈아 끼운 것이다.
-    그래서 오늘은 코드를 한 줄도 쓰지 않고, <strong>식이 왜 그렇게 생겼는지</strong>에만 시간을 쓴다.
-    대신 식이 나올 때마다 <strong>숫자를 대입한 줄</strong>과, 그 식이 맞는지 <strong>손으로 확인하는 법</strong>을 붙여 둔다.
+    오늘 유도는 <strong>칼만 필터와 EKF의 알고리즘을 얻는 데 필요한 만큼만</strong> 한다 — 확률의 곱을 가우시안으로 쓰고, 그것을 최소제곱으로 푸는 한 줄기다.
+    나머지 시간은 <strong>그 알고리즘의 각 줄이 무슨 뜻인지, 쓸 때 무엇을 정해야 하고 돌리면 어떻게 되는지</strong>에 쓴다.
   </p>
 
   <!-- ─────────────────────────── 요약 ─────────────────────────── -->
@@ -97,11 +93,10 @@
     <tr><th style="width:20%">단계</th><th>무엇을 가정하나</th><th>무엇이 나오나</th><th style="width:7%">절</th></tr>
     <tr><td>베이즈 필터</td><td>마르코프 가정 두 개 (상태는 바로 앞만 기억 · 측정은 지금 상태만 본다)</td>
       <td>예측 \(\overline{\mathrm{bel}} = \int p(\mathbf{x}_k\mid\mathbf{x}_{k-1},\mathbf{u}_k)\,\mathrm{bel}\) · 갱신 \(\mathrm{bel} = \eta\, p(\mathbf{z}_k\mid\mathbf{x}_k)\,\overline{\mathrm{bel}}\)</td><td>③</td></tr>
-    <tr><td>칼만 필터</td><td>+ 선형 모형 · 가우시안 잡음</td><td>평균과 공분산만 옮기면 된다 — 예측 2줄, 갱신 5줄. <strong>두 가지 유도가 같은 답</strong>을 낸다</td><td>⑤</td></tr>
-    <tr><td>EKF</td><td>+ 비선형을 지금 추정값에서 1차로 편다</td><td>KF 식에 야코비안 \(F, H\)를 넣는다. 평균이 치우치고 공분산이 작아질 수 있다</td><td>⑥</td></tr>
-    <tr><td>변형들</td><td>선형화를 어떻게 덜 틀리게 하나 · 무엇을 상태로 두나</td><td>IEKF(반복) · ESKF(오차 상태) · UKF(시그마 점) · 정보 필터(\(\Lambda\)로) · 파티클(표본으로)</td><td>⑦</td></tr>
-    <tr><td>EKF-SLAM</td><td>지도를 상태에 넣는다</td><td>상관을 타고 루프가 지도를 고친다 · 대신 \(O(N^2)\)과 일관성 문제</td><td>⑧</td></tr>
-    <tr><td>한 문장</td><td></td><td><strong>필터는 과거를 주변화한다</strong> → 8회는 과거를 지우지 않는다</td><td>⑨</td></tr>
+    <tr><td>칼만 필터</td><td>+ 선형 모형 · 가우시안 잡음</td><td>예측은 선형변환, 갱신은 <strong>두 가우시안의 곱 = 가중 최소제곱</strong>. 예측 2줄 + 갱신 5줄</td><td>④⑤</td></tr>
+    <tr><td>EKF</td><td>+ 비선형을 지금 추정값에서 1차로 편다</td><td>KF 식에 야코비안 \(F, H\)를 넣고, 혁신만 비선형 함수로. 평균이 치우치고 공분산이 작아질 수 있다</td><td>⑥</td></tr>
+    <tr><td>EKF-SLAM</td><td>지도를 상태에 넣는다</td><td>상관을 타고 루프가 지도를 고친다 · 대신 \(O(N^2)\)과 일관성 문제</td><td>⑦</td></tr>
+    <tr><td>한 문장</td><td></td><td><strong>필터는 과거를 주변화한다</strong> → 8회는 과거를 지우지 않는다</td><td>⑧</td></tr>
   </table>
   </div>
 
@@ -128,7 +123,7 @@
     <tr><td>\(\hat{\mathbf{x}}_k^-,\ P_k^-\) · \(\hat{\mathbf{x}}_k,\ P_k\)</td><td>예측의 평균·공분산 · 갱신 후의 평균·공분산</td><td>\(P\)는 필터 상태의 공분산 (일반 가우시안은 \(\Sigma\))</td></tr>
     <tr><td>\(F_k,\ H_k\)</td><td>\(f\)와 \(h\)의 야코비안</td><td>\(n\times n\) · \(m\times n\)</td></tr>
     <tr><td>\(\mathbf{y}_k,\ S_k,\ K_k\)</td><td>혁신 · 혁신 공분산 · 칼만 이득</td><td>⑤절에서 유도한 뒤 이름을 붙인다</td></tr>
-    <tr><td>\(\Lambda = P^{-1}\) · \(\boldsymbol{\eta} = \Lambda\hat{\mathbf{x}}\)</td><td><strong>정보행렬 · 정보벡터</strong></td><td>8회도 <strong>같은 \(\Lambda\)</strong>를 쓴다</td></tr>
+    <tr><td>\(\Lambda = P^{-1}\) · \(\boldsymbol{\eta} = \Lambda\hat{\mathbf{x}}\)</td><td><strong>정보행렬 · 정보벡터</strong></td><td>④절. 8회도 <strong>같은 \(\Lambda\)</strong>를 쓴다</td></tr>
   </table>
   </div>
 
@@ -240,12 +235,12 @@
   <p>
     \(\mathbf{z}_{1:k}\)는 \(\mathbf{z}_1, \dots, \mathbf{z}_k\)를 모두 모은 것을 줄여 쓴 것이다.
     <strong>오늘의 필터는 Online SLAM을, 8회의 최적화는 Full SLAM을 푼다.</strong>
-    둘의 차이는 \(\mathbf{x}_{0:k-1}\)을 분포에 남겨 두느냐 지워 버리느냐 하나다. ⑨절에서 이 「지우기」가 정확히 무슨 연산인지 본다.
+    둘의 차이는 \(\mathbf{x}_{0:k-1}\)을 분포에 남겨 두느냐 지워 버리느냐 하나다. ⑧절에서 이 「지우기」가 정확히 무슨 연산인지 본다.
   </p>
 
   <p>
-    이 절부터 ⑦절까지는 식을 간단히 하려고 <strong>랜드마크를 상태 안에 넣었다고 보고</strong> \(\mathbf{x}_k\) 하나만 쓴다.
-    로봇 위치추정(localization)이면 지도를 이미 알고 있는 경우이고, SLAM이면 \(\mathbf{x}_k\) 안에 랜드마크가 들어 있는 경우다(⑧절).
+    이 절부터 ⑥절까지는 식을 간단히 하려고 <strong>랜드마크를 상태 안에 넣었다고 보고</strong> \(\mathbf{x}_k\) 하나만 쓴다.
+    로봇 위치추정(localization)이면 지도를 이미 알고 있는 경우이고, SLAM이면 \(\mathbf{x}_k\) 안에 랜드마크가 들어 있는 경우다(⑦절).
   </p>
 
   <!-- ─────────────────────────── ② 네 규칙 ─────────────────────────── -->
@@ -410,7 +405,7 @@
   </div>
 
   <p>
-    이 두 줄이 이후 모든 필터의 뼈대다. 칼만 필터·EKF·UKF·파티클 필터는 <strong>이 적분과 곱셈을 어떻게 계산할지</strong>에 대한 서로 다른 답이다.
+    이 두 줄이 이후 모든 필터의 뼈대다. 오늘 볼 칼만 필터와 EKF는 — 그리고 이름이 다른 여러 필터들도 — <strong>이 적분과 곱셈을 어떻게 계산할지</strong>에 대한 서로 다른 답이다.
   </p>
 
   <h3 id="grid">격자 위에서 한 번 돌려 보기</h3>
@@ -460,17 +455,19 @@
     <strong>격자 필터는 정확하지만 차원이 늘면 쓸 수 없다.</strong>
     3차원 위치와 3차원 회전을 칸 100개씩으로 나누면 칸이 \(100^6 = 10^{12}\)개다.
     랜드마크까지 상태에 넣으면 말할 것도 없다. 그래서 실제 SLAM은 둘 중 하나를 고른다 —
-    <strong>분포의 모양을 가우시안으로 못박고 평균·공분산만 들고 다니거나</strong>(⑤~⑦절),
-    <strong>분포를 표본 몇 백~몇 천 개로 대신하거나</strong>(⑦절 파티클 필터).
+    <strong>분포의 모양을 가우시안으로 못박고 평균·공분산만 들고 다니거나</strong>(⑤·⑥절),
+    <strong>분포를 표본 몇 백~몇 천 개로 대신하거나</strong>(파티클 필터 — 6회의 FastSLAM). 오늘은 앞의 길을 간다.
   </div>
 
+
   <!-- ─────────────────────────── ④ 가우시안 ─────────────────────────── -->
-  <h2 id="gauss">④ 가우시안의 다섯 성질</h2>
+  <h2 id="gauss">④ 가우시안 — 필터에 필요한 네 가지</h2>
 
   <p>
     왜 하필 가우시안일까? 측정 잡음이 실제로 가우시안에 가깝다는 이유도 있지만, 더 큰 이유는
     <strong>베이즈 필터의 두 연산(적분과 곱셈)을 해도 다시 가우시안이 된다</strong>는 성질이다.
-    그래서 평균과 공분산 두 개만 들고 다니면 분포 전체를 들고 다니는 것과 같다. 이 절은 그 성질을 하나씩 유도한다.
+    그래서 평균과 공분산 두 개만 들고 다니면 분포 전체를 들고 다니는 것과 같다.
+    이 절은 ⑤절의 유도에 쓰는 것만 네 가지 골라 둔다.
   </p>
 
   <p>\(n\)차원 가우시안의 밀도는 이렇다.</p>
@@ -491,7 +488,7 @@
     <p class="boxtitle">🆕 Gauss · Mahalanobis</p>
     <dl>
       <dt>Carl Friedrich Gauss (1777~1855)</dt>
-      <dd>독일의 수학자. 1809년 천체 궤도 계산에 관한 책에서 측정 오차가 이 분포를 따른다고 놓고 <strong>최소제곱법</strong>을 정당화했다. 그래서 가우시안과 최소제곱은 처음부터 한 몸이었다 — 8회의 출발점이 이것이다.</dd>
+      <dd>독일의 수학자. 1809년 천체 궤도 계산에 관한 책에서 측정 오차가 이 분포를 따른다고 놓고 <strong>최소제곱법</strong>을 정당화했다. 그래서 가우시안과 최소제곱은 처음부터 한 몸이었다 — ⑤절의 갱신 유도와 8회의 출발점이 이것이다.</dd>
       <dt>Prasanta Chandra Mahalanobis (1893~1972)</dt>
       <dd>인도의 통계학자. 1936년에 공분산으로 나눠 잰 거리를 제안했다. 방향마다 퍼진 정도가 다르면 「같은 1 m」도 어떤 방향에서는 가깝고 어떤 방향에서는 멀다는 생각이다.</dd>
     </dl>
@@ -511,8 +508,8 @@
   $$
 
   <p>
-    모양이 가우시안으로 남는다는 것은 밀도식에 \(\mathbf{x} = A^{-1}(\mathbf{y}-\mathbf{b})\)를 넣으면 지수 안이 여전히 \(\mathbf{y}\)의 이차식이라는 데서 보인다
-    (\(A\)가 정사각이 아니어도 성립한다 — 특성함수로 보이는 것이 일반적이다).
+    모양이 가우시안으로 남는다는 것은 밀도식에 \(\mathbf{x} = A^{-1}(\mathbf{y}-\mathbf{b})\)를 넣으면 지수 안이 여전히 \(\mathbf{y}\)의 이차식이라는 데서 보인다.
+    <strong>칼만 필터의 예측이 이 성질이다.</strong>
   </p>
 
   <h3>성질 2 — 독립인 가우시안의 합도 가우시안이고, 공분산이 더해진다</h3>
@@ -528,7 +525,7 @@
   = \Sigma + Q
   $$
 
-  <h3>성질 3 — 결합 가우시안의 주변분포는 해당 블록만 떼면 된다</h3>
+  <h3>성질 3 — 일부만 보려면 그 블록만 떼면 된다</h3>
 
   <p>두 덩이 \(\mathbf{a}\), \(\mathbf{b}\)를 한 벡터로 쌓은 결합 가우시안을 이렇게 쓴다.</p>
 
@@ -542,173 +539,53 @@
   $$
 
   <p>
-    \(\mathbf{b}\)를 적분해 지우면 \(\mathbf{a}\sim\mathcal{N}(\boldsymbol\mu_a, \Sigma_{aa})\)이다.
+    \(\mathbf{b}\)를 적분해 지우면(주변화, 규칙 2) \(\mathbf{a}\sim\mathcal{N}(\boldsymbol\mu_a, \Sigma_{aa})\)이다.
     성질 1에서 \(A = [\,I\ \ 0\,]\)로 놓으면 \(A\Sigma A^\top = \Sigma_{aa}\)가 바로 나온다.
-    <strong>공분산 형식에서는 주변화가 공짜다.</strong> 이 한 줄을 기억해 두면 정보 형식(아래)과의 대비가 선명해진다.
+    ⑦절의 EKF-SLAM에서 상태에 랜드마크가 수백 개 들어 있어도, <strong>랜드마크 하나의 불확실도는 \(P\)에서 그 블록만 읽으면</strong> 된다.
   </p>
 
-  <h3 id="cond">성질 4 — 조건부도 가우시안이고, 그 식에 Schur 보수가 나온다</h3>
+  <h3 id="quad">성질 4 — 지수 안이 이차식이면 가우시안이다</h3>
 
   <p>
-    이 성질이 칼만 갱신 그 자체다(⑤절). 결합 가우시안에서 \(\mathbf{b}\)의 값을 알게 됐을 때 \(\mathbf{a}\)의 분포는 무엇인가?
-    결과부터 적고, 그다음에 유도한다.
+    거꾸로 물어 보자. 어떤 분포가 \(p(\mathbf{x}) \propto \exp\!\big(-J(\mathbf{x})\big)\) 꼴이고 \(J\)가 \(\mathbf{x}\)의 이차식이라면, 그 분포의 평균과 공분산은 무엇일까?
+    \(J\)를 이차항 · 일차항 · 상수로 나눠 쓰고 완전제곱한다. \(\Lambda\)는 대칭이고 양의 정부호라고 둔다.
   </p>
 
   $$
   \begin{aligned}
-  p(\mathbf{a} \mid \mathbf{b}) &= \mathcal{N}\big(\mathbf{a};\ \boldsymbol\mu_{a|b},\ \Sigma_{a|b}\big) \\
-  \boldsymbol\mu_{a|b} &= \boldsymbol\mu_a + \Sigma_{ab}\Sigma_{bb}^{-1}(\mathbf{b} - \boldsymbol\mu_b)
-    &&\text{예상과 다른 만큼}(\mathbf{b}-\boldsymbol\mu_b)\text{을 상관을 타고 } \mathbf{a}\text{에 옮긴다} \\
-  \Sigma_{a|b} &= \Sigma_{aa} - \Sigma_{ab}\Sigma_{bb}^{-1}\Sigma_{ba}
-    &&\mathbf{b}\text{를 알아서 줄어든 만큼}
+  J(\mathbf{x}) &= \tfrac12\,\mathbf{x}^\top\Lambda\,\mathbf{x} - \boldsymbol\eta^\top\mathbf{x} + c
+    &&\Lambda\text{: 이차항 계수 · }\boldsymbol\eta\text{: 일차항 계수} \\
+  &= \tfrac12\,\big(\mathbf{x} - \Lambda^{-1}\boldsymbol\eta\big)^\top \Lambda\, \big(\mathbf{x} - \Lambda^{-1}\boldsymbol\eta\big) + \underbrace{c - \tfrac12\boldsymbol\eta^\top\Lambda^{-1}\boldsymbol\eta}_{\mathbf{x}\text{와 무관}}
+    &&\text{완전제곱 — 펴면 첫 줄로 돌아온다}
   \end{aligned}
   $$
 
-  <p>
-    유도는 지수 안의 이차식을 \(\mathbf{a}\)에 대해 완전제곱하는 것이다. 먼저 결합 공분산의 역행렬을 블록으로 쓴다.
-    이 역행렬이 <strong>정보행렬 \(\Lambda\)</strong>다.
-  </p>
+  <p>둘째 줄을 가우시안의 지수 \(\tfrac12(\mathbf{x}-\boldsymbol\mu)^\top\Sigma^{-1}(\mathbf{x}-\boldsymbol\mu)\)와 맞대 보면 바로 읽힌다.</p>
 
   $$
-  \Lambda = \Sigma^{-1} = \begin{bmatrix}\Lambda_{aa} & \Lambda_{ab}\\ \Lambda_{ba} & \Lambda_{bb}\end{bmatrix}
-  $$
-
-  <p>\(\boldsymbol\delta_a = \mathbf{a}-\boldsymbol\mu_a\), \(\boldsymbol\delta_b = \mathbf{b}-\boldsymbol\mu_b\)로 놓고 지수 안을 블록으로 편다.</p>
-
-  $$
-  \begin{aligned}
-  \begin{bmatrix}\boldsymbol\delta_a\\ \boldsymbol\delta_b\end{bmatrix}^\top \Lambda \begin{bmatrix}\boldsymbol\delta_a\\ \boldsymbol\delta_b\end{bmatrix}
-  &= \boldsymbol\delta_a^\top\Lambda_{aa}\boldsymbol\delta_a
-   + 2\,\boldsymbol\delta_a^\top\Lambda_{ab}\boldsymbol\delta_b
-   + \boldsymbol\delta_b^\top\Lambda_{bb}\boldsymbol\delta_b
-    &&\Lambda_{ba} = \Lambda_{ab}^\top \text{이라 교차항이 둘 모인다} \\
-  &= \big(\boldsymbol\delta_a + \Lambda_{aa}^{-1}\Lambda_{ab}\boldsymbol\delta_b\big)^\top \Lambda_{aa} \big(\boldsymbol\delta_a + \Lambda_{aa}^{-1}\Lambda_{ab}\boldsymbol\delta_b\big)
-   + \underbrace{\boldsymbol\delta_b^\top\big(\Lambda_{bb} - \Lambda_{ba}\Lambda_{aa}^{-1}\Lambda_{ab}\big)\boldsymbol\delta_b}_{\mathbf{a}\text{와 무관}}
-    &&\text{완전제곱}
-  \end{aligned}
-  $$
-
-  <p>
-    둘째 줄을 펴 보면 첫 줄로 돌아온다(첫 항을 펴면 \(\boldsymbol\delta_b^\top\Lambda_{ba}\Lambda_{aa}^{-1}\Lambda_{ab}\boldsymbol\delta_b\)가 남는데, 둘째 항이 그것을 뺀다).
-    \(\mathbf{b}\)를 고정하면 둘째 항은 상수이므로, 남은 첫 항이 \(\mathbf{a}\)의 가우시안을 정한다.
-  </p>
-
-  $$
-  \boldsymbol\mu_{a|b} = \boldsymbol\mu_a - \Lambda_{aa}^{-1}\Lambda_{ab}(\mathbf{b}-\boldsymbol\mu_b),
+  \boldsymbol\mu = \Lambda^{-1}\boldsymbol\eta,
   \qquad
-  \Sigma_{a|b} = \Lambda_{aa}^{-1}
+  \Sigma = \Lambda^{-1}
   $$
 
   <p>
-    <strong>정보 형식으로 보면 조건부가 공짜다</strong> — 공분산은 \(\Lambda_{aa}\)를 그냥 뒤집으면 된다.
-    남은 일은 이것을 \(\Sigma\)의 블록으로 바꾸는 것이다. 블록 행렬의 역행렬 공식이 필요하다.
+    이것을 최적화의 말로 다시 읽을 수 있다. \(J\)의 기울기 \(\nabla J = \Lambda\mathbf{x} - \boldsymbol\eta\)를 0으로 놓은 점이 \(\Lambda^{-1}\boldsymbol\eta\)이고,
+    \(J\)를 두 번 미분한 헤시안이 \(\Lambda\)다. 정리하면 이렇다.
   </p>
-
-  <p>
-    \(\Sigma\)를 블록 가우스 소거로 「아래 삼각 × 블록 대각 × 위 삼각」으로 쪼갠다.
-    \(\Sigma_{bb}\)를 축으로 삼아 \(\Sigma_{ab}\)를 지우면 이렇게 된다.
-  </p>
-
-  $$
-  \begin{bmatrix}\Sigma_{aa} & \Sigma_{ab}\\ \Sigma_{ba} & \Sigma_{bb}\end{bmatrix}
-  =
-  \begin{bmatrix} I & \Sigma_{ab}\Sigma_{bb}^{-1}\\ 0 & I\end{bmatrix}
-  \begin{bmatrix} \Sigma_{aa}-\Sigma_{ab}\Sigma_{bb}^{-1}\Sigma_{ba} & 0\\ 0 & \Sigma_{bb}\end{bmatrix}
-  \begin{bmatrix} I & 0\\ \Sigma_{bb}^{-1}\Sigma_{ba} & I\end{bmatrix}
-  $$
-
-  <p>
-    오른쪽 세 행렬을 곱해 보면 왼쪽이 나온다(왼쪽 위 블록이 \(\Sigma_{aa} - \Sigma_{ab}\Sigma_{bb}^{-1}\Sigma_{ba} + \Sigma_{ab}\Sigma_{bb}^{-1}\Sigma_{ba} = \Sigma_{aa}\)).
-    가운데 블록 \(\Sigma_{aa}-\Sigma_{ab}\Sigma_{bb}^{-1}\Sigma_{ba}\)를 <strong>\(\Sigma_{bb}\)에 대한 Schur 보수</strong>라고 부른다.
-    양변의 역을 취하면 삼각 행렬의 역은 부호만 바뀌므로 이렇게 된다.
-  </p>
-
-  $$
-  \Sigma^{-1}
-  =
-  \begin{bmatrix} I & 0\\ -\Sigma_{bb}^{-1}\Sigma_{ba} & I\end{bmatrix}
-  \begin{bmatrix} (\Sigma_{aa}-\Sigma_{ab}\Sigma_{bb}^{-1}\Sigma_{ba})^{-1} & 0\\ 0 & \Sigma_{bb}^{-1}\end{bmatrix}
-  \begin{bmatrix} I & -\Sigma_{ab}\Sigma_{bb}^{-1}\\ 0 & I\end{bmatrix}
-  $$
-
-  <p>곱해서 왼쪽 위와 오른쪽 위 블록만 읽는다.</p>
-
-  $$
-  \begin{aligned}
-  \Lambda_{aa} &= (\Sigma_{aa}-\Sigma_{ab}\Sigma_{bb}^{-1}\Sigma_{ba})^{-1}
-    &&\Rightarrow\quad \Sigma_{a|b} = \Lambda_{aa}^{-1} = \Sigma_{aa}-\Sigma_{ab}\Sigma_{bb}^{-1}\Sigma_{ba} \\
-  \Lambda_{ab} &= -(\Sigma_{aa}-\Sigma_{ab}\Sigma_{bb}^{-1}\Sigma_{ba})^{-1}\,\Sigma_{ab}\Sigma_{bb}^{-1}
-    &&\Rightarrow\quad -\Lambda_{aa}^{-1}\Lambda_{ab} = \Sigma_{ab}\Sigma_{bb}^{-1}
-  \end{aligned}
-  $$
-
-  <p>위의 \(\boldsymbol\mu_{a|b}\)에 넣으면 처음 적은 결과가 나온다. 유도 끝이다.</p>
-
-  <div class="box firstseen">
-    <p class="boxtitle">🆕 Schur 보수 (Schur complement)</p>
-    <dl>
-      <dt>Issai Schur (1875~1941)</dt>
-      <dd>독일(현 벨라루스 출신)의 수학자. 블록 행렬의 행렬식을 다루면서 이 꼴을 썼고, 1968년 Emilie Haynsworth가 그의 이름을 붙였다.</dd>
-      <dt>\(M = \begin{bmatrix}A & B\\ C & D\end{bmatrix}\)에서 \(D\)에 대한 Schur 보수 \(A - BD^{-1}C\)</dt>
-      <dd>「\(D\) 쪽 변수를 소거하고 남은 \(A\) 쪽 블록」이다. 오늘은 <strong>공분산의 Schur 보수 = 조건부 공분산</strong>으로 처음 나왔고,
-        8회에서는 <strong>정보행렬의 Schur 보수 = 주변화</strong>로, 번들조정에서는 점을 소거하는 계산으로 다시 나온다. 이 강의에서 가장 자주 만나는 식 가운데 하나다.</dd>
-    </dl>
-  </div>
-
-  <h3>성질 5 — 두 가우시안의 곱은 (정규화하면) 가우시안이고, 정보가 더해진다</h3>
-
-  <p>베이즈 갱신은 「우도 × 사전」이다. 둘 다 가우시안이면 지수가 더해진다.</p>
-
-  $$
-  \begin{aligned}
-  \mathcal{N}(\mathbf{x};\boldsymbol\mu_1,\Sigma_1)\,\mathcal{N}(\mathbf{x};\boldsymbol\mu_2,\Sigma_2)
-  &\propto \exp\!\Big(-\tfrac12\big[(\mathbf{x}-\boldsymbol\mu_1)^\top\Sigma_1^{-1}(\mathbf{x}-\boldsymbol\mu_1) + (\mathbf{x}-\boldsymbol\mu_2)^\top\Sigma_2^{-1}(\mathbf{x}-\boldsymbol\mu_2)\big]\Big) \\
-  &= \exp\!\Big(-\tfrac12\big[\mathbf{x}^\top(\Sigma_1^{-1}+\Sigma_2^{-1})\mathbf{x} - 2\mathbf{x}^\top(\Sigma_1^{-1}\boldsymbol\mu_1 + \Sigma_2^{-1}\boldsymbol\mu_2) + \text{상수}\big]\Big)
-  \end{aligned}
-  $$
-
-  <p>
-    가우시안 \(\mathcal{N}(\boldsymbol\mu, \Sigma)\)의 지수를 펴면 \(\mathbf{x}^\top\Sigma^{-1}\mathbf{x} - 2\mathbf{x}^\top\Sigma^{-1}\boldsymbol\mu + \text{상수}\)다.
-    둘을 맞춰 보면, 곱의 이차항 계수가 \(\Sigma^{-1}\)이고 일차항 계수가 \(\Sigma^{-1}\boldsymbol\mu\)다.
-  </p>
-
-  $$
-  \Sigma^{-1} = \Sigma_1^{-1} + \Sigma_2^{-1},
-  \qquad
-  \Sigma^{-1}\boldsymbol\mu = \Sigma_1^{-1}\boldsymbol\mu_1 + \Sigma_2^{-1}\boldsymbol\mu_2
-  $$
-
-  <h3 id="infoform">정보 형식 — \(\Lambda\)와 \(\boldsymbol\eta\)</h3>
-
-  <p>
-    성질 5의 두 식에 이름을 붙이면 아주 깔끔해진다. 가우시안을 \((\boldsymbol\mu, \Sigma)\) 대신 아래 두 양으로 들고 다니는 것을 <strong>정보 형식</strong>(information form, canonical form)이라고 한다.
-  </p>
-
-  $$
-  \Lambda = \Sigma^{-1} \quad(\text{정보행렬}),
-  \qquad
-  \boldsymbol\eta = \Sigma^{-1}\boldsymbol\mu = \Lambda\boldsymbol\mu \quad(\text{정보벡터}),
-  \qquad
-  p(\mathbf{x}) \propto \exp\!\big(-\tfrac12\mathbf{x}^\top\Lambda\mathbf{x} + \boldsymbol\eta^\top\mathbf{x}\big)
-  $$
-
-  <p>그러면 가우시안의 곱은 그냥 <strong>정보의 덧셈</strong>이다: \(\Lambda = \Lambda_1 + \Lambda_2\), \(\boldsymbol\eta = \boldsymbol\eta_1 + \boldsymbol\eta_2\).</p>
-
-  <div class="tablewrap">
-  <table>
-    <tr><th style="width:22%">연산</th><th>공분산 형식 \((\boldsymbol\mu, \Sigma)\)</th><th>정보 형식 \((\boldsymbol\eta, \Lambda)\)</th></tr>
-    <tr><td>주변화 (변수 지우기)</td><td><strong>쉽다</strong> — 블록을 뗀다</td><td>어렵다 — Schur 보수 \(\Lambda_{aa}-\Lambda_{ab}\Lambda_{bb}^{-1}\Lambda_{ba}\)</td></tr>
-    <tr><td>조건부 (값을 알게 됨)</td><td>어렵다 — Schur 보수 \(\Sigma_{aa}-\Sigma_{ab}\Sigma_{bb}^{-1}\Sigma_{ba}\)</td><td><strong>쉽다</strong> — 블록 \(\Lambda_{aa}\)를 뗀다</td></tr>
-    <tr><td>곱 (측정 합치기)</td><td>어렵다</td><td><strong>쉽다</strong> — 더한다</td></tr>
-  </table>
-  </div>
 
   <div class="interp">
-    <strong>이 표가 7회와 8회를 잇는 다리다.</strong>
-    필터의 예측은 「지난 상태를 지운다」(주변화)라서 공분산 형식에 유리하고, 갱신은 「측정을 곱한다」라서 정보 형식에 유리하다.
-    칼만 필터는 공분산 형식을 택하고 갱신을 비싸게 치른다. 8회의 최적화는 정보 형식을 택하고 <strong>지우기를 아예 안 한다</strong> — 그래서 가볍다.
-    정보 형식의 주변화가 어렵다는 것(Schur 보수)은 8회 ⑩절에서 「fill-in」이라는 모습으로 다시 나온다.
+    <strong>\(p \propto e^{-J}\)이고 \(J\)가 이차식이면 — 평균은 \(J\)를 최소로 하는 점, 공분산은 \(J\)의 헤시안의 역이다.</strong>
+    확률에서 「가장 그럴듯한 점과 그 퍼짐」을 찾는 문제가 「이차식의 최소점과 그 굽은 정도」를 찾는 문제로 바뀐다.
+    방향을 거꾸로 하면 가우시안 하나의 \(-\log\)는 \(\tfrac12\lVert\mathbf{x}-\boldsymbol\mu\rVert^2_\Sigma + \text{상수}\) — 마할라노비스 제곱의 절반이다.
+    ⑤절의 갱신 유도는 이 두 문장만으로 끝난다.
   </div>
+
+  <p>
+    \(\Lambda\)를 <strong>정보행렬</strong>, \(\boldsymbol\eta\)를 <strong>정보벡터</strong>라고 부르고, 가우시안을 \((\boldsymbol\mu, \Sigma)\) 대신
+    \(p(\mathbf{x}) \propto \exp\!\big(-\tfrac12\mathbf{x}^\top\Lambda\mathbf{x} + \boldsymbol\eta^\top\mathbf{x}\big)\)로 들고 다니는 것을 <strong>정보 형식</strong>(information form)이라고 한다.
+    공분산이 크면(잘 모르면) 정보가 작고, 공분산이 작으면 정보가 크다. 8회는 처음부터 끝까지 이 \(\Lambda\)로 이야기한다.
+    굵은 \(\boldsymbol\eta\)는 ②절의 정규화 상수 \(\eta\)와 다른 것이다.
+  </p>
 
   <!-- ─────────────────────────── ⑤ KF ─────────────────────────── -->
   <h2 id="kf">⑤ 칼만 필터(KF)</h2>
@@ -744,60 +621,123 @@
   \end{aligned}
   $$
 
-  <h3 id="kf-cond">갱신 유도 1 — 결합 가우시안의 조건부</h3>
+  <h3 id="kf-map">갱신 — 두 가우시안의 곱을 최소제곱으로 푼다</h3>
 
   <p>
-    예측 믿음 아래에서 상태 \(\mathbf{x}_k\)와 앞으로 올 측정 \(\mathbf{z}_k = H_k\mathbf{x}_k + \mathbf{v}_k\)를 <strong>한 벡터로 쌓으면</strong> 결합 가우시안이다
-    (\([\mathbf{x};\mathbf{z}]\)가 \([\mathbf{x};\mathbf{v}]\)의 선형변환이기 때문이다 — 성질 1).
-    그 평균과 공분산을 블록마다 계산한다. 아래첨자 \(k\)는 잠시 뗀다.
+    갱신은 베이즈 필터의 둘째 줄 \(\mathrm{bel}(\mathbf{x}) = \eta\,p(\mathbf{z}\mid\mathbf{x})\,\overline{\mathrm{bel}}(\mathbf{x})\)이다. 아래첨자 \(k\)는 잠시 뗀다.
+    곱하는 두 분포가 모두 가우시안이다 — 예측 믿음은 방금 구했고, 측정 모델은 「\(\mathbf{x}\)이면 \(\mathbf{z}\)는 \(H\mathbf{x}\) 둘레에 \(W\)만큼 퍼진다」다.
   </p>
 
   $$
   \begin{aligned}
-  \mathrm{E}[\mathbf{z}] &= H\hat{\mathbf{x}}^- \\
-  \mathrm{Cov}[\mathbf{x},\mathbf{z}] &= \mathrm{E}\big[(\mathbf{x}-\hat{\mathbf{x}}^-)(H(\mathbf{x}-\hat{\mathbf{x}}^-) + \mathbf{v})^\top\big] = P^-H^\top
-    &&\mathbf{v}\text{는 }\mathbf{x}\text{와 독립} \\
-  \mathrm{Cov}[\mathbf{z}] &= HP^-H^\top + W
-    &&\text{성질 1 · 2}
+  \overline{\mathrm{bel}}(\mathbf{x}) &= \mathcal{N}(\mathbf{x};\ \hat{\mathbf{x}}^-,\ P^-) \ \propto\ \exp\!\Big(-\tfrac12\lVert \mathbf{x}-\hat{\mathbf{x}}^-\rVert^2_{P^-}\Big)
+    &&\text{예측 믿음} \\
+  p(\mathbf{z}\mid\mathbf{x}) &= \mathcal{N}(\mathbf{z};\ H\mathbf{x},\ W) \ \propto\ \exp\!\Big(-\tfrac12\lVert \mathbf{z}-H\mathbf{x}\rVert^2_{W}\Big)
+    &&\text{측정 우도 — }\mathbf{z}\text{는 이미 잰 값}
   \end{aligned}
   $$
 
+  <p>지수끼리 곱하면 지수 안이 더해진다.</p>
+
   $$
-  \begin{bmatrix}\mathbf{x}\\ \mathbf{z}\end{bmatrix}
-  \sim \mathcal{N}\!\left(
-    \begin{bmatrix}\hat{\mathbf{x}}^-\\ H\hat{\mathbf{x}}^-\end{bmatrix},\
-    \begin{bmatrix}P^- & P^-H^\top\\ HP^- & HP^-H^\top + W\end{bmatrix}
-  \right)
+  \mathrm{bel}(\mathbf{x}) \ \propto\ \exp\!\big(-J(\mathbf{x})\big),
+  \qquad
+  J(\mathbf{x}) = \underbrace{\tfrac12\lVert \mathbf{x}-\hat{\mathbf{x}}^-\rVert^2_{P^-}}_{\text{예측에서 멀어진 벌점}}
+    + \underbrace{\tfrac12\lVert \mathbf{z}-H\mathbf{x}\rVert^2_{W}}_{\text{측정과 어긋난 벌점}}
   $$
 
   <p>
-    측정 \(\mathbf{z}\)가 실제로 들어왔다. 갱신된 믿음은 이 결합 분포를 그 \(\mathbf{z}\)에서 <strong>자른</strong> 조건부 \(p(\mathbf{x}\mid\mathbf{z})\)다.
-    성질 4에 \(\mathbf{a}=\mathbf{x}\), \(\mathbf{b}=\mathbf{z}\)를 넣는다.
+    \(J\)는 \(\mathbf{x}\)의 이차식이다. 그러니 성질 4에 따라 \(\mathrm{bel}\)은 가우시안이고,
+    <strong>평균은 \(J\)를 최소로 하는 점, 공분산은 \(J\)의 헤시안의 역</strong>이다.
+    분포가 가장 높은 점을 MAP(maximum a posteriori, 사후분포의 최댓값)라고 부르는데, 가우시안에서는 MAP와 평균이 같은 점이다.
+    즉 <strong>칼만 갱신은 가중 최소제곱 문제</strong>다 — 예측과 측정 사이에서, 각자 믿을 만한 만큼 무게를 주어 타협점을 찾는다.
   </p>
+
+  <p>기울기를 0으로 놓는다.</p>
 
   $$
   \begin{aligned}
-  \hat{\mathbf{x}} &= \hat{\mathbf{x}}^- + P^-H^\top (HP^-H^\top + W)^{-1}\,(\mathbf{z} - H\hat{\mathbf{x}}^-)
-    &&\boldsymbol\mu_a + \Sigma_{ab}\Sigma_{bb}^{-1}(\mathbf{b}-\boldsymbol\mu_b) \\
-  P &= P^- - P^-H^\top (HP^-H^\top + W)^{-1} HP^-
-    &&\Sigma_{aa} - \Sigma_{ab}\Sigma_{bb}^{-1}\Sigma_{ba}
+  \nabla J(\mathbf{x}) &= (P^-)^{-1}(\mathbf{x}-\hat{\mathbf{x}}^-) - H^\top W^{-1}(\mathbf{z}-H\mathbf{x}) = \mathbf{0}
+    &&\text{두 벌점을 각각 미분} \\
+  \Longrightarrow\quad
+  \underbrace{\big((P^-)^{-1} + H^\top W^{-1}H\big)}_{\Lambda}\ \hat{\mathbf{x}}
+  &= \underbrace{(P^-)^{-1}\hat{\mathbf{x}}^- + H^\top W^{-1}\mathbf{z}}_{\boldsymbol\eta},
+  \qquad
+  P = \Lambda^{-1}
+    &&\nabla^2 J = \Lambda
   \end{aligned}
   $$
 
+  <div class="interp">
+    <strong>갱신된 정보 = 예측의 정보 \((P^-)^{-1}\) + 측정의 정보 \(H^\top W^{-1}H\).</strong>
+    측정을 하나 받을 때마다 정보가 <strong>더해지기만</strong> 한다 — 측정이 불확실도를 키우는 일은 없다.
+    이 식은 이미 쓸 수 있는 알고리즘이다. 8회의 최적화는 이 꼴을 궤적 전체에 대해 그대로 쓴다.
+  </div>
+
   <p>
-    같은 덩어리가 여러 번 나온다. 자주 나오는 것부터 이름을 붙인다 — 이렇게 만든 세 이름이 칼만 필터의 세 주인공이다.
+    그런데 필터에서는 이 꼴을 그대로 쓰지 않는다. \(\Lambda\)는 \(n\times n\)(상태 크기)이고 매 스텝 뒤집어야 하는데,
+    측정은 보통 상태보다 훨씬 작다(\(m \ll n\)). 그래서 <strong>\(n\times n\) 역행렬 대신 \(m\times m\) 역행렬 하나</strong>로 같은 답을 내는 꼴로 바꾼다. 세 단계다.
+  </p>
+
+  <p><strong>① 평균을 「예측 + 고침」 꼴로.</strong> \((P^-)^{-1} = \Lambda - H^\top W^{-1}H\)를 \(\boldsymbol\eta\)에 넣는다.</p>
+
+  $$
+  \begin{aligned}
+  \Lambda\hat{\mathbf{x}} &= \Lambda\hat{\mathbf{x}}^- - H^\top W^{-1}H\hat{\mathbf{x}}^- + H^\top W^{-1}\mathbf{z} \\
+  \hat{\mathbf{x}} &= \hat{\mathbf{x}}^- + \underbrace{\Lambda^{-1}H^\top W^{-1}}_{K}\,\big(\mathbf{z} - H\hat{\mathbf{x}}^-\big)
+    &&\text{양변 왼쪽에 }\Lambda^{-1}
+  \end{aligned}
+  $$
+
+  <p><strong>② \(K\)를 \(\Lambda^{-1}\) 없이.</strong> \(\Lambda\)에 \(P^-H^\top\)를 곱해 보면 \(m\times m\)짜리 덩어리 \(S\)가 나온다.</p>
+
+  $$
+  \begin{aligned}
+  \Lambda\,P^-H^\top &= \big((P^-)^{-1} + H^\top W^{-1}H\big)P^-H^\top
+   = H^\top + H^\top W^{-1}HP^-H^\top
+   = H^\top W^{-1}\underbrace{\big(W + HP^-H^\top\big)}_{S}
+    &&H^\top = H^\top W^{-1}W \\
+  \Longrightarrow\quad K &= \Lambda^{-1}H^\top W^{-1} = P^-H^\top S^{-1}
+    &&\text{왼쪽에 }\Lambda^{-1}\text{, 오른쪽에 }S^{-1}
+  \end{aligned}
+  $$
+
+  <p><strong>③ 공분산도 \(P^-\)로.</strong> \((I-KH)P^-\)에 \(\Lambda\)를 곱하면 \(I\)가 나오는지 본다. ②에서 \(\Lambda K = H^\top W^{-1}\)이다.</p>
+
+  $$
+  \Lambda\,(I - KH)\,P^-
+  = \Lambda P^- - H^\top W^{-1}HP^-
+  = \big((P^-)^{-1} + H^\top W^{-1}H\big)P^- - H^\top W^{-1}HP^-
+  = I
+  \quad\Longrightarrow\quad
+  P = \Lambda^{-1} = (I - KH)\,P^-
+  $$
+
+  <p>
+    유도는 여기서 끝이다. 자주 나오는 덩어리 셋에 이름을 붙인다 — 이렇게 만든 세 이름이 칼만 필터의 세 주인공이다.
   </p>
 
   $$
   \begin{aligned}
   \mathbf{y} &= \mathbf{z} - H\hat{\mathbf{x}}^-
-    &&\textbf{혁신 (innovation)}\text{: 잰 값과 예측한 값의 차} \\
+    &&\textbf{혁신 (innovation)}\text{: 잰 값과 예측한 측정의 차} \\
   S &= HP^-H^\top + W
     &&\textbf{혁신 공분산}\text{: 혁신이 얼마나 클 수 있나 = 예측의 불확실도 + 측정 잡음} \\
   K &= P^-H^\top S^{-1}
     &&\textbf{칼만 이득}\text{: 혁신을 상태의 고침으로 바꾸는 비율}
   \end{aligned}
   $$
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 Kalman — 사람 이름이다</p>
+    <dl>
+      <dt>Rudolf E. Kálmán (1930~2016)</dt>
+      <dd>헝가리 부다페스트에서 태어나 미국에서 활동한 수학자·공학자. 1960년 논문 <em>A New Approach to Linear Filtering and Prediction Problems</em>로 이 필터를 발표했다.
+        NASA Ames의 Stanley Schmidt가 이것을 비선형 궤도 문제에 맞게 고친 것(⑥절의 EKF)이 아폴로 우주선의 항법에 쓰였다.</dd>
+    </dl>
+  </div>
+
+  <h3 id="kf-algo">알고리즘 — 일곱 줄과 그 뜻</h3>
 
   <div class="box lab-block">
     <p class="boxtitle">칼만 필터 — 한 스텝</p>
@@ -816,136 +756,31 @@
     \hat{\mathbf{x}}_k &= \hat{\mathbf{x}}_k^- + K_k\mathbf{y}_k
       &&\text{갱신 평균} \\
     P_k &= (I - K_kH_k)\,P_k^-
-      &&\text{갱신 공분산 } \big(P^- - KSK^\top \text{과 같다}\big)
+      &&\text{갱신 공분산}
     \end{aligned}
     $$
   </div>
 
   <p>
-    마지막 줄은 \(P^- - P^-H^\top S^{-1}HP^- = P^- - K H P^-\)에서 나온다. 같은 것을 \(P^- - KSK^\top\)로도 쓸 수 있다
-    (\(KSK^\top = P^-H^\top S^{-1} S S^{-1} H P^- = KHP^-\)). ⑧절의 계산량 이야기에서 이 꼴이 쓰인다.
+    앞의 두 줄이 예측, 뒤의 다섯 줄이 갱신이다. 식은 외우는 것보다 <strong>한 줄씩 무엇을 하는지</strong> 읽을 수 있는 것이 중요하다.
   </p>
 
-  <div class="box firstseen">
-    <p class="boxtitle">🆕 Kalman — 사람 이름이다</p>
-    <dl>
-      <dt>Rudolf E. Kálmán (1930~2016)</dt>
-      <dd>헝가리 부다페스트에서 태어나 미국에서 활동한 수학자·공학자. 1960년 논문 <em>A New Approach to Linear Filtering and Prediction Problems</em>로 이 필터를 발표했다.
-        NASA Ames의 Stanley Schmidt가 이것을 비선형 궤도 문제에 맞게 고친 것(⑥절의 EKF)이 아폴로 우주선의 항법에 쓰였다.</dd>
-    </dl>
+  <div class="tablewrap">
+  <table>
+    <tr><th style="width:18%">줄</th><th>무엇을 하나</th><th style="width:42%">읽는 법</th></tr>
+    <tr><td>\(\hat{\mathbf{x}}^-\)</td><td>운동 모델로 평균을 옮긴다</td><td>측정을 보기 전에 「아마 여기쯤」</td></tr>
+    <tr><td>\(P^-\)</td><td>불확실도를 옮기고 \(Q\)만큼 키운다</td><td>예측만 계속하면 \(P\)는 <strong>커지기만</strong> 한다</td></tr>
+    <tr><td>\(\mathbf{y}\)</td><td>잰 값 − 예측한 측정</td><td>「놀라움」. 0이면 고칠 것이 없다</td></tr>
+    <tr><td>\(S\)</td><td>\(\mathbf{y}\)가 얼마나 클 수 있나</td><td>\(\mathbf{y}\)가 \(S\)에 비해 지나치게 크면 측정을 의심한다 (아래 쓰는 법)</td></tr>
+    <tr><td>\(K\)</td><td>\(\mathbf{y}\)를 상태의 고침으로 바꾸는 비율</td><td>「내 예측의 불확실도」 ÷ 「전체 불확실도」</td></tr>
+    <tr><td>\(\hat{\mathbf{x}}\)</td><td>평균을 고친다</td><td>\(K\)의 \(P^-H^\top\) 덕분에 <strong>측정이 직접 보지 않는 성분도</strong> 상관을 타고 고쳐진다</td></tr>
+    <tr><td>\(P\)</td><td>불확실도를 줄인다</td><td><strong>잰 값 \(\mathbf{z}\)가 들어 있지 않다</strong> — 측정이 「무엇이었는지」가 아니라 「있었는지」만 본다</td></tr>
+  </table>
   </div>
 
-  <h3 id="kf-map">갱신 유도 2 — MAP와 최소제곱</h3>
-
   <p>
-    같은 갱신을 전혀 다른 길로 다시 얻어 보자. 이 둘째 길이 8회 전체의 씨앗이다.
-    베이즈 필터의 갱신 \(\mathrm{bel} = \eta\,p(\mathbf{z}\mid\mathbf{x})\,\overline{\mathrm{bel}}(\mathbf{x})\)에서
-    <strong>분포가 가장 높은 점(MAP, maximum a posteriori)</strong>을 찾는다고 하자. 곱보다 합이 다루기 쉬우니 \(-\log\)를 취한다.
+    마지막 줄은 같은 것을 \(P^- - KSK^\top\)로 쓰기도 한다(\(KSK^\top = P^-H^\top S^{-1}SS^{-1}HP^- = KHP^-\)). ⑦절의 EKF-SLAM에서 이 꼴을 쓴다.
   </p>
-
-  $$
-  \begin{aligned}
-  \hat{\mathbf{x}} &= \arg\max_{\mathbf{x}}\ p(\mathbf{z}\mid\mathbf{x})\ \overline{\mathrm{bel}}(\mathbf{x})
-    &&\text{MAP} \\
-  &= \arg\min_{\mathbf{x}}\ \big[-\log p(\mathbf{z}\mid\mathbf{x}) - \log \overline{\mathrm{bel}}(\mathbf{x})\big]
-    &&-\log\text{는 단조감소 — 최대가 최소로} \\
-  &= \arg\min_{\mathbf{x}}\ \underbrace{\tfrac12\lVert \mathbf{x}-\hat{\mathbf{x}}^-\rVert^2_{P^-}}_{\text{예측에서 멀어진 벌점}}
-    + \underbrace{\tfrac12\lVert \mathbf{z}-H\mathbf{x}\rVert^2_{W}}_{\text{측정과 어긋난 벌점}}
-    &&\text{가우시안의 }-\log\text{ = 마할라노비스 제곱의 반 + 상수}
-  \end{aligned}
-  $$
-
-  <p>
-    <strong>갱신은 가중 최소제곱 문제다.</strong> 이차식이므로 기울기를 0으로 놓으면 바로 풀린다.
-    \(J(\mathbf{x}) = \tfrac12(\mathbf{x}-\hat{\mathbf{x}}^-)^\top (P^-)^{-1}(\mathbf{x}-\hat{\mathbf{x}}^-) + \tfrac12(\mathbf{z}-H\mathbf{x})^\top W^{-1}(\mathbf{z}-H\mathbf{x})\)로 놓으면
-  </p>
-
-  $$
-  \begin{aligned}
-  \frac{\partial J}{\partial \mathbf{x}} &= (P^-)^{-1}(\mathbf{x}-\hat{\mathbf{x}}^-) - H^\top W^{-1}(\mathbf{z}-H\mathbf{x}) = \mathbf{0} \\
-  \Longrightarrow\quad
-  \underbrace{\big((P^-)^{-1} + H^\top W^{-1}H\big)}_{\Lambda}\ \hat{\mathbf{x}}
-  &= \underbrace{(P^-)^{-1}\hat{\mathbf{x}}^- + H^\top W^{-1}\mathbf{z}}_{\boldsymbol\eta}
-  \end{aligned}
-  $$
-
-  <p>
-    정보 형식 그대로다. <strong>예측의 정보 \((P^-)^{-1}\)에 측정의 정보 \(H^\top W^{-1}H\)를 더하면 갱신된 정보다</strong> (성질 5).
-    \(J\)의 두 번 미분(헤시안)이 \(\Lambda\)이고, 가우시안 MAP 문제에서는 그 헤시안의 역이 바로 사후 공분산이다 —
-    8회에서 「정보행렬 = 가우스-뉴턴 헤시안」으로 다시 만나는 사실이다.
-  </p>
-
-  $$
-  P = \Lambda^{-1} = \big((P^-)^{-1} + H^\top W^{-1}H\big)^{-1},
-  \qquad
-  \hat{\mathbf{x}} = P\,\boldsymbol\eta
-  $$
-
-  <p>
-    유도 1과 생긴 것이 전혀 다르다. 정말 같은 답일까? 이것을 잇는 것이 <strong>Woodbury 항등식</strong>이다.
-  </p>
-
-  $$
-  \big(A + UCV\big)^{-1} = A^{-1} - A^{-1}U\big(C^{-1} + VA^{-1}U\big)^{-1}VA^{-1}
-  $$
-
-  <p>
-    \(A = (P^-)^{-1}\), \(U = H^\top\), \(C = W^{-1}\), \(V = H\)를 넣으면
-  </p>
-
-  $$
-  \big((P^-)^{-1} + H^\top W^{-1}H\big)^{-1}
-  = P^- - P^-H^\top\big(\underbrace{W + HP^-H^\top}_{S}\big)^{-1}HP^-
-  = P^- - KHP^-
-  $$
-
-  <p>
-    공분산이 유도 1과 같다. Woodbury 항등식 자체는 오른쪽에 \((A+UCV)\)를 곱해 \(I\)가 나오는 것으로 확인할 수 있다.
-  </p>
-
-  $$
-  \begin{aligned}
-  &(A+UCV)\big[A^{-1} - A^{-1}U(C^{-1}+VA^{-1}U)^{-1}VA^{-1}\big] \\
-  &= I + UCVA^{-1} - U(C^{-1}+VA^{-1}U)^{-1}VA^{-1} - UCVA^{-1}U(C^{-1}+VA^{-1}U)^{-1}VA^{-1} \\
-  &= I + UCVA^{-1} - U\,\big[\,I + CVA^{-1}U\,\big](C^{-1}+VA^{-1}U)^{-1}VA^{-1}
-    &&\text{뒤 두 항을 } U\text{로 묶는다} \\
-  &= I + UCVA^{-1} - UC\,\big[\,C^{-1} + VA^{-1}U\,\big](C^{-1}+VA^{-1}U)^{-1}VA^{-1}
-    &&I + CVA^{-1}U = C(C^{-1}+VA^{-1}U) \\
-  &= I + UCVA^{-1} - UCVA^{-1} = I
-  \end{aligned}
-  $$
-
-  <p>평균도 같은지 보자. \(\hat{\mathbf{x}} = P\boldsymbol\eta\)에서 \(\boldsymbol\eta\)의 \((P^-)^{-1}\hat{\mathbf{x}}^-\)를 \((\Lambda - H^\top W^{-1}H)\hat{\mathbf{x}}^-\)로 바꿔 쓴다.</p>
-
-  $$
-  \begin{aligned}
-  \hat{\mathbf{x}}
-  &= P\big[(\Lambda - H^\top W^{-1}H)\hat{\mathbf{x}}^- + H^\top W^{-1}\mathbf{z}\big]
-  = \hat{\mathbf{x}}^- + PH^\top W^{-1}(\mathbf{z} - H\hat{\mathbf{x}}^-)
-    &&P\Lambda = I
-  \end{aligned}
-  $$
-
-  <p>남은 것은 \(PH^\top W^{-1} = K\)인지다. 위에서 얻은 \(P = P^- - KHP^-\)를 넣는다.</p>
-
-  $$
-  \begin{aligned}
-  PH^\top W^{-1}
-  &= P^-H^\top W^{-1} - KHP^-H^\top W^{-1}
-   = P^-H^\top W^{-1} - K\,(S - W)\,W^{-1}
-    &&HP^-H^\top = S - W \\
-  &= P^-H^\top W^{-1} - KSW^{-1} + K
-   = P^-H^\top W^{-1} - P^-H^\top W^{-1} + K = K
-    &&KS = P^-H^\top
-  \end{aligned}
-  $$
-
-  <div class="interp">
-    <strong>두 유도가 같은 답을 낸다는 것이 오늘 가장 중요한 사실이다.</strong>
-    유도 1은 「분포를 자른다」는 확률의 언어이고, 유도 2는 「벌점의 합을 최소로 한다」는 최적화의 언어다.
-    선형·가우시안이면 둘은 완전히 같다. 8회는 유도 2의 길을 <strong>지나온 상태 전부</strong>에 대해 걷는다.
-    비선형이면 두 길이 갈라지는데, 갈라지는 방식이 곧 ⑥·⑦절의 EKF와 IEKF의 차이다.
-  </div>
 
   <h3 id="kf-num">숫자로 한 걸음</h3>
 
@@ -954,14 +789,13 @@
   <ul>
     <li>1차원 복도의 로봇. 지금 위치 추정은 \(\hat x = 2.0\) m, 분산 \(P = 0.04\) m² (표준편차 0.2 m).</li>
     <li>「1 m 가라」고 했다: \(u = 1.0\) m, 운동 잡음 분산 \(Q = 0.01\) m² (0.1 m).</li>
-    <li>벽까지의 거리로 위치를 재는 센서가 \(z = 3.15\) m를 읽었다. 측정 잡음 분산 \(W = 0.02\) m² (0.141 m). \(H = 1\)이다.</li>
+    <li>벽까지의 거리로 위치를 재는 센서가 \(z = 3.15\) m를 읽었다. 측정 잡음 분산 \(W = 0.02\) m² (0.141 m). \(F = B = H = 1\)이다.</li>
   </ul>
 
   <figure>
-    <img src="assets/img/07_conditional.png" width="760"
-         alt="왼쪽: 가로축 측정 z, 세로축 위치 x인 평면에 대각선으로 누운 타원과 표본점들. z=3.15에 세로 주황 선이 있고, 그 선을 따라 초록 종 모양 곡선(평균 3.107)이 그려져 있다. 오른쪽: 위치 x 축 위에 회색 점선 종(2.0), 보라 종(3.0, 넓다), 주황 종(3.15), 초록 종(3.107, 가장 좁고 높다)">
-    <figcaption>(가) 유도 1의 그림 — 예측 아래에서 \((x, z)\)는 대각선으로 누운 결합 가우시안이고, 실제로 온 \(z\)에서 자른 단면이 갱신된 믿음이다.
-      (나) 유도 2의 그림 — 예측(보라)과 측정 우도(주황)를 곱하면 둘보다 좁은 초록이 된다. 두 그림의 초록이 같은 분포다.</figcaption>
+    <img src="assets/img/07_kf1d.png" width="760"
+         alt="위치 x 축 위에 종 모양 곡선 넷. 회색 점선(이전 믿음, 2.0), 보라(예측, 3.0, 가장 넓다), 주황(측정 우도, 3.15), 초록(갱신, 3.107, 가장 좁고 높다). 2.0에서 3.0으로 가는 보라 화살표와, 3.0에서 3.107로 가는 초록 화살표가 있다">
+    <figcaption>이전 믿음(회색)을 1 m 옮기며 넓힌 것이 예측(보라)이다. 예측과 측정 우도(주황)를 곱하면 둘 사이, 측정 쪽에 더 가까운 자리에 <strong>둘보다 좁은</strong> 갱신(초록)이 생긴다.</figcaption>
   </figure>
 
   $$
@@ -973,14 +807,14 @@
   &\quad S &= 0.05 + 0.02 = 0.07
     &&\text{혁신과 그 분산} \\
   K &= 0.05 / 0.07 = 0.7143
-    &&&&\text{예측보다 측정을 2.5배 믿는다} \\
+    &&&&\text{혁신의 71 \%를 받아들인다} \\
   \hat x &= 3.0 + 0.7143 \times 0.15 = 3.1071,
   &\quad P &= (1 - 0.7143) \times 0.05 = 0.01429
     &&\text{갱신 — 표준편차 0.120 m}
   \end{aligned}
   $$
 
-  <p>정보 형식(유도 2)으로 다시 계산하면</p>
+  <p>같은 갱신을 정보 형식(\(\Lambda\hat{x} = \eta\))으로 계산하면</p>
 
   $$
   \begin{aligned}
@@ -992,35 +826,109 @@
   $$
 
   <p>
-    두 길의 답이 소수 넷째 자리까지 같다(스크립트에서 차이는 0이다).
-    스칼라일 때 칼만 이득은 \(K = P^-/(P^-+W)\) — <strong>「내 예측의 불확실도가 전체 불확실도에서 차지하는 비율」</strong>이다.
-    \(W\to0\)(완벽한 센서)이면 \(K\to1\)이라 측정을 그대로 받고, \(W\to\infty\)(쓸모없는 센서)이면 \(K\to0\)이라 예측을 지킨다.
-    갱신 분산 \(P = P^-W/(P^-+W)\)는 \(P^-\)와 \(W\)의 <strong>조화평균의 절반</strong>이라 둘 중 어느 것보다도 작다.
+    두 꼴의 답이 같다(스크립트에서 차이는 0이다). 정보 형식으로 보면 뜻이 잘 보인다 —
+    예측의 정보 20과 측정의 정보 50을 더해 70이 되고, 평균은 두 값 3.0과 3.15를 <strong>정보로 가중평균</strong>한 것이다.
+    측정의 정보가 2.5배 크니 측정 쪽으로 더 끌려간다.
   </p>
 
-  <h3 id="kf-check">Joseph 형 · 혁신 · 일관성</h3>
+  <p>
+    스칼라일 때 칼만 이득은 \(K = P^-/(P^-+W)\)다.
+    \(W\to0\)(완벽한 센서)이면 \(K\to1\)이라 측정을 그대로 받고, \(W\to\infty\)(쓸모없는 센서)이면 \(K\to0\)이라 예측을 지킨다.
+    갱신 분산 \(P = P^-W/(P^-+W)\)는 \(P^-\)와 \(W\) <strong>둘 중 어느 것보다도 작다</strong> — 두 정보를 합쳤으니 당연하다.
+  </p>
+
+  <h3 id="kf-use">쓰는 법 — 무엇을 정하고, 돌리면 어떻게 되나</h3>
 
   <p>
-    \(P = (I-KH)P^-\)는 \(K\)가 정확히 최적일 때만 성립하는 줄임 꼴이다. 반올림 오차로 \(K\)가 조금이라도 어긋나면
-    \(P\)가 대칭성을 잃거나 음의 고윳값을 가질 수 있다. 오차 \(\mathbf{e} = \mathbf{x} - \hat{\mathbf{x}}\)를 직접 따라가면 어떤 \(K\)에서도 성립하는 꼴이 나온다.
+    칼만 필터를 실제 문제에 쓰려면 사람이 무엇을 정해야 할까? 일곱 줄 안에서 바뀌지 않는 것들이 전부 사람 몫이다.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th style="width:22%">정할 것</th><th style="width:18%">복도 예에서</th><th>어떻게 정하나 · 잘못 정하면</th></tr>
+    <tr><td>상태 \(\mathbf{x}\)</td><td>위치 하나</td><td>마르코프 가정 M1·M2가 성립하도록 필요한 것을 다 넣는다(②절). 빠뜨리면 모형이 어긋난 만큼 혁신이 한쪽으로 쏠린다</td></tr>
+    <tr><td>운동 모델 \(F, B\)</td><td>\(1, 1\)</td><td>물리 법칙이나 기구학에서 온다</td></tr>
+    <tr><td>측정 모델 \(H\)</td><td>\(1\)</td><td>센서가 상태의 무엇을 보는지</td></tr>
+    <tr><td>측정 잡음 \(W\)</td><td>0.02 m²</td><td>센서 사양서, 또는 가만히 둔 센서 출력의 분산으로 잰다 — 비교적 정하기 쉽다</td></tr>
+    <tr><td>운동 잡음 \(Q\)</td><td>0.01 m²</td><td>「운동 모델이 한 스텝에 얼마나 틀릴 수 있나」. 잴 수 없는 경우가 많아 <strong>조정(튜닝)의 주 대상</strong>이다</td></tr>
+    <tr><td>처음 \(\hat{\mathbf{x}}_0,\ P_0\)</td><td>2.0 m, 0.04 m²</td><td>모르면 \(P_0\)를 넉넉히 크게. 너무 작게 잡으면 처음 측정들을 무시한다</td></tr>
+  </table>
+  </div>
+
+  <p>
+    정한 대로 30 스텝을 돌려 보았다(<code>src/filter_numbers.py</code> ⑤). 로봇은 매 스텝 1 m 가라는 명령을 받고 실제로는 \(Q\)만큼 흔들리며 간다.
+    측정은 매 스텝 오지만 <strong>11~16번 스텝에는 오지 않고</strong>, <strong>23번 스텝의 측정은 엉뚱하다</strong>(다른 벽을 잡아 1 m를 더 읽었다).
+    아래 그림은 추정 오차와, 필터가 스스로 믿는 \(\pm1\sigma\) 띠를 함께 그린 것이다.
+  </p>
+
+  <figure>
+    <img src="assets/img/07_kf_run.png" width="760"
+         alt="위 그림: 가로축 스텝 1~30. 파란 선(추정 오차)이 0 근처에서 움직이고, 파란 띠(±1σ)가 처음에 약간 넓다가 ±0.1 m로 자리 잡는다. 회색으로 칠한 11~16 스텝에서 띠가 ±0.26 m까지 넓어졌다가 17 스텝에서 다시 좁아진다. 주황 점(측정 오차)은 띠보다 넓게 흩어져 있다. 23 스텝에 빨간 X(0.85 m 위)가 있고 'NIS 19.8 > 3.84'라고 적혀 있다. 아래 그림: 칼만 이득이 0.71에서 시작해 0.5로 내려가고, 11~16과 23 스텝은 비어 있으며, 17 스텝에서 0.8로 뛰었다가 다시 0.5로 돌아간다">
+    <figcaption>(가) 측정이 꾸준히 오면 띠가 일정한 폭으로 자리 잡는다. 측정이 끊긴 구간(회색)에서는 예측만 해서 띠가 넓어지고, 측정이 돌아오자마자 좁아진다.
+      23번 스텝의 엉뚱한 측정(빨간 X)은 버려서 추정이 끌려가지 않았다. (나) 이득은 몇 스텝 만에 0.5로 자리 잡고, 띠가 넓어진 뒤에는 잠시 커진다.</figcaption>
+  </figure>
+
+  <p><strong>① 이득은 저절로 자리 잡는다 — 그 값을 정하는 것은 \(Q\)와 \(W\)의 비다.</strong>
+    \(P\)와 \(K\)의 식에는 \(\mathbf{z}\)가 없으므로, 모델과 \(Q, W\)만 정해지면 이득의 흐름이 미리 정해진다.
+    스칼라에서 \(P^- = P + Q\), \(P = (1-K)P^-\)가 더 이상 바뀌지 않는 점을 풀면 \((P^-)^2 - QP^- - QW = 0\)이고,
+    이 예에서는 \(P^- = 0.02\), \(K_\infty = 0.5\), 갱신 뒤 표준편차 0.100 m다. 그림 (나)의 0.71 · 0.55 · 0.51 · 0.50이 그리로 가는 길이다.
+  </p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>\(Q\) (m²)</th><th>\(Q/W\)</th><th>정상상태 이득 \(K_\infty\)</th><th>필터의 성격</th></tr>
+    <tr><td>0.0025</td><td>0.125</td><td>0.297</td><td>운동 모델을 믿는다 — 매끄럽지만 실제 움직임이 바뀌면 늦게 따라간다</td></tr>
+    <tr><td>0.01</td><td>0.5</td><td>0.500</td><td>지금 예</td></tr>
+    <tr><td>0.04</td><td>2</td><td>0.732</td><td>측정을 믿는다 — 빨리 따라가지만 측정 잡음을 그대로 받는다</td></tr>
+  </table>
+  </div>
+
+  <p>
+    \(Q\)와 \(W\)를 둘 다 2배로 키우면 \(K_\infty\)는 0.5 그대로다. <strong>이득을 정하는 것은 두 값의 크기가 아니라 비</strong>다.
+    그래서 튜닝은 보통 \(W\)를 센서에서 재 놓고 \(Q\)를 움직이며 한다. 크기 자체는 \(P\) — 필터가 말하는 불확실도 — 를 정하므로, 비만 맞고 크기가 틀리면 추정은 괜찮은데 \(P\)가 거짓말을 한다(아래 NEES).
+  </p>
+
+  <p><strong>② 측정이 안 오면 예측만 한다.</strong>
+    갱신 다섯 줄을 건너뛰고 \(\hat{\mathbf{x}} = \hat{\mathbf{x}}^-\), \(P = P^-\)로 둔다. 11~16번 스텝에서 \(P\)는 스텝마다 \(Q\)씩 커져 0.01에서 0.07로(표준편차 0.100 → 0.265 m) 넓어졌다.
+    17번 스텝에 측정이 돌아오자 \(P^-\)가 컸던 만큼 이득이 0.8로 커져 측정을 크게 받아들이고, \(P\)는 0.016으로 바로 줄었다.
+    실제 시스템에서는 이것이 예외가 아니라 일상이다. EuRoC는 IMU가 200 Hz, 카메라가 20 Hz라서 <strong>예측 열 번에 갱신 한 번</strong>이 기본 박자다.
+    측정이 여러 개 한꺼번에 오면 \(\mathbf{z}\), \(H\)를 세로로 쌓고 \(W\)를 블록 대각으로 놓아 한 번에 갱신하거나, 측정 잡음이 서로 독립이면 하나씩 차례로 갱신해도 같은 답이 나온다.
+  </p>
+
+  <p><strong>③ 이상한 측정은 혁신으로 거른다.</strong>
+    모형이 맞다면 혁신 \(\mathbf{y}\)는 평균 0, 공분산 \(S\)인 가우시안이다. 그래서 혁신을 \(S\)로 잰 마할라노비스 제곱 — 이것을 NIS라고 한다 — 은 대개 작다.
+    너무 크면 그 측정이 모형 밖에서 왔다고 보고 <strong>갱신하지 않는다</strong>. 이것을 gating이라고 부른다.
   </p>
 
   $$
   \begin{aligned}
-  \mathbf{e} &= \mathbf{x} - \hat{\mathbf{x}}^- - K(H\mathbf{x} + \mathbf{v} - H\hat{\mathbf{x}}^-)
-   = (I - KH)\,\mathbf{e}^- - K\mathbf{v} \\
-  P &= \mathrm{E}[\mathbf{e}\mathbf{e}^\top] = (I-KH)\,P^-\,(I-KH)^\top + KWK^\top
-    &&\textbf{Joseph 형}\text{ — 두 항이 모두 양의 준정부호}
+  \epsilon_{\mathbf{y}} &= \mathbf{y}^\top S^{-1}\mathbf{y} \ \sim\ \chi^2_m
+    &&\text{NIS — 자유도 }m\text{(측정 크기)인 카이제곱을 따른다} \\
+  \epsilon_{\mathbf{y}} &= 0.891^2 / 0.040 = 19.8 \ >\ 3.84
+    &&\text{23번 스텝 — 자유도 1의 95 \% 점을 넘으므로 버린다}
   \end{aligned}
   $$
 
   <p>
-    \(K = P^-H^\top S^{-1}\)를 넣고 펴면 \((I-KH)P^-\)로 줄어드는 것을 확인할 수 있다. 1960년대 Peter Joseph가 제안해 그의 이름이 붙었다.
+    받아들였다면 \(0.5 \times 0.891 = 0.445\) m만큼 끌려갔을 것이다. 문턱 3.84는 「정상인 측정도 20번에 한 번은 넘는다」는 값이다.
+    문턱을 너무 낮추면 좋은 측정까지 버리고, 버린 만큼 \(P\)가 커져 다음 문턱 판정이 흔들린다. 측정이 2차원이면(픽셀 좌표) 문턱은 5.99다.
   </p>
 
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 카이제곱 분포 · gating</p>
+    <dl>
+      <dt>카이제곱 분포 \(\chi^2_m\)</dt>
+      <dd>표준정규분포를 따르는 독립인 값 \(m\)개를 제곱해 더한 것의 분포. 평균이 \(m\)이다. \(\mathbf{y}^\top S^{-1}\mathbf{y}\)는 \(\mathbf{y}\)를 \(S\)로 「표준화」한 뒤 제곱해 더한 것이라 이 분포를 따른다. 95 % 점(자유도 1이면 3.84, 2이면 5.99)은 통계표에 있는 값이다.</dd>
+      <dt>gating</dt>
+      <dd>「문(gate)을 지나가는 측정만 들인다」는 뜻. 혁신이 \(S\)로 그린 타원 밖에 떨어진 측정을 들이지 않는 것이다. SLAM에서는 잘못 짝지어진 특징점(9회의 outlier)을 거르는 데 같은 생각을 쓴다.</dd>
+    </dl>
+  </div>
+
+  <h3 id="kf-check">필터가 맞게 도는지 — NIS · NEES</h3>
+
   <p>
-    필터가 「맞게」 돌고 있는지는 혁신으로 잰다. 모형이 맞다면 혁신 \(\mathbf{y}_k\)는 평균 0, 공분산 \(S_k\)인 가우시안이어야 한다.
-    그래서 아래 두 값은 자유도가 정해진 \(\chi^2\) 분포를 따른다.
+    ③의 NIS는 측정 하나를 거르는 데도 쓰지만, <strong>필터 전체가 맞게 돌고 있는지</strong>를 재는 데도 쓴다. 모형이 맞다면 그 평균이 \(m\)이어야 한다.
+    정답 궤적이 있으면(EuRoC처럼) 추정 오차를 \(P\)로 잰 NEES도 쓸 수 있다.
   </p>
 
   $$
@@ -1035,10 +943,27 @@
   $$
 
   <p>
-    NEES의 평균이 \(n\)보다 크게 나오면 <strong>필터가 실제보다 자기를 더 확신하고 있다</strong>(과신, overconfident)는 뜻이다.
-    이것이 ⑧절에서 말할 「일관성(consistency)」의 정의다 — <strong>필터가 믿는 공분산이 실제 오차의 크기와 맞는가.</strong>
-    위 숫자 예에서는 \(n = m = 1\)이므로 NIS \(= 0.15^2 / 0.07 = 0.32\)다. 한 번 잰 값이라 판정할 수는 없고, 여러 스텝 평균이 1 근처여야 한다.
+    위의 30 스텝에서 받아들인 측정 23개의 NIS 평균은 <strong>0.99</strong>로, 기대값 1과 잘 맞는다.
+    NEES의 평균이 \(n\)보다 크게 나오면 <strong>필터가 실제보다 자기를 더 확신하고 있다</strong>(과신, overconfident)는 뜻이고, 작으면 지나치게 겁을 내고 있다는 뜻이다.
+    이것이 ⑦절에서 말할 「일관성(consistency)」의 정의다 — <strong>필터가 믿는 공분산이 실제 오차의 크기와 맞는가.</strong>
   </p>
+
+  <p>
+    구현할 때 한 가지 더. \(P = (I-KH)P^-\)는 \(K\)가 정확히 최적일 때만 맞는 줄임 꼴이라, 반올림 오차가 쌓이면 \(P\)가 대칭성을 잃을 수 있다.
+    그래서 흔히 같은 값을 주는 <strong>Joseph 형</strong>을 쓴다. 두 항이 모두 양의 준정부호라 반올림이 있어도 \(P\)가 망가지지 않는다.
+  </p>
+
+  $$
+  \begin{aligned}
+  P &= (I-KH)\,P^-\,(I-KH)^\top + KWK^\top
+    &&\textbf{Joseph 형} \\
+  &= (I-KH)P^- - \big[\,P^-H^\top - K\underbrace{(HP^-H^\top + W)}_{S}\,\big]K^\top
+   = (I-KH)P^-
+    &&KS = P^-H^\top\text{라 괄호가 0}
+  \end{aligned}
+  $$
+
+  <p>1960년대 Peter Joseph가 제안해 그의 이름이 붙었다.</p>
 
   <!-- ─────────────────────────── ⑥ EKF ─────────────────────────── -->
   <h2 id="ekf">⑥ 확장 칼만 필터(EKF)</h2>
@@ -1049,7 +974,7 @@
     EKF의 답은 단순하다 — <strong>지금 추정값 근처에서만 선형이라고 치자.</strong>
   </p>
 
-  <p>비선형 모형을 지금 추정값 둘레에서 1차 테일러 전개한다.</p>
+  <p>비선형 모형을 지금 추정값 둘레에서 1차 테일러 전개한다. 운동 모델은 지난 갱신값 \(\hat{\mathbf{x}}_{k-1}\)에서, 측정 모델은 예측값 \(\hat{\mathbf{x}}_k^-\)에서 편다.</p>
 
   $$
   \begin{aligned}
@@ -1061,26 +986,62 @@
   $$
 
   <p>
-    펴 놓은 식은 선형이므로 칼만 필터를 그대로 쓸 수 있다. 다만 평균은 펴지 않은 원래 함수로 계산한다 — 그쪽이 더 정확하기 때문이다.
-    잡음이 덧셈 꼴로 들어가지 않는 경우(\(\mathbf{x}_k = f(\mathbf{x}_{k-1}, \mathbf{u}_k, \mathbf{w}_k)\))에는 잡음에 대한 야코비안 \(L_k = \partial f/\partial\mathbf{w}\)도 필요하다.
+    펴 놓은 식은 선형이므로 ⑤절의 유도를 그대로 따라가면 된다. <strong>예측</strong>은 \(\mathbf{x}_k \approx f(\hat{\mathbf{x}}_{k-1},\mathbf{u}_k) + F_k(\mathbf{x}_{k-1} - \hat{\mathbf{x}}_{k-1}) + \mathbf{w}_k\)에 성질 1·2를 쓰면
+    평균 \(f(\hat{\mathbf{x}}_{k-1},\mathbf{u}_k)\), 공분산 \(F_kP_{k-1}F_k^\top + Q_k\)다.
+    <strong>갱신</strong>은 벌점 \(J\)의 측정 항에 펴 놓은 \(h\)를 넣고, 예측에서 얼마나 움직였는지를 \(\boldsymbol\delta = \mathbf{x} - \hat{\mathbf{x}}^-\)로 쓴다.
+  </p>
+
+  $$
+  \begin{aligned}
+  J(\mathbf{x}) &\approx \tfrac12\lVert \mathbf{x}-\hat{\mathbf{x}}^-\rVert^2_{P^-}
+    + \tfrac12\big\lVert \mathbf{z} - h(\hat{\mathbf{x}}^-) - H(\mathbf{x}-\hat{\mathbf{x}}^-)\big\rVert^2_{W} \\
+  &= \tfrac12\lVert \boldsymbol\delta - \mathbf{0}\rVert^2_{P^-}
+    + \tfrac12\big\lVert \underbrace{\mathbf{z} - h(\hat{\mathbf{x}}^-)}_{\mathbf{y}} - H\boldsymbol\delta\big\rVert^2_{W}
+    &&\boldsymbol\delta = \mathbf{x} - \hat{\mathbf{x}}^-
+  \end{aligned}
+  $$
+
+  <p>
+    ⑤절의 \(J\)에서 \(\hat{\mathbf{x}}^-\) 자리에 \(\mathbf{0}\)이, \(\mathbf{z}\) 자리에 \(\mathbf{y}\)가 들어간 꼴이다. 그러니 답도 그대로 — \(\hat{\boldsymbol\delta} = K\mathbf{y}\), 즉 \(\hat{\mathbf{x}} = \hat{\mathbf{x}}^- + K\big(\mathbf{z} - h(\hat{\mathbf{x}}^-)\big)\)다.
+    <strong>혁신만 비선형 함수로 계산하고, 나머지는 KF와 같다.</strong>
+    잡음이 덧셈 꼴로 들어가지 않는 경우(\(\mathbf{x}_k = f(\mathbf{x}_{k-1}, \mathbf{u}_k, \mathbf{w}_k)\))에는 잡음에 대한 야코비안 \(L_k = \partial f/\partial\mathbf{w}\)로 \(Q_k\)를 상태 공간에 옮긴다(성질 1).
   </p>
 
   <div class="box lab-block">
-    <p class="boxtitle">EKF — KF와 달라지는 곳</p>
+    <p class="boxtitle">EKF — 한 스텝</p>
     $$
     \begin{aligned}
     \hat{\mathbf{x}}_k^- &= f(\hat{\mathbf{x}}_{k-1},\ \mathbf{u}_k)
-      &&\text{평균은 비선형 함수 그대로} \\
+      &&\text{예측 평균 — 비선형 함수 그대로} \\
     P_k^- &= F_kP_{k-1}F_k^\top + L_kQ_kL_k^\top
-      &&\text{공분산은 야코비안으로 (덧셈 잡음이면 } L_k = I\text{)} \\
+      &&\text{예측 공분산 — 야코비안으로 (덧셈 잡음이면 } L_k = I\text{)} \\[4pt]
     \mathbf{y}_k &= \mathbf{z}_k - h(\hat{\mathbf{x}}_k^-)
-      &&\text{예측 측정도 비선형 함수 그대로} \\
-    S_k,\ K_k,\ \hat{\mathbf{x}}_k,\ P_k &\ :\ \text{KF와 같다 } (H_k\text{는 위의 야코비안})
+      &&\text{혁신 — 예측 측정도 비선형 함수 그대로} \\
+    S_k &= H_kP_k^-H_k^\top + W_k
+      &&\text{이하 KF와 같다} \\
+    K_k &= P_k^-H_k^\top S_k^{-1} \\
+    \hat{\mathbf{x}}_k &= \hat{\mathbf{x}}_k^- + K_k\mathbf{y}_k \\
+    P_k &= (I - K_kH_k)\,P_k^-
     \end{aligned}
     $$
   </div>
 
-  <h3>예 1 — 2차원 로봇의 운동 모델</h3>
+  <div class="tablewrap">
+  <table>
+    <tr><th style="width:20%">무엇이</th><th>KF에서는</th><th>EKF에서는</th></tr>
+    <tr><td>평균의 예측</td><td>\(F\hat{\mathbf{x}} + B\mathbf{u}\)</td><td>\(f(\hat{\mathbf{x}}, \mathbf{u})\) — 펴지 않은 원래 함수 (그쪽이 더 정확하다)</td></tr>
+    <tr><td>예측한 측정</td><td>\(H\hat{\mathbf{x}}^-\)</td><td>\(h(\hat{\mathbf{x}}^-)\)</td></tr>
+    <tr><td>\(F,\ H\)</td><td>정해진 상수</td><td><strong>매 스텝 지금 추정값에서 새로 계산</strong>하는 야코비안</td></tr>
+    <tr><td>\(K,\ P\)의 흐름</td><td>\(\mathbf{z}\)와 무관 — 미리 정해진다</td><td>추정값을 따라 바뀐다 — 추정이 틀리면 이득도 틀린다</td></tr>
+  </table>
+  </div>
+
+  <p>
+    마지막 줄이 EKF의 약점이 시작되는 자리다. KF에서는 \(P\)가 측정과 상관없이 정해졌지만, EKF에서는 <strong>틀린 추정값에서 편 야코비안이 \(P\)를 정한다.</strong>
+    이 절 끝과 ⑦절의 일관성 이야기가 이 한 줄에서 나온다.
+  </p>
+
+  <h3 id="ekf-ex">예 1 — 2차원 로봇의 운동 모델</h3>
 
   <p>
     평면 위 로봇의 상태 \(\mathbf{x} = (p_x, p_y, \theta)\), 입력은 앞으로 가는 속력 \(v\)와 도는 각속도 \(\omega\), 시간 간격 \(\Delta t\)다.
@@ -1109,7 +1070,7 @@
   <p>
     로봇이 랜드마크 \(\mathbf{l} = (l_x, l_y)\)까지의 거리 \(r\)와, 로봇 앞쪽에서 잰 방위 \(\phi\)를 잰다.
     \(\Delta_x = l_x - p_x\), \(\Delta_y = l_y - p_y\), \(q = \Delta_x^2 + \Delta_y^2\)로 놓는다.
-    상태를 \((p_x, p_y, \theta, l_x, l_y)\)로 두고(⑧절의 EKF-SLAM 꼴) 다섯 변수로 미분한다.
+    상태를 \((p_x, p_y, \theta, l_x, l_y)\)로 두고(⑦절의 EKF-SLAM 꼴) 다섯 변수로 미분한다.
   </p>
 
   $$
@@ -1139,24 +1100,40 @@
   $$
 
   <p>
-    유한차분으로 계산한 야코비안과의 차이는 \(1.8\times10^{-10}\)이다. 두 가지를 눈여겨볼 만하다.
+    두 가지를 눈여겨볼 만하다.
     <strong>로봇 칸과 랜드마크 칸이 부호만 다르다</strong> — 측정은 둘의 차 \(\mathbf{l}-\mathbf{p}\)에만 달려 있기 때문이다.
-    그리고 <strong>둘을 똑같이 옮기면(\(\delta p = \delta l\)) 측정이 안 바뀐다</strong> — 이 「보이지 않는 방향」이 ⑧절 일관성 이야기의 열쇠다.
+    그리고 <strong>둘을 똑같이 옮기면(\(\delta p = \delta l\)) 측정이 안 바뀐다</strong> — 이 「보이지 않는 방향」이 ⑦절 일관성 이야기의 열쇠다.
   </p>
+
+  <h3 id="ekf-use">쓰는 법 — EKF에서 자주 틀리는 세 자리</h3>
+
+  <p>
+    EKF의 일곱 줄은 KF와 거의 같지만, 실제로 구현해 보면 틀리는 자리는 KF에 없던 곳에 몰려 있다.
+  </p>
+
+  <ul>
+    <li><strong>야코비안을 유한차분과 대 본다.</strong> 손으로 미분한 \(F, H\)에 부호 하나가 틀려도 필터는 돌아간다 — 조금 이상하게.
+      각 성분을 \(10^{-6}\) 정도 흔들어 \(\big(h(\mathbf{x}+\epsilon\mathbf{e}_i) - h(\mathbf{x}-\epsilon\mathbf{e}_i)\big)/2\epsilon\)과 비교하면 바로 잡힌다.
+      예 2의 해석 야코비안과 유한차분의 차이는 \(1.8\times10^{-10}\)이었다.</li>
+    <li><strong>각도가 든 혁신은 \([-\pi, \pi)\)로 감는다.</strong> 예측한 방위가 179°, 잰 방위가 −179°이면 실제 차이는 2°인데, 그냥 빼면 −358°가 된다.
+      이 혁신에 이득을 곱하면 로봇이 한 바퀴를 돈 것처럼 고쳐진다. 상태의 \(\theta\)도 갱신 뒤에 같은 범위로 감아 둔다.</li>
+    <li><strong>야코비안은 정해진 점에서 계산한다.</strong> \(F_k\)는 지난 갱신값 \(\hat{\mathbf{x}}_{k-1}\)에서, \(H_k\)는 예측값 \(\hat{\mathbf{x}}_k^-\)에서다.
+      갱신 뒤의 값으로 \(H\)를 다시 계산해 같은 측정을 또 넣으면 같은 정보를 두 번 쓰게 되어 \(P\)가 부당하게 줄어든다.</li>
+  </ul>
 
   <h3 id="ekf-loss">선형화가 잃는 것</h3>
 
   <p>
     EKF가 무엇을 포기했는지 그림으로 보자. 가장 단순한 비선형 — 극좌표를 직교좌표로 바꾸는 것 하나만 본다.
     거리 \(r\sim\mathcal{N}(1, 0.02^2)\)는 잘 알고, 방향 \(\theta\sim\mathcal{N}(90°, 0.35^2)\)(약 20°)는 잘 모르는 상황이다.
-    \((x, y) = (r\cos\theta, r\sin\theta)\)의 분포는 어떻게 생겼을까?
+    \((x, y) = (r\cos\theta, r\sin\theta)\)의 분포는 어떻게 생겼을까? (<code>src/filter_numbers.py</code> ④)
   </p>
 
   <figure>
     <img src="assets/img/07_nonlinear.png" width="760"
-         alt="왼쪽: 방향-거리 평면에 둥근 점구름. 오른쪽: x-y 평면에 위로 볼록한 바나나 모양 점구름. 검은 실선 타원(참)의 중심은 y=0.941, 빨간 점선 타원(EKF)은 y=1.0에 납작하게 있고, 초록 일점쇄선 타원(UKF)은 검은 타원과 거의 겹친다. 초록 십자 다섯 개가 시그마 점이다">
-    <figcaption>같은 입력 분포를 세 방법으로 옮겼다. 참값은 표본 100만 개로 잰 것이다.
-      EKF(빨강)는 평균을 바나나의 <strong>바깥</strong>에 놓고 세로 폭을 거의 0으로 본다. UKF(초록, ⑦절)는 점 다섯 개만 보내고도 참값과 거의 겹친다.</figcaption>
+         alt="왼쪽: 방향-거리 평면에 둥근 점구름. 오른쪽: x-y 평면에 위로 볼록한 바나나 모양 점구름. 검은 실선 타원(참)의 중심은 y=0.941, 빨간 점선 타원(EKF)은 y=1.0에 납작하게 있다">
+    <figcaption>같은 입력 분포를 두 방법으로 옮겼다. 참값은 표본 100만 개로 잰 것이다.
+      EKF(빨강)는 평균을 바나나의 <strong>바깥</strong>에 놓고 세로 폭을 거의 0으로 본다.</figcaption>
   </figure>
 
   <div class="tablewrap">
@@ -1164,7 +1141,6 @@
     <tr><th></th><th>평균 \(y\)</th><th>\(y\) 분산</th><th>\(x\) 분산</th></tr>
     <tr><td>참값 (몬테카를로 100만 개)</td><td>0.9406</td><td>0.0070</td><td>0.1086</td></tr>
     <tr><td>EKF (평균점에서 선형화)</td><td>1.0000</td><td>0.0004</td><td>0.1225</td></tr>
-    <tr><td>UKF (시그마 점 5개)</td><td>0.9406</td><td>0.0075</td><td>0.1082</td></tr>
   </table>
   </div>
 
@@ -1179,366 +1155,11 @@
     <strong>EKF의 실패는 「틀린다」보다 「틀린 채 확신한다」 쪽이다.</strong>
     분산을 작게 보면 다음 측정의 칼만 이득이 작아져 측정을 덜 듣는다. 그러면 오차가 고쳐지지 않은 채 쌓인다.
     선형화 오차는 <strong>불확실도가 클수록, 함수가 휠수록</strong> 커진다. SLAM에서 둘 다 큰 자리가 처음 보는 랜드마크의 초기화와 큰 회전이다.
-    ⑦절의 변형들은 전부 이 문제를 줄이는 서로 다른 방법이다.
+    쓰는 쪽에서 할 수 있는 일은 둘이다 — 불확실도가 큰 채로 비선형이 센 측정을 넣지 않는 것, 그리고 NIS · NEES로 과신을 감시하는 것.
   </div>
 
-  <!-- ─────────────────────────── ⑦ 변형들 ─────────────────────────── -->
-  <h2 id="variants">⑦ KF의 변형들</h2>
-
-  <p>
-    EKF가 나온 뒤 수십 년 동안 수많은 변형이 나왔다. 이름은 많지만 묻는 질문은 셋뿐이다.
-    <strong>선형화를 어디서 하나</strong>(IEKF), <strong>무엇을 상태로 두나</strong>(ESKF · 정보 필터), <strong>선형화를 아예 안 할 수 있나</strong>(UKF · 파티클 필터).
-  </p>
-
-  <h3 id="iekf">IEKF — 갱신을 반복한다</h3>
-
-  <p>
-    EKF는 \(h\)를 <strong>예측값 \(\hat{\mathbf{x}}^-\)에서</strong> 편다. 그런데 갱신이 끝나면 더 나은 추정 \(\hat{\mathbf{x}}\)가 생긴다.
-    그 점에서 다시 펴고 다시 갱신하면 어떨까? 유도 2(MAP)의 비선형판으로 돌아가 보면 답이 분명해진다.
-  </p>
-
-  $$
-  \hat{\mathbf{x}} = \arg\min_{\mathbf{x}}\ \tfrac12\lVert \mathbf{x}-\hat{\mathbf{x}}^-\rVert^2_{P^-} + \tfrac12\lVert \mathbf{z}-h(\mathbf{x})\rVert^2_{W}
-  $$
-
-  <p>
-    비선형 최소제곱이다. \(i\)번째 추정 \(\mathbf{x}^{(i)}\)에서 \(h(\mathbf{x}) \approx h(\mathbf{x}^{(i)}) + H_i(\mathbf{x}-\mathbf{x}^{(i)})\)로 펴면 다시 이차식이 되고,
-    그 최소점을 다음 추정으로 삼는다(이것이 8회에서 배울 가우스-뉴턴 한 걸음이다). 이차식의 기울기를 0으로 놓고 Woodbury로 정리하면 이렇게 된다.
-  </p>
-
-  $$
-  \begin{aligned}
-  K_i &= P^-H_i^\top\big(H_iP^-H_i^\top + W\big)^{-1}
-    &&H_i = \partial h/\partial\mathbf{x}\ \text{at}\ \mathbf{x}^{(i)} \\
-  \mathbf{x}^{(i+1)} &= \hat{\mathbf{x}}^- + K_i\Big(\mathbf{z} - h(\mathbf{x}^{(i)}) - H_i\big(\hat{\mathbf{x}}^- - \mathbf{x}^{(i)}\big)\Big)
-    &&\text{펴는 점이 }\hat{\mathbf{x}}^-\text{이 아니라서 붙는 보정항} \\
-  P &= (I - K_NH_N)P^-
-    &&\text{마지막 반복의 이득으로}
-  \end{aligned}
-  $$
-
-  <p>
-    \(\mathbf{x}^{(0)} = \hat{\mathbf{x}}^-\)로 시작하면 보정항이 0이라 <strong>첫 반복이 정확히 EKF</strong>다.
-    즉 EKF는 「가우스-뉴턴을 한 번만 하고 멈춘 IEKF」다. 이 관찰(Bell &amp; Cathey, 1993)이 필터와 최적화가 같은 문제를 푼다는 첫 번째 증거다.
-    측정이 크게 비선형일 때(가까운 랜드마크, 큰 혁신) 효과가 크고, 비용은 반복 횟수만큼 \(H\)와 \(S^{-1}\)을 다시 계산하는 것이다.
-  </p>
-
-  <h3 id="eskf">ESKF — 오차를 상태로 둔다</h3>
-
-  <p>
-    3회에서 회전은 벡터 공간이 아니라 manifold \(\mathbf{SO}(3)\) 위에 산다는 것을 봤다. 그럼 회전에 칼만 필터를 쓰려면 무엇이 문제일까?
-  </p>
-
-  <ul>
-    <li>쿼터니언 네 숫자를 상태로 두면 \(\lVert q\rVert = 1\) 제약 때문에 공분산이 한 방향으로 <strong>0이어야</strong> 한다. 4×4 공분산이 특이 행렬이 된다.</li>
-    <li>갱신 \(\hat{\mathbf{x}} + K\mathbf{y}\)의 「더하기」가 회전에서는 뜻이 없다. 더한 쿼터니언은 단위가 아니다.</li>
-    <li>오일러각 세 숫자는 짐벌락(3회)에서 야코비안이 무너진다.</li>
-  </ul>
-
-  <p>
-    오차상태 칼만 필터(ESKF, error-state Kalman filter)는 상태를 둘로 나눠 이 문제를 피한다.
-  </p>
-
-  $$
-  \mathbf{x}_{\text{참}} = \bar{\mathbf{x}} \boxplus \delta\mathbf{x},
-  \qquad
-  \bar{\mathbf{x}}:\ \text{공칭 상태 (manifold 위 · 잡음 없이 적분)},
-  \qquad
-  \delta\mathbf{x} \sim \mathcal{N}(\mathbf{0}, P):\ \text{오차 상태 (tangent space · 작다)}
-  $$
-
-  <p>
-    회전 부분의 \(\boxplus\)는 이 강의의 규약대로 right perturbation이다: \(R_{\text{참}} = \bar R\,\mathrm{Exp}(\delta\boldsymbol\theta)\) (3회).
-    칼만 필터가 다루는 것은 \(\delta\mathbf{x}\) 하나다. 이것은 원점 근처의 작은 벡터라 제약도 특이점도 없고, 선형화가 잘 맞는다.
-    한 스텝은 다섯 단계다.
-  </p>
-
-  <div class="box lab-block">
-    <p class="boxtitle">ESKF — 한 스텝</p>
-    $$
-    \begin{aligned}
-    &\text{1. 공칭 전파:} &\bar{\mathbf{x}}_k &= f(\bar{\mathbf{x}}_{k-1},\ \mathbf{u}_k)
-      &&\text{잡음 없이, manifold 위에서 정확히} \\
-    &\text{2. 오차 전파:} &P_k^- &= F_\delta P_{k-1} F_\delta^\top + L_\delta Q L_\delta^\top
-      &&\delta\hat{\mathbf{x}}\text{의 평균은 0으로 남는다} \\
-    &\text{3. 갱신:} &\delta\hat{\mathbf{x}} &= K\big(\mathbf{z} - h(\bar{\mathbf{x}}_k)\big),\quad K = P^-H_\delta^\top(H_\delta P^-H_\delta^\top+W)^{-1}
-      &&H_\delta = \left.\partial h(\bar{\mathbf{x}}\boxplus\delta\mathbf{x})/\partial\delta\mathbf{x}\right|_{\mathbf{0}} \\
-    &\text{4. 주입:} &\bar{\mathbf{x}}_k &\leftarrow \bar{\mathbf{x}}_k \boxplus \delta\hat{\mathbf{x}}
-      &&\text{고친 만큼 공칭에 옮긴다} \\
-    &\text{5. 리셋:} &\delta\hat{\mathbf{x}} &\leftarrow \mathbf{0},\quad P_k \leftarrow G\,(I-KH_\delta)P^-\,G^\top
-      &&G = \partial\delta\mathbf{x}^+/\partial\delta\mathbf{x}\ (\approx I)
-    \end{aligned}
-    $$
-  </div>
-
-  <p>
-    리셋의 \(G\)는 「기준점(공칭)이 옮겨 갔으니 오차를 새 기준점에서 다시 잰다」는 좌표 바꾸기다.
-    회전 블록에서 \(\bar R\,\mathrm{Exp}(\delta\hat{\boldsymbol\theta})\,\mathrm{Exp}(\delta\boldsymbol\theta^+) = \bar R\,\mathrm{Exp}(\delta\boldsymbol\theta)\)를 1차로 풀면
-    \(G_\theta \approx I - \tfrac12[\delta\hat{\boldsymbol\theta}]_\times\)이고, \(\delta\hat{\boldsymbol\theta}\)가 작아 흔히 \(I\)로 둔다.
-  </p>
-
-  <p>
-    <strong>예 — 자이로와 가속도계로 자세만 추정하기.</strong> 상태는 자세 \(R = R_{WB}\) 하나, 오차는 \(\delta\boldsymbol\theta\in\mathbb{R}^3\)이다.
-    자이로가 잰 각속도를 \(\tilde{\boldsymbol\omega} = \boldsymbol\omega + \mathbf{n}\)이라 하자(바이어스는 10회에서 넣는다).
-  </p>
-
-  $$
-  \begin{aligned}
-  \bar R_k &= \bar R_{k-1}\,\mathrm{Exp}(\tilde{\boldsymbol\omega}\Delta t)
-    &&\text{공칭: 잰 각속도로 그대로 돌린다} \\
-  R_k &= R_{k-1}\,\mathrm{Exp}\big((\tilde{\boldsymbol\omega}-\mathbf{n})\Delta t\big)
-    &&\text{참: 잡음을 빼야 맞다}
-  \end{aligned}
-  $$
-
-  <p>
-    둘째 줄에 \(R = \bar R\,\mathrm{Exp}(\delta\boldsymbol\theta)\)를 양쪽에 넣고 첫 줄로 나누면 오차가 어떻게 번지는지 나온다.
-    3회의 두 성질 — \(\mathrm{Exp}(\mathbf{a}-\mathbf{b}) \approx \mathrm{Exp}(\mathbf{a})\,\mathrm{Exp}(-J_r(\mathbf{a})\mathbf{b})\)와
-    Adjoint 성질 \(\Delta R^\top\mathrm{Exp}(\boldsymbol\phi)\Delta R = \mathrm{Exp}(\Delta R^\top\boldsymbol\phi)\) — 을 쓴다.
-    \(\Delta R = \mathrm{Exp}(\tilde{\boldsymbol\omega}\Delta t)\)로 줄여 쓴다.
-  </p>
-
-  $$
-  \begin{aligned}
-  \bar R_k\,\mathrm{Exp}(\delta\boldsymbol\theta_k)
-  &= \bar R_{k-1}\,\mathrm{Exp}(\delta\boldsymbol\theta_{k-1})\,\mathrm{Exp}\big((\tilde{\boldsymbol\omega}-\mathbf{n})\Delta t\big) \\
-  \mathrm{Exp}(\delta\boldsymbol\theta_k)
-  &= \Delta R^\top\,\mathrm{Exp}(\delta\boldsymbol\theta_{k-1})\,\Delta R\ \mathrm{Exp}\big(-J_r(\tilde{\boldsymbol\omega}\Delta t)\,\mathbf{n}\Delta t\big)
-    &&\text{양변 왼쪽에 } \bar R_k^\top = \Delta R^\top\bar R_{k-1}^\top \\
-  &= \mathrm{Exp}(\Delta R^\top\delta\boldsymbol\theta_{k-1})\ \mathrm{Exp}\big(-J_r\,\mathbf{n}\Delta t\big)
-    &&\text{Adjoint 성질} \\
-  \delta\boldsymbol\theta_k &\approx \underbrace{\Delta R^\top}_{F_\delta}\,\delta\boldsymbol\theta_{k-1}\ \underbrace{-\ J_r\Delta t}_{L_\delta}\ \mathbf{n}
-    &&\text{작은 것끼리의 곱은 1차로 더한다}
-  \end{aligned}
-  $$
-
-  <p>
-    측정은 <strong>정지해 있을 때의 가속도계</strong>로 하자. 10회에서 자세히 보겠지만 정지한 가속도계는 몸체 좌표로 본 「위쪽 중력 반작용」을 읽는다:
-    \(\mathbf{z} = R^\top\bar{\mathbf{g}} + \mathbf{v}\), \(\bar{\mathbf{g}} = (0, 0, 9.81)\). \(R = \bar R\,\mathrm{Exp}(\delta\boldsymbol\theta)\)를 넣고 1차로 편다.
-  </p>
-
-  $$
-  \begin{aligned}
-  h(\bar R\boxplus\delta\boldsymbol\theta) &= \mathrm{Exp}(\delta\boldsymbol\theta)^\top\bar R^\top\bar{\mathbf{g}}
-   \approx (I - [\delta\boldsymbol\theta]_\times)\,\bar R^\top\bar{\mathbf{g}}
-   = \bar R^\top\bar{\mathbf{g}} + [\bar R^\top\bar{\mathbf{g}}]_\times\,\delta\boldsymbol\theta
-    &&-[\mathbf{a}]_\times\mathbf{b} = [\mathbf{b}]_\times\mathbf{a} \\
-  H_\delta &= [\bar R^\top\bar{\mathbf{g}}]_\times
-  \end{aligned}
-  $$
-
-  <p>
-    \(H_\delta\)는 반대칭 행렬이라 <strong>\(\bar R^\top\bar{\mathbf{g}}\) 방향으로 도는 오차에는 0을 곱한다</strong>(\([\mathbf{a}]_\times\mathbf{a} = \mathbf{0}\)).
-    중력 방향을 축으로 도는 회전 — 즉 <strong>yaw</strong> — 는 가속도계로 볼 수 없다는 뜻이다. 롤·피치는 보이고 yaw는 안 보인다.
-    시각-관성 SLAM에서 관측할 수 없는 방향이 「위치 3 + yaw 1 = 4자유도」인 이유(13회의 4자유도 자세그래프)의 절반이 이 한 줄에 있다.
-  </p>
-
-  <div class="box firstseen">
-    <p class="boxtitle">🆕 ESKF의 원전</p>
-    <dl>
-      <dt>Joan Solà, <em>Quaternion kinematics for the error-state Kalman filter</em> (2017)</dt>
-      <dd>스페인 IRI(바르셀로나 로봇연구소)의 연구자가 쓴 긴 해설 문서. 쿼터니언과 오차 상태 필터를 처음부터 끝까지 정리해, 시각-관성 필터를 만드는 사람들이 사실상 표준으로 참조한다.
-        다만 이 문서는 <strong>local(=right) perturbation과 global(=left)을 둘 다</strong> 다루므로, 읽을 때 어느 쪽 식인지 확인해야 한다.</dd>
-    </dl>
-  </div>
-
-  <h3 id="ukf">UKF — 야코비안 대신 점을 보낸다</h3>
-
-  <p>
-    ⑥절의 그림에서 문제는 「분포 전체를 함수에 통과시키는 대신, 평균점의 기울기만 봤다」는 것이었다.
-    그럼 <strong>분포를 대표하는 점 몇 개를 골라 함수에 그대로 통과시키면</strong> 어떨까? 그것이 unscented transform이고, 그것을 쓰는 필터가 UKF다.
-  </p>
-
-  <p>\(n\)차원 \(\mathcal{N}(\boldsymbol\mu, P)\)에서 시그마 점 \(2n+1\)개와 가중치를 이렇게 고른다.</p>
-
-  $$
-  \begin{aligned}
-  \boldsymbol\chi_0 &= \boldsymbol\mu,
-  \qquad
-  \boldsymbol\chi_{i} = \boldsymbol\mu + \big(\sqrt{(n+\lambda)P}\big)_i,
-  \qquad
-  \boldsymbol\chi_{n+i} = \boldsymbol\mu - \big(\sqrt{(n+\lambda)P}\big)_i,
-  \quad i = 1..n
-    &&(\cdot)_i\text{: 행렬 제곱근의 } i\text{번째 열} \\
-  w_0^{(m)} &= \frac{\lambda}{n+\lambda},
-  \qquad
-  w_0^{(c)} = \frac{\lambda}{n+\lambda} + (1-\alpha^2+\beta),
-  \qquad
-  w_i^{(m)} = w_i^{(c)} = \frac{1}{2(n+\lambda)},
-  \qquad
-  \lambda = \alpha^2(n+\kappa) - n
-  \end{aligned}
-  $$
-
-  <p>
-    행렬 제곱근은 보통 촐레스키 분해(\(P = LL^\top\)의 \(L\))로 구한다. 점들을 함수에 통과시킨 \(\boldsymbol\zeta_i = f(\boldsymbol\chi_i)\)로 평균과 공분산을 다시 잰다.
-  </p>
-
-  $$
-  \hat{\boldsymbol\mu} = \sum_{i=0}^{2n} w_i^{(m)}\boldsymbol\zeta_i,
-  \qquad
-  \hat P = \sum_{i=0}^{2n} w_i^{(c)}\,(\boldsymbol\zeta_i - \hat{\boldsymbol\mu})(\boldsymbol\zeta_i - \hat{\boldsymbol\mu})^\top
-  $$
-
-  <p>
-    선형 함수에 통과시키면 이 식은 정확히 \(A\boldsymbol\mu+\mathbf{b}\), \(APA^\top\)를 준다 — 칼만 필터와 같다.
-    비선형이면 테일러 전개의 2차 항까지 평균이 맞는다. ⑥절 그림은 \(n=2\), \(\alpha=1\), \(\beta=0\), \(\kappa = 3-n = 1\)(Julier와 Uhlmann의 원래 선택)로,
-    점 다섯 개만으로 평균 \(y\) 0.9406(참값 0.9406), \(y\) 분산 0.0075(참값 0.0070)를 냈다.
-  </p>
-
-  <p>갱신도 같은 생각이다. 예측 시그마 점 \(\boldsymbol\chi_i^-\)를 측정 함수에 통과시켜 \(\boldsymbol\zeta_i = h(\boldsymbol\chi_i^-)\)를 얻고,</p>
-
-  $$
-  \begin{aligned}
-  \hat{\mathbf{z}} &= \textstyle\sum_i w_i^{(m)}\boldsymbol\zeta_i,
-  &\quad S &= \textstyle\sum_i w_i^{(c)}(\boldsymbol\zeta_i-\hat{\mathbf{z}})(\boldsymbol\zeta_i-\hat{\mathbf{z}})^\top + W,
-  &\quad P_{xz} &= \textstyle\sum_i w_i^{(c)}(\boldsymbol\chi_i^- - \hat{\mathbf{x}}^-)(\boldsymbol\zeta_i-\hat{\mathbf{z}})^\top \\
-  K &= P_{xz}S^{-1},
-  &\quad \hat{\mathbf{x}} &= \hat{\mathbf{x}}^- + K(\mathbf{z}-\hat{\mathbf{z}}),
-  &\quad P &= P^- - KSK^\top
-  \end{aligned}
-  $$
-
-  <p>
-    \(K = P_{xz}S^{-1}\)는 성질 4의 \(\Sigma_{ab}\Sigma_{bb}^{-1}\) 그대로다. KF에서는 \(P_{xz} = P^-H^\top\)였던 것을 표본으로 잰 것뿐이다.
-    UKF는 야코비안이 필요 없다는 큰 장점이 있지만, 함수를 \(2n+1\)번 불러야 한다. 상태가 수천 차원인 SLAM에서는 그 비용이 커서 잘 쓰이지 않고,
-    상태가 작은 위치추정·자세추정에서 주로 쓰인다.
-  </p>
-
-  <h3 id="eif">정보 필터 — \(\Lambda\)와 \(\boldsymbol\eta\)를 들고 다닌다</h3>
-
-  <p>
-    ④절의 표를 떠올리면 자연스러운 질문이 생긴다. 칼만 필터를 정보 형식으로 돌리면 어떻게 될까?
-    갱신은 유도 2에서 이미 얻었다 — 더하기 두 개다.
-  </p>
-
-  $$
-  \Lambda_k = \Lambda_k^- + H_k^\top W_k^{-1}H_k,
-  \qquad
-  \boldsymbol\eta_k = \boldsymbol\eta_k^- + H_k^\top W_k^{-1}\mathbf{z}_k
-  $$
-
-  <p>
-    \(H_k\)가 상태의 몇 칸만 건드리면 \(H_k^\top W_k^{-1}H_k\)도 그 칸만 0이 아니다. <strong>측정 하나가 정보행렬에 남기는 흔적은 그 측정에 든 변수 쌍뿐이다.</strong>
-    비선형(EIF, extended information filter)이면 \(\boldsymbol\eta\) 쪽에 선형화점 \(\bar{\mathbf{x}}\)의 보정이 붙는다: \(H^\top W^{-1}\big(\mathbf{z} - h(\bar{\mathbf{x}}) + H\bar{\mathbf{x}}\big)\).
-  </p>
-
-  <p>
-    예측은 거꾸로 어렵다. \(\Lambda^- = (P^-)^{-1} = (F\Lambda_{k-1}^{-1}F^\top + Q)^{-1}\) — 역행렬이 두 번 든다.
-    이 예측을 <strong>다른 눈으로</strong> 보면 8회로 가는 길이 보인다. 지난 상태 \(\mathbf{x}_{k-1}\)과 새 상태 \(\mathbf{x}_k\)를 <strong>함께</strong> 들고 있다고 생각하자.
-    운동 모델 \(\mathbf{x}_k = F\mathbf{x}_{k-1} + B\mathbf{u} + \mathbf{w}\)의 \(-\log\)는 \(\tfrac12\lVert \mathbf{x}_k - F\mathbf{x}_{k-1} - B\mathbf{u}\rVert^2_Q\)이고, 이것을 \((\mathbf{x}_{k-1}, \mathbf{x}_k)\)로 펴면 정보행렬 조각이 나온다.
-  </p>
-
-  $$
-  \begin{bmatrix}\mathbf{x}_{k-1}\\ \mathbf{x}_k\end{bmatrix}:\qquad
-  \Lambda_{\text{결합}} =
-  \begin{bmatrix}
-    \Lambda_{k-1} + F^\top Q^{-1}F & -F^\top Q^{-1} \\
-    -Q^{-1}F & Q^{-1}
-  \end{bmatrix}
-  \quad
-  \begin{matrix}\leftarrow\ \text{지난 믿음 + 운동 조각}\\ \phantom{x}\end{matrix}
-  $$
-
-  <p>
-    예측 \(\overline{\mathrm{bel}}(\mathbf{x}_k)\)는 이 결합분포에서 \(\mathbf{x}_{k-1}\)을 <strong>주변화</strong>한 것이다.
-    정보 형식에서 주변화는 Schur 보수다(④절 표). \(\mathbf{x}_{k-1}\) 블록을 소거하면
-  </p>
-
-  $$
-  \Lambda_k^- = Q^{-1} - Q^{-1}F\big(\Lambda_{k-1} + F^\top Q^{-1}F\big)^{-1}F^\top Q^{-1}
-  = \big(Q + F\Lambda_{k-1}^{-1}F^\top\big)^{-1}
-    \qquad\text{(Woodbury)}
-  $$
-
-  <p>
-    칼만 필터의 \(P^- = FPF^\top + Q\)와 정확히 같다. 정리하면 <strong>예측 = 「운동 조각을 붙이고, 지난 상태를 Schur 보수로 지운다」</strong>다.
-    지우기 전 결합 정보행렬은 띠 모양으로 희소했는데, 지우고 나면 그 희소성이 사라질 수 있다. 이것이 ⑨절과 8회의 출발점이다.
-  </p>
-
-  <div class="interp">
-    정보 필터는 SLAM에서 한때 큰 기대를 받았다. 랜드마크를 많이 넣어도 정보행렬이 <strong>거의</strong> 희소하게 남는다는 관찰 때문이다
-    (Thrun 외 2004, SEIF — sparse extended information filter). 다만 지난 자세를 계속 지우는 한 정보행렬은 조금씩 차오르고,
-    SEIF는 작은 값을 억지로 0으로 만들어 희소성을 유지했다. 이 억지가 일관성을 해친다는 것이 알려지면서,
-    「지난 자세를 <strong>지우지 않으면</strong> 정보행렬은 정확히 희소하다」는 쪽(8회의 그래프 최적화)이 이겼다.
-  </div>
-
-  <h3 id="pf">파티클 필터와 FastSLAM</h3>
-
-  <p>
-    가우시안을 버리면 어떻게 될까? ③절의 격자처럼 아무 모양이나 담을 수 있으면서 차원에 덜 민감한 방법이 있다 — 분포를 <strong>표본(파티클)</strong>으로 대신하는 것이다.
-  </p>
-
-  $$
-  \mathrm{bel}(\mathbf{x}_k) \approx \sum_{i=1}^{M} w_k^{[i]}\,\delta\big(\mathbf{x}_k - \mathbf{x}_k^{[i]}\big),
-  \qquad \sum_i w_k^{[i]} = 1
-  $$
-
-  <p>베이즈 필터의 두 줄을 표본으로 그대로 옮긴 것이 가장 기본적인 SIR(sampling importance resampling) 파티클 필터다.</p>
-
-  $$
-  \begin{aligned}
-  &\text{예측:} &\mathbf{x}_k^{[i]} &\sim p(\mathbf{x}_k \mid \mathbf{x}_{k-1}^{[i]},\ \mathbf{u}_k)
-    &&\text{파티클마다 운동 모델에서 하나씩 뽑는다 — 적분을 표본으로} \\
-  &\text{갱신:} &w_k^{[i]} &= \eta\ p(\mathbf{z}_k \mid \mathbf{x}_k^{[i]})
-    &&\text{측정과 맞는 파티클에 무게를 준다 — 곱셈을 무게로} \\
-  &\text{재표집:} &&\text{무게에 비례해 } M\text{개를 다시 뽑고 무게를 } 1/M\text{로}
-    &&\text{무게가 한쪽에 몰리는 것(퇴화)을 막는다}
-  \end{aligned}
-  $$
-
-  <p>
-    무게가 「우도」인 이유는 중요도 표집(importance sampling)에서 나온다. 뽑고 싶은 분포(목표)가 \(\mathrm{bel} = \eta\,p(\mathbf{z}\mid\mathbf{x})\,\overline{\mathrm{bel}}\)인데
-    실제로 뽑은 분포(제안)가 \(\overline{\mathrm{bel}}\)이므로, 무게는 목표/제안 \(= \eta\,p(\mathbf{z}\mid\mathbf{x})\)다.
-    무게가 몇 개 파티클에 몰렸는지는 유효 표본 수 \(M_{\text{eff}} = 1/\sum_i (w^{[i]})^2\)로 잰다. 모든 무게가 같으면 \(M\), 하나에 몰리면 1이다.
-  </p>
-
-  <p>
-    파티클 필터의 약점은 차원이다. 분포를 고르게 덮으려면 차원이 하나 늘 때마다 파티클이 몇 배씩 필요하다.
-    SLAM 상태 전체(로봇 + 랜드마크 수천 개)에 쓰는 것은 불가능하다. 이것을 푼 것이 <strong>Rao-Blackwellization</strong>이다.
-  </p>
-
-  $$
-  p(\mathbf{x}_{0:k},\ \mathbf{l}_{1:N} \mid \mathbf{z}_{1:k},\mathbf{u}_{1:k})
-  = \underbrace{p(\mathbf{x}_{0:k} \mid \mathbf{z}_{1:k},\mathbf{u}_{1:k})}_{\text{파티클로}}
-    \ \prod_{j=1}^{N} \underbrace{p(\mathbf{l}_j \mid \mathbf{x}_{0:k},\ \mathbf{z}_{1:k})}_{\text{작은 EKF 하나씩}}
-  $$
-
-  <p>
-    첫 등호는 규칙 1(곱셈법칙)이고, 랜드마크끼리의 곱으로 쪼개지는 것은 <strong>경로를 알면 랜드마크들이 서로 독립</strong>이기 때문이다(규칙 4).
-    랜드마크들이 상관을 갖는 이유는 「같은 로봇의 같은 위치 오차를 나눠 가져서」였으므로(⑧절), 경로를 조건으로 고정하면 그 공통 원인이 사라진다.
-    그래서 경로 가설마다 랜드마크를 2×2짜리 작은 EKF로 따로 추정한다. 이것이 <strong>FastSLAM</strong>(Montemerlo · Thrun 외, 2002)이다.
-    2차원 레이저 SLAM(격자 지도를 쓰는 GMapping 등)과 지도 안에서의 위치추정(Monte Carlo localization)에서 오래 쓰였고,
-    6자유도 시각 SLAM에서는 경로 공간이 너무 커서 거의 쓰이지 않는다.
-  </p>
-
-  <div class="box firstseen">
-    <p class="boxtitle">🆕 Rao · Blackwell · Julier · Uhlmann</p>
-    <dl>
-      <dt>C. R. Rao (1920~2023) · David Blackwell (1919~2010)</dt>
-      <dd>인도 출신 통계학자와 미국 통계학자. 1940년대에 각자 「일부 변수를 조건부로 정확히 적분해 내면 추정량의 분산이 줄어든다」는 정리를 보였다. 파티클 필터에서는 「해석적으로 풀리는 부분(랜드마크)은 풀고, 안 풀리는 부분(경로)만 표본으로」라는 뜻으로 쓴다.</dd>
-      <dt>Simon Julier · Jeffrey Uhlmann</dt>
-      <dd>옥스퍼드에서 Hugh Durrant-Whyte 그룹에 있던 연구자들. 1997년에 unscented transform과 UKF를 발표했다. 「unscented」에는 깊은 뜻이 없고, 이름을 짓다가 붙인 농담에 가까운 말이라고 Uhlmann이 회고했다.</dd>
-    </dl>
-  </div>
-
-  <h3 id="compare">한 표로 비교</h3>
-
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th style="width:13%">필터</th><th>분포를 무엇으로</th><th>비선형 처리</th><th>갱신 비용</th><th>SLAM에서 쓰이는 자리</th></tr>
-    <tr><td>KF</td><td>평균 · 공분산</td><td>— (선형만)</td><td>\(O(n^2)\) ~ \(O(n^3)\)</td><td>개념의 기준. 선형 부분 시스템</td></tr>
-    <tr><td>EKF</td><td>평균 · 공분산</td><td>지금 추정값에서 1차</td><td>같다</td><td>EKF-SLAM, MonoSLAM (6회)</td></tr>
-    <tr><td>IEKF</td><td>평균 · 공분산</td><td>갱신 안에서 가우스-뉴턴 반복</td><td>× 반복 횟수</td><td>측정이 크게 비선형일 때 · 라이다-관성 오도메트리</td></tr>
-    <tr><td>ESKF</td><td>공칭(manifold) + 오차 가우시안</td><td>오차 상태에서 1차 — 작아서 잘 맞는다</td><td>EKF와 같다</td><td><strong>IMU 필터의 표준</strong> · MSCKF · OpenVINS (12회)</td></tr>
-    <tr><td>UKF</td><td>시그마 점 \(2n+1\)개</td><td>점을 그대로 통과</td><td>함수 \(2n+1\)번</td><td>작은 상태의 자세·위치 추정</td></tr>
-    <tr><td>정보 필터</td><td>\(\Lambda\) · \(\boldsymbol\eta\)</td><td>EKF와 같다</td><td>갱신 싸다 · 예측 비싸다</td><td>SEIF. <strong>8회 그래프 최적화의 전 단계</strong></td></tr>
-    <tr><td>파티클</td><td>표본 \(M\)개</td><td>선형화 없음</td><td>\(O(M)\) × 우도</td><td>2차원 레이저 SLAM · 지도 안 위치추정 · FastSLAM</td></tr>
-  </table>
-  </div>
-
-  <!-- ─────────────────────────── ⑧ EKF-SLAM ─────────────────────────── -->
-  <h2 id="ekfslam">⑧ EKF-SLAM</h2>
+  <!-- ─────────────────────────── ⑦ EKF-SLAM ─────────────────────────── -->
+  <h2 id="ekfslam">⑦ EKF-SLAM</h2>
 
   <p>
     이제 랜드마크를 상태에 넣는다. 6회에서 본 Smith · Self · Cheeseman(1986)의 통찰 —
@@ -1655,7 +1276,7 @@
   <p>
     혁신이 \(y = 0.1\) m이면 \(K y = (-0.08,\ 0.01,\ -0.04)\) m만큼 고쳐진다. <strong>이번에 보지도 않은 \(p_2\)가 4 cm 고쳐졌다.</strong>
     \(p_2\)는 「같은 로봇이 같은 위치 오차를 안고 본」 점이라, 로봇 위치가 고쳐지면 그 오차를 나눠 가진 만큼 함께 고쳐진다.
-    표준편차는 \((0.173,\ 0.112,\ 0.150) \to (0.118,\ 0.111,\ 0.136)\) m로 셋 다 줄었다.
+    표준편차는 \(P\)의 대각에서 읽는다(④절 성질 3) — \((0.173,\ 0.112,\ 0.150) \to (0.118,\ 0.111,\ 0.136)\) m로 셋 다 줄었다.
   </p>
 
   <h3 id="ekfslam-loop">상관과 루프 클로징</h3>
@@ -1755,11 +1376,12 @@
     </p>
   </div>
 
-  <!-- ─────────────────────────── ⑨ 주변화 ─────────────────────────── -->
-  <h2 id="marginal">⑨ 필터가 하는 일을 한 문장으로 — 과거를 주변화한다</h2>
+
+  <!-- ─────────────────────────── ⑧ 주변화 ─────────────────────────── -->
+  <h2 id="marginal">⑧ 필터가 하는 일을 한 문장으로 — 과거를 주변화한다</h2>
 
   <p>
-    오늘 본 모든 필터가 공통으로 하는 일은 무엇일까? ⑦절 정보 필터에서 본 예측의 다른 모습을 다시 떠올리면 답이 나온다.
+    오늘 본 필터들이 공통으로 하는 일은 무엇일까? ③절에서 유도한 예측 식을 다시 보면 답이 보인다.
   </p>
 
   $$
@@ -1768,30 +1390,41 @@
   $$
 
   <p>
-    적분 안은 \((\mathbf{x}_{k-1}, \mathbf{x}_k)\)의 결합분포이고, 적분은 \(\mathbf{x}_{k-1}\)을 지운다. 필터는 매 스텝 이렇게 <strong>바로 앞 상태를 주변화</strong>한다.
-    그래서 지금 상태 하나만 들고 다닐 수 있다. 그 대가는 이미 다 봤다.
+    적분 안은 \((\mathbf{x}_{k-1}, \mathbf{x}_k)\)의 결합분포다(규칙 1). 선형·가우시안이면 그 \(-\log\)는 두 벌점의 합이다.
+  </p>
+
+  $$
+  -\log p(\mathbf{x}_{k-1},\ \mathbf{x}_k \mid \cdots)
+  = \underbrace{\tfrac12\lVert \mathbf{x}_k - F\mathbf{x}_{k-1} - B\mathbf{u}_k\rVert^2_{Q}}_{\text{운동이 남긴 벌점}}
+  + \underbrace{\tfrac12\lVert \mathbf{x}_{k-1} - \hat{\mathbf{x}}_{k-1}\rVert^2_{P_{k-1}}}_{\text{지난 믿음}}
+  + \text{상수}
+  $$
+
+  <p>
+    필터는 이 두 벌점을 붙이자마자 적분으로 \(\mathbf{x}_{k-1}\)을 지운다. 매 스텝 이렇게 <strong>바로 앞 상태를 주변화</strong>하기 때문에 지금 상태 하나만 들고 다닐 수 있다.
+    그 대가는 이미 다 봤다.
   </p>
 
   <div class="tablewrap">
   <table>
     <tr><th style="width:34%">지운 것</th><th>그래서 못 하는 것</th><th style="width:14%">본 자리</th></tr>
-    <tr><td>지난 상태 \(\mathbf{x}_{0:k-1}\)</td><td>루프를 닫아도 <strong>지나온 궤적을 못 고친다</strong></td><td>⑧ 루프 그림 (나)</td></tr>
-    <tr><td>지난 측정 (선형화 결과만 남긴다)</td><td><strong>다시 선형화하지 못한다</strong></td><td>⑧ 한계 ②</td></tr>
-    <tr><td>지난 상태를 지우며 생긴 연결</td><td>정보행렬이 <strong>꽉 찬다</strong> → \(O(N^2)\)</td><td>⑦ 정보 필터 · ⑧ 상관 그림</td></tr>
+    <tr><td>지난 상태 \(\mathbf{x}_{0:k-1}\)</td><td>루프를 닫아도 <strong>지나온 궤적을 못 고친다</strong></td><td>⑦ 루프 그림 (나)</td></tr>
+    <tr><td>지난 측정 (선형화 결과만 남긴다)</td><td><strong>다시 선형화하지 못한다</strong></td><td>⑦ 한계 ②</td></tr>
+    <tr><td>지난 상태를 지우며 생긴 연결</td><td>랜드마크끼리 상관이 <strong>꽉 찬다</strong> → \(O(N^2)\)</td><td>⑦ 상관 그림</td></tr>
   </table>
   </div>
 
   <p>
     그럼 <strong>지우지 않으면</strong> 어떻게 될까? 지난 상태를 전부 변수로 남기면 루프에서 궤적을 고칠 수 있고, 측정을 남겨 두면 몇 번이고 다시 선형화할 수 있다.
     변수가 많아지니 더 무거울 것 같지만, 놀랍게도 정보행렬이 <strong>정확히 희소하게</strong> 남아 오히려 가벼워진다.
-    그리고 그 문제를 푸는 방법은 ⑤절 유도 2 — 벌점의 합을 최소로 한다 — 를 궤적 전체로 넓힌 것이다. 그것이 8회다.
+    그리고 그 문제를 푸는 방법은 ⑤절의 갱신 유도 — 벌점의 합을 최소로 한다 — 를 궤적 전체로 넓힌 것이다. 그것이 8회다.
   </p>
 
   <!-- ─────────────────────────── 손으로 확인 ─────────────────────────── -->
   <h2 id="handcheck">✍️ 식이 맞는지 손으로 확인하는 법</h2>
 
   <p>
-    오늘 식은 길지만, 맞는지 확인하는 방법은 몇 가지로 정해져 있다. 시험에서도, 논문을 읽을 때도, 나중에 구현할 때도 같은 방법을 쓴다.
+    오늘 식이 맞는지 확인하는 방법은 몇 가지로 정해져 있다. 시험에서도, 논문을 읽을 때도, 나중에 구현할 때도 같은 방법을 쓴다.
   </p>
 
   <div class="tablewrap">
@@ -1799,11 +1432,12 @@
     <tr><th style="width:26%">방법</th><th>오늘 식에 대 보면</th></tr>
     <tr><td><strong>스칼라로 줄여 본다</strong></td><td>\(H=1\)이면 \(K = P^-/(P^-+W)\), \(P = P^-W/(P^-+W)\). 행렬 식이 이 둘로 줄어들지 않으면 어딘가 틀렸다</td></tr>
     <tr><td><strong>극한을 넣어 본다</strong></td><td>\(W\to0\): \(K\to H^{-1}\)(측정을 그대로) · \(W\to\infty\): \(K\to0\)(예측을 지킨다) · \(Q=0\): 예측이 불확실도를 키우지 않는다</td></tr>
-    <tr><td><strong>두 유도가 같은 답인가</strong></td><td>조건부(유도 1)와 MAP(유도 2) — 숫자 예에서 3.1071 · 0.01429로 같았다. 정보 필터의 예측(Schur)과 KF의 예측(\(FPF^\top+Q\))도 Woodbury로 같다</td></tr>
-    <tr><td><strong>특수한 경우로 돌아가는가</strong></td><td>EKF에 선형 \(f, h\)를 넣으면 KF · IEKF의 첫 반복은 EKF · UKF에 선형 함수를 넣으면 KF · Joseph 형에 최적 \(K\)를 넣으면 \((I-KH)P^-\)</td></tr>
+    <tr><td><strong>두 꼴이 같은 답인가</strong></td><td>정보 형식(\(\Lambda = 70,\ \eta = 217.5\))과 이득 형식이 숫자 예에서 3.1071 · 0.01429로 같았다</td></tr>
+    <tr><td><strong>특수한 경우로 돌아가는가</strong></td><td>EKF에 선형 \(f, h\)를 넣으면 KF · Joseph 형에 최적 \(K\)를 넣으면 \((I-KH)P^-\)</td></tr>
     <tr><td><strong>대칭 · 양의 정부호인가</strong></td><td>\(P\), \(S\), \(\Lambda\)는 언제나 대칭이고 고윳값이 양수다. 갱신 후 \(P\)의 대각은 갱신 전보다 커지지 않는다</td></tr>
-    <tr><td><strong>보이지 않는 방향</strong></td><td>상대 측정의 야코비안에 「전부 같이 옮기기」 벡터를 곱하면 0인가 — ⑥절 예 2, ⑦절 ESKF의 yaw</td></tr>
-    <tr><td><strong>통계로 잰다</strong></td><td>NIS의 평균 ≈ \(m\), NEES의 평균 ≈ \(n\). 크면 과신, 작으면 과소신</td></tr>
+    <tr><td><strong>야코비안을 유한차분과</strong></td><td>⑥절 예 2 — 해석식과 \(1.8\times10^{-10}\) 차이</td></tr>
+    <tr><td><strong>보이지 않는 방향</strong></td><td>상대 측정의 야코비안에 「전부 같이 옮기기」 벡터를 곱하면 0인가 — ⑥절 예 2</td></tr>
+    <tr><td><strong>통계로 잰다</strong></td><td>NIS의 평균 ≈ \(m\), NEES의 평균 ≈ \(n\). 크면 과신, 작으면 과소신 — ⑤절 30 스텝에서 NIS 평균 0.99</td></tr>
   </table>
   </div>
 
@@ -1813,20 +1447,19 @@
     <li><input type="checkbox" id="c1"><label for="c1">Online SLAM과 Full SLAM이 <strong>무엇을 분포에 남기는지</strong> 식으로 쓸 수 있다</label></li>
     <li><input type="checkbox" id="c2"><label for="c2">마르코프 가정 두 개(M1 · M2)를 쓰고, 상태를 잘못 정하면 어느 쪽이 깨지는지 예를 들 수 있다</label></li>
     <li><input type="checkbox" id="c3"><label for="c3">베이즈 필터의 갱신과 예측을 <strong>규칙 번호를 짚으며</strong> 유도할 수 있다</label></li>
-    <li><input type="checkbox" id="c4"><label for="c4">조건부 가우시안의 평균·공분산을 완전제곱과 블록 역행렬로 유도할 수 있다</label></li>
-    <li><input type="checkbox" id="c5"><label for="c5">공분산 형식과 정보 형식에서 주변화·조건부·곱 중 무엇이 쉬운지 표로 말할 수 있다</label></li>
-    <li><input type="checkbox" id="c6"><label for="c6">칼만 갱신을 <strong>두 가지로</strong>(조건부 · MAP) 유도하고, Woodbury로 같음을 보일 수 있다</label></li>
-    <li><input type="checkbox" id="c7"><label for="c7">스칼라 숫자 예(3.0 · 0.05 → 3.1071 · 0.01429)를 손으로 다시 계산할 수 있다</label></li>
-    <li><input type="checkbox" id="c8"><label for="c8">Joseph 형이 왜 필요한지, NIS · NEES가 무엇을 재는지 말할 수 있다</label></li>
-    <li><input type="checkbox" id="c9"><label for="c9">거리-방위 측정의 야코비안을 유도하고, 로봇 칸과 랜드마크 칸이 왜 부호만 다른지 설명할 수 있다</label></li>
-    <li><input type="checkbox" id="c10"><label for="c10">EKF가 평균을 치우치게 하고 분산을 작게 보는 이유를 극좌표 예로 설명할 수 있다</label></li>
-    <li><input type="checkbox" id="c11"><label for="c11">EKF가 「가우스-뉴턴 한 번」인 IEKF라는 것을 보일 수 있다</label></li>
-    <li><input type="checkbox" id="c12"><label for="c12">ESKF의 다섯 단계를 쓰고, 자세 예에서 \(F_\delta = \Delta R^\top\)와 \(H_\delta = [\bar R^\top\bar{\mathbf{g}}]_\times\)를 유도할 수 있다</label></li>
-    <li><input type="checkbox" id="c13"><label for="c13">KF의 예측이 「운동 조각을 붙이고 지난 상태를 Schur 보수로 지우는 것」임을 보일 수 있다</label></li>
-    <li><input type="checkbox" id="c14"><label for="c14">파티클 무게가 우도인 이유와 Rao-Blackwellization이 무엇을 쪼개는지 말할 수 있다</label></li>
-    <li><input type="checkbox" id="c15"><label for="c15">EKF-SLAM에서 \(H\)는 희소한데 \(K\)가 꽉 차는 이유와, 보지 않은 랜드마크가 고쳐지는 이유를 안다</label></li>
-    <li><input type="checkbox" id="c16"><label for="c16">EKF-SLAM의 세 한계를 대고, 일관성 붕괴가 「선형화점이 달라서」 생긴다는 것을 설명할 수 있다</label></li>
-    <li><input type="checkbox" id="c17"><label for="c17">「필터는 과거를 주변화한다」가 무엇을 잃게 하는지 세 가지를 댈 수 있다</label></li>
+    <li><input type="checkbox" id="c4"><label for="c4">\(p \propto e^{-J}\)이고 \(J\)가 이차식이면 평균이 최소점, 공분산이 헤시안의 역임을 완전제곱으로 보일 수 있다</label></li>
+    <li><input type="checkbox" id="c5"><label for="c5">칼만 갱신을 「두 가우시안의 곱 → 벌점의 합 \(J\) → 기울기 0」으로 유도하고, 정보 형식을 \(K = P^-H^\top S^{-1}\) 꼴로 바꿀 수 있다</label></li>
+    <li><input type="checkbox" id="c6"><label for="c6">칼만 필터의 일곱 줄이 각각 무엇을 하는지, 쓰는 사람이 정해야 하는 것 여섯 가지를 댈 수 있다</label></li>
+    <li><input type="checkbox" id="c7"><label for="c7">스칼라 숫자 예(3.0 · 0.05 → 3.1071 · 0.01429)를 두 꼴로 손으로 다시 계산할 수 있다</label></li>
+    <li><input type="checkbox" id="c8"><label for="c8">이득을 정하는 것이 \(Q/W\)의 비라는 것과, 측정이 끊기면 \(P\)와 \(K\)가 어떻게 되는지 설명할 수 있다</label></li>
+    <li><input type="checkbox" id="c9"><label for="c9">NIS로 이상한 측정을 거르는 법(문턱 3.84 · 5.99)과, NIS · NEES로 필터의 과신을 재는 법을 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c10"><label for="c10">EKF가 KF와 다른 곳 세 군데를 대고, 혁신만 비선형 함수로 계산해도 되는 이유를 \(\boldsymbol\delta\)로 보일 수 있다</label></li>
+    <li><input type="checkbox" id="c11"><label for="c11">거리-방위 측정의 야코비안을 유도하고, 로봇 칸과 랜드마크 칸이 왜 부호만 다른지 설명할 수 있다</label></li>
+    <li><input type="checkbox" id="c12"><label for="c12">EKF 구현에서 유한차분 확인 · 각도 감기 · 선형화점, 세 가지를 왜 챙기는지 안다</label></li>
+    <li><input type="checkbox" id="c13"><label for="c13">EKF가 평균을 치우치게 하고 분산을 작게 보는 이유를 극좌표 예로 설명할 수 있다</label></li>
+    <li><input type="checkbox" id="c14"><label for="c14">EKF-SLAM에서 \(H\)는 희소한데 \(K\)가 꽉 차는 이유와, 보지 않은 랜드마크가 고쳐지는 이유를 안다</label></li>
+    <li><input type="checkbox" id="c15"><label for="c15">EKF-SLAM의 세 한계를 대고, 일관성 붕괴가 「선형화점이 달라서」 생긴다는 것을 설명할 수 있다</label></li>
+    <li><input type="checkbox" id="c16"><label for="c16">「필터는 과거를 주변화한다」가 무엇을 잃게 하는지 세 가지를 댈 수 있다</label></li>
   </ul>
 
   <h2 id="more">조금 더 알아두면 <span class="badge b-lv">참고</span></h2>
@@ -1834,10 +1467,27 @@
   <details class="story">
     <summary>📚 읽을거리 — Thrun · Burgard · Fox, <em>Probabilistic Robotics</em> 2 · 3 · 10장</summary>
     <p>
-      오늘의 ②~⑦절은 이 책 2장(베이즈 필터) · 3장(가우시안 필터 — KF · EKF · UKF · 정보 필터) · 4장(파티클 필터)을 따라간다.
-      10장이 EKF-SLAM, 13장이 FastSLAM이다. <strong>\(R\)과 \(Q\)가 이 강의와 반대</strong>라는 것만 기억하고 읽으면 기호가 거의 같다.
+      오늘의 ②~⑥절은 이 책 2장(베이즈 필터)과 3장(가우시안 필터 — KF · EKF)을 따라간다. 10장이 EKF-SLAM이다.
+      <strong>\(R\)과 \(Q\)가 이 강의와 반대</strong>라는 것만 기억하고 읽으면 기호가 거의 같다.
+      3장은 칼만 갱신을 결합 가우시안의 조건부로도 유도하는데, 오늘 본 최소제곱 유도와 같은 답이 나온다.
       8회는 같은 책 11장(GraphSLAM)이 출발점이다.
     </p>
+  </details>
+
+  <details class="story">
+    <summary>KF의 변형들 — 이름만 알아 두면</summary>
+    <p>
+      논문을 읽다 보면 칼만 필터 앞에 글자가 붙은 이름이 계속 나온다. 이 강의에서 식으로 다루지는 않지만, 무엇을 바꾼 것인지만 적어 둔다.
+    </p>
+    <div class="tablewrap">
+    <table>
+      <tr><th style="width:22%">이름</th><th>EKF에서 무엇을 바꿨나</th></tr>
+      <tr><td>IEKF (반복 EKF)</td><td>갱신 뒤의 새 추정점에서 측정 모델을 다시 펴고 갱신을 되풀이한다. ⑤절의 \(J\)를 가우스-뉴턴으로 여러 번 푸는 것과 같다(8회)</td></tr>
+      <tr><td>ESKF (오차상태 KF)</td><td>회전처럼 벡터 공간이 아닌 상태를 「공칭값 + 작은 오차」로 나누고 오차만 필터로 다룬다. MSCKF 같은 필터형 시각-관성 시스템의 바탕이다(12회)</td></tr>
+      <tr><td>UKF</td><td>야코비안 대신 분포를 대표하는 점 몇 개를 함수에 그대로 통과시켜 평균과 공분산을 다시 잰다</td></tr>
+      <tr><td>파티클 필터</td><td>가우시안을 버리고 분포를 표본 수백~수천 개로 들고 다닌다. 경로는 표본으로, 랜드마크는 작은 EKF로 나눈 것이 FastSLAM(6회)이다</td></tr>
+    </table>
+    </div>
   </details>
 
   <details class="story">
@@ -1855,7 +1505,7 @@
     <p>
       Dissanayake 외(2001)는 선형 EKF-SLAM에서 지도의 불확실도가 단조 감소하고, 그 하한이 <strong>처음 랜드마크를 볼 때의 로봇 불확실도</strong>라는 것을 증명했다.
       즉 지도의 「모양」(랜드마크 사이 상대 위치)은 계속 정확해지지만, 지도 전체의 「절대 위치」는 출발점의 불확실도 밑으로 내려가지 않는다.
-      앞의 것이 상관 덕분이고, 뒤의 것이 「통째로 옮기기는 안 보인다」(⑧절 한계 ③)의 다른 표현이다.
+      앞의 것이 상관 덕분이고, 뒤의 것이 「통째로 옮기기는 안 보인다」(⑦절 한계 ③)의 다른 표현이다.
     </p>
   </details>
 
