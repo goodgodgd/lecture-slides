@@ -44,7 +44,8 @@
   <a href="#kf-algo" class="sub">알고리즘 — 일곱 줄과 그 뜻</a>
   <a href="#kf-num" class="sub">숫자로 한 걸음</a>
   <a href="#kf-use" class="sub">쓰는 법 — Q와 W · 측정이 없을 때 · gating</a>
-  <a href="#kf-check" class="sub">NIS · NEES · Joseph 형</a>
+  <a href="#kf-check" class="sub">필터가 맞게 도는지 — NIS · NEES</a>
+  <a href="#kf-joseph" class="sub">Joseph 형 — 같은 P를 다르게 계산하는 식</a>
   <a href="#ekf">⑥ 확장 칼만 필터(EKF)</a>
   <a href="#ekf-ex" class="sub">운동 모델과 거리-방위 측정의 야코비안</a>
   <a href="#ekf-use" class="sub">쓰는 법 — 자주 틀리는 세 자리</a>
@@ -480,7 +481,8 @@
 
   <p>
     지수 안의 \((\mathbf{x}-\boldsymbol\mu)^\top \Sigma^{-1} (\mathbf{x}-\boldsymbol\mu)\)를 <strong>마할라노비스 거리의 제곱</strong>이라고 하고,
-    이 강의에서는 \(\lVert \mathbf{x}-\boldsymbol\mu \rVert^2_{\Sigma}\)로 줄여 쓴다. 8회에서 최소제곱의 「가중치 붙은 제곱」이 바로 이것이다.
+    논문과 8회에서는 이것을 \(\lVert \mathbf{x}-\boldsymbol\mu \rVert^2_{\Sigma}\)로 줄여 쓰고, 최소제곱의 「가중치 붙은 제곱」이 바로 이것이다.
+    이 회차에서는 미분을 따라가기 쉽도록 줄이지 않고 \((\mathbf{x}-\boldsymbol\mu)^\top \Sigma^{-1} (\mathbf{x}-\boldsymbol\mu)\)로 풀어 쓴다.
     이 값이 일정한 점들이 타원(3차원이면 타원체)을 이루고, 그 타원이 그림에서 늘 그리는 「1σ 타원」이다.
   </p>
 
@@ -496,32 +498,108 @@
 
   <h3>성질 1 — 선형변환해도 가우시안이다</h3>
 
-  <p>\(\mathbf{x}\sim\mathcal{N}(\boldsymbol\mu, \Sigma)\)이고 \(\mathbf{y} = A\mathbf{x} + \mathbf{b}\)이면, 평균과 공분산은 기댓값의 선형성으로 바로 나온다.</p>
+  <p>\(\mathbf{x}\sim\mathcal{N}(\boldsymbol\mu, \Sigma)\)이고 \(\mathbf{y} = A\mathbf{x} + \mathbf{b}\)라고 하자(\(A\), \(\mathbf{b}\)는 정해진 상수). 평균은 기댓값의 선형성 — 상수는 기댓값 밖으로 나온다 — 으로 바로 나온다.</p>
+
+  $$
+  \mathrm{E}[\mathbf{y}] = \mathrm{E}[A\mathbf{x} + \mathbf{b}] = A\,\mathrm{E}[\mathbf{x}] + \mathbf{b} = A\boldsymbol\mu + \mathbf{b}
+  $$
+
+  <p>공분산은 정의에서 출발해, \(\mathbf{y}\)와 \(\mathrm{E}[\mathbf{y}]\)를 \(\mathbf{x}\)로 바꿔 쓰는 것이 요점이다.</p>
 
   $$
   \begin{aligned}
-  \mathrm{E}[\mathbf{y}] &= A\,\mathrm{E}[\mathbf{x}] + \mathbf{b} = A\boldsymbol\mu + \mathbf{b} \\
-  \mathrm{Cov}[\mathbf{y}] &= \mathrm{E}\big[(\mathbf{y}-\mathrm{E}\mathbf{y})(\mathbf{y}-\mathrm{E}\mathbf{y})^\top\big]
-    = \mathrm{E}\big[A(\mathbf{x}-\boldsymbol\mu)(\mathbf{x}-\boldsymbol\mu)^\top A^\top\big]
-    = A\Sigma A^\top
+  \mathrm{Cov}[\mathbf{y}]
+  &= \mathrm{E}\big[(\mathbf{y}-\mathrm{E}[\mathbf{y}])(\mathbf{y}-\mathrm{E}[\mathbf{y}])^\top\big]
+    &&\text{공분산의 정의} \\
+  &= \mathrm{E}\big[(A\mathbf{x}+\mathbf{b}-A\boldsymbol\mu-\mathbf{b})(A\mathbf{x}+\mathbf{b}-A\boldsymbol\mu-\mathbf{b})^\top\big]
+    &&\mathbf{y} = A\mathbf{x}+\mathbf{b},\ \ \mathrm{E}[\mathbf{y}] = A\boldsymbol\mu+\mathbf{b}\text{를 넣는다} \\
+  &= \mathrm{E}\big[\big(A(\mathbf{x}-\boldsymbol\mu)\big)\big(A(\mathbf{x}-\boldsymbol\mu)\big)^\top\big]
+    &&\mathbf{b}\text{가 지워지고 }A\text{로 묶인다} \\
+  &= \mathrm{E}\big[A(\mathbf{x}-\boldsymbol\mu)(\mathbf{x}-\boldsymbol\mu)^\top A^\top\big]
+    &&(A\mathbf{v})^\top = \mathbf{v}^\top A^\top \\
+  &= A\,\mathrm{E}\big[(\mathbf{x}-\boldsymbol\mu)(\mathbf{x}-\boldsymbol\mu)^\top\big]\,A^\top
+    &&A\text{는 상수라 기댓값 밖으로} \\
+  &= A\Sigma A^\top
+    &&\text{가운데가 }\mathrm{Cov}[\mathbf{x}]\text{의 정의}
   \end{aligned}
   $$
 
   <p>
-    모양이 가우시안으로 남는다는 것은 밀도식에 \(\mathbf{x} = A^{-1}(\mathbf{y}-\mathbf{b})\)를 넣으면 지수 안이 여전히 \(\mathbf{y}\)의 이차식이라는 데서 보인다.
+    분포의 모양도 가우시안으로 남는다. \(A\)가 정사각이고 역행렬이 있다면 \(\mathbf{x} = A^{-1}(\mathbf{y}-\mathbf{b})\)를 \(\mathbf{x}\)의 밀도식 지수 안에 넣어 보면 된다.
+  </p>
+
+  $$
+  \begin{aligned}
+  \mathbf{x}-\boldsymbol\mu &= A^{-1}(\mathbf{y}-\mathbf{b}) - A^{-1}A\boldsymbol\mu = A^{-1}(\mathbf{y}-A\boldsymbol\mu-\mathbf{b})
+    &&\boldsymbol\mu = A^{-1}A\boldsymbol\mu \\
+  (\mathbf{x}-\boldsymbol\mu)^\top\Sigma^{-1}(\mathbf{x}-\boldsymbol\mu)
+  &= (\mathbf{y}-A\boldsymbol\mu-\mathbf{b})^\top A^{-\top}\Sigma^{-1}A^{-1}(\mathbf{y}-A\boldsymbol\mu-\mathbf{b})
+    &&\text{넣는다} \\
+  &= (\mathbf{y}-A\boldsymbol\mu-\mathbf{b})^\top (A\Sigma A^\top)^{-1}(\mathbf{y}-A\boldsymbol\mu-\mathbf{b})
+    &&A^{-\top}\Sigma^{-1}A^{-1} = (A\Sigma A^\top)^{-1}
+  \end{aligned}
+  $$
+
+  <p>
+    지수 안이 다시 「평균 \(A\boldsymbol\mu+\mathbf{b}\), 공분산 \(A\Sigma A^\top\)인 가우시안」의 꼴이다. 위에서 구한 평균·공분산과 정확히 맞는다.
+    (\(A\)가 정사각이 아니어도 결론은 같다 — 성질 3이 그 한 예다.)
     <strong>칼만 필터의 예측이 이 성질이다.</strong>
   </p>
 
   <h3>성질 2 — 독립인 가우시안의 합도 가우시안이고, 공분산이 더해진다</h3>
 
-  <p>\(\mathbf{x}\sim\mathcal{N}(\boldsymbol\mu, \Sigma)\)와 \(\mathbf{w}\sim\mathcal{N}(\mathbf{0}, Q)\)가 독립이면 \(\mathbf{y} = \mathbf{x} + \mathbf{w}\)의 공분산에서 교차항이 사라진다.</p>
+  <p>\(\mathbf{x}\sim\mathcal{N}(\boldsymbol\mu, \Sigma)\)와 \(\mathbf{w}\sim\mathcal{N}(\mathbf{0}, Q)\)가 독립이라고 하자. 합의 평균은 평균의 합이다.</p>
 
   $$
+  \mathrm{E}[\mathbf{x}+\mathbf{w}] = \mathrm{E}[\mathbf{x}] + \mathrm{E}[\mathbf{w}] = \boldsymbol\mu + \mathbf{0} = \boldsymbol\mu
+  $$
+
+  <p>공분산은 성질 1처럼 정의에서 출발한다. 괄호 안을 \(\mathbf{x}\)의 몫과 \(\mathbf{w}\)의 몫으로 나눠 펴면 네 항이 나온다.</p>
+
+  $$
+  \begin{aligned}
   \mathrm{Cov}[\mathbf{x}+\mathbf{w}]
-  = \underbrace{\mathrm{E}[(\mathbf{x}-\boldsymbol\mu)(\mathbf{x}-\boldsymbol\mu)^\top]}_{\Sigma}
-  + \underbrace{\mathrm{E}[(\mathbf{x}-\boldsymbol\mu)\mathbf{w}^\top]}_{0\ (\text{독립})}
-  + \underbrace{\mathrm{E}[\mathbf{w}(\mathbf{x}-\boldsymbol\mu)^\top]}_{0}
+  &= \mathrm{E}\big[(\mathbf{x}+\mathbf{w}-\boldsymbol\mu)(\mathbf{x}+\mathbf{w}-\boldsymbol\mu)^\top\big]
+    &&\text{정의} \\
+  &= \mathrm{E}\big[\big((\mathbf{x}-\boldsymbol\mu)+\mathbf{w}\big)\big((\mathbf{x}-\boldsymbol\mu)+\mathbf{w}\big)^\top\big]
+    &&\text{묶음을 바꾼다} \\
+  &= \mathrm{E}\big[(\mathbf{x}-\boldsymbol\mu)(\mathbf{x}-\boldsymbol\mu)^\top + (\mathbf{x}-\boldsymbol\mu)\mathbf{w}^\top
+    &&\text{편다} \\
+  &\qquad\ + \mathbf{w}(\mathbf{x}-\boldsymbol\mu)^\top + \mathbf{w}\mathbf{w}^\top\big] \\
+  &= \underbrace{\mathrm{E}[(\mathbf{x}-\boldsymbol\mu)(\mathbf{x}-\boldsymbol\mu)^\top]}_{\Sigma}
+  + \underbrace{\mathrm{E}[(\mathbf{x}-\boldsymbol\mu)\mathbf{w}^\top]}_{\text{교차항}}
+  + \underbrace{\mathrm{E}[\mathbf{w}(\mathbf{x}-\boldsymbol\mu)^\top]}_{\text{교차항}}
   + \underbrace{\mathrm{E}[\mathbf{w}\mathbf{w}^\top]}_{Q}
+    &&\text{항마다 나눈다}
+  \end{aligned}
+  $$
+
+  <p>교차항이 0이 되는 곳에서 독립을 쓴다. 독립인 두 변수의 곱의 기댓값은 기댓값의 곱으로 나뉜다.</p>
+
+  $$
+  \begin{aligned}
+  \mathrm{E}[(\mathbf{x}-\boldsymbol\mu)\mathbf{w}^\top]
+  &= \mathrm{E}[\mathbf{x}-\boldsymbol\mu]\ \mathrm{E}[\mathbf{w}]^\top
+    &&\text{독립} \\
+  &= (\boldsymbol\mu-\boldsymbol\mu)\,\mathbf{0}^\top = 0
+    &&\text{셋째 항도 같은 이유로 0} \\
+  \Longrightarrow\quad \mathrm{Cov}[\mathbf{x}+\mathbf{w}] &= \Sigma + Q
+  \end{aligned}
+  $$
+
+  <p>
+    「모르는 정도」가 서로 얽히지 않고 그대로 쌓인다는 뜻이다.
+    합의 모양이 가우시안이라는 것은 성질 1로 보인다. 독립이면 결합 밀도는 두 밀도의 곱이라 지수 안이 더해지고, 그 합은 \(\mathbf{x}\)와 \(\mathbf{w}\)를 쌓은 벡터의 이차식이다 — 쌓은 벡터가 가우시안이다.
+    \(\mathbf{x}+\mathbf{w}\)는 그 벡터에 행렬 \([\,I\ \ I\,]\)를 곱한 것이므로 성질 1에 따라 가우시안이고, 공분산도 같은 답이 나온다.
+  </p>
+
+  $$
+  \mathbf{x}+\mathbf{w} = \begin{bmatrix} I & I \end{bmatrix}\begin{bmatrix}\mathbf{x}\\ \mathbf{w}\end{bmatrix},
+  \qquad
+  \begin{bmatrix} I & I \end{bmatrix}
+  \begin{bmatrix} \Sigma & 0 \\ 0 & Q \end{bmatrix}
+  \begin{bmatrix} I \\ I \end{bmatrix}
+  = \begin{bmatrix} \Sigma & Q \end{bmatrix}\begin{bmatrix} I \\ I \end{bmatrix}
   = \Sigma + Q
   $$
 
@@ -540,7 +618,21 @@
 
   <p>
     \(\mathbf{b}\)를 적분해 지우면(주변화, 규칙 2) \(\mathbf{a}\sim\mathcal{N}(\boldsymbol\mu_a, \Sigma_{aa})\)이다.
-    성질 1에서 \(A = [\,I\ \ 0\,]\)로 놓으면 \(A\Sigma A^\top = \Sigma_{aa}\)가 바로 나온다.
+    \(\mathbf{a}\)는 쌓은 벡터에서 위 덩이만 고른 것이므로 성질 1에서 \(A = [\,I\ \ 0\,]\)로 놓으면 된다.
+  </p>
+
+  $$
+  \mathbf{a} = \begin{bmatrix} I & 0 \end{bmatrix}\begin{bmatrix}\mathbf{a}\\ \mathbf{b}\end{bmatrix},
+  \qquad
+  A\Sigma A^\top
+  = \begin{bmatrix} I & 0 \end{bmatrix}
+    \begin{bmatrix}\Sigma_{aa} & \Sigma_{ab}\\ \Sigma_{ba} & \Sigma_{bb}\end{bmatrix}
+    \begin{bmatrix} I \\ 0 \end{bmatrix}
+  = \begin{bmatrix}\Sigma_{aa} & \Sigma_{ab}\end{bmatrix}\begin{bmatrix} I \\ 0 \end{bmatrix}
+  = \Sigma_{aa}
+  $$
+
+  <p>
     ⑦절의 EKF-SLAM에서 상태에 랜드마크가 수백 개 들어 있어도, <strong>랜드마크 하나의 불확실도는 \(P\)에서 그 블록만 읽으면</strong> 된다.
   </p>
 
@@ -556,9 +648,31 @@
   J(\mathbf{x}) &= \tfrac12\,\mathbf{x}^\top\Lambda\,\mathbf{x} - \boldsymbol\eta^\top\mathbf{x} + c
     &&\Lambda\text{: 이차항 계수 · }\boldsymbol\eta\text{: 일차항 계수} \\
   &= \tfrac12\,\big(\mathbf{x} - \Lambda^{-1}\boldsymbol\eta\big)^\top \Lambda\, \big(\mathbf{x} - \Lambda^{-1}\boldsymbol\eta\big) + \underbrace{c - \tfrac12\boldsymbol\eta^\top\Lambda^{-1}\boldsymbol\eta}_{\mathbf{x}\text{와 무관}}
-    &&\text{완전제곱 — 펴면 첫 줄로 돌아온다}
+    &&\text{완전제곱}
   \end{aligned}
   $$
+
+  <p>둘째 줄이 맞는지는 완전제곱 항을 펴 보면 안다. \(\Lambda\)가 대칭이라 \(\Lambda^{-1}\)도 대칭이고, 스칼라는 전치해도 같다(\(\mathbf{x}^\top\boldsymbol\eta = \boldsymbol\eta^\top\mathbf{x}\)).</p>
+
+  $$
+  \begin{aligned}
+  \tfrac12\big(\mathbf{x} - \Lambda^{-1}\boldsymbol\eta\big)^\top \Lambda \big(\mathbf{x} - \Lambda^{-1}\boldsymbol\eta\big)
+  &= \tfrac12\mathbf{x}^\top\Lambda\mathbf{x}
+   - \tfrac12\mathbf{x}^\top\Lambda\Lambda^{-1}\boldsymbol\eta
+   - \tfrac12\boldsymbol\eta^\top\Lambda^{-1}\Lambda\mathbf{x}
+   + \tfrac12\boldsymbol\eta^\top\Lambda^{-1}\Lambda\Lambda^{-1}\boldsymbol\eta
+    &&\text{네 항으로 편다} \\
+  &= \tfrac12\mathbf{x}^\top\Lambda\mathbf{x}
+   - \tfrac12\mathbf{x}^\top\boldsymbol\eta
+   - \tfrac12\boldsymbol\eta^\top\mathbf{x}
+   + \tfrac12\boldsymbol\eta^\top\Lambda^{-1}\boldsymbol\eta
+    &&\Lambda\Lambda^{-1} = I \\
+  &= \tfrac12\mathbf{x}^\top\Lambda\mathbf{x} - \boldsymbol\eta^\top\mathbf{x} + \tfrac12\boldsymbol\eta^\top\Lambda^{-1}\boldsymbol\eta
+    &&\text{가운데 둘은 같은 스칼라}
+  \end{aligned}
+  $$
+
+  <p>여기에 \(c - \tfrac12\boldsymbol\eta^\top\Lambda^{-1}\boldsymbol\eta\)를 더하면 마지막 항이 지워지고 첫 줄 \(J\)로 돌아온다.</p>
 
   <p>둘째 줄을 가우시안의 지수 \(\tfrac12(\mathbf{x}-\boldsymbol\mu)^\top\Sigma^{-1}(\mathbf{x}-\boldsymbol\mu)\)와 맞대 보면 바로 읽힌다.</p>
 
@@ -576,7 +690,7 @@
   <div class="interp">
     <strong>\(p \propto e^{-J}\)이고 \(J\)가 이차식이면 — 평균은 \(J\)를 최소로 하는 점, 공분산은 \(J\)의 헤시안의 역이다.</strong>
     확률에서 「가장 그럴듯한 점과 그 퍼짐」을 찾는 문제가 「이차식의 최소점과 그 굽은 정도」를 찾는 문제로 바뀐다.
-    방향을 거꾸로 하면 가우시안 하나의 \(-\log\)는 \(\tfrac12\lVert\mathbf{x}-\boldsymbol\mu\rVert^2_\Sigma + \text{상수}\) — 마할라노비스 제곱의 절반이다.
+    방향을 거꾸로 하면 가우시안 하나의 \(-\log\)는 \(\tfrac12(\mathbf{x}-\boldsymbol\mu)^\top\Sigma^{-1}(\mathbf{x}-\boldsymbol\mu) + \text{상수}\) — 마할라노비스 제곱의 절반이다.
     ⑤절의 갱신 유도는 이 두 문장만으로 끝난다.
   </div>
 
@@ -609,8 +723,21 @@
 
   <p>
     \(\mathrm{bel}(\mathbf{x}_{k-1}) = \mathcal{N}(\hat{\mathbf{x}}_{k-1}, P_{k-1})\)라고 하자. 예측의 적분 \(\int p(\mathbf{x}_k\mid\mathbf{x}_{k-1},\mathbf{u}_k)\,\mathrm{bel}(\mathbf{x}_{k-1})\,d\mathbf{x}_{k-1}\)은
-    「\(\mathbf{x}_{k-1}\)을 뽑아 \(F_k\)를 곱하고 \(B_k\mathbf{u}_k\)를 더한 뒤, 독립인 잡음 \(\mathbf{w}_k\)를 더한 것」의 분포다. 성질 1·2를 차례로 쓰면 끝난다.
+    「\(\mathbf{x}_{k-1}\)을 뽑아 \(F_k\)를 곱하고 \(B_k\mathbf{u}_k\)를 더한 뒤, 독립인 잡음 \(\mathbf{w}_k\)를 더한 것」의 분포다. 성질 1·2를 차례로 쓴다.
   </p>
+
+  $$
+  \begin{aligned}
+  F_k\mathbf{x}_{k-1} + B_k\mathbf{u}_k
+  &\sim \mathcal{N}\big(F_k\hat{\mathbf{x}}_{k-1} + B_k\mathbf{u}_k,\ \ F_kP_{k-1}F_k^\top\big)
+    &&\text{성질 1 — }A = F_k,\ \mathbf{b} = B_k\mathbf{u}_k \\
+  \mathbf{x}_k = \big(F_k\mathbf{x}_{k-1} + B_k\mathbf{u}_k\big) + \mathbf{w}_k
+  &\sim \mathcal{N}\big(F_k\hat{\mathbf{x}}_{k-1} + B_k\mathbf{u}_k,\ \ F_kP_{k-1}F_k^\top + Q_k\big)
+    &&\text{성질 2 — 평균은 그대로, 공분산에 }Q_k
+  \end{aligned}
+  $$
+
+  <p>이 분포의 평균과 공분산에 이름을 붙인 것이 예측의 두 줄이다.</p>
 
   $$
   \begin{aligned}
@@ -626,46 +753,76 @@
   <p>
     갱신은 베이즈 필터의 둘째 줄 \(\mathrm{bel}(\mathbf{x}) = \eta\,p(\mathbf{z}\mid\mathbf{x})\,\overline{\mathrm{bel}}(\mathbf{x})\)이다. 아래첨자 \(k\)는 잠시 뗀다.
     곱하는 두 분포가 모두 가우시안이다 — 예측 믿음은 방금 구했고, 측정 모델은 「\(\mathbf{x}\)이면 \(\mathbf{z}\)는 \(H\mathbf{x}\) 둘레에 \(W\)만큼 퍼진다」다.
+    정규화 상수는 \(\mathbf{x}\)와 무관하므로 \(\propto\)로 떼어 두고 지수만 본다.
   </p>
 
   $$
   \begin{aligned}
-  \overline{\mathrm{bel}}(\mathbf{x}) &= \mathcal{N}(\mathbf{x};\ \hat{\mathbf{x}}^-,\ P^-) \ \propto\ \exp\!\Big(-\tfrac12\lVert \mathbf{x}-\hat{\mathbf{x}}^-\rVert^2_{P^-}\Big)
+  \overline{\mathrm{bel}}(\mathbf{x}) &= \mathcal{N}(\mathbf{x};\ \hat{\mathbf{x}}^-,\ P^-) \ \propto\ \exp\!\Big(-\tfrac12\,(\mathbf{x}-\hat{\mathbf{x}}^-)^\top (P^-)^{-1} (\mathbf{x}-\hat{\mathbf{x}}^-)\Big)
     &&\text{예측 믿음} \\
-  p(\mathbf{z}\mid\mathbf{x}) &= \mathcal{N}(\mathbf{z};\ H\mathbf{x},\ W) \ \propto\ \exp\!\Big(-\tfrac12\lVert \mathbf{z}-H\mathbf{x}\rVert^2_{W}\Big)
+  p(\mathbf{z}\mid\mathbf{x}) &= \mathcal{N}(\mathbf{z};\ H\mathbf{x},\ W) \ \propto\ \exp\!\Big(-\tfrac12\,(\mathbf{z}-H\mathbf{x})^\top W^{-1} (\mathbf{z}-H\mathbf{x})\Big)
     &&\text{측정 우도 — }\mathbf{z}\text{는 이미 잰 값}
   \end{aligned}
   $$
 
-  <p>지수끼리 곱하면 지수 안이 더해진다.</p>
+  <p>두 지수를 곱하면 지수 안이 더해진다 (\(e^{-a}e^{-b} = e^{-(a+b)}\)).</p>
 
   $$
-  \mathrm{bel}(\mathbf{x}) \ \propto\ \exp\!\big(-J(\mathbf{x})\big),
-  \qquad
-  J(\mathbf{x}) = \underbrace{\tfrac12\lVert \mathbf{x}-\hat{\mathbf{x}}^-\rVert^2_{P^-}}_{\text{예측에서 멀어진 벌점}}
-    + \underbrace{\tfrac12\lVert \mathbf{z}-H\mathbf{x}\rVert^2_{W}}_{\text{측정과 어긋난 벌점}}
+  \begin{aligned}
+  \mathrm{bel}(\mathbf{x}) &\propto \exp\!\big(-J(\mathbf{x})\big), \\
+  J(\mathbf{x}) &= \tfrac12\,(\mathbf{x}-\hat{\mathbf{x}}^-)^\top (P^-)^{-1} (\mathbf{x}-\hat{\mathbf{x}}^-)
+    &&\text{예측에서 멀어진 벌점} \\
+  &\quad + \tfrac12\,(\mathbf{z}-H\mathbf{x})^\top W^{-1} (\mathbf{z}-H\mathbf{x})
+    &&\text{측정과 어긋난 벌점}
+  \end{aligned}
   $$
 
   <p>
     \(J\)는 \(\mathbf{x}\)의 이차식이다. 그러니 성질 4에 따라 \(\mathrm{bel}\)은 가우시안이고,
     <strong>평균은 \(J\)를 최소로 하는 점, 공분산은 \(J\)의 헤시안의 역</strong>이다.
     분포가 가장 높은 점을 MAP(maximum a posteriori, 사후분포의 최댓값)라고 부르는데, 가우시안에서는 MAP와 평균이 같은 점이다.
-    즉 <strong>칼만 갱신은 가중 최소제곱 문제</strong>다 — 예측과 측정 사이에서, 각자 믿을 만한 만큼 무게를 주어 타협점을 찾는다.
+    즉 <strong>칼만 갱신은 가중 최소제곱 문제</strong>다 — 예측과 측정 사이에서, 각자 믿을 만한 만큼 무게(\((P^-)^{-1}\), \(W^{-1}\))를 주어 타협점을 찾는다.
   </p>
 
-  <p>기울기를 0으로 놓는다.</p>
+  <p>
+    최소점을 찾으려면 \(J\)를 \(\mathbf{x}\)로 미분해 0으로 놓는다. 이차형식의 미분은 스칼라 \(\tfrac12 m(x-a)^2 \to m(x-a)\)와 모양이 같다.
+    \(M\)이 대칭이면(공분산의 역은 늘 대칭이다) 다음 두 공식이면 충분하다.
+  </p>
 
   $$
   \begin{aligned}
-  \nabla J(\mathbf{x}) &= (P^-)^{-1}(\mathbf{x}-\hat{\mathbf{x}}^-) - H^\top W^{-1}(\mathbf{z}-H\mathbf{x}) = \mathbf{0}
-    &&\text{두 벌점을 각각 미분} \\
-  \Longrightarrow\quad
-  \underbrace{\big((P^-)^{-1} + H^\top W^{-1}H\big)}_{\Lambda}\ \hat{\mathbf{x}}
-  &= \underbrace{(P^-)^{-1}\hat{\mathbf{x}}^- + H^\top W^{-1}\mathbf{z}}_{\boldsymbol\eta},
-  \qquad
-  P = \Lambda^{-1}
-    &&\nabla^2 J = \Lambda
+  \frac{\partial}{\partial\mathbf{x}}\Big[\tfrac12\,(\mathbf{x}-\mathbf{a})^\top M (\mathbf{x}-\mathbf{a})\Big] &= M(\mathbf{x}-\mathbf{a})
+    &&\text{스칼라의 } m(x-a) \\
+  \frac{\partial}{\partial\mathbf{x}}\Big[\tfrac12\,(\mathbf{z}-H\mathbf{x})^\top M (\mathbf{z}-H\mathbf{x})\Big] &= -H^\top M(\mathbf{z}-H\mathbf{x})
+    &&\text{연쇄법칙 — 괄호 안 }\mathbf{z}-H\mathbf{x}\text{를 미분하면 }-H
   \end{aligned}
+  $$
+
+  <p>첫 공식은 \(\mathbf{x}^\top M\mathbf{x}\)의 미분이 \((M + M^\top)\mathbf{x} = 2M\mathbf{x}\)라는 데서 나온다. 둘째는 첫 공식에 연쇄법칙을 한 번 더 쓴 것이다. 두 벌점에 하나씩 쓴다.</p>
+
+  $$
+  \begin{aligned}
+  \nabla J(\mathbf{x})
+  &= (P^-)^{-1}(\mathbf{x}-\hat{\mathbf{x}}^-) - H^\top W^{-1}(\mathbf{z}-H\mathbf{x})
+    &&\text{첫 벌점에 첫 공식, 둘째 벌점에 둘째 공식} \\
+  &= (P^-)^{-1}\mathbf{x} - (P^-)^{-1}\hat{\mathbf{x}}^- - H^\top W^{-1}\mathbf{z} + H^\top W^{-1}H\mathbf{x}
+    &&\text{괄호를 푼다} \\
+  &= \underbrace{\big((P^-)^{-1} + H^\top W^{-1}H\big)}_{\Lambda}\,\mathbf{x}
+   - \underbrace{\big((P^-)^{-1}\hat{\mathbf{x}}^- + H^\top W^{-1}\mathbf{z}\big)}_{\boldsymbol\eta}
+    &&\mathbf{x}\text{가 붙은 항과 안 붙은 항으로 모은다}
+  \end{aligned}
+  $$
+
+  <p>
+    \(\nabla J = \Lambda\mathbf{x} - \boldsymbol\eta\) — 성질 4의 기울기와 똑같은 꼴이다. 이것을 0으로 놓은 점이 갱신 평균이고,
+    한 번 더 미분하면 \(\mathbf{x}\)가 붙은 항의 계수만 남으므로 헤시안이 \(\Lambda\)다.
+  </p>
+
+  $$
+  \Lambda\,\hat{\mathbf{x}} = \boldsymbol\eta,
+  \qquad
+  P = \Lambda^{-1} = \big((P^-)^{-1} + H^\top W^{-1}H\big)^{-1}
+  \qquad\big(\nabla^2 J = \Lambda\big)
   $$
 
   <div class="interp">
@@ -676,41 +833,107 @@
 
   <p>
     그런데 필터에서는 이 꼴을 그대로 쓰지 않는다. \(\Lambda\)는 \(n\times n\)(상태 크기)이고 매 스텝 뒤집어야 하는데,
-    측정은 보통 상태보다 훨씬 작다(\(m \ll n\)). 그래서 <strong>\(n\times n\) 역행렬 대신 \(m\times m\) 역행렬 하나</strong>로 같은 답을 내는 꼴로 바꾼다. 세 단계다.
+    측정은 보통 상태보다 훨씬 작다(\(m \ll n\)). 그래서 <strong>\(n\times n\) 역행렬 대신 \(m\times m\) 역행렬 하나</strong>로 같은 답을 내는 꼴로 바꾼다.
   </p>
 
-  <p><strong>① 평균을 「예측 + 고침」 꼴로.</strong> \((P^-)^{-1} = \Lambda - H^\top W^{-1}H\)를 \(\boldsymbol\eta\)에 넣는다.</p>
+  <p>
+    무엇을 하려는지는 <strong>스칼라로 먼저 보면</strong> 분명하다. \(H = 1\)이고 \(P^-\), \(W\)가 숫자이면
+    정보 형식의 답은 분수 안에 분수가 든 꼴이다. 분자·분모에 \(P^-W\)를 곱해 정리하면 이렇게 된다.
+  </p>
 
   $$
   \begin{aligned}
-  \Lambda\hat{\mathbf{x}} &= \Lambda\hat{\mathbf{x}}^- - H^\top W^{-1}H\hat{\mathbf{x}}^- + H^\top W^{-1}\mathbf{z} \\
-  \hat{\mathbf{x}} &= \hat{\mathbf{x}}^- + \underbrace{\Lambda^{-1}H^\top W^{-1}}_{K}\,\big(\mathbf{z} - H\hat{\mathbf{x}}^-\big)
+  P &= \frac{1}{\dfrac{1}{P^-} + \dfrac{1}{W}} = \frac{P^-W}{P^- + W}
+    &&\text{분자·분모에 }P^-W \\
+  \hat x &= P\,\Big(\frac{\hat x^-}{P^-} + \frac{z}{W}\Big) = \frac{W\hat x^- + P^-z}{P^- + W}
+    &&\hat x = \eta/\Lambda = P\eta \\
+  &= \frac{(P^- + W)\,\hat x^- + P^-(z - \hat x^-)}{P^- + W}
+    &&W\hat x^- = (P^-+W)\hat x^- - P^-\hat x^- \\
+  &= \hat x^- + \underbrace{\frac{P^-}{P^- + W}}_{K}\,(z - \hat x^-)
+    &&\text{「예측 + 고침」} \\
+  P &= \frac{P^-W}{P^- + W} = \Big(1 - \frac{P^-}{P^- + W}\Big)P^- = (1 - K)\,P^-
+    &&\frac{W}{P^-+W} = 1 - \frac{P^-}{P^-+W}
+  \end{aligned}
+  $$
+
+  <p>
+    스칼라에서는 「정보의 합」 \(1/P^- + 1/W\)을 뒤집는 대신 「불확실도의 합」 \(P^- + W\) 하나로 나누게 됐다. 이것이 \(m\times m\) 역행렬 \(S^{-1}\)의 정체다.
+    행렬에서도 똑같은 일을 한다. 나눗셈이 역행렬이 되어 곱하는 순서를 지켜야 할 뿐이다. 스칼라의 세 결과 — 「예측 + 고침」 꼴, \(K = P^-/(P^-+W)\), \(P = (1-K)P^-\) — 를 하나씩 행렬로 옮긴다.
+  </p>
+
+  <p><strong>① 평균을 「예측 + 고침」 꼴로.</strong> 스칼라의 셋째 줄처럼 \(\boldsymbol\eta\) 안의 \(\hat{\mathbf{x}}^-\) 항을 \(\Lambda\hat{\mathbf{x}}^-\)로 만든다. \(H^\top W^{-1}H\hat{\mathbf{x}}^-\)를 더하고 뺀다.</p>
+
+  $$
+  \begin{aligned}
+  \boldsymbol\eta &= (P^-)^{-1}\hat{\mathbf{x}}^- + H^\top W^{-1}\mathbf{z} \\
+  &= \big((P^-)^{-1} + H^\top W^{-1}H\big)\hat{\mathbf{x}}^- - H^\top W^{-1}H\hat{\mathbf{x}}^- + H^\top W^{-1}\mathbf{z}
+    &&H^\top W^{-1}H\hat{\mathbf{x}}^-\text{를 더하고 뺀다} \\
+  &= \Lambda\hat{\mathbf{x}}^- + H^\top W^{-1}\big(\mathbf{z} - H\hat{\mathbf{x}}^-\big)
+    &&\Lambda\text{와 }H^\top W^{-1}\text{로 묶는다} \\
+  \hat{\mathbf{x}} = \Lambda^{-1}\boldsymbol\eta &= \hat{\mathbf{x}}^- + \underbrace{\Lambda^{-1}H^\top W^{-1}}_{K}\,\big(\mathbf{z} - H\hat{\mathbf{x}}^-\big)
     &&\text{양변 왼쪽에 }\Lambda^{-1}
   \end{aligned}
   $$
 
-  <p><strong>② \(K\)를 \(\Lambda^{-1}\) 없이.</strong> \(\Lambda\)에 \(P^-H^\top\)를 곱해 보면 \(m\times m\)짜리 덩어리 \(S\)가 나온다.</p>
+  <p>
+    꼴은 「예측 + \(K\) × (잰 값 − 예측한 측정)」이 됐다. 그런데 \(K\) 안에 아직 \(\Lambda^{-1}\)이 남아 있다.
+    스칼라로 줄이면 \(K = \dfrac{1/W}{1/P^- + 1/W}\) — 분수 속 분수 그대로다. 이것을 정리하는 것이 다음 단계다.
+  </p>
+
+  <p>
+    <strong>② \(K\)에서 \(\Lambda^{-1}\)을 없앤다.</strong> 스칼라에서는 분자·분모에 \(P^-W\)를 곱했다. 행렬에서는 정리한 답 \(P^-H^\top(\,\cdot\,)^{-1}\)이 어떤 꼴일지 스칼라에서 짐작이 되므로,
+    \(P^-H^\top\)에 \(\Lambda\)를 곱해 보고 무엇이 나오는지 본다.
+  </p>
 
   $$
   \begin{aligned}
-  \Lambda\,P^-H^\top &= \big((P^-)^{-1} + H^\top W^{-1}H\big)P^-H^\top
-   = H^\top + H^\top W^{-1}HP^-H^\top
-   = H^\top W^{-1}\underbrace{\big(W + HP^-H^\top\big)}_{S}
+  \Lambda\,P^-H^\top &= \big((P^-)^{-1} + H^\top W^{-1}H\big)\,P^-H^\top
+    &&\Lambda\text{를 펴 쓴다} \\
+  &= (P^-)^{-1}P^-H^\top + H^\top W^{-1}HP^-H^\top
+    &&\text{분배} \\
+  &= H^\top + H^\top W^{-1}HP^-H^\top
+    &&(P^-)^{-1}P^- = I \\
+  &= H^\top W^{-1}W + H^\top W^{-1}HP^-H^\top
     &&H^\top = H^\top W^{-1}W \\
-  \Longrightarrow\quad K &= \Lambda^{-1}H^\top W^{-1} = P^-H^\top S^{-1}
-    &&\text{왼쪽에 }\Lambda^{-1}\text{, 오른쪽에 }S^{-1}
+  &= H^\top W^{-1}\underbrace{\big(W + HP^-H^\top\big)}_{S}
+    &&H^\top W^{-1}\text{를 왼쪽으로 묶는다}
   \end{aligned}
   $$
 
-  <p><strong>③ 공분산도 \(P^-\)로.</strong> \((I-KH)P^-\)에 \(\Lambda\)를 곱하면 \(I\)가 나오는지 본다. ②에서 \(\Lambda K = H^\top W^{-1}\)이다.</p>
+  <p>마지막 줄 \(\Lambda P^-H^\top = H^\top W^{-1}S\)의 양변에 오른쪽에서 \(S^{-1}\), 왼쪽에서 \(\Lambda^{-1}\)을 곱한다.</p>
 
   $$
+  \begin{aligned}
+  \Lambda\,P^-H^\top S^{-1} &= H^\top W^{-1}
+    &&\text{오른쪽에 }S^{-1} \\
+  P^-H^\top S^{-1} &= \Lambda^{-1}H^\top W^{-1} = K
+    &&\text{왼쪽에 }\Lambda^{-1}\text{ — 오른쪽이 ①의 }K
+  \end{aligned}
+  $$
+
+  <p>
+    \(K = P^-H^\top S^{-1}\)이다. 스칼라로 줄이면 \(P^-/(P^- + W)\) — 위에서 본 그대로다. 남은 역행렬은 \(S^{-1}\) 하나이고, \(S\)는 측정 크기 \(m\times m\)다.
+    덤으로 첫 줄에서 \(\Lambda K = H^\top W^{-1}\)도 얻었다. ③에서 쓴다.
+  </p>
+
+  <p>
+    <strong>③ 공분산도 \(P^-\)로.</strong> 스칼라에서는 \(P = (1-K)P^-\)였다. 행렬에서도 \((I-KH)P^-\)가 \(\Lambda^{-1}\)인지 — 즉 \(\Lambda\)를 곱하면 \(I\)가 되는지 — 확인한다.
+  </p>
+
+  $$
+  \begin{aligned}
   \Lambda\,(I - KH)\,P^-
-  = \Lambda P^- - H^\top W^{-1}HP^-
-  = \big((P^-)^{-1} + H^\top W^{-1}H\big)P^- - H^\top W^{-1}HP^-
-  = I
-  \quad\Longrightarrow\quad
-  P = \Lambda^{-1} = (I - KH)\,P^-
+  &= \Lambda P^- - (\Lambda K)\,HP^-
+    &&\text{괄호를 푼다} \\
+  &= \Lambda P^- - H^\top W^{-1}HP^-
+    &&\Lambda K = H^\top W^{-1}\ \text{(②)} \\
+  &= \big((P^-)^{-1} + H^\top W^{-1}H\big)P^- - H^\top W^{-1}HP^-
+    &&\Lambda\text{를 펴 쓴다} \\
+  &= I + H^\top W^{-1}HP^- - H^\top W^{-1}HP^- = I
+    &&\text{둘째와 셋째 항이 지워진다} \\
+  \Longrightarrow\quad P = \Lambda^{-1} &= (I - KH)\,P^-
+    &&\Lambda\text{를 곱해 }I\text{가 되는 행렬이 곧 }\Lambda^{-1}
+  \end{aligned}
   $$
 
   <p>
@@ -832,7 +1055,7 @@
   </p>
 
   <p>
-    스칼라일 때 칼만 이득은 \(K = P^-/(P^-+W)\)다.
+    유도에서 본 대로 스칼라일 때 칼만 이득은 \(K = P^-/(P^-+W)\)이고, 이 예에서는 \(0.05/(0.05+0.02)\)였다.
     \(W\to0\)(완벽한 센서)이면 \(K\to1\)이라 측정을 그대로 받고, \(W\to\infty\)(쓸모없는 센서)이면 \(K\to0\)이라 예측을 지킨다.
     갱신 분산 \(P = P^-W/(P^-+W)\)는 \(P^-\)와 \(W\) <strong>둘 중 어느 것보다도 작다</strong> — 두 정보를 합쳤으니 당연하다.
   </p>
@@ -868,10 +1091,61 @@
       23번 스텝의 엉뚱한 측정(빨간 X)은 버려서 추정이 끌려가지 않았다. (나) 이득은 몇 스텝 만에 0.5로 자리 잡고, 띠가 넓어진 뒤에는 잠시 커진다.</figcaption>
   </figure>
 
-  <p><strong>① 이득은 저절로 자리 잡는다 — 그 값을 정하는 것은 \(Q\)와 \(W\)의 비다.</strong>
-    \(P\)와 \(K\)의 식에는 \(\mathbf{z}\)가 없으므로, 모델과 \(Q, W\)만 정해지면 이득의 흐름이 미리 정해진다.
-    스칼라에서 \(P^- = P + Q\), \(P = (1-K)P^-\)가 더 이상 바뀌지 않는 점을 풀면 \((P^-)^2 - QP^- - QW = 0\)이고,
-    이 예에서는 \(P^- = 0.02\), \(K_\infty = 0.5\), 갱신 뒤 표준편차 0.100 m다. 그림 (나)의 0.71 · 0.55 · 0.51 · 0.50이 그리로 가는 길이다.
+  <p><strong>① 이득은 무엇이 정하나 — 예측의 불확실도와 측정의 불확실도의 비.</strong>
+    스칼라(\(H = 1\))로 보면 이득의 식이 그대로 읽힌다.
+  </p>
+
+  $$
+  K = \frac{P^-}{P^- + W},
+  \qquad
+  P^- = \underbrace{P_{k-1}}_{\text{지난 갱신이 남긴 불확실도}} + \underbrace{Q}_{\text{이번 스텝의 운동 잡음}}
+  $$
+
+  <p>
+    \(P^-\)는 지난 갱신이 남긴 불확실도에 이번 운동이 \(Q\)를 보탠 것이다. 그 \(P_{k-1}\)도 한 스텝 전의 \(P^-\)에서 나왔으니,
+    거슬러 올라가면 <strong>\(P^-\)는 \(Q\)가 스텝마다 쌓이고 측정이 그때마다 깎아 낸 결과</strong>다.
+    그러니 이득은 「\(Q\)가 쌓아 온 예측의 불확실도 \(P^-\)」와 「측정 한 번의 불확실도 \(W\)」 사이의 비율로 정해진다.
+    \(P^-\)가 \(W\)보다 크면 \(K\)가 1에 가까워져 측정 쪽으로, 작으면 0에 가까워져 예측 쪽으로 간다.
+    \(P\)와 \(K\)의 식에는 잰 값 \(\mathbf{z}\)가 없으므로, 모델과 \(Q, W\)만 정해지면 이 흐름은 측정과 상관없이 미리 정해진다.
+  </p>
+
+  <p>그림 (나)의 처음 몇 스텝을 이 식으로 따라가면 이렇다(<code>src/filter_numbers.py</code> ⑤). 처음 \(P_0 = 0.04\)가 커서 측정을 많이 받고, 그 뒤로 0.50에 다가간다.</p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>스텝</th><th>\(P^- = P_{k-1} + Q\)</th><th>\(K = P^-/(P^- + W)\)</th><th>\(P = (1-K)\,P^-\)</th></tr>
+    <tr><td>1</td><td>0.04 + 0.01 = 0.0500</td><td>0.0500 / 0.0700 = 0.71</td><td>0.0143</td></tr>
+    <tr><td>2</td><td>0.0143 + 0.01 = 0.0243</td><td>0.0243 / 0.0443 = 0.55</td><td>0.0110</td></tr>
+    <tr><td>3</td><td>0.0110 + 0.01 = 0.0210</td><td>0.0210 / 0.0410 = 0.51</td><td>0.0102</td></tr>
+  </table>
+  </div>
+
+  <p>
+    어디서 멈출까? 매 스텝 예측이 \(Q\)를 <strong>더하고</strong>, 갱신이 \(P^- - P = KP^-\)를 <strong>깎는다</strong>.
+    둘이 같아지면 \(P^-\)가 더 이상 바뀌지 않는다. 이 자리의 이득을 정상상태 이득 \(K_\infty\)라고 한다.
+  </p>
+
+  $$
+  \begin{aligned}
+  K P^- &= Q
+    &&\text{깎는 양 = 더하는 양} \\
+  \frac{(P^-)^2}{P^- + W} &= Q
+    &&K = \tfrac{P^-}{P^-+W}\text{를 넣는다} \\
+  (P^-)^2 - QP^- - QW &= 0
+    &&\text{양변에 }P^-+W \\
+  P^- &= \tfrac12\Big(Q + \sqrt{Q^2 + 4QW}\Big)
+    &&\text{양의 근} \\
+  &= \tfrac12\Big(0.01 + \sqrt{0.0001 + 0.0008}\Big) = 0.02 \\
+  K_\infty &= 0.02/(0.02 + 0.02) = 0.5 \\
+  P &= (1 - 0.5)\times 0.02 = 0.01
+    &&\text{표준편차 0.100 m}
+  \end{aligned}
+  $$
+
+  <p>
+    확인해 보면 \(K_\infty P^- = 0.5\times0.02 = 0.01 = Q\)다. 이 정상상태에서 \(P^-\)와 \(W\)의 비를 정하는 것이 \(Q\)와 \(W\)의 비다.
+    셋째 줄을 \(W^2\)으로 나누면 \(r = P^-/W\)에 대한 식 \(r^2 - (Q/W)\,r - Q/W = 0\)이 되어, \(r\)는 \(Q/W\)만으로 정해지고 \(K_\infty = r/(1+r)\)도 그렇다.
+    아래 표는 \(W = 0.02\)를 두고 \(Q\)만 바꿔 본 것이다.
   </p>
 
   <div class="tablewrap">
@@ -884,7 +1158,7 @@
   </div>
 
   <p>
-    \(Q\)와 \(W\)를 둘 다 2배로 키우면 \(K_\infty\)는 0.5 그대로다. <strong>이득을 정하는 것은 두 값의 크기가 아니라 비</strong>다.
+    \(Q\)와 \(W\)를 둘 다 2배로 키우면 쌓이는 \(P^-\)도 2배가 되어 \(P^-/W\)가 그대로이고, \(K_\infty\)는 0.5 그대로다. <strong>이득을 정하는 것은 두 값의 크기가 아니라 비</strong>다.
     그래서 튜닝은 보통 \(W\)를 센서에서 재 놓고 \(Q\)를 움직이며 한다. 크기 자체는 \(P\) — 필터가 말하는 불확실도 — 를 정하므로, 비만 맞고 크기가 틀리면 추정은 괜찮은데 \(P\)가 거짓말을 한다(아래 NEES).
   </p>
 
@@ -948,22 +1222,120 @@
     이것이 ⑦절에서 말할 「일관성(consistency)」의 정의다 — <strong>필터가 믿는 공분산이 실제 오차의 크기와 맞는가.</strong>
   </p>
 
+  <h3 id="kf-joseph">Joseph 형 — 같은 \(P\)를 다르게 계산하는 식</h3>
+
   <p>
-    구현할 때 한 가지 더. \(P = (I-KH)P^-\)는 \(K\)가 정확히 최적일 때만 맞는 줄임 꼴이라, 반올림 오차가 쌓이면 \(P\)가 대칭성을 잃을 수 있다.
-    그래서 흔히 같은 값을 주는 <strong>Joseph 형</strong>을 쓴다. 두 항이 모두 양의 준정부호라 반올림이 있어도 \(P\)가 망가지지 않는다.
+    칼만 필터를 구현한 코드나 다른 교재를 보면 갱신 공분산이 \((I-KH)P^-\)가 아니라 이렇게 적혀 있는 경우가 많다.
+  </p>
+
+  $$
+  P = (I-KH)\,P^-\,(I-KH)^\top + KWK^\top
+  \qquad \textbf{Joseph 형}
+  $$
+
+  <p>
+    왜 식이 다를까? 그리고 바꿔 써도 될까? 이 식이 어디서 나오는지부터 보면 두 질문의 답이 함께 나온다.
+  </p>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 Joseph — 사람 이름이다</p>
+    <dl>
+      <dt>Peter D. Joseph</dt>
+      <dd>미국의 공학자. 칼만 필터가 항법 계산에 막 쓰이기 시작한 1960년대에 이 꼴을 썼고, Richard Bucy와 함께 낸 1968년 책 <em>Filtering for Stochastic Processes with Applications to Guidance</em>에 실리면서 그의 이름이 붙었다.</dd>
+    </dl>
+  </div>
+
+  <p>
+    <strong>어디서 나오나 — 갱신 뒤 오차의 공분산을 직접 계산한다.</strong>
+    참 상태를 \(\mathbf{x}\)라 하고, 갱신 전 오차를 \(\mathbf{e}^- = \mathbf{x} - \hat{\mathbf{x}}^-\), 갱신 뒤 오차를 \(\mathbf{e} = \mathbf{x} - \hat{\mathbf{x}}\)로 둔다.
+    \(\mathbf{e}^-\)의 공분산이 \(P^-\)이고(그것이 \(P^-\)의 뜻이다), 측정 \(\mathbf{z} = H\mathbf{x} + \mathbf{v}\)의 잡음 \(\mathbf{v}\)는 \(\mathbf{e}^-\)와 독립이다.
+    갱신식 \(\hat{\mathbf{x}} = \hat{\mathbf{x}}^- + K(\mathbf{z} - H\hat{\mathbf{x}}^-)\)를 넣어 \(\mathbf{e}\)를 \(\mathbf{e}^-\)와 \(\mathbf{v}\)로 쓴다.
+    <strong>여기서 \(K\)는 아무 행렬이어도 된다</strong> — 최적이라는 사실을 쓰지 않는다.
   </p>
 
   $$
   \begin{aligned}
-  P &= (I-KH)\,P^-\,(I-KH)^\top + KWK^\top
-    &&\textbf{Joseph 형} \\
-  &= (I-KH)P^- - \big[\,P^-H^\top - K\underbrace{(HP^-H^\top + W)}_{S}\,\big]K^\top
-   = (I-KH)P^-
-    &&KS = P^-H^\top\text{라 괄호가 0}
+  \mathbf{e} &= \mathbf{x} - \hat{\mathbf{x}}^- - K\big(\mathbf{z} - H\hat{\mathbf{x}}^-\big)
+    &&\text{갱신식을 넣는다} \\
+  &= \mathbf{x} - \hat{\mathbf{x}}^- - K\big(H\mathbf{x} + \mathbf{v} - H\hat{\mathbf{x}}^-\big)
+    &&\mathbf{z} = H\mathbf{x} + \mathbf{v} \\
+  &= (\mathbf{x} - \hat{\mathbf{x}}^-) - KH(\mathbf{x} - \hat{\mathbf{x}}^-) - K\mathbf{v}
+    &&\text{괄호를 풀고 }\mathbf{x} - \hat{\mathbf{x}}^-\text{끼리 모은다} \\
+  &= (I - KH)\,\mathbf{e}^- - K\mathbf{v}
   \end{aligned}
   $$
 
-  <p>1960년대 Peter Joseph가 제안해 그의 이름이 붙었다.</p>
+  <p>\(\mathbf{e}\)는 독립인 두 가우시안 \(\mathbf{e}^-\), \(\mathbf{v}\)에 각각 행렬을 곱해 더한 것이다. 성질 1과 2를 그대로 쓴다.</p>
+
+  $$
+  \begin{aligned}
+  \mathrm{Cov}[\mathbf{e}]
+  &= \underbrace{(I-KH)\,P^-\,(I-KH)^\top}_{\text{성질 1 — }A = I-KH}
+   + \underbrace{(-K)\,W\,(-K)^\top}_{\text{성질 1 — }A = -K}
+    &&\text{성질 2 — 독립이라 더한다} \\
+  &= (I-KH)\,P^-\,(I-KH)^\top + KWK^\top
+    &&\text{부호 둘이 상쇄}
+  \end{aligned}
+  $$
+
+  <p>
+    이것이 Joseph 형이다. 그러니 Joseph 형은 <strong>「이 \(K\)로 갱신했을 때 실제 오차의 공분산」</strong>이고, \(K\)가 무엇이든 맞는 식이다.
+  </p>
+
+  <p>
+    <strong>왜 \((I-KH)P^-\)와 같아지나 — \(K\)가 최적일 때만.</strong> Joseph 형을 펴서 \(S\)가 나오게 모은다.
+  </p>
+
+  $$
+  \begin{aligned}
+  &(I-KH)\,P^-\,(I-KH)^\top + KWK^\top \\
+  &= (I-KH)P^- - (I-KH)P^-H^\top K^\top + KWK^\top
+    &&(I-KH)^\top = I - H^\top K^\top\text{로 편다} \\
+  &= (I-KH)P^- - P^-H^\top K^\top + KHP^-H^\top K^\top + KWK^\top
+    &&\text{둘째 항을 편다} \\
+  &= (I-KH)P^- - P^-H^\top K^\top + K\,\underbrace{(HP^-H^\top + W)}_{S}\,K^\top
+    &&\text{뒤 두 항을 }K(\cdots)K^\top\text{로 묶는다} \\
+  &= (I-KH)P^- - \big(P^-H^\top - KS\big)K^\top
+    &&\text{뒤 두 항을 }(\cdots)K^\top\text{로 묶는다}
+  \end{aligned}
+  $$
+
+  <p>
+    \(K = P^-H^\top S^{-1}\)이면 \(KS = P^-H^\top\)이라 마지막 괄호가 0이다. 그래서 최적 이득에서는 \((I-KH)P^-\)만 남는다.
+    거꾸로 말하면 <strong>\((I-KH)P^-\)는 「\(K\)가 정확히 최적」이라는 사실을 써서 줄인 꼴</strong>이다.
+  </p>
+
+  <p>
+    <strong>그럼 왜 긴 쪽을 쓰나 — 컴퓨터가 계산한 \(K\)는 정확히 최적이 아니다.</strong>
+    반올림 오차 때문에 계산된 \(K\)는 최적에서 조금 벗어나 있고, 그 순간 줄임 꼴은 더 이상 실제 오차의 공분산이 아니다.
+    얼마나 다른지 보려고 앞의 숫자 예(\(P^- = 0.05\), \(W = 0.02\), 최적 \(K = 0.7143\))에 \(K\)를 일부러 최적보다 5 % 큰 0.75로 넣어 본다 (<code>src/filter_numbers.py</code> ⑦).
+  </p>
+
+  $$
+  \begin{aligned}
+  \text{줄임 꼴:}\quad &(1 - 0.75)\times 0.05 = 0.01250 \\
+  \text{Joseph 형:}\quad &(1 - 0.75)^2\times 0.05 + 0.75^2\times 0.02 = 0.00313 + 0.01125 = 0.01437 \\
+  \text{최적 }K\text{일 때:}\quad &(1 - 0.7143)\times 0.05 = 0.01429
+  \end{aligned}
+  $$
+
+  <p>
+    최적이 아닌 \(K\)로 갱신했으니 실제 분산은 최적일 때(0.01429)보다 커야 한다. Joseph 형은 그것을 그대로 말한다(0.01437).
+    줄임 꼴은 <strong>최적 필터보다도 작은 분산</strong>(0.01250)을 말한다. 있을 수 없는 값이고, 필터가 실제보다 자기를 더 믿는 쪽(과신)으로 틀린다.
+    게다가 \(K\)가 5 % 틀렸을 때 Joseph 형은 0.6 %밖에 안 움직이는데 줄임 꼴은 12.5 % 움직인다.
+    스칼라 Joseph 형을 \(K\)로 미분하면 \(-2(1-K)P^- + 2KW\)이고 이것이 0인 점이 바로 최적 \(K = P^-/(P^-+W)\)라서, 최적 근처에서 \(K\)의 작은 오차에 거의 둔감하다.
+  </p>
+
+  <p>
+    행렬에서는 문제가 하나 더 있다. \(P^- - KHP^-\)는 수학적으로 대칭이지만 \(K\), \(H\), \(P^-\)를 차례로 곱하는 계산에서는 대칭이 보장되지 않고,
+    측정이 아주 정확해 \(P\)가 작아질 때 비슷한 크기의 행렬을 빼다 보면 대각에 음수(음의 분산)가 생길 수도 있다.
+    Joseph 형은 「양의 준정부호 행렬을 같은 행렬로 앞뒤에서 끼운 것」(\(AP^-A^\top\), \(KWK^\top\)) 둘의 합이라, 어떤 \(K\)를 넣어도 대칭이고 고윳값이 음수가 되지 않는다.
+  </p>
+
+  <div class="interp">
+    <strong>그래도 되나? — 된다.</strong> 최적 \(K\)에서 두 식은 수학적으로 같은 값이고, Joseph 형은 \(K\)가 최적이 아닐 때도 맞는 더 일반적인 식이다.
+    대가는 \(n\times n\) 행렬곱 몇 번이다. 상태가 작으면 Joseph 형을 쓰고, 그것이 부담이면 줄임 꼴을 쓰되 매 스텝 \(P \leftarrow \tfrac12(P + P^\top)\)로 대칭을 맞춰 두는 경우가 많다.
+  </div>
 
   <!-- ─────────────────────────── ⑥ EKF ─────────────────────────── -->
   <h2 id="ekf">⑥ 확장 칼만 필터(EKF)</h2>
@@ -986,23 +1358,54 @@
   $$
 
   <p>
-    펴 놓은 식은 선형이므로 ⑤절의 유도를 그대로 따라가면 된다. <strong>예측</strong>은 \(\mathbf{x}_k \approx f(\hat{\mathbf{x}}_{k-1},\mathbf{u}_k) + F_k(\mathbf{x}_{k-1} - \hat{\mathbf{x}}_{k-1}) + \mathbf{w}_k\)에 성질 1·2를 쓰면
-    평균 \(f(\hat{\mathbf{x}}_{k-1},\mathbf{u}_k)\), 공분산 \(F_kP_{k-1}F_k^\top + Q_k\)다.
+    펴 놓은 식은 선형이므로 ⑤절의 유도를 그대로 따라가면 된다. <strong>예측</strong>은 펴 놓은 운동 모델에 성질 1·2를 쓴다.
+  </p>
+
+  $$
+  \begin{aligned}
+  \mathbf{x}_k &\approx \underbrace{f(\hat{\mathbf{x}}_{k-1},\mathbf{u}_k) - F_k\hat{\mathbf{x}}_{k-1}}_{\text{상수 }\mathbf{b}} + F_k\,\mathbf{x}_{k-1} + \mathbf{w}_k
+    &&\text{테일러 전개를 }A\mathbf{x}+\mathbf{b}\text{ 꼴로 정리} \\
+  \mathrm{E}[\mathbf{x}_k] &\approx f(\hat{\mathbf{x}}_{k-1},\mathbf{u}_k) - F_k\hat{\mathbf{x}}_{k-1} + F_k\hat{\mathbf{x}}_{k-1} = f(\hat{\mathbf{x}}_{k-1},\mathbf{u}_k)
+    &&\text{성질 1의 평균 — }\mathrm{E}[\mathbf{x}_{k-1}] = \hat{\mathbf{x}}_{k-1} \\
+  \mathrm{Cov}[\mathbf{x}_k] &\approx F_kP_{k-1}F_k^\top + Q_k
+    &&\text{성질 1의 공분산 · 성질 2로 }Q_k
+  \end{aligned}
+  $$
+
+  <p>
     <strong>갱신</strong>은 벌점 \(J\)의 측정 항에 펴 놓은 \(h\)를 넣고, 예측에서 얼마나 움직였는지를 \(\boldsymbol\delta = \mathbf{x} - \hat{\mathbf{x}}^-\)로 쓴다.
   </p>
 
   $$
   \begin{aligned}
-  J(\mathbf{x}) &\approx \tfrac12\lVert \mathbf{x}-\hat{\mathbf{x}}^-\rVert^2_{P^-}
-    + \tfrac12\big\lVert \mathbf{z} - h(\hat{\mathbf{x}}^-) - H(\mathbf{x}-\hat{\mathbf{x}}^-)\big\rVert^2_{W} \\
-  &= \tfrac12\lVert \boldsymbol\delta - \mathbf{0}\rVert^2_{P^-}
-    + \tfrac12\big\lVert \underbrace{\mathbf{z} - h(\hat{\mathbf{x}}^-)}_{\mathbf{y}} - H\boldsymbol\delta\big\rVert^2_{W}
-    &&\boldsymbol\delta = \mathbf{x} - \hat{\mathbf{x}}^-
+  J(\mathbf{x}) &\approx \tfrac12\,(\mathbf{x}-\hat{\mathbf{x}}^-)^\top (P^-)^{-1} (\mathbf{x}-\hat{\mathbf{x}}^-)
+    &&\text{예측 벌점은 그대로} \\
+  &\quad + \tfrac12\,\big(\mathbf{z} - h(\hat{\mathbf{x}}^-) - H(\mathbf{x}-\hat{\mathbf{x}}^-)\big)^\top W^{-1} \big(\mathbf{z} - h(\hat{\mathbf{x}}^-) - H(\mathbf{x}-\hat{\mathbf{x}}^-)\big)
+    &&\text{측정 벌점에 편 }h\text{를 넣는다} \\
+  &= \tfrac12\,(\boldsymbol\delta - \mathbf{0})^\top (P^-)^{-1} (\boldsymbol\delta - \mathbf{0})
+    &&\boldsymbol\delta = \mathbf{x} - \hat{\mathbf{x}}^- \\
+  &\quad + \tfrac12\,(\mathbf{y} - H\boldsymbol\delta)^\top W^{-1} (\mathbf{y} - H\boldsymbol\delta)
+    &&\mathbf{y} = \mathbf{z} - h(\hat{\mathbf{x}}^-)
   \end{aligned}
   $$
 
   <p>
-    ⑤절의 \(J\)에서 \(\hat{\mathbf{x}}^-\) 자리에 \(\mathbf{0}\)이, \(\mathbf{z}\) 자리에 \(\mathbf{y}\)가 들어간 꼴이다. 그러니 답도 그대로 — \(\hat{\boldsymbol\delta} = K\mathbf{y}\), 즉 \(\hat{\mathbf{x}} = \hat{\mathbf{x}}^- + K\big(\mathbf{z} - h(\hat{\mathbf{x}}^-)\big)\)다.
+    ⑤절의 \(J\)에서 변수 \(\mathbf{x}\) 자리에 \(\boldsymbol\delta\)가, \(\hat{\mathbf{x}}^-\) 자리에 \(\mathbf{0}\)이, \(\mathbf{z}\) 자리에 \(\mathbf{y}\)가 들어간 꼴이다. 그러니 ⑤절의 답에 같은 자리바꿈을 하면 된다.
+  </p>
+
+  $$
+  \begin{aligned}
+  \hat{\mathbf{x}} &= \hat{\mathbf{x}}^- + K\big(\mathbf{z} - H\hat{\mathbf{x}}^-\big)
+    &&\text{⑤절의 답} \\
+  \hat{\boldsymbol\delta} &= \mathbf{0} + K\big(\mathbf{y} - H\,\mathbf{0}\big) = K\mathbf{y}
+    &&\hat{\mathbf{x}}^- \to \mathbf{0},\ \ \mathbf{z} \to \mathbf{y} \\
+  \hat{\mathbf{x}} &= \hat{\mathbf{x}}^- + \hat{\boldsymbol\delta} = \hat{\mathbf{x}}^- + K\big(\mathbf{z} - h(\hat{\mathbf{x}}^-)\big)
+    &&\boldsymbol\delta = \mathbf{x} - \hat{\mathbf{x}}^-\text{를 되돌린다}
+  \end{aligned}
+  $$
+
+  <p>
+    \(K\)와 \(P\)는 \(P^-, H, W\)로만 정해지므로 ⑤절과 같은 식이다.
     <strong>혁신만 비선형 함수로 계산하고, 나머지는 KF와 같다.</strong>
     잡음이 덧셈 꼴로 들어가지 않는 경우(\(\mathbf{x}_k = f(\mathbf{x}_{k-1}, \mathbf{u}_k, \mathbf{w}_k)\))에는 잡음에 대한 야코비안 \(L_k = \partial f/\partial\mathbf{w}\)로 \(Q_k\)를 상태 공간에 옮긴다(성질 1).
   </p>
@@ -1185,16 +1588,28 @@
   <h3>예측 — 로봇 블록과 그 줄만</h3>
 
   <p>
-    랜드마크는 움직이지 않으므로 운동 모델은 로봇에만 걸린다: \(F = \mathrm{blkdiag}(F_r, I)\).
-    \(FPF^\top\)를 블록으로 펴면
+    랜드마크는 움직이지 않으므로 운동 모델은 로봇에만 걸린다: \(F = \mathrm{blkdiag}(F_r, I)\). 운동 잡음도 로봇 칸에만 들어간다.
+    랜드마크 전부를 \(\mathbf{l}\) 하나로 묶어 \(P\)를 2×2 블록으로 보고, \(FPF^\top\)를 블록 곱셈으로 편다.
   </p>
 
   $$
-  P^- =
-  \begin{bmatrix}
+  \begin{aligned}
+  FPF^\top
+  &= \begin{bmatrix} F_r & 0 \\ 0 & I \end{bmatrix}
+     \begin{bmatrix} P_{rr} & P_{rl} \\ P_{lr} & P_{ll} \end{bmatrix}
+     \begin{bmatrix} F_r^\top & 0 \\ 0 & I \end{bmatrix} \\
+  &= \begin{bmatrix} F_rP_{rr} & F_rP_{rl} \\ P_{lr} & P_{ll} \end{bmatrix}
+     \begin{bmatrix} F_r^\top & 0 \\ 0 & I \end{bmatrix}
+    &&\text{왼쪽 곱 — 위 블록 줄에만 }F_r \\
+  &= \begin{bmatrix} F_rP_{rr}F_r^\top & F_rP_{rl} \\ P_{lr}F_r^\top & P_{ll} \end{bmatrix}
+    &&\text{오른쪽 곱 — 왼쪽 블록 열에만 }F_r^\top \\
+  P^- &= FPF^\top + \begin{bmatrix} L Q L^\top & 0 \\ 0 & 0 \end{bmatrix}
+   = \begin{bmatrix}
     F_rP_{rr}F_r^\top + L Q L^\top & F_rP_{rl} \\
     P_{lr}F_r^\top & P_{ll}
   \end{bmatrix}
+    &&\text{운동 잡음은 로봇 칸에만}
+  \end{aligned}
   $$
 
   <p>
@@ -1205,17 +1620,30 @@
 
   <p>
     처음 본 랜드마크는 측정을 거꾸로 풀어 위치를 정한다: \(\mathbf{l}_{\text{새}} = g(\mathbf{x}_r, \mathbf{z})\) (예: 거리-방위를 직교좌표로).
-    \(G_r = \partial g/\partial\mathbf{x}_r\), \(G_z = \partial g/\partial\mathbf{z}\)로 성질 1을 쓰면 늘어난 공분산의 새 블록이 나온다.
+    \(G_r = \partial g/\partial\mathbf{x}_r\), \(G_z = \partial g/\partial\mathbf{z}\)로 지금 추정값 둘레에서 펴면, 새 랜드마크의 오차는 로봇 오차와 측정 잡음의 선형 결합이 된다. 여기서 \(\hat{\mathbf{l}}_{\text{새}} = g(\hat{\mathbf{x}}_r, \mathbf{z})\)이고, 측정 잡음 \(\mathbf{v}\)는 지금까지의 상태 오차와 독립이다.
   </p>
 
   $$
-  P_{\text{새},\text{새}} = G_rP_{rr}G_r^\top + G_zWG_z^\top,
-  \qquad
-  P_{\text{새},\,\cdot} = G_r\,\big[\,P_{rr}\ \ P_{rl}\,\big]
+  \begin{aligned}
+  \mathbf{l}_{\text{새}} - \hat{\mathbf{l}}_{\text{새}}
+  &\approx G_r(\mathbf{x}_r - \hat{\mathbf{x}}_r) + G_z\mathbf{v}
+    &&\text{1차 테일러} \\
+  P_{\text{새},\text{새}}
+  &= \mathrm{E}\big[(\mathbf{l}_{\text{새}} - \hat{\mathbf{l}}_{\text{새}})(\mathbf{l}_{\text{새}} - \hat{\mathbf{l}}_{\text{새}})^\top\big] \\
+  &= G_rP_{rr}G_r^\top + G_zWG_z^\top
+    &&\text{성질 1 · 2} \\
+  P_{\text{새},\,\cdot}
+  &= \mathrm{E}\big[(\mathbf{l}_{\text{새}} - \hat{\mathbf{l}}_{\text{새}})(\mathbf{x} - \hat{\mathbf{x}})^\top\big]
+    &&\text{기존 상태 전체와} \\
+  &= G_r\,\mathrm{E}\big[(\mathbf{x}_r - \hat{\mathbf{x}}_r)(\mathbf{x} - \hat{\mathbf{x}})^\top\big]
+   + G_z\,\underbrace{\mathrm{E}\big[\mathbf{v}(\mathbf{x} - \hat{\mathbf{x}})^\top\big]}_{0\ (\text{독립})} \\
+  &= G_r\,\big[\,P_{rr}\ \ P_{rl}\,\big]
+    &&P\text{의 로봇 줄}
+  \end{aligned}
   $$
 
   <p>
-    둘째 식이 핵심이다. <strong>새 랜드마크는 로봇과, 그리고 로봇을 통해 기존 랜드마크 전부와 상관을 갖고 태어난다.</strong>
+    마지막 식 \(P_{\text{새},\,\cdot}\)이 핵심이다. <strong>새 랜드마크는 로봇과, 그리고 로봇을 통해 기존 랜드마크 전부와 상관을 갖고 태어난다.</strong>
     가장 단순한 1차원 경우를 그림으로 보자. 로봇 위치 오차 \(\sigma_r = 0.10\) m, 거리 센서 오차 \(\sigma_z = 0.05\) m, \(\mathbf{l} = \mathbf{x}_r + \mathbf{z}\)라 \(G_r = G_z = 1\)이다.
   </p>
 
@@ -1265,10 +1693,11 @@
   P^- &= \begin{bmatrix} 0.030 & 0.010 & 0.020 \\ 0.010 & 0.0125 & 0.010 \\ 0.020 & 0.010 & 0.0225 \end{bmatrix}
     &&(x,\ p_1,\ p_2)\ \text{— 돌아온 직후} \\
   P^-H^\top &= \begin{bmatrix} -0.030 + 0.010 \\ -0.010 + 0.0125 \\ -0.020 + 0.010 \end{bmatrix}
-   = \begin{bmatrix} -0.020 \\ 0.0025 \\ -0.010 \end{bmatrix},
-  \qquad
-  S = HP^-H^\top + W = 0.0225 + 0.0025 = 0.025 \\
-  K &= \begin{bmatrix} -0.8 & 0.1 & -0.4 \end{bmatrix}^\top
+   = \begin{bmatrix} -0.020 \\ 0.0025 \\ -0.010 \end{bmatrix}
+    &&-(x\text{ 열}) + (p_1\text{ 열}) \\
+  S &= H\,(P^-H^\top) + W = (-1)(-0.020) + (1)(0.0025) + (0)(-0.010) + 0.0025 = 0.0225 + 0.0025 = 0.025
+    &&W = 0.05^2 \\
+  K &= P^-H^\top / S = \begin{bmatrix} -0.020 & 0.0025 & -0.010 \end{bmatrix}^\top / 0.025 = \begin{bmatrix} -0.8 & 0.1 & -0.4 \end{bmatrix}^\top
     &&p_2\text{의 칸이 0이 아니다}
   \end{aligned}
   $$
@@ -1394,10 +1823,14 @@
   </p>
 
   $$
+  \begin{aligned}
   -\log p(\mathbf{x}_{k-1},\ \mathbf{x}_k \mid \cdots)
-  = \underbrace{\tfrac12\lVert \mathbf{x}_k - F\mathbf{x}_{k-1} - B\mathbf{u}_k\rVert^2_{Q}}_{\text{운동이 남긴 벌점}}
-  + \underbrace{\tfrac12\lVert \mathbf{x}_{k-1} - \hat{\mathbf{x}}_{k-1}\rVert^2_{P_{k-1}}}_{\text{지난 믿음}}
-  + \text{상수}
+  &= \tfrac12\,(\mathbf{x}_k - F\mathbf{x}_{k-1} - B\mathbf{u}_k)^\top Q^{-1} (\mathbf{x}_k - F\mathbf{x}_{k-1} - B\mathbf{u}_k)
+    &&\text{운동이 남긴 벌점 — }-\log p(\mathbf{x}_k\mid\mathbf{x}_{k-1},\mathbf{u}_k) \\
+  &\quad + \tfrac12\,(\mathbf{x}_{k-1} - \hat{\mathbf{x}}_{k-1})^\top P_{k-1}^{-1} (\mathbf{x}_{k-1} - \hat{\mathbf{x}}_{k-1})
+    &&\text{지난 믿음 — }-\log \mathrm{bel}(\mathbf{x}_{k-1}) \\
+  &\quad + \text{상수}
+  \end{aligned}
   $$
 
   <p>
@@ -1451,7 +1884,7 @@
     <li><input type="checkbox" id="c5"><label for="c5">칼만 갱신을 「두 가우시안의 곱 → 벌점의 합 \(J\) → 기울기 0」으로 유도하고, 정보 형식을 \(K = P^-H^\top S^{-1}\) 꼴로 바꿀 수 있다</label></li>
     <li><input type="checkbox" id="c6"><label for="c6">칼만 필터의 일곱 줄이 각각 무엇을 하는지, 쓰는 사람이 정해야 하는 것 여섯 가지를 댈 수 있다</label></li>
     <li><input type="checkbox" id="c7"><label for="c7">스칼라 숫자 예(3.0 · 0.05 → 3.1071 · 0.01429)를 두 꼴로 손으로 다시 계산할 수 있다</label></li>
-    <li><input type="checkbox" id="c8"><label for="c8">이득을 정하는 것이 \(Q/W\)의 비라는 것과, 측정이 끊기면 \(P\)와 \(K\)가 어떻게 되는지 설명할 수 있다</label></li>
+    <li><input type="checkbox" id="c8"><label for="c8">이득이 「\(Q\)가 쌓은 예측 불확실도 \(P^-\)」와 「측정 불확실도 \(W\)」의 비로 정해지고 정상상태에서는 \(Q/W\)만으로 정해진다는 것과, 측정이 끊기면 \(P\)와 \(K\)가 어떻게 되는지 설명할 수 있다</label></li>
     <li><input type="checkbox" id="c9"><label for="c9">NIS로 이상한 측정을 거르는 법(문턱 3.84 · 5.99)과, NIS · NEES로 필터의 과신을 재는 법을 말할 수 있다</label></li>
     <li><input type="checkbox" id="c10"><label for="c10">EKF가 KF와 다른 곳 세 군데를 대고, 혁신만 비선형 함수로 계산해도 되는 이유를 \(\boldsymbol\delta\)로 보일 수 있다</label></li>
     <li><input type="checkbox" id="c11"><label for="c11">거리-방위 측정의 야코비안을 유도하고, 로봇 칸과 랜드마크 칸이 왜 부호만 다른지 설명할 수 있다</label></li>
