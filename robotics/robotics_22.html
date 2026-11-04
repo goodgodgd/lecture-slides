@@ -29,13 +29,13 @@
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
   <a href="#summary">한 장 요약</a>
-  <a href="#plan">① front_range와 wall_stop v9~v12</a>
+  <a href="#plan">① wall_range와 turtle_drive v8~v11</a>
   <a href="#qos">② QoS 정책 — Reliability · History · Durability</a>
   <a href="#compat">③ QoS 호환성</a>
-  <a href="#v9">④ sensor_msgs/msg/Range 발행 (v9)</a>
-  <a href="#v10">⑤ QoS 불일치 진단과 SensorDataQoS (v10)</a>
-  <a href="#v11">⑥ 콜백 처리 시간과 지연 (v11)</a>
-  <a href="#v12">⑦ 로깅 THROTTLE · DEBUG (v12)</a>
+  <a href="#v8">④ sensor_msgs/msg/Range 발행 (v8)</a>
+  <a href="#v9">⑤ QoS 불일치 진단과 SensorDataQoS (v9)</a>
+  <a href="#v10">⑥ 콜백 처리 시간과 지연 (v10)</a>
+  <a href="#v11">⑦ 로깅 THROTTLE · DEBUG (v11)</a>
   <a href="#rqt">⑧ rqt_graph · rqt_plot</a>
   <a href="#bag">⑨ ros2 bag 기록과 재생</a>
   <a href="#rviz">⑩ rviz2</a>
@@ -65,12 +65,12 @@
 
   <p>
     18회 ⑦절에서 「이름도 맞고 개수도 맞는데 안 붙는」 짝을 봤다. 그때는 <code>ros2 topic pub</code>에 옵션을 붙여 일부러 만든 것이라 「QoS는 22회에서 제대로」라고 미뤘다.
-    오늘은 그것을 <strong>우리 코드에서</strong> 만난다. 같은 패키지 <code>turtle_drive</code>에 센서처럼 거리를 보내는 노드 <code>front_range</code>를 더하고(v9),
-    <code>wall_stop</code>이 그 거리를 받아 서게 바꾸면(v10) — AI가 흔히 주는 모양 그대로 구독을 만들었을 때 — 거북이가 출발조차 하지 않는다.
+    오늘은 그것을 <strong>우리 코드에서</strong> 만난다. 같은 패키지 <code>turtle_drive</code>에 센서처럼 거리를 보내는 노드 <code>wall_range</code>를 더하고(v8),
+    <code>turtle_drive</code> 노드가 그 거리로 「범위를 벗어났나」를 판단하게 바꾸면(v9) — AI가 흔히 주는 모양 그대로 구독을 만들었을 때 — 거북이가 출발조차 하지 않는다.
   </p>
   <p>
-    고친 뒤에는 콜백이 <strong>얼마나 오래 걸리는지</strong> 잰다(v11). 21회 ⑥절에서 콜백 안에서 기다리면 노드 전체가 멈추는 것을 봤다. 아주 멈추지는 않더라도 콜백이 느리면 무엇이 달라지는지를
-    거북이가 벽 앞에서 서는 자리로 확인한다. 그다음 콜백마다 찍던 로그를 정리하고(v12), 마지막으로 rqt_plot·<code>ros2 bag</code>·rviz2로 값을 <strong>보는</strong> 방법을 익힌다.
+    고친 뒤에는 콜백이 <strong>얼마나 오래 걸리는지</strong> 잰다(v10). 21회 ⑥절에서 콜백 안에서 기다리면 노드 전체가 멈추는 것을 봤다. 아주 멈추지는 않더라도 콜백이 느리면 무엇이 달라지는지를
+    거북이가 <strong>돌아서는 자리</strong>로 확인한다. 그다음 콜백마다 찍던 로그를 정리하고(v11), 마지막으로 rqt_plot·<code>ros2 bag</code>·rviz2로 값을 <strong>보는</strong> 방법을 익힌다.
     3부의 마지막 회차라 끝에서 15~22회에 쌓은 것을 한 표로 정리한다.
   </p>
 
@@ -91,23 +91,23 @@
   </div>
   <div class="interp">
     <strong>해석:</strong> 일곱 줄 가운데 셋째·다섯째 줄은 <strong>빌드가 잡아 주지 않는다.</strong> QoS가 안 맞아도, 콜백이 느려도 컴파일은 되고 노드는 뜬다.
-    그래서 오늘의 확인은 늘 두 가지로 끝난다 — <code>ros2 topic info -v</code>의 Reliability 두 줄, 그리고 거북이가 <strong>실제로 어디서 섰나.</strong>
+    그래서 오늘의 확인은 늘 두 가지로 끝난다 — <code>ros2 topic info -v</code>의 Reliability 두 줄, 그리고 거북이가 <strong>실제로 어디서 돌아섰나.</strong>
   </div>
 
   <!-- ── ① 오늘 만들 것 ── -->
-  <h2 id="plan">① <code>front_range</code>와 <code>wall_stop</code> v9~v12 <span class="badge b-red">🔴 사람이 한다</span></h2>
+  <h2 id="plan">① <code>wall_range</code>와 <code>turtle_drive</code> v8~v11 <span class="badge b-red">🔴 사람이 한다</span></h2>
   <p>
-    지금 <code>wall_stop</code>은 <code>/turtle1/pose</code>를 받아 앞 벽까지 거리를 <strong>스스로 계산</strong>한다. 실물 로봇은 어떨까? 거리는 라이다나 초음파 센서가 재서 토픽으로 보내 주고,
+    지금 <code>turtle_drive</code>는 <code>/turtle1/pose</code>를 받아 x·y가 범위 안에 있는지를 <strong>스스로 계산</strong>한다. 실물 로봇은 어떨까? 벽이나 콘까지의 거리는 라이다나 초음파 센서가 재서 토픽으로 보내 주고,
     주행 노드는 그 값을 받아 판단만 한다. 15회에서 본 「센서 드라이버 노드와 판단 노드를 나눈다」는 구조다. 오늘은 turtlesim에서도 그 모양을 만든다 —
-    거리를 재는 일은 새 노드 <code>front_range</code>가 맡고, <code>wall_stop</code>은 그 토픽을 받는다.
+    벽까지 거리를 재는 일은 새 노드 <code>wall_range</code>가 맡고, <code>turtle_drive</code>는 그 토픽을 받는다.
   </p>
   <div class="tablewrap">
   <table>
     <tr><th>단계</th><th>더하는 것</th><th>바뀌는 파일</th><th>거북이는</th></tr>
-    <tr><td><strong>v9</strong> (④절)</td><td>새 노드 <code>front_range</code> — 자세를 받아 앞 거리를 <code>sensor_msgs/msg/Range</code>로 <strong>best effort</strong> 발행</td><td><code>src/front_range.cpp</code>(새) · <code>CMakeLists.txt</code> · <code>package.xml</code> · launch</td><td>v8과 같다. 토픽이 하나 는다</td></tr>
-    <tr><td><strong>v10</strong> (⑤절)</td><td><code>wall_stop</code>이 자세 대신 <code>/turtle1/front_range</code>를 구독</td><td><code>wall_stop.cpp</code> · <code>CMakeLists.txt</code></td><td>구독 QoS가 기본값이면 <strong>출발도 안 한다</strong> → <code>SensorDataQoS()</code>로 고친다</td></tr>
-    <tr><td><strong>v11</strong> (⑥절)</td><td>거리 콜백의 처리 시간과 받은 값의 나이를 잰다. 실험용 파라미터 둘</td><td><code>wall_stop.cpp</code></td><td>콜백이 느리면 <strong>늦게 선다</strong> — 큐가 깊으면 벽에 닿는다</td></tr>
-    <tr><td><strong>v12</strong> (⑦절)</td><td>로그를 THROTTLE · DEBUG로 정리</td><td><code>wall_stop.cpp</code></td><td>같다. 터미널이 1초에 한 줄로 조용해진다</td></tr>
+    <tr><td><strong>v8</strong> (④절)</td><td>새 노드 <code>wall_range</code> — 자세를 받아 <strong>가장 가까운 벽까지 거리</strong>를 <code>sensor_msgs/msg/Range</code>로 <strong>best effort</strong> 발행</td><td><code>src/wall_range.cpp</code>(새) · <code>CMakeLists.txt</code> · <code>package.xml</code> · launch</td><td>v7과 같다. 토픽이 하나 는다</td></tr>
+    <tr><td><strong>v9</strong> (⑤절)</td><td><code>turtle_drive</code>가 범위 판정을 <code>/turtle1/wall_range</code>로 한다</td><td><code>turtle_drive.cpp</code> · <code>CMakeLists.txt</code></td><td>구독 QoS가 기본값이면 <strong>출발도 안 한다</strong> → <code>SensorDataQoS()</code>로 고친다</td></tr>
+    <tr><td><strong>v10</strong> (⑥절)</td><td>거리 콜백의 처리 시간과 받은 값의 나이를 잰다. 실험용 파라미터 둘</td><td><code>turtle_drive.cpp</code></td><td>콜백이 느리면 <strong>늦게 돌아선다</strong> — 큐가 깊으면 벽에 닿는다</td></tr>
+    <tr><td><strong>v11</strong> (⑦절)</td><td>로그를 THROTTLE · DEBUG로 정리</td><td><code>turtle_drive.cpp</code></td><td>같다. 터미널이 1초에 한 줄로 조용해진다</td></tr>
   </table>
   </div>
   <p>
@@ -132,7 +132,7 @@
 
   <h3>History와 Depth — 밀린 메시지를 몇 개까지 쌓아 두나</h3>
   <p>
-    20회 🆕에서 <code>create_publisher(…, 10)</code>의 <code>10</code>을 <strong>큐 깊이</strong>라고 했다. 정확히는 두 정책이다. <strong>History</strong>는 쌓는 방식이고, 보통은 <strong>KEEP_LAST</strong>(최근 N개만 둔다)다.
+    20회 ②절 🆕에서 <code>create_publisher(…, 10)</code>의 <code>10</code>을 <strong>큐 깊이</strong>라고 했다. 정확히는 두 정책이다. <strong>History</strong>는 쌓는 방식이고, 보통은 <strong>KEEP_LAST</strong>(최근 N개만 둔다)다.
     그 N이 <strong>Depth</strong>다. 받는 쪽 콜백이 아직 앞 메시지를 처리하는 동안 새 메시지가 오면 큐에 쌓이고, N개가 넘으면 <strong>가장 오래된 것부터 버린다.</strong>
     History를 KEEP_ALL로 두면 버리지 않고 다 쌓지만, 이 과목에서는 쓸 일이 거의 없다.
   </p>
@@ -194,12 +194,12 @@ angular_velocity: 0.0
     그래서 규칙은 <strong>「받는 쪽은 보내는 쪽에 맞춘다」</strong>다 — 센서 토픽은 센서용 QoS로, 명령 토픽은 기본값으로. 누가 어떻게 보내는지는 <code>ros2 topic info -v</code>가 알려 준다.
   </div>
 
-  <!-- ── ④ v9 ── -->
-  <h2 id="v9">④ <code>sensor_msgs/msg/Range</code> 발행 — <code>front_range</code> 노드 (v9) <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+  <!-- ── ④ v8 ── -->
+  <h2 id="v8">④ <code>sensor_msgs/msg/Range</code> 발행 — <code>wall_range</code> 노드 (v8) <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
   <h3>개념 — 거리 하나를 담는 센서 메시지</h3>
   <p>
-    초음파·적외선 거리 센서처럼 <strong>한 방향의 거리 하나</strong>를 재는 센서는 <code>sensor_msgs/msg/Range</code>로 보낸다(라이다처럼 여러 방향을 한꺼번에 재는 센서는 24회의 <code>LaserScan</code>이다).
+    초음파·적외선 거리 센서처럼 <strong>거리 하나</strong>를 재는 센서는 <code>sensor_msgs/msg/Range</code>로 보낸다(라이다처럼 여러 방향을 한꺼번에 재는 센서는 24회의 <code>LaserScan</code>이다).
     17회처럼 정의부터 본다. 주석이 길어 필드 줄만 남겼다.
   </p>
   <pre class="lang-sh"><code>$ ros2 interface show sensor_msgs/msg/Range
@@ -219,57 +219,63 @@ float32 variance        # variance of the range sensor
 (주석 줄은 줄였다)</code></pre>
   <div class="tablewrap">
   <table>
-    <tr><th>필드</th><th>뜻</th><th><code>front_range</code>가 넣는 값</th></tr>
+    <tr><th>필드</th><th>뜻</th><th><code>wall_range</code>가 넣는 값</th></tr>
     <tr><td><code>header.stamp</code></td><td>이 값을 <strong>잰 시각</strong> (17회 <code>Header</code>)</td><td>계산한 순간의 시각 <code>this-&gt;now()</code> — ⑥절에서 「받은 값의 나이」를 재는 데 쓴다</td></tr>
     <tr><td><code>header.frame_id</code></td><td>어느 좌표계에서 잰 값인가 (17회)</td><td><code>"turtle1"</code> — 거북이에 붙은 센서. ⑩절 rviz2가 이 이름을 본다</td></tr>
     <tr><td><code>radiation_type</code></td><td>센서 종류 — 위의 상수 <code>ULTRASOUND</code>(0)·<code>INFRARED</code>(1)</td><td>초음파로 둔다</td></tr>
-    <tr><td><code>field_of_view</code> · <code>min_range</code> · <code>max_range</code></td><td>재는 부채꼴의 각도(rad), 잴 수 있는 거리 범위(m)</td><td>0.2 rad · 0 m · 16 m (창의 대각선 15.7 m보다 길게)</td></tr>
-    <tr><td><code>range</code></td><td>잰 거리(m)</td><td>20회 <code>front_distance()</code>로 계산한 앞 벽까지 거리</td></tr>
+    <tr><td><code>field_of_view</code> · <code>min_range</code> · <code>max_range</code></td><td>재는 부채꼴의 각도(rad), 잴 수 있는 거리 범위(m)</td><td>0.2 rad · 0 m · 6 m (지도 가운데 5.5 m보다 길게)</td></tr>
+    <tr><td><code>range</code></td><td>잰 거리(m)</td><td>가장 가까운 벽까지 거리</td></tr>
   </table>
   </div>
 
-  <h3>예제에 적용 — 앞 거리 계산을 새 노드로 옮긴다</h3>
+  <h3>예제에 적용 — 벽까지 거리를 재는 일을 새 노드로 뺀다</h3>
   <p>
-    20회 v3에서 만든 <code>front_distance()</code>를 그대로 새 파일 <code>src/front_range.cpp</code>로 옮긴다. 이 노드는 <code>/turtle1/pose</code>가 올 때마다(초당 62.5번, 18회 <code>hz</code>) 거리를 계산해
-    <code>/turtle1/front_range</code>로 보낸다. 실제 센서 드라이버처럼 <strong>best effort</strong>로 보낸다 — 발행자의 둘째 인자에 <code>10</code> 대신 <code>rclcpp::SensorDataQoS()</code>를 준다.
-    이번 단계에서 <code>wall_stop.cpp</code>는 v8 그대로다.
+    가장 가까운 벽까지 거리는 어떻게 구할까? 지도 한 변이 11 m이니 네 벽까지 거리는 왼쪽 <code>x</code>, 아래 <code>y</code>, 오른쪽 <code>11 − x</code>, 위 <code>11 − y</code>이고, 그중 <strong>가장 작은 값</strong>이 답이다.
+    20회 v2의 범위 판정 「x나 y가 1보다 작거나 10보다 크다」는 「이 값이 1(<code>margin</code>)보다 작다」와 같은 말이다. 그래서 거리 하나만 받으면 <code>turtle_drive</code>의 판정을 그대로 바꿔 쓸 수 있다(⑤절).
+  </p>
+  <p>
+    새 파일 <code>src/wall_range.cpp</code>의 노드는 <code>/turtle1/pose</code>가 올 때마다(초당 62.5번, 18회 <code>hz</code>) 이 거리를 구해 <code>/turtle1/wall_range</code>로 보낸다.
+    실제 센서 드라이버처럼 <strong>best effort</strong>로 보낸다 — 발행자의 둘째 인자에 <code>10</code> 대신 <code>rclcpp::SensorDataQoS()</code>를 준다.
+    이번 단계에서 <code>turtle_drive.cpp</code>는 v7 그대로다.
   </p>
 
-  <h3>9단계 (v9) — 새 실행 파일 <code>front_range</code></h3>
-  <div class="codelabel good">새 파일 src/front_range.cpp — 생성자와 콜백</div>
+  <h3>8단계 (v8) — 새 실행 파일 <code>wall_range</code></h3>
+  <div class="codelabel good">새 파일 src/wall_range.cpp — 생성자와 콜백</div>
   <pre class="lang-cpp after"><code>#include "sensor_msgs/msg/range.hpp"
   // …
-  FrontRange()
-  : Node("front_range")
+  WallRange()
+  : Node("wall_range")
   {
     // 센서 데이터용 QoS 로 발행한다 — best effort, 깊이 5 (실제 라이다·초음파 드라이버가 대개 이렇게 보낸다)
     range_pub_ = this-&gt;create_publisher&lt;sensor_msgs::msg::Range&gt;(
-      "/turtle1/front_range", rclcpp::SensorDataQoS());
+      "/turtle1/wall_range", rclcpp::SensorDataQoS());
     pose_sub_ = this-&gt;create_subscription&lt;turtlesim::msg::Pose&gt;(
       "/turtle1/pose", 10,
       [this](turtlesim::msg::Pose::ConstSharedPtr msg) { on_pose(msg); });
   }
-  // 자세가 올 때마다(초당 62.5번) 앞 벽까지 거리를 계산해 Range 메시지로 내보낸다
+  // 자세가 올 때마다(초당 62.5번) 가장 가까운 벽까지 거리를 Range 메시지로 내보낸다
   void on_pose(turtlesim::msg::Pose::ConstSharedPtr msg)
   {
     sensor_msgs::msg::Range r;
     r.header.stamp = this-&gt;now();        // 이 값을 잰 시각
     r.header.frame_id = "turtle1";       // 거북이에 붙은 센서라는 뜻
     r.radiation_type = sensor_msgs::msg::Range::ULTRASOUND;
-    r.field_of_view = 0.2;               // 앞쪽 0.2 rad(약 11도) 부채꼴
+    r.field_of_view = 0.2;               // 0.2 rad(약 11도) 부채꼴
     r.min_range = 0.0;
-    r.max_range = 16.0;                  // 창의 대각선(약 15.7 m)보다 조금 길게
-    r.range = static_cast&lt;float&gt;(front_distance(*msg));
+    r.max_range = 6.0;                   // 지도 가운데(5.5 m)보다 조금 길게
+    // 네 벽까지 거리 — 왼쪽 x, 아래 y, 오른쪽 11 − x, 위 11 − y — 중 가장 작은 값
+    r.range = static_cast&lt;float&gt;(std::min({msg-&gt;x, msg-&gt;y, map_size_ - msg-&gt;x, map_size_ - msg-&gt;y}));
     range_pub_-&gt;publish(r);
-  }</code></pre>
+  }
+  const float map_size_ = 11.0f;       // 지도 한 변의 길이 (m) — turtle_drive 와 같은 값</code></pre>
   <div class="codelabel good">CMakeLists.txt · package.xml 에 더하는 줄</div>
   <pre class="lang-cmake after"><code>find_package(sensor_msgs REQUIRED)
 # …
-add_executable(front_range src/front_range.cpp)
-target_link_libraries(front_range PRIVATE
+add_executable(wall_range src/wall_range.cpp)
+target_link_libraries(wall_range PRIVATE
   rclcpp::rclcpp ${turtlesim_TARGETS} ${sensor_msgs_TARGETS})
 # …
-install(TARGETS hello_node wall_stop front_range
+install(TARGETS hello_node turtle_drive wall_range
   DESTINATION lib/${PROJECT_NAME})</code></pre>
   <pre><code>  &lt;depend&gt;sensor_msgs&lt;/depend&gt;</code></pre>
   <div class="box firstseen">
@@ -281,42 +287,44 @@ install(TARGETS hello_node wall_stop front_range
       <dd>노드의 시계로 지금 시각을 <code>rclcpp::Time</code>으로 돌려준다. <code>header.stamp</code>에 그대로 넣을 수 있다. 「이 거리를 언제 쟀나」를 메시지에 적어 보내는 것이다.</dd>
       <dt>sensor_msgs::msg::Range::ULTRASOUND</dt>
       <dd>메시지 정의 안의 상수(<code>uint8 ULTRASOUND=0</code>)가 C++에서는 이렇게 클래스 안의 이름으로 보인다. 숫자 0을 직접 쓰는 것보다 뜻이 읽힌다.</dd>
+      <dt>std::min({a, b, c, d})</dt>
+      <dd><code>&lt;algorithm&gt;</code>에 있는, 가장 작은 값을 돌려주는 함수. <code>std::min(a, b)</code>처럼 두 값을 넘겨도 되고, 여기처럼 <strong>중괄호로 값 여럿을 묶어</strong> 넘기면 그중 가장 작은 값을 돌려준다. 13회의 <code>min_element</code>가 컨테이너의 범위에서 찾았다면, 이것은 그 자리에서 적은 값 몇 개를 비교한다. 묶은 값은 타입이 모두 같아야 해서, <code>Pose</code>의 <code>x</code>·<code>y</code>(<code>float</code>)에 맞춰 <code>map_size_</code>도 <code>float</code>(<code>11.0f</code>)로 두었다.</dd>
       <dt>static_cast&lt;float&gt;(…)</dt>
-      <dd><code>front_distance()</code>는 <code>double</code>을, <code>range</code> 필드는 <code>float32</code>(<code>float</code>)를 쓴다. 정밀도가 줄어드는 변환이라 「알고 바꾼다」고 적어 둔 것이다.</dd>
+      <dd>「이 값을 <code>float</code>로 바꾼다」고 적어 두는 형변환이다. 지금 계산은 이미 <code>float</code>라 바뀌는 것은 없지만, <code>range</code> 필드가 <code>float32</code>라는 것을 코드에 드러내 둔다. 계산을 <code>double</code>로 바꾸더라도 이 줄은 그대로 맞다.</dd>
     </dl>
   </div>
   <p>
-    launch 파일에도 <code>front_range</code> 노드를 한 덩어리 더해 셋이 함께 뜨게 했다(📄 상자). <code>wall_stop</code>은 아직 이 토픽을 안 쓰므로 거북이는 v8과 똑같이 움직인다.
+    launch 파일에도 <code>wall_range</code> 노드를 한 덩어리 더해 셋이 함께 뜨게 했다(📄 상자). <code>turtle_drive</code>는 아직 이 토픽을 안 쓰므로 거북이는 v7과 똑같이 움직인다.
   </p>
 
   <h3>실제로 나온 출력</h3>
-  <p>turtlesim을 띄운 옆 터미널에서 <code>ros2 run turtle_drive front_range</code>를 띄우고, 또 다른 터미널에서 토픽을 본다.</p>
+  <p>turtlesim을 띄운 옆 터미널에서 <code>ros2 run turtle_drive wall_range</code>를 띄우고, 또 다른 터미널에서 토픽을 본다.</p>
   <pre class="lang-sh"><code>$ ros2 pkg executables turtle_drive
-turtle_drive front_range
 turtle_drive hello_node
-turtle_drive wall_stop
-$ ros2 topic echo --once /turtle1/front_range
+turtle_drive turtle_drive
+turtle_drive wall_range
+$ ros2 topic echo --once /turtle1/wall_range
 header:
   stamp:
-    sec: 1792278315
-    nanosec: 768654342
+    sec: 1793759388
+    nanosec: 775691298
   frame_id: turtle1
 radiation_type: 0
 field_of_view: 0.20000000298023224
 min_range: 0.0
-max_range: 16.0
-range: 5.544455528259277
+max_range: 6.0
+range: 5.455555438995361
 variance: 0.0
 ---
-$ ros2 topic hz /turtle1/front_range
-average rate: 62.470
-	min: 0.015s max: 0.016s std dev: 0.00048s window: 64</code></pre>
-  <pre class="lang-sh"><code>$ ros2 topic info -v /turtle1/front_range
+$ ros2 topic hz /turtle1/wall_range
+average rate: 62.502
+	min: 0.015s max: 0.016s std dev: 0.00044s window: 64</code></pre>
+  <pre class="lang-sh"><code>$ ros2 topic info -v /turtle1/wall_range
 Type: sensor_msgs/msg/Range
 
 Publisher count: 1
 
-Node name: front_range
+Node name: wall_range
 (…)
 Endpoint type: PUBLISHER
 (…)
@@ -328,73 +336,59 @@ QoS profile:
 
 Subscription count: 0</code></pre>
   <p>
-    거북이가 처음 자리(x = 5.54)에서 오른쪽을 보고 있으니 <code>range</code>는 창 한 변 11.09 − 5.54 = <strong>5.54 m</strong>다. 자세와 같은 초당 62.5번으로 온다.
+    거북이가 처음 자리 (5.54, 5.54)에 있으니 네 벽까지는 5.54 · 5.54 · 11 − 5.54 = 5.46 · 5.46이고, 가장 작은 <strong>5.46 m</strong>가 <code>range</code>에 들어 있다. 자세와 같은 초당 62.5번으로 온다.
     <code>info -v</code>의 보내는 쪽 Reliability가 <strong>BEST_EFFORT</strong> — <code>SensorDataQoS()</code>가 그렇게 정했다. 받는 쪽은 아직 없다(<code>Subscription count: 0</code>).
   </p>
 
-  <!-- fullcode "전체 코드 — turtle_drive/ (9단계 · v9. front_range.cpp 새 파일, CMakeLists.txt·package.xml·launch 에 한 덩어리씩. wall_stop.cpp 는 21회 v8 그대로)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive front_range"
-       l22_qos_debug/steps/step9/turtle_drive/src/front_range.cpp as turtle_drive/src/front_range.cpp
-       l22_qos_debug/steps/step9/turtle_drive/CMakeLists.txt as turtle_drive/CMakeLists.txt
-       l22_qos_debug/steps/step9/turtle_drive/package.xml as turtle_drive/package.xml
-       l22_qos_debug/steps/step9/turtle_drive/launch/wall_stop.launch.py as turtle_drive/launch/wall_stop.launch.py
+  <!-- fullcode "전체 코드 — turtle_drive/ (8단계 · v8. wall_range.cpp 새 파일, CMakeLists.txt·package.xml·launch 에 한 덩어리씩. turtle_drive.cpp 는 21회 v7 그대로)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive wall_range"
+       l22_qos_debug/steps/step8/turtle_drive/src/wall_range.cpp as turtle_drive/src/wall_range.cpp
+       l22_qos_debug/steps/step8/turtle_drive/CMakeLists.txt as turtle_drive/CMakeLists.txt
+       l22_qos_debug/steps/step8/turtle_drive/package.xml as turtle_drive/package.xml
+       l22_qos_debug/steps/step8/turtle_drive/launch/turtle_drive.launch.py as turtle_drive/launch/turtle_drive.launch.py
   -->
 <details class="fullcode">
-  <summary>전체 코드 — turtle_drive/ (9단계 · v9. front_range.cpp 새 파일, CMakeLists.txt·package.xml·launch 에 한 덩어리씩. wall_stop.cpp 는 21회 v8 그대로)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive front_range</code></p>
-  <div class="codefile"><div class="fname">turtle_drive/src/front_range.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 22회 앞 거리 센서 — front_range v9 (9단계: 거북이 자세로 앞 벽까지 거리를 재서 센서처럼 best effort 로 발행한다)
+  <summary>전체 코드 — turtle_drive/ (8단계 · v8. wall_range.cpp 새 파일, CMakeLists.txt·package.xml·launch 에 한 덩어리씩. turtle_drive.cpp 는 21회 v7 그대로)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive wall_range</code></p>
+  <div class="codefile"><div class="fname">turtle_drive/src/wall_range.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 22회 벽 거리 센서 — wall_range v8 (8단계: 거북이 자세로 가장 가까운 벽까지 거리를 재서 센서처럼 best effort 로 발행한다)
 #include &lt;algorithm&gt;
-#include &lt;cmath&gt;
-#include &lt;limits&gt;
 #include &lt;memory&gt;
 
 #include &quot;rclcpp/rclcpp.hpp&quot;
 #include &quot;sensor_msgs/msg/range.hpp&quot;
 #include &quot;turtlesim/msg/pose.hpp&quot;
 
-class FrontRange : public rclcpp::Node
+class WallRange : public rclcpp::Node
 {
 public:
-  FrontRange()
-  : Node(&quot;front_range&quot;)
+  WallRange()
+  : Node(&quot;wall_range&quot;)
   {
     // 센서 데이터용 QoS 로 발행한다 — best effort, 깊이 5 (실제 라이다·초음파 드라이버가 대개 이렇게 보낸다)
     range_pub_ = this-&gt;create_publisher&lt;sensor_msgs::msg::Range&gt;(
-      &quot;/turtle1/front_range&quot;, rclcpp::SensorDataQoS());
+      &quot;/turtle1/wall_range&quot;, rclcpp::SensorDataQoS());
     pose_sub_ = this-&gt;create_subscription&lt;turtlesim::msg::Pose&gt;(
       &quot;/turtle1/pose&quot;, 10,
       [this](turtlesim::msg::Pose::ConstSharedPtr msg) { on_pose(msg); });
-    RCLCPP_INFO(this-&gt;get_logger(), &quot;/turtle1/front_range 를 발행합니다&quot;);
+    RCLCPP_INFO(this-&gt;get_logger(), &quot;/turtle1/wall_range 를 발행합니다&quot;);
   }
 
 private:
-  // 자세가 올 때마다(초당 62.5번) 앞 벽까지 거리를 계산해 Range 메시지로 내보낸다
+  // 자세가 올 때마다(초당 62.5번) 가장 가까운 벽까지 거리를 Range 메시지로 내보낸다
   void on_pose(turtlesim::msg::Pose::ConstSharedPtr msg)
   {
     sensor_msgs::msg::Range r;
     r.header.stamp = this-&gt;now();        // 이 값을 잰 시각
     r.header.frame_id = &quot;turtle1&quot;;       // 거북이에 붙은 센서라는 뜻
     r.radiation_type = sensor_msgs::msg::Range::ULTRASOUND;
-    r.field_of_view = 0.2;               // 앞쪽 0.2 rad(약 11도) 부채꼴
+    r.field_of_view = 0.2;               // 0.2 rad(약 11도) 부채꼴
     r.min_range = 0.0;
-    r.max_range = 16.0;                  // 창의 대각선(약 15.7 m)보다 조금 길게
-    r.range = static_cast&lt;float&gt;(front_distance(*msg));
+    r.max_range = 6.0;                   // 지도 가운데(5.5 m)보다 조금 길게
+    // 네 벽까지 거리 — 왼쪽 x, 아래 y, 오른쪽 11 − x, 위 11 − y — 중 가장 작은 값
+    r.range = static_cast&lt;float&gt;(std::min({msg-&gt;x, msg-&gt;y, map_size_ - msg-&gt;x, map_size_ - msg-&gt;y}));
     range_pub_-&gt;publish(r);
   }
 
-  // 지금 바라보는 방향으로 곧장 가면 벽까지 몇 m 남았나 (20회 wall_stop 에서 옮겨 왔다)
-  double front_distance(const turtlesim::msg::Pose &amp; p) const
-  {
-    const double c = std::cos(p.theta);
-    const double s = std::sin(p.theta);
-    double d = std::numeric_limits&lt;double&gt;::infinity();
-    if (c &gt; 1e-6)  { d = std::min(d, (world_size_ - p.x) / c); }   // 오른쪽 벽
-    if (c &lt; -1e-6) { d = std::min(d, (0.0 - p.x) / c); }           // 왼쪽 벽
-    if (s &gt; 1e-6)  { d = std::min(d, (world_size_ - p.y) / s); }   // 위쪽 벽
-    if (s &lt; -1e-6) { d = std::min(d, (0.0 - p.y) / s); }           // 아래쪽 벽
-    return d;
-  }
-
-  const double world_size_ = 11.0889; // turtlesim 창 한 변의 길이 (m)
+  const float map_size_ = 11.0f;       // 지도 한 변의 길이 (m) — turtle_drive 와 같은 값
 
   rclcpp::Publisher&lt;sensor_msgs::msg::Range&gt;::SharedPtr range_pub_;
   rclcpp::Subscription&lt;turtlesim::msg::Pose&gt;::SharedPtr pose_sub_;
@@ -403,7 +397,7 @@ private:
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared&lt;FrontRange&gt;());
+  rclcpp::spin(std::make_shared&lt;WallRange&gt;());
   rclcpp::shutdown();
   return 0;
 }</code></pre></div>
@@ -426,19 +420,19 @@ find_package(sensor_msgs REQUIRED)
 add_executable(hello_node src/hello_node.cpp)
 target_link_libraries(hello_node PRIVATE rclcpp::rclcpp)
 
-# 20회 — 실행 파일 wall_stop. Twist(geometry_msgs)를 보내고 Pose(turtlesim)를 받는다
+# 20회 — 실행 파일 turtle_drive. Twist(geometry_msgs)를 보내고 Pose(turtlesim)를 받는다
 # 21회 — SetBool(std_srvs) 서비스를 받는다
-add_executable(wall_stop src/wall_stop.cpp)
-target_link_libraries(wall_stop PRIVATE
+add_executable(turtle_drive src/turtle_drive.cpp)
+target_link_libraries(turtle_drive PRIVATE
   rclcpp::rclcpp ${geometry_msgs_TARGETS} ${turtlesim_TARGETS} ${std_srvs_TARGETS})
 
-# 22회 — 실행 파일 front_range. Pose(turtlesim)를 받아 Range(sensor_msgs)를 보낸다
-add_executable(front_range src/front_range.cpp)
-target_link_libraries(front_range PRIVATE
+# 22회 — 실행 파일 wall_range. Pose(turtlesim)를 받아 Range(sensor_msgs)를 보낸다
+add_executable(wall_range src/wall_range.cpp)
+target_link_libraries(wall_range PRIVATE
   rclcpp::rclcpp ${turtlesim_TARGETS} ${sensor_msgs_TARGETS})
 
 # 만든 실행 파일을 ros2 run 이 찾는 자리에 설치한다
-install(TARGETS hello_node wall_stop front_range
+install(TARGETS hello_node turtle_drive wall_range
   DESTINATION lib/${PROJECT_NAME})
 
 # 21회 — 빌드하지 않는 파일(launch 파일·파라미터 파일)은 share/ 아래로 복사한다
@@ -484,8 +478,7 @@ ament_package()</code></pre></div>
     &lt;build_type&gt;ament_cmake&lt;/build_type&gt;
   &lt;/export&gt;
 &lt;/package&gt;</code></pre></div>
-  <div class="codefile"><div class="fname">turtle_drive/launch/wall_stop.launch.py</div><button onclick="copyCode(this)">복사</button><pre class="lang-py"><code># 21회 — turtlesim 과 wall_stop 을 한 번에 띄운다. wall_stop 은 config/wall_stop.yaml 의 파라미터로 시작한다
-# 22회 — 앞 거리 센서 front_range 를 함께 띄운다
+  <div class="codefile"><div class="fname">turtle_drive/launch/turtle_drive.launch.py</div><button onclick="copyCode(this)">복사</button><pre class="lang-py"><code># 22회 — turtlesim · wall_range · turtle_drive 를 한 번에 띄운다. turtle_drive 는 config/turtle_drive.yaml 의 파라미터로 시작한다
 import os
 
 from ament_index_python.packages import get_package_share_directory
@@ -495,7 +488,7 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     params = os.path.join(
-        get_package_share_directory(&#x27;turtle_drive&#x27;), &#x27;config&#x27;, &#x27;wall_stop.yaml&#x27;)
+        get_package_share_directory(&#x27;turtle_drive&#x27;), &#x27;config&#x27;, &#x27;turtle_drive.yaml&#x27;)
 
     return LaunchDescription([
         Node(
@@ -505,149 +498,166 @@ def generate_launch_description():
         ),
         Node(
             package=&#x27;turtle_drive&#x27;,
-            executable=&#x27;front_range&#x27;,
-            name=&#x27;front_range&#x27;,
+            executable=&#x27;wall_range&#x27;,
+            name=&#x27;wall_range&#x27;,
             output=&#x27;screen&#x27;,
         ),
         Node(
             package=&#x27;turtle_drive&#x27;,
-            executable=&#x27;wall_stop&#x27;,
-            name=&#x27;wall_stop&#x27;,
+            executable=&#x27;turtle_drive&#x27;,
+            name=&#x27;turtle_drive&#x27;,
             parameters=[params],
             output=&#x27;screen&#x27;,
         ),
     ])</code></pre></div>
 </details>
 <!-- /fullcode -->
+<!-- /fullcode -->
 
-  <!-- ── ⑤ v10 ── -->
-  <h2 id="v10">⑤ QoS 불일치 진단과 <code>SensorDataQoS</code> 구독 (v10) <span class="badge b-red">🔴 사람이 한다</span></h2>
+  <!-- ── ⑤ v9 ── -->
+  <h2 id="v9">⑤ QoS 불일치 진단과 <code>SensorDataQoS</code> 구독 (v9) <span class="badge b-red">🔴 사람이 한다</span></h2>
 
-  <h3>예제에 적용 — <code>wall_stop</code>이 자세 대신 거리를 받는다</h3>
+  <h3>예제에 적용 — 범위 판정을 받은 거리로 한다</h3>
   <p>
-    이제 <code>wall_stop</code>이 <code>front_range</code>의 값을 쓰게 바꾼다. 구독자 하나를 바꾸고, 판단에 쓰는 거리를 <code>range_-&gt;range</code>로 바꾸면 끝이다.
-    계산을 옮겼으니 <code>front_distance()</code>와 <code>world_size_</code>는 지운다. 에이전트에게 「<code>/turtle1/pose</code> 대신 <code>/turtle1/front_range</code>(<code>sensor_msgs/msg/Range</code>)를 받아 서게 바꿔 줘」라고 하면 대개 이런 코드가 온다.
-    20회에 쓴 구독자와 똑같은 모양이다.
+    이제 <code>turtle_drive</code>가 <code>wall_range</code>의 값을 쓰게 바꾼다. 구독자를 하나 더하고, 범위 판정을 <code>range_-&gt;range &lt; margin_</code> 한 줄로 바꾸면 된다.
+    자세 구독은 그대로 둔다 — 「중앙을 보고 있나」(20회 ⑤절)는 여전히 자세의 방향으로 판단하기 때문이다.
+    에이전트에게 「범위 판정을 <code>/turtle1/wall_range</code>(<code>sensor_msgs/msg/Range</code>)로 하게 바꿔 줘」라고 하면 대개 이런 코드가 온다. 20회에 쓴 구독자와 똑같은 모양이다.
   </p>
-  <div class="codelabel bad">받은 코드 (v10 변형) — 구독 QoS 를 숫자 10 으로</div>
+  <div class="codelabel bad">받은 코드 (v9 변형) — 구독 QoS 를 숫자 10 으로</div>
   <pre class="lang-cpp before"><code>    range_sub_ = this-&gt;create_subscription&lt;sensor_msgs::msg::Range&gt;(
-      "/turtle1/front_range", 10,
+      "/turtle1/wall_range", 10,
       [this](sensor_msgs::msg::Range::ConstSharedPtr msg) { on_range(msg); });
   // …
   void on_timer()
   {
-    if (!range_) {                   // 아직 거리를 한 번도 못 받았다
+    if (!pose_ || !range_) {                     // 아직 자세나 거리를 한 번도 못 받았다
       return;
     }
-    read_parameters();
-    const double front = range_-&gt;range;   // 앞 벽까지 거리 — front_range 가 재서 보내 준 값</code></pre>
-  <p>빌드는 경고 없이 된다. turtlesim과 <code>front_range</code>를 띄운 채 이 <code>wall_stop</code>을 띄웠다.</p>
-  <pre class="lang-sh"><code>$ ros2 run turtle_drive wall_stop
-[INFO] [1792278345.522042112] [wall_stop]: speed = 1.00 m/s, wall_margin = 1.00 m
-[WARN] [1792278345.958130406] [wall_stop]: New publisher discovered on topic '/turtle1/front_range', offering incompatible QoS. No messages will be sent to it. Last incompatible policy: RELIABILITY_QOS_POLICY
+    // …
+    const bool outside = range_-&gt;range &lt; margin_;   // 가장 가까운 벽까지 거리 — wall_range 가 재서 보내 준 값</code></pre>
+  <p>빌드는 경고 없이 된다. turtlesim과 <code>wall_range</code>를 띄운 채 이 <code>turtle_drive</code>를 띄웠다.</p>
+  <pre class="lang-sh"><code>$ ros2 run turtle_drive turtle_drive
+[INFO] [1793759418.162252915] [turtle_drive]: max_speed = 1.20 m/s, margin = 1.00 m (1.0 ~ 10.0 안에서 돌아다닙니다)
+[WARN] [1793759418.599961442] [turtle_drive]: New publisher discovered on topic '/turtle1/wall_range', offering incompatible QoS. No messages will be sent to it. Last incompatible policy: RELIABILITY_QOS_POLICY
 (그 뒤로 아무것도 안 찍힌다)</code></pre>
   <p>
     거북이는 <strong>출발도 하지 않는다.</strong> 18회 ⑬절 「막혔을 때 보는 순서」대로 내려가 본다. 0~2번(ros2가 먹나, 노드가 떴나, 이름·타입이 맞나)은 통과한다.
   </p>
-  <pre class="lang-sh"><code>$ ros2 topic info /turtle1/front_range              # 3번 — 양쪽이 다 붙어 있나
+  <pre class="lang-sh"><code>$ ros2 topic echo --once /turtle1/pose               # 거북이는 처음 자리에 서 있다
+x: 5.544444561004639
+y: 5.544444561004639
+linear_velocity: 0.0
+$ ros2 topic info /turtle1/wall_range                # 3번 — 양쪽이 다 붙어 있나
 Type: sensor_msgs/msg/Range
 Publisher count: 1
 Subscription count: 1
-$ ros2 topic echo --once /turtle1/front_range       # 4번 — 값이 실제로 오나
+$ ros2 topic echo --once /turtle1/wall_range         # 4번 — 값이 실제로 오나
 header:
   (…)
-range: 5.544455528259277
+range: 5.455555438995361
 variance: 0.0
 ---
-$ ros2 topic hz /turtle1/cmd_vel                    # wall_stop 이 명령을 보내나 — 3초 동안 한 줄도 안 나온다</code></pre>
+$ ros2 topic hz /turtle1/cmd_vel                     # turtle_drive 가 명령을 보내나 — 3초 동안 한 줄도 안 나온다</code></pre>
   <p>
-    3번에서 개수는 1과 1이다. 4번 <code>echo</code>에는 값이 멀쩡히 온다. 그런데 <code>wall_stop</code>은 명령을 하나도 안 보낸다 — <code>on_timer()</code>가 <code>range_</code>가 비어 있어 매번 바로 돌아가고 있다.
+    3번에서 개수는 1과 1이다. 4번 <code>echo</code>에는 값이 멀쩡히 온다. 그런데 <code>turtle_drive</code>는 명령을 하나도 안 보낸다 — <code>on_timer()</code>가 <code>range_</code>가 비어 있어 매번 바로 돌아가고 있다.
     <strong>「<code>echo</code>로는 보이는데 내 노드만 못 받는다」</strong>, 18회가 예고한 바로 그 증상이다. 5번으로 간다.
   </p>
-  <pre class="lang-sh"><code>$ ros2 topic info -v /turtle1/front_range           # 5번 — 둘이 붙을 수 있나
+  <pre class="lang-sh"><code>$ ros2 topic info -v /turtle1/wall_range            # 5번 — 둘이 붙을 수 있나
 Type: sensor_msgs/msg/Range
 
 Publisher count: 1
 
-Node name: front_range
+Node name: wall_range
 (…)
 Endpoint type: PUBLISHER
-(…)
 QoS profile:
   Reliability: BEST_EFFORT
   (…)
 
 Subscription count: 1
 
-Node name: wall_stop
+Node name: turtle_drive
 (…)
 Endpoint type: SUBSCRIPTION
-(…)
 QoS profile:
   Reliability: RELIABLE
   (…)</code></pre>
   <p>
     보내는 쪽 BEST_EFFORT, 받는 쪽 RELIABLE — ③절 표의 셋째 줄, <strong>안 붙는 짝</strong>이다. 숫자 <code>10</code>이 Reliability를 기본값 RELIABLE로 정해 버렸기 때문이다(②절 해석).
     처음 출력의 <code>[WARN]</code> 줄이 같은 말을 이미 하고 있었다 — 「QoS가 안 맞는 발행자를 찾았다. 그 발행자는 여기로 아무것도 보내지 않는다. 걸린 정책: RELIABILITY」.
-    <code>front_range</code> 터미널에도 같은 뜻의 경고가 찍혔다.
+    <code>wall_range</code> 터미널에도 같은 뜻의 경고가 찍혔다.
   </p>
-  <pre><code>[WARN] [1792278345.521119032] [front_range]: New subscription discovered on topic '/turtle1/front_range', requesting incompatible QoS. No messages will be sent to it. Last incompatible policy: RELIABILITY_QOS_POLICY</code></pre>
+  <pre><code>[WARN] [1793759418.161821922] [wall_range]: New subscription discovered on topic '/turtle1/wall_range', requesting incompatible QoS. No messages will be sent to it. Last incompatible policy: RELIABILITY_QOS_POLICY</code></pre>
   <p>
     <code>echo</code>가 받은 이유는 18회에서 본 대로다. <code>echo</code>는 보내는 쪽의 QoS를 보고 붙을 수 있게 스스로 고른다. 우리 코드는 그러지 않는다.
   </p>
-  <!-- fullcode "전체 코드 — turtle_drive/src/wall_stop.cpp (v10 변형 · 구독 QoS 가 숫자 10 — 빌드는 되는데 콜백이 한 번도 안 불린다)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive wall_stop"
-       l22_qos_debug/steps/variants/qos_mismatch/turtle_drive/src/wall_stop.cpp as turtle_drive/src/wall_stop.cpp
+  <!-- fullcode "전체 코드 — turtle_drive/src/turtle_drive.cpp (v9 변형 · 구독 QoS 가 숫자 10 — 빌드는 되는데 거리 콜백이 한 번도 안 불린다)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive turtle_drive"
+       l22_qos_debug/steps/variants/qos_mismatch/turtle_drive/src/turtle_drive.cpp as turtle_drive/src/turtle_drive.cpp
   -->
 <details class="fullcode">
-  <summary>전체 코드 — turtle_drive/src/wall_stop.cpp (v10 변형 · 구독 QoS 가 숫자 10 — 빌드는 되는데 콜백이 한 번도 안 불린다)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive wall_stop</code></p>
-  <div class="codefile"><div class="fname">turtle_drive/src/wall_stop.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 22회 벽 앞 정지 — v10 변형 (구독 QoS 를 큐 깊이 10 = 기본값으로 둔 판 · 빌드는 되는데 콜백이 한 번도 안 불린다)
+  <summary>전체 코드 — turtle_drive/src/turtle_drive.cpp (v9 변형 · 구독 QoS 가 숫자 10 — 빌드는 되는데 거리 콜백이 한 번도 안 불린다)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive turtle_drive</code></p>
+  <div class="codefile"><div class="fname">turtle_drive/src/turtle_drive.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 22회 turtle_drive — v9 변형 (거리 구독을 큐 깊이 10 만 주어 만든 판 · 빌드는 되고 거북이가 출발하지 않는다)
+#include &lt;algorithm&gt;
 #include &lt;chrono&gt;
 #include &lt;cstdint&gt;
+#include &lt;cmath&gt;
 #include &lt;memory&gt;
+#include &lt;random&gt;
 #include &lt;vector&gt;
 
 #include &quot;rclcpp/rclcpp.hpp&quot;
 #include &quot;geometry_msgs/msg/twist.hpp&quot;
+#include &quot;turtlesim/msg/pose.hpp&quot;
 #include &quot;sensor_msgs/msg/range.hpp&quot;
 #include &quot;std_srvs/srv/set_bool.hpp&quot;
 #include &quot;turtlesim/srv/set_pen.hpp&quot;
 
 using namespace std::chrono_literals;
 
-class WallStop : public rclcpp::Node
+class TurtleDrive : public rclcpp::Node
 {
 public:
-  WallStop()
-  : Node(&quot;wall_stop&quot;)
+  TurtleDrive()
+  : Node(&quot;turtle_drive&quot;)
   {
-    // 파라미터를 선언한다 — 이름과 기본값. 타입은 기본값에서 정해진다 (1.0 이므로 double)
-    this-&gt;declare_parameter(&quot;speed&quot;, 1.0);
-    this-&gt;declare_parameter(&quot;wall_margin&quot;, 1.0);
+    // 파라미터를 선언한다 — 이름과 기본값. 타입은 기본값에서 정해진다 (1.2 이므로 double)
+    this-&gt;declare_parameter(&quot;max_speed&quot;, 1.2);
+    this-&gt;declare_parameter(&quot;margin&quot;, 1.0);
     read_parameters();
 
     cmd_pub_ = this-&gt;create_publisher&lt;geometry_msgs::msg::Twist&gt;(&quot;/turtle1/cmd_vel&quot;, 10);
+    pose_sub_ = this-&gt;create_subscription&lt;turtlesim::msg::Pose&gt;(
+      &quot;/turtle1/pose&quot;, 10,
+      [this](turtlesim::msg::Pose::ConstSharedPtr msg) { on_pose(msg); });
     range_sub_ = this-&gt;create_subscription&lt;sensor_msgs::msg::Range&gt;(
-      &quot;/turtle1/front_range&quot;, 10,
+      &quot;/turtle1/wall_range&quot;, 10,
       [this](sensor_msgs::msg::Range::ConstSharedPtr msg) { on_range(msg); });
     enable_srv_ = this-&gt;create_service&lt;std_srvs::srv::SetBool&gt;(
       &quot;~/enable&quot;,
       [this](const std_srvs::srv::SetBool::Request::SharedPtr req,
              std_srvs::srv::SetBool::Response::SharedPtr res) { on_enable(req, res); });
     pen_client_ = this-&gt;create_client&lt;turtlesim::srv::SetPen&gt;(&quot;/turtle1/set_pen&quot;);
-    timer_ = this-&gt;create_wall_timer(100ms, [this]() { on_timer(); });
-    RCLCPP_INFO(this-&gt;get_logger(), &quot;speed = %.2f m/s, wall_margin = %.2f m&quot;, speed_, wall_margin_);
+    timer_ = this-&gt;create_wall_timer(500ms, [this]() { on_timer(); });
+    RCLCPP_INFO(this-&gt;get_logger(), &quot;max_speed = %.2f m/s, margin = %.2f m (%.1f ~ %.1f 안에서 돌아다닙니다)&quot;,
+                max_speed_, margin_, margin_, map_size_ - margin_);
   }
 
 private:
   // 파라미터의 지금 값을 읽어 멤버에 넣는다 — 생성자에서 한 번, 그 뒤로는 타이머가 부를 때마다
   void read_parameters()
   {
-    speed_ = this-&gt;get_parameter(&quot;speed&quot;).as_double();
-    wall_margin_ = this-&gt;get_parameter(&quot;wall_margin&quot;).as_double();
+    max_speed_ = this-&gt;get_parameter(&quot;max_speed&quot;).as_double();
+    margin_ = this-&gt;get_parameter(&quot;margin&quot;).as_double();
   }
 
-  // /turtle1/front_range 가 올 때마다 불린다 — 받은 것을 들고 있기만 한다
+  // /turtle1/pose 가 올 때마다 불린다 — 받은 것을 들고 있기만 한다
+  void on_pose(turtlesim::msg::Pose::ConstSharedPtr msg)
+  {
+    pose_ = msg;
+  }
+
+  // /turtle1/wall_range 가 올 때마다 불린다 — 받은 것을 들고 있기만 한다
   void on_range(sensor_msgs::msg::Range::ConstSharedPtr msg)
   {
     range_ = msg;
@@ -663,45 +673,55 @@ private:
     RCLCPP_INFO(this-&gt;get_logger(), &quot;~/enable 요청: %s&quot;, res-&gt;message.c_str());
   }
 
-  // 타이머가 0.1초마다 부른다 — 판단하고 명령을 보낸다
+  // 타이머가 0.5초마다 부른다 — 판단하고 명령을 보낸다
   void on_timer()
   {
-    if (!range_) {                   // 아직 거리를 한 번도 못 받았다
+    if (!pose_ || !range_) {                     // 아직 자세나 거리를 한 번도 못 받았다
       return;
     }
-    read_parameters();               // 밖에서(ros2 param set) 바뀌었을 수 있으니 판단 전에 다시 읽는다
-    const double front = range_-&gt;range;   // 앞 벽까지 거리 — front_range 가 재서 보내 준 값
-    const bool near_wall = front &lt; wall_margin_;
-    const bool stop = near_wall || !enabled_;   // 벽 앞이거나, 주행이 꺼졌으면 선다
-    if (stop &amp;&amp; !stopped_) {
-      RCLCPP_INFO(this-&gt;get_logger(), &quot;섭니다 — %s (앞 벽까지 %.2f m)&quot;,
-                  near_wall ? &quot;벽 앞&quot; : &quot;주행 꺼짐&quot;, front);
+    if (!enabled_) {                             // 주행이 꺼졌다 — 0 인 명령(「서라」)만 보낸다
+      cmd_pub_-&gt;publish(geometry_msgs::msg::Twist());
+      return;
+    }
+    read_parameters();                           // 밖에서(ros2 param set) 바뀌었을 수 있으니 판단 전에 다시 읽는다
+    const bool outside = range_-&gt;range &lt; margin_;   // 가장 가까운 벽까지 거리 — wall_range 가 재서 보내 준 값
+    const double angle = angle_to_center(*pose_);
+    const bool turn_back = outside &amp;&amp; angle &gt; turn_tolerance_;   // 범위 밖인데 중앙을 안 보고 있다
+
+    if (turn_back &amp;&amp; !turning_) {
+      RCLCPP_INFO(this-&gt;get_logger(), &quot;범위 밖 (벽까지 %.2f m) — 중앙 쪽으로 돕니다&quot;, range_-&gt;range);
       change_pen();
     }
-    stopped_ = stop;
+    if (!turn_back &amp;&amp; turning_) {
+      RCLCPP_INFO(this-&gt;get_logger(), &quot;중앙을 봅니다 — 다시 출발합니다&quot;);
+    }
+    turning_ = turn_back;
 
-    geometry_msgs::msg::Twist cmd;   // 여섯 칸이 전부 0 — 이대로 보내면 「서라」
-    if (!stop) {
-      cmd.linear.x = speed_;
+    geometry_msgs::msg::Twist cmd;               // 여섯 칸이 전부 0 으로 시작한다
+    if (turn_back) {
+      cmd.angular.z = 1.0;                       // 제자리에서 왼쪽으로 돈다 (linear.x 는 0)
+    } else {
+      cmd.linear.x = random_between(0.2, max_speed_);
+      cmd.angular.z = random_between(-1.0, 1.0);
     }
     cmd_pub_-&gt;publish(cmd);
   }
 
-  // /turtle1/set_pen 에 다음 펜 색을 요청한다 — 다시 달리기 시작하면 그 색으로 선이 그려진다
+  // /turtle1/set_pen 에 다음 펜 색을 요청한다 — 다시 출발하면 그 색으로 선이 그려진다
   void change_pen()
   {
     if (!pen_client_-&gt;service_is_ready()) {   // 서버(turtlesim)가 아직 없으면 이번에는 건너뛴다
       RCLCPP_WARN(this-&gt;get_logger(), &quot;/turtle1/set_pen 서비스가 아직 없습니다&quot;);
       return;
     }
-    const PenColor c = pen_colors_[stop_count_ % pen_colors_.size()];
-    ++stop_count_;
+    const PenColor c = pen_colors_[turn_count_ % pen_colors_.size()];
+    ++turn_count_;
 
     auto req = std::make_shared&lt;turtlesim::srv::SetPen::Request&gt;();
     req-&gt;r = c.r;
     req-&gt;g = c.g;
     req-&gt;b = c.b;
-    req-&gt;width = 5;                  // 선 굵기 (기본은 3)
+    req-&gt;width = 5;                            // 선 굵기 (기본은 3)
     // 보내고 바로 돌아온다. 응답이 오면 spin 이 이 람다를 불러 준다
     pen_client_-&gt;async_send_request(
       req, [this, c](rclcpp::Client&lt;turtlesim::srv::SetPen&gt;::SharedFuture) {
@@ -709,131 +729,176 @@ private:
       });
   }
 
-  double speed_ = 0.0;                // 파라미터 speed 에서 읽는다 (m/s)
-  double wall_margin_ = 0.0;          // 파라미터 wall_margin 에서 읽는다 (m)
-  bool stopped_ = false;
-  bool enabled_ = true;               // ~/enable 서비스로 바뀐다. 처음에는 켜져 있다
+  // 바라보는 방향과 「중앙으로 가는 방향」 사이의 각 (0 ~ π rad)
+  double angle_to_center(const turtlesim::msg::Pose &amp; p) const
+  {
+    const double dx = center_ - p.x;             // 중앙으로 가는 방향
+    const double dy = center_ - p.y;
+    const double hx = std::cos(p.theta);         // 바라보는 방향 (길이 1)
+    const double hy = std::sin(p.theta);
+    const double cos_angle = (dx * hx + dy * hy) / std::hypot(dx, dy);   // 내적 ÷ 두 길이의 곱
+    return std::acos(std::clamp(cos_angle, -1.0, 1.0));
+  }
+
+  // lo 와 hi 사이의 실수 하나를 고르게 뽑는다
+  double random_between(double lo, double hi)
+  {
+    std::uniform_real_distribution&lt;double&gt; dist(lo, hi);
+    return dist(gen_);
+  }
+
+  double max_speed_ = 0.0;             // 파라미터 max_speed 에서 읽는다 (m/s)
+  double margin_ = 0.0;                // 파라미터 margin 에서 읽는다 (m)
+  const double map_size_ = 11.0;       // 지도 한 변의 길이 (m)
+  const double center_ = 5.5;          // 지도 가운데 (x, y 모두)
+  const double turn_tolerance_ = 0.35; // 중앙과 이 각(약 20°) 안이면 다시 출발한다 (rad)
+  bool turning_ = false;               // 지금 돌아서는 중인가 — 로그를 바뀔 때만 찍는 데 쓴다
+  bool enabled_ = true;                // ~/enable 서비스로 바뀐다. 처음에는 켜져 있다
 
   struct PenColor { std::uint8_t r; std::uint8_t g; std::uint8_t b; };
   const std::vector&lt;PenColor&gt; pen_colors_ = {{255, 70, 70}, {60, 220, 60}, {255, 210, 0}};   // 빨강 → 초록 → 노랑
-  std::size_t stop_count_ = 0;        // 지금까지 선 횟수 — 다음 색을 고르는 데 쓴다
+  std::size_t turn_count_ = 0;         // 지금까지 돌아선 횟수 — 다음 색을 고르는 데 쓴다
 
+  std::mt19937 gen_{std::random_device{}()};   // 난수 생성기 — 실행할 때마다 다른 씨앗으로 시작한다
   rclcpp::Publisher&lt;geometry_msgs::msg::Twist&gt;::SharedPtr cmd_pub_;
+  rclcpp::Subscription&lt;turtlesim::msg::Pose&gt;::SharedPtr pose_sub_;
   rclcpp::Subscription&lt;sensor_msgs::msg::Range&gt;::SharedPtr range_sub_;
   rclcpp::Service&lt;std_srvs::srv::SetBool&gt;::SharedPtr enable_srv_;
   rclcpp::Client&lt;turtlesim::srv::SetPen&gt;::SharedPtr pen_client_;
   rclcpp::TimerBase::SharedPtr timer_;
-  sensor_msgs::msg::Range::ConstSharedPtr range_;   // 마지막으로 받은 앞 거리 (처음에는 비어 있다)
+  turtlesim::msg::Pose::ConstSharedPtr pose_;  // 마지막으로 받은 자세 (처음에는 비어 있다)
+  sensor_msgs::msg::Range::ConstSharedPtr range_;   // 마지막으로 받은 벽까지 거리 (처음에는 비어 있다)
 };
 
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  auto node = std::make_shared&lt;WallStop&gt;();
+  auto node = std::make_shared&lt;TurtleDrive&gt;();
   rclcpp::spin(node);            // 타이머·구독 콜백은 이 안에서 불린다
   rclcpp::shutdown();
   return 0;
 }</code></pre></div>
 </details>
 <!-- /fullcode -->
+<!-- /fullcode -->
 
-  <h3>10단계 (v10) — 받는 쪽도 <code>SensorDataQoS()</code></h3>
-  <div class="codelabel bad">고치기 전 (v10 변형)</div>
+  <h3>9단계 (v9) — 받는 쪽도 <code>SensorDataQoS()</code></h3>
+  <div class="codelabel bad">고치기 전 (v9 변형)</div>
   <pre class="lang-cpp before"><code>    range_sub_ = this-&gt;create_subscription&lt;sensor_msgs::msg::Range&gt;(
-      "/turtle1/front_range", 10,</code></pre>
-  <div class="codelabel good">고친 뒤 (v10)</div>
+      "/turtle1/wall_range", 10,</code></pre>
+  <div class="codelabel good">고친 뒤 (v9)</div>
   <pre class="lang-cpp after"><code>    // 센서처럼 best effort 로 오는 토픽이다 — 받는 쪽도 센서 데이터용 QoS 로 맞춘다
     range_sub_ = this-&gt;create_subscription&lt;sensor_msgs::msg::Range&gt;(
-      "/turtle1/front_range", rclcpp::SensorDataQoS(),</code></pre>
+      "/turtle1/wall_range", rclcpp::SensorDataQoS(),</code></pre>
   <p>
-    바뀌는 것은 숫자 하나다. <code>sensor_msgs</code>는 v9에서 <code>package.xml</code>·<code>find_package</code>에 이미 넣었으니, <code>CMakeLists.txt</code>에서는 <code>wall_stop</code>의 <code>target_link_libraries</code>에 <code>${sensor_msgs_TARGETS}</code>만 더한다(20회 ⑦절과 같은 일).
+    바뀌는 것은 숫자 하나다. <code>sensor_msgs</code>는 v8에서 <code>package.xml</code>·<code>find_package</code>에 이미 넣었으니, <code>CMakeLists.txt</code>에서는 <code>turtle_drive</code>의 <code>target_link_libraries</code>에 <code>${sensor_msgs_TARGETS}</code>만 더한다(20회 ⑥절과 같은 일).
   </p>
 
   <h3>실제로 나온 출력</h3>
-  <pre class="lang-sh"><code>$ ros2 run turtle_drive wall_stop
-[INFO] [1792278370.971858430] [wall_stop]: speed = 1.00 m/s, wall_margin = 1.00 m
-[INFO] [1792278375.771935471] [wall_stop]: 섭니다 — 벽 앞 (앞 벽까지 0.94 m)
-[INFO] [1792278375.783593561] [wall_stop]: 펜 색을 (255, 70, 70) 로 바꿨습니다
-$ ros2 topic info -v /turtle1/front_range
+  <pre class="lang-sh"><code>$ ros2 run turtle_drive turtle_drive
+[INFO] [1793759445.129266977] [turtle_drive]: max_speed = 1.20 m/s, margin = 1.00 m (1.0 ~ 10.0 안에서 돌아다닙니다)
+[INFO] [1793759453.629411335] [turtle_drive]: 범위 밖 (벽까지 0.79 m) — 중앙 쪽으로 돕니다
+[INFO] [1793759453.636892417] [turtle_drive]: 펜 색을 (255, 70, 70) 로 바꿨습니다
+[INFO] [1793759456.129395619] [turtle_drive]: 중앙을 봅니다 — 다시 출발합니다
+[INFO] [1793759470.129409783] [turtle_drive]: 범위 밖 (벽까지 0.90 m) — 중앙 쪽으로 돕니다
+[INFO] [1793759470.132691664] [turtle_drive]: 펜 색을 (60, 220, 60) 로 바꿨습니다
+[INFO] [1793759473.129358497] [turtle_drive]: 중앙을 봅니다 — 다시 출발합니다
+$ ros2 topic info -v /turtle1/wall_range
 (…)
-Node name: front_range
+Node name: wall_range
 (…)
   Reliability: BEST_EFFORT
 (…)
-Node name: wall_stop
+Node name: turtle_drive
 (…)
   Reliability: BEST_EFFORT
 (…)</code></pre>
   <p>
-    경고가 사라지고, 거북이가 출발해 v8과 같은 자리에서 섰다. 양쪽 Reliability가 둘 다 BEST_EFFORT다. 계산하는 노드가 바뀌었을 뿐 판단은 같으니 서는 자리도 같다.
+    경고가 사라지고, 거북이가 출발해 v7처럼 돌아다니다 범위를 벗어나면 돌아선다. 양쪽 Reliability가 둘 다 BEST_EFFORT다. 계산하는 노드가 바뀌었을 뿐 판단은 같다.
+    「벽까지 0.79 m」처럼 1 m보다 조금 안쪽에서 돌아서는 것은 20회 v2와 같은 이유다 — 판단이 0.5초에 한 번이라 그사이에 조금 더 간다.
+    40초 동안 turtlesim의 <code>Oh no! I hit the wall!</code>은 한 줄도 없었다.
   </p>
   <div class="tablewrap">
   <table>
     <tr><th>받는 토픽</th><th>구독 QoS</th><th>왜</th></tr>
-    <tr><td>센서 — <code>/scan</code>(라이다) · 카메라 · 우리 <code>/turtle1/front_range</code></td><td><code>rclcpp::SensorDataQoS()</code></td><td>보내는 쪽이 대개 best effort다. reliable로 받으면 안 붙는다</td></tr>
+    <tr><td>센서 — <code>/scan</code>(라이다) · 카메라 · 우리 <code>/turtle1/wall_range</code></td><td><code>rclcpp::SensorDataQoS()</code></td><td>보내는 쪽이 대개 best effort다. reliable로 받으면 안 붙는다</td></tr>
     <tr><td>명령·상태 — <code>/turtle1/cmd_vel</code> · <code>/turtle1/pose</code></td><td><code>10</code> (기본)</td><td>보내는 쪽이 reliable이다. 잃으면 곤란한 값이다</td></tr>
     <tr><td>모르는 토픽</td><td>먼저 <code>ros2 topic info -v</code></td><td>보내는 쪽 Reliability를 보고 맞춘다</td></tr>
   </table>
   </div>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
-    이 노드가 /turtle1/front_range 를 구독하는데 콜백이 한 번도 안 불려. ros2 topic echo 로는 값이 보여. 먼저 ros2 topic info -v /turtle1/front_range 를 실행해서 발행 쪽과 구독 쪽 노드 이름과 Reliability 를 표로 보여 주고, 두 값이 다르면 구독 코드의 QoS 를 발행 쪽에 맞추는 방법(SensorDataQoS 등)을 제안해 줘. 토픽 이름은 맞으니 이름은 바꾸지 마.
+    이 노드가 /turtle1/wall_range 를 구독하는데 콜백이 한 번도 안 불려. ros2 topic echo 로는 값이 보여. 먼저 ros2 topic info -v /turtle1/wall_range 를 실행해서 발행 쪽과 구독 쪽 노드 이름과 Reliability 를 표로 보여 주고, 두 값이 다르면 구독 코드의 QoS 를 발행 쪽에 맞추는 방법(SensorDataQoS 등)을 제안해 줘. 토픽 이름은 맞으니 이름은 바꾸지 마.
   </div>
-  <!-- fullcode "전체 코드 — turtle_drive/ (10단계 · v10. front_range.cpp·package.xml·launch 는 v9 그대로)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 launch turtle_drive wall_stop.launch.py"
-       l22_qos_debug/steps/step10/turtle_drive/src/wall_stop.cpp as turtle_drive/src/wall_stop.cpp
-       l22_qos_debug/steps/step10/turtle_drive/CMakeLists.txt as turtle_drive/CMakeLists.txt
+  <!-- fullcode "전체 코드 — turtle_drive/ (9단계 · v9. wall_range.cpp·package.xml·launch 는 v8 그대로)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 launch turtle_drive turtle_drive.launch.py"
+       l22_qos_debug/steps/step9/turtle_drive/src/turtle_drive.cpp as turtle_drive/src/turtle_drive.cpp
+       l22_qos_debug/steps/step9/turtle_drive/CMakeLists.txt as turtle_drive/CMakeLists.txt
   -->
 <details class="fullcode">
-  <summary>전체 코드 — turtle_drive/ (10단계 · v10. front_range.cpp·package.xml·launch 는 v9 그대로)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 launch turtle_drive wall_stop.launch.py</code></p>
-  <div class="codefile"><div class="fname">turtle_drive/src/wall_stop.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 22회 벽 앞 정지 — v10 (10단계: 앞 거리를 직접 계산하지 않고 front_range 의 /turtle1/front_range 를 SensorDataQoS 로 구독한다)
+  <summary>전체 코드 — turtle_drive/ (9단계 · v9. wall_range.cpp·package.xml·launch 는 v8 그대로)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 launch turtle_drive turtle_drive.launch.py</code></p>
+  <div class="codefile"><div class="fname">turtle_drive/src/turtle_drive.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 22회 turtle_drive — v9 (9단계: 범위 판정을 wall_range 의 /turtle1/wall_range 로 한다 — SensorDataQoS 로 구독)
+#include &lt;algorithm&gt;
 #include &lt;chrono&gt;
 #include &lt;cstdint&gt;
+#include &lt;cmath&gt;
 #include &lt;memory&gt;
+#include &lt;random&gt;
 #include &lt;vector&gt;
 
 #include &quot;rclcpp/rclcpp.hpp&quot;
 #include &quot;geometry_msgs/msg/twist.hpp&quot;
+#include &quot;turtlesim/msg/pose.hpp&quot;
 #include &quot;sensor_msgs/msg/range.hpp&quot;
 #include &quot;std_srvs/srv/set_bool.hpp&quot;
 #include &quot;turtlesim/srv/set_pen.hpp&quot;
 
 using namespace std::chrono_literals;
 
-class WallStop : public rclcpp::Node
+class TurtleDrive : public rclcpp::Node
 {
 public:
-  WallStop()
-  : Node(&quot;wall_stop&quot;)
+  TurtleDrive()
+  : Node(&quot;turtle_drive&quot;)
   {
-    // 파라미터를 선언한다 — 이름과 기본값. 타입은 기본값에서 정해진다 (1.0 이므로 double)
-    this-&gt;declare_parameter(&quot;speed&quot;, 1.0);
-    this-&gt;declare_parameter(&quot;wall_margin&quot;, 1.0);
+    // 파라미터를 선언한다 — 이름과 기본값. 타입은 기본값에서 정해진다 (1.2 이므로 double)
+    this-&gt;declare_parameter(&quot;max_speed&quot;, 1.2);
+    this-&gt;declare_parameter(&quot;margin&quot;, 1.0);
     read_parameters();
 
     cmd_pub_ = this-&gt;create_publisher&lt;geometry_msgs::msg::Twist&gt;(&quot;/turtle1/cmd_vel&quot;, 10);
+    pose_sub_ = this-&gt;create_subscription&lt;turtlesim::msg::Pose&gt;(
+      &quot;/turtle1/pose&quot;, 10,
+      [this](turtlesim::msg::Pose::ConstSharedPtr msg) { on_pose(msg); });
     // 센서처럼 best effort 로 오는 토픽이다 — 받는 쪽도 센서 데이터용 QoS 로 맞춘다
     range_sub_ = this-&gt;create_subscription&lt;sensor_msgs::msg::Range&gt;(
-      &quot;/turtle1/front_range&quot;, rclcpp::SensorDataQoS(),
+      &quot;/turtle1/wall_range&quot;, rclcpp::SensorDataQoS(),
       [this](sensor_msgs::msg::Range::ConstSharedPtr msg) { on_range(msg); });
     enable_srv_ = this-&gt;create_service&lt;std_srvs::srv::SetBool&gt;(
       &quot;~/enable&quot;,
       [this](const std_srvs::srv::SetBool::Request::SharedPtr req,
              std_srvs::srv::SetBool::Response::SharedPtr res) { on_enable(req, res); });
     pen_client_ = this-&gt;create_client&lt;turtlesim::srv::SetPen&gt;(&quot;/turtle1/set_pen&quot;);
-    timer_ = this-&gt;create_wall_timer(100ms, [this]() { on_timer(); });
-    RCLCPP_INFO(this-&gt;get_logger(), &quot;speed = %.2f m/s, wall_margin = %.2f m&quot;, speed_, wall_margin_);
+    timer_ = this-&gt;create_wall_timer(500ms, [this]() { on_timer(); });
+    RCLCPP_INFO(this-&gt;get_logger(), &quot;max_speed = %.2f m/s, margin = %.2f m (%.1f ~ %.1f 안에서 돌아다닙니다)&quot;,
+                max_speed_, margin_, margin_, map_size_ - margin_);
   }
 
 private:
   // 파라미터의 지금 값을 읽어 멤버에 넣는다 — 생성자에서 한 번, 그 뒤로는 타이머가 부를 때마다
   void read_parameters()
   {
-    speed_ = this-&gt;get_parameter(&quot;speed&quot;).as_double();
-    wall_margin_ = this-&gt;get_parameter(&quot;wall_margin&quot;).as_double();
+    max_speed_ = this-&gt;get_parameter(&quot;max_speed&quot;).as_double();
+    margin_ = this-&gt;get_parameter(&quot;margin&quot;).as_double();
   }
 
-  // /turtle1/front_range 가 올 때마다 불린다 — 받은 것을 들고 있기만 한다
+  // /turtle1/pose 가 올 때마다 불린다 — 받은 것을 들고 있기만 한다
+  void on_pose(turtlesim::msg::Pose::ConstSharedPtr msg)
+  {
+    pose_ = msg;
+  }
+
+  // /turtle1/wall_range 가 올 때마다 불린다 — 받은 것을 들고 있기만 한다
   void on_range(sensor_msgs::msg::Range::ConstSharedPtr msg)
   {
     range_ = msg;
@@ -849,45 +914,55 @@ private:
     RCLCPP_INFO(this-&gt;get_logger(), &quot;~/enable 요청: %s&quot;, res-&gt;message.c_str());
   }
 
-  // 타이머가 0.1초마다 부른다 — 판단하고 명령을 보낸다
+  // 타이머가 0.5초마다 부른다 — 판단하고 명령을 보낸다
   void on_timer()
   {
-    if (!range_) {                   // 아직 거리를 한 번도 못 받았다
+    if (!pose_ || !range_) {                     // 아직 자세나 거리를 한 번도 못 받았다
       return;
     }
-    read_parameters();               // 밖에서(ros2 param set) 바뀌었을 수 있으니 판단 전에 다시 읽는다
-    const double front = range_-&gt;range;   // 앞 벽까지 거리 — front_range 가 재서 보내 준 값
-    const bool near_wall = front &lt; wall_margin_;
-    const bool stop = near_wall || !enabled_;   // 벽 앞이거나, 주행이 꺼졌으면 선다
-    if (stop &amp;&amp; !stopped_) {
-      RCLCPP_INFO(this-&gt;get_logger(), &quot;섭니다 — %s (앞 벽까지 %.2f m)&quot;,
-                  near_wall ? &quot;벽 앞&quot; : &quot;주행 꺼짐&quot;, front);
+    if (!enabled_) {                             // 주행이 꺼졌다 — 0 인 명령(「서라」)만 보낸다
+      cmd_pub_-&gt;publish(geometry_msgs::msg::Twist());
+      return;
+    }
+    read_parameters();                           // 밖에서(ros2 param set) 바뀌었을 수 있으니 판단 전에 다시 읽는다
+    const bool outside = range_-&gt;range &lt; margin_;   // 가장 가까운 벽까지 거리 — wall_range 가 재서 보내 준 값
+    const double angle = angle_to_center(*pose_);
+    const bool turn_back = outside &amp;&amp; angle &gt; turn_tolerance_;   // 범위 밖인데 중앙을 안 보고 있다
+
+    if (turn_back &amp;&amp; !turning_) {
+      RCLCPP_INFO(this-&gt;get_logger(), &quot;범위 밖 (벽까지 %.2f m) — 중앙 쪽으로 돕니다&quot;, range_-&gt;range);
       change_pen();
     }
-    stopped_ = stop;
+    if (!turn_back &amp;&amp; turning_) {
+      RCLCPP_INFO(this-&gt;get_logger(), &quot;중앙을 봅니다 — 다시 출발합니다&quot;);
+    }
+    turning_ = turn_back;
 
-    geometry_msgs::msg::Twist cmd;   // 여섯 칸이 전부 0 — 이대로 보내면 「서라」
-    if (!stop) {
-      cmd.linear.x = speed_;
+    geometry_msgs::msg::Twist cmd;               // 여섯 칸이 전부 0 으로 시작한다
+    if (turn_back) {
+      cmd.angular.z = 1.0;                       // 제자리에서 왼쪽으로 돈다 (linear.x 는 0)
+    } else {
+      cmd.linear.x = random_between(0.2, max_speed_);
+      cmd.angular.z = random_between(-1.0, 1.0);
     }
     cmd_pub_-&gt;publish(cmd);
   }
 
-  // /turtle1/set_pen 에 다음 펜 색을 요청한다 — 다시 달리기 시작하면 그 색으로 선이 그려진다
+  // /turtle1/set_pen 에 다음 펜 색을 요청한다 — 다시 출발하면 그 색으로 선이 그려진다
   void change_pen()
   {
     if (!pen_client_-&gt;service_is_ready()) {   // 서버(turtlesim)가 아직 없으면 이번에는 건너뛴다
       RCLCPP_WARN(this-&gt;get_logger(), &quot;/turtle1/set_pen 서비스가 아직 없습니다&quot;);
       return;
     }
-    const PenColor c = pen_colors_[stop_count_ % pen_colors_.size()];
-    ++stop_count_;
+    const PenColor c = pen_colors_[turn_count_ % pen_colors_.size()];
+    ++turn_count_;
 
     auto req = std::make_shared&lt;turtlesim::srv::SetPen::Request&gt;();
     req-&gt;r = c.r;
     req-&gt;g = c.g;
     req-&gt;b = c.b;
-    req-&gt;width = 5;                  // 선 굵기 (기본은 3)
+    req-&gt;width = 5;                            // 선 굵기 (기본은 3)
     // 보내고 바로 돌아온다. 응답이 오면 spin 이 이 람다를 불러 준다
     pen_client_-&gt;async_send_request(
       req, [this, c](rclcpp::Client&lt;turtlesim::srv::SetPen&gt;::SharedFuture) {
@@ -895,27 +970,51 @@ private:
       });
   }
 
-  double speed_ = 0.0;                // 파라미터 speed 에서 읽는다 (m/s)
-  double wall_margin_ = 0.0;          // 파라미터 wall_margin 에서 읽는다 (m)
-  bool stopped_ = false;
-  bool enabled_ = true;               // ~/enable 서비스로 바뀐다. 처음에는 켜져 있다
+  // 바라보는 방향과 「중앙으로 가는 방향」 사이의 각 (0 ~ π rad)
+  double angle_to_center(const turtlesim::msg::Pose &amp; p) const
+  {
+    const double dx = center_ - p.x;             // 중앙으로 가는 방향
+    const double dy = center_ - p.y;
+    const double hx = std::cos(p.theta);         // 바라보는 방향 (길이 1)
+    const double hy = std::sin(p.theta);
+    const double cos_angle = (dx * hx + dy * hy) / std::hypot(dx, dy);   // 내적 ÷ 두 길이의 곱
+    return std::acos(std::clamp(cos_angle, -1.0, 1.0));
+  }
+
+  // lo 와 hi 사이의 실수 하나를 고르게 뽑는다
+  double random_between(double lo, double hi)
+  {
+    std::uniform_real_distribution&lt;double&gt; dist(lo, hi);
+    return dist(gen_);
+  }
+
+  double max_speed_ = 0.0;             // 파라미터 max_speed 에서 읽는다 (m/s)
+  double margin_ = 0.0;                // 파라미터 margin 에서 읽는다 (m)
+  const double map_size_ = 11.0;       // 지도 한 변의 길이 (m)
+  const double center_ = 5.5;          // 지도 가운데 (x, y 모두)
+  const double turn_tolerance_ = 0.35; // 중앙과 이 각(약 20°) 안이면 다시 출발한다 (rad)
+  bool turning_ = false;               // 지금 돌아서는 중인가 — 로그를 바뀔 때만 찍는 데 쓴다
+  bool enabled_ = true;                // ~/enable 서비스로 바뀐다. 처음에는 켜져 있다
 
   struct PenColor { std::uint8_t r; std::uint8_t g; std::uint8_t b; };
   const std::vector&lt;PenColor&gt; pen_colors_ = {{255, 70, 70}, {60, 220, 60}, {255, 210, 0}};   // 빨강 → 초록 → 노랑
-  std::size_t stop_count_ = 0;        // 지금까지 선 횟수 — 다음 색을 고르는 데 쓴다
+  std::size_t turn_count_ = 0;         // 지금까지 돌아선 횟수 — 다음 색을 고르는 데 쓴다
 
+  std::mt19937 gen_{std::random_device{}()};   // 난수 생성기 — 실행할 때마다 다른 씨앗으로 시작한다
   rclcpp::Publisher&lt;geometry_msgs::msg::Twist&gt;::SharedPtr cmd_pub_;
+  rclcpp::Subscription&lt;turtlesim::msg::Pose&gt;::SharedPtr pose_sub_;
   rclcpp::Subscription&lt;sensor_msgs::msg::Range&gt;::SharedPtr range_sub_;
   rclcpp::Service&lt;std_srvs::srv::SetBool&gt;::SharedPtr enable_srv_;
   rclcpp::Client&lt;turtlesim::srv::SetPen&gt;::SharedPtr pen_client_;
   rclcpp::TimerBase::SharedPtr timer_;
-  sensor_msgs::msg::Range::ConstSharedPtr range_;   // 마지막으로 받은 앞 거리 (처음에는 비어 있다)
+  turtlesim::msg::Pose::ConstSharedPtr pose_;  // 마지막으로 받은 자세 (처음에는 비어 있다)
+  sensor_msgs::msg::Range::ConstSharedPtr range_;   // 마지막으로 받은 벽까지 거리 (처음에는 비어 있다)
 };
 
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  auto node = std::make_shared&lt;WallStop&gt;();
+  auto node = std::make_shared&lt;TurtleDrive&gt;();
   rclcpp::spin(node);            // 타이머·구독 콜백은 이 안에서 불린다
   rclcpp::shutdown();
   return 0;
@@ -939,21 +1038,20 @@ find_package(sensor_msgs REQUIRED)
 add_executable(hello_node src/hello_node.cpp)
 target_link_libraries(hello_node PRIVATE rclcpp::rclcpp)
 
-# 20회 — 실행 파일 wall_stop. Twist(geometry_msgs)를 보내고 Pose(turtlesim)를 받는다
+# 20회 — 실행 파일 turtle_drive. Twist(geometry_msgs)를 보내고 Pose(turtlesim)를 받는다
 # 21회 — SetBool(std_srvs) 서비스를 받는다
-# 22회 — 자세(Pose) 대신 앞 거리(Range, sensor_msgs)를 받는다. SetPen 을 부르므로 turtlesim 은 그대로
-add_executable(wall_stop src/wall_stop.cpp)
-target_link_libraries(wall_stop PRIVATE
-  rclcpp::rclcpp ${geometry_msgs_TARGETS} ${turtlesim_TARGETS} ${std_srvs_TARGETS}
-  ${sensor_msgs_TARGETS})
+# 22회 — Range(sensor_msgs)를 받는다
+add_executable(turtle_drive src/turtle_drive.cpp)
+target_link_libraries(turtle_drive PRIVATE
+  rclcpp::rclcpp ${geometry_msgs_TARGETS} ${turtlesim_TARGETS} ${std_srvs_TARGETS} ${sensor_msgs_TARGETS})
 
-# 22회 — 실행 파일 front_range. Pose(turtlesim)를 받아 Range(sensor_msgs)를 보낸다
-add_executable(front_range src/front_range.cpp)
-target_link_libraries(front_range PRIVATE
+# 22회 — 실행 파일 wall_range. Pose(turtlesim)를 받아 Range(sensor_msgs)를 보낸다
+add_executable(wall_range src/wall_range.cpp)
+target_link_libraries(wall_range PRIVATE
   rclcpp::rclcpp ${turtlesim_TARGETS} ${sensor_msgs_TARGETS})
 
 # 만든 실행 파일을 ros2 run 이 찾는 자리에 설치한다
-install(TARGETS hello_node wall_stop front_range
+install(TARGETS hello_node turtle_drive wall_range
   DESTINATION lib/${PROJECT_NAME})
 
 # 21회 — 빌드하지 않는 파일(launch 파일·파라미터 파일)은 share/ 아래로 복사한다
@@ -975,13 +1073,14 @@ endif()
 ament_package()</code></pre></div>
 </details>
 <!-- /fullcode -->
+<!-- /fullcode -->
 
-  <!-- ── ⑥ v11 ── -->
-  <h2 id="v11">⑥ 콜백 처리 시간과 지연 — <code>std::chrono::steady_clock</code> (v11) <span class="badge b-red">🔴 사람이 한다</span></h2>
+  <!-- ── ⑥ v10 ── -->
+  <h2 id="v10">⑥ 콜백 처리 시간과 지연 — <code>std::chrono::steady_clock</code> (v10) <span class="badge b-red">🔴 사람이 한다</span></h2>
 
   <h3>개념 — 처리 시간이 주기보다 길면</h3>
   <p>
-    콜백이 조금 느리면 무엇이 달라질까? 20회 ②절의 규칙을 다시 적으면 — 기본 <code>spin</code>은 콜백을 <strong>한 번에 하나씩</strong> 부른다. 21회 ⑥절은 그 극단이었다. 콜백 안에서 응답을 기다리자 다른 콜백이 하나도 안 불리고 노드가 멈췄다.
+    콜백이 조금 느리면 무엇이 달라질까? 20회 ③절의 규칙을 다시 적으면 — 기본 <code>spin</code>은 콜백을 <strong>한 번에 하나씩</strong> 부른다. 21회 ⑥절은 그 극단이었다. 콜백 안에서 응답을 기다리자 다른 콜백이 하나도 안 불리고 노드가 멈췄다.
     오늘 보는 것은 멈추지는 않고 <strong>느리기만 한</strong> 경우다. 거리는 16 ms마다(초당 62.5번) 오는데 콜백 하나가 50 ms 걸린다면, 콜백이 하나를 처리하는 동안 세 개쯤이 더 도착한다.
   </p>
   <div class="tablewrap">
@@ -994,7 +1093,7 @@ ament_package()</code></pre></div>
   </div>
   <p>
     그래서 재야 할 것은 둘이다. 하나는 <strong>콜백 처리 시간</strong> — 콜백 앞뒤의 시각 차이다. 6회에서 for문의 시간을 잴 때, 13회에서 직접 짠 for문과 STL을 비교할 때 쓴 <code>std::chrono::steady_clock</code>을 그대로 쓴다.
-    다른 하나는 <strong>받은 값의 나이</strong>, 보통 <strong>지연</strong>(latency)이라고 부르는 것이다. <code>front_range</code>가 <code>header.stamp</code>에 잰 시각을 적어 보냈으니, 콜백이 그 값을 손에 쥔 순간의 시각에서 빼면 「이 값이 몇 ms 묵었나」가 나온다.
+    다른 하나는 <strong>받은 값의 나이</strong>, 보통 <strong>지연</strong>(latency)이라고 부르는 것이다. <code>wall_range</code>가 <code>header.stamp</code>에 잰 시각을 적어 보냈으니, 콜백이 그 값을 손에 쥔 순간의 시각에서 빼면 「이 값이 몇 ms 묵었나」가 나온다.
   </p>
   <pre class="lang-cpp"><code>const auto t0 = std::chrono::steady_clock::now();                       // 콜백 시작
 const double age_ms = (this-&gt;now() - rclcpp::Time(msg-&gt;header.stamp)).seconds() * 1000.0;   // 받은 값의 나이
@@ -1005,21 +1104,21 @@ const double took_ms = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).
   <h3>예제에 적용 — 무거운 처리를 흉내 내고 큐 깊이를 바꿔 본다</h3>
   <p>
     지금 <code>on_range()</code>는 받은 것을 들고 있기만 해서 거의 0 ms다. 실제 노드라면 여기서 라이다 값 360개를 거르고(9회), 정렬해 중앙값을 찾고(13회), 콘을 찾는 일을 한다.
-    그것을 흉내 내려고 파라미터 <code>work_ms</code>만큼 일부러 쉬게 한다(20회 <code>sleep_for</code>). 큐 깊이도 파라미터 <code>range_depth</code>로 꺼낸다.
+    그것을 흉내 내려고 파라미터 <code>work_ms</code>만큼 일부러 쉬게 한다(20회 ⑧절 <code>sleep_for</code>). 큐 깊이도 파라미터 <code>range_depth</code>로 꺼낸다.
     두 값은 <strong>구독을 만들 때 한 번만</strong> 쓰므로 생성자에서 한 번 읽는다 — 21회 ③절의 「실행 중에 다시 읽나」를 여기서는 일부러 하지 않는 것이다. 바꾸려면 노드를 다시 띄운다.
   </p>
 
-  <h3>11단계 (v11) — 처리 시간과 나이를 콜백마다 찍는다</h3>
-  <div class="codelabel bad">고치기 전 (v10) — 구독자와 on_range</div>
+  <h3>10단계 (v10) — 처리 시간과 나이를 콜백마다 찍는다</h3>
+  <div class="codelabel bad">고치기 전 (v9) — 구독자와 on_range</div>
   <pre class="lang-cpp before"><code>    range_sub_ = this-&gt;create_subscription&lt;sensor_msgs::msg::Range&gt;(
-      "/turtle1/front_range", rclcpp::SensorDataQoS(),
+      "/turtle1/wall_range", rclcpp::SensorDataQoS(),
       [this](sensor_msgs::msg::Range::ConstSharedPtr msg) { on_range(msg); });
   // …
   void on_range(sensor_msgs::msg::Range::ConstSharedPtr msg)
   {
     range_ = msg;
   }</code></pre>
-  <div class="codelabel good">고친 뒤 (v11) — 맨 위에 #include &lt;thread&gt;, 멤버 std::int64_t work_ms_ = 0;</div>
+  <div class="codelabel good">고친 뒤 (v10) — 맨 위에 #include &lt;thread&gt;, 멤버 std::int64_t work_ms_ = 0;</div>
   <pre class="lang-cpp after"><code>    // 실험용 파라미터 둘 — 구독을 만들 때만 쓰므로 생성자에서 한 번만 읽는다 (둘 다 정수)
     this-&gt;declare_parameter("work_ms", 0);       // 거리 콜백 안에서 일부러 쉬는 시간 (ms)
     this-&gt;declare_parameter("range_depth", 5);   // 거리 구독의 큐 깊이 — SensorDataQoS 의 기본이 5
@@ -1027,7 +1126,7 @@ const double took_ms = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).
     const auto depth = this-&gt;get_parameter("range_depth").as_int();
     // …
     range_sub_ = this-&gt;create_subscription&lt;sensor_msgs::msg::Range&gt;(
-      "/turtle1/front_range", rclcpp::SensorDataQoS().keep_last(depth),
+      "/turtle1/wall_range", rclcpp::SensorDataQoS().keep_last(depth),
       [this](sensor_msgs::msg::Range::ConstSharedPtr msg) { on_range(msg); });
   // …
   void on_range(sensor_msgs::msg::Range::ConstSharedPtr msg)
@@ -1061,95 +1160,99 @@ const double took_ms = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).
   </div>
 
   <h3>실제로 나온 출력</h3>
-  <p>turtlesim과 <code>front_range</code>는 그대로 두고 <code>wall_stop</code>만 설정을 바꿔 네 번 띄웠다. 매번 turtlesim을 새로 띄워 거북이를 가운데에서 출발시켰다. 먼저 처리 시간 0, 깊이 5(기본).</p>
-  <pre class="lang-sh"><code>$ ros2 run turtle_drive wall_stop --ros-args -p work_ms:=0 -p range_depth:=5
-[INFO] [1792278432.490664965] [wall_stop]: speed = 1.00 m/s, wall_margin = 1.00 m, work_ms = 0, range_depth = 5
-[INFO] [1792278432.606730838] [wall_stop]: 거리 5.54 m · 나이 0.2 ms · 처리 0.0 ms
-[INFO] [1792278432.622224538] [wall_stop]: 거리 5.54 m · 나이 0.1 ms · 처리 0.0 ms
+  <p>turtlesim과 <code>wall_range</code>를 띄우고 <code>turtle_drive</code>만 설정을 바꿔 가며 1분씩 띄웠다. 매번 turtlesim을 새로 띄워 거북이를 가운데에서 출발시켰다. 먼저 처리 시간 0, 깊이 5(기본).</p>
+  <pre class="lang-sh"><code>$ ros2 run turtle_drive turtle_drive --ros-args -p work_ms:=0 -p range_depth:=5
+[INFO] [1793759561.276365635] [turtle_drive]: max_speed = 1.20 m/s, margin = 1.00 m, work_ms = 0, range_depth = 5
+[INFO] [1793759561.394238596] [turtle_drive]: 거리 5.46 m · 나이 0.1 ms · 처리 0.0 ms
+[INFO] [1793759561.410453099] [turtle_drive]: 거리 5.46 m · 나이 0.0 ms · 처리 0.0 ms
 (…)
-[INFO] [1792278437.278401587] [wall_stop]: 거리 0.95 m · 나이 0.2 ms · 처리 0.0 ms
-[INFO] [1792278437.290792504] [wall_stop]: 섭니다 — 벽 앞 (앞 벽까지 0.95 m)</code></pre>
+[INFO] [1793759574.754449085] [turtle_drive]: 거리 0.95 m · 나이 0.1 ms · 처리 0.0 ms
+[INFO] [1793759574.771020207] [turtle_drive]: 거리 0.94 m · 나이 0.0 ms · 처리 0.0 ms
+[INFO] [1793759574.776464418] [turtle_drive]: 범위 밖 (벽까지 0.94 m) — 중앙 쪽으로 돕니다
+[INFO] [1793759574.786555332] [turtle_drive]: 펜 색을 (255, 70, 70) 로 바꿨습니다</code></pre>
   <p>
-    줄 사이 간격이 0.016초 — 거리가 올 때마다 한 줄씩이다. 받은 값의 나이는 0.1~0.3 ms, 처리 시간은 0.0 ms다. 이번에는 처리 50 ms에 깊이를 100으로 크게 잡았다.
+    줄 사이 간격이 0.016초 — 거리가 올 때마다 한 줄씩, 1초에 62~63줄이다. 받은 값의 나이는 0.0~0.6 ms, 처리 시간은 0.0 ms다. 이번에는 처리 50 ms에 깊이를 100으로 크게 잡았다.
   </p>
-  <pre class="lang-sh"><code>$ ros2 run turtle_drive wall_stop --ros-args -p work_ms:=50 -p range_depth:=100
-[INFO] [1792278483.777375089] [wall_stop]: speed = 1.00 m/s, wall_margin = 1.00 m, work_ms = 50, range_depth = 100
-[INFO] [1792278484.316858082] [wall_stop]: 거리 5.54 m · 나이 357.4 ms · 처리 50.1 ms
-[INFO] [1792278484.367095026] [wall_stop]: 거리 5.54 m · 나이 391.3 ms · 처리 50.1 ms
-[INFO] [1792278484.417278149] [wall_stop]: 거리 5.54 m · 나이 425.2 ms · 처리 50.1 ms
+  <pre class="lang-sh"><code>$ ros2 run turtle_drive turtle_drive --ros-args -p work_ms:=50 -p range_depth:=100
+[INFO] [1793759892.319098329] [turtle_drive]: max_speed = 1.20 m/s, margin = 1.00 m, work_ms = 50, range_depth = 100
+[INFO] [1793759892.807657336] [turtle_drive]: 거리 5.46 m · 나이 324.6 ms · 처리 50.1 ms
+[INFO] [1793759892.857782719] [turtle_drive]: 거리 5.46 m · 나이 358.6 ms · 처리 50.1 ms
+[INFO] [1793759892.908015113] [turtle_drive]: 거리 5.46 m · 나이 393.6 ms · 처리 50.1 ms
 (…)
-[INFO] [1792278490.546178349] [wall_stop]: 거리 0.95 m · 나이 1594.0 ms · 처리 50.1 ms
-[INFO] [1792278490.596360841] [wall_stop]: 거리 0.90 m · 나이 1596.6 ms · 처리 50.1 ms
-[INFO] [1792278490.596439310] [wall_stop]: 섭니다 — 벽 앞 (앞 벽까지 0.90 m)
-(…)
-[INFO] [1792278494.563821695] [wall_stop]: 거리 0.00 m · 나이 1595.9 ms · 처리 50.1 ms</code></pre>
-  <pre><code>[WARN] [1792278489.861727825] [turtlesim]: Oh no! I hit the wall! (Clamping from [x=11.096445, y=5.544445])</code></pre>
+[INFO] [1793759901.790167840] [turtle_drive]: 거리 0.82 m · 나이 1595.8 ms · 처리 50.1 ms
+[INFO] [1793759901.840363816] [turtle_drive]: 거리 0.80 m · 나이 1597.7 ms · 처리 50.1 ms
+[INFO] [1793759901.840445469] [turtle_drive]: 범위 밖 (벽까지 0.80 m) — 중앙 쪽으로 돕니다</code></pre>
+  <pre><code>[WARN] [1793759901.104125680] [turtlesim]: Oh no! I hit the wall! (Clamping from [x=11.102788, y=7.125224])</code></pre>
   <p>
-    줄 간격이 0.05초로 벌어졌다 — 처리 시간만큼이다. 나이는 줄마다 약 34 ms씩 늘다가 <strong>1,590 ms 언저리에서 멈췄다.</strong> 큐 100칸이 다 찼기 때문이다(100 × 16 ms ≒ 1.6초).
-    그때부터 콜백은 늘 <strong>1.6초 전의 거리</strong>로 판단한다. 「섭니다」는 489.86의 turtlesim 경고 <code>Oh no! I hit the wall!</code>보다 <strong>0.7초 늦게</strong> 찍혔다. 「0.90 m 남았다」고 판단한 그 순간 거북이는 이미 벽에 닿아 있었다.
+    줄 간격이 0.05초로 벌어졌다 — 처리 시간만큼이다. 나이는 줄마다 약 34 ms씩 늘다가 <strong>1,600 ms 언저리에서 멈췄다.</strong> 큐 100칸이 다 찼기 때문이다(100 × 16 ms ≒ 1.6초).
+    그때부터 콜백은 늘 <strong>1.6초 전의 거리</strong>로 판단한다. 「범위 밖 — 돕니다」는 901.10의 turtlesim 경고 <code>Oh no! I hit the wall!</code>보다 <strong>0.7초 늦게</strong> 찍혔다. 「벽까지 0.80 m」라고 판단한 그 순간 거북이는 이미 오른쪽 벽(x = 11.09)에 닿아 있었다.
   </p>
   <figure>
-    <img src="assets/img/22_turtle_lag.png" width="500"
-         alt="turtlesim 창의 가운데 줄 두 장을 위아래로 놓은 그림. 위 그림은 가운데에서 오른쪽으로 그어진 선 끝에서 거북이가 벽 앞 조금 떨어진 곳에 서 있다. 아래 그림은 같은 선이 오른쪽 끝까지 이어져 거북이가 벽에 붙어 있다">
-    <figcaption>위: 처리 0 ms · 깊이 5 — 앞 벽 0.95 m 앞(x = 10.15)에서 섰다. 아래: 처리 50 ms · 깊이 100 — 벽(x = 11.09)에 닿아서야 멈췄다. 두 판 모두 코드와 <code>wall_margin</code>(1.0 m)이 같고 다른 것은 파라미터 둘뿐이다(창의 가운데 줄만 잘랐다).</figcaption>
+    <img src="assets/img/22_turtle_lag.png" width="720"
+         alt="turtlesim 창 두 장을 나란히 놓은 그림. 왼쪽은 빨강·초록·노랑 선이 창 가장자리에 닿기 전에 꺾여 안쪽으로 돌아온다. 오른쪽은 빨간 선이 아래로 내려가 창 아래 가장자리에 닿은 뒤에야 색이 바뀌며 꺾인다">
+    <figcaption>왼쪽: 처리 0 ms · 깊이 5. 오른쪽: 처리 50 ms · 깊이 100. 두 판 모두 코드와 <code>margin</code>(1.0 m)이 같고 다른 것은 파라미터 둘뿐이다. 선 색이 바뀐 자리가 돌아서기 시작한 자리다(21회 v6). 각각 50초 동안 돌린 화면이다. 왼쪽은 벽까지 0.90 m · 0.85 m에서 돌아섰고, 오른쪽은 아래 벽에서 <strong>2 cm</strong>까지 다가간 뒤에야 색이 바뀌었다(실습의 「성공」 로그가 이 오른쪽 판이다).</figcaption>
   </figure>
-  <p>네 설정을 한 표로 모았다. 「선 뒤 실제 앞 거리」는 거북이가 선 뒤 <code>ros2 topic echo --once /turtle1/front_range</code>로 받은 값이다. 같은 실험을 두 번 돌려 달라진 칸은 둘 다 적었다.</p>
+  <p>네 설정을 한 표로 모았다. 거북이가 무작위로 움직이므로 돌릴 때마다 숫자가 조금씩 다르다 — 처리 50 ms인 두 판은 두 번씩 돌려 둘 다 적었다. 「벽에 가장 가까이 간 거리」는 검증용 노드로 1분 동안 거북이 자세를 받아 잰 것이다.</p>
   <div class="tablewrap">
   <table>
-    <tr><th>work_ms · range_depth</th><th>받은 값의 나이</th><th>1초에 처리한 거리</th><th>선 뒤 실제 앞 거리 (여유 1.0 m)</th></tr>
-    <tr><td>0 · 5</td><td>0.1~0.3 ms</td><td>62~63개 (전부)</td><td>0.95 m</td></tr>
-    <tr><td>50 · 1</td><td>0.5~15 ms</td><td>20개</td><td>0.87 m (다시 돌리면 0.94 m)</td></tr>
-    <tr><td>50 · 5</td><td>65~80 ms</td><td>20개</td><td>0.82 m</td></tr>
-    <tr><td>50 · 100</td><td>약 1,590 ms</td><td>20개</td><td><strong>0.00 m — 벽에 닿았다</strong></td></tr>
+    <tr><th>work_ms · range_depth</th><th>받은 값의 나이</th><th>1초에 처리한 거리</th><th>1분 동안 벽 경고</th><th>벽에 가장 가까이 간 거리 (margin 1.0 m)</th></tr>
+    <tr><td>0 · 5</td><td>0.0~0.6 ms</td><td>62~63개 (전부)</td><td>0줄</td><td>0.86 m</td></tr>
+    <tr><td>50 · 1</td><td>0.1~16 ms</td><td>20개</td><td>0줄</td><td>0.68 m</td></tr>
+    <tr><td>50 · 5</td><td>64~81 ms</td><td>20개</td><td>0줄 · 0줄</td><td>0.71 m · 0.64 m</td></tr>
+    <tr><td>50 · 100</td><td>약 1,580~1,600 ms</td><td>20개</td><td><strong>18줄 · 47줄</strong></td><td><strong>0.00 m · 0.00 m — 벽에 닿았다</strong></td></tr>
   </table>
   </div>
   <div class="interp">
     <strong>해석:</strong> 처리 50 ms면 1초에 20개밖에 못 처리한다. 도착하는 62.5개 중 나머지 42개는 어디로 갔나? 깊이 1·5에서는 <strong>버려졌고</strong>, 덕분에 콜백은 비교적 새 값을 봤다.
     깊이 100에서는 버리지 않고 <strong>쌓아 두었고</strong>, 그 대가로 콜백이 1.6초 전 세상을 보며 판단했다. 큐를 크게 잡는 것은 「안 잃는다」는 점에서는 안전해 보이지만 센서 값에서는 반대다 — <strong>최신 값을 늦게 보는 것이 잃는 것보다 위험하다.</strong>
-    깊이 1에서도 몇 cm 늦고 돌릴 때마다 값이 다른 것은 처리 50 ms와 타이머(0.1초마다 판단)를 기다리는 시간이 더해지고, 그 둘이 어긋나는 때가 매번 달라서다. 늦음을 없애는 근본은 큐 깊이가 아니라 <strong>처리 시간을 주기보다 짧게</strong> 하는 것이다.
+    깊이 1·5에서도 처리 0 ms보다 벽에 조금 더 다가간 것은 처리 50 ms만큼 판단(0.5초마다 도는 타이머)이 밀리고 값도 그만큼 묵기 때문이다 — 무작위로 움직이므로 판마다의 차이도 섞여 있다. 늦음을 없애는 근본은 큐 깊이가 아니라 <strong>처리 시간을 주기보다 짧게</strong> 하는 것이다.
   </div>
   <p>
     여기서 2부가 이어진다. 12회에서 「<code>LaserScan</code>을 값으로 받으면 콜백마다 복사가 일어난다」고 했고, 13회에서 직접 짠 for문보다 STL 알고리즘이 빨랐다. 그때는 마이크로초의 차이였지만,
-    콜백 안에서는 그 차이가 쌓여 <strong>처리 시간</strong>이 되고, 처리 시간이 주기를 넘는 순간 로봇이 늦게 선다. 노트북에서 넉넉하던 처리가 라즈베리파이(28회)에서 몇 배로 늘어나는 일도 흔하다.
-    <span style="color:var(--muted)">측정 환경: 컨테이너(우분투 24.04, ROS 2 Jazzy), AMD Ryzen Threadripper PRO 5955WX. 50 ms는 일부러 쉰 시간이라 컴퓨터가 달라도 거의 같게 나온다.</span>
+    콜백 안에서는 그 차이가 쌓여 <strong>처리 시간</strong>이 되고, 처리 시간이 주기를 넘는 순간 로봇이 늦게 돌아선다. 노트북에서 넉넉하던 처리가 라즈베리파이(28회)에서 몇 배로 늘어나는 일도 흔하다.
+    <span style="color:var(--muted)">측정 환경: 컨테이너(우분투 24.04, ROS 2 Jazzy), Intel Core i7-12700K. 50 ms는 일부러 쉰 시간이라 컴퓨터가 달라도 거의 같게 나온다.</span>
   </p>
   <div class="box trap">
     <div class="boxtitle">⚠️ 처리 시간만 재면 늦음이 안 보인다</div>
     <p>
-      위 네 판 모두 <code>처리 50.1 ms</code>로 같다. 처리 시간만 찍었다면 깊이 100이 왜 벽에 닿았는지 알 수 없다. 차이를 보여 준 것은 <strong>나이</strong>(<code>now() - header.stamp</code>)였다.
+      처리 50 ms인 판은 모두 <code>처리 50.1 ms</code>로 같다. 처리 시간만 찍었다면 깊이 100이 왜 벽에 닿았는지 알 수 없다. 차이를 보여 준 것은 <strong>나이</strong>(<code>now() - header.stamp</code>)였다.
       받은 코드에 시간 측정이 있으면 무엇을 재고 있는지 본다 — 콜백 안의 시간인지, 데이터가 묵은 시간인지. <code>ros2 topic hz</code>(18회 ⑬ 6번)는 <strong>보내는</strong> 쪽의 주기를 보여 줄 뿐이라, 이 경우에도 62.5 Hz로 멀쩡하게 나온다.
     </p>
   </div>
-  <!-- fullcode "전체 코드 — turtle_drive/src/wall_stop.cpp (11단계 · v11. 나머지 파일은 v10 그대로)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive wall_stop --ros-args -p work_ms:=50 -p range_depth:=100"
-       l22_qos_debug/steps/step11/turtle_drive/src/wall_stop.cpp as turtle_drive/src/wall_stop.cpp
+  <!-- fullcode "전체 코드 — turtle_drive/src/turtle_drive.cpp (10단계 · v10. 나머지 파일은 v9 그대로)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive turtle_drive --ros-args -p work_ms:=50 -p range_depth:=100"
+       l22_qos_debug/steps/step10/turtle_drive/src/turtle_drive.cpp as turtle_drive/src/turtle_drive.cpp
   -->
 <details class="fullcode">
-  <summary>전체 코드 — turtle_drive/src/wall_stop.cpp (11단계 · v11. 나머지 파일은 v10 그대로)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive wall_stop --ros-args -p work_ms:=50 -p range_depth:=100</code></p>
-  <div class="codefile"><div class="fname">turtle_drive/src/wall_stop.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 22회 벽 앞 정지 — v11 (11단계: std::chrono::steady_clock 으로 콜백 처리 시간을 재고, 받은 값의 나이를 찍는다)
+  <summary>전체 코드 — turtle_drive/src/turtle_drive.cpp (10단계 · v10. 나머지 파일은 v9 그대로)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive turtle_drive --ros-args -p work_ms:=50 -p range_depth:=100</code></p>
+  <div class="codefile"><div class="fname">turtle_drive/src/turtle_drive.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 22회 turtle_drive — v10 (10단계: std::chrono::steady_clock 으로 콜백 처리 시간을 재고, 받은 값의 나이를 찍는다)
+#include &lt;algorithm&gt;
 #include &lt;chrono&gt;
 #include &lt;cstdint&gt;
+#include &lt;cmath&gt;
 #include &lt;memory&gt;
+#include &lt;random&gt;
 #include &lt;thread&gt;
 #include &lt;vector&gt;
 
 #include &quot;rclcpp/rclcpp.hpp&quot;
 #include &quot;geometry_msgs/msg/twist.hpp&quot;
+#include &quot;turtlesim/msg/pose.hpp&quot;
 #include &quot;sensor_msgs/msg/range.hpp&quot;
 #include &quot;std_srvs/srv/set_bool.hpp&quot;
 #include &quot;turtlesim/srv/set_pen.hpp&quot;
 
 using namespace std::chrono_literals;
 
-class WallStop : public rclcpp::Node
+class TurtleDrive : public rclcpp::Node
 {
 public:
-  WallStop()
-  : Node(&quot;wall_stop&quot;)
+  TurtleDrive()
+  : Node(&quot;turtle_drive&quot;)
   {
-    // 파라미터를 선언한다 — 이름과 기본값. 타입은 기본값에서 정해진다 (1.0 이므로 double)
-    this-&gt;declare_parameter(&quot;speed&quot;, 1.0);
-    this-&gt;declare_parameter(&quot;wall_margin&quot;, 1.0);
+    // 파라미터를 선언한다 — 이름과 기본값. 타입은 기본값에서 정해진다 (1.2 이므로 double)
+    this-&gt;declare_parameter(&quot;max_speed&quot;, 1.2);
+    this-&gt;declare_parameter(&quot;margin&quot;, 1.0);
     read_parameters();
     // 실험용 파라미터 둘 — 구독을 만들 때만 쓰므로 생성자에서 한 번만 읽는다 (둘 다 정수)
     this-&gt;declare_parameter(&quot;work_ms&quot;, 0);       // 거리 콜백 안에서 일부러 쉬는 시간 (ms)
@@ -1158,29 +1261,38 @@ public:
     const auto depth = this-&gt;get_parameter(&quot;range_depth&quot;).as_int();
 
     cmd_pub_ = this-&gt;create_publisher&lt;geometry_msgs::msg::Twist&gt;(&quot;/turtle1/cmd_vel&quot;, 10);
+    pose_sub_ = this-&gt;create_subscription&lt;turtlesim::msg::Pose&gt;(
+      &quot;/turtle1/pose&quot;, 10,
+      [this](turtlesim::msg::Pose::ConstSharedPtr msg) { on_pose(msg); });
     // 센서처럼 best effort 로 오는 토픽이다 — 받는 쪽도 센서 데이터용 QoS 로 맞춘다
     range_sub_ = this-&gt;create_subscription&lt;sensor_msgs::msg::Range&gt;(
-      &quot;/turtle1/front_range&quot;, rclcpp::SensorDataQoS().keep_last(depth),
+      &quot;/turtle1/wall_range&quot;, rclcpp::SensorDataQoS().keep_last(depth),
       [this](sensor_msgs::msg::Range::ConstSharedPtr msg) { on_range(msg); });
     enable_srv_ = this-&gt;create_service&lt;std_srvs::srv::SetBool&gt;(
       &quot;~/enable&quot;,
       [this](const std_srvs::srv::SetBool::Request::SharedPtr req,
              std_srvs::srv::SetBool::Response::SharedPtr res) { on_enable(req, res); });
     pen_client_ = this-&gt;create_client&lt;turtlesim::srv::SetPen&gt;(&quot;/turtle1/set_pen&quot;);
-    timer_ = this-&gt;create_wall_timer(100ms, [this]() { on_timer(); });
-    RCLCPP_INFO(this-&gt;get_logger(), &quot;speed = %.2f m/s, wall_margin = %.2f m, work_ms = %ld, range_depth = %ld&quot;,
-                speed_, wall_margin_, work_ms_, depth);
+    timer_ = this-&gt;create_wall_timer(500ms, [this]() { on_timer(); });
+    RCLCPP_INFO(this-&gt;get_logger(), &quot;max_speed = %.2f m/s, margin = %.2f m, work_ms = %ld, range_depth = %ld&quot;,
+                max_speed_, margin_, work_ms_, depth);
   }
 
 private:
   // 파라미터의 지금 값을 읽어 멤버에 넣는다 — 생성자에서 한 번, 그 뒤로는 타이머가 부를 때마다
   void read_parameters()
   {
-    speed_ = this-&gt;get_parameter(&quot;speed&quot;).as_double();
-    wall_margin_ = this-&gt;get_parameter(&quot;wall_margin&quot;).as_double();
+    max_speed_ = this-&gt;get_parameter(&quot;max_speed&quot;).as_double();
+    margin_ = this-&gt;get_parameter(&quot;margin&quot;).as_double();
   }
 
-  // /turtle1/front_range 가 올 때마다 불린다 — 처리하고 들고 있는다. 처리 시간과 받은 값의 나이를 잰다
+  // /turtle1/pose 가 올 때마다 불린다 — 받은 것을 들고 있기만 한다
+  void on_pose(turtlesim::msg::Pose::ConstSharedPtr msg)
+  {
+    pose_ = msg;
+  }
+
+  // /turtle1/wall_range 가 올 때마다 불린다 — 처리하고 들고 있는다. 처리 시간과 받은 값의 나이를 잰다
   void on_range(sensor_msgs::msg::Range::ConstSharedPtr msg)
   {
     const auto t0 = std::chrono::steady_clock::now();
@@ -1206,45 +1318,55 @@ private:
     RCLCPP_INFO(this-&gt;get_logger(), &quot;~/enable 요청: %s&quot;, res-&gt;message.c_str());
   }
 
-  // 타이머가 0.1초마다 부른다 — 판단하고 명령을 보낸다
+  // 타이머가 0.5초마다 부른다 — 판단하고 명령을 보낸다
   void on_timer()
   {
-    if (!range_) {                   // 아직 거리를 한 번도 못 받았다
+    if (!pose_ || !range_) {                     // 아직 자세나 거리를 한 번도 못 받았다
       return;
     }
-    read_parameters();               // 밖에서(ros2 param set) 바뀌었을 수 있으니 판단 전에 다시 읽는다
-    const double front = range_-&gt;range;   // 앞 벽까지 거리 — front_range 가 재서 보내 준 값
-    const bool near_wall = front &lt; wall_margin_;
-    const bool stop = near_wall || !enabled_;   // 벽 앞이거나, 주행이 꺼졌으면 선다
-    if (stop &amp;&amp; !stopped_) {
-      RCLCPP_INFO(this-&gt;get_logger(), &quot;섭니다 — %s (앞 벽까지 %.2f m)&quot;,
-                  near_wall ? &quot;벽 앞&quot; : &quot;주행 꺼짐&quot;, front);
+    if (!enabled_) {                             // 주행이 꺼졌다 — 0 인 명령(「서라」)만 보낸다
+      cmd_pub_-&gt;publish(geometry_msgs::msg::Twist());
+      return;
+    }
+    read_parameters();                           // 밖에서(ros2 param set) 바뀌었을 수 있으니 판단 전에 다시 읽는다
+    const bool outside = range_-&gt;range &lt; margin_;   // 가장 가까운 벽까지 거리 — wall_range 가 재서 보내 준 값
+    const double angle = angle_to_center(*pose_);
+    const bool turn_back = outside &amp;&amp; angle &gt; turn_tolerance_;   // 범위 밖인데 중앙을 안 보고 있다
+
+    if (turn_back &amp;&amp; !turning_) {
+      RCLCPP_INFO(this-&gt;get_logger(), &quot;범위 밖 (벽까지 %.2f m) — 중앙 쪽으로 돕니다&quot;, range_-&gt;range);
       change_pen();
     }
-    stopped_ = stop;
+    if (!turn_back &amp;&amp; turning_) {
+      RCLCPP_INFO(this-&gt;get_logger(), &quot;중앙을 봅니다 — 다시 출발합니다&quot;);
+    }
+    turning_ = turn_back;
 
-    geometry_msgs::msg::Twist cmd;   // 여섯 칸이 전부 0 — 이대로 보내면 「서라」
-    if (!stop) {
-      cmd.linear.x = speed_;
+    geometry_msgs::msg::Twist cmd;               // 여섯 칸이 전부 0 으로 시작한다
+    if (turn_back) {
+      cmd.angular.z = 1.0;                       // 제자리에서 왼쪽으로 돈다 (linear.x 는 0)
+    } else {
+      cmd.linear.x = random_between(0.2, max_speed_);
+      cmd.angular.z = random_between(-1.0, 1.0);
     }
     cmd_pub_-&gt;publish(cmd);
   }
 
-  // /turtle1/set_pen 에 다음 펜 색을 요청한다 — 다시 달리기 시작하면 그 색으로 선이 그려진다
+  // /turtle1/set_pen 에 다음 펜 색을 요청한다 — 다시 출발하면 그 색으로 선이 그려진다
   void change_pen()
   {
     if (!pen_client_-&gt;service_is_ready()) {   // 서버(turtlesim)가 아직 없으면 이번에는 건너뛴다
       RCLCPP_WARN(this-&gt;get_logger(), &quot;/turtle1/set_pen 서비스가 아직 없습니다&quot;);
       return;
     }
-    const PenColor c = pen_colors_[stop_count_ % pen_colors_.size()];
-    ++stop_count_;
+    const PenColor c = pen_colors_[turn_count_ % pen_colors_.size()];
+    ++turn_count_;
 
     auto req = std::make_shared&lt;turtlesim::srv::SetPen::Request&gt;();
     req-&gt;r = c.r;
     req-&gt;g = c.g;
     req-&gt;b = c.b;
-    req-&gt;width = 5;                  // 선 굵기 (기본은 3)
+    req-&gt;width = 5;                            // 선 굵기 (기본은 3)
     // 보내고 바로 돌아온다. 응답이 오면 spin 이 이 람다를 불러 준다
     pen_client_-&gt;async_send_request(
       req, [this, c](rclcpp::Client&lt;turtlesim::srv::SetPen&gt;::SharedFuture) {
@@ -1252,43 +1374,68 @@ private:
       });
   }
 
-  double speed_ = 0.0;                // 파라미터 speed 에서 읽는다 (m/s)
-  double wall_margin_ = 0.0;          // 파라미터 wall_margin 에서 읽는다 (m)
-  std::int64_t work_ms_ = 0;          // 파라미터 work_ms 에서 읽는다 (ms)
-  bool stopped_ = false;
-  bool enabled_ = true;               // ~/enable 서비스로 바뀐다. 처음에는 켜져 있다
+  // 바라보는 방향과 「중앙으로 가는 방향」 사이의 각 (0 ~ π rad)
+  double angle_to_center(const turtlesim::msg::Pose &amp; p) const
+  {
+    const double dx = center_ - p.x;             // 중앙으로 가는 방향
+    const double dy = center_ - p.y;
+    const double hx = std::cos(p.theta);         // 바라보는 방향 (길이 1)
+    const double hy = std::sin(p.theta);
+    const double cos_angle = (dx * hx + dy * hy) / std::hypot(dx, dy);   // 내적 ÷ 두 길이의 곱
+    return std::acos(std::clamp(cos_angle, -1.0, 1.0));
+  }
+
+  // lo 와 hi 사이의 실수 하나를 고르게 뽑는다
+  double random_between(double lo, double hi)
+  {
+    std::uniform_real_distribution&lt;double&gt; dist(lo, hi);
+    return dist(gen_);
+  }
+
+  double max_speed_ = 0.0;             // 파라미터 max_speed 에서 읽는다 (m/s)
+  double margin_ = 0.0;                // 파라미터 margin 에서 읽는다 (m)
+  const double map_size_ = 11.0;       // 지도 한 변의 길이 (m)
+  const double center_ = 5.5;          // 지도 가운데 (x, y 모두)
+  const double turn_tolerance_ = 0.35; // 중앙과 이 각(약 20°) 안이면 다시 출발한다 (rad)
+  bool turning_ = false;               // 지금 돌아서는 중인가 — 로그를 바뀔 때만 찍는 데 쓴다
+  bool enabled_ = true;                // ~/enable 서비스로 바뀐다. 처음에는 켜져 있다
+  std::int64_t work_ms_ = 0;           // 파라미터 work_ms 에서 읽는다 (ms)
 
   struct PenColor { std::uint8_t r; std::uint8_t g; std::uint8_t b; };
   const std::vector&lt;PenColor&gt; pen_colors_ = {{255, 70, 70}, {60, 220, 60}, {255, 210, 0}};   // 빨강 → 초록 → 노랑
-  std::size_t stop_count_ = 0;        // 지금까지 선 횟수 — 다음 색을 고르는 데 쓴다
+  std::size_t turn_count_ = 0;         // 지금까지 돌아선 횟수 — 다음 색을 고르는 데 쓴다
 
+  std::mt19937 gen_{std::random_device{}()};   // 난수 생성기 — 실행할 때마다 다른 씨앗으로 시작한다
   rclcpp::Publisher&lt;geometry_msgs::msg::Twist&gt;::SharedPtr cmd_pub_;
+  rclcpp::Subscription&lt;turtlesim::msg::Pose&gt;::SharedPtr pose_sub_;
   rclcpp::Subscription&lt;sensor_msgs::msg::Range&gt;::SharedPtr range_sub_;
   rclcpp::Service&lt;std_srvs::srv::SetBool&gt;::SharedPtr enable_srv_;
   rclcpp::Client&lt;turtlesim::srv::SetPen&gt;::SharedPtr pen_client_;
   rclcpp::TimerBase::SharedPtr timer_;
-  sensor_msgs::msg::Range::ConstSharedPtr range_;   // 마지막으로 받은 앞 거리 (처음에는 비어 있다)
+  turtlesim::msg::Pose::ConstSharedPtr pose_;  // 마지막으로 받은 자세 (처음에는 비어 있다)
+  sensor_msgs::msg::Range::ConstSharedPtr range_;   // 마지막으로 받은 벽까지 거리 (처음에는 비어 있다)
 };
 
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  auto node = std::make_shared&lt;WallStop&gt;();
+  auto node = std::make_shared&lt;TurtleDrive&gt;();
   rclcpp::spin(node);            // 타이머·구독 콜백은 이 안에서 불린다
   rclcpp::shutdown();
   return 0;
 }</code></pre></div>
 </details>
 <!-- /fullcode -->
+<!-- /fullcode -->
 
-  <!-- ── ⑦ v12 ── -->
-  <h2 id="v12">⑦ 로깅 — <code>RCLCPP_INFO_THROTTLE</code> · <code>RCLCPP_DEBUG</code> · <code>--log-level</code> (v12) <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+  <!-- ── ⑦ v11 ── -->
+  <h2 id="v11">⑦ 로깅 — <code>RCLCPP_INFO_THROTTLE</code> · <code>RCLCPP_DEBUG</code> · <code>--log-level</code> (v11) <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
   <h3>개념 — 로그 수준과 주기 제한</h3>
   <p>
-    v11의 터미널은 읽을 수 있었나? 처리 0 ms일 때 1초에 <strong>63줄</strong>이 올라갔다. 10초면 600줄이고, 그 사이에 「섭니다」 한 줄이 묻힌다. 실물 로봇에서는 SSH로 붙은 터미널(28회)이 이 속도를 못 따라가기도 한다.
-    한 줄 찍는 데 드는 시간도 0은 아니다. 검증용으로 <code>RCLCPP_INFO</code> 한 줄의 앞뒤를 재 보니 <strong>평균 약 40 µs</strong>였고, 찍지 않은 판은 0.1 µs였다(같은 컨테이너, 출력을 파일로 보낸 경우 — 화면에 그리는 터미널은 더 느릴 수 있다).
-    초당 62번이면 작지만, 1 kHz로 오는 IMU 토픽이라면 1초에 40 ms를 로그에 쓰는 셈이다.
+    v10의 터미널은 읽을 수 있었나? 처리 0 ms일 때 1초에 <strong>63줄</strong>이 올라갔다. 1분이면 3,800줄이고, 그 사이에 「범위 밖 — 돕니다」 몇 줄이 묻힌다. 실물 로봇에서는 SSH로 붙은 터미널(28회)이 이 속도를 못 따라가기도 한다.
+    한 줄 찍는 데 드는 시간도 0은 아니다. 검증용으로 <code>RCLCPP_INFO</code> 한 줄의 앞뒤를 재 보니 <strong>평균 약 20~26 µs</strong>였고, 찍지 않은 판은 0.04 µs였다(같은 컨테이너, 출력을 파일로 보낸 경우 — 화면에 그리는 터미널은 더 느릴 수 있다).
+    초당 62번이면 작지만, 1 kHz로 오는 IMU 토픽이라면 1초에 20 ms 넘게 로그에 쓰는 셈이다.
   </p>
   <p>
     그래서 로그는 두 가지로 줄인다. 하나는 <strong>수준</strong>(severity)이다. 19회에 <code>RCLCPP_INFO</code>, 14회에 <code>RCLCPP_ERROR</code>, 21회에 <code>RCLCPP_WARN</code>을 썼는데, 그 아래에 <strong>DEBUG</strong>가 있다. 노드는 기본으로 INFO 이상만 찍으므로 DEBUG 줄은 평소에 안 보인다.
@@ -1298,16 +1445,16 @@ int main(int argc, char ** argv)
   <table>
     <tr><th>수준</th><th>매크로</th><th>기본으로 보이나</th><th>쓰는 자리</th></tr>
     <tr><td>DEBUG</td><td><code>RCLCPP_DEBUG</code></td><td>안 보인다</td><td>콜백마다의 자세한 값 — 문제를 찾을 때만 켠다</td></tr>
-    <tr><td>INFO</td><td><code>RCLCPP_INFO</code> · <code>RCLCPP_INFO_THROTTLE</code></td><td>보인다</td><td>시작 설정, 상태가 바뀐 순간(「섭니다」), 1초 요약</td></tr>
+    <tr><td>INFO</td><td><code>RCLCPP_INFO</code> · <code>RCLCPP_INFO_THROTTLE</code></td><td>보인다</td><td>시작 설정, 상태가 바뀐 순간(「범위 밖 — 돕니다」), 1초 요약</td></tr>
     <tr><td>WARN · ERROR</td><td><code>RCLCPP_WARN</code> · <code>RCLCPP_ERROR</code></td><td>보인다</td><td>이상한 상황 — 이것도 콜백마다 나면 <code>_THROTTLE</code>을 붙인다</td></tr>
   </table>
   </div>
 
   <h3>예제에 적용 — 콜백마다 찍는 줄은 DEBUG로, 요약은 1초에 한 번</h3>
-  <h3>12단계 (v12)</h3>
-  <div class="codelabel bad">고치기 전 (v11) — on_range 의 마지막 줄</div>
+  <h3>11단계 (v11)</h3>
+  <div class="codelabel bad">고치기 전 (v10) — on_range 의 마지막 줄</div>
   <pre class="lang-cpp before"><code>    RCLCPP_INFO(this-&gt;get_logger(), "거리 %.2f m · 나이 %.1f ms · 처리 %.1f ms", msg-&gt;range, age_ms, took_ms);</code></pre>
-  <div class="codelabel good">고친 뒤 (v12) — 멤버 std::size_t range_count_ = 0; 하나 더</div>
+  <div class="codelabel good">고친 뒤 (v11) — 멤버 std::size_t range_count_ = 0; 하나 더</div>
   <pre class="lang-cpp after"><code>    ++range_count_;
     // 콜백마다 찍는 자세한 줄은 DEBUG — 평소에는 안 보이고 --log-level 로 켤 때만 보인다
     RCLCPP_DEBUG(this-&gt;get_logger(), "거리 %.2f m · 나이 %.1f ms · 처리 %.1f ms", msg-&gt;range, age_ms, took_ms);
@@ -1330,90 +1477,102 @@ int main(int argc, char ** argv)
   </div>
 
   <h3>실제로 나온 출력</h3>
-  <pre class="lang-sh"><code>$ ros2 run turtle_drive wall_stop
-[INFO] [1792278562.463997945] [wall_stop]: speed = 1.00 m/s, wall_margin = 1.00 m, work_ms = 0, range_depth = 5
-[INFO] [1792278562.577327354] [wall_stop]: 받은 거리 1개 · 지금 거리 5.54 m · 나이 0.2 ms · 처리 0.0 ms
-[INFO] [1792278563.585933303] [wall_stop]: 받은 거리 64개 · 지금 거리 4.62 m · 나이 0.2 ms · 처리 0.0 ms
-[INFO] [1792278564.594273215] [wall_stop]: 받은 거리 127개 · 지금 거리 3.61 m · 나이 0.2 ms · 처리 0.0 ms
-[INFO] [1792278565.601395367] [wall_stop]: 받은 거리 190개 · 지금 거리 2.60 m · 나이 0.3 ms · 처리 0.0 ms
-[INFO] [1792278566.609580951] [wall_stop]: 받은 거리 253개 · 지금 거리 1.59 m · 나이 0.2 ms · 처리 0.0 ms
-[INFO] [1792278567.264120079] [wall_stop]: 섭니다 — 벽 앞 (앞 벽까지 0.95 m)
-[INFO] [1792278567.265673309] [wall_stop]: 펜 색을 (255, 70, 70) 로 바꿨습니다
-[INFO] [1792278567.617722511] [wall_stop]: 받은 거리 316개 · 지금 거리 0.95 m · 나이 0.2 ms · 처리 0.0 ms</code></pre>
+  <pre class="lang-sh"><code>$ ros2 run turtle_drive turtle_drive
+[INFO] [1793759966.267157315] [turtle_drive]: max_speed = 1.20 m/s, margin = 1.00 m, work_ms = 0, range_depth = 5
+[INFO] [1793759966.705049452] [turtle_drive]: 받은 거리 1개 · 지금 거리 5.46 m · 나이 332.6 ms · 처리 0.0 ms
+[INFO] [1793759967.716656788] [turtle_drive]: 받은 거리 85개 · 지금 거리 4.67 m · 나이 0.0 ms · 처리 0.0 ms
+[INFO] [1793759968.724280657] [turtle_drive]: 받은 거리 148개 · 지금 거리 4.25 m · 나이 0.0 ms · 처리 0.0 ms
+[INFO] [1793759969.732863436] [turtle_drive]: 받은 거리 211개 · 지금 거리 3.50 m · 나이 0.0 ms · 처리 0.0 ms
+(…)
+[INFO] [1793759973.764164497] [turtle_drive]: 받은 거리 463개 · 지금 거리 1.26 m · 나이 0.1 ms · 처리 0.0 ms
+[INFO] [1793759974.767312187] [turtle_drive]: 범위 밖 (벽까지 0.99 m) — 중앙 쪽으로 돕니다
+[INFO] [1793759974.772652945] [turtle_drive]: 펜 색을 (255, 70, 70) 로 바꿨습니다
+[INFO] [1793759974.772698034] [turtle_drive]: 받은 거리 526개 · 지금 거리 0.99 m · 나이 0.1 ms · 처리 0.0 ms
+[INFO] [1793759975.780831913] [turtle_drive]: 받은 거리 589개 · 지금 거리 0.99 m · 나이 0.0 ms · 처리 0.0 ms
+[INFO] [1793759976.788715699] [turtle_drive]: 받은 거리 652개 · 지금 거리 0.99 m · 나이 0.1 ms · 처리 0.0 ms
+[INFO] [1793759977.267262615] [turtle_drive]: 중앙을 봅니다 — 다시 출발합니다
+[INFO] [1793759977.796905961] [turtle_drive]: 받은 거리 715개 · 지금 거리 1.34 m · 나이 0.2 ms · 처리 0.0 ms</code></pre>
   <p>
-    요약이 정확히 1초 간격이고, 「받은 거리」가 1초에 63개씩 는다 — 콜백은 전부 불렸고 찍기만 1초에 한 번이다. 「섭니다」가 이제 눈에 들어온다.
+    요약이 정확히 1초 간격이고, 「받은 거리」가 1초에 63개씩 는다 — 콜백은 전부 불렸고 찍기만 1초에 한 번이다. 「범위 밖 — 돕니다」와 「다시 출발합니다」가 이제 눈에 들어온다.
+    돌아서는 3초 동안 거리가 0.99 m 그대로인 것도 보인다 — 제자리에서 돌기만 했기 때문이다. (첫 줄의 나이 332.6 ms는 노드가 뜨는 동안 쌓여 있던 값이라 그다음 줄부터는 0.0 ms다.)
     자세한 줄이 필요하면 코드를 고치지 않고 <strong>실행할 때</strong> 그 노드의 수준을 내린다.
   </p>
-  <pre class="lang-sh"><code>$ ros2 run turtle_drive wall_stop --ros-args --log-level wall_stop:=debug
-[INFO] [1792279499.101878606] [wall_stop]: speed = 1.00 m/s, wall_margin = 1.00 m, work_ms = 0, range_depth = 5
+  <pre class="lang-sh"><code>$ ros2 run turtle_drive turtle_drive --ros-args --log-level turtle_drive:=debug
+[INFO] [1793759988.058665231] [turtle_drive]: max_speed = 1.20 m/s, margin = 1.00 m, work_ms = 0, range_depth = 5
 (…)
-[DEBUG] [1792279500.143078283] [wall_stop]: 거리 5.00 m · 나이 0.2 ms · 처리 0.0 ms
-[DEBUG] [1792279500.159655731] [wall_stop]: 거리 4.98 m · 나이 0.2 ms · 처리 0.0 ms
-[DEBUG] [1792279500.175221066] [wall_stop]: 거리 4.97 m · 나이 0.2 ms · 처리 0.0 ms</code></pre>
+[DEBUG] [1793759989.157171732] [turtle_drive]: 거리 4.82 m · 나이 0.0 ms · 처리 0.0 ms
+[DEBUG] [1793759989.172688870] [turtle_drive]: 거리 4.81 m · 나이 0.2 ms · 처리 0.0 ms
+[INFO] [1793759989.172704240] [turtle_drive]: 받은 거리 64개 · 지금 거리 4.81 m · 나이 0.2 ms · 처리 0.0 ms
+[DEBUG] [1793759989.189001590] [turtle_drive]: 거리 4.80 m · 나이 0.1 ms · 처리 0.0 ms
+[DEBUG] [1793759989.204441753] [turtle_drive]: 거리 4.79 m · 나이 0.0 ms · 처리 0.0 ms</code></pre>
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 명령에서 처음 나오는 것</p>
     <dl>
       <dt>--ros-args --log-level 로거이름:=debug</dt>
-      <dd>그 로거의 수준을 DEBUG로 내려 띄운다. 노드의 로거 이름은 노드 이름(<code>wall_stop</code>)이다. 여기서는 <code>RCLCPP_DEBUG</code> 줄이 보이게 했다.</dd>
+      <dd>그 로거의 수준을 DEBUG로 내려 띄운다. 노드의 로거 이름은 노드 이름(<code>turtle_drive</code>)이다. 여기서는 <code>RCLCPP_DEBUG</code> 줄이 보이게 했다.</dd>
     </dl>
   </div>
   <div class="box trap">
     <div class="boxtitle">⚠️ 이름 없이 <code>--log-level debug</code>만 주면 ROS 내부 로그가 쏟아진다</div>
-    <pre class="lang-sh"><code>$ ros2 run turtle_drive wall_stop --ros-args --log-level debug
-[DEBUG] [1792279503.979066660] [rclcpp]: signal handler installed
-[DEBUG] [1792279503.979098130] [rclcpp]: deferred_signal_handler(): waiting for SIGINT/SIGTERM or uninstall
-[DEBUG] [1792279503.979133477] [rcl]: Initializing node 'wall_stop' in namespace ''
-[DEBUG] [1792279503.979146131] [rcl]: Using domain ID of '62'
-[DEBUG] [1792279503.984621482] [rcl]: Node initialized
-[DEBUG] [1792279503.984641019] [rcl]: Initializing publisher for topic name '/rosout'
+    <pre class="lang-sh"><code>$ ros2 run turtle_drive turtle_drive --ros-args --log-level debug
+[DEBUG] [1793759992.832009198] [rclcpp]: signal handler installed
+[DEBUG] [1793759992.832066796] [rcl]: Initializing node 'turtle_drive' in namespace ''
+[DEBUG] [1793759992.832074347] [rcl]: Using domain ID of '72'
+[DEBUG] [1793759992.832086907] [rclcpp]: deferred_signal_handler(): waiting for SIGINT/SIGTERM or uninstall
+[DEBUG] [1793759992.836033631] [rcl]: Node initialized
+[DEBUG] [1793759992.836047698] [rcl]: Initializing publisher for topic name '/rosout'
 (…)</code></pre>
     <p>
-      <code>rclcpp</code>·<code>rcl</code>(뒤로 가면 <code>rmw_fastrtps_cpp</code>까지) — ROS 자체의 DEBUG 로그까지 전부 켜져서 우리 줄을 찾기 어렵다. <strong>노드 이름을 붙여</strong> <code>wall_stop:=debug</code>로 주면 우리 노드만 내려간다.
-      (<code>domain ID of '62'</code>는 검증한 환경의 번호라 여러분 화면에서는 다르게 보인다.)
+      <code>rclcpp</code>·<code>rcl</code>(뒤로 가면 <code>rmw_fastrtps_cpp</code>까지) — ROS 자체의 DEBUG 로그까지 전부 켜져서 우리 줄을 찾기 어렵다. <strong>노드 이름을 붙여</strong> <code>turtle_drive:=debug</code>로 주면 우리 노드만 내려간다.
+      (<code>domain ID of '72'</code>는 검증한 환경의 번호라 여러분 화면에서는 다르게 보인다.)
     </p>
   </div>
   <p>
-    ⑥절의 「처리 50 · 깊이 100」도 v12로 다시 띄우면 1초 한 줄로 늦음이 읽힌다 — <code>받은 거리 41개 · 지금 거리 5.00 m · 나이 1367.4 ms</code>, 다음 줄 <code>61개 · 4.22 m · 나이 1587.5 ms</code>. 1초에 20개, 나이 1.6초.
+    ⑥절의 「처리 50 · 깊이 100」도 v11로 다시 띄우면 1초 한 줄로 늦음이 읽힌다 — <code>받은 거리 41개 · 지금 거리 5.35 m · 나이 1364.9 ms</code>, 다음 줄 <code>61개 · 4.82 m · 나이 1584.3 ms</code>. 1초에 20개, 나이 1.6초.
   </p>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
-    이 노드의 콜백 안에 있는 RCLCPP_INFO·RCLCPP_WARN 줄을 전부 찾아서, 메시지가 올 때마다(또는 타이머마다) 찍히는 줄이면 RCLCPP_DEBUG 로 내리거나 RCLCPP_INFO_THROTTLE(…, *this->get_clock(), 1000, …) 으로 1초에 한 번만 찍게 바꿔 줘. 상태가 바뀌는 순간에 한 번 찍는 줄(예: 섭니다)은 그대로 둬. 어느 줄을 어떻게 바꿨는지 표로 먼저 보여 줘.
+    이 노드의 콜백 안에 있는 RCLCPP_INFO·RCLCPP_WARN 줄을 전부 찾아서, 메시지가 올 때마다(또는 타이머마다) 찍히는 줄이면 RCLCPP_DEBUG 로 내리거나 RCLCPP_INFO_THROTTLE(…, *this->get_clock(), 1000, …) 으로 1초에 한 번만 찍게 바꿔 줘. 상태가 바뀌는 순간에 한 번 찍는 줄(예: 범위 밖 — 중앙 쪽으로 돕니다)은 그대로 둬. 어느 줄을 어떻게 바꿨는지 표로 먼저 보여 줘.
   </div>
-  <!-- fullcode "전체 코드 — turtle_drive/ (12단계 · v12 완성본. 22회가 끝난 패키지 전체)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 launch turtle_drive wall_stop.launch.py"
-       l22_qos_debug/steps/step12/turtle_drive/src/wall_stop.cpp as turtle_drive/src/wall_stop.cpp
-       l22_qos_debug/steps/step12/turtle_drive/src/front_range.cpp as turtle_drive/src/front_range.cpp
-       l22_qos_debug/steps/step12/turtle_drive/CMakeLists.txt as turtle_drive/CMakeLists.txt
-       l22_qos_debug/steps/step12/turtle_drive/package.xml as turtle_drive/package.xml
-       l22_qos_debug/steps/step12/turtle_drive/launch/wall_stop.launch.py as turtle_drive/launch/wall_stop.launch.py
-       l22_qos_debug/steps/step12/turtle_drive/config/wall_stop.yaml as turtle_drive/config/wall_stop.yaml
+  <!-- fullcode "전체 코드 — turtle_drive/ (11단계 · v11 완성본. 22회가 끝난 패키지 전체)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 launch turtle_drive turtle_drive.launch.py"
+       l22_qos_debug/steps/step11/turtle_drive/src/turtle_drive.cpp as turtle_drive/src/turtle_drive.cpp
+       l22_qos_debug/steps/step11/turtle_drive/src/wall_range.cpp as turtle_drive/src/wall_range.cpp
+       l22_qos_debug/steps/step11/turtle_drive/CMakeLists.txt as turtle_drive/CMakeLists.txt
+       l22_qos_debug/steps/step11/turtle_drive/package.xml as turtle_drive/package.xml
+       l22_qos_debug/steps/step11/turtle_drive/launch/turtle_drive.launch.py as turtle_drive/launch/turtle_drive.launch.py
+       l22_qos_debug/steps/step11/turtle_drive/config/turtle_drive.yaml as turtle_drive/config/turtle_drive.yaml
   -->
 <details class="fullcode">
-  <summary>전체 코드 — turtle_drive/ (12단계 · v12 완성본. 22회가 끝난 패키지 전체)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 launch turtle_drive wall_stop.launch.py</code></p>
-  <div class="codefile"><div class="fname">turtle_drive/src/wall_stop.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 22회 벽 앞 정지 — v12 (12단계: 콜백마다 찍던 로그를 RCLCPP_DEBUG 로 내리고, 요약은 RCLCPP_INFO_THROTTLE 로 1초에 한 번)
+  <summary>전체 코드 — turtle_drive/ (11단계 · v11 완성본. 22회가 끝난 패키지 전체)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 launch turtle_drive turtle_drive.launch.py</code></p>
+  <div class="codefile"><div class="fname">turtle_drive/src/turtle_drive.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 22회 turtle_drive — v11 (11단계: 콜백마다 찍던 로그를 RCLCPP_DEBUG 로 내리고, 요약은 RCLCPP_INFO_THROTTLE 로 1초에 한 번)
+#include &lt;algorithm&gt;
 #include &lt;chrono&gt;
 #include &lt;cstdint&gt;
+#include &lt;cmath&gt;
 #include &lt;memory&gt;
+#include &lt;random&gt;
 #include &lt;thread&gt;
 #include &lt;vector&gt;
 
 #include &quot;rclcpp/rclcpp.hpp&quot;
 #include &quot;geometry_msgs/msg/twist.hpp&quot;
+#include &quot;turtlesim/msg/pose.hpp&quot;
 #include &quot;sensor_msgs/msg/range.hpp&quot;
 #include &quot;std_srvs/srv/set_bool.hpp&quot;
 #include &quot;turtlesim/srv/set_pen.hpp&quot;
 
 using namespace std::chrono_literals;
 
-class WallStop : public rclcpp::Node
+class TurtleDrive : public rclcpp::Node
 {
 public:
-  WallStop()
-  : Node(&quot;wall_stop&quot;)
+  TurtleDrive()
+  : Node(&quot;turtle_drive&quot;)
   {
-    // 파라미터를 선언한다 — 이름과 기본값. 타입은 기본값에서 정해진다 (1.0 이므로 double)
-    this-&gt;declare_parameter(&quot;speed&quot;, 1.0);
-    this-&gt;declare_parameter(&quot;wall_margin&quot;, 1.0);
+    // 파라미터를 선언한다 — 이름과 기본값. 타입은 기본값에서 정해진다 (1.2 이므로 double)
+    this-&gt;declare_parameter(&quot;max_speed&quot;, 1.2);
+    this-&gt;declare_parameter(&quot;margin&quot;, 1.0);
     read_parameters();
     // 실험용 파라미터 둘 — 구독을 만들 때만 쓰므로 생성자에서 한 번만 읽는다 (둘 다 정수)
     this-&gt;declare_parameter(&quot;work_ms&quot;, 0);       // 거리 콜백 안에서 일부러 쉬는 시간 (ms)
@@ -1422,29 +1581,38 @@ public:
     const auto depth = this-&gt;get_parameter(&quot;range_depth&quot;).as_int();
 
     cmd_pub_ = this-&gt;create_publisher&lt;geometry_msgs::msg::Twist&gt;(&quot;/turtle1/cmd_vel&quot;, 10);
+    pose_sub_ = this-&gt;create_subscription&lt;turtlesim::msg::Pose&gt;(
+      &quot;/turtle1/pose&quot;, 10,
+      [this](turtlesim::msg::Pose::ConstSharedPtr msg) { on_pose(msg); });
     // 센서처럼 best effort 로 오는 토픽이다 — 받는 쪽도 센서 데이터용 QoS 로 맞춘다
     range_sub_ = this-&gt;create_subscription&lt;sensor_msgs::msg::Range&gt;(
-      &quot;/turtle1/front_range&quot;, rclcpp::SensorDataQoS().keep_last(depth),
+      &quot;/turtle1/wall_range&quot;, rclcpp::SensorDataQoS().keep_last(depth),
       [this](sensor_msgs::msg::Range::ConstSharedPtr msg) { on_range(msg); });
     enable_srv_ = this-&gt;create_service&lt;std_srvs::srv::SetBool&gt;(
       &quot;~/enable&quot;,
       [this](const std_srvs::srv::SetBool::Request::SharedPtr req,
              std_srvs::srv::SetBool::Response::SharedPtr res) { on_enable(req, res); });
     pen_client_ = this-&gt;create_client&lt;turtlesim::srv::SetPen&gt;(&quot;/turtle1/set_pen&quot;);
-    timer_ = this-&gt;create_wall_timer(100ms, [this]() { on_timer(); });
-    RCLCPP_INFO(this-&gt;get_logger(), &quot;speed = %.2f m/s, wall_margin = %.2f m, work_ms = %ld, range_depth = %ld&quot;,
-                speed_, wall_margin_, work_ms_, depth);
+    timer_ = this-&gt;create_wall_timer(500ms, [this]() { on_timer(); });
+    RCLCPP_INFO(this-&gt;get_logger(), &quot;max_speed = %.2f m/s, margin = %.2f m, work_ms = %ld, range_depth = %ld&quot;,
+                max_speed_, margin_, work_ms_, depth);
   }
 
 private:
   // 파라미터의 지금 값을 읽어 멤버에 넣는다 — 생성자에서 한 번, 그 뒤로는 타이머가 부를 때마다
   void read_parameters()
   {
-    speed_ = this-&gt;get_parameter(&quot;speed&quot;).as_double();
-    wall_margin_ = this-&gt;get_parameter(&quot;wall_margin&quot;).as_double();
+    max_speed_ = this-&gt;get_parameter(&quot;max_speed&quot;).as_double();
+    margin_ = this-&gt;get_parameter(&quot;margin&quot;).as_double();
   }
 
-  // /turtle1/front_range 가 올 때마다 불린다 — 처리하고 들고 있는다. 처리 시간과 받은 값의 나이를 잰다
+  // /turtle1/pose 가 올 때마다 불린다 — 받은 것을 들고 있기만 한다
+  void on_pose(turtlesim::msg::Pose::ConstSharedPtr msg)
+  {
+    pose_ = msg;
+  }
+
+  // /turtle1/wall_range 가 올 때마다 불린다 — 처리하고 들고 있는다. 처리 시간과 받은 값의 나이를 잰다
   void on_range(sensor_msgs::msg::Range::ConstSharedPtr msg)
   {
     const auto t0 = std::chrono::steady_clock::now();
@@ -1476,45 +1644,55 @@ private:
     RCLCPP_INFO(this-&gt;get_logger(), &quot;~/enable 요청: %s&quot;, res-&gt;message.c_str());
   }
 
-  // 타이머가 0.1초마다 부른다 — 판단하고 명령을 보낸다
+  // 타이머가 0.5초마다 부른다 — 판단하고 명령을 보낸다
   void on_timer()
   {
-    if (!range_) {                   // 아직 거리를 한 번도 못 받았다
+    if (!pose_ || !range_) {                     // 아직 자세나 거리를 한 번도 못 받았다
       return;
     }
-    read_parameters();               // 밖에서(ros2 param set) 바뀌었을 수 있으니 판단 전에 다시 읽는다
-    const double front = range_-&gt;range;   // 앞 벽까지 거리 — front_range 가 재서 보내 준 값
-    const bool near_wall = front &lt; wall_margin_;
-    const bool stop = near_wall || !enabled_;   // 벽 앞이거나, 주행이 꺼졌으면 선다
-    if (stop &amp;&amp; !stopped_) {
-      RCLCPP_INFO(this-&gt;get_logger(), &quot;섭니다 — %s (앞 벽까지 %.2f m)&quot;,
-                  near_wall ? &quot;벽 앞&quot; : &quot;주행 꺼짐&quot;, front);
+    if (!enabled_) {                             // 주행이 꺼졌다 — 0 인 명령(「서라」)만 보낸다
+      cmd_pub_-&gt;publish(geometry_msgs::msg::Twist());
+      return;
+    }
+    read_parameters();                           // 밖에서(ros2 param set) 바뀌었을 수 있으니 판단 전에 다시 읽는다
+    const bool outside = range_-&gt;range &lt; margin_;   // 가장 가까운 벽까지 거리 — wall_range 가 재서 보내 준 값
+    const double angle = angle_to_center(*pose_);
+    const bool turn_back = outside &amp;&amp; angle &gt; turn_tolerance_;   // 범위 밖인데 중앙을 안 보고 있다
+
+    if (turn_back &amp;&amp; !turning_) {
+      RCLCPP_INFO(this-&gt;get_logger(), &quot;범위 밖 (벽까지 %.2f m) — 중앙 쪽으로 돕니다&quot;, range_-&gt;range);
       change_pen();
     }
-    stopped_ = stop;
+    if (!turn_back &amp;&amp; turning_) {
+      RCLCPP_INFO(this-&gt;get_logger(), &quot;중앙을 봅니다 — 다시 출발합니다&quot;);
+    }
+    turning_ = turn_back;
 
-    geometry_msgs::msg::Twist cmd;   // 여섯 칸이 전부 0 — 이대로 보내면 「서라」
-    if (!stop) {
-      cmd.linear.x = speed_;
+    geometry_msgs::msg::Twist cmd;               // 여섯 칸이 전부 0 으로 시작한다
+    if (turn_back) {
+      cmd.angular.z = 1.0;                       // 제자리에서 왼쪽으로 돈다 (linear.x 는 0)
+    } else {
+      cmd.linear.x = random_between(0.2, max_speed_);
+      cmd.angular.z = random_between(-1.0, 1.0);
     }
     cmd_pub_-&gt;publish(cmd);
   }
 
-  // /turtle1/set_pen 에 다음 펜 색을 요청한다 — 다시 달리기 시작하면 그 색으로 선이 그려진다
+  // /turtle1/set_pen 에 다음 펜 색을 요청한다 — 다시 출발하면 그 색으로 선이 그려진다
   void change_pen()
   {
     if (!pen_client_-&gt;service_is_ready()) {   // 서버(turtlesim)가 아직 없으면 이번에는 건너뛴다
       RCLCPP_WARN(this-&gt;get_logger(), &quot;/turtle1/set_pen 서비스가 아직 없습니다&quot;);
       return;
     }
-    const PenColor c = pen_colors_[stop_count_ % pen_colors_.size()];
-    ++stop_count_;
+    const PenColor c = pen_colors_[turn_count_ % pen_colors_.size()];
+    ++turn_count_;
 
     auto req = std::make_shared&lt;turtlesim::srv::SetPen::Request&gt;();
     req-&gt;r = c.r;
     req-&gt;g = c.g;
     req-&gt;b = c.b;
-    req-&gt;width = 5;                  // 선 굵기 (기본은 3)
+    req-&gt;width = 5;                            // 선 굵기 (기본은 3)
     // 보내고 바로 돌아온다. 응답이 오면 spin 이 이 람다를 불러 준다
     pen_client_-&gt;async_send_request(
       req, [this, c](rclcpp::Client&lt;turtlesim::srv::SetPen&gt;::SharedFuture) {
@@ -1522,87 +1700,97 @@ private:
       });
   }
 
-  double speed_ = 0.0;                // 파라미터 speed 에서 읽는다 (m/s)
-  double wall_margin_ = 0.0;          // 파라미터 wall_margin 에서 읽는다 (m)
-  std::int64_t work_ms_ = 0;          // 파라미터 work_ms 에서 읽는다 (ms)
-  std::size_t range_count_ = 0;       // 지금까지 받은 거리 메시지 수
-  bool stopped_ = false;
-  bool enabled_ = true;               // ~/enable 서비스로 바뀐다. 처음에는 켜져 있다
+  // 바라보는 방향과 「중앙으로 가는 방향」 사이의 각 (0 ~ π rad)
+  double angle_to_center(const turtlesim::msg::Pose &amp; p) const
+  {
+    const double dx = center_ - p.x;             // 중앙으로 가는 방향
+    const double dy = center_ - p.y;
+    const double hx = std::cos(p.theta);         // 바라보는 방향 (길이 1)
+    const double hy = std::sin(p.theta);
+    const double cos_angle = (dx * hx + dy * hy) / std::hypot(dx, dy);   // 내적 ÷ 두 길이의 곱
+    return std::acos(std::clamp(cos_angle, -1.0, 1.0));
+  }
+
+  // lo 와 hi 사이의 실수 하나를 고르게 뽑는다
+  double random_between(double lo, double hi)
+  {
+    std::uniform_real_distribution&lt;double&gt; dist(lo, hi);
+    return dist(gen_);
+  }
+
+  double max_speed_ = 0.0;             // 파라미터 max_speed 에서 읽는다 (m/s)
+  double margin_ = 0.0;                // 파라미터 margin 에서 읽는다 (m)
+  const double map_size_ = 11.0;       // 지도 한 변의 길이 (m)
+  const double center_ = 5.5;          // 지도 가운데 (x, y 모두)
+  const double turn_tolerance_ = 0.35; // 중앙과 이 각(약 20°) 안이면 다시 출발한다 (rad)
+  bool turning_ = false;               // 지금 돌아서는 중인가 — 로그를 바뀔 때만 찍는 데 쓴다
+  bool enabled_ = true;                // ~/enable 서비스로 바뀐다. 처음에는 켜져 있다
+  std::int64_t work_ms_ = 0;           // 파라미터 work_ms 에서 읽는다 (ms)
+  std::size_t range_count_ = 0;        // 지금까지 받은 거리 메시지 수
 
   struct PenColor { std::uint8_t r; std::uint8_t g; std::uint8_t b; };
   const std::vector&lt;PenColor&gt; pen_colors_ = {{255, 70, 70}, {60, 220, 60}, {255, 210, 0}};   // 빨강 → 초록 → 노랑
-  std::size_t stop_count_ = 0;        // 지금까지 선 횟수 — 다음 색을 고르는 데 쓴다
+  std::size_t turn_count_ = 0;         // 지금까지 돌아선 횟수 — 다음 색을 고르는 데 쓴다
 
+  std::mt19937 gen_{std::random_device{}()};   // 난수 생성기 — 실행할 때마다 다른 씨앗으로 시작한다
   rclcpp::Publisher&lt;geometry_msgs::msg::Twist&gt;::SharedPtr cmd_pub_;
+  rclcpp::Subscription&lt;turtlesim::msg::Pose&gt;::SharedPtr pose_sub_;
   rclcpp::Subscription&lt;sensor_msgs::msg::Range&gt;::SharedPtr range_sub_;
   rclcpp::Service&lt;std_srvs::srv::SetBool&gt;::SharedPtr enable_srv_;
   rclcpp::Client&lt;turtlesim::srv::SetPen&gt;::SharedPtr pen_client_;
   rclcpp::TimerBase::SharedPtr timer_;
-  sensor_msgs::msg::Range::ConstSharedPtr range_;   // 마지막으로 받은 앞 거리 (처음에는 비어 있다)
+  turtlesim::msg::Pose::ConstSharedPtr pose_;  // 마지막으로 받은 자세 (처음에는 비어 있다)
+  sensor_msgs::msg::Range::ConstSharedPtr range_;   // 마지막으로 받은 벽까지 거리 (처음에는 비어 있다)
 };
 
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  auto node = std::make_shared&lt;WallStop&gt;();
+  auto node = std::make_shared&lt;TurtleDrive&gt;();
   rclcpp::spin(node);            // 타이머·구독 콜백은 이 안에서 불린다
   rclcpp::shutdown();
   return 0;
 }</code></pre></div>
-  <div class="codefile"><div class="fname">turtle_drive/src/front_range.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 22회 앞 거리 센서 — front_range v9 (9단계: 거북이 자세로 앞 벽까지 거리를 재서 센서처럼 best effort 로 발행한다)
+  <div class="codefile"><div class="fname">turtle_drive/src/wall_range.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 22회 벽 거리 센서 — wall_range v8 (8단계: 거북이 자세로 가장 가까운 벽까지 거리를 재서 센서처럼 best effort 로 발행한다)
 #include &lt;algorithm&gt;
-#include &lt;cmath&gt;
-#include &lt;limits&gt;
 #include &lt;memory&gt;
 
 #include &quot;rclcpp/rclcpp.hpp&quot;
 #include &quot;sensor_msgs/msg/range.hpp&quot;
 #include &quot;turtlesim/msg/pose.hpp&quot;
 
-class FrontRange : public rclcpp::Node
+class WallRange : public rclcpp::Node
 {
 public:
-  FrontRange()
-  : Node(&quot;front_range&quot;)
+  WallRange()
+  : Node(&quot;wall_range&quot;)
   {
     // 센서 데이터용 QoS 로 발행한다 — best effort, 깊이 5 (실제 라이다·초음파 드라이버가 대개 이렇게 보낸다)
     range_pub_ = this-&gt;create_publisher&lt;sensor_msgs::msg::Range&gt;(
-      &quot;/turtle1/front_range&quot;, rclcpp::SensorDataQoS());
+      &quot;/turtle1/wall_range&quot;, rclcpp::SensorDataQoS());
     pose_sub_ = this-&gt;create_subscription&lt;turtlesim::msg::Pose&gt;(
       &quot;/turtle1/pose&quot;, 10,
       [this](turtlesim::msg::Pose::ConstSharedPtr msg) { on_pose(msg); });
-    RCLCPP_INFO(this-&gt;get_logger(), &quot;/turtle1/front_range 를 발행합니다&quot;);
+    RCLCPP_INFO(this-&gt;get_logger(), &quot;/turtle1/wall_range 를 발행합니다&quot;);
   }
 
 private:
-  // 자세가 올 때마다(초당 62.5번) 앞 벽까지 거리를 계산해 Range 메시지로 내보낸다
+  // 자세가 올 때마다(초당 62.5번) 가장 가까운 벽까지 거리를 Range 메시지로 내보낸다
   void on_pose(turtlesim::msg::Pose::ConstSharedPtr msg)
   {
     sensor_msgs::msg::Range r;
     r.header.stamp = this-&gt;now();        // 이 값을 잰 시각
     r.header.frame_id = &quot;turtle1&quot;;       // 거북이에 붙은 센서라는 뜻
     r.radiation_type = sensor_msgs::msg::Range::ULTRASOUND;
-    r.field_of_view = 0.2;               // 앞쪽 0.2 rad(약 11도) 부채꼴
+    r.field_of_view = 0.2;               // 0.2 rad(약 11도) 부채꼴
     r.min_range = 0.0;
-    r.max_range = 16.0;                  // 창의 대각선(약 15.7 m)보다 조금 길게
-    r.range = static_cast&lt;float&gt;(front_distance(*msg));
+    r.max_range = 6.0;                   // 지도 가운데(5.5 m)보다 조금 길게
+    // 네 벽까지 거리 — 왼쪽 x, 아래 y, 오른쪽 11 − x, 위 11 − y — 중 가장 작은 값
+    r.range = static_cast&lt;float&gt;(std::min({msg-&gt;x, msg-&gt;y, map_size_ - msg-&gt;x, map_size_ - msg-&gt;y}));
     range_pub_-&gt;publish(r);
   }
 
-  // 지금 바라보는 방향으로 곧장 가면 벽까지 몇 m 남았나 (20회 wall_stop 에서 옮겨 왔다)
-  double front_distance(const turtlesim::msg::Pose &amp; p) const
-  {
-    const double c = std::cos(p.theta);
-    const double s = std::sin(p.theta);
-    double d = std::numeric_limits&lt;double&gt;::infinity();
-    if (c &gt; 1e-6)  { d = std::min(d, (world_size_ - p.x) / c); }   // 오른쪽 벽
-    if (c &lt; -1e-6) { d = std::min(d, (0.0 - p.x) / c); }           // 왼쪽 벽
-    if (s &gt; 1e-6)  { d = std::min(d, (world_size_ - p.y) / s); }   // 위쪽 벽
-    if (s &lt; -1e-6) { d = std::min(d, (0.0 - p.y) / s); }           // 아래쪽 벽
-    return d;
-  }
-
-  const double world_size_ = 11.0889; // turtlesim 창 한 변의 길이 (m)
+  const float map_size_ = 11.0f;       // 지도 한 변의 길이 (m) — turtle_drive 와 같은 값
 
   rclcpp::Publisher&lt;sensor_msgs::msg::Range&gt;::SharedPtr range_pub_;
   rclcpp::Subscription&lt;turtlesim::msg::Pose&gt;::SharedPtr pose_sub_;
@@ -1611,7 +1799,7 @@ private:
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared&lt;FrontRange&gt;());
+  rclcpp::spin(std::make_shared&lt;WallRange&gt;());
   rclcpp::shutdown();
   return 0;
 }</code></pre></div>
@@ -1634,21 +1822,20 @@ find_package(sensor_msgs REQUIRED)
 add_executable(hello_node src/hello_node.cpp)
 target_link_libraries(hello_node PRIVATE rclcpp::rclcpp)
 
-# 20회 — 실행 파일 wall_stop. Twist(geometry_msgs)를 보내고 Pose(turtlesim)를 받는다
+# 20회 — 실행 파일 turtle_drive. Twist(geometry_msgs)를 보내고 Pose(turtlesim)를 받는다
 # 21회 — SetBool(std_srvs) 서비스를 받는다
-# 22회 — 자세(Pose) 대신 앞 거리(Range, sensor_msgs)를 받는다. SetPen 을 부르므로 turtlesim 은 그대로
-add_executable(wall_stop src/wall_stop.cpp)
-target_link_libraries(wall_stop PRIVATE
-  rclcpp::rclcpp ${geometry_msgs_TARGETS} ${turtlesim_TARGETS} ${std_srvs_TARGETS}
-  ${sensor_msgs_TARGETS})
+# 22회 — Range(sensor_msgs)를 받는다
+add_executable(turtle_drive src/turtle_drive.cpp)
+target_link_libraries(turtle_drive PRIVATE
+  rclcpp::rclcpp ${geometry_msgs_TARGETS} ${turtlesim_TARGETS} ${std_srvs_TARGETS} ${sensor_msgs_TARGETS})
 
-# 22회 — 실행 파일 front_range. Pose(turtlesim)를 받아 Range(sensor_msgs)를 보낸다
-add_executable(front_range src/front_range.cpp)
-target_link_libraries(front_range PRIVATE
+# 22회 — 실행 파일 wall_range. Pose(turtlesim)를 받아 Range(sensor_msgs)를 보낸다
+add_executable(wall_range src/wall_range.cpp)
+target_link_libraries(wall_range PRIVATE
   rclcpp::rclcpp ${turtlesim_TARGETS} ${sensor_msgs_TARGETS})
 
 # 만든 실행 파일을 ros2 run 이 찾는 자리에 설치한다
-install(TARGETS hello_node wall_stop front_range
+install(TARGETS hello_node turtle_drive wall_range
   DESTINATION lib/${PROJECT_NAME})
 
 # 21회 — 빌드하지 않는 파일(launch 파일·파라미터 파일)은 share/ 아래로 복사한다
@@ -1694,8 +1881,7 @@ ament_package()</code></pre></div>
     &lt;build_type&gt;ament_cmake&lt;/build_type&gt;
   &lt;/export&gt;
 &lt;/package&gt;</code></pre></div>
-  <div class="codefile"><div class="fname">turtle_drive/launch/wall_stop.launch.py</div><button onclick="copyCode(this)">복사</button><pre class="lang-py"><code># 21회 — turtlesim 과 wall_stop 을 한 번에 띄운다. wall_stop 은 config/wall_stop.yaml 의 파라미터로 시작한다
-# 22회 — 앞 거리 센서 front_range 를 함께 띄운다
+  <div class="codefile"><div class="fname">turtle_drive/launch/turtle_drive.launch.py</div><button onclick="copyCode(this)">복사</button><pre class="lang-py"><code># 22회 — turtlesim · wall_range · turtle_drive 를 한 번에 띄운다. turtle_drive 는 config/turtle_drive.yaml 의 파라미터로 시작한다
 import os
 
 from ament_index_python.packages import get_package_share_directory
@@ -1705,7 +1891,7 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     params = os.path.join(
-        get_package_share_directory(&#x27;turtle_drive&#x27;), &#x27;config&#x27;, &#x27;wall_stop.yaml&#x27;)
+        get_package_share_directory(&#x27;turtle_drive&#x27;), &#x27;config&#x27;, &#x27;turtle_drive.yaml&#x27;)
 
     return LaunchDescription([
         Node(
@@ -1715,44 +1901,45 @@ def generate_launch_description():
         ),
         Node(
             package=&#x27;turtle_drive&#x27;,
-            executable=&#x27;front_range&#x27;,
-            name=&#x27;front_range&#x27;,
+            executable=&#x27;wall_range&#x27;,
+            name=&#x27;wall_range&#x27;,
             output=&#x27;screen&#x27;,
         ),
         Node(
             package=&#x27;turtle_drive&#x27;,
-            executable=&#x27;wall_stop&#x27;,
-            name=&#x27;wall_stop&#x27;,
+            executable=&#x27;turtle_drive&#x27;,
+            name=&#x27;turtle_drive&#x27;,
             parameters=[params],
             output=&#x27;screen&#x27;,
         ),
     ])</code></pre></div>
-  <div class="codefile"><div class="fname">turtle_drive/config/wall_stop.yaml</div><button onclick="copyCode(this)">복사</button><pre class=""><code># 21회 — wall_stop 노드의 파라미터 (ros2 param dump /wall_stop 의 출력에서 우리 파라미터 두 줄만 남겼다)
-/wall_stop:
+  <div class="codefile"><div class="fname">turtle_drive/config/turtle_drive.yaml</div><button onclick="copyCode(this)">복사</button><pre class=""><code># 21회 — turtle_drive 노드의 파라미터 (ros2 param dump /turtle_drive 의 출력에서 우리 파라미터 두 줄만 남겼다)
+/turtle_drive:
   ros__parameters:
-    speed: 0.8
-    wall_margin: 1.5</code></pre></div>
+    max_speed: 0.8
+    margin: 2.0</code></pre></div>
 </details>
+<!-- /fullcode -->
 <!-- /fullcode -->
 
   <!-- ── ⑧ rqt ── -->
   <h2 id="rqt">⑧ <code>rqt_graph</code> · <code>rqt_plot</code> <span class="badge b-red">🔴 그림은 사람이 읽는다</span></h2>
   <p>
-    로그는 한 줄씩 읽는 도구다. 노드가 셋으로 늘었으니 연결을 한눈에 보고 싶고, 거리가 시간에 따라 어떻게 줄었는지를 숫자 600개가 아니라 선 하나로 보고 싶다. 둘 다 rqt로 본다.
+    로그는 한 줄씩 읽는 도구다. 노드가 셋으로 늘었으니 연결을 한눈에 보고 싶고, 벽까지 거리가 시간에 따라 어떻게 오르내렸는지를 숫자 수천 개가 아니라 선 하나로 보고 싶다. 둘 다 rqt로 본다.
   </p>
   <h3><code>rqt_graph</code> — 노드가 하나 끼어든 연결</h3>
-  <p>launch로 셋을 띄운 채 18회처럼 <code>rqt_graph</code>를 열었다(Nodes/Topics (active)).</p>
+  <p>turtlesim · <code>wall_range</code> · <code>turtle_drive</code> 셋을 띄운 채 18회처럼 <code>rqt_graph</code>를 열었다(Nodes/Topics (active)).</p>
   <figure>
     <img src="assets/img/22_rqt_graph.png" width="640"
-         alt="rqt_graph 화면. /turtle1 묶음 안에 /turtle1/front_range, /turtle1/pose, /turtle1/cmd_vel 세 토픽이 있다. /turtlesim 에서 /turtle1/pose 로, /turtle1/pose 에서 /front_range 로, /front_range 에서 /turtle1/front_range 로, /turtle1/front_range 에서 /wall_stop 으로, /wall_stop 에서 /turtle1/cmd_vel 로, /turtle1/cmd_vel 에서 /turtlesim 으로 화살표가 이어진다">
-    <figcaption>21회 그림에서는 <code>/turtle1/pose</code>가 곧장 <code>/wall_stop</code>으로 갔다. 이제는 <code>/front_range</code>를 거쳐 <code>/turtle1/front_range</code>로 바뀌어 들어간다 — 센서 노드 → 판단 노드 → 구동(turtlesim)의 한 바퀴다.</figcaption>
+         alt="rqt_graph 화면. /turtle1 묶음 안에 /turtle1/wall_range, /turtle1/pose, /turtle1/cmd_vel 세 토픽이 있다. /turtlesim 에서 /turtle1/pose 로, /turtle1/pose 에서 /wall_range 와 /turtle_drive 로, /wall_range 에서 /turtle1/wall_range 로, /turtle1/wall_range 에서 /turtle_drive 로, /turtle_drive 에서 /turtle1/cmd_vel 로, /turtle1/cmd_vel 에서 /turtlesim 으로 화살표가 이어진다">
+    <figcaption>21회 그림에서는 <code>/turtle1/pose</code>만 <code>/turtle_drive</code>로 들어갔다. 이제는 <code>/turtle1/pose</code>가 <code>/wall_range</code>에도 가고, <code>/wall_range</code>가 만든 <code>/turtle1/wall_range</code>가 <code>/turtle_drive</code>로 들어간다 — 센서 노드 → 판단 노드 → 구동(turtlesim)의 한 바퀴다. 자세는 「중앙을 보고 있나」에 여전히 쓰여서 <code>/turtle_drive</code>로 곧장 가는 화살표도 남아 있다.</figcaption>
   </figure>
   <p>
-    18회 ⑧절의 해석이 여기에도 그대로다 — QoS가 안 맞아도 화살표는 그려진다. ⑤절의 v10 변형을 띄웠을 때도 <code>info</code>의 개수는 1과 1이었다. rqt_graph는 「이 이름을 쓰겠다고 한 노드」를 잇는 것이지 메시지가 실제로 흐르는지를 보는 것이 아니다. 화살표가 있는데 반응이 없으면 <code>info -v</code>로 간다.
+    18회 ⑧절의 해석이 여기에도 그대로다 — QoS가 안 맞아도 화살표는 그려진다. ⑤절의 v9 변형을 띄웠을 때도 <code>info</code>의 개수는 1과 1이었다. rqt_graph는 「이 이름을 쓰겠다고 한 노드」를 잇는 것이지 메시지가 실제로 흐르는지를 보는 것이 아니다. 화살표가 있는데 반응이 없으면 <code>info -v</code>로 간다.
   </p>
 
   <h3><code>rqt_plot</code> — 필드 하나를 시간축에 그린다</h3>
-  <pre class="lang-sh"><code>$ ros2 run rqt_plot rqt_plot /turtle1/front_range/range</code></pre>
+  <pre class="lang-sh"><code>$ ros2 run rqt_plot rqt_plot /turtle1/wall_range/range</code></pre>
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 명령에서 처음 나오는 것</p>
     <dl>
@@ -1762,70 +1949,75 @@ def generate_launch_description():
   </div>
   <p>
     창이 뜨는 순간에는 아직 다른 노드를 다 찾지 못해 인자로 준 토픽이 빠질 수 있다(18회 rqt_graph와 같은 이유). 그래프에 범례가 안 생기면 <code>Topic</code> 칸에 다시 적고 +를 누른다.
-    rqt_plot은 <code>echo</code>처럼 보내는 쪽 QoS에 맞춰 받으므로 best effort 토픽도 그대로 그려진다. 아래는 rqt_plot을 연 뒤 <code>wall_stop</code>을 띄우고, 선 뒤에 <code>ros2 param set /wall_stop wall_margin 0.5</code>를 친 화면이다.
+    rqt_plot은 <code>echo</code>처럼 보내는 쪽 QoS에 맞춰 받으므로 best effort 토픽도 그대로 그려진다. 아래는 rqt_plot을 연 뒤 <code>turtle_drive</code>를 띄우고(기본 <code>margin</code> 1.0), 18초쯤 지나 <code>ros2 param set /turtle_drive margin 2.0</code>을 친 화면이다.
   </p>
   <figure>
     <img src="assets/img/22_rqt_plot.png" width="620"
-         alt="rqt_plot 창. 파란 선 하나가 세로축 5.5 근처에서 시작해 가로축 3초부터 8초까지 곧게 내려가 1 근처에서 평평해지고, 11초쯤에서 다시 조금 내려가 0.5 근처에서 끝난다">
-    <figcaption>가로축은 rqt_plot이 토픽을 받기 시작한 뒤의 초, 세로축은 앞 벽까지 거리(m). 3~8초 사이의 곧은 내리막이 1 m/s 주행이고, 0.95 m에서 섰다가 <code>wall_margin</code>을 0.5로 줄이자 한 번 더 내려가 0.45 m 언저리에서 섰다. 로그 600줄에 든 정보가 선 하나로 보인다.</figcaption>
+         alt="rqt_plot 창. 파란 선 하나가 세로축 5.5 근처에서 시작해 오르내린다. 13~16초에 0.8 근처에서 평평한 골짜기, 23~26초에 1.9 근처, 37~41초에 2.0 근처에서 평평한 골짜기가 있다">
+    <figcaption>가로축은 rqt_plot이 토픽을 받기 시작한 뒤의 초, 세로축은 가장 가까운 벽까지 거리(m). 내려가는 선은 벽으로 다가가는 것이고, <strong>바닥이 평평한 골짜기</strong>가 제자리에서 돌아서는 3초쯤이다. 첫 골짜기는 0.77 m(<code>margin</code> 1.0), <code>margin</code>을 2.0으로 바꾼 뒤의 두 골짜기는 1.93 m · 2.0 m 언저리다. 로그 수천 줄에 든 정보가 선 하나로 보인다.</figcaption>
   </figure>
   <div class="interp">
-    <strong>해석:</strong> 이 그림에서 읽을 것은 <strong>기울기와 꺾이는 자리</strong>다. 기울기가 일정하면 속도가 일정한 것이고, 꺾인 자리의 높이가 서는 거리다.
+    <strong>해석:</strong> 이 그림에서 읽을 것은 <strong>골짜기 바닥의 높이</strong>다. 바닥의 높이가 돌아서기 시작한 거리이고, <code>param set</code> 한 번으로 그 높이가 바뀐 것이 보인다.
     프로젝트에서 조향값을 그려 보면 이 선이 위아래로 떨리는지가 보이는데, 그것이 튜닝(21회 <code>param set</code>)의 단서가 된다. 그림을 읽고 판단하는 일은 에이전트에게 맡기기 어렵다 — 에이전트는 이 창을 볼 수 없다.
   </div>
 
   <!-- ── ⑨ bag ── -->
   <h2 id="bag">⑨ <code>ros2 bag</code> 기록과 재생 <span class="badge b-yellow">🟡 맡기되 결과는 내가 본다</span></h2>
   <p>
-    18회 ⑪절에서는 <code>cmd_vel</code>을 기록해 거북이를 다시 몰았다. 이번에는 거꾸로 <strong>센서 값</strong>을 기록한다. 센서 값을 남겨 두면 로봇(여기서는 turtlesim과 <code>front_range</code>) 없이도 <code>wall_stop</code>에게 똑같은 입력을 몇 번이고 줄 수 있다.
-    판단 코드나 파라미터를 바꿔 가며 「같은 상황에서 이번에는 어디서 서겠다고 하나」를 볼 수 있다.
+    18회 ⑪절에서는 <code>cmd_vel</code>을 기록해 거북이를 다시 몰았다. 이번에는 거꾸로 <strong>센서 값</strong>을 기록한다. 센서 값을 남겨 두면 로봇(여기서는 turtlesim과 <code>wall_range</code>) 없이도 <code>turtle_drive</code>에게 똑같은 입력을 몇 번이고 줄 수 있다.
+    판단 코드나 파라미터를 바꿔 가며 「같은 상황에서 이번에는 어디서 돌아서겠다고 하나」를 볼 수 있다.
   </p>
-  <pre class="lang-sh"><code>$ ros2 launch turtle_drive wall_stop.launch.py         # 터미널 1 — 셋을 띄운다 (YAML: speed 0.8, wall_margin 1.5)
+  <pre class="lang-sh"><code>$ ros2 launch turtle_drive turtle_drive.launch.py        # 터미널 1 — 셋을 띄운다 (YAML: max_speed 0.8, margin 2.0)
 $ cd ~/bags                                             # 터미널 2 — 18회에 만든 폴더
-$ ros2 bag record -o wall1 --topics /turtle1/front_range /turtle1/cmd_vel
+$ ros2 bag record -o drive1 --topics /turtle1/wall_range /turtle1/pose /turtle1/cmd_vel
 (…)
-[INFO] [1792279351.794399105] [rosbag2_recorder]: Subscribed to topic '/turtle1/front_range'
-[INFO] [1792279351.796794061] [rosbag2_recorder]: Subscribed to topic '/turtle1/cmd_vel'
-(거북이가 선 뒤 몇 초 기다렸다가 Ctrl+C)
-$ ros2 bag info wall1
+[INFO] [1793760068.618583608] [rosbag2_recorder]: Subscribed to topic '/turtle1/pose'
+[INFO] [1793760068.619657188] [rosbag2_recorder]: Subscribed to topic '/turtle1/cmd_vel'
+[INFO] [1793760068.620622196] [rosbag2_recorder]: Subscribed to topic '/turtle1/wall_range'
+(거북이가 한두 번 돌아선 뒤 Ctrl+C)
+$ ros2 bag info drive1
 (…)
-Duration:          9.231870315s
-Messages:          670
-Topic information: Topic: /turtle1/cmd_vel | Type: geometry_msgs/msg/Twist | Count: 92 | Serialization Format: cdr
-                   Topic: /turtle1/front_range | Type: sensor_msgs/msg/Range | Count: 578 | Serialization Format: cdr</code></pre>
+Duration:          24.303322807s
+Messages:          3089
+Topic information: Topic: /turtle1/cmd_vel | Type: geometry_msgs/msg/Twist | Count: 49 | Serialization Format: cdr
+                   Topic: /turtle1/pose | Type: turtlesim/msg/Pose | Count: 1520 | Serialization Format: cdr
+                   Topic: /turtle1/wall_range | Type: sensor_msgs/msg/Range | Count: 1520 | Serialization Format: cdr</code></pre>
   <p>
-    9.2초 동안 거리 578개(초당 62.5개)와 명령 92개(초당 10개)가 남았다. 이제 launch를 끄고 — turtlesim도 <code>front_range</code>도 없는 상태에서 — <code>wall_stop</code>만 <strong>여유 거리를 2.5 m로 바꿔</strong> 띄운 뒤 거리만 재생한다.
+    24.3초 동안 거리와 자세가 1,520개씩(초당 62.5개), 명령이 49개(초당 2개 — 0.5초 타이머) 남았다. 이 기록 동안 거북이는 <code>margin</code> 2.0으로 달렸고, launch 터미널에는 「범위 밖 (벽까지 1.66 m)」가 찍혔다.
+    이제 launch를 끄고 — turtlesim도 <code>wall_range</code>도 없는 상태에서 — <code>turtle_drive</code>만 <strong><code>margin</code>을 3.0으로 바꿔</strong> 띄운 뒤 거리와 자세만 재생한다.
   </p>
-  <pre class="lang-sh"><code>$ ros2 run turtle_drive wall_stop --ros-args -p wall_margin:=2.5      # 터미널 1
-$ ros2 bag play wall1 --topics /turtle1/front_range                  # 터미널 2
+  <pre class="lang-sh"><code>$ ros2 run turtle_drive turtle_drive --ros-args -p margin:=3.0          # 터미널 1
+$ ros2 bag play drive1 --topics /turtle1/wall_range /turtle1/pose       # 터미널 2
 (…)
-[INFO] [1792279368.236535245] [rosbag2_player]: Playback until timestamp: -1</code></pre>
-  <pre><code>[INFO] [1792279366.621519411] [wall_stop]: speed = 1.00 m/s, wall_margin = 2.50 m, work_ms = 0, range_depth = 5
-[INFO] [1792279368.338005824] [wall_stop]: 받은 거리 1개 · 지금 거리 3.73 m · 나이 16529.0 ms · 처리 0.0 ms
-[INFO] [1792279369.346171488] [wall_stop]: 받은 거리 64개 · 지금 거리 2.92 m · 나이 16529.0 ms · 처리 0.0 ms
-[INFO] [1792279369.921637470] [wall_stop]: 섭니다 — 벽 앞 (앞 벽까지 2.47 m)
-[WARN] [1792279369.921719165] [wall_stop]: /turtle1/set_pen 서비스가 아직 없습니다
-[INFO] [1792279370.353844790] [wall_stop]: 받은 거리 127개 · 지금 거리 2.11 m · 나이 16529.0 ms · 처리 0.0 ms
-[INFO] [1792279371.361888807] [wall_stop]: 받은 거리 190개 · 지금 거리 1.46 m · 나이 16529.0 ms · 처리 0.0 ms</code></pre>
+[INFO] [1793760100.970668915] [rosbag2_player]: Playback until timestamp: -1</code></pre>
+  <pre><code>[INFO] [1793760099.383022634] [turtle_drive]: max_speed = 1.20 m/s, margin = 3.00 m, work_ms = 0, range_depth = 5
+[INFO] [1793760101.072336459] [turtle_drive]: 받은 거리 1개 · 지금 거리 4.28 m · 나이 32438.6 ms · 처리 0.0 ms
+[INFO] [1793760102.080008619] [turtle_drive]: 받은 거리 64개 · 지금 거리 3.61 m · 나이 32438.7 ms · 처리 0.0 ms
+[INFO] [1793760103.087456928] [turtle_drive]: 받은 거리 127개 · 지금 거리 3.14 m · 나이 32438.6 ms · 처리 0.0 ms
+[INFO] [1793760103.383123786] [turtle_drive]: 범위 밖 (벽까지 2.97 m) — 중앙 쪽으로 돕니다
+[WARN] [1793760103.383177416] [turtle_drive]: /turtle1/set_pen 서비스가 아직 없습니다
+[INFO] [1793760104.096288809] [turtle_drive]: 받은 거리 190개 · 지금 거리 2.48 m · 나이 32438.6 ms · 처리 0.0 ms
+[INFO] [1793760105.103593530] [turtle_drive]: 받은 거리 253개 · 지금 거리 2.03 m · 나이 32438.5 ms · 처리 0.0 ms
+[INFO] [1793760106.111517944] [turtle_drive]: 받은 거리 316개 · 지금 거리 1.66 m · 나이 32438.7 ms · 처리 0.0 ms</code></pre>
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 명령에서 처음 나오는 것</p>
     <dl>
       <dt>ros2 bag play 이름 --topics 토픽…</dt>
-      <dd>bag 안의 토픽 중 적은 것만 재생한다. 여기서는 <code>/turtle1/front_range</code>만 내보냈다. 기록해 둔 <code>cmd_vel</code>까지 재생하면 옛 명령과 지금 <code>wall_stop</code>의 명령이 같은 토픽에 섞인다.</dd>
+      <dd>bag 안의 토픽 중 적은 것만 재생한다. 여기서는 <code>turtle_drive</code>가 받는 두 토픽 — 거리와 자세 — 만 내보냈다(자세는 「중앙을 보고 있나」에 쓴다). 기록해 둔 <code>cmd_vel</code>까지 재생하면 옛 명령과 지금 <code>turtle_drive</code>의 명령이 같은 토픽에 섞인다.</dd>
     </dl>
   </div>
   <p>
-    <code>wall_stop</code>은 이것이 녹화인 줄 모른다. 2.47 m에서 「섭니다」 — 새 여유 거리대로 판단했다. 기록을 켰을 때 거북이는 이미 출발해 있어서 첫 값이 3.73 m다.
+    <code>turtle_drive</code>는 이것이 녹화인 줄 모른다. 2.97 m에서 「범위 밖 — 돕니다」 — 새 <code>margin</code>(3.0)대로 판단했다. 기록을 켰을 때 거북이는 이미 출발해 있어서 첫 값이 4.28 m다.
     <code>set_pen</code> 경고는 turtlesim이 없어서 나온 것이고, 21회에 <code>service_is_ready()</code>로 먼저 본 덕에 노드는 멈추지 않았다.
   </p>
   <div class="box trap">
     <div class="boxtitle">⚠️ 재생은 녹화다 — 거북이는 새 판단에 반응하지 않는다</div>
     <p>
-      로그를 끝까지 보면 「섭니다」 뒤에도 거리가 2.11 → 1.46 m로 계속 줄어든다. 녹화 속 거북이는 그때 여유 1.5 m로 달렸기 때문이다. 재생은 <strong>입력을 되풀이할 뿐</strong>, 우리 명령이 로봇을 움직여 다음 입력이 바뀌는 고리는 없다.
-      그래서 bag으로 확인할 수 있는 것은 「이 입력에서 언제 무엇을 판단하나」까지다. 그 판단으로 로봇이 실제로 어디서 서는지는 다시 로봇 앞에서 본다.
+      로그를 끝까지 보면 「돕니다」 뒤에도 거리가 2.48 → 2.03 → 1.66 m로 계속 줄어든다. 녹화 속 거북이는 그때 <code>margin</code> 2.0으로 달렸기 때문이다. 재생은 <strong>입력을 되풀이할 뿐</strong>, 우리 명령이 로봇을 움직여 다음 입력이 바뀌는 고리는 없다.
+      그래서 bag으로 확인할 수 있는 것은 「이 입력에서 언제 무엇을 판단하나」까지다. 그 판단으로 로봇이 실제로 어디서 돌아서는지는 다시 로봇 앞에서 본다.
     </p>
     <p>
-      <code>나이 16529.0 ms</code>도 같은 이유다. 메시지의 <code>stamp</code>는 <strong>기록할 때의 시각</strong>이고 지금은 16.5초 뒤라서, 재생 중에는 나이가 뜻을 잃는다. 재생 시각에 맞추는 방법은 「조금 더 알아두면」에 있다.
+      <code>나이 32438.6 ms</code>도 같은 이유다. 메시지의 <code>stamp</code>는 <strong>기록할 때의 시각</strong>이고 지금은 32초 뒤라서, 재생 중에는 나이가 뜻을 잃는다. 재생 시각에 맞추는 방법은 「조금 더 알아두면」에 있다.
     </p>
   </div>
   <p>
@@ -1833,7 +2025,7 @@ $ ros2 bag play wall1 --topics /turtle1/front_range                  # 터미널
   </p>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
-    ~/bags 폴더에서 /turtle1/front_range 와 /turtle1/cmd_vel 을 wall2 라는 이름으로 ros2 bag record 해 줘. 내가 끝났다고 하면 Ctrl+C 로 멈추고 ros2 bag info 결과에서 토픽별 Count 와 Duration 을 알려 줘. 그다음 재생할 때는 --topics /turtle1/front_range 로 거리만 재생하는 명령을 알려 줘. 재생은 내가 직접 할게.
+    ~/bags 폴더에서 /turtle1/wall_range, /turtle1/pose, /turtle1/cmd_vel 을 drive2 라는 이름으로 ros2 bag record 해 줘. 내가 끝났다고 하면 Ctrl+C 로 멈추고 ros2 bag info 결과에서 토픽별 Count 와 Duration 을 알려 줘. 그다음 재생할 때는 --topics /turtle1/wall_range /turtle1/pose 로 거리와 자세만 재생하는 명령을 알려 줘. 재생은 내가 직접 할게.
   </div>
 
   <!-- ── ⑩ rviz2 ── -->
@@ -1848,18 +2040,18 @@ $ ros2 bag play wall1 --topics /turtle1/front_range                  # 터미널
     <tr><td>1</td><td><code>rviz2</code>를 띄운다</td><td>터미널에서 <code>rviz2</code></td></tr>
     <tr><td>2</td><td>왼쪽 <code>Global Options</code> → <strong>Fixed Frame</strong> — 화면의 기준이 되는 좌표계</td><td><code>turtle1</code> — 메시지의 <code>frame_id</code>와 같게</td></tr>
     <tr><td>3</td><td>아래 <strong>Add</strong> → By display type → <strong>Range</strong></td><td>센서 메시지 타입에 맞는 표시를 고른다</td></tr>
-    <tr><td>4</td><td>Range → <code>Topic</code>에 토픽 이름, 그 아래 <strong>Reliability Policy</strong></td><td><code>/turtle1/front_range</code> · <strong>Best Effort</strong></td></tr>
+    <tr><td>4</td><td>Range → <code>Topic</code>에 토픽 이름, 그 아래 <strong>Reliability Policy</strong></td><td><code>/turtle1/wall_range</code> · <strong>Best Effort</strong></td></tr>
   </table>
   </div>
   <p>
     4번의 Reliability Policy는 처음에 <strong>Reliable</strong>로 되어 있다. 그대로 두면 오늘 ⑤절과 똑같은 일이 rviz2에서 일어난다 — 화면에 아무것도 안 그려지고, Range 옆 <code>Status: Ok</code>는 초록색 그대로이며, rviz2를 띄운 터미널에만 이 줄이 남는다.
   </p>
-  <pre><code>[WARN] [1792279076.027661013] [rviz]: New publisher discovered on topic '/turtle1/front_range', offering incompatible QoS. No messages will be sent to it. Last incompatible policy: RELIABILITY_QOS_POLICY</code></pre>
+  <pre><code>[WARN] [1793760354.129343177] [rviz]: New publisher discovered on topic '/turtle1/wall_range', offering incompatible QoS. No messages will be sent to it. Last incompatible policy: RELIABILITY_QOS_POLICY</code></pre>
   <p>Best Effort로 바꾸면 바로 그려진다. 아래는 거북이가 달리는 도중의 화면이다.</p>
   <figure>
     <img src="assets/img/22_rviz_range.png" width="700"
-         alt="rviz2 창. 왼쪽 Displays 패널에 Global Options, Global Status: Warn, Grid, Axes, Range 가 있고 Range 의 Topic 은 /turtle1/front_range, Reliability Policy 는 Best Effort 다. 오른쪽 어두운 격자 화면 가운데에 빨강·초록 좌표축이 있고, 빨간 축 방향으로 주황색 가는 부채꼴이 격자 두 칸 남짓 뻗어 있다">
-    <figcaption>Fixed Frame <code>turtle1</code>, 위에서 내려다본 화면(격자 한 칸 1 m). 빨강이 거북이의 앞(x), 초록이 왼쪽(y)이다 — 이 색 약속(x 빨강·y 초록·z 파랑)은 ROS 도구 어디서나 같다. 주황 부채꼴의 길이가 <code>range</code>이고 벌어진 각이 <code>field_of_view</code>(0.2 rad)다. 거북이가 벽에 다가가면 부채꼴이 짧아진다.
+         alt="rviz2 창. 왼쪽 Displays 패널에 Global Options, Global Status: Warn, Grid, Axes, Range 가 있고 Range 의 Topic 은 /turtle1/wall_range, Reliability Policy 는 Best Effort 다. 오른쪽 어두운 격자 화면에 빨강·초록 좌표축이 있고, 빨간 축 방향으로 주황색 가는 부채꼴이 격자 네 칸 남짓 뻗어 있다">
+    <figcaption>Fixed Frame <code>turtle1</code>, 위에서 내려다본 화면(격자 한 칸 1 m). 빨강이 거북이의 앞(x), 초록이 왼쪽(y)이다 — 이 색 약속(x 빨강·y 초록·z 파랑)은 ROS 도구 어디서나 같다. 주황 부채꼴의 길이가 <code>range</code>이고 벌어진 각이 <code>field_of_view</code>(0.2 rad)다. 거북이가 벽에 다가가면 부채꼴이 짧아진다. <code>wall_range</code>는 「가장 가까운 벽까지」를 재므로 실제 초음파 센서처럼 앞쪽만 재는 것은 아니다 — rviz2는 메시지에 적힌 대로 x축(앞) 방향에 그릴 뿐이다.
       왼쪽 위 <code>Global Status: Warn</code>은 좌표계 사이의 관계(TF)를 아직 하나도 알려 주지 않아서 뜬다 — 기준 좌표계를 메시지와 같게 골라서 그림은 그려진다. TF는 26회에서 다룬다.</figcaption>
   </figure>
   <div class="interp">
@@ -1877,9 +2069,9 @@ $ ros2 bag play wall1 --topics /turtle1/front_range                  # 터미널
     <tr><td>17</td><td>노드·토픽·서비스·액션·파라미터, 메시지 정의, <code>frame_id</code></td><td>이 일에는 토픽인가 서비스인가</td></tr>
     <tr><td>18</td><td><code>ros2 node/topic/service/param/bag</code>, rqt_graph, 막혔을 때 보는 순서 0~6</td><td>값이 안 흐른다 — 어디부터 보나</td></tr>
     <tr><td>19</td><td>패키지 <code>turtle_drive</code>, <code>package.xml</code>, <code>install(TARGETS)</code>, <code>hello_node</code></td><td><code>ros2 run</code>이 못 찾는다</td></tr>
-    <tr><td>20</td><td>발행자·구독자·타이머, 콜백과 <code>spin</code>, <code>wall_stop</code> v1~v3</td><td>콜백이 언제 불리나, 메시지를 어떻게 받나</td></tr>
-    <tr><td>21</td><td>파라미터·YAML·서비스·launch, <code>install(DIRECTORY)</code>, v4~v8</td><td>값이 안 먹는다, 노드가 서비스 뒤에 멈춘다</td></tr>
-    <tr><td>22</td><td>QoS와 호환성, <code>SensorDataQoS</code>, 처리 시간과 나이, THROTTLE·DEBUG, rqt_plot·bag·rviz2, <code>front_range</code> + v9~v12</td><td>echo로는 오는데 안 받는다, 로봇이 늦게 선다</td></tr>
+    <tr><td>20</td><td>발행자·구독자·타이머, 콜백과 <code>spin</code>, <code>turtle_drive</code> v1~v2</td><td>콜백이 언제 불리나, 메시지를 어떻게 받나</td></tr>
+    <tr><td>21</td><td>파라미터·YAML·서비스·launch, <code>install(DIRECTORY)</code>, v3~v7</td><td>값이 안 먹는다, 노드가 서비스 뒤에 멈춘다</td></tr>
+    <tr><td>22</td><td>QoS와 호환성, <code>SensorDataQoS</code>, 처리 시간과 나이, THROTTLE·DEBUG, rqt_plot·bag·rviz2, <code>wall_range</code> + v8~v11</td><td>echo로는 오는데 안 받는다, 로봇이 늦게 돌아선다</td></tr>
   </table>
   </div>
   <div class="interp">
@@ -1892,42 +2084,42 @@ $ ros2 bag play wall1 --topics /turtle1/front_range                  # 터미널
   <div class="lab-block">
     <p class="boxtitle">🧪 이걸 해 보면 무엇을 알게 되나</p>
     <p>
-      「echo로는 보이는데 안 받는다」를 직접 만들어 <code>info -v</code>로 짚어 보고, 콜백이 느릴 때 거북이가 <strong>어디서</strong> 서는지를 화면과 숫자로 맞춰 본다. 마지막으로 기록한 거리로 거북이 없이 판단을 다시 돌려 본다.
+      「echo로는 보이는데 안 받는다」를 직접 만들어 <code>info -v</code>로 짚어 보고, 콜백이 느릴 때 거북이가 <strong>어디서</strong> 돌아서는지를 화면과 숫자로 맞춰 본다. 마지막으로 기록한 거리와 자세로 거북이 없이 판단을 다시 돌려 본다.
     </p>
     <p class="boxtitle">준비물</p>
     <ul>
       <li>WSL 터미널 셋 (16회 <code>.bashrc</code>가 걸린 상태)</li>
       <li>21회 실습까지 끝낸 <code>~/ros2_ws/src/turtle_drive</code></li>
-      <li>⑦절 끝의 📄 「12단계 · v12 완성본」(파일 여섯), ⑤절의 📄 「v10 변형」</li>
+      <li>⑦절 끝의 📄 「11단계 · v11 완성본」(파일 여섯), ⑤절의 📄 「v9 변형」</li>
     </ul>
     <p class="boxtitle">절차</p>
     <ol>
-      <li><strong>(4분)</strong> v12 완성본의 파일을 같은 경로로 넣고(<code>src/front_range.cpp</code>는 새 파일) 빌드한다. 터미널 1에서 launch로 띄우고, 터미널 2에서 <code>ros2 topic info -v /turtle1/front_range</code>의 Reliability 두 줄이 둘 다 <code>BEST_EFFORT</code>인지 본다.
+      <li><strong>(4분)</strong> v11 완성본의 파일을 같은 경로로 넣고(<code>src/wall_range.cpp</code>는 새 파일) 빌드한다. 터미널 1에서 launch로 띄우고, 터미널 2에서 <code>ros2 topic info -v /turtle1/wall_range</code>의 Reliability 두 줄이 둘 다 <code>BEST_EFFORT</code>인지 본다.
         <pre class="lang-sh"><code>$ cd ~/ros2_ws
 $ colcon build --packages-select turtle_drive
 $ source install/setup.bash
-$ ros2 launch turtle_drive wall_stop.launch.py</code></pre></li>
-      <li><strong>(4분)</strong> <code>wall_stop.cpp</code>를 「v10 변형」으로 바꿔 빌드하고 다시 띄운다. 거북이가 서 있는 것, launch 터미널의 <code>[WARN] … incompatible QoS</code>, <code>ros2 topic echo --once /turtle1/front_range</code>에는 값이 오는 것, <code>info -v</code>에서 <code>wall_stop</code>만 <code>RELIABLE</code>인 것을 차례로 확인한다. v12로 되돌린다.</li>
-      <li><strong>(5분)</strong> launch를 끄고 터미널 셋에 나눠 띄운다 — <code>ros2 run turtlesim turtlesim_node</code>, <code>ros2 run turtle_drive front_range</code>, <code>ros2 run turtle_drive wall_stop --ros-args -p work_ms:=50 -p range_depth:=100</code>. 1초 요약의 나이가 1,600 ms 언저리로 오르는 것과 거북이가 벽에 닿는 것(turtlesim 터미널의 <code>Oh no! I hit the wall!</code>)을 본다.</li>
-      <li><strong>(4분)</strong> turtlesim을 다시 띄우고 <code>range_depth:=1</code>로 같은 실험을 한다. 선 뒤 <code>ros2 topic echo --once /turtle1/front_range</code>의 <code>range</code>를 ⑥절 표와 비교한다. 시간이 남으면 <code>work_ms:=10</code>(주기 16 ms보다 짧다)도 해 보고 나이가 어떻게 되는지 본다.</li>
-      <li><strong>(4분)</strong> launch로 다시 띄우고 <code>rqt_plot /turtle1/front_range/range</code>를 연다. 거북이가 선 뒤 <code>ros2 param set /wall_stop wall_margin 0.5</code> — 선이 한 번 더 꺾이는지 본다.</li>
-      <li><strong>(5분)</strong> ⑨절대로 <code>~/bags</code>에서 <code>wall1</code>을 기록하고, launch를 끈 뒤 <code>wall_stop</code>만 <code>-p wall_margin:=2.5</code>로 띄워 <code>ros2 bag play wall1 --topics /turtle1/front_range</code>. 「섭니다」의 거리가 2.5 m 언저리인지 본다.</li>
+$ ros2 launch turtle_drive turtle_drive.launch.py</code></pre></li>
+      <li><strong>(4분)</strong> <code>turtle_drive.cpp</code>를 「v9 변형」으로 바꿔 빌드하고 다시 띄운다. 거북이가 처음 자리에 서 있는 것, launch 터미널의 <code>[WARN] … incompatible QoS</code>, <code>ros2 topic echo --once /turtle1/wall_range</code>에는 값이 오는 것, <code>info -v</code>에서 <code>turtle_drive</code>만 <code>RELIABLE</code>인 것을 차례로 확인한다. v11로 되돌린다.</li>
+      <li><strong>(5분)</strong> launch를 끄고 터미널 셋에 나눠 띄운다 — <code>ros2 run turtlesim turtlesim_node</code>, <code>ros2 run turtle_drive wall_range</code>, <code>ros2 run turtle_drive turtle_drive --ros-args -p work_ms:=50 -p range_depth:=100</code>. 1초 요약의 나이가 1,600 ms 언저리로 오르는 것과, 거북이가 늦게 돌아서다 벽에 닿는 것(turtlesim 터미널의 <code>Oh no! I hit the wall!</code>)을 본다. 1분쯤 지켜본다 — 무작위로 움직이므로 벽에 닿는 때가 매번 다르다.</li>
+      <li><strong>(4분)</strong> turtlesim을 다시 띄우고 <code>range_depth:=5</code>로 같은 실험을 한다. 나이가 얼마인지, 1분 동안 벽 경고가 나오는지 ⑥절 표와 비교한다. 시간이 남으면 <code>work_ms:=10</code>(주기 16 ms보다 짧다)도 해 보고 나이가 어떻게 되는지 본다.</li>
+      <li><strong>(4분)</strong> launch로 다시 띄우고 <code>rqt_plot /turtle1/wall_range/range</code>를 연다. 골짜기가 몇 번 생긴 뒤 <code>ros2 param set /turtle_drive margin 1.0</code> — 골짜기의 바닥 높이가 바뀌는지 본다(YAML의 <code>margin</code>은 2.0이다).</li>
+      <li><strong>(5분)</strong> ⑨절대로 <code>~/bags</code>에서 <code>drive1</code>을 기록하고, launch를 끈 뒤 <code>turtle_drive</code>만 <code>-p margin:=3.0</code>으로 띄워 <code>ros2 bag play drive1 --topics /turtle1/wall_range /turtle1/pose</code>. 「범위 밖」 줄의 거리가 3 m 언저리인지 본다.</li>
     </ol>
     <p class="boxtitle">이렇게 되면 성공이다</p>
-    <pre class="lang-sh"><code>$ ros2 run turtle_drive wall_stop --ros-args -p work_ms:=50 -p range_depth:=100
-[INFO] [1792278913.728826583] [wall_stop]: speed = 1.00 m/s, wall_margin = 1.00 m, work_ms = 50, range_depth = 100
-[INFO] [1792278913.895036085] [wall_stop]: 받은 거리 1개 · 지금 거리 5.54 m · 나이 0.2 ms · 처리 50.1 ms
-[INFO] [1792278914.899513924] [wall_stop]: 받은 거리 21개 · 지금 거리 5.42 m · 나이 791.0 ms · 처리 50.1 ms
-[INFO] [1792278915.903152624] [wall_stop]: 받은 거리 41개 · 지금 거리 5.10 m · 나이 1475.0 ms · 처리 50.1 ms
-[INFO] [1792278916.907265306] [wall_stop]: 받은 거리 61개 · 지금 거리 4.22 m · 나이 1598.7 ms · 처리 50.1 ms
+    <pre class="lang-sh"><code>$ ros2 run turtle_drive turtle_drive --ros-args -p work_ms:=50 -p range_depth:=100
+[INFO] [1793760239.396488753] [turtle_drive]: max_speed = 1.20 m/s, margin = 1.00 m, work_ms = 50, range_depth = 100
+[INFO] [1793760239.568770216] [turtle_drive]: 받은 거리 1개 · 지금 거리 5.46 m · 나이 0.1 ms · 처리 50.1 ms
+[INFO] [1793760240.572173664] [turtle_drive]: 받은 거리 21개 · 지금 거리 5.46 m · 나이 789.2 ms · 처리 50.1 ms
+[INFO] [1793760241.575110059] [turtle_drive]: 받은 거리 41개 · 지금 거리 5.41 m · 나이 1472.4 ms · 처리 50.1 ms
+[INFO] [1793760242.577940426] [turtle_drive]: 받은 거리 61개 · 지금 거리 4.91 m · 나이 1595.6 ms · 처리 50.1 ms
 (…)
-[INFO] [1792278919.917703437] [wall_stop]: 받은 거리 121개 · 지금 거리 1.19 m · 나이 1585.0 ms · 처리 50.1 ms
-[INFO] [1792278920.168582993] [wall_stop]: 섭니다 — 벽 앞 (앞 벽까지 0.95 m)
-[INFO] [1792278920.269129532] [wall_stop]: 펜 색을 (255, 70, 70) 로 바꿨습니다
-[INFO] [1792278920.921283301] [wall_stop]: 받은 거리 141개 · 지금 거리 0.20 m · 나이 1596.7 ms · 처리 50.1 ms
-[INFO] [1792278921.924658697] [wall_stop]: 받은 거리 161개 · 지금 거리 0.00 m · 나이 1592.8 ms · 처리 50.1 ms</code></pre>
+[INFO] [1793760253.611654920] [turtle_drive]: 받은 거리 281개 · 지금 거리 1.21 m · 나이 1589.2 ms · 처리 50.1 ms
+[INFO] [1793760253.912636156] [turtle_drive]: 범위 밖 (벽까지 0.96 m) — 중앙 쪽으로 돕니다
+[INFO] [1793760254.013169385] [turtle_drive]: 펜 색을 (255, 70, 70) 로 바꿨습니다
+[INFO] [1793760254.614821611] [turtle_drive]: 받은 거리 301개 · 지금 거리 0.54 m · 나이 1584.7 ms · 처리 50.1 ms
+[INFO] [1793760255.617794788] [turtle_drive]: 받은 거리 321개 · 지금 거리 0.02 m · 나이 1595.1 ms · 처리 50.1 ms</code></pre>
     <p>
-      1초에 20개씩 늘고, 나이가 1.6초에서 멈추고, 「섭니다」 뒤에도 거리가 0.20 → 0.00으로 줄어든다(이미 늦은 판단). 이 로그는 ⑥절 그림을 찍을 때 받은 것이다.
+      1초에 20개씩 늘고, 나이가 1.6초에서 멈추고, 「돕니다」 뒤에도 거리가 0.54 → 0.02 m로 줄어든다(이미 늦은 판단 — 돌기 시작했을 때 거북이는 1.6초 전 자리보다 훨씬 벽에 가까이 있었다). 이 로그는 ⑥절 그림의 오른쪽 판을 찍을 때 받은 것이다.
       <span style="color:var(--muted)">확인한 곳: 컨테이너(우분투 24.04, ROS 2 Jazzy, colcon). 그림을 찍을 때만 turtlesim에 창 자리를 정하는 <code>-geometry</code> 인자를 더했다.</span>
     </p>
   </div>
@@ -1935,16 +2127,16 @@ $ ros2 launch turtle_drive wall_stop.launch.py</code></pre></li>
   <!-- ── 📝 연습문제 ── -->
   <h2 id="exercise">📝 연습문제 — QoS·처리 시간 측정·로그 정리 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
   <p>
-    아래는 20·21회 연습문제의 <code>wall_watch</code>(패키지 <code>turtle_watch</code>)를 「자세가 올 때마다 알린다」로 바꾼 판이다. 돌아가기는 한다. 대신 오늘 배운 것이 하나도 없다 — 1초에 60줄 넘게 찍히고, 센서 토픽을 받지 않고 자세에서 직접 계산하며, 처리 시간을 모른다.
+    아래는 20·21회 연습문제의 <code>wall_watch</code>(패키지 <code>turtle_watch</code>)를 「자세가 올 때마다 알린다」로 바꾼 판이다. 돌아가기는 한다. 대신 오늘 배운 것이 하나도 없다 — 1초에 60줄 넘게 찍히고, <code>wall_range</code>가 이미 보내 주는 거리를 받지 않고 자세에서 직접 계산하며, 처리 시간을 모른다.
   </p>
   <pre class="lang-sh"><code>$ ros2 run turtle_watch wall_watch
-[INFO] [1792279417.490370146] [wall_watch]: 가장 가까운 벽까지 5.54 m
-[INFO] [1792279417.490542673] [wall_watch]: 가장 가까운 벽까지 5.54 m
-[INFO] [1792279417.490571618] [wall_watch]: 가장 가까운 벽까지 5.54 m
+[INFO] [1793759503.833415091] [wall_watch]: 가장 가까운 벽까지 5.54 m
+[INFO] [1793759503.833507814] [wall_watch]: 가장 가까운 벽까지 5.54 m
+[INFO] [1793759503.833516353] [wall_watch]: 가장 가까운 벽까지 5.54 m
 (…)
-[WARN] [1792279426.845490958] [wall_watch]: 벽이 가깝습니다: 0.63 m
-[WARN] [1792279426.860787523] [wall_watch]: 벽이 가깝습니다: 0.63 m</code></pre>
-  <p>(검증에서는 9초 동안 598줄이 찍혔다.)</p>
+[WARN] [1793759513.240989580] [wall_watch]: 벽이 가깝습니다: 0.63 m
+[WARN] [1793759513.256347288] [wall_watch]: 벽이 가깝습니다: 0.63 m</code></pre>
+  <p>(검증에서는 10초 동안 600줄이 찍혔다.)</p>
   <!-- fullcode open "연습문제 — 오늘 배운 것이 없는 원본 (turtle_watch/)" build="cd ~/ros2_ws && colcon build --packages-select turtle_watch && source install/setup.bash && ros2 run turtle_watch wall_watch"
        l22_qos_debug/steps/exercise_old/turtle_watch/src/wall_watch.cpp as turtle_watch/src/wall_watch.cpp
        l22_qos_debug/steps/exercise_old/turtle_watch/CMakeLists.txt as turtle_watch/CMakeLists.txt
@@ -2030,21 +2222,21 @@ ament_package()</code></pre></div>
 &lt;/package&gt;</code></pre></div>
 </details>
 <!-- /fullcode -->
-  <p>앞 회차 연습문제를 했으면 <code>~/ros2_ws/src/turtle_watch/</code>의 파일을 이 세 파일로 바꾼다. 거북이는 <code>turtle_teleop_key</code>(17회)로 벽 쪽으로 몰아 본다.</p>
+  <p>앞 회차 연습문제를 했으면 <code>~/ros2_ws/src/turtle_watch/</code>의 파일을 이 세 파일로 바꾼다. <code>turtle_drive</code>는 띄우지 않고 turtlesim과 <code>wall_range</code>만 띄운 뒤, 거북이는 <code>turtle_teleop_key</code>(18회)로 벽 쪽으로 몰아 본다.</p>
   <h3>할 일</h3>
   <div class="tablewrap">
   <table>
     <tr><th>고칠 것</th><th>오늘 어디서 했나</th><th>확인하는 법</th></tr>
-    <tr><td><code>/turtle1/pose</code> 대신 <code>turtle_drive</code>의 <code>front_range</code>가 보내는 <code>/turtle1/front_range</code>를 받아 <strong>앞 벽까지 거리</strong>로 경고한다</td><td>④ · ⑤</td><td><code>ros2 topic info -v /turtle1/front_range</code>에서 <code>wall_watch</code>의 Reliability가 <code>BEST_EFFORT</code>, 경고 줄에 앞 거리가 찍힌다</td></tr>
+    <tr><td><code>/turtle1/pose</code>로 직접 계산하는 대신 <code>turtle_drive</code> 패키지의 <code>wall_range</code>가 보내는 <code>/turtle1/wall_range</code>를 받아 경고한다</td><td>④ · ⑤</td><td><code>ros2 topic info -v /turtle1/wall_range</code>에서 <code>wall_watch</code>의 Reliability가 <code>BEST_EFFORT</code>, 경고 줄에 받은 거리가 찍힌다</td></tr>
     <tr><td>의존성 <code>sensor_msgs</code> 두 곳 (이제 안 쓰는 <code>turtlesim</code>은 뺀다)</td><td>④</td><td><code>colcon info turtle_watch</code>의 <code>build:</code>·<code>run:</code></td></tr>
     <tr><td>콜백 처리 시간을 <code>steady_clock</code>으로 잰다</td><td>⑥</td><td>요약 줄에 처리 시간(ms)이 있다</td></tr>
     <tr><td>콜백마다 찍는 줄은 <code>RCLCPP_DEBUG</code>, 요약과 경고는 1초에 한 번 (<code>_THROTTLE</code>)</td><td>⑦</td><td>평소 1초에 한 줄, <code>--log-level wall_watch:=debug</code>로 띄우면 초당 60줄 남짓</td></tr>
-    <tr><td>⑨절 bag을 재생해서 거북이 없이 경고가 나오는지</td><td>⑨</td><td>turtlesim·<code>front_range</code> 없이 <code>ros2 bag play wall1 --topics /turtle1/front_range</code> → 경고 줄</td></tr>
+    <tr><td>⑨절 bag을 재생해서 거북이 없이 경고가 나오는지</td><td>⑨</td><td>turtlesim·<code>wall_range</code> 없이 <code>ros2 bag play drive1 --topics /turtle1/wall_range</code> → 경고 줄</td></tr>
   </table>
   </div>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
-    ~/ros2_ws/src/turtle_watch 패키지의 wall_watch 노드를 고쳐 줘. 고치기 전에 아래 기준마다 어느 파일·줄을 바꿀지 표로 먼저 보여 줘. 기준: /turtle1/pose 대신 /turtle1/front_range(sensor_msgs/msg/Range, best effort 로 발행됨)를 rclcpp::SensorDataQoS() 로 구독하고 range 값이 1.5 m 보다 작으면 경고, sensor_msgs 는 package.xml 과 CMakeLists.txt 양쪽에 넣고 안 쓰게 된 turtlesim 의존성은 뺄 것, 콜백 처리 시간을 std::chrono::steady_clock 으로 재서 ms 로, 메시지마다 찍는 줄은 RCLCPP_DEBUG, 요약(받은 개수·거리·처리 시간)은 RCLCPP_INFO_THROTTLE 로 1000 ms 에 한 번, 경고도 RCLCPP_WARN_THROTTLE 로 1000 ms 에 한 번. 빌드는 ~/ros2_ws 에서 colcon build --packages-select turtle_watch 로 해 줘. 확인은 내가 할게.
+    ~/ros2_ws/src/turtle_watch 패키지의 wall_watch 노드를 고쳐 줘. 고치기 전에 아래 기준마다 어느 파일·줄을 바꿀지 표로 먼저 보여 줘. 기준: /turtle1/pose 로 직접 계산하는 대신 /turtle1/wall_range(sensor_msgs/msg/Range, best effort 로 발행됨)를 rclcpp::SensorDataQoS() 로 구독하고 range 값이 1.5 m 보다 작으면 경고, sensor_msgs 는 package.xml 과 CMakeLists.txt 양쪽에 넣고 안 쓰게 된 turtlesim 의존성은 뺄 것, 콜백 처리 시간을 std::chrono::steady_clock 으로 재서 ms 로, 메시지마다 찍는 줄은 RCLCPP_DEBUG, 요약(받은 개수·거리·처리 시간)은 RCLCPP_INFO_THROTTLE 로 1000 ms 에 한 번, 경고도 RCLCPP_WARN_THROTTLE 로 1000 ms 에 한 번. 빌드는 ~/ros2_ws 에서 colcon build --packages-select turtle_watch 로 해 줘. 확인은 내가 할게.
   </div>
   <p>
     정답은 하나가 아니다. 위 표의 「확인하는 법」이 전부 통과하면 된 것이다. 첫째 줄은 돌려 봐야 확실하다 — 받은 코드가 구독 QoS를 숫자로 두었다면 빌드도 실행도 되는데 아무 줄도 안 찍힌다.
@@ -2055,7 +2247,7 @@ ament_package()</code></pre></div>
   <div class="tablewrap">
   <table>
     <tr><th>이럴 때</th><th>이렇게 말한다</th></tr>
-    <tr><td>센서 토픽을 구독하는 코드를 받을 때</td><td>"/turtle1/front_range(sensor_msgs/msg/Range)를 구독해 줘. 발행 쪽이 best effort 이니 구독 QoS 는 숫자 대신 rclcpp::SensorDataQoS() 로, 콜백은 ConstSharedPtr 로 받아 줘. sensor_msgs 는 package.xml 과 CMakeLists.txt 양쪽에."</td></tr>
+    <tr><td>센서 토픽을 구독하는 코드를 받을 때</td><td>"/turtle1/wall_range(sensor_msgs/msg/Range)를 구독해 줘. 발행 쪽이 best effort 이니 구독 QoS 는 숫자 대신 rclcpp::SensorDataQoS() 로, 콜백은 ConstSharedPtr 로 받아 줘. sensor_msgs 는 package.xml 과 CMakeLists.txt 양쪽에."</td></tr>
     <tr><td>echo로는 오는데 콜백이 안 불릴 때</td><td>⑤절 프롬프트 — <code>info -v</code>로 양쪽 Reliability를 표로 먼저, 이름은 바꾸지 말 것</td></tr>
     <tr><td>콜백이 느린지 재고 싶을 때</td><td>"이 노드의 구독 콜백 앞뒤를 std::chrono::steady_clock 으로 재서 처리 시간(ms)을, this->now() 에서 msg->header.stamp 를 빼서 받은 값의 나이(ms)를 RCLCPP_INFO_THROTTLE 로 1초에 한 번 찍게 해 줘. 판단 로직은 바꾸지 마."</td></tr>
     <tr><td>로그가 너무 많을 때</td><td>⑦절 프롬프트 — 메시지마다 찍는 줄은 DEBUG 나 THROTTLE 로, 상태가 바뀌는 순간의 줄은 그대로</td></tr>
@@ -2064,7 +2256,7 @@ ament_package()</code></pre></div>
   </div>
   <div class="interp">
     <strong>해석:</strong> 다섯 줄 중 셋이 「무엇을 바꾸지 마」를 담고 있다 — 이름을 바꾸지 마, 판단 로직을 바꾸지 마, 상태 줄은 그대로. 오늘의 원인은 전부 <strong>코드 한두 곳</strong>에 있었고, 넓게 고치게 두면 그 한 곳이 묻힌다.
-    붙었는지, 늦지 않은지는 <code>info -v</code>와 거북이가 선 자리로 여러분이 봅니다.
+    붙었는지, 늦지 않은지는 <code>info -v</code>와 거북이가 돌아선 자리로 여러분이 봅니다.
   </div>
 
   <!-- ── ✅ 점검 ── -->
@@ -2075,7 +2267,7 @@ ament_package()</code></pre></div>
     <li><input type="checkbox" id="c3"><label for="c3">「발행 best effort + 구독 reliable」은 안 붙고 반대 짝은 붙는 이유를 「약속과 요구」로 말할 수 있나?</label></li>
     <li><input type="checkbox" id="c4"><label for="c4">「echo로는 보이는데 내 노드는 못 받는다」를 만났을 때 18회 ⑬의 몇 번에서 무엇을 보는지 말할 수 있나?</label></li>
     <li><input type="checkbox" id="c5"><label for="c5">처리 시간이 주기보다 길 때 큐 깊이 1과 100이 각각 어떻게 되는지(버린다 / 밀린다), 왜 깊이 100이 벽에 닿았는지 「받은 값의 나이」로 설명할 수 있나?</label></li>
-    <li><input type="checkbox" id="c6"><label for="c6">콜백마다의 로그를 <code>RCLCPP_DEBUG</code>와 <code>_THROTTLE</code>로 바꾸고, <code>--log-level wall_stop:=debug</code>로 다시 켜 봤나?</label></li>
+    <li><input type="checkbox" id="c6"><label for="c6">콜백마다의 로그를 <code>RCLCPP_DEBUG</code>와 <code>_THROTTLE</code>로 바꾸고, <code>--log-level turtle_drive:=debug</code>로 다시 켜 봤나?</label></li>
     <li><input type="checkbox" id="c7"><label for="c7">bag 재생으로 확인할 수 있는 것과 없는 것(로봇이 새 판단에 반응하는가)을 구별할 수 있나?</label></li>
   </ul>
 
@@ -2084,14 +2276,15 @@ ament_package()</code></pre></div>
   <details>
     <summary>bag 재생 시각에 맞추기 — <code>--clock</code>과 <code>use_sim_time</code></summary>
     <p>
-      ⑨절에서 재생 중 나이가 16,529 ms로 찍혔다. 메시지의 시각은 기록할 때의 시각이고, 노드의 <code>now()</code>는 지금 벽시계라서다. 재생할 때 <code>--clock</code>을 붙이면 bag이 <code>/clock</code> 토픽으로 <strong>녹화 속 시각</strong>을 내보내고,
+      ⑨절에서 재생 중 나이가 32,438 ms로 찍혔다. 메시지의 시각은 기록할 때의 시각이고, 노드의 <code>now()</code>는 지금 벽시계라서다. 재생할 때 <code>--clock</code>을 붙이면 bag이 <code>/clock</code> 토픽으로 <strong>녹화 속 시각</strong>을 내보내고,
       노드를 <code>use_sim_time</code> 파라미터(모든 노드에 있다, 21회 <code>param list</code>)를 <code>true</code>로 띄우면 그 노드의 <code>now()</code>가 <code>/clock</code>을 따른다.
     </p>
-    <pre class="lang-sh"><code>$ ros2 run turtle_drive wall_stop --ros-args -p wall_margin:=2.5 -p use_sim_time:=true
-$ ros2 bag play wall1 --topics /turtle1/front_range --clock</code></pre>
-    <pre><code>[INFO] [1792279384.680919898] [wall_stop]: 받은 거리 3개 · 지금 거리 3.70 m · 나이 -7.0 ms · 처리 0.0 ms
-[INFO] [1792279385.704414727] [wall_stop]: 받은 거리 67개 · 지금 거리 2.88 m · 나이 -5.6 ms · 처리 0.0 ms
-[INFO] [1792279386.232814630] [wall_stop]: 섭니다 — 벽 앞 (앞 벽까지 2.47 m)</code></pre>
+    <pre class="lang-sh"><code>$ ros2 run turtle_drive turtle_drive --ros-args -p margin:=3.0 -p use_sim_time:=true
+$ ros2 bag play drive1 --topics /turtle1/wall_range /turtle1/pose --clock</code></pre>
+    <pre><code>[INFO] [1793760132.382057100] [turtle_drive]: 받은 거리 3개 · 지금 거리 4.26 m · 나이 -6.8 ms · 처리 0.0 ms
+[INFO] [1793760133.389658852] [turtle_drive]: 받은 거리 66개 · 지금 거리 3.60 m · 나이 -14.3 ms · 처리 0.0 ms
+[INFO] [1793760134.413466047] [turtle_drive]: 받은 거리 130개 · 지금 거리 3.11 m · 나이 -13.3 ms · 처리 0.0 ms
+[INFO] [1793760134.667000364] [turtle_drive]: 범위 밖 (벽까지 2.97 m) — 중앙 쪽으로 돕니다</code></pre>
     <p>
       나이가 0 언저리로 돌아왔다. 음수가 나오는 것은 <code>/clock</code>이 띄엄띄엄(값을 안 주면 초당 40번) 오기 때문에 노드의 「지금」이 메시지 시각보다 조금 뒤처져 있어서다.
       Gazebo 같은 시뮬레이터도 이 방식으로 시간을 준다 — 시뮬레이터를 쓰는 회차에서 <code>use_sim_time</code>을 다시 만난다.

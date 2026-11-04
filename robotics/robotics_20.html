@@ -29,16 +29,14 @@
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
   <a href="#summary">한 장 요약</a>
-  <a href="#plan">① wall_stop과 두 토픽</a>
-  <a href="#callback">② 콜백과 rclcpp::spin</a>
-  <a href="#pub">③ 발행자 create_publisher</a>
-  <a href="#v1">④ 타이머 create_wall_timer (v1)</a>
-  <a href="#echo">⑤ 내 노드의 발행 확인</a>
-  <a href="#v2">⑥ 구독자와 ConstSharedPtr (v2)</a>
-  <a href="#deps">⑦ 의존성 — 두 파일 양쪽</a>
-  <a href="#v3">⑧ 정면 장애물 판정 (v3)</a>
-  <a href="#ctrlc">⑨ Ctrl+C와 cmd_vel 타임아웃</a>
-  <a href="#review">⑩ 받은 코드 검사 목록</a>
+  <a href="#plan">① turtle_drive와 두 토픽</a>
+  <a href="#pub">② 발행자 create_publisher</a>
+  <a href="#v1">③ 타이머와 콜백 (v1)</a>
+  <a href="#echo">④ 내 노드의 발행 확인</a>
+  <a href="#v2">⑤ 구독자와 ConstSharedPtr (v2)</a>
+  <a href="#deps">⑥ 의존성 — 두 파일 양쪽</a>
+  <a href="#ctrlc">⑦ Ctrl+C와 cmd_vel 타임아웃</a>
+  <a href="#review">⑧ 받은 코드 검사 목록</a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
   <a href="#prompts">🤖 프롬프트 모음</a>
@@ -55,29 +53,28 @@
     <span class="lab">오늘 답할 질문</span>
     <ol>
       <li>내 노드가 <code>/turtle1/cmd_vel</code>에 속도 명령을 보내려면 코드에 무엇이 있어야 하나?</li>
-      <li>「0.1초마다 한 번」을 코드로는 어떻게 적나? <code>while</code>과 <code>sleep</code>으로 적으면 무엇이 안 되나?</li>
+      <li>「0.5초마다 한 번」을 코드로는 어떻게 적나? <code>while</code>과 <code>sleep</code>으로 적으면 무엇이 안 되나?</li>
       <li>받은 메시지는 콜백에서 어떤 모양으로 받아 두나? 왜 <code>ConstSharedPtr</code>인가?</li>
       <li>달리는 중에 내 노드를 Ctrl+C로 끊으면 거북이는 서나, 마지막 속도로 계속 가나?</li>
-      <li>AI가 준 노드 코드가 빌드도 되고 실행도 되는데 거북이가 벽에 부딪힌다. 무엇부터 보면 되나?</li>
+      <li>AI가 준 노드 코드가 빌드도 되고 실행도 되는데 거북이가 가운데서 맴돌기만 한다. 무엇부터 보면 되나?</li>
     </ol>
   </div>
 
   <p>
     19회에 만든 <code>hello_node</code>는 그래프에 이름만 올렸을 뿐 <strong>어느 화살표에도 이어져 있지 않았다.</strong>
-    오늘은 같은 패키지 <code>turtle_drive</code>에 실행 파일을 하나 더 넣는다. 이름은 <strong><code>wall_stop</code></strong> —
-    거북이를 앞으로 몰다가 <strong>앞에 벽이 가까워지면 세우는</strong> 노드다.
-    7회에 만든 「정면 장애물 판정기」를 기억하는 사람도 있을 것이다. 그때는 숫자 배열을 보고 판정만 했고, 오늘은 판정한 결과로 실제로 거북이를 세운다.
-    기말 프로젝트의 「콘 앞에서 선다」가 정확히 이 모양이다. 거북이의 자세가 라이다 값으로 바뀔 뿐이다.
+    오늘은 같은 패키지 <code>turtle_drive</code>에 실행 파일을 하나 더 넣는다. 이름은 패키지와 같은 <strong><code>turtle_drive</code></strong> —
+    거북이를 <strong>무작위로 돌아다니게 하다가, 벽에 가까워지면 중앙 쪽으로 돌려세워 다시 출발시키는</strong> 노드다.
+    이 노드는 21·22회에서도 계속 자란다. 오늘이 그 첫 두 단계다.
   </p>
   <p>
-    노드는 세 단계로 자란다. <strong>v1</strong>은 0.1초마다 「앞으로 가라」를 보내기만 한다(발행자·타이머).
-    <strong>v2</strong>는 거북이의 자세를 받아 들고 있는다(구독자). <strong>v3</strong>는 받은 자세로 벽까지 거리를 재서 가까우면 「서라」를 보낸다.
-    19회 끝에서 예고한 대로, 오늘 쓰는 콜백은 전부 <code>rclcpp::spin</code> 안에서 불린다. 이것이 왜 중요한지는 ⑩절에서 AI가 준 코드가 보여 준다.
+    노드는 두 단계로 자란다. <strong>v1</strong>은 0.5초마다 무작위 속도를 보내기만 한다(발행자·타이머). 거북이는 아무 데로나 가다가 결국 벽에 부딪힌다.
+    <strong>v2</strong>는 거북이의 자세를 받아서(구독자), 정해 둔 범위를 벗어나면 <strong>중앙을 볼 때까지 제자리에서 돌고</strong> 다시 출발한다.
+    두 단계 모두 「함수를 넘겨 두면 때가 됐을 때 불러 주는」 <strong>콜백</strong>으로 움직이고, 그 콜백을 부르는 것은 19회의 <code>rclcpp::spin</code>이다.
   </p>
   <p>
-    그리고 이 회차의 몸통은 ⑩절이다. 「벽 앞에서 서는 노드를 만들어 줘」라고 하면 돌아오는 그럴듯한 코드를 하나 놓고,
-    11·12·13회에서 쌓은 검사 목록으로 한 줄씩 훑는다. 그 코드는 빌드되고 실행되는데, 거북이는 벽에 부딪히고, Ctrl+C를 누르면 <code>Segmentation fault</code>가 난다.
-    왜 그런지를 ①~⑨절에서 배운 것으로 짚을 수 있으면 오늘의 목표에 닿은 것이다.
+    그리고 ⑧절에서는 「돌아다니다가 벽 근처에서 되돌아오는 노드를 만들어 줘」라고 하면 돌아오는 그럴듯한 코드를 하나 놓고,
+    11·12·13회에서 쌓은 검사 목록으로 한 줄씩 훑는다. 그 코드는 빌드되고 실행되는데, 거북이는 가운데서 맴돌기만 하고, Ctrl+C를 누르면 <code>Segmentation fault</code>가 난다.
+    왜 그런지를 ①~⑦절에서 배운 것으로 짚을 수 있으면 오늘의 목표에 닿은 것이다.
   </p>
 
   <!-- ── 한 장 요약표 ── -->
@@ -86,9 +83,9 @@
   <div class="tablewrap">
   <table class="summary-table">
     <tr><th>용어</th><th>코드에서 이렇게 보인다</th><th>이것만 알면 된다</th></tr>
-    <tr><td>콜백(callback) · <code>rclcpp::spin</code></td><td><code>rclcpp::spin(node);</code></td><td>타이머·구독 콜백은 <strong><code>spin</code> 안에서만</strong> 불린다. <code>spin</code>이 없으면 구독은 붙어 있어도 콜백이 안 불린다</td></tr>
     <tr><td>발행자(publisher)</td><td><code>create_publisher&lt;geometry_msgs::msg::Twist&gt;("/turtle1/cmd_vel", 10)</code></td><td>토픽 이름과 메시지 타입을 정해 만들고, <code>publish(msg)</code>로 보낸다. 노드의 <strong>멤버</strong>로 들고 있는다</td></tr>
-    <tr><td>타이머(timer)</td><td><code>create_wall_timer(100ms, [this]() { on_timer(); })</code></td><td>「주기마다 할 일」은 <code>while</code> + <code>sleep</code>이 아니라 타이머로 적는다</td></tr>
+    <tr><td>타이머(timer)</td><td><code>create_wall_timer(500ms, [this]() { on_timer(); })</code></td><td>「주기마다 할 일」은 <code>while</code> + <code>sleep</code>이 아니라 타이머로 적는다</td></tr>
+    <tr><td>콜백(callback) · <code>rclcpp::spin</code></td><td><code>rclcpp::spin(node);</code></td><td>타이머·구독 콜백은 <strong><code>spin</code> 안에서만</strong> 불린다. <code>spin</code>이 없으면 구독은 붙어 있어도 콜백이 안 불린다</td></tr>
     <tr><td>구독자(subscription)</td><td><code>create_subscription&lt;turtlesim::msg::Pose&gt;("/turtle1/pose", 10, 콜백)</code></td><td>메시지가 올 때마다 콜백이 불린다. 콜백은 <strong>받아 두기만</strong> 하고, 판단은 타이머 쪽에서 한다</td></tr>
     <tr><td><code>ConstSharedPtr</code></td><td><code>void on_pose(turtlesim::msg::Pose::ConstSharedPtr msg)</code></td><td><code>std::shared_ptr&lt;const Pose&gt;</code>의 타입 별칭. <strong>복사 없이, 고치지 못하게</strong> 받고, 그대로 멤버에 들고 있을 수 있다</td></tr>
     <tr><td>큐 깊이(depth)</td><td><code>…("/turtle1/cmd_vel", <strong>10</strong>)</code></td><td>밀렸을 때 쌓아 둘 메시지 수. 보통 10. 뜻을 모르고 1000·1로 바꾸지 않는다 (22회)</td></tr>
@@ -97,12 +94,12 @@
   </table>
   </div>
   <div class="interp">
-    <strong>해석:</strong> 여덟 줄 중 첫 줄이 나머지를 묶는다. 발행·구독·타이머는 전부 「무엇을 할지 함수로 넘겨 두면, <code>spin</code>이 때가 됐을 때 불러 준다」는 같은 구조다.
-    이 구조를 알면 ⑩절의 받은 코드에서 <strong>구독 콜백이 왜 한 번도 안 불렸는지</strong>가 한 줄로 설명된다.
+    <strong>해석:</strong> 여덟 줄 중 셋째 줄이 나머지를 묶는다. 타이머도 구독도 「무엇을 할지 함수로 넘겨 두면, <code>spin</code>이 때가 됐을 때 불러 준다」는 같은 구조다.
+    이 구조를 알면 ⑧절의 받은 코드에서 <strong>구독 콜백이 왜 한 번도 안 불렸는지</strong>가 한 줄로 설명된다.
   </div>
 
   <!-- ── ① 오늘 만들 것 ── -->
-  <h2 id="plan">① <code>wall_stop</code>과 두 토픽 — <code>/turtle1/cmd_vel</code> · <code>/turtle1/pose</code> <span class="badge b-red">🔴 사람이 한다</span></h2>
+  <h2 id="plan">① <code>turtle_drive</code>와 두 토픽 — <code>/turtle1/cmd_vel</code> · <code>/turtle1/pose</code> <span class="badge b-red">🔴 사람이 한다</span></h2>
   <p>
     코드를 쓰기 전에 무엇을 보내고 무엇을 받을지부터 정해야 한다. 토픽 이름이 하나만 틀려도 노드는 멀쩡히 돌면서 아무 일도 하지 않는다(18회 「막혔을 때 보는 순서」).
     그래서 첫 일은 18회 명령으로 <strong>토픽 이름과 타입을 직접 확인하는 것</strong>이다. turtlesim을 띄우고 다른 터미널에서 친다.
@@ -128,12 +125,12 @@ linear_velocity: 0.0
 angular_velocity: 0.0
 ---</code></pre>
   <p>
-    거북이는 (5.54, 5.54)에서 <code>theta</code> 0, 즉 <strong>오른쪽(+x)을 보고</strong> 태어난다. 그대로 앞으로 가면 오른쪽 벽에 닿는다.
+    거북이는 (5.54, 5.54)에서 <code>theta</code> 0, 즉 <strong>오른쪽(+x)을 보고</strong> 태어난다. 창의 한 변은 약 11 m이고, 거북이가 태어난 자리가 그 한가운데다.
     17회에서 인터페이스 이름 세 토막이 그대로 C++ 헤더와 타입 이름이 된다고 했다. 오늘 쓸 두 메시지를 그 규칙으로 옮기면 이렇다.
   </p>
   <div class="tablewrap">
   <table>
-    <tr><th>토픽</th><th>인터페이스</th><th>C++ 헤더</th><th>C++ 타입</th><th>wall_stop에서</th></tr>
+    <tr><th>토픽</th><th>인터페이스</th><th>C++ 헤더</th><th>C++ 타입</th><th>turtle_drive에서</th></tr>
     <tr><td><code>/turtle1/cmd_vel</code></td><td><code>geometry_msgs/msg/Twist</code></td><td><code>"geometry_msgs/msg/twist.hpp"</code></td><td><code>geometry_msgs::msg::Twist</code></td><td><strong>보낸다</strong> (v1부터)</td></tr>
     <tr><td><code>/turtle1/pose</code></td><td><code>turtlesim/msg/Pose</code></td><td><code>"turtlesim/msg/pose.hpp"</code></td><td><code>turtlesim::msg::Pose</code></td><td><strong>받는다</strong> (v2부터)</td></tr>
   </table>
@@ -143,56 +140,17 @@ angular_velocity: 0.0
     <code>ls /opt/ros/jazzy/include/turtlesim/turtlesim/msg/</code>에 <code>pose.hpp</code>가, <code>…/geometry_msgs/geometry_msgs/msg/</code>에 <code>twist.hpp</code>가 있다.
     AI가 준 코드의 <code>#include</code> 줄이 이 표와 다르면(예: <code>turtlesim/Pose.h</code>) ROS 1 시절 이름이다(17회).
   </div>
-  <p>세 단계에서 무엇이 더해지는지 먼저 한 표로 본다.</p>
+  <p>두 단계에서 무엇이 더해지는지 먼저 한 표로 본다.</p>
   <div class="tablewrap">
   <table>
     <tr><th>단계</th><th>더하는 것</th><th>거북이는</th><th>새 의존성</th></tr>
-    <tr><td><strong>v1</strong> (④절)</td><td>발행자 · 타이머</td><td>오른쪽으로 곧장 가서 <strong>벽에 붙는다</strong></td><td><code>geometry_msgs</code></td></tr>
-    <tr><td><strong>v2</strong> (⑥절)</td><td>구독자 · 받은 자세를 멤버에</td><td>똑같이 벽에 붙는다. 대신 <strong>자기가 어디 있는지 안다</strong></td><td><code>turtlesim</code></td></tr>
-    <tr><td><strong>v3</strong> (⑧절)</td><td>앞 벽까지 거리로 판정</td><td><strong>벽 앞 1 m에서 선다</strong></td><td>—</td></tr>
+    <tr><td><strong>v1</strong> (③절)</td><td>발행자 · 타이머 · 무작위 속도</td><td>아무 데로나 돌아다니다 <strong>벽에 부딪힌다</strong></td><td><code>geometry_msgs</code></td></tr>
+    <tr><td><strong>v2</strong> (⑤절)</td><td>구독자 · 범위 판정 · 중앙 쪽으로 돌아서기</td><td><strong>1 ~ 10 안에서</strong> 돌아다니고, 벗어나면 중앙 쪽으로 돌아선다</td><td><code>turtlesim</code></td></tr>
   </table>
   </div>
 
-  <!-- ── ② 콜백과 spin ── -->
-  <h2 id="callback">② 콜백(callback)과 <code>rclcpp::spin</code> <span class="badge b-red">🔴 사람이 한다</span></h2>
-
-  <h3>개념 — 함수를 넘겨 두면 때가 됐을 때 불러 준다</h3>
-  <p>
-    「0.1초마다 명령을 보낸다」, 「자세가 오면 받아 둔다」 — 이것을 어떻게 적을까? 2부까지의 프로그램은 위에서 아래로 한 줄씩 내려가며 일을 했다.
-    그런데 메시지는 <strong>언제 올지 내가 정하지 못한다.</strong> 기다렸다가 오면 처리해야 한다.
-  </p>
-  <p>
-    그래서 ROS 2는 거꾸로 묻는다. 「이 일이 생기면 무엇을 할지 함수로 미리 넘겨 달라. 때가 되면 내가 부르겠다.」
-    이렇게 넘겨 두었다가 나중에 불리는 함수를 <strong>콜백</strong>(callback, 「나중에 다시 불러 준다」)이라고 한다.
-    14회에서 「저장해 뒀다가 나중에 부르는 람다」를 봤는데, 그것이 바로 콜백이다.
-    그리고 <strong>때가 됐는지 살피다가 콜백을 부르는 일</strong>을 하는 것이 19회의 <code>rclcpp::spin</code>이다.
-  </p>
-  <div class="tablewrap">
-  <table>
-    <tr><th>무엇이 생기면</th><th>누가 불리나</th><th>오늘 만드는 것</th></tr>
-    <tr><td>정해 둔 시간이 지났다</td><td>타이머 콜백</td><td><code>on_timer()</code> — 0.1초마다. 판단하고 속도 명령을 보낸다</td></tr>
-    <tr><td>구독한 토픽에 메시지가 왔다</td><td>구독 콜백</td><td><code>on_pose(msg)</code> — 초당 62.5번(18회 <code>hz</code>). 받은 자세를 들고 있는다</td></tr>
-  </table>
-  </div>
-  <pre class="lang-cpp"><code>int main(int argc, char ** argv)
-{
-  rclcpp::init(argc, argv);
-  auto node = std::make_shared&lt;WallStop&gt;();   // 생성자에서 발행자·구독자·타이머를 만들고 콜백을 넘긴다
-  rclcpp::spin(node);                          // 여기서 기다리다가 일이 생길 때마다 콜백을 부른다
-  rclcpp::shutdown();
-  return 0;
-}</code></pre>
-  <div class="interp">
-    <strong>해석:</strong> 규칙은 둘이다. 첫째, <strong>콜백은 <code>spin</code> 안에서만 불린다.</strong> 메시지가 컴퓨터에 도착해도 <code>spin</code>이 돌지 않으면 아무도 그 콜백을 부르지 않는다.
-    둘째, 기본 <code>rclcpp::spin</code>은 <strong>콜백을 한 번에 하나씩</strong> 부른다. 한 콜백이 오래 걸리면 다른 콜백이 그만큼 기다린다 — 그래서 콜백은 짧게 쓴다. 이 기다림이 실제로 얼마나 되는지는 22회에서 시간을 재어 본다.
-  </div>
-  <p>
-    19회 v3의 로그에서 「<code>spin</code> 에 들어갑니다」와 「<code>signal_handler</code>」 사이가 3초쯤 비어 있었다. 그때는 부를 콜백이 없어서 그냥 기다리기만 했다.
-    오늘은 그 빈 구간에서 타이머 콜백이 0.1초마다, 구독 콜백이 0.016초마다 불린다.
-  </p>
-
-  <!-- ── ③ 발행자 ── -->
-  <h2 id="pub">③ 발행자(publisher) — <code>create_publisher</code>와 <code>publish</code> <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+  <!-- ── ② 발행자 ── -->
+  <h2 id="pub">② 발행자(publisher) — <code>create_publisher</code>와 <code>publish</code> <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
   <h3>개념 — 토픽 하나에 보내는 창구</h3>
   <p>
@@ -236,74 +194,108 @@ cmd_pub_-&gt;publish(cmd);</code></pre>
     <p class="later">큐 깊이와 QoS를 제대로 다루는 곳: 22회</p>
   </div>
 
-  <!-- ── ④ v1 ── -->
-  <h2 id="v1">④ 타이머(timer) — <code>create_wall_timer</code> (v1) <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+  <!-- ── ③ v1 ── -->
+  <h2 id="v1">③ 타이머(timer)와 콜백(callback) — <code>create_wall_timer</code> · <code>rclcpp::spin</code> (v1) <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
-  <h3>개념 — 주기마다 콜백을 부르는 객체</h3>
+  <h3>개념 — 주기마다 부르는 함수, 그것을 부르는 <code>spin</code></h3>
   <p>
     발행자는 만들었는데 언제 <code>publish</code>를 부를까? 생성자에서 한 번 부르고 끝내면 안 될까?
     18회에서 <code>topic pub --once</code>로 한 번 보냈을 때 거북이가 <strong>짧은 호를 그리고 멈췄다.</strong> turtlesim은 속도 명령이 1초 넘게 안 오면 거북이를 세운다.
     거북이를 계속 가게 하려면 명령을 <strong>계속, 일정한 간격으로</strong> 보내야 한다.
   </p>
   <p>
-    「일정한 간격으로」를 2부 방식으로 적으면 <code>while</code> 반복 안에 <code>sleep</code>을 넣는 모양이 된다. 그런데 ②절의 규칙을 떠올려 보면 문제가 보인다.
-    <code>while</code>이 <code>main</code>을 붙잡고 있으면 <code>spin</code>에 들어가지 못하고, 그러면 <strong>구독 콜백이 불릴 자리가 없다.</strong>
-    13회의 원칙 「이미 있는 것을 먼저 찾는다」를 여기에 적용하면 답이 나온다 — 주기마다 콜백을 불러 주는 것은 ROS 2에 이미 있다. 그것이 <strong>타이머</strong>다.
+    「일정한 간격으로」를 2부 방식으로 적으면 <code>while</code> 반복 안에 <code>sleep</code>을 넣는 모양이 된다. 이것도 발행은 된다.
+    그런데 오늘 노드는 보내기만 하지 않는다 — v2에서는 거북이의 자세를 <strong>받아야</strong> 한다. 자세는 <strong>언제 올지 내가 정하지 못한다.</strong>
+    <code>while</code>이 <code>main</code>을 붙잡고 있으면 그 사이에 온 메시지를 처리할 자리가 없다.
+  </p>
+  <p>
+    그래서 ROS 2는 거꾸로 묻는다. 「주기마다, 또는 메시지가 오면 무엇을 할지 <strong>함수로 미리 넘겨 달라.</strong> 때가 되면 내가 부르겠다.」
+    이렇게 넘겨 두었다가 나중에 불리는 함수를 <strong>콜백</strong>(callback, 「나중에 다시 불러 준다」)이라고 한다. 14회에서 「저장해 뒀다가 나중에 부르는 람다」를 봤는데, 그것이 바로 콜백이다.
+    주기마다 콜백을 불러 주는 객체가 <strong>타이머</strong>이고, <strong>때가 됐는지 살피다가 콜백을 부르는 일</strong>을 하는 것이 19회의 <code>rclcpp::spin</code>이다.
   </p>
   <pre class="lang-cpp"><code>// 주기와 콜백을 넘겨 만든다. 이 객체가 살아 있는 동안 spin 이 주기마다 콜백을 부른다
-timer_ = this-&gt;create_wall_timer(100ms, [this]() { on_timer(); });</code></pre>
+timer_ = this-&gt;create_wall_timer(500ms, [this]() { on_timer(); });
+
+int main(int argc, char ** argv)
+{
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared&lt;TurtleDrive&gt;();   // 생성자에서 발행자·타이머를 만들고 콜백을 넘긴다
+  rclcpp::spin(node);                            // 여기서 기다리다가 때가 될 때마다 콜백을 부른다
+  rclcpp::shutdown();
+  return 0;
+}</code></pre>
   <div class="tablewrap">
   <table>
-    <tr><th></th><th><code>while</code> + <code>sleep_for</code></th><th><code>create_wall_timer</code></th></tr>
+    <tr><th></th><th><code>while</code> + <code>sleep_for</code></th><th><code>create_wall_timer</code> + <code>spin</code></th></tr>
     <tr><td>주기는 누가 지키나</td><td>내 반복문</td><td><code>spin</code></td></tr>
     <tr><td>그동안 구독 콜백은</td><td><strong>안 불린다</strong> (반복문 안에서 따로 불러 주지 않는 한)</td><td>사이사이에 불린다</td></tr>
     <tr><td>Ctrl+C를 누르면</td><td>반복 조건에 <code>rclcpp::ok()</code>가 있어야 끝난다</td><td><code>spin</code>이 돌아온다</td></tr>
-    <tr><td>주기를 바꾸려면</td><td>반복문 안을 고친다</td><td>숫자 하나(<code>100ms</code>)를 고친다</td></tr>
+    <tr><td>주기를 바꾸려면</td><td>반복문 안을 고친다</td><td>숫자 하나(<code>500ms</code>)를 고친다</td></tr>
   </table>
   </div>
   <div class="interp">
-    <strong>해석:</strong> 둘째 줄이 결정적이다. <code>while</code> 방식으로도 발행은 된다. 그래서 v1만 놓고 보면 차이가 안 보인다.
-    차이는 구독이 더해지는 v2에서 드러나고, ⑩절의 받은 코드가 정확히 이 자리에서 무너진다.
+    <strong>해석:</strong> 규칙은 둘이다. 첫째, <strong>콜백은 <code>spin</code> 안에서만 불린다.</strong> 메시지가 컴퓨터에 도착해도 <code>spin</code>이 돌지 않으면 아무도 그 콜백을 부르지 않는다.
+    둘째, 기본 <code>rclcpp::spin</code>은 <strong>콜백을 한 번에 하나씩</strong> 부른다. 한 콜백이 오래 걸리면 다른 콜백이 그만큼 기다린다 — 그래서 콜백은 짧게 쓴다. 이 기다림이 실제로 얼마나 되는지는 22회에서 시간을 재어 본다.
+    v1만 놓고 보면 <code>while</code>과 차이가 안 보인다. 차이는 구독이 더해지는 v2에서 드러나고, ⑧절의 받은 코드가 정확히 이 자리에서 무너진다.
   </div>
-
-  <h3>예제에 적용 — <code>src/wall_stop.cpp</code>를 새로 만든다</h3>
   <p>
-    19회 패키지에 실행 파일을 하나 더한다. 소스 이름은 실행 파일 이름과 같게 <code>wall_stop.cpp</code>로 짓는다.
-    <code>Twist</code>를 쓰므로 의존성 <code>geometry_msgs</code>가 하나 늘고, 19회 ⑩절 규칙대로 <strong><code>package.xml</code>과 <code>CMakeLists.txt</code> 양쪽</strong>에 넣는다.
+    19회 v3의 로그에서 「<code>spin</code> 에 들어갑니다」와 「<code>signal_handler</code>」 사이가 3초쯤 비어 있었다. 그때는 부를 콜백이 없어서 그냥 기다리기만 했다.
+    오늘은 그 빈 구간에서 타이머 콜백이 0.5초마다 불린다. v2에서는 여기에 구독 콜백이 0.016초마다 더해진다.
+  </p>
+
+  <h3>예제에 적용 — <code>src/turtle_drive.cpp</code>를 새로 만든다</h3>
+  <p>
+    19회 패키지에 실행 파일을 하나 더한다. 소스 이름은 실행 파일 이름과 같게 <code>turtle_drive.cpp</code>로 짓는다. 클래스 이름은 <code>TurtleDrive</code>, 노드 이름은 <code>turtle_drive</code>다.
+    타이머 콜백 <code>on_timer()</code>는 부를 때마다 <strong>앞으로 가는 속도와 도는 속도를 무작위로 하나씩 골라</strong> 보낸다. 그러면 거북이가 이리저리 돌아다닌다.
+    주기를 0.5초로 둔 것은 위에서 본 turtlesim의 1초 규칙 때문이다 — 1초보다 자주 보내야 거북이가 중간에 서지 않는다.
+  </p>
+  <p>
+    <code>Twist</code>를 쓰므로 의존성 <code>geometry_msgs</code>가 하나 늘고, 19회 ②·③절에서 본 대로 <strong><code>package.xml</code>과 <code>CMakeLists.txt</code> 양쪽</strong>에 넣는다.
     <code>hello_node</code>는 그대로 둔다.
   </p>
 
   <h3>1단계 (v1) — 발행자와 타이머</h3>
-  <div class="codelabel good">turtle_drive/src/wall_stop.cpp (새 파일)</div>
-  <pre class="lang-cpp after"><code>// 20회 벽 앞 정지 — v1 (1단계: create_publisher · create_wall_timer — 거북이가 직진한다)
+  <div class="codelabel good">turtle_drive/src/turtle_drive.cpp (새 파일)</div>
+  <pre class="lang-cpp after"><code>// 20회 turtle_drive — v1 (1단계: create_publisher · create_wall_timer — 무작위로 돌아다닌다)
 #include &lt;chrono&gt;
 #include &lt;memory&gt;
+#include &lt;random&gt;
 
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 
 using namespace std::chrono_literals;
 
-class WallStop : public rclcpp::Node
+class TurtleDrive : public rclcpp::Node
 {
 public:
-  WallStop()
-  : Node("wall_stop")
+  TurtleDrive()
+  : Node("turtle_drive")
   {
     cmd_pub_ = this-&gt;create_publisher&lt;geometry_msgs::msg::Twist&gt;("/turtle1/cmd_vel", 10);
-    timer_ = this-&gt;create_wall_timer(100ms, [this]() { on_timer(); });
-    RCLCPP_INFO(this-&gt;get_logger(), "0.1초마다 /turtle1/cmd_vel 에 직진 명령을 보냅니다");
+    timer_ = this-&gt;create_wall_timer(500ms, [this]() { on_timer(); });
+    RCLCPP_INFO(this-&gt;get_logger(), "0.5초마다 /turtle1/cmd_vel 에 무작위 속도를 보냅니다");
   }
 
 private:
-  // 타이머가 0.1초마다 부른다
+  // 타이머가 0.5초마다 부른다
   void on_timer()
   {
-    geometry_msgs::msg::Twist cmd;   // 여섯 칸이 전부 0 으로 시작한다
-    cmd.linear.x = 1.0;              // 앞으로 1 m/s
+    geometry_msgs::msg::Twist cmd;               // 여섯 칸이 전부 0 으로 시작한다
+    cmd.linear.x = random_between(0.2, 1.2);     // 앞으로 0.2 ~ 1.2 m/s
+    cmd.angular.z = random_between(-1.0, 1.0);   // 왼쪽(+)·오른쪽(-)으로 최대 1 rad/s
+    RCLCPP_INFO(this-&gt;get_logger(), "linear.x = %.2f, angular.z = %.2f", cmd.linear.x, cmd.angular.z);
     cmd_pub_-&gt;publish(cmd);
   }
 
+  // lo 와 hi 사이의 실수 하나를 고르게 뽑는다
+  double random_between(double lo, double hi)
+  {
+    std::uniform_real_distribution&lt;double&gt; dist(lo, hi);
+    return dist(gen_);
+  }
+
+  std::mt19937 gen_{std::random_device{}()};   // 난수 생성기 — 실행할 때마다 다른 씨앗으로 시작한다
   rclcpp::Publisher&lt;geometry_msgs::msg::Twist&gt;::SharedPtr cmd_pub_;
   rclcpp::TimerBase::SharedPtr timer_;
 };
@@ -311,7 +303,7 @@ private:
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  auto node = std::make_shared&lt;WallStop&gt;();
+  auto node = std::make_shared&lt;TurtleDrive&gt;();
   rclcpp::spin(node);            // 타이머 콜백은 이 안에서 불린다
   rclcpp::shutdown();
   return 0;
@@ -319,14 +311,16 @@ int main(int argc, char ** argv)
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
     <dl>
-      <dt>this-&gt;create_wall_timer(100ms, 콜백)</dt>
-      <dd>주기(14회의 <code>100ms</code> 표기)마다 콜백을 부르는 타이머를 만든다. 이름의 <strong>wall</strong>은 벽이 아니라 <strong>벽시계(wall clock)</strong>, 곧 실제 흐르는 시간이라는 뜻이다. 오늘 노드 이름의 「벽」과는 상관이 없다. 여기서는 0.1초마다 <code>on_timer()</code>를 부르게 했다.</dd>
+      <dt>this-&gt;create_wall_timer(500ms, 콜백)</dt>
+      <dd>주기(14회의 <code>500ms</code> 표기)마다 콜백을 부르는 타이머를 만든다. 이름의 <strong>wall</strong>은 벽이 아니라 <strong>벽시계(wall clock)</strong>, 곧 실제 흐르는 시간이라는 뜻이다. 여기서는 0.5초마다 <code>on_timer()</code>를 부르게 했다.</dd>
       <dt>[this]() { on_timer(); }</dt>
       <dd>14회의 람다와 <code>[this]</code> 캡처다. 14회 표에서 「저장해 뒀다가 나중에 부르는 람다는 가리키던 것이 먼저 사라질 수 있으니 조심」이라고 했는데, 여기서는 괜찮다. 이 람다를 들고 있는 타이머가 <strong>이 노드의 멤버</strong>라서, 노드(<code>this</code>)보다 먼저 사라질 수 없기 때문이다.</dd>
       <dt>rclcpp::TimerBase::SharedPtr</dt>
       <dd>타이머를 들고 있는 멤버의 타입. 발행자와 같은 이유로 멤버여야 한다 — 이 객체가 사라지면 타이머도 멈춘다.</dd>
-      <dt>geometry_msgs::msg::Twist cmd;</dt>
-      <dd>메시지도 그냥 C++ 구조체다. 만들면 숫자 칸이 전부 0으로 채워진다. 17회에서 본 여섯 칸 중 <code>linear.x</code> 하나만 1.0으로 바꿨다 — 「앞으로 1 m/s, 회전 없음」.</dd>
+      <dt>geometry_msgs::msg::Twist cmd; · cmd.angular.z</dt>
+      <dd>메시지도 그냥 C++ 구조체다. 만들면 숫자 칸이 전부 0으로 채워진다. 17회에서 본 여섯 칸 중 둘만 채웠다 — <code>linear.x</code>는 앞으로 가는 속도(m/s), <code>angular.z</code>는 제자리에서 도는 속도(rad/s)다. <code>angular.z</code>가 양수면 왼쪽(반시계 방향), 음수면 오른쪽으로 돈다. 둘을 함께 주면 거북이가 곡선을 그린다.</dd>
+      <dt>std::mt19937 · std::random_device · std::uniform_real_distribution</dt>
+      <dd><code>&lt;random&gt;</code>의 난수 도구 셋. <code>mt19937</code>은 난수를 만들어 내는 <strong>생성기</strong>, <code>random_device</code>는 그 생성기의 출발값(씨앗)을 컴퓨터에서 얻어 오는 장치, <code>uniform_real_distribution(lo, hi)</code>는 생성기가 낸 수를 「lo와 hi 사이에 고르게 퍼진 실수」로 바꾸는 <strong>분포</strong>다. 씨앗이 매번 달라서 실행할 때마다 다른 길로 간다. 생성기는 멤버로 하나만 두고 계속 쓴다 — 부를 때마다 새로 만들면 비슷한 수가 되풀이되기 쉽다.</dd>
     </dl>
   </div>
 
@@ -348,12 +342,12 @@ find_package(geometry_msgs REQUIRED)
 add_executable(hello_node src/hello_node.cpp)
 target_link_libraries(hello_node PRIVATE rclcpp::rclcpp)
 
-# 20회 — 실행 파일 wall_stop. Twist 메시지를 쓰므로 geometry_msgs 도 붙인다
-add_executable(wall_stop src/wall_stop.cpp)
-target_link_libraries(wall_stop PRIVATE rclcpp::rclcpp ${geometry_msgs_TARGETS})
+# 20회 — 실행 파일 turtle_drive. Twist 메시지를 쓰므로 geometry_msgs 도 붙인다
+add_executable(turtle_drive src/turtle_drive.cpp)
+target_link_libraries(turtle_drive PRIVATE rclcpp::rclcpp ${geometry_msgs_TARGETS})
 
 # 만든 실행 파일을 ros2 run 이 찾는 자리에 설치한다
-install(TARGETS hello_node wall_stop
+install(TARGETS hello_node turtle_drive
   DESTINATION lib/${PROJECT_NAME})</code></pre>
   <div class="codelabel bad">고치기 전 — package.xml</div>
   <pre class="before"><code>  &lt;depend&gt;rclcpp&lt;/depend&gt;</code></pre>
@@ -365,7 +359,7 @@ install(TARGETS hello_node wall_stop
     <dl>
       <dt>${geometry_msgs_TARGETS}</dt>
       <dd>메시지 패키지를 붙이는 모양. <code>rclcpp</code>는 <code>rclcpp::rclcpp</code>라는 타깃 하나였는데, 메시지 패키지는 C++·C 등 언어별 타깃이 여럿이라 <code>find_package(geometry_msgs)</code>가 그 목록을 <code>geometry_msgs_TARGETS</code>라는 변수에 담아 둔다. <code>${…}</code>는 8회의 CMake 변수 읽기다. 19회 ⑤절 프롬프트의 「<code>${패키지_TARGETS}</code> 모양」이 이것이다.</dd>
-      <dt>install(TARGETS hello_node wall_stop …)</dt>
+      <dt>install(TARGETS hello_node turtle_drive …)</dt>
       <dd>실행 파일이 늘면 이 줄에 이름을 더한다. 빠뜨리면 19회 ⑨절 ②의 <code>No executable found</code>를 다시 만난다.</dd>
     </dl>
   </div>
@@ -374,65 +368,82 @@ install(TARGETS hello_node wall_stop
   <pre class="lang-sh"><code>$ cd ~/ros2_ws
 $ colcon build --packages-select turtle_drive
 Starting &gt;&gt;&gt; turtle_drive
-Finished &lt;&lt;&lt; turtle_drive [4.16s]
+Finished &lt;&lt;&lt; turtle_drive [3.16s]
 
-Summary: 1 package finished [4.24s]
+Summary: 1 package finished [3.21s]
 $ source install/setup.bash
 $ ros2 pkg executables turtle_drive
 turtle_drive hello_node
-turtle_drive wall_stop</code></pre>
-  <p>실행 파일이 둘이 됐다. 터미널 1에 turtlesim을 띄우고, 터미널 2에서 <code>wall_stop</code>을 띄운다.</p>
-  <pre class="lang-sh"><code>$ ros2 run turtle_drive wall_stop
-[INFO] [1792273484.698376223] [wall_stop]: 0.1초마다 /turtle1/cmd_vel 에 직진 명령을 보냅니다</code></pre>
+turtle_drive turtle_drive</code></pre>
+  <p>실행 파일이 둘이 됐다. 패키지 이름과 실행 파일 이름이 같아서 <code>turtle_drive turtle_drive</code>로 찍힌다. 터미널 1에 turtlesim을 띄우고, 터미널 2에서 실행한다.</p>
+  <pre class="lang-sh"><code>$ ros2 run turtle_drive turtle_drive
+[INFO] [1793759345.355034252] [turtle_drive]: 0.5초마다 /turtle1/cmd_vel 에 무작위 속도를 보냅니다
+[INFO] [1793759345.855148255] [turtle_drive]: linear.x = 0.70, angular.z = -0.76
+[INFO] [1793759346.355240808] [turtle_drive]: linear.x = 1.20, angular.z = 0.02
+[INFO] [1793759346.855170671] [turtle_drive]: linear.x = 0.54, angular.z = -0.37
+[INFO] [1793759347.355167038] [turtle_drive]: linear.x = 0.60, angular.z = 0.26
+(… 0.5초마다 한 줄 …)</code></pre>
   <p>
-    노드가 찍는 것은 이 한 줄뿐이다. 거북이는 오른쪽으로 곧장 가서 5~6초 뒤 벽에 닿는다. 그 순간 <strong>turtlesim 쪽 터미널</strong>에 이런 줄이 쏟아진다.
+    시각 칸을 보면 줄 사이가 정확히 0.5초다 — 타이머의 박자다. 숫자는 줄마다 다르고, 다시 실행하면 또 다르다.
+    거북이는 그때마다 방향과 빠르기를 바꾸며 이리저리 가다가, 9초쯤 뒤 오른쪽 벽에 닿았다. 그 순간 <strong>turtlesim 쪽 터미널</strong>에 이런 줄이 쏟아진다.
   </p>
-  <pre><code>[WARN] [1792273515.564891203] [turtlesim]: Oh no! I hit the wall! (Clamping from [x=11.096445, y=5.544445])
-[WARN] [1792273515.580509134] [turtlesim]: Oh no! I hit the wall! (Clamping from [x=11.104889, y=5.544445])
+  <pre><code>[WARN] [1793759354.307972557] [turtlesim]: Oh no! I hit the wall! (Clamping from [x=11.101662, y=6.100204])
+[WARN] [1793759354.324445236] [turtlesim]: Oh no! I hit the wall! (Clamping from [x=11.103110, y=6.107002])
 (… 같은 줄이 초당 60번쯤 계속 …)</code></pre>
   <p>
-    「벽에 부딪혔다. 위치를 벽 안쪽으로 잘라 둔다(clamping)」는 경고다. 우리 노드는 벽을 모르니 계속 「앞으로」를 보내고, turtlesim은 그때마다 거북이를 벽에 붙여 둔다.
-    경고가 초당 60여 줄인 것은 turtlesim이 거북이를 초당 62.5번 움직이기 때문이다(18회 <code>hz /turtle1/pose</code>의 그 숫자).
-    벽에 붙는 x는 <strong>11.0889</strong>다. turtlesim 창의 한 변이 그만큼이라는 뜻이고, v3에서 이 숫자를 쓴다.
+    「벽에 부딪혔다. 위치를 벽 안쪽으로 잘라 둔다(clamping)」는 경고다. 우리 노드는 벽을 모르니 계속 무작위로 「가라」를 보내고, turtlesim은 그때마다 거북이를 벽에 붙여 둔다.
+    40초 동안 이 경고가 636줄 나왔다. 경고가 초당 60여 줄씩인 것은 turtlesim이 거북이를 초당 62.5번 움직이기 때문이다(18회 <code>hz /turtle1/pose</code>의 그 숫자).
+    벽에 붙는 x는 약 <strong>11.09</strong>다. 창의 한 변이 그만큼이라는 뜻이고, v2에서 범위를 정할 때 이 숫자를 쓴다.
   </p>
 
-  <!-- fullcode "전체 코드 — turtle_drive/ (1단계 · v1. hello_node.cpp 는 19회 그대로)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive wall_stop"
-       l20_topic/steps/step1/turtle_drive/src/wall_stop.cpp as turtle_drive/src/wall_stop.cpp
+  <!-- fullcode "전체 코드 — turtle_drive/ (1단계 · v1. hello_node.cpp 는 19회 그대로)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive turtle_drive"
+       l20_topic/steps/step1/turtle_drive/src/turtle_drive.cpp as turtle_drive/src/turtle_drive.cpp
        l20_topic/steps/step1/turtle_drive/CMakeLists.txt as turtle_drive/CMakeLists.txt
        l20_topic/steps/step1/turtle_drive/package.xml as turtle_drive/package.xml
   -->
 <details class="fullcode">
   <summary>전체 코드 — turtle_drive/ (1단계 · v1. hello_node.cpp 는 19회 그대로)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive wall_stop</code></p>
-  <div class="codefile"><div class="fname">turtle_drive/src/wall_stop.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 20회 벽 앞 정지 — v1 (1단계: create_publisher · create_wall_timer — 거북이가 직진한다)
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive turtle_drive</code></p>
+  <div class="codefile"><div class="fname">turtle_drive/src/turtle_drive.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 20회 turtle_drive — v1 (1단계: create_publisher · create_wall_timer — 무작위로 돌아다닌다)
 #include &lt;chrono&gt;
 #include &lt;memory&gt;
+#include &lt;random&gt;
 
 #include &quot;rclcpp/rclcpp.hpp&quot;
 #include &quot;geometry_msgs/msg/twist.hpp&quot;
 
 using namespace std::chrono_literals;
 
-class WallStop : public rclcpp::Node
+class TurtleDrive : public rclcpp::Node
 {
 public:
-  WallStop()
-  : Node(&quot;wall_stop&quot;)
+  TurtleDrive()
+  : Node(&quot;turtle_drive&quot;)
   {
     cmd_pub_ = this-&gt;create_publisher&lt;geometry_msgs::msg::Twist&gt;(&quot;/turtle1/cmd_vel&quot;, 10);
-    timer_ = this-&gt;create_wall_timer(100ms, [this]() { on_timer(); });
-    RCLCPP_INFO(this-&gt;get_logger(), &quot;0.1초마다 /turtle1/cmd_vel 에 직진 명령을 보냅니다&quot;);
+    timer_ = this-&gt;create_wall_timer(500ms, [this]() { on_timer(); });
+    RCLCPP_INFO(this-&gt;get_logger(), &quot;0.5초마다 /turtle1/cmd_vel 에 무작위 속도를 보냅니다&quot;);
   }
 
 private:
-  // 타이머가 0.1초마다 부른다
+  // 타이머가 0.5초마다 부른다
   void on_timer()
   {
-    geometry_msgs::msg::Twist cmd;   // 여섯 칸이 전부 0 으로 시작한다
-    cmd.linear.x = 1.0;              // 앞으로 1 m/s
+    geometry_msgs::msg::Twist cmd;               // 여섯 칸이 전부 0 으로 시작한다
+    cmd.linear.x = random_between(0.2, 1.2);     // 앞으로 0.2 ~ 1.2 m/s
+    cmd.angular.z = random_between(-1.0, 1.0);   // 왼쪽(+)·오른쪽(-)으로 최대 1 rad/s
+    RCLCPP_INFO(this-&gt;get_logger(), &quot;linear.x = %.2f, angular.z = %.2f&quot;, cmd.linear.x, cmd.angular.z);
     cmd_pub_-&gt;publish(cmd);
   }
 
+  // lo 와 hi 사이의 실수 하나를 고르게 뽑는다
+  double random_between(double lo, double hi)
+  {
+    std::uniform_real_distribution&lt;double&gt; dist(lo, hi);
+    return dist(gen_);
+  }
+
+  std::mt19937 gen_{std::random_device{}()};   // 난수 생성기 — 실행할 때마다 다른 씨앗으로 시작한다
   rclcpp::Publisher&lt;geometry_msgs::msg::Twist&gt;::SharedPtr cmd_pub_;
   rclcpp::TimerBase::SharedPtr timer_;
 };
@@ -440,7 +451,7 @@ private:
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  auto node = std::make_shared&lt;WallStop&gt;();
+  auto node = std::make_shared&lt;TurtleDrive&gt;();
   rclcpp::spin(node);            // 타이머 콜백은 이 안에서 불린다
   rclcpp::shutdown();
   return 0;
@@ -461,12 +472,12 @@ find_package(geometry_msgs REQUIRED)
 add_executable(hello_node src/hello_node.cpp)
 target_link_libraries(hello_node PRIVATE rclcpp::rclcpp)
 
-# 20회 — 실행 파일 wall_stop. Twist 메시지를 쓰므로 geometry_msgs 도 붙인다
-add_executable(wall_stop src/wall_stop.cpp)
-target_link_libraries(wall_stop PRIVATE rclcpp::rclcpp ${geometry_msgs_TARGETS})
+# 20회 — 실행 파일 turtle_drive. Twist 메시지를 쓰므로 geometry_msgs 도 붙인다
+add_executable(turtle_drive src/turtle_drive.cpp)
+target_link_libraries(turtle_drive PRIVATE rclcpp::rclcpp ${geometry_msgs_TARGETS})
 
 # 만든 실행 파일을 ros2 run 이 찾는 자리에 설치한다
-install(TARGETS hello_node wall_stop
+install(TARGETS hello_node turtle_drive
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
@@ -505,42 +516,44 @@ ament_package()</code></pre></div>
 &lt;/package&gt;</code></pre></div>
 </details>
 <!-- /fullcode -->
+<!-- /fullcode -->
 
-  <!-- ── ⑤ 발행 확인 ── -->
-  <h2 id="echo">⑤ 내 노드의 발행 확인 — <code>ros2 topic echo</code> · <code>hz</code> · <code>info -v</code> <span class="badge b-red">🔴 사람이 한다</span></h2>
+  <!-- ── ④ 발행 확인 ── -->
+  <h2 id="echo">④ 내 노드의 발행 확인 — <code>ros2 topic echo</code> · <code>hz</code> · <code>info -v</code> <span class="badge b-red">🔴 사람이 한다</span></h2>
   <p>
     거북이가 움직였으니 된 것일까? 이번에는 거북이가 움직여서 알았지만, 실물 로봇에서는 바퀴가 안 돌 때 <strong>내 노드가 안 보낸 것인지, 로봇이 안 받은 것인지</strong>부터 갈라야 한다.
-    18회에 배운 명령을 이번에는 <strong>직접 만든 노드</strong>에 그대로 대 본다. <code>wall_stop</code>이 도는 동안 터미널 3에서 친다.
+    18회에 배운 명령을 이번에는 <strong>직접 만든 노드</strong>에 그대로 대 본다. <code>turtle_drive</code>가 도는 동안 터미널 3에서 친다.
   </p>
   <pre class="lang-sh"><code>$ ros2 node list
+/turtle_drive
 /turtlesim
-/wall_stop
 $ ros2 topic echo --once /turtle1/cmd_vel
 linear:
-  x: 1.0
+  x: 1.0847314157460786
   y: 0.0
   z: 0.0
 angular:
   x: 0.0
   y: 0.0
-  z: 0.0
+  z: 0.25225873761763684
 ---
 $ ros2 topic hz /turtle1/cmd_vel
-average rate: 9.999
-	min: 0.100s max: 0.100s std dev: 0.00019s window: 11
-average rate: 10.000
-	min: 0.100s max: 0.100s std dev: 0.00016s window: 22</code></pre>
+average rate: 2.000
+	min: 0.500s max: 0.500s std dev: 0.00004s window: 3
+average rate: 2.000
+	min: 0.500s max: 0.500s std dev: 0.00004s window: 6</code></pre>
   <div class="tablewrap">
   <table>
     <tr><th>명령</th><th>보이는 것</th><th>코드의 어느 줄과 맞춰 보나</th></tr>
-    <tr><td><code>node list</code></td><td><code>/wall_stop</code></td><td><code>: Node("wall_stop")</code></td></tr>
-    <tr><td><code>echo --once</code></td><td><code>linear.x: 1.0</code>, 나머지 0</td><td><code>cmd.linear.x = 1.0;</code></td></tr>
-    <tr><td><code>hz</code></td><td><code>average rate: 10.000</code>, <code>min</code>·<code>max</code> 모두 0.100초</td><td><code>create_wall_timer(100ms, …)</code></td></tr>
+    <tr><td><code>node list</code></td><td><code>/turtle_drive</code></td><td><code>: Node("turtle_drive")</code></td></tr>
+    <tr><td><code>echo --once</code></td><td><code>linear.x: 1.08…</code>, <code>angular.z: 0.25…</code>, 나머지 0</td><td><code>cmd.linear.x = …</code> · <code>cmd.angular.z = …</code>. 노드 터미널의 <code>linear.x = 1.08, angular.z = 0.25</code> 줄과 같은 메시지다</td></tr>
+    <tr><td><code>hz</code></td><td><code>average rate: 2.000</code>, <code>min</code>·<code>max</code> 모두 0.500초</td><td><code>create_wall_timer(500ms, …)</code></td></tr>
   </table>
   </div>
   <div class="interp">
     <strong>해석:</strong> 세 줄 모두 코드에 적은 그대로다. <strong>코드를 읽어서 기대한 숫자와 명령이 보여 준 숫자를 맞춰 보는 것</strong>이 확인이다.
-    18회에서 teleop만 있을 때 <code>hz /turtle1/cmd_vel</code>은 아무것도 안 찍었다. 지금은 10.000 — 일정하게 보내는 쪽이 생겼기 때문이다. <code>min</code>과 <code>max</code>가 같으니 간격도 고르다.
+    값이 무작위라서 <code>echo</code>의 숫자는 칠 때마다 다르다. 그래도 노드가 찍은 로그 줄 하나와 정확히 짝이 맞는다 — 내 노드가 보낸 것이 맞다는 증거다.
+    18회에서 teleop만 있을 때 <code>hz /turtle1/cmd_vel</code>은 아무것도 안 찍었다. 지금은 2.000 — 일정하게 보내는 쪽이 생겼기 때문이다. <code>min</code>과 <code>max</code>가 같으니 간격도 고르다.
   </div>
   <p>누가 보내고 누가 받는지는 <code>info -v</code>로 본다(일부 줄은 생략했다).</p>
   <pre class="lang-sh"><code>$ ros2 topic info -v /turtle1/cmd_vel
@@ -548,44 +561,48 @@ Type: geometry_msgs/msg/Twist
 
 Publisher count: 1
 
-Node name: wall_stop
+Node name: turtle_drive
 Node namespace: /
 Topic type: geometry_msgs/msg/Twist
+(… 생략 …)
 Endpoint type: PUBLISHER
+(… 생략 …)
 QoS profile:
   Reliability: RELIABLE
   History (Depth): UNKNOWN
 (… 생략 …)
-
 Subscription count: 1
 
 Node name: turtlesim
 Node namespace: /
 Topic type: geometry_msgs/msg/Twist
+(… 생략 …)
 Endpoint type: SUBSCRIPTION
+(… 생략 …)
 QoS profile:
   Reliability: RELIABLE
 (… 생략 …)</code></pre>
   <p>
-    18회에서는 보내는 쪽이 <code>teleop_turtle</code>이었는데, 지금은 <strong><code>wall_stop</code></strong>이다. 받는 쪽은 그대로 <code>turtlesim</code>.
+    18회에서는 보내는 쪽이 <code>teleop_turtle</code>이었는데, 지금은 <strong><code>turtle_drive</code></strong>다. 받는 쪽은 그대로 <code>turtlesim</code>.
     양쪽 <code>Reliability</code>가 둘 다 <code>RELIABLE</code>이라 붙는다 — <code>create_publisher</code>에 숫자 10만 넘기면 이 값이 기본이다.
     <code>History (Depth)</code>가 <code>UNKNOWN</code>으로 나오는 것은 큐 깊이가 노드끼리 서로 알려 주는 정보에 들어 있지 않아서이고, 우리가 넣은 10이 사라진 것은 아니다.
   </p>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
-    wall_stop 노드가 /turtle1/cmd_vel 에 제대로 보내고 있는지 확인하고 싶어. ros2 topic hz 를 5초, ros2 topic echo --once, ros2 topic info -v 를 차례로 돌려서 출력 원문을 그대로 붙여 줘. 판단은 내가 할게 — 요약하지 말고 average rate, linear.x 값, Publisher 쪽 Node name 줄만 굵게 표시해 줘.
+    turtle_drive 노드가 /turtle1/cmd_vel 에 제대로 보내고 있는지 확인하고 싶어. ros2 topic hz 를 5초, ros2 topic echo --once, ros2 topic info -v 를 차례로 돌려서 출력 원문을 그대로 붙여 줘. 판단은 내가 할게 — 요약하지 말고 average rate, linear.x·angular.z 값, Publisher 쪽 Node name 줄만 굵게 표시해 줘.
   </div>
   <p>
-    「판단은 내가 할게」를 넣는 이유가 있다. 확인을 통째로 맡기면 「정상적으로 발행되고 있습니다」 한 줄이 돌아오기 쉽다. 10.000이라는 숫자를 <code>100ms</code>와 맞춰 보는 일은 여러분이 합니다.
+    「판단은 내가 할게」를 넣는 이유가 있다. 확인을 통째로 맡기면 「정상적으로 발행되고 있습니다」 한 줄이 돌아오기 쉽다. 2.000이라는 숫자를 <code>500ms</code>와 맞춰 보는 일은 여러분이 합니다.
   </p>
 
-  <!-- ── ⑥ v2 ── -->
-  <h2 id="v2">⑥ 구독자(subscription)와 <code>ConstSharedPtr</code> (v2) <span class="badge b-red">🔴 사람이 한다</span></h2>
+  <!-- ── ⑤ v2 ── -->
+  <h2 id="v2">⑤ 구독자(subscription)와 <code>ConstSharedPtr</code> — 범위를 벗어나면 중앙으로 (v2) <span class="badge b-red">🔴 사람이 한다</span></h2>
 
   <h3>개념 — 메시지가 올 때마다 불리는 콜백</h3>
   <p>
-    벽 앞에서 서려면 먼저 <strong>거북이가 어디 있는지</strong> 알아야 한다. turtlesim은 그것을 <code>/turtle1/pose</code>로 초당 62.5번 내보내고 있다.
+    벽에 부딪히기 전에 돌아서려면 먼저 <strong>거북이가 어디 있는지</strong> 알아야 한다. turtlesim은 그것을 <code>/turtle1/pose</code>로 초당 62.5번 내보내고 있다.
     그 토픽을 받는 객체가 <strong>구독자</strong>다. 발행자처럼 토픽 이름과 타입으로 만들고, 여기에 <strong>메시지가 오면 부를 콜백</strong>을 하나 더 넘긴다.
+    타이머 콜백이 「때가 되면」 불렸다면, 구독 콜백은 「메시지가 오면」 불린다. 부르는 쪽은 똑같이 <code>spin</code>이다.
   </p>
   <pre class="lang-cpp"><code>pose_sub_ = this-&gt;create_subscription&lt;turtlesim::msg::Pose&gt;(
   "/turtle1/pose", 10,
@@ -615,49 +632,87 @@ QoS profile:
     <strong>콜백 인자는 처음부터 <code>ConstSharedPtr</code>로 받는 습관</strong>을 들여 두면 메시지가 커져도 고칠 것이 없다.
   </p>
 
-  <h3>예제에 적용 — 받은 자세를 멤버에 들고 있는다</h3>
+  <h3>개념 — 중앙을 보고 있나: 두 방향 사이의 각</h3>
   <p>
-    구독 콜백(초당 62.5번)과 타이머 콜백(초당 10번)은 <strong>부르는 박자가 다르다.</strong> 그래서 구독 콜백에서 판단까지 하지 않는다.
+    범위를 벗어났을 때 「중앙 쪽으로 돌아선다」는 것은 무엇을 재면 될까? 거북이가 <strong>바라보는 방향</strong>과 <strong>거북이에서 중앙으로 가는 방향</strong>, 두 방향 사이의 각이다.
+    이 각이 0이면 중앙을 똑바로 보고 있고, 180°면 중앙을 등지고 있다.
+  </p>
+  <p>
+    두 방향 사이의 각은 수학 시간에 배운 <strong>내적</strong>(dot product)으로 구한다. 두 벡터 <strong>a</strong>, <strong>b</strong>에 대해 <strong>a</strong> · <strong>b</strong> = |<strong>a</strong>| |<strong>b</strong>| cos φ이므로,
+    cos φ = (<strong>a</strong> · <strong>b</strong>) / (|<strong>a</strong>| |<strong>b</strong>|)를 계산해 cos를 거꾸로 풀면(arccos) 각 φ가 나온다.
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>벡터</th><th>성분</th><th>길이</th></tr>
+    <tr><td>바라보는 방향 <strong>h</strong></td><td>(cos θ, sin θ) — <code>Pose</code>의 <code>theta</code>로 만든다</td><td>1</td></tr>
+    <tr><td>중앙으로 가는 방향 <strong>d</strong></td><td>(5.5 − x, 5.5 − y) — 중앙 좌표에서 거북이 좌표를 뺀다</td><td>√(d<sub>x</sub>² + d<sub>y</sub>²)</td></tr>
+  </table>
+  </div>
+  <p>예를 들어 거북이가 오른쪽 벽 가까이 (10.5, 5.5)에 있으면 <strong>d</strong> = (−5, 0), 곧 중앙은 왼쪽에 있다. 바라보는 방향만 바꿔 가며 각을 구해 보면 이렇다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>바라보는 방향</th><th>θ</th><th><strong>h</strong></th><th>cos φ = <strong>d</strong> · <strong>h</strong> / |<strong>d</strong>|</th><th>중앙과의 각 φ</th></tr>
+    <tr><td>오른쪽 (벽 쪽)</td><td>0</td><td>(1, 0)</td><td>−5 / 5 = −1</td><td><strong>180°</strong> — 등지고 있다</td></tr>
+    <tr><td>위쪽</td><td>π/2</td><td>(0, 1)</td><td>0 / 5 = 0</td><td><strong>90°</strong></td></tr>
+    <tr><td>왼쪽 (중앙 쪽)</td><td>π</td><td>(−1, 0)</td><td>5 / 5 = 1</td><td><strong>0°</strong> — 중앙을 본다</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 범위 밖에서 이 각이 크면 제자리에서 돌고, 작아지면(오늘은 <strong>20° 안</strong>) 다시 출발한다.
+    「벽까지 몇 m 남았나」를 벽 네 개에 대해 따로 계산할 필요가 없다 — 범위 밖인지는 x·y를 1과 10에 비교하면 되고, 어느 쪽으로 갈지는 이 각 하나가 정한다.
+  </div>
+
+  <h3>예제에 적용 — 받은 자세는 들고만 있고, 타이머가 판단한다</h3>
+  <p>
+    구독 콜백(초당 62.5번)과 타이머 콜백(초당 2번)은 <strong>부르는 박자가 다르다.</strong> 그래서 구독 콜백에서 판단까지 하지 않는다.
     구독 콜백은 <strong>받은 것을 멤버에 넣어 두기만</strong> 하고, 판단과 명령은 타이머 콜백이 <strong>그 순간의 최신 자세</strong>로 한다.
-    타이머 사이에 온 자세 대여섯 개 중 앞의 것들은 덮어써져 버려지는데, 속도 명령을 정하는 데는 최신 하나면 되므로 그것이 맞다.
+    타이머 사이에 온 자세 서른 개 남짓 중 앞의 것들은 덮어써져 버려지는데, 속도 명령을 정하는 데는 최신 하나면 되므로 그것이 맞다.
+  </p>
+  <p>
+    타이머 콜백이 정하는 것은 셋이다. 창의 한 변이 약 11 m이니 <strong>벽에서 1 m 안쪽, 곧 x와 y가 모두 1 ~ 10 안</strong>을 다닐 범위로 둔다.
+    거북이가 <strong>범위 밖이고 중앙과의 각이 20°보다 크면</strong> 앞으로 가지 않고 제자리에서 왼쪽으로 돈다(<code>linear.x</code> 0, <code>angular.z</code> 1.0).
+    그 밖에는 v1처럼 무작위로 간다. 범위 밖이어도 중앙 쪽을 보고 있으면 그대로 가게 두는 것이 요점이다 — 그래야 범위 안으로 돌아올 수 있다.
   </p>
   <p>
     하나 더 정할 것이 있다. 노드가 뜬 직후에는 <strong>아직 자세를 한 번도 못 받은</strong> 순간이 있다. 그때 판단하면 무엇을 기준으로 판단하는 것일까?
     멤버를 <code>ConstSharedPtr</code>로 두면 처음에는 비어 있는(<code>nullptr</code>) 포인터라서, 「아직 모른다」를 <code>if (!pose_)</code> 한 줄로 가를 수 있다.
     14회 <code>std::optional</code>이 「값이 없을 수도 있다」를 타입으로 드러냈던 것과 같은 생각이다.
+    범위·여유·속도 같은 숫자는 코드 곳곳에 흩지 않고 9회의 <strong>기본 멤버 초기화자</strong>로 한자리에 모은다. 21회에 이 가운데 둘이 파라미터로 바뀐다.
   </p>
 
-  <h3>2단계 (v2) — 구독자 하나, 멤버 하나</h3>
+  <h3>2단계 (v2) — 구독자 하나, 판단 하나</h3>
   <div class="codelabel bad">고치기 전 (v1) — 생성자와 on_timer, 멤버</div>
-  <pre class="lang-cpp before"><code>  WallStop()
-  : Node("wall_stop")
+  <pre class="lang-cpp before"><code>  TurtleDrive()
+  : Node("turtle_drive")
   {
     cmd_pub_ = this-&gt;create_publisher&lt;geometry_msgs::msg::Twist&gt;("/turtle1/cmd_vel", 10);
-    timer_ = this-&gt;create_wall_timer(100ms, [this]() { on_timer(); });
-    RCLCPP_INFO(this-&gt;get_logger(), "0.1초마다 /turtle1/cmd_vel 에 직진 명령을 보냅니다");
+    timer_ = this-&gt;create_wall_timer(500ms, [this]() { on_timer(); });
+    RCLCPP_INFO(this-&gt;get_logger(), "0.5초마다 /turtle1/cmd_vel 에 무작위 속도를 보냅니다");
   }
 
 private:
-  // 타이머가 0.1초마다 부른다
+  // 타이머가 0.5초마다 부른다
   void on_timer()
   {
-    geometry_msgs::msg::Twist cmd;   // 여섯 칸이 전부 0 으로 시작한다
-    cmd.linear.x = 1.0;              // 앞으로 1 m/s
+    geometry_msgs::msg::Twist cmd;               // 여섯 칸이 전부 0 으로 시작한다
+    cmd.linear.x = random_between(0.2, 1.2);     // 앞으로 0.2 ~ 1.2 m/s
+    cmd.angular.z = random_between(-1.0, 1.0);   // 왼쪽(+)·오른쪽(-)으로 최대 1 rad/s
+    RCLCPP_INFO(this-&gt;get_logger(), "linear.x = %.2f, angular.z = %.2f", cmd.linear.x, cmd.angular.z);
     cmd_pub_-&gt;publish(cmd);
   }
-
+  (…)
   rclcpp::Publisher&lt;geometry_msgs::msg::Twist&gt;::SharedPtr cmd_pub_;
   rclcpp::TimerBase::SharedPtr timer_;</code></pre>
-  <div class="codelabel good">고친 뒤 (v2) — 맨 위에 #include "turtlesim/msg/pose.hpp" 도 더한다</div>
-  <pre class="lang-cpp after"><code>  WallStop()
-  : Node("wall_stop")
+  <div class="codelabel good">고친 뒤 (v2) — 맨 위에 #include &lt;algorithm&gt; · &lt;cmath&gt; · "turtlesim/msg/pose.hpp" 도 더한다</div>
+  <pre class="lang-cpp after"><code>  TurtleDrive()
+  : Node("turtle_drive")
   {
     cmd_pub_ = this-&gt;create_publisher&lt;geometry_msgs::msg::Twist&gt;("/turtle1/cmd_vel", 10);
     pose_sub_ = this-&gt;create_subscription&lt;turtlesim::msg::Pose&gt;(
       "/turtle1/pose", 10,
       [this](turtlesim::msg::Pose::ConstSharedPtr msg) { on_pose(msg); });
-    timer_ = this-&gt;create_wall_timer(100ms, [this]() { on_timer(); });
-    RCLCPP_INFO(this-&gt;get_logger(), "0.1초마다 /turtle1/cmd_vel 에 직진 명령을 보냅니다");
+    timer_ = this-&gt;create_wall_timer(500ms, [this]() { on_timer(); });
+    RCLCPP_INFO(this-&gt;get_logger(), "%.1f ~ %.1f 안에서 돌아다닙니다", margin_, map_size_ - margin_);
   }
 
 private:
@@ -667,84 +722,140 @@ private:
     pose_ = msg;
   }
 
-  // 타이머가 0.1초마다 부른다
+  // 타이머가 0.5초마다 부른다 — 판단하고 명령을 보낸다
   void on_timer()
   {
-    if (!pose_) {                    // 아직 자세를 한 번도 못 받았다
+    if (!pose_) {                                // 아직 자세를 한 번도 못 받았다
       return;
     }
-    RCLCPP_INFO(this-&gt;get_logger(), "x = %.2f, y = %.2f", pose_-&gt;x, pose_-&gt;y);
+    const double lo = margin_;
+    const double hi = map_size_ - margin_;
+    const bool outside = pose_-&gt;x &lt; lo || pose_-&gt;x &gt; hi || pose_-&gt;y &lt; lo || pose_-&gt;y &gt; hi;
+    const double angle = angle_to_center(*pose_);
+    const bool turn_back = outside &amp;&amp; angle &gt; turn_tolerance_;   // 범위 밖인데 중앙을 안 보고 있다
 
-    geometry_msgs::msg::Twist cmd;   // 여섯 칸이 전부 0 으로 시작한다
-    cmd.linear.x = 1.0;              // 앞으로 1 m/s
+    if (turn_back &amp;&amp; !turning_) {
+      RCLCPP_INFO(this-&gt;get_logger(), "범위 밖 (x = %.2f, y = %.2f) — 중앙 쪽으로 돕니다", pose_-&gt;x, pose_-&gt;y);
+    }
+    if (!turn_back &amp;&amp; turning_) {
+      RCLCPP_INFO(this-&gt;get_logger(), "중앙을 봅니다 — 다시 출발합니다");
+    }
+    turning_ = turn_back;
+
+    geometry_msgs::msg::Twist cmd;               // 여섯 칸이 전부 0 으로 시작한다
+    if (turn_back) {
+      cmd.angular.z = 1.0;                       // 제자리에서 왼쪽으로 돈다 (linear.x 는 0)
+    } else {
+      cmd.linear.x = random_between(0.2, max_speed_);
+      cmd.angular.z = random_between(-1.0, 1.0);
+    }
     cmd_pub_-&gt;publish(cmd);
   }
 
+  // 바라보는 방향과 「중앙으로 가는 방향」 사이의 각 (0 ~ π rad)
+  double angle_to_center(const turtlesim::msg::Pose &amp; p) const
+  {
+    const double dx = center_ - p.x;             // 중앙으로 가는 방향
+    const double dy = center_ - p.y;
+    const double hx = std::cos(p.theta);         // 바라보는 방향 (길이 1)
+    const double hy = std::sin(p.theta);
+    const double cos_angle = (dx * hx + dy * hy) / std::hypot(dx, dy);   // 내적 ÷ 두 길이의 곱
+    return std::acos(std::clamp(cos_angle, -1.0, 1.0));
+  }
+  (…)
+  const double max_speed_ = 1.2;       // 앞으로 가는 속도의 상한 (m/s)
+  const double margin_ = 1.0;          // 벽에서 이만큼 안쪽까지만 다닌다 (m) → 1 ~ 10
+  const double map_size_ = 11.0;       // 지도 한 변의 길이 (m)
+  const double center_ = 5.5;          // 지도 가운데 (x, y 모두)
+  const double turn_tolerance_ = 0.35; // 중앙과 이 각(약 20°) 안이면 다시 출발한다 (rad)
+  bool turning_ = false;               // 지금 돌아서는 중인가 — 로그를 바뀔 때만 찍는 데 쓴다
+  (…)
   rclcpp::Publisher&lt;geometry_msgs::msg::Twist&gt;::SharedPtr cmd_pub_;
   rclcpp::Subscription&lt;turtlesim::msg::Pose&gt;::SharedPtr pose_sub_;
   rclcpp::TimerBase::SharedPtr timer_;
-  turtlesim::msg::Pose::ConstSharedPtr pose_;   // 마지막으로 받은 자세 (처음에는 비어 있다)</code></pre>
+  turtlesim::msg::Pose::ConstSharedPtr pose_;  // 마지막으로 받은 자세 (처음에는 비어 있다)</code></pre>
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
     <dl>
       <dt>this-&gt;create_subscription&lt;T&gt;("토픽", 10, 콜백)</dt>
-      <dd>T 타입 메시지를 그 토픽에서 받는 구독자를 만든다. 셋째 인자가 메시지가 올 때마다 불릴 콜백이다. 여기서는 람다가 받은 포인터를 그대로 <code>on_pose</code>에 넘긴다. 10은 ③절의 큐 깊이다.</dd>
+      <dd>T 타입 메시지를 그 토픽에서 받는 구독자를 만든다. 셋째 인자가 메시지가 올 때마다 불릴 콜백이다. 여기서는 람다가 받은 포인터를 그대로 <code>on_pose</code>에 넘긴다. 10은 ②절의 큐 깊이다.</dd>
       <dt>turtlesim::msg::Pose::ConstSharedPtr</dt>
       <dd>메시지 타입마다 만들어져 있는 타입 별칭. 풀어 쓰면 <code>std::shared_ptr&lt;const turtlesim::msg::Pose&gt;</code>다(설치된 헤더 <code>turtlesim/msg/detail/pose__struct.hpp</code>에 <code>using ConstSharedPtr = …</code>로 적혀 있다). 콜백 인자로도, 멤버 타입으로도 썼다.</dd>
       <dt>pose_ = msg;</dt>
       <dd>메시지를 복사하는 줄이 아니다. <strong>포인터를 복사</strong>하는 줄이다. 11회의 <code>shared_ptr</code> 복사라서 참조 횟수가 하나 늘고, 다음 자세가 와서 <code>pose_</code>가 새 포인터로 바뀌면 옛 메시지는 참조 횟수가 0이 되어 지워진다.</dd>
       <dt>rclcpp::Subscription&lt;T&gt;::SharedPtr</dt>
       <dd>구독자를 들고 있는 멤버의 타입. 발행자·타이머와 같은 이유로 멤버여야 한다 — 이것이 사라지면 구독도 끝난다.</dd>
+      <dt>std::cos(θ) · std::sin(θ) · std::hypot(x, y) · std::acos(c)</dt>
+      <dd><code>&lt;cmath&gt;</code>의 수학 함수. 각도는 <strong>라디안</strong>으로 주고받는다 — <code>Pose</code>의 <code>theta</code>가 라디안이라 그대로 넣었다. <code>hypot(x, y)</code>는 √(x² + y²), 곧 벡터의 길이다. <code>acos</code>는 cos를 거꾸로 푼 값(0 ~ π)을 돌려준다. 좌표와 각도는 25회에서 제대로 다룬다.</dd>
+      <dt>std::clamp(값, -1.0, 1.0)</dt>
+      <dd><code>&lt;algorithm&gt;</code>의 함수로, 값이 범위를 넘으면 끝값으로 잘라 준다. 실수 계산은 오차가 있어서 cos φ가 1.0000001처럼 나올 수 있는데, <code>acos</code>는 −1 ~ 1 밖의 값을 받으면 숫자가 아닌 값(NaN)을 돌려준다. 그것을 막는 한 줄이다.</dd>
+      <dt>0.35 (rad)</dt>
+      <dd>라디안으로 적은 약 20°(0.35 × 180 / π ≈ 20.1). 도는 속도가 1 rad/s이고 판단은 0.5초마다이니 한 번 판단할 때마다 약 0.5 rad(29°)씩 돈다. 「20° 안」이라는 창은 양쪽으로 40°라서, 도는 동안 한 번은 그 안에 들어온다.</dd>
     </dl>
+    <p class="later">좌표계와 각도를 제대로 다루는 곳: 25회</p>
   </div>
   <p>
     <code>CMakeLists.txt</code>와 <code>package.xml</code>에도 <code>turtlesim</code>이 들어간다. 바뀌는 줄은 v1과 같은 자리다 — <code>find_package(turtlesim REQUIRED)</code>,
-    <code>target_link_libraries</code>에 <code>${turtlesim_TARGETS}</code>, <code>&lt;depend&gt;turtlesim&lt;/depend&gt;</code>. 한쪽만 넣으면 어떻게 되는지는 바로 다음 ⑦절에서 본다.
+    <code>target_link_libraries</code>에 <code>${turtlesim_TARGETS}</code>, <code>&lt;depend&gt;turtlesim&lt;/depend&gt;</code>. 한쪽만 넣으면 어떻게 되는지는 바로 다음 ⑥절에서 본다.
   </p>
 
   <h3>실제로 나온 출력</h3>
   <pre class="lang-sh"><code>$ colcon build --packages-select turtle_drive
 Starting &gt;&gt;&gt; turtle_drive
-Finished &lt;&lt;&lt; turtle_drive [6.91s]
+Finished &lt;&lt;&lt; turtle_drive [5.39s]
 
-Summary: 1 package finished [6.98s]
+Summary: 1 package finished [5.45s]
 $ source install/setup.bash
-$ ros2 run turtle_drive wall_stop
-[INFO] [1792273509.519961359] [wall_stop]: 0.1초마다 /turtle1/cmd_vel 에 직진 명령을 보냅니다
-[INFO] [1792273510.020049185] [wall_stop]: x = 5.54, y = 5.54
-[INFO] [1792273510.120064577] [wall_stop]: x = 5.64, y = 5.54
-(… 0.1초마다 한 줄 …)
-[INFO] [1792273514.520068500] [wall_stop]: x = 10.04, y = 5.54
-[INFO] [1792273514.620069124] [wall_stop]: x = 10.14, y = 5.54
+$ ros2 run turtle_drive turtle_drive
+[INFO] [1793759395.218066781] [turtle_drive]: 1.0 ~ 10.0 안에서 돌아다닙니다
+[INFO] [1793759403.718122082] [turtle_drive]: 범위 밖 (x = 10.20, y = 3.16) — 중앙 쪽으로 돕니다
+[INFO] [1793759406.218124063] [turtle_drive]: 중앙을 봅니다 — 다시 출발합니다
+[INFO] [1793759414.718175495] [turtle_drive]: 범위 밖 (x = 5.80, y = 0.94) — 중앙 쪽으로 돕니다
+[INFO] [1793759418.718165931] [turtle_drive]: 중앙을 봅니다 — 다시 출발합니다
+[INFO] [1793759428.718151896] [turtle_drive]: 범위 밖 (x = 0.90, y = 4.33) — 중앙 쪽으로 돕니다
+[INFO] [1793759431.718160645] [turtle_drive]: 중앙을 봅니다 — 다시 출발합니다
 (…)
-[INFO] [1792273515.520069364] [wall_stop]: x = 11.05, y = 5.54
-[INFO] [1792273515.620069528] [wall_stop]: x = 11.09, y = 5.54
-[INFO] [1792273515.720069364] [wall_stop]: x = 11.09, y = 5.54
-(… 11.09 가 계속 …)</code></pre>
+[INFO] [1793759470.218231230] [turtle_drive]: 범위 밖 (x = 10.40, y = 6.80) — 중앙 쪽으로 돕니다
+[INFO] [1793759473.718161634] [turtle_drive]: 중앙을 봅니다 — 다시 출발합니다
+[INFO] [1793759474.218136117] [turtle_drive]: 범위 밖 (x = 10.18, y = 6.66) — 중앙 쪽으로 돕니다
+[INFO] [1793759479.718126500] [turtle_drive]: 중앙을 봅니다 — 다시 출발합니다</code></pre>
   <p>
-    시각 칸을 보면 줄 사이가 정확히 0.1초다 — 타이머의 박자다. x는 한 줄에 약 0.1씩 는다. 1 m/s로 0.1초 갔으니 맞다.
-    그리고 11.09에서 멈춘다. 벽이다. <strong>노드는 이제 자기가 벽에 붙었다는 것을 알지만, 아직 그것으로 아무것도 하지 않는다.</strong>
-    첫 줄(<code>x = 5.54</code>)이 「보냅니다」보다 0.5초 늦게 찍힌 것도 볼 만하다. 그 사이에 타이머가 네 번 불렸지만 <code>pose_</code>가 비어 있어서 <code>return</code>했다 — 구독이 연결되고 첫 자세가 오기까지 그만큼 걸린 것이다. 그동안 거북이도 출발하지 않았다.
+    오른쪽(x = 10.20), 아래쪽(y = 0.94), 왼쪽(x = 0.90) 경계에서 차례로 돌아섰다. 한 번 돌아서는 데 대개 2 ~ 4초 걸렸고, 90초 동안 turtlesim 터미널에는 <code>Oh no! I hit the wall!</code>이 <strong>한 줄도</strong> 나오지 않았다.
+    끝에서 두 번째 묶음처럼 「다시 출발합니다」 바로 다음에 또 「범위 밖」이 찍히는 일도 있다. 중앙을 보고 출발했는데 아직 범위 밖일 때 무작위 회전이 고개를 다시 바깥으로 돌린 것이다. 그러면 한 번 더 돌아서 들어온다.
   </p>
+  <p>
+    그런데 범위를 1 ~ 10으로 정했는데 왜 x가 <strong>10.40</strong>까지 나갔을까? 판단은 0.5초에 한 번이고, 그사이 거북이는 최대 1.2 m/s × 0.5초 = <strong>0.6 m</strong>를 간다.
+    직전 판단 때는 범위 안이라 「가라」였고, 다음 판단 때는 이미 경계를 넘어 있었던 것이다. <strong>판단 주기 × 속도</strong>만큼은 늘 넘어간다.
+    범위를 벽에서 1 m 안쪽으로 둔 것이 그래서다 — 0.6 m를 넘어가도 벽(11.09)까지는 아직 여유가 있다.
+    실물 로봇에서는 여기에 센서가 재는 주기와 바퀴가 멈추는 데 걸리는 거리가 더해진다.
+  </p>
+  <figure class="narrow">
+    <img src="assets/img/20_random_walk.png" width="360"
+         alt="turtlesim 창. 거북이가 지나간 연한 선이 창 오른쪽 위에 엉켜 있고, 위쪽과 오른쪽 벽에 닿기 전에 꺾여 안쪽으로 돌아온다. 선은 어느 벽에도 닿지 않는다">
+    <figcaption>v2를 75초쯤 돌린 화면. 선이 <strong>위쪽·오른쪽 벽에 닿기 전에 꺾여</strong> 안쪽으로 돌아온다.
+      꺾인 자리는 경계(벽에서 1 m)를 조금 넘어선 곳이다 — 위의 「판단 주기 × 속도」만큼이다. 다니는 자리는 실행할 때마다 다르다.</figcaption>
+  </figure>
   <figure>
     <img src="assets/img/20_rqt_graph.png" width="680"
-         alt="rqt_graph 화면. 왼쪽 /turtle1 묶음 안에 /turtle1/pose 와 /turtle1/cmd_vel 네모가 있다. /turtlesim 타원에서 /turtle1/pose 로, /turtle1/pose 에서 /wall_stop 타원으로 화살표가 가고, /wall_stop 에서 /turtle1/cmd_vel 로, /turtle1/cmd_vel 에서 /turtlesim 으로 화살표가 간다">
-    <figcaption><code>wall_stop</code>을 띄운 채 <code>rqt_graph</code>(Nodes/Topics (active))를 연 화면. <strong>화살표가 한 바퀴 돈다</strong> —
-      <code>/turtlesim</code> → <code>/turtle1/pose</code> → <code>/wall_stop</code> → <code>/turtle1/cmd_vel</code> → <code>/turtlesim</code>.
+         alt="rqt_graph 화면. 왼쪽 /turtle1 묶음 안에 /turtle1/pose 와 /turtle1/cmd_vel 네모가 있다. /turtlesim 타원에서 /turtle1/pose 로, /turtle1/pose 에서 /turtle_drive 타원으로 화살표가 가고, /turtle_drive 에서 /turtle1/cmd_vel 로, /turtle1/cmd_vel 에서 /turtlesim 으로 화살표가 간다">
+    <figcaption><code>turtle_drive</code>를 띄운 채 <code>rqt_graph</code>(Nodes/Topics (active))를 연 화면. <strong>화살표가 한 바퀴 돈다</strong> —
+      <code>/turtlesim</code> → <code>/turtle1/pose</code> → <code>/turtle_drive</code> → <code>/turtle1/cmd_vel</code> → <code>/turtlesim</code>.
       19회의 <code>/hello_node</code>는 어느 화살표에도 이어져 있지 않았다. 구독자 하나, 발행자 하나가 화살표 두 개가 됐다.</figcaption>
   </figure>
-
-  <!-- fullcode "전체 코드 — turtle_drive/ (2단계 · v2)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive wall_stop"
-       l20_topic/steps/step2/turtle_drive/src/wall_stop.cpp as turtle_drive/src/wall_stop.cpp
+  <!-- fullcode "전체 코드 — turtle_drive/ (2단계 · v2 완성본. 21회가 이 패키지에 이어 붙인다)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive turtle_drive"
+       l20_topic/steps/step2/turtle_drive/src/turtle_drive.cpp as turtle_drive/src/turtle_drive.cpp
        l20_topic/steps/step2/turtle_drive/CMakeLists.txt as turtle_drive/CMakeLists.txt
        l20_topic/steps/step2/turtle_drive/package.xml as turtle_drive/package.xml
   -->
 <details class="fullcode">
-  <summary>전체 코드 — turtle_drive/ (2단계 · v2)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive wall_stop</code></p>
-  <div class="codefile"><div class="fname">turtle_drive/src/wall_stop.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 20회 벽 앞 정지 — v2 (2단계: create_subscription · ConstSharedPtr — 최신 자세를 멤버에 둔다)
+  <summary>전체 코드 — turtle_drive/ (2단계 · v2 완성본. 21회가 이 패키지에 이어 붙인다)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive turtle_drive</code></p>
+  <div class="codefile"><div class="fname">turtle_drive/src/turtle_drive.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 20회 turtle_drive — v2 (2단계: create_subscription — 범위를 벗어나면 중앙 쪽으로 돌아선다)
+#include &lt;algorithm&gt;
 #include &lt;chrono&gt;
+#include &lt;cmath&gt;
 #include &lt;memory&gt;
+#include &lt;random&gt;
 
 #include &quot;rclcpp/rclcpp.hpp&quot;
 #include &quot;geometry_msgs/msg/twist.hpp&quot;
@@ -752,18 +863,18 @@ $ ros2 run turtle_drive wall_stop
 
 using namespace std::chrono_literals;
 
-class WallStop : public rclcpp::Node
+class TurtleDrive : public rclcpp::Node
 {
 public:
-  WallStop()
-  : Node(&quot;wall_stop&quot;)
+  TurtleDrive()
+  : Node(&quot;turtle_drive&quot;)
   {
     cmd_pub_ = this-&gt;create_publisher&lt;geometry_msgs::msg::Twist&gt;(&quot;/turtle1/cmd_vel&quot;, 10);
     pose_sub_ = this-&gt;create_subscription&lt;turtlesim::msg::Pose&gt;(
       &quot;/turtle1/pose&quot;, 10,
       [this](turtlesim::msg::Pose::ConstSharedPtr msg) { on_pose(msg); });
-    timer_ = this-&gt;create_wall_timer(100ms, [this]() { on_timer(); });
-    RCLCPP_INFO(this-&gt;get_logger(), &quot;0.1초마다 /turtle1/cmd_vel 에 직진 명령을 보냅니다&quot;);
+    timer_ = this-&gt;create_wall_timer(500ms, [this]() { on_timer(); });
+    RCLCPP_INFO(this-&gt;get_logger(), &quot;%.1f ~ %.1f 안에서 돌아다닙니다&quot;, margin_, map_size_ - margin_);
   }
 
 private:
@@ -773,29 +884,72 @@ private:
     pose_ = msg;
   }
 
-  // 타이머가 0.1초마다 부른다
+  // 타이머가 0.5초마다 부른다 — 판단하고 명령을 보낸다
   void on_timer()
   {
-    if (!pose_) {                    // 아직 자세를 한 번도 못 받았다
+    if (!pose_) {                                // 아직 자세를 한 번도 못 받았다
       return;
     }
-    RCLCPP_INFO(this-&gt;get_logger(), &quot;x = %.2f, y = %.2f&quot;, pose_-&gt;x, pose_-&gt;y);
+    const double lo = margin_;
+    const double hi = map_size_ - margin_;
+    const bool outside = pose_-&gt;x &lt; lo || pose_-&gt;x &gt; hi || pose_-&gt;y &lt; lo || pose_-&gt;y &gt; hi;
+    const double angle = angle_to_center(*pose_);
+    const bool turn_back = outside &amp;&amp; angle &gt; turn_tolerance_;   // 범위 밖인데 중앙을 안 보고 있다
 
-    geometry_msgs::msg::Twist cmd;   // 여섯 칸이 전부 0 으로 시작한다
-    cmd.linear.x = 1.0;              // 앞으로 1 m/s
+    if (turn_back &amp;&amp; !turning_) {
+      RCLCPP_INFO(this-&gt;get_logger(), &quot;범위 밖 (x = %.2f, y = %.2f) — 중앙 쪽으로 돕니다&quot;, pose_-&gt;x, pose_-&gt;y);
+    }
+    if (!turn_back &amp;&amp; turning_) {
+      RCLCPP_INFO(this-&gt;get_logger(), &quot;중앙을 봅니다 — 다시 출발합니다&quot;);
+    }
+    turning_ = turn_back;
+
+    geometry_msgs::msg::Twist cmd;               // 여섯 칸이 전부 0 으로 시작한다
+    if (turn_back) {
+      cmd.angular.z = 1.0;                       // 제자리에서 왼쪽으로 돈다 (linear.x 는 0)
+    } else {
+      cmd.linear.x = random_between(0.2, max_speed_);
+      cmd.angular.z = random_between(-1.0, 1.0);
+    }
     cmd_pub_-&gt;publish(cmd);
   }
 
+  // 바라보는 방향과 「중앙으로 가는 방향」 사이의 각 (0 ~ π rad)
+  double angle_to_center(const turtlesim::msg::Pose &amp; p) const
+  {
+    const double dx = center_ - p.x;             // 중앙으로 가는 방향
+    const double dy = center_ - p.y;
+    const double hx = std::cos(p.theta);         // 바라보는 방향 (길이 1)
+    const double hy = std::sin(p.theta);
+    const double cos_angle = (dx * hx + dy * hy) / std::hypot(dx, dy);   // 내적 ÷ 두 길이의 곱
+    return std::acos(std::clamp(cos_angle, -1.0, 1.0));
+  }
+
+  // lo 와 hi 사이의 실수 하나를 고르게 뽑는다
+  double random_between(double lo, double hi)
+  {
+    std::uniform_real_distribution&lt;double&gt; dist(lo, hi);
+    return dist(gen_);
+  }
+
+  const double max_speed_ = 1.2;       // 앞으로 가는 속도의 상한 (m/s)
+  const double margin_ = 1.0;          // 벽에서 이만큼 안쪽까지만 다닌다 (m) → 1 ~ 10
+  const double map_size_ = 11.0;       // 지도 한 변의 길이 (m)
+  const double center_ = 5.5;          // 지도 가운데 (x, y 모두)
+  const double turn_tolerance_ = 0.35; // 중앙과 이 각(약 20°) 안이면 다시 출발한다 (rad)
+  bool turning_ = false;               // 지금 돌아서는 중인가 — 로그를 바뀔 때만 찍는 데 쓴다
+
+  std::mt19937 gen_{std::random_device{}()};   // 난수 생성기 — 실행할 때마다 다른 씨앗으로 시작한다
   rclcpp::Publisher&lt;geometry_msgs::msg::Twist&gt;::SharedPtr cmd_pub_;
   rclcpp::Subscription&lt;turtlesim::msg::Pose&gt;::SharedPtr pose_sub_;
   rclcpp::TimerBase::SharedPtr timer_;
-  turtlesim::msg::Pose::ConstSharedPtr pose_;   // 마지막으로 받은 자세 (처음에는 비어 있다)
+  turtlesim::msg::Pose::ConstSharedPtr pose_;  // 마지막으로 받은 자세 (처음에는 비어 있다)
 };
 
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  auto node = std::make_shared&lt;WallStop&gt;();
+  auto node = std::make_shared&lt;TurtleDrive&gt;();
   rclcpp::spin(node);            // 타이머·구독 콜백은 이 안에서 불린다
   rclcpp::shutdown();
   return 0;
@@ -817,13 +971,13 @@ find_package(turtlesim REQUIRED)
 add_executable(hello_node src/hello_node.cpp)
 target_link_libraries(hello_node PRIVATE rclcpp::rclcpp)
 
-# 20회 — 실행 파일 wall_stop. Twist(geometry_msgs)를 보내고 Pose(turtlesim)를 받는다
-add_executable(wall_stop src/wall_stop.cpp)
-target_link_libraries(wall_stop PRIVATE
+# 20회 — 실행 파일 turtle_drive. Twist(geometry_msgs)를 보내고 Pose(turtlesim)를 받는다
+add_executable(turtle_drive src/turtle_drive.cpp)
+target_link_libraries(turtle_drive PRIVATE
   rclcpp::rclcpp ${geometry_msgs_TARGETS} ${turtlesim_TARGETS})
 
 # 만든 실행 파일을 ros2 run 이 찾는 자리에 설치한다
-install(TARGETS hello_node wall_stop
+install(TARGETS hello_node turtle_drive
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
@@ -863,11 +1017,20 @@ ament_package()</code></pre></div>
 &lt;/package&gt;</code></pre></div>
 </details>
 <!-- /fullcode -->
+<!-- /fullcode -->
+  <div class="tablewrap">
+  <table>
+    <tr><th>모양</th><th>쓸 때</th><th>안 쓸 때</th></tr>
+    <tr><td>구독 콜백은 받아 두기만, 판단은 타이머 콜백에서</td><td><strong>기본값.</strong> 받는 박자(62.5 Hz)와 보내는 박자(2 Hz)가 다를 때</td><td>메시지가 올 때마다 꼭 한 번씩 반응해야 할 때(받은 것을 그대로 다른 토픽으로 넘기는 노드 등)는 구독 콜백에서 바로 보낸다</td></tr>
+    <tr><td>숫자를 기본 멤버 초기화자로 모은다</td><td>속도·여유처럼 바꿔 볼 값 — 한자리에 있어야 찾는다</td><td>바꿀 일이 없는 값. 그래도 이름은 붙인다(<code>map_size_</code>, <code>center_</code>)</td></tr>
+    <tr><td>상태가 바뀔 때만 로그를 찍는다 (<code>turning_</code>)</td><td>0.5초마다 같은 줄이 쌓이면 정작 볼 줄이 묻힐 때</td><td>v1처럼 보내는 값 자체를 확인하고 싶을 때는 매번 찍는다. 확인이 끝나면 지운다</td></tr>
+  </table>
+  </div>
 
-  <!-- ── ⑦ deps ── -->
-  <h2 id="deps">⑦ 의존성 — <code>package.xml</code>과 <code>CMakeLists.txt</code> 양쪽에 <code>turtlesim</code> <span class="badge b-red">🔴 사람이 한다</span></h2>
+  <!-- ── ⑥ deps ── -->
+  <h2 id="deps">⑥ 의존성 — <code>package.xml</code>과 <code>CMakeLists.txt</code> 양쪽에 <code>turtlesim</code> <span class="badge b-red">🔴 사람이 한다</span></h2>
   <p>
-    19회에서 <code>rclcpp</code>로 한 실험을 메시지 패키지로 한 번 더 한다. 메시지 패키지는 AI가 의존성을 빠뜨리기 가장 쉬운 자리다 —
+    19회 ②·③절에서 「한쪽만 빠뜨리면 어떻게 되나」를 짧게 짚었다. 오늘은 그것을 메시지 패키지로 직접 빼 본다. 메시지 패키지는 AI가 의존성을 빠뜨리기 가장 쉬운 자리다 —
     코드에서 <code>#include</code>만 한 줄 더하고 끝내기 쉽기 때문이다. v2에서 <code>turtlesim</code>을 한쪽에서만 뺀 판 세 가지를 빌드했다.
   </p>
   <h3><code>CMakeLists.txt</code>에서 뺐을 때</h3>
@@ -875,28 +1038,28 @@ ament_package()</code></pre></div>
   <pre class="lang-sh"><code>$ colcon build --packages-select turtle_drive
 Starting &gt;&gt;&gt; turtle_drive
 --- stderr: turtle_drive
-/home/ubuntu/ros2_ws/src/turtle_drive/src/wall_stop.cpp:7:10: fatal error: turtlesim/msg/pose.hpp: No such file or directory
-    7 | #include "turtlesim/msg/pose.hpp"
+/home/ubuntu/ros2_ws/src/turtle_drive/src/turtle_drive.cpp:10:10: fatal error: turtlesim/msg/pose.hpp: No such file or directory
+   10 | #include "turtlesim/msg/pose.hpp"
       |          ^~~~~~~~~~~~~~~~~~~~~~~~
 compilation terminated.
-gmake[2]: *** [CMakeFiles/wall_stop.dir/build.make:76: CMakeFiles/wall_stop.dir/src/wall_stop.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/turtle_drive.dir/build.make:76: CMakeFiles/turtle_drive.dir/src/turtle_drive.cpp.o] Error 1
 (… 생략 …)
 ---
-Failed   &lt;&lt;&lt; turtle_drive [3.27s, exited with code 2]
+Failed   &lt;&lt;&lt; turtle_drive [2.38s, exited with code 2]
 
-Summary: 0 packages finished [3.36s]
+Summary: 0 packages finished [2.45s]
   1 package failed: turtle_drive
   1 package had stderr output: turtle_drive</code></pre>
   <p>
-    19회와 같은 <strong>컴파일 단계</strong> 오류다. 그런데 <code>find_package</code>는 남기고 <strong><code>target_link_libraries</code>에서 <code>${turtlesim_TARGETS}</code>만</strong> 빼도 <strong>똑같은 글자</strong>가 나온다.
+    19회 ③절에서 본 것과 같은 <strong>컴파일 단계</strong> 오류다. 그런데 <code>find_package</code>는 남기고 <strong><code>target_link_libraries</code>에서 <code>${turtlesim_TARGETS}</code>만</strong> 빼도 <strong>똑같은 글자</strong>가 나온다.
     <code>find_package</code>는 패키지를 찾아 불러올 뿐이고, 헤더 경로를 이 실행 파일에 거는 것은 링크 줄이기 때문이다. 오류 글자만 보고는 두 경우가 구별되지 않으니 두 줄을 다 본다.
   </p>
   <h3><code>package.xml</code>에서 뺐을 때</h3>
   <pre class="lang-sh"><code>$ colcon build --packages-select turtle_drive
 Starting &gt;&gt;&gt; turtle_drive
-Finished &lt;&lt;&lt; turtle_drive [6.92s]
+Finished &lt;&lt;&lt; turtle_drive [5.57s]
 
-Summary: 1 package finished [7.00s]
+Summary: 1 package finished [5.63s]
 $ colcon info turtle_drive
 path: src/turtle_drive
   type: ros.ament_cmake
@@ -906,6 +1069,13 @@ path: src/turtle_drive
     run: geometry_msgs rclcpp
     test: ament_lint_auto ament_lint_common
 (… 생략 …)</code></pre>
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 명령에서 처음 나오는 것</p>
+    <dl>
+      <dt>colcon info 패키지</dt>
+      <dd>colcon이 <code>package.xml</code>을 읽어 알아낸 그 패키지의 정보(경로·종류·의존성)를 보여 준다. 빌드는 하지 않는다. <code>dependencies</code> 아래 <code>build:</code>·<code>run:</code>이 <code>&lt;depend&gt;</code> 줄에서 온 것이다.</dd>
+    </dl>
+  </div>
   <div class="tablewrap">
   <table>
     <tr><th>무엇을 뺐나</th><th>빌드</th><th>알아채는 법</th></tr>
@@ -924,356 +1094,44 @@ path: src/turtle_drive
     turtle_drive 패키지의 src/*.cpp 에서 #include 하는 ROS 패키지(rclcpp, 메시지 패키지)를 전부 뽑아서, 각각이 package.xml 의 &lt;depend&gt;, CMakeLists.txt 의 find_package, target_link_libraries 세 곳에 있는지 표로 보여 줘. 빠진 칸은 고치지 말고 표에만 표시해 줘.
   </div>
 
-  <!-- ── ⑧ v3 ── -->
-  <h2 id="v3">⑧ 정면 장애물 판정 — 앞 벽까지 거리 (v3) <span class="badge b-red">🔴 사람이 한다</span></h2>
-
-  <h3>개념 — 바라보는 방향으로 곧장 갔을 때 남은 거리</h3>
+  <!-- ── ⑦ Ctrl+C ── -->
+  <h2 id="ctrlc">⑦ Ctrl+C와 cmd_vel 타임아웃 <span class="badge b-red">🔴 사람이 한다</span></h2>
   <p>
-    「벽에 가까우면 선다」를 어떻게 판정할까? 가장 먼저 떠오르는 것은 「x가 10보다 크면 선다」다. 지금 거북이는 오른쪽으로만 가니 이것으로도 선다.
-    그런데 거북이가 <strong>왼쪽을 보고</strong> 오른쪽 벽 가까이에 있으면 어떨까? 벽에서 멀어지는 중인데도 선다. 반대로 위쪽 벽을 향해 가면 x는 그대로라 서지 않는다.
-    로봇이 신경 써야 하는 것은 <strong>가장 가까운 벽이 아니라 앞에 있는 벽</strong>이다. 프로젝트에서도 옆의 콘이 아니라 앞의 콘에서 선다.
-  </p>
-  <p>
-    그래서 <strong>지금 바라보는 방향(theta)으로 곧장 가면 벽까지 몇 m 남았나</strong>를 잰다. 방향의 x 성분은 cos θ, y 성분은 sin θ다.
-    오른쪽 벽(x = 11.0889)까지는 x 방향으로 <code>11.0889 − x</code>가 남았고, 1 m 갈 때마다 x 쪽으로 cos θ만큼 다가가므로 <code>(11.0889 − x) / cos θ</code> m를 가야 닿는다.
-    네 벽에 대해 이것을 구하고(그 벽 쪽으로 가고 있을 때만), <strong>가장 작은 값</strong>이 앞 벽까지의 거리다.
-  </p>
-  <div class="tablewrap">
-  <table>
-    <tr><th>숫자를 넣어 본다</th><th>x, y, θ</th><th>앞 벽까지</th></tr>
-    <tr><td>태어난 자리, 오른쪽을 본다</td><td>5.54, 5.54, 0</td><td>cos 0 = 1 → (11.09 − 5.54) / 1 = <strong>5.54 m</strong> (오른쪽 벽)</td></tr>
-    <tr><td>v3가 선 자리</td><td>10.14, 5.54, 0</td><td>(11.09 − 10.14) / 1 = <strong>0.95 m</strong></td></tr>
-    <tr><td>같은 자리에서 왼쪽을 본다</td><td>10.14, 5.54, π</td><td>cos π = −1 → (0 − 10.14) / (−1) = <strong>10.14 m</strong> (왼쪽 벽) — 서지 않는다</td></tr>
-  </table>
-  </div>
-  <div class="interp">
-    <strong>해석:</strong> 셋째 줄이 「x &gt; 10이면 선다」와 갈리는 자리다. 같은 위치인데 <strong>바라보는 방향에 따라 판정이 바뀐다.</strong> 이것이 「정면」 장애물 판정이다.
-  </div>
-
-  <h3>예제에 적용 — <code>on_timer</code>가 판단한다</h3>
-  <p>
-    v2의 <code>on_timer</code>는 자세를 찍기만 했다. 이제 그 자세로 앞 벽까지 거리를 구하고, <strong>정해 둔 여유(<code>wall_margin_</code>, 1 m)보다 가까우면 0인 <code>Twist</code>를 보낸다.</strong>
-    0인 <code>Twist</code>가 곧 「서라」다 — ④절에서 본 대로 메시지를 만들면 여섯 칸이 전부 0이니, <code>linear.x</code>를 채우지 않고 보내면 된다.
-    속도·여유·창 크기는 숫자를 코드 곳곳에 흩지 않고 9회의 <strong>기본 멤버 초기화자</strong>로 한자리에 모은다. 21회에 이 셋 중 둘이 파라미터로 바뀐다.
-    「섭니다」 로그는 서는 순간에 <strong>한 번만</strong> 찍도록 <code>stopped_</code>로 앞 상태를 기억한다 — 안 그러면 0.1초마다 같은 줄이 찍힌다.
-  </p>
-
-  <h3>3단계 (v3) — 앞 벽까지 거리로 선다</h3>
-  <div class="codelabel bad">고치기 전 (v2) — on_timer</div>
-  <pre class="lang-cpp before"><code>  // 타이머가 0.1초마다 부른다
-  void on_timer()
-  {
-    if (!pose_) {                    // 아직 자세를 한 번도 못 받았다
-      return;
-    }
-    RCLCPP_INFO(this-&gt;get_logger(), "x = %.2f, y = %.2f", pose_-&gt;x, pose_-&gt;y);
-
-    geometry_msgs::msg::Twist cmd;   // 여섯 칸이 전부 0 으로 시작한다
-    cmd.linear.x = 1.0;              // 앞으로 1 m/s
-    cmd_pub_-&gt;publish(cmd);
-  }</code></pre>
-  <div class="codelabel good">고친 뒤 (v3) — on_timer 가 판단하고, front_distance 와 멤버 넷이 늘었다. 맨 위에 #include &lt;algorithm&gt; · &lt;cmath&gt; · &lt;limits&gt; 도 더한다</div>
-  <pre class="lang-cpp after"><code>  // 타이머가 0.1초마다 부른다 — 판단하고 명령을 보낸다
-  void on_timer()
-  {
-    if (!pose_) {                    // 아직 자세를 한 번도 못 받았다
-      return;
-    }
-    const double front = front_distance(*pose_);
-    const bool near_wall = front &lt; wall_margin_;
-    if (near_wall &amp;&amp; !stopped_) {
-      RCLCPP_INFO(this-&gt;get_logger(), "앞 벽까지 %.2f m — 섭니다 (x = %.2f, y = %.2f)",
-                  front, pose_-&gt;x, pose_-&gt;y);
-    }
-    stopped_ = near_wall;
-
-    geometry_msgs::msg::Twist cmd;   // 여섯 칸이 전부 0 — 이대로 보내면 「서라」
-    if (!near_wall) {
-      cmd.linear.x = speed_;
-    }
-    cmd_pub_-&gt;publish(cmd);
-  }
-
-  // 지금 바라보는 방향으로 곧장 가면 벽까지 몇 m 남았나
-  double front_distance(const turtlesim::msg::Pose &amp; p) const
-  {
-    const double c = std::cos(p.theta);
-    const double s = std::sin(p.theta);
-    double d = std::numeric_limits&lt;double&gt;::infinity();
-    if (c &gt; 1e-6)  { d = std::min(d, (world_size_ - p.x) / c); }   // 오른쪽 벽
-    if (c &lt; -1e-6) { d = std::min(d, (0.0 - p.x) / c); }           // 왼쪽 벽
-    if (s &gt; 1e-6)  { d = std::min(d, (world_size_ - p.y) / s); }   // 위쪽 벽
-    if (s &lt; -1e-6) { d = std::min(d, (0.0 - p.y) / s); }           // 아래쪽 벽
-    return d;
-  }
-
-  const double speed_ = 1.0;          // 앞으로 가는 속도 (m/s)
-  const double wall_margin_ = 1.0;    // 벽 앞 이만큼에서 선다 (m)
-  const double world_size_ = 11.0889; // turtlesim 창 한 변의 길이 (m)
-  bool stopped_ = false;</code></pre>
-  <div class="box firstseen">
-    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
-    <dl>
-      <dt>std::cos(θ) · std::sin(θ)</dt>
-      <dd><code>&lt;cmath&gt;</code>의 삼각함수. 각도는 <strong>라디안</strong>으로 받는다 — <code>Pose</code>의 <code>theta</code>가 라디안이라 그대로 넣었다. 바라보는 방향을 x 성분·y 성분으로 나누는 데 썼다. 좌표와 각도는 25회에서 제대로 다룬다.</dd>
-      <dt>std::min(a, b)</dt>
-      <dd><code>&lt;algorithm&gt;</code>에 있는, 두 값 중 작은 것을 돌려주는 함수. 13회의 <code>min_element</code>가 범위에서 가장 작은 값을 찾았다면 이것은 두 값만 비교한다. 여기서는 벽 네 개 중 가장 가까운 앞 벽을 고르는 데 썼다.</dd>
-      <dt>std::numeric_limits&lt;double&gt;::infinity()</dt>
-      <dd><code>&lt;limits&gt;</code>가 주는 「무한대」 값. 어떤 거리와 <code>std::min</code>을 해도 그 거리가 이긴다. 그래서 「아직 찾은 벽이 없다」의 출발값으로 썼다. 13회에서 본 라이다의 <code>inf</code>가 바로 이 값이다.</dd>
-      <dt>1e-6</dt>
-      <dd>0.000001. cos θ가 정확히 0인 방향(바로 위·아래)이면 그 벽 쪽으로는 영영 닿지 않으니 나누지 않는다. 실수는 정확히 0이 되기 어려워 「거의 0」을 이 값으로 갈랐다.</dd>
-    </dl>
-    <p class="later">좌표계와 각도를 제대로 다루는 곳: 25회</p>
-  </div>
-
-  <h3>실제로 나온 출력</h3>
-  <pre class="lang-sh"><code>$ ros2 run turtle_drive wall_stop
-[INFO] [1792273530.106605979] [wall_stop]: 벽 앞 1.0 m 에서 섭니다
-[INFO] [1792273535.206714147] [wall_stop]: 앞 벽까지 0.95 m — 섭니다 (x = 10.14, y = 5.54)</code></pre>
-  <p>
-    5.1초 뒤에 한 번 찍고 그 뒤로는 조용하다. 다른 터미널에서 거북이와 명령을 본다.
-  </p>
-  <pre class="lang-sh"><code>$ ros2 topic echo --once /turtle1/pose
-x: 10.136444091796875
-y: 5.544444561004639
-theta: 0.0
-linear_velocity: 0.0
-angular_velocity: 0.0
----
-$ ros2 topic echo --once /turtle1/cmd_vel
-linear:
-  x: 0.0
-  y: 0.0
-  z: 0.0
-angular:
-  x: 0.0
-  y: 0.0
-  z: 0.0
----
-$ ros2 topic hz /turtle1/cmd_vel
-average rate: 10.000
-	min: 0.100s max: 0.100s std dev: 0.00017s window: 12</code></pre>
-  <p>
-    거북이는 x = 10.14에 서 있고(<code>linear_velocity: 0.0</code>), 노드는 여전히 0.1초마다 <strong>0인 명령</strong>을 보내고 있다(<code>hz</code> 10.000).
-    v1에서 보던 turtlesim의 <code>Oh no! I hit the wall!</code>은 한 줄도 나오지 않는다.
-  </p>
-  <p>
-    그런데 왜 1.00 m가 아니라 <strong>0.95 m</strong>에서 섰을까? 판정은 0.1초에 한 번이고, 그사이 거북이는 1 m/s × 0.1초 = <strong>0.1 m</strong>를 간다.
-    직전 판정 때 1.05 m라 「아직 멀다」였고, 다음 판정 때 이미 0.95 m였던 것이다. <strong>판정 주기 × 속도</strong>만큼은 늘 넘어간다.
-    실물 로봇에서는 여기에 라이다가 재는 주기와 바퀴가 멈추는 데 걸리는 거리가 더해진다. 「1 m 앞에서 서라」를 「1 m 넘게 남기고 선다」로 읽으면 안 되는 이유다.
-  </p>
-  <figure class="narrow">
-    <img src="assets/img/20_wall_stop.png" width="360"
-         alt="turtlesim 창. 가운데에서 출발한 거북이가 오른쪽으로 곧은 선을 그리고, 오른쪽 벽에 닿기 전에 멈춰 있다">
-    <figcaption>v3가 세운 거북이. <strong>오른쪽 벽과 거북이 사이에 틈</strong>이 있다 — 그 틈이 약 0.95 m다.
-      v1·v2에서는 거북이가 벽에 붙어 반쯤 잘려 보였다(⑩절 그림).</figcaption>
-  </figure>
-
-  <!-- fullcode "전체 코드 — turtle_drive/ (3단계 · v3 완성본. 21회가 이 패키지에 이어 붙인다)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive wall_stop"
-       l20_topic/steps/step3/turtle_drive/src/wall_stop.cpp as turtle_drive/src/wall_stop.cpp
-       l20_topic/steps/step3/turtle_drive/CMakeLists.txt as turtle_drive/CMakeLists.txt
-       l20_topic/steps/step3/turtle_drive/package.xml as turtle_drive/package.xml
-  -->
-<details class="fullcode">
-  <summary>전체 코드 — turtle_drive/ (3단계 · v3 완성본. 21회가 이 패키지에 이어 붙인다)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive wall_stop</code></p>
-  <div class="codefile"><div class="fname">turtle_drive/src/wall_stop.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 20회 벽 앞 정지 — v3 (3단계: 정면 장애물 판정 — 벽까지 거리가 wall_margin_ 보다 가까우면 선다)
-#include &lt;algorithm&gt;
-#include &lt;chrono&gt;
-#include &lt;cmath&gt;
-#include &lt;limits&gt;
-#include &lt;memory&gt;
-
-#include &quot;rclcpp/rclcpp.hpp&quot;
-#include &quot;geometry_msgs/msg/twist.hpp&quot;
-#include &quot;turtlesim/msg/pose.hpp&quot;
-
-using namespace std::chrono_literals;
-
-class WallStop : public rclcpp::Node
-{
-public:
-  WallStop()
-  : Node(&quot;wall_stop&quot;)
-  {
-    cmd_pub_ = this-&gt;create_publisher&lt;geometry_msgs::msg::Twist&gt;(&quot;/turtle1/cmd_vel&quot;, 10);
-    pose_sub_ = this-&gt;create_subscription&lt;turtlesim::msg::Pose&gt;(
-      &quot;/turtle1/pose&quot;, 10,
-      [this](turtlesim::msg::Pose::ConstSharedPtr msg) { on_pose(msg); });
-    timer_ = this-&gt;create_wall_timer(100ms, [this]() { on_timer(); });
-    RCLCPP_INFO(this-&gt;get_logger(), &quot;벽 앞 %.1f m 에서 섭니다&quot;, wall_margin_);
-  }
-
-private:
-  // /turtle1/pose 가 올 때마다 불린다 — 받은 것을 들고 있기만 한다
-  void on_pose(turtlesim::msg::Pose::ConstSharedPtr msg)
-  {
-    pose_ = msg;
-  }
-
-  // 타이머가 0.1초마다 부른다 — 판단하고 명령을 보낸다
-  void on_timer()
-  {
-    if (!pose_) {                    // 아직 자세를 한 번도 못 받았다
-      return;
-    }
-    const double front = front_distance(*pose_);
-    const bool near_wall = front &lt; wall_margin_;
-    if (near_wall &amp;&amp; !stopped_) {
-      RCLCPP_INFO(this-&gt;get_logger(), &quot;앞 벽까지 %.2f m — 섭니다 (x = %.2f, y = %.2f)&quot;,
-                  front, pose_-&gt;x, pose_-&gt;y);
-    }
-    stopped_ = near_wall;
-
-    geometry_msgs::msg::Twist cmd;   // 여섯 칸이 전부 0 — 이대로 보내면 「서라」
-    if (!near_wall) {
-      cmd.linear.x = speed_;
-    }
-    cmd_pub_-&gt;publish(cmd);
-  }
-
-  // 지금 바라보는 방향으로 곧장 가면 벽까지 몇 m 남았나
-  double front_distance(const turtlesim::msg::Pose &amp; p) const
-  {
-    const double c = std::cos(p.theta);
-    const double s = std::sin(p.theta);
-    double d = std::numeric_limits&lt;double&gt;::infinity();
-    if (c &gt; 1e-6)  { d = std::min(d, (world_size_ - p.x) / c); }   // 오른쪽 벽
-    if (c &lt; -1e-6) { d = std::min(d, (0.0 - p.x) / c); }           // 왼쪽 벽
-    if (s &gt; 1e-6)  { d = std::min(d, (world_size_ - p.y) / s); }   // 위쪽 벽
-    if (s &lt; -1e-6) { d = std::min(d, (0.0 - p.y) / s); }           // 아래쪽 벽
-    return d;
-  }
-
-  const double speed_ = 1.0;          // 앞으로 가는 속도 (m/s)
-  const double wall_margin_ = 1.0;    // 벽 앞 이만큼에서 선다 (m)
-  const double world_size_ = 11.0889; // turtlesim 창 한 변의 길이 (m)
-  bool stopped_ = false;
-
-  rclcpp::Publisher&lt;geometry_msgs::msg::Twist&gt;::SharedPtr cmd_pub_;
-  rclcpp::Subscription&lt;turtlesim::msg::Pose&gt;::SharedPtr pose_sub_;
-  rclcpp::TimerBase::SharedPtr timer_;
-  turtlesim::msg::Pose::ConstSharedPtr pose_;   // 마지막으로 받은 자세 (처음에는 비어 있다)
-};
-
-int main(int argc, char ** argv)
-{
-  rclcpp::init(argc, argv);
-  auto node = std::make_shared&lt;WallStop&gt;();
-  rclcpp::spin(node);            // 타이머·구독 콜백은 이 안에서 불린다
-  rclcpp::shutdown();
-  return 0;
-}</code></pre></div>
-  <div class="codefile"><div class="fname">turtle_drive/CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre class="lang-cmake"><code>cmake_minimum_required(VERSION 3.8)
-project(turtle_drive)
-
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES &quot;Clang&quot;)
-  add_compile_options(-Wall -Wextra -Wpedantic)
-endif()
-
-# find dependencies
-find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
-find_package(geometry_msgs REQUIRED)
-find_package(turtlesim REQUIRED)
-
-# 19회 — 실행 파일 hello_node 를 만들고 rclcpp 를 붙인다 (8회와 같은 두 줄)
-add_executable(hello_node src/hello_node.cpp)
-target_link_libraries(hello_node PRIVATE rclcpp::rclcpp)
-
-# 20회 — 실행 파일 wall_stop. Twist(geometry_msgs)를 보내고 Pose(turtlesim)를 받는다
-add_executable(wall_stop src/wall_stop.cpp)
-target_link_libraries(wall_stop PRIVATE
-  rclcpp::rclcpp ${geometry_msgs_TARGETS} ${turtlesim_TARGETS})
-
-# 만든 실행 파일을 ros2 run 이 찾는 자리에 설치한다
-install(TARGETS hello_node wall_stop
-  DESTINATION lib/${PROJECT_NAME})
-
-if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  # the following line skips the linter which checks for copyrights
-  # comment the line when a copyright and license is added to all source files
-  set(ament_cmake_copyright_FOUND TRUE)
-  # the following line skips cpplint (only works in a git repo)
-  # comment the line when this package is in a git repo and when
-  # a copyright and license is added to all source files
-  set(ament_cmake_cpplint_FOUND TRUE)
-  ament_lint_auto_find_test_dependencies()
-endif()
-
-ament_package()</code></pre></div>
-  <div class="codefile"><div class="fname">turtle_drive/package.xml</div><button onclick="copyCode(this)">복사</button><pre class=""><code>&lt;?xml version=&quot;1.0&quot;?&gt;
-&lt;?xml-model href=&quot;http://download.ros.org/schema/package_format3.xsd&quot; schematypens=&quot;http://www.w3.org/2001/XMLSchema&quot;?&gt;
-&lt;package format=&quot;3&quot;&gt;
-  &lt;name&gt;turtle_drive&lt;/name&gt;
-  &lt;version&gt;0.0.0&lt;/version&gt;
-  &lt;description&gt;로봇공학 3부 실습 — turtlesim 거북이를 움직이는 노드를 모은 패키지&lt;/description&gt;
-  &lt;maintainer email=&quot;student@example.com&quot;&gt;Student Name&lt;/maintainer&gt;
-  &lt;license&gt;MIT&lt;/license&gt;
-
-  &lt;buildtool_depend&gt;ament_cmake&lt;/buildtool_depend&gt;
-
-  &lt;depend&gt;rclcpp&lt;/depend&gt;
-  &lt;depend&gt;geometry_msgs&lt;/depend&gt;
-  &lt;depend&gt;turtlesim&lt;/depend&gt;
-
-  &lt;test_depend&gt;ament_lint_auto&lt;/test_depend&gt;
-  &lt;test_depend&gt;ament_lint_common&lt;/test_depend&gt;
-
-  &lt;export&gt;
-    &lt;build_type&gt;ament_cmake&lt;/build_type&gt;
-  &lt;/export&gt;
-&lt;/package&gt;</code></pre></div>
-</details>
-<!-- /fullcode -->
-
-  <div class="tablewrap">
-  <table>
-    <tr><th>모양</th><th>쓸 때</th><th>안 쓸 때</th></tr>
-    <tr><td>구독 콜백은 받아 두기만, 판단은 타이머 콜백에서</td><td><strong>기본값.</strong> 받는 박자(62.5 Hz)와 보내는 박자(10 Hz)가 다를 때</td><td>메시지가 올 때마다 꼭 한 번씩 반응해야 할 때(받은 것을 그대로 다른 토픽으로 넘기는 노드 등)는 구독 콜백에서 바로 보낸다</td></tr>
-    <tr><td>서 있을 때도 0인 명령을 계속 보낸다</td><td>「서라」를 분명히 하고 싶을 때 — 받는 쪽 타임아웃(⑨절)을 기다리지 않고 <strong>바로</strong> 선다</td><td>같은 토픽에 다른 노드(teleop 등)도 보내고 있을 때는 서로 덮어쓴다. 그때는 누가 그 토픽의 주인인지부터 정한다</td></tr>
-    <tr><td>숫자를 기본 멤버 초기화자로 모은다</td><td>속도·거리처럼 바꿔 볼 값 — 한자리에 있어야 찾는다</td><td>바꿀 일이 없는 물리 상수. 그래도 이름은 붙인다(<code>world_size_</code>)</td></tr>
-  </table>
-  </div>
-
-  <!-- ── ⑨ Ctrl+C ── -->
-  <h2 id="ctrlc">⑨ Ctrl+C와 cmd_vel 타임아웃 <span class="badge b-red">🔴 사람이 한다</span></h2>
-  <p>
-    거북이가 달리는 도중에 <code>wall_stop</code>을 Ctrl+C로 끊으면 어떻게 될까? 마지막으로 받은 명령은 「앞으로 1 m/s」다. 그 명령대로 벽까지 계속 갈까, 그 자리에 설까?
-    코드만 읽어서는 답이 안 나온다. v3에는 Ctrl+C 때 「서라」를 보내는 줄이 없다 — <code>spin</code>이 돌아오면 그대로 <code>shutdown</code>하고 끝난다.
+    거북이가 달리는 도중에 <code>turtle_drive</code>를 Ctrl+C로 끊으면 어떻게 될까? 마지막으로 보낸 명령은 「이 속도로 가라」다. 그 명령대로 계속 갈까, 그 자리에 설까?
+    코드만 읽어서는 답이 안 나온다. 우리 노드에는 Ctrl+C 때 「서라」를 보내는 줄이 없다 — <code>spin</code>이 돌아오면 그대로 <code>shutdown</code>하고 끝난다.
     그럼 거북이 쪽에 달렸다. <strong>돌려 봐야 아는 것</strong>이라 직접 쟀다.
   </p>
-  <p>v1(직진만 하는 판)을 띄우고 3초 뒤에 Ctrl+C를 눌렀다. 다른 터미널에서 Ctrl+C 전과 뒤에 자세를 한 번씩 받았다.</p>
+  <p>v1을 띄우고 3초쯤 뒤에 Ctrl+C를 눌렀다. 다른 터미널에서 Ctrl+C 전과 뒤에 자세를 한 번씩 받았다.</p>
   <pre class="lang-sh"><code>$ ros2 topic echo --once /turtle1/pose      # Ctrl+C 1초쯤 전
-x: 7.4324445724487305
-y: 5.544444561004639
-theta: 0.0
-linear_velocity: 1.0
-angular_velocity: 0.0
+x: 6.824798107147217
+y: 5.866145133972168
+theta: 0.4768603444099426
+linear_velocity: 0.7677249908447266
+angular_velocity: 0.42173296213150024
 ---
 $ ros2 topic echo --once /turtle1/pose      # Ctrl+C 2초쯤 뒤
-x: 8.552444458007812
-y: 5.544444561004639
-theta: 0.0
+x: 7.336749076843262
+y: 6.262693405151367
+theta: 0.8344898819923401
 linear_velocity: 0.0
 angular_velocity: 0.0
 ---</code></pre>
   <p>
     <strong>섰다.</strong> 다만 바로 서지는 않았다. 언제 섰는지 보려고 0.1초마다 자세와 「마지막 명령이 온 지 몇 초」를 함께 찍는 검증용 노드를 하나 더 띄워 잰 결과다(이 노드는 자료에 싣지 않는다).
+    마지막 명령은 「0.50 m/s로 가라」였고, Ctrl+C는 그 명령 0.36초 뒤에 눌렀다.
   </p>
   <div class="tablewrap">
   <table>
-    <tr><th>마지막 명령 뒤</th><th>x</th><th><code>linear_velocity</code></th></tr>
-    <tr><td>0.08초 (Ctrl+C 직전)</td><td>8.232</td><td>1.00</td></tr>
-    <tr><td>0.48초</td><td>8.632</td><td>1.00</td></tr>
-    <tr><td>0.98초</td><td>9.128</td><td>1.00</td></tr>
-    <tr><td><strong>1.08초</strong></td><td><strong>9.160</strong></td><td><strong>0.00</strong></td></tr>
-    <tr><td>3.28초</td><td>9.160</td><td>0.00</td></tr>
+    <tr><th>마지막 명령 뒤</th><th>x, y</th><th><code>linear_velocity</code></th></tr>
+    <tr><td>0.28초 (Ctrl+C 직전)</td><td>7.143, 5.137</td><td>0.50</td></tr>
+    <tr><td>0.48초</td><td>7.226, 5.074</td><td>0.50</td></tr>
+    <tr><td>0.98초</td><td>7.421, 4.920</td><td>0.50</td></tr>
+    <tr><td><strong>1.08초</strong></td><td><strong>7.433, 4.910</strong></td><td><strong>0.00</strong></td></tr>
+    <tr><td>3.08초</td><td>7.433, 4.910</td><td>0.00</td></tr>
   </table>
   </div>
   <div class="interp">
-    <strong>해석:</strong> 명령이 끊긴 뒤 <strong>약 1초 동안은 마지막 속도 그대로</strong> 갔고(약 0.9 m), 1초가 넘자 섰다.
+    <strong>해석:</strong> 명령이 끊긴 뒤 <strong>약 1초 동안은 마지막 속도 그대로</strong> 갔고(약 0.5 m), 1초가 넘자 섰다.
     이것은 우리 노드가 한 일이 아니라 <strong>turtlesim이 정해 둔 규칙</strong>이다 — 속도 명령이 1초 넘게 안 오면 거북이를 세운다(18회 <code>topic pub --once</code>에서 거북이가 짧게 가다 선 것도 이 규칙이다).
     이런 규칙을 <strong>명령 타임아웃</strong>이라고 부른다. 측정 환경: 컨테이너(우분투 24.04, ROS 2 Jazzy, turtlesim). 여러분 노트북에서도 1초 언저리가 나올 것이다.
   </div>
@@ -1287,22 +1145,23 @@ angular_velocity: 0.0
     </p>
   </div>
   <p>
-    v3는 이 규칙에 기대지 않는다. 벽 앞에서는 0인 명령을 <strong>스스로</strong> 보내므로 그 순간에 선다. ⑧절 표의 「서 있을 때도 0인 명령을 계속 보낸다」가 그 뜻이다.
-    남는 구멍은 <strong>달리는 도중에 노드가 끝나는 경우</strong>뿐이고, 그때는 받는 쪽의 타임아웃에 맡겨진다. 이 구멍을 어떻게 막을지는 여러분이 실습에서 직접 보고 판단할 거리다.
+    이 규칙은 반대쪽에서도 우리 노드에 영향을 준다. ③절에서 타이머 주기를 1초가 아니라 0.5초로 둔 것이 그래서다 — 1초에 한 번 보내면 명령과 명령 사이에 거북이가 섰다 가기를 되풀이할 수 있다.
+    남는 구멍은 <strong>달리는 도중에 노드가 끝나는 경우</strong>이고, 그때는 받는 쪽의 타임아웃에 맡겨진다. 이 구멍을 어떻게 막을지는 여러분이 실습에서 직접 보고 판단할 거리다.
   </p>
 
-  <!-- ── ⑩ review ── -->
-  <h2 id="review">⑩ 받은 노드 코드 검사 — 콜백·전역 변수·<code>while</code>+<code>sleep</code>·큐 깊이 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+  <!-- ── ⑧ review ── -->
+  <h2 id="review">⑧ 받은 노드 코드 검사 — 콜백·전역 변수·<code>while</code>+<code>sleep</code>·큐 깊이 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
   <h3>언제 이게 필요해지나</h3>
   <p>
-    여기까지 세 단계를 직접 따라왔다. 실제로는 이 노드를 처음부터 손으로 쓸 일이 드물다. 에이전트에게 「turtlesim 거북이를 앞으로 보내다가 벽 앞에서 세우는 ROS 2 C++ 노드를 만들어 줘」라고 하면 몇 초 만에 코드가 온다.
+    여기까지 두 단계를 직접 따라왔다. 실제로는 이 노드를 처음부터 손으로 쓸 일이 드물다. 에이전트에게 「turtlesim 거북이를 무작위로 돌아다니게 하다가 벽 근처에 가면 되돌아오게 하는 ROS 2 C++ 노드를 만들어 줘」라고 하면 몇 초 만에 코드가 온다.
     아래는 그렇게 받은 답들에서 <strong>자주 보이는 모양을 모아 이 자료에서 만든 대표 코드</strong>다. 특정 AI의 답을 그대로 옮긴 것은 아니지만, 한 줄 한 줄은 인터넷 예제와 AI 답에서 흔히 보는 것들이다.
   </p>
-  <div class="codelabel bad">흔히 받는 모양 — turtle_drive/src/wall_stop.cpp 전체 🔴</div>
+  <div class="codelabel bad">흔히 받는 모양 — turtle_drive/src/turtle_drive.cpp 전체 🔴</div>
   <pre class="lang-cpp before"><code>#include &lt;chrono&gt;
+#include &lt;cstdlib&gt;
+#include &lt;ctime&gt;
 #include &lt;thread&gt;
-
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include "turtlesim/msg/pose.hpp"
@@ -1320,38 +1179,43 @@ void pose_callback(const turtlesim::msg::Pose msg)
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  auto node = rclcpp::Node::make_shared("wall_stop");
-
+  auto node = rclcpp::Node::make_shared("turtle_drive");
   cmd_pub = node-&gt;create_publisher&lt;geometry_msgs::msg::Twist&gt;("/turtle1/cmd_vel", 1000);
   auto pose_sub = node-&gt;create_subscription&lt;turtlesim::msg::Pose&gt;(
     "/turtle1/pose", 1000, pose_callback);
-
-  RCLCPP_INFO(node-&gt;get_logger(), "wall_stop node started");
+  RCLCPP_INFO(node-&gt;get_logger(), "turtle_drive node started");
+  std::srand(std::time(nullptr));
 
   while (rclcpp::ok()) {
     geometry_msgs::msg::Twist cmd;
-    if (current_pose.x &lt; 10.0) {
-      cmd.linear.x = 1.0;
+    if (current_pose.x &lt; 1.0 || current_pose.x &gt; 10.0 ||
+        current_pose.y &lt; 1.0 || current_pose.y &gt; 10.0) {
+      // Near the wall: turn while moving slowly to get back inside
+      cmd.linear.x = 0.5;
+      cmd.angular.z = 1.5;
+      RCLCPP_INFO(node-&gt;get_logger(), "Near wall! Turning back.");
     } else {
-      cmd.linear.x = 0.0;
-      RCLCPP_INFO(node-&gt;get_logger(), "Wall detected! Stopping.");
+      // Random walk
+      cmd.linear.x = 0.2 + (std::rand() % 100) / 100.0;
+      cmd.angular.z = (std::rand() % 200 - 100) / 100.0;
     }
     cmd_pub-&gt;publish(cmd);
-    std::this_thread::sleep_for(100ms);
+    std::this_thread::sleep_for(500ms);
   }
-
   rclcpp::shutdown();
   return 0;
 }</code></pre>
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
     <dl>
-      <dt>std::this_thread::sleep_for(100ms)</dt>
+      <dt>std::this_thread::sleep_for(500ms)</dt>
       <dd><code>&lt;thread&gt;</code>의 함수. 지금 실행 흐름을 그 시간만큼 <strong>그냥 멈춰 세운다.</strong> 그동안은 아무 일도 하지 않는다 — 콜백도 부르지 않는다.</dd>
       <dt>rclcpp::ok()</dt>
       <dd>Ctrl+C 같은 끝내라는 신호가 아직 안 왔으면 <code>true</code>. <code>spin</code>을 쓰지 않고 직접 반복할 때 반복 조건으로 쓴다.</dd>
       <dt>rclcpp::Node::make_shared("이름")</dt>
       <dd>19회 ⑥절 표의 「<code>main</code> 안에서 바로 만들기」. 클래스를 만들지 않고 <code>rclcpp::Node</code> 객체를 그대로 만든다.</dd>
+      <dt>std::srand · std::rand()</dt>
+      <dd>C 언어 시절의 난수 함수(<code>&lt;cstdlib&gt;</code>). <code>srand</code>로 씨앗을 한 번 주고, <code>rand()</code>가 0 이상의 정수를 낸다. <code>% 100</code>으로 0 ~ 99를 만든 뒤 나눠서 실수로 바꿨다. v1의 <code>&lt;random&gt;</code>과 하는 일은 같지만 범위와 분포를 손으로 맞춰야 한다.</dd>
     </dl>
   </div>
   <p>
@@ -1359,81 +1223,97 @@ int main(int argc, char ** argv)
   </p>
   <pre class="lang-sh"><code>$ colcon build --packages-select turtle_drive
 Starting &gt;&gt;&gt; turtle_drive
-Finished &lt;&lt;&lt; turtle_drive [6.90s]
+Finished &lt;&lt;&lt; turtle_drive [5.55s]
 
-Summary: 1 package finished [6.97s]
+Summary: 1 package finished [5.61s]
 $ source install/setup.bash
-$ ros2 run turtle_drive wall_stop
-[INFO] [1792273581.081847426] [wall_stop]: wall_stop node started</code></pre>
-  <figure class="narrow">
-    <img src="assets/img/20_ai_hit_wall.png" width="360"
-         alt="turtlesim 창. 거북이가 오른쪽으로 곧은 선을 그리고 오른쪽 벽에 붙어, 몸이 창 밖으로 반쯤 잘려 있다">
-    <figcaption>받은 코드를 돌린 화면. 거북이가 <strong>오른쪽 벽에 붙어 반쯤 잘려 있다.</strong> turtlesim 터미널에는 <code>Oh no! I hit the wall!</code>이 쏟아지고,
-      노드 터미널에는 <code>Wall detected!</code>가 <strong>한 번도</strong> 찍히지 않는다.</figcaption>
-  </figure>
+$ ros2 run turtle_drive turtle_drive
+[INFO] [1793759530.260185975] [turtle_drive]: turtle_drive node started
+[INFO] [1793759530.260258204] [turtle_drive]: Near wall! Turning back.
+[INFO] [1793759530.760344929] [turtle_drive]: Near wall! Turning back.
+[INFO] [1793759531.260568389] [turtle_drive]: Near wall! Turning back.
+[INFO] [1793759531.760751214] [turtle_drive]: Near wall! Turning back.
+(… 0.5초마다 같은 줄 …)</code></pre>
+  <p>
+    거북이는 창 <strong>한가운데</strong>에서 작은 원만 그리며 맴돈다. 벽 근처에는 가 본 적도 없는데, 노드는 첫 줄부터 「벽 근처다, 돌아선다」를 찍는다.
+  </p>
 
   <h3>원인 찾기 — 18회 순서대로</h3>
   <p>
-    「벽 앞에서 안 선다」를 보면 판정 숫자 <code>10.0</code>부터 바꿔 보고 싶어진다. 그런데 숫자를 바꿔서 될 일인지부터 가르는 편이 덜 헤맨다.
+    「벽 근처가 아닌데 벽 근처라고 한다」를 보면 판정 숫자 <code>1.0</code>·<code>10.0</code>부터 바꿔 보고 싶어진다. 그런데 숫자를 바꿔서 될 일인지부터 가르는 편이 덜 헤맨다.
     18회 순서대로 보내는 쪽과 받는 쪽을 하나씩 본다.
   </p>
   <pre class="lang-sh"><code>$ ros2 topic hz /turtle1/cmd_vel
-average rate: 9.985
-	min: 0.100s max: 0.100s std dev: 0.00007s window: 11
+average rate: 2.000
+	min: 0.500s max: 0.500s std dev: 0.00004s window: 3
+$ ros2 topic echo --once /turtle1/cmd_vel
+linear:
+  x: 0.5
+  y: 0.0
+  z: 0.0
+angular:
+  x: 0.0
+  y: 0.0
+  z: 1.5
+---
 $ ros2 topic info /turtle1/pose
 Type: turtlesim/msg/Pose
 Publisher count: 1
 Subscription count: 1
 $ ros2 topic echo --once /turtle1/pose
-x: 11.088889122009277
-y: 5.544444561004639
-theta: 0.0
-linear_velocity: 1.0
-angular_velocity: 0.0
+x: 5.2539238929748535
+y: 5.707402229309082
+theta: -1.0463706254959106
+linear_velocity: 0.5
+angular_velocity: 1.5
 ---</code></pre>
   <div class="tablewrap">
   <table>
     <tr><th>물음</th><th>답</th><th>그러니</th></tr>
-    <tr><td>명령은 나가나</td><td><code>hz</code> 약 10</td><td>발행은 된다</td></tr>
+    <tr><td>명령은 나가나</td><td><code>hz</code> 2.000, 값은 늘 <code>0.5</code> · <code>1.5</code></td><td>발행은 된다. 그런데 매번 「돌아서기」 쪽 값이다</td></tr>
     <tr><td>자세 토픽에 내 노드가 붙었나</td><td><code>Subscription count: 1</code></td><td>구독도 있다</td></tr>
-    <tr><td>자세가 실제로 오나</td><td><code>x: 11.0888…</code> — 벽에 붙어 있다</td><td>값도 흐른다. 그런데 노드는 「x &lt; 10」으로 판단했다</td></tr>
+    <tr><td>자세가 실제로 오나</td><td><code>x: 5.25…</code>, <code>y: 5.70…</code> — 한가운데다</td><td>값도 흐른다. 그런데 노드는 「범위 밖」으로 판단했다</td></tr>
   </table>
   </div>
   <p>
-    구독은 붙어 있고 값도 오는데, 노드는 x가 10보다 작다고 판단했다. 그렇다면 <code>current_pose</code>가 한 번도 바뀌지 않은 것 아닐까?
+    구독은 붙어 있고 값도 오는데, 노드는 거북이가 범위 밖에 있다고 판단했다. 그렇다면 <code>current_pose</code>가 한 번도 바뀌지 않은 것 아닐까?
     확인하는 방법은 간단하다. <strong>콜백 안에 로그 한 줄</strong>을 넣고 다시 돌린다.
   </p>
   <div class="codelabel bad">확인용으로 한 줄 넣은 판</div>
   <pre class="lang-cpp before"><code>void pose_callback(const turtlesim::msg::Pose msg)
 {
   current_pose = msg;
-  RCLCPP_INFO(rclcpp::get_logger("wall_stop"), "pose_callback: x = %.2f", msg.x);   // 확인용 한 줄
+  RCLCPP_INFO(rclcpp::get_logger("turtle_drive"), "pose_callback: x = %.2f", msg.x);   // 확인용 한 줄
 }</code></pre>
-  <pre class="lang-sh"><code>$ ros2 run turtle_drive wall_stop
-[INFO] [1792273603.757678092] [wall_stop]: wall_stop node started
-[INFO] [1792273607.577373215] [rclcpp]: signal_handler(SIGINT/SIGTERM)</code></pre>
+  <pre class="lang-sh"><code>$ ros2 run turtle_drive turtle_drive
+[INFO] [1793759552.555910860] [turtle_drive]: turtle_drive node started
+[INFO] [1793759552.555971065] [turtle_drive]: Near wall! Turning back.
+[INFO] [1793759553.056059031] [turtle_drive]: Near wall! Turning back.
+(…)
+[INFO] [1793759556.057096538] [turtle_drive]: Near wall! Turning back.
+[INFO] [1793759556.413904199] [rclcpp]: signal_handler(SIGINT/SIGTERM)</code></pre>
   <p>
     4초 가까이 도는 동안 자세가 200번 넘게 왔을 텐데 <code>pose_callback</code> 줄이 <strong>한 번도</strong> 없다. 콜백이 불리지 않았다.
-    ②절의 첫째 규칙 그대로다 — <strong>이 코드에는 <code>spin</code>이 없다.</strong> <code>main</code>이 <code>while</code>을 도는 동안 메시지는 도착해서 쌓이지만, 그것을 꺼내 콜백을 불러 줄 자리가 없다.
-    그래서 <code>current_pose</code>는 만들어질 때의 값, <strong><code>x = 0</code></strong>에 머물러 있었고 「0 &lt; 10이니 가라」를 계속 보냈다.
+    ③절의 첫째 규칙 그대로다 — <strong>이 코드에는 <code>spin</code>이 없다.</strong> <code>main</code>이 <code>while</code>을 도는 동안 메시지는 도착해서 쌓이지만, 그것을 꺼내 콜백을 불러 줄 자리가 없다.
+    그래서 <code>current_pose</code>는 만들어질 때의 값, <strong><code>x = 0</code>, <code>y = 0</code></strong>에 머물러 있었고, 0은 1보다 작으니 「범위 밖이다, 돌아선다」를 계속 보냈다.
     (확인이 끝나면 이 로그 줄은 지운다. 초당 62.5번 찍히는 로그는 그 자체로 짐이 된다 — 22회.)
   </p>
-
   <div class="box trap">
     <div class="boxtitle">⚠️ Ctrl+C를 누르면 <code>Segmentation fault</code></div>
     <p>받은 코드를 Ctrl+C로 끊었을 때 실제로 찍힌 것이다(가운데는 줄였다).</p>
-    <pre><code>[INFO] [1792273591.902146902] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+    <pre><code>[INFO] [1793759542.122116502] [rclcpp]: signal_handler(SIGINT/SIGTERM)
 Failed to delete datawriter, at ./src/publisher.cpp:45 during '__function__'
-[ERROR] [1792273592.101971361] [wall_stop.rclcpp]: Error in destruction of rcl publisher handle: cannot publish data, at ./src/rmw_publish.cpp:66, at ./src/rcl/publisher.c:201
+[ERROR] [1793759542.366452174] [turtle_drive.rclcpp]: Error in destruction of rcl publisher handle: cannot publish data, at ./src/rmw_publish.cpp:66, at ./src/rcl/publisher.c:201
 (… 생략 …)
 __function__:80: 'destroy_subscription' failed
 [ros2run]: Segmentation fault</code></pre>
     <p>
-      네 번 돌려 네 번 다 났다. 원인은 <strong>발행자를 전역 변수에 둔 것</strong>이다. 전역 변수는 <code>main</code>이 끝난 <strong>뒤에야</strong> 지워진다.
+      네 번 더 돌려 네 번 다 비정상으로 끝났다(세 번은 <code>Segmentation fault</code>, 한 번은 <code>terminate called after throwing an instance of 'std::system_error'</code> 뒤 <code>Aborted</code>).
+      원인은 <strong>발행자를 전역 변수에 둔 것</strong>이다. 전역 변수는 <code>main</code>이 끝난 <strong>뒤에야</strong> 지워진다.
       그때는 이미 <code>rclcpp::shutdown()</code>이 ROS 2 통신을 정리한 뒤라, 발행자가 자기를 정리하려다 실패하고 프로그램이 죽는다.
       11회 RAII에서 본 「얻은 것은 돌려준다」가, <strong>돌려주는 순서</strong>가 어긋나서 터진 것이다.
       확인하려고 <strong>다른 곳은 그대로 두고 발행자만 <code>main</code> 안의 지역 변수로</strong> 옮겨 돌렸더니 Ctrl+C 때 <code>signal_handler</code> 한 줄만 찍히고 깨끗하게 끝났다.
-      v3처럼 발행자를 노드의 멤버로 두면 노드와 함께, <code>shutdown</code>보다 먼저 없어지지 않으니 이 일이 생기지 않는다.
+      v2처럼 발행자를 노드의 멤버로 두면 노드와 함께, <code>shutdown</code>보다 먼저 없어지니 이 일이 생기지 않는다.
     </p>
   </div>
 
@@ -1441,53 +1321,53 @@ __function__:80: 'destroy_subscription' failed
   <p class="readme-first">무엇을 먼저 볼지: <strong>「받은 코드에서」 열</strong>. 일곱 줄 모두 빌드를 막지 않는다. 그래서 빌드 성공은 이 중 어느 것도 보증하지 않는다.</p>
   <div class="tablewrap">
   <table>
-    <tr><th></th><th>검사할 것</th><th>받은 코드에서</th><th>어디서 배웠나</th><th>고친 모양 (v3)</th></tr>
-    <tr><td>1</td><td><strong>콜백이 불리는 자리(<code>spin</code>)가 있나</strong></td><td><code>while</code> + <code>sleep_for</code> — <code>spin</code>이 없어 구독 콜백이 한 번도 안 불린다. <strong>거북이가 벽에 부딪힌 원인</strong></td><td>19회 <code>spin</code> · 오늘 ②</td><td><code>rclcpp::spin(node)</code></td></tr>
-    <tr><td>2</td><td>주기마다 할 일이 타이머인가</td><td><code>while</code> 반복이 주기를 직접 센다</td><td>13회 「이미 있는 것을 먼저」 · 14회 <code>100ms</code> · 오늘 ④</td><td><code>create_wall_timer(100ms, …)</code></td></tr>
-    <tr><td>3</td><td>콜백 인자를 <code>ConstSharedPtr</code>로 받나</td><td><code>const Pose msg</code> — <strong>값 전달</strong>. 콜백마다 복사</td><td>12회 값 전달·<code>const &amp;</code> · 11회 <code>shared_ptr</code> · 오늘 ⑥</td><td><code>Pose::ConstSharedPtr msg</code></td></tr>
-    <tr><td>4</td><td>발행자·구독자·상태가 노드의 멤버인가</td><td>발행자와 자세가 <strong>전역 변수</strong>. Ctrl+C 때 <code>Segmentation fault</code></td><td>9회 클래스 · 11회 RAII · 19회 노드 상속</td><td><code>class WallStop : public rclcpp::Node</code>의 멤버</td></tr>
-    <tr><td>5</td><td>「아직 못 받음」을 따로 다루나</td><td>기본값 <code>x = 0</code>을 진짜 자세처럼 읽는다 — 「모른다」가 「벽에서 멀다」가 됐다</td><td>14회 <code>std::optional</code> · 오늘 ⑥</td><td><code>if (!pose_) return;</code></td></tr>
-    <tr><td>6</td><td>숫자의 뜻을 말할 수 있나</td><td>큐 깊이 <strong>1000</strong>, 판정 <strong><code>10.0</code></strong> — 왜 그 값인지 코드에 없다. <code>10.0</code>은 x만 보고 방향을 안 본다</td><td>오늘 ③ · ⑧ (큐 깊이는 22회, 파라미터는 21회)</td><td>깊이 10 · <code>wall_margin_</code> · <code>front_distance</code></td></tr>
-    <tr><td>7</td><td>새 의존성이 두 파일 양쪽에 있나</td><td>(이 대표 코드는 v3의 패키지 파일을 그대로 썼다. 받은 패키지라면 반드시 본다)</td><td>19회 ⑩ · 오늘 ⑦</td><td><code>&lt;depend&gt;</code> · <code>find_package</code> · 링크 줄</td></tr>
+    <tr><th></th><th>검사할 것</th><th>받은 코드에서</th><th>어디서 배웠나</th><th>고친 모양 (v2)</th></tr>
+    <tr><td>1</td><td><strong>콜백이 불리는 자리(<code>spin</code>)가 있나</strong></td><td><code>while</code> + <code>sleep_for</code> — <code>spin</code>이 없어 구독 콜백이 한 번도 안 불린다. <strong>거북이가 가운데서 맴돈 원인</strong></td><td>19회 <code>spin</code> · 오늘 ③</td><td><code>rclcpp::spin(node);</code></td></tr>
+    <tr><td>2</td><td>주기마다 할 일이 타이머인가</td><td><code>while</code> 반복이 주기를 직접 센다</td><td>13회 「이미 있는 것을 먼저」 · 14회 <code>500ms</code> · 오늘 ③</td><td><code>create_wall_timer(500ms, …)</code></td></tr>
+    <tr><td>3</td><td>콜백 인자를 <code>ConstSharedPtr</code>로 받나</td><td><code>const Pose msg</code> — <strong>값 전달</strong>. 콜백마다 복사</td><td>12회 값 전달·<code>const &amp;</code> · 11회 <code>shared_ptr</code> · 오늘 ⑤</td><td><code>Pose::ConstSharedPtr msg</code></td></tr>
+    <tr><td>4</td><td>발행자·구독자·상태가 노드의 멤버인가</td><td>발행자와 자세가 <strong>전역 변수</strong>. Ctrl+C 때 <code>Segmentation fault</code></td><td>9회 클래스 · 11회 RAII · 19회 노드 상속</td><td><code>class TurtleDrive : public rclcpp::Node</code>의 멤버</td></tr>
+    <tr><td>5</td><td>「아직 못 받음」을 따로 다루나</td><td>기본값 <code>x = 0</code>, <code>y = 0</code>을 진짜 자세처럼 읽는다 — 「모른다」가 「범위 밖이다」가 됐다</td><td>14회 <code>std::optional</code> · 오늘 ⑤</td><td><code>if (!pose_) return;</code></td></tr>
+    <tr><td>6</td><td>숫자의 뜻을 말할 수 있나</td><td>큐 깊이 <strong>1000</strong>, <code>1.0</code>·<code>10.0</code>·<code>0.5</code>·<code>1.5</code>가 곳곳에 맨숫자로 — 왜 그 값인지 코드에 없다. 돌아설 때도 앞으로 가면서 돌아서 경계 밖으로 더 나갈 수 있다</td><td>오늘 ② · ⑤ (큐 깊이는 22회, 파라미터는 21회)</td><td>깊이 10 · <code>margin_</code> · <code>map_size_</code> 같은 이름 붙은 멤버</td></tr>
+    <tr><td>7</td><td>새 의존성이 두 파일 양쪽에 있나</td><td>(이 대표 코드는 v2의 패키지 파일을 그대로 썼다. 받은 패키지라면 반드시 본다)</td><td>19회 ②·③ · 오늘 ⑥</td><td><code>&lt;depend&gt;</code> · <code>find_package</code> · 링크 줄</td></tr>
   </table>
   </div>
   <div class="interp">
-    <strong>해석:</strong> 1번 하나가 거북이를 벽에 부딪히게 했고, 4번 하나가 Ctrl+C 때 프로그램을 죽였다. 나머지 다섯은 <strong>오늘은 결과를 바꾸지 않는다.</strong>
+    <strong>해석:</strong> 1번 하나가 거북이를 가운데서 맴돌게 했고, 4번 하나가 Ctrl+C 때 프로그램을 죽였다. 나머지 다섯은 <strong>오늘은 결과를 바꾸지 않는다.</strong>
     큐 깊이 1000이나 10이나, 값 전달이나 <code>ConstSharedPtr</code>나, 지금 거북이의 움직임은 똑같다. 그래서 「돌아가니 됐다」로 넘어가기 쉽다.
-    결과가 바뀌는 것은 메시지가 커지고(24회 <code>LaserScan</code>), 콜백이 느려지고(22회), 판정을 바꿔 가며 튜닝할 때(21회)다. 그때 고치면 늦으니 받을 때 고친다.
+    결과가 바뀌는 것은 메시지가 커지고(24회 <code>LaserScan</code>), 콜백이 느려지고(22회), 숫자를 바꿔 가며 튜닝할 때(21회)다. 그때 고치면 늦으니 받을 때 고친다.
   </div>
 
   <h3>이렇게 말하면 된다</h3>
   <p>
     「코드 좀 개선해 줘」나 「효율적으로 고쳐 줘」로는 위 일곱 줄이 다 고쳐져 오지 않는 경우가 많다. 고칠 자리를 <strong>짚어서</strong> 말한다.
-    AI가 만든 C++ 코드를 조사한 한 연구는 C++ 함수 50개를 요청 방식만 달리해 다시 짜게 했다. 아무 말 없이 받은 코드의 효율 점수가 0.294였고, 「효율적으로」라는 일반적인 요구로는 0.342, <strong>무엇이 문제인지 범주를 짚어서 요구했을 때 0.385</strong>까지 올라갔다(만점 1.0).
+    AI가 만든 C++ 코드를 조사한 한 연구는 C++ 함수 50개를 요청 방식만 달리해 다시 짜게 했다. 아무 말 없이 받은 코드의 효율 점수가 0.294였고, 「효율적으로」라는 일반적인 요구로는 0.342, <strong>무엇이 문제인지 범주를 짚어서 요구했을 때 0.385</strong>였다.
     차이를 만든 것은 무엇이 잘못됐는지 아는 것이었다.
   </p>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
-    이 wall_stop.cpp 를 아래 기준으로 고쳐 줘. 고치기 전에 기준마다 지금 코드의 어느 줄이 어긋나는지 먼저 표로 보여 줘.
-    ① rclcpp::Node 를 상속한 WallStop 클래스로 만들고, 발행자·구독자·타이머·마지막 자세는 전부 멤버로 둬(전역 변수 금지).
-    ② while + sleep_for 대신 create_wall_timer(100ms, …) 를 쓰고 main 은 init → make_shared → spin → shutdown.
+    이 turtle_drive.cpp 를 아래 기준으로 고쳐 줘. 고치기 전에 기준마다 지금 코드의 어느 줄이 어긋나는지 먼저 표로 보여 줘.
+    ① rclcpp::Node 를 상속한 TurtleDrive 클래스로 만들고, 발행자·구독자·타이머·마지막 자세는 전부 멤버로 둬(전역 변수 금지).
+    ② while + sleep_for 대신 create_wall_timer(500ms, …) 를 쓰고 main 은 init → make_shared → spin → shutdown.
     ③ 구독 콜백 인자는 turtlesim::msg::Pose::ConstSharedPtr 로 받고, 콜백에서는 포인터를 멤버에 저장만 해.
     ④ 자세를 아직 못 받았으면 타이머 콜백에서 아무것도 보내지 마.
-    ⑤ 판정은 x 대신 「지금 theta 방향으로 갔을 때 앞 벽까지 거리」로 하고, 1.0 m 보다 가까우면 0 인 Twist 를 보내. 속도와 여유 거리는 이름 붙은 멤버로.
-    ⑥ 큐 깊이는 10.
+    ⑤ x·y 가 1 ~ 10 밖이고 「바라보는 방향과 중앙(5.5, 5.5)으로 가는 방향 사이의 각」이 20° 보다 크면 제자리에서 돌고(linear.x 0), 아니면 무작위로 가. 범위·여유·속도는 이름 붙은 멤버로.
+    ⑥ 큐 깊이는 10, 난수는 &lt;random&gt; 의 mt19937 과 uniform_real_distribution.
     빌드는 ~/ros2_ws 에서 colcon build --packages-select turtle_drive 로 하고, 실행 결과는 내가 직접 볼게.
   </div>
   <p>
-    받은 결과는 <strong>⑧절의 v3와 나란히 놓고</strong> 일곱 줄을 다시 훑는다. 모양이 조금 달라도 된다(예: 람다 대신 <code>std::bind</code> — 「조금 더 알아두면」).
-    마지막 확인은 여러분이 합니다 — 거북이가 벽 앞에서 서는지, <code>hz</code>가 10인지, Ctrl+C 때 <code>Segmentation fault</code>가 없는지.
+    받은 결과는 <strong>⑤절의 v2와 나란히 놓고</strong> 일곱 줄을 다시 훑는다. 모양이 조금 달라도 된다(예: 람다 대신 <code>std::bind</code> — 「조금 더 알아두면」).
+    마지막 확인은 여러분이 합니다 — 거북이가 벽에 닿기 전에 돌아서는지, <code>hz</code>가 2인지, Ctrl+C 때 <code>Segmentation fault</code>가 없는지.
   </p>
-
-  <!-- fullcode "전체 코드 — turtle_drive/src/wall_stop.cpp (받은 코드 판 · 빌드는 되고 벽에 부딪힌다. CMakeLists.txt·package.xml 은 v3 그대로)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive wall_stop"
-       l20_topic/steps/variants/ai_given/turtle_drive/src/wall_stop.cpp as turtle_drive/src/wall_stop.cpp
+  <!-- fullcode "전체 코드 — turtle_drive/src/turtle_drive.cpp (받은 코드 판 · 빌드는 되고 가운데서 맴돈다. CMakeLists.txt·package.xml 은 v2 그대로)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive turtle_drive"
+       l20_topic/steps/variants/ai_given/turtle_drive/src/turtle_drive.cpp as turtle_drive/src/turtle_drive.cpp
   -->
 <details class="fullcode">
-  <summary>전체 코드 — turtle_drive/src/wall_stop.cpp (받은 코드 판 · 빌드는 되고 벽에 부딪힌다. CMakeLists.txt·package.xml 은 v3 그대로)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive wall_stop</code></p>
-  <div class="codefile"><div class="fname">turtle_drive/src/wall_stop.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>#include &lt;chrono&gt;
+  <summary>전체 코드 — turtle_drive/src/turtle_drive.cpp (받은 코드 판 · 빌드는 되고 가운데서 맴돈다. CMakeLists.txt·package.xml 은 v2 그대로)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive turtle_drive</code></p>
+  <div class="codefile"><div class="fname">turtle_drive/src/turtle_drive.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>#include &lt;chrono&gt;
+#include &lt;cstdlib&gt;
+#include &lt;ctime&gt;
 #include &lt;thread&gt;
-
 #include &quot;rclcpp/rclcpp.hpp&quot;
 #include &quot;geometry_msgs/msg/twist.hpp&quot;
 #include &quot;turtlesim/msg/pose.hpp&quot;
@@ -1505,38 +1385,42 @@ void pose_callback(const turtlesim::msg::Pose msg)
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  auto node = rclcpp::Node::make_shared(&quot;wall_stop&quot;);
-
+  auto node = rclcpp::Node::make_shared(&quot;turtle_drive&quot;);
   cmd_pub = node-&gt;create_publisher&lt;geometry_msgs::msg::Twist&gt;(&quot;/turtle1/cmd_vel&quot;, 1000);
   auto pose_sub = node-&gt;create_subscription&lt;turtlesim::msg::Pose&gt;(
     &quot;/turtle1/pose&quot;, 1000, pose_callback);
-
-  RCLCPP_INFO(node-&gt;get_logger(), &quot;wall_stop node started&quot;);
+  RCLCPP_INFO(node-&gt;get_logger(), &quot;turtle_drive node started&quot;);
+  std::srand(std::time(nullptr));
 
   while (rclcpp::ok()) {
     geometry_msgs::msg::Twist cmd;
-    if (current_pose.x &lt; 10.0) {
-      cmd.linear.x = 1.0;
+    if (current_pose.x &lt; 1.0 || current_pose.x &gt; 10.0 ||
+        current_pose.y &lt; 1.0 || current_pose.y &gt; 10.0) {
+      // Near the wall: turn while moving slowly to get back inside
+      cmd.linear.x = 0.5;
+      cmd.angular.z = 1.5;
+      RCLCPP_INFO(node-&gt;get_logger(), &quot;Near wall! Turning back.&quot;);
     } else {
-      cmd.linear.x = 0.0;
-      RCLCPP_INFO(node-&gt;get_logger(), &quot;Wall detected! Stopping.&quot;);
+      // Random walk
+      cmd.linear.x = 0.2 + (std::rand() % 100) / 100.0;
+      cmd.angular.z = (std::rand() % 200 - 100) / 100.0;
     }
     cmd_pub-&gt;publish(cmd);
-    std::this_thread::sleep_for(100ms);
+    std::this_thread::sleep_for(500ms);
   }
-
   rclcpp::shutdown();
   return 0;
 }</code></pre></div>
 </details>
 <!-- /fullcode -->
+<!-- /fullcode -->
 
   <!-- ── 🧪 실습 ── -->
-  <h2 id="lab">🧪 실습 — wall_stop 실행과 받은 코드 검사 <span class="badge b-red">🔴 사람이 한다</span></h2>
+  <h2 id="lab">🧪 실습 — turtle_drive 실행과 받은 코드 검사 <span class="badge b-red">🔴 사람이 한다</span></h2>
   <div class="lab-block">
     <p class="boxtitle">🧪 이걸 해 보면 무엇을 알게 되나</p>
     <p>
-      <strong>코드에 적은 숫자(<code>100ms</code>, <code>1.0</code>, <code>wall_margin_</code>)가 명령 출력과 화면에 그대로 나타나는지</strong>를 자기 손으로 맞춰 본다.
+      <strong>코드에 적은 숫자(<code>500ms</code>, <code>margin_</code>)가 명령 출력과 화면에 그대로 나타나는지</strong>를 자기 손으로 맞춰 본다.
       그리고 「빌드는 되는데 틀린 코드」 두 가지(<code>spin</code>이 없는 것, 발행자가 전역인 것)를 직접 돌려 증상을 본다.
     </p>
 
@@ -1544,34 +1428,35 @@ int main(int argc, char ** argv)
     <ul>
       <li>WSL 터미널 넷 (16회에 <code>.bashrc</code>에 넣은 <code>source /opt/ros/jazzy/setup.bash</code>가 걸린 상태)</li>
       <li>19회 실습까지 끝낸 <code>~/ros2_ws/src/turtle_drive</code></li>
-      <li>⑧절 끝의 📄 「3단계 · v3 완성본」, ⑩절 끝의 📄 「받은 코드 판」</li>
+      <li>⑤절 끝의 📄 「2단계 · v2 완성본」, ⑧절 끝의 📄 「받은 코드 판」</li>
     </ul>
 
     <p class="boxtitle">절차</p>
     <ol>
-      <li><strong>(4분)</strong> v3 완성본의 파일 셋(<code>src/wall_stop.cpp</code>·<code>CMakeLists.txt</code>·<code>package.xml</code>)을 패키지에 넣고 작업공간 최상위에서 빌드한다 (터미널 1).
+      <li><strong>(4분)</strong> v2 완성본의 파일 셋(<code>src/turtle_drive.cpp</code>·<code>CMakeLists.txt</code>·<code>package.xml</code>)을 패키지에 넣고 작업공간 최상위에서 빌드한다 (터미널 1).
         <pre class="lang-sh"><code>$ cd ~/ros2_ws
 $ colcon build --packages-select turtle_drive
 $ source install/setup.bash
 $ ros2 pkg executables turtle_drive</code></pre>
-        <code>hello_node</code>와 <code>wall_stop</code> 둘이 보이면 된다.</li>
-      <li><strong>(2분)</strong> 터미널 2에서 turtlesim을 띄우고, 터미널 1에서 <code>ros2 run turtle_drive wall_stop</code>. 거북이가 오른쪽 벽 앞에서 서고 「앞 벽까지 0.9x m — 섭니다」가 한 번 찍히는지 본다.</li>
-      <li><strong>(3분)</strong> 터미널 3에서 ⑤절 명령을 친다 — <code>ros2 topic hz /turtle1/cmd_vel</code>(10 언저리), <code>ros2 topic echo --once /turtle1/cmd_vel</code>(전부 0), <code>ros2 topic info -v /turtle1/cmd_vel</code>(보내는 쪽 <code>wall_stop</code>). 그리고 <code>rqt_graph</code>를 띄워 화살표가 한 바퀴 도는지 본다.</li>
-      <li><strong>(4분)</strong> <code>wall_margin_</code>을 <code>2.0</code>으로 바꿔 다시 빌드하고, 터미널 4에서 <code>ros2 service call /reset std_srvs/srv/Empty</code>(18회)로 거북이를 처음 자리로 돌린 뒤 다시 실행한다.
-        이번에는 <code>앞 벽까지 1.94 m — 섭니다 (x = 9.14, y = 5.54)</code>가 찍히고, 거북이가 벽에서 2 m쯤 떨어져 서면 된다.
+        <code>hello_node</code>와 <code>turtle_drive</code> 둘이 보이면 된다.</li>
+      <li><strong>(3분)</strong> 터미널 2에서 turtlesim을 띄우고, 터미널 1에서 <code>ros2 run turtle_drive turtle_drive</code>. 거북이가 벽에 닿기 전에 돌아서는지, 그때마다 「범위 밖 … 중앙 쪽으로 돕니다」와 「중앙을 봅니다 — 다시 출발합니다」가 짝으로 찍히는지 본다.</li>
+      <li><strong>(3분)</strong> 터미널 3에서 ④절 명령을 친다 — <code>ros2 topic hz /turtle1/cmd_vel</code>(2 언저리), <code>ros2 topic echo --once /turtle1/cmd_vel</code>(돌아서는 중이면 <code>linear.x</code> 0, <code>angular.z</code> 1.0), <code>ros2 topic info -v /turtle1/cmd_vel</code>(보내는 쪽 <code>turtle_drive</code>). 그리고 <code>rqt_graph</code>를 띄워 ⑤절 그림과 같은지 본다.</li>
+      <li><strong>(4분)</strong> <code>margin_</code>을 <code>2.0</code>으로 바꿔 다시 빌드하고, 터미널 4에서 <code>ros2 service call /reset std_srvs/srv/Empty</code>(18회)로 거북이를 처음 자리로 돌린 뒤 다시 실행한다.
+        이번에는 첫 줄이 <code>2.0 ~ 9.0 안에서 돌아다닙니다</code>로 바뀌고, 「범위 밖」 줄의 x·y가 2 언저리나 9 언저리에서 찍히면 된다.
         숫자 하나를 바꾸는 데 빌드를 다시 해야 했다는 것을 기억해 둔다 — 21회에 이 숫자를 파라미터로 빼면 <strong>노드를 세우지 않고</strong> 바꿀 수 있다. 끝나면 1.0으로 되돌린다.</li>
-      <li><strong>(4분)</strong> <code>wall_stop.cpp</code>를 ⑩절의 받은 코드 판으로 바꾸고 다시 빌드·실행한다. 거북이가 벽에 부딪히는지, <code>Wall detected!</code>가 한 번도 안 찍히는지 본다. Ctrl+C를 눌러 <code>Segmentation fault</code>가 나는지 본다.</li>
-      <li><strong>(3분)</strong> 받은 코드 판에서 <strong>한 곳만</strong> 고친다 — 발행자 전역 변수 줄을 지우고 <code>main</code> 안에서 <code>auto cmd_pub = …</code>로 만든다. 다시 빌드해 Ctrl+C를 누르고 <code>Segmentation fault</code>가 사라졌는지 본다. 거북이는 여전히 벽에 부딪힐 것이다 — 그것은 검사 목록 1번 몫이다. 끝나면 v3로 되돌린다.</li>
+      <li><strong>(4분)</strong> <code>turtle_drive.cpp</code>를 ⑧절의 받은 코드 판으로 바꾸고 다시 빌드·실행한다. 거북이가 가운데서 맴도는지, <code>Near wall! Turning back.</code>이 첫 줄부터 찍히는지 본다. Ctrl+C를 눌러 <code>Segmentation fault</code>가 나는지 본다.</li>
+      <li><strong>(3분)</strong> 받은 코드 판에서 <strong>한 곳만</strong> 고친다 — 발행자 전역 변수 줄을 지우고 <code>main</code> 안에서 <code>auto cmd_pub = …</code>로 만든다. 다시 빌드해 Ctrl+C를 누르고 <code>Segmentation fault</code>가 사라졌는지 본다. 거북이는 여전히 맴돈다 — <code>spin</code>이 없는 것은 그대로이기 때문이다. 끝나면 v2 완성본으로 되돌린다.</li>
     </ol>
 
     <p class="boxtitle">이렇게 되면 성공이다</p>
-    <pre class="lang-sh"><code>$ ros2 run turtle_drive wall_stop
-[INFO] [1792273530.106605979] [wall_stop]: 벽 앞 1.0 m 에서 섭니다
-[INFO] [1792273535.206714147] [wall_stop]: 앞 벽까지 0.95 m — 섭니다 (x = 10.14, y = 5.54)</code></pre>
+    <pre class="lang-sh"><code>$ ros2 run turtle_drive turtle_drive
+[INFO] [1793759395.218066781] [turtle_drive]: 1.0 ~ 10.0 안에서 돌아다닙니다
+[INFO] [1793759403.718122082] [turtle_drive]: 범위 밖 (x = 10.20, y = 3.16) — 중앙 쪽으로 돕니다
+[INFO] [1793759406.218124063] [turtle_drive]: 중앙을 봅니다 — 다시 출발합니다</code></pre>
     <p>
-      화면은 ⑧절 그림처럼 <strong>벽과 거북이 사이에 틈</strong>이 있어야 하고, <code>rqt_graph</code>는 ⑥절 그림처럼 <code>/wall_stop</code>에서 나가는 화살표와 들어오는 화살표가 하나씩 있어야 한다.
-      숫자(0.95, 0.94 …)는 판정 순간에 따라 조금씩 다를 수 있다.
-      <span style="color:var(--muted)">확인한 곳: 컨테이너(우분투 24.04, ROS 2 Jazzy, CMake 3.28, colcon). 4번 단계의 teleop 조작은 화면을 보며 사람이 하는 것이라 자료에 출력을 싣지 않았다.</span>
+      화면은 ⑤절 그림처럼 <strong>선이 벽에 닿기 전에 꺾여</strong> 있어야 하고, <code>rqt_graph</code>는 <code>/turtle_drive</code>에서 나가는 화살표와 들어오는 화살표가 하나씩 있어야 한다.
+      돌아서는 자리와 숫자(10.20, 3.16 …)는 실행할 때마다 다르다.
+      <span style="color:var(--muted)">확인한 곳: 컨테이너(우분투 24.04, ROS 2 Jazzy, CMake 3.28, colcon). 4번 단계에서 <code>margin_</code>을 2.0으로 바꿔 60초 돌렸을 때 「범위 밖」 줄은 x = 9.19, 1.70, 9.03 · y = 1.93에서 찍혔다.</span>
     </p>
   </div>
 
@@ -1585,9 +1470,9 @@ $ ros2 pkg executables turtle_drive</code></pre>
   <pre class="lang-sh"><code>$ cd ~/ros2_ws
 $ colcon build --packages-select turtle_watch
 Starting &gt;&gt;&gt; turtle_watch
-Finished &lt;&lt;&lt; turtle_watch [6.41s]
+Finished &lt;&lt;&lt; turtle_watch [4.81s]
 
-Summary: 1 package finished [6.49s]
+Summary: 1 package finished [4.87s]
 $ source install/setup.bash
 $ ros2 run turtle_watch wall_watch
 가장 가까운 벽까지 5.54444 m
@@ -1676,12 +1561,13 @@ ament_package()</code></pre></div>
 &lt;/package&gt;</code></pre></div>
 </details>
 <!-- /fullcode -->
+<!-- /fullcode -->
   <p>세 파일을 <code>~/ros2_ws/src/turtle_watch/</code> 아래에 같은 경로로 만든다(<code>turtle_drive</code> 옆에 둔다).</p>
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
     <dl>
       <dt>rclcpp::spin_some(node)</dt>
-      <dd>지금까지 도착해 있는 일만 처리하고 <strong>바로 돌아온다.</strong> <code>spin</code>이 「끝날 때까지 기다리며 처리」라면 이것은 「밀린 것만 한 번 처리」다. 그래서 <code>while</code> 안에서 부르면 콜백이 불리기는 한다 — 대신 주기를 지키고 끝낼 때를 정하는 일을 내 반복문이 떠맡는다. 이 코드가 ⑩절의 받은 코드와 달리 <strong>돌아가는</strong> 이유가 이 한 줄이다.</dd>
+      <dd>지금까지 도착해 있는 일만 처리하고 <strong>바로 돌아온다.</strong> <code>spin</code>이 「끝날 때까지 기다리며 처리」라면 이것은 「밀린 것만 한 번 처리」다. 그래서 <code>while</code> 안에서 부르면 콜백이 불리기는 한다 — 대신 주기를 지키고 끝낼 때를 살피는 일을 반복문이 다 떠맡는다.</dd>
     </dl>
   </div>
 
@@ -1689,17 +1575,17 @@ ament_package()</code></pre></div>
   <div class="tablewrap">
   <table>
     <tr><th>고칠 것</th><th>오늘 어디서 했나</th><th>확인하는 법</th></tr>
-    <tr><td><code>rclcpp::Node</code>를 상속한 클래스, 구독자와 마지막 자세는 멤버로 (전역 변수 없이)</td><td>⑥ · ⑩ 검사 4</td><td>파일에 전역 변수가 없다</td></tr>
-    <tr><td><code>while</code> + <code>spin_some</code> + <code>sleep_for</code> 대신 타이머 500 ms와 <code>spin</code></td><td>④ · ⑩ 검사 1·2</td><td><code>main</code>이 <code>init → make_shared → spin → shutdown</code> 네 줄이다. 로그 줄의 시각 간격이 0.5초다</td></tr>
-    <tr><td>콜백 인자를 <code>ConstSharedPtr</code>로, 「아직 못 받음」을 따로</td><td>⑥ · ⑩ 검사 3·5</td><td>turtlesim을 <strong>나중에</strong> 띄워도, 그 전에는 아무것도 안 찍히고 띄운 뒤부터 찍힌다</td></tr>
-    <tr><td>큐 깊이 1000과 <code>11.0889f</code></td><td>③ · ⑧</td><td>깊이는 10. 창 크기는 이름 붙은 멤버 하나에만 있다</td></tr>
+    <tr><td><code>rclcpp::Node</code>를 상속한 클래스, 구독자와 마지막 자세는 멤버로 (전역 변수 없이)</td><td>⑤ · ⑧ 검사 4</td><td>파일에 전역 변수가 없다</td></tr>
+    <tr><td><code>while</code> + <code>spin_some</code> + <code>sleep_for</code> 대신 타이머 500 ms와 <code>spin</code></td><td>③ · ⑧ 검사 1·2</td><td><code>main</code>이 <code>init → make_shared → spin → shutdown</code> 네 줄이다. 로그 줄의 시각 간격이 0.5초다</td></tr>
+    <tr><td>콜백 인자를 <code>ConstSharedPtr</code>로, 「아직 못 받음」을 따로</td><td>⑤ · ⑧ 검사 3·5</td><td>turtlesim을 <strong>나중에</strong> 띄워도, 그 전에는 아무것도 안 찍히고 띄운 뒤부터 찍힌다</td></tr>
+    <tr><td>큐 깊이 1000과 <code>11.0889f</code></td><td>② · ⑤</td><td>깊이는 10. 창 크기는 이름 붙은 멤버 하나에만 있다</td></tr>
     <tr><td><code>std::cout</code> 대신 노드의 로그</td><td>19회 ⑥</td><td>줄 머리에 <code>[INFO] … [wall_watch]</code>가 붙는다</td></tr>
-    <tr><td>의존성 두 곳</td><td>⑦</td><td><code>colcon info turtle_watch</code>의 <code>build:</code>·<code>run:</code>에 <code>turtlesim</code>이 보인다 (지금은 <code>ament_cmake rclcpp</code>뿐이다)</td></tr>
+    <tr><td>의존성 두 곳</td><td>⑥</td><td><code>colcon info turtle_watch</code>의 <code>build:</code>·<code>run:</code>에 <code>turtlesim</code>이 보인다 (지금은 <code>ament_cmake rclcpp</code>뿐이다)</td></tr>
   </table>
   </div>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
-    ~/ros2_ws/src/turtle_watch 패키지를 고쳐 줘. 고치기 전에 아래 기준마다 지금 코드의 어느 줄이 어긋나는지 표로 먼저 보여 줘. 기준: rclcpp::Node 를 상속한 클래스, 구독자·마지막 자세는 멤버(전역 변수 금지), while·spin_some·sleep_for 대신 create_wall_timer(500ms, …) 와 rclcpp::spin, 구독 콜백 인자는 turtlesim::msg::Pose::ConstSharedPtr 이고 포인터만 저장, 자세를 아직 못 받았으면 아무것도 찍지 않음, 큐 깊이 10, 창 크기 11.0889 는 이름 붙은 멤버 하나로, std::cout 대신 RCLCPP_INFO, 의존성은 package.xml 과 CMakeLists.txt 양쪽에. 빌드는 ~/ros2_ws 에서 colcon build --packages-select turtle_watch 로 해 줘.
+    ~/ros2_ws/src/turtle_watch 패키지를 고쳐 줘. 고치기 전에 아래 기준마다 지금 코드의 어느 줄이 어긋나는지 표로 먼저 보여 줘. 기준: rclcpp::Node 를 상속한 클래스, 구독자·마지막 자세는 멤버(전역 변수 금지), while·spin_some·sleep_for 대신 create_wall_timer(500ms, …) 와 rclcpp::spin, 구독 콜백 인자는 turtlesim::msg::Pose::ConstSharedPtr 로 받아 멤버에 저장만, 자세를 아직 못 받았으면 아무것도 찍지 않음, 큐 깊이 10, 창 크기 11.0889 는 이름 붙은 멤버로, std::cout 대신 RCLCPP_INFO, turtlesim 의존성은 package.xml 과 CMakeLists.txt 양쪽에. 빌드는 ~/ros2_ws 에서 colcon build --packages-select turtle_watch 로 해 줘.
   </div>
   <p>
     정답은 하나가 아니다. <strong>위 표의 「확인하는 법」이 전부 통과하면</strong> 된 것이다.
@@ -1712,17 +1598,17 @@ ament_package()</code></pre></div>
   <div class="tablewrap">
   <table>
     <tr><th>이럴 때</th><th>이렇게 말한다</th></tr>
-    <tr><td>노드를 처음 받을 때</td><td>"rclcpp::Node 를 상속한 클래스로 만들어 줘. 발행자·구독자·타이머는 멤버로, 주기 일은 create_wall_timer 로, 구독 콜백 인자는 메시지타입::ConstSharedPtr 로, main 은 init → make_shared → spin → shutdown 으로. 토픽 이름과 타입은 ros2 topic list -t 결과를 붙일게."</td></tr>
+    <tr><td>노드를 처음 받을 때</td><td>"rclcpp::Node 를 상속한 클래스로 만들어 줘. 발행자·구독자·타이머는 멤버로, 주기 일은 create_wall_timer 로, 구독 콜백 인자는 메시지타입::ConstSharedPtr 로, main 은 init → make_shared → spin → shutdown 으로. 토픽 이름과 타입은 ros2 topic list -t 로 먼저 확인해 줘."</td></tr>
     <tr><td>내 노드의 발행을 확인할 때</td><td>"ros2 topic hz, echo --once, info -v 를 차례로 돌려서 원문을 붙여 줘. 요약하지 말고 average rate, 값, Publisher 쪽 Node name 만 굵게."</td></tr>
     <tr><td>의존성을 맞출 때</td><td>"src/*.cpp 의 #include 에서 ROS 패키지를 뽑아 package.xml &lt;depend&gt;, find_package, target_link_libraries 세 곳에 있는지 표로 보여 줘. 고치지는 말고."</td></tr>
     <tr><td>구독 콜백이 안 불리는 것 같을 때</td><td>"구독 콜백 첫 줄에 RCLCPP_INFO 로 확인용 로그를 한 줄 넣어 줘. 그리고 main 에 rclcpp::spin 이 있는지, while 반복이 spin 을 막고 있지 않은지 짚어 줘."</td></tr>
-    <tr><td>받은 노드를 고칠 때</td><td>⑩절의 여섯 기준 프롬프트 — 고치기 전에 어긋나는 줄을 표로 먼저</td></tr>
+    <tr><td>받은 노드를 고칠 때</td><td>⑧절의 여섯 기준 프롬프트 — 고치기 전에 어긋나는 줄을 표로 먼저</td></tr>
     <tr><td>Ctrl+C 때 오류가 날 때</td><td>"Ctrl+C 때 이 오류가 나. 전역 변수나 static 으로 둔 ROS 객체(발행자·구독자·노드)가 있는지 찾고, 있으면 노드 클래스의 멤버로 옮겨 줘."</td></tr>
   </table>
   </div>
   <div class="interp">
     <strong>해석:</strong> 프롬프트마다 <strong>무엇을 기준으로 할지</strong>가 들어 있다. 기준을 말하지 않으면 에이전트는 「돌아가는 코드」를 기준으로 삼고, 받은 코드는 실제로 돌아간다.
-    거북이가 서는지, Ctrl+C 때 깨끗이 끝나는지는 여러분이 화면과 터미널을 보고 확인합니다.
+    거북이가 벽 앞에서 돌아서는지, Ctrl+C 때 깨끗이 끝나는지는 여러분이 화면과 터미널을 보고 확인합니다.
   </div>
 
   <!-- ── ✅ 점검 ── -->
@@ -1731,11 +1617,12 @@ ament_package()</code></pre></div>
     <li><input type="checkbox" id="c1"><label for="c1">「콜백은 <code>spin</code> 안에서만 불린다」를 받은 코드의 증상(구독은 붙었는데 콜백이 안 불림)으로 설명할 수 있나?</label></li>
     <li><input type="checkbox" id="c2"><label for="c2">발행자·구독자·타이머를 왜 노드의 <strong>멤버</strong>로 들고 있는지, 전역 변수에 두면 Ctrl+C 때 무슨 일이 생기는지 말할 수 있나?</label></li>
     <li><input type="checkbox" id="c3"><label for="c3">콜백 인자 네 모양(값·<code>const &amp;</code>·<code>SharedPtr</code>·<code>ConstSharedPtr</code>) 중 무엇을 왜 쓰는지 말할 수 있나?</label></li>
-    <li><input type="checkbox" id="c4"><label for="c4"><code>ros2 topic hz</code>·<code>echo --once</code>·<code>info -v</code>로 내 노드의 발행을 코드의 숫자(<code>100ms</code>, <code>1.0</code>, 노드 이름)와 맞춰 봤나?</label></li>
+    <li><input type="checkbox" id="c4"><label for="c4"><code>ros2 topic hz</code>·<code>echo --once</code>·<code>info -v</code>로 내 노드의 발행을 코드의 숫자(<code>500ms</code>, 노드 이름)와 로그 줄에 맞춰 봤나?</label></li>
     <li><input type="checkbox" id="c5"><label for="c5"><code>turtlesim</code>을 <code>package.xml</code>과 <code>CMakeLists.txt</code> 양쪽에 넣었나? <code>colcon info</code>로 확인했나?</label></li>
-    <li><input type="checkbox" id="c6"><label for="c6">v3가 1.00 m가 아니라 0.95 m에서 선 이유를 「판정 주기 × 속도」로 말할 수 있나?</label></li>
-    <li><input type="checkbox" id="c7"><label for="c7">달리는 노드를 Ctrl+C로 끊으면 turtlesim 거북이가 어떻게 되는지, 그것이 누구의 규칙인지 말할 수 있나?</label></li>
-    <li><input type="checkbox" id="c8"><label for="c8"><code>rqt_graph</code>에서 <code>/wall_stop</code>을 지나 한 바퀴 도는 화살표를 봤나?</label></li>
+    <li><input type="checkbox" id="c6"><label for="c6">범위를 1 ~ 10으로 정했는데 x가 10.40까지 나간 이유를 「판단 주기 × 속도」로 말할 수 있나?</label></li>
+    <li><input type="checkbox" id="c7"><label for="c7">「중앙과의 각」을 바라보는 방향과 중앙으로 가는 방향의 <strong>내적</strong>으로 구하는 흐름을 말할 수 있나?</label></li>
+    <li><input type="checkbox" id="c8"><label for="c8">달리는 노드를 Ctrl+C로 끊으면 turtlesim 거북이가 어떻게 되는지, 그것이 누구의 규칙인지 말할 수 있나?</label></li>
+    <li><input type="checkbox" id="c9"><label for="c9"><code>rqt_graph</code>에서 <code>/turtle_drive</code>를 지나 한 바퀴 도는 화살표를 봤나?</label></li>
   </ul>
 
   <!-- ── 조금 더 ── -->
@@ -1743,17 +1630,28 @@ ament_package()</code></pre></div>
   <details>
     <summary><code>std::bind</code> — 람다 대신 받는 코드에 자주 보이는 모양</summary>
     <p>
-      인터넷 예제와 AI 답에는 콜백을 람다 대신 <code>std::bind</code>로 넘기는 모양이 아주 많다. v3를 이 모양으로 바꿔 빌드·실행해 보니 똑같이 0.94 m에서 섰다.
+      인터넷 예제와 AI 답에는 콜백을 람다 대신 <code>std::bind</code>로 넘기는 모양이 아주 많다. v2를 이 모양으로 바꿔 빌드·실행해 보니 똑같이 1 ~ 10 안에서 돌아다니다 경계에서 돌아섰다.
     </p>
     <pre class="lang-cpp"><code>#include &lt;functional&gt;
 // …
 pose_sub_ = this-&gt;create_subscription&lt;turtlesim::msg::Pose&gt;(
   "/turtle1/pose", 10,
-  std::bind(&amp;WallStop::on_pose, this, std::placeholders::_1));
-timer_ = this-&gt;create_wall_timer(100ms, std::bind(&amp;WallStop::on_timer, this));</code></pre>
+  std::bind(&amp;TurtleDrive::on_pose, this, std::placeholders::_1));
+timer_ = this-&gt;create_wall_timer(500ms, std::bind(&amp;TurtleDrive::on_timer, this));</code></pre>
     <p>
-      「<code>WallStop::on_pose</code>를 <code>this</code> 객체에 대해 부르는 함수를 만들어라. 첫 번째 인자(<code>_1</code>)는 나중에 들어오는 것을 넘겨라」라고 읽는다.
+      「<code>TurtleDrive::on_pose</code>를 <code>this</code> 객체에 대해 부르는 함수를 만들어라. 첫 번째 인자(<code>_1</code>)는 나중에 들어오는 것을 넘겨라」라고 읽는다.
       하는 일은 <code>[this](… msg) { on_pose(msg); }</code>와 같다. 이 과목은 14회에 배운 람다로 쓰지만, 받은 코드에 <code>std::bind</code>가 있다고 틀린 것은 아니다.
+    </p>
+  </details>
+  <details>
+    <summary>왜 늘 왼쪽으로만 도나 — 도는 방향까지 고르려면</summary>
+    <p>
+      v2는 범위 밖에서 언제나 <code>angular.z = 1.0</code>, 곧 왼쪽으로만 돈다. 중앙이 거북이의 오른쪽에 조금 비켜 있으면 왼쪽으로 <strong>거의 한 바퀴</strong>를 돌아야 중앙을 보게 된다.
+      ⑤절 출력의 마지막 묶음에서 5.5초나 돈 것이 그 경우다. 동작은 맞지만 시간이 걸린다.
+    </p>
+    <p>
+      중앙이 왼쪽에 있는지 오른쪽에 있는지는 두 방향의 <strong>외적</strong>(cross product)의 부호로 알 수 있다 — 바라보는 방향 <strong>h</strong>와 중앙 방향 <strong>d</strong>에 대해 h<sub>x</sub>·d<sub>y</sub> − h<sub>y</sub>·d<sub>x</sub>가 양수면 왼쪽, 음수면 오른쪽이다.
+      그 부호대로 <code>angular.z</code>를 +1 또는 −1로 주면 늘 짧은 쪽으로 돈다. 내적이 「얼마나 다른가」를 준다면 외적은 「어느 쪽으로 다른가」를 준다. 25회에서 좌표와 회전을 다룰 때 다시 만난다.
     </p>
   </details>
   <details>
@@ -1761,7 +1659,7 @@ timer_ = this-&gt;create_wall_timer(100ms, std::bind(&amp;WallStop::on_timer, th
     <p>
       ROS 1 시절의 기본 예제(talker)는 <code>ros::Rate loop_rate(10); while (ros::ok()) { …; ros::spinOnce(); loop_rate.sleep(); }</code> 모양이었다.
       반복문 안에서 <code>spinOnce</code>(오늘 연습문제의 <code>spin_some</code>에 해당)로 콜백을 처리하고, <code>Rate</code>로 주기를 맞췄다.
-      이 모양의 예제가 오랫동안 인터넷에 쌓였고, ROS 2로 옮기면서 <code>spinOnce</code>만 빠뜨린 것이 ⑩절의 받은 코드다.
+      이 모양의 예제가 오랫동안 인터넷에 쌓였고, ROS 2로 옮기면서 <code>spinOnce</code>만 빠뜨린 것이 ⑧절의 받은 코드다.
       ROS 2의 기본 예제는 타이머와 <code>spin</code>으로 짜여 있다. 받은 코드에 <code>Rate</code>나 <code>while (rclcpp::ok())</code>가 보이면 ROS 1 버릇이 섞였을 수 있다고 읽으면 된다(17회 「ROS 1 방식이 섞여 있으면」).
     </p>
   </details>
@@ -1777,7 +1675,7 @@ timer_ = this-&gt;create_wall_timer(100ms, std::bind(&amp;WallStop::on_timer, th
     <summary>콜백 안에서 바로 발행하는 노드</summary>
     <p>
       받은 메시지를 조금 바꿔 다른 토픽으로 바로 넘기는 노드(단위를 바꾸거나, 값을 걸러 내거나)는 타이머 없이 <strong>구독 콜백 안에서 <code>publish</code></strong>한다.
-      그러면 받는 박자 그대로 내보낸다. ⑧절 표 첫 줄의 「안 쓸 때」가 이 경우다. 거북이 자세를 받아 앞 벽까지 거리만 계산해 다른 토픽으로 내보내는 노드라면 이 모양이 자연스럽다.
+      그러면 받는 박자 그대로 내보낸다. ⑤절 표 첫 줄의 「안 쓸 때」가 이 경우다. 22회에 만드는 <code>wall_range</code> 노드 — 거북이 자세를 받아 가장 가까운 벽까지 거리만 계산해 다른 토픽으로 내보내는 노드 — 가 이 모양이다.
     </p>
   </details>
   <details>

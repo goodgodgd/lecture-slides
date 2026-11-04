@@ -38,8 +38,6 @@
   <a href="#v3">⑦ 멤버 변수와 소멸자 (v3)</a>
   <a href="#colcon">⑧ colcon build와 작업공간</a>
   <a href="#notfound">⑨ ros2 run이 못 찾는 세 가지</a>
-  <a href="#deps">⑩ 의존성 — package.xml과 CMakeLists.txt</a>
-  <a href="#review">⑪ 받은 패키지 검사</a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
   <a href="#prompts">🤖 프롬프트 모음</a>
@@ -75,7 +73,7 @@
     거북이를 움직이는 일(발행·구독·타이머)은 20회 몫이라 오늘은 하지 않는다.
   </p>
   <p>
-    그리고 이 회차의 절반은 <strong>안 될 때</strong>를 다룬다.
+    그리고 <strong>안 될 때</strong>도 다룬다.
     <code>ros2 run</code>이 실행 파일을 못 찾는 경우는 대개 세 가지 중 하나이고, 세 가지 모두 실제로 재현해 오류 메시지를 받아 두었다.
     메시지를 한 번 봐 두면 나중에 같은 글자를 만났을 때 어디를 볼지 바로 떠오른다.
   </p>
@@ -98,7 +96,7 @@
   </div>
   <div class="interp">
     <strong>해석:</strong> 여덟 줄 가운데 둘째·셋째 줄이 이 회차에서 실수가 가장 많이 나는 자리다.
-    <strong>같은 의존성을 두 파일에 두 번 적는다</strong>는 것이 처음에는 낭비처럼 보이는데, 두 파일을 읽는 프로그램이 서로 다르기 때문이다. ⑩절에서 실제로 하나씩 빼 본다.
+    <strong>같은 의존성을 두 파일에 두 번 적는다</strong>는 것이 처음에는 낭비처럼 보이는데, 두 파일을 읽는 프로그램이 서로 다르기 때문이다. 한쪽을 빠뜨리면 어떻게 되는지는 ②·③절에서 짚는다.
   </div>
 
   <!-- ── ① 패키지 ── -->
@@ -266,8 +264,14 @@ ros2 pkg create: error: the following arguments are required: package_name</code
     <code>&lt;depend&gt;</code>는 <code>&lt;build_depend&gt;</code>(빌드할 때 필요)와 <code>&lt;exec_depend&gt;</code>(실행할 때 필요)를 한 줄로 합친 것이고, 대부분의 경우 이것 하나로 충분하다.
   </div>
   <p>
+    그럼 <code>&lt;depend&gt;rclcpp&lt;/depend&gt;</code> 한 줄을 빠뜨리면 어떻게 될까? 의외로 <strong>내 컴퓨터에서는 빌드도 실행도 된다.</strong>
+    CMake는 이 파일을 읽지 않고, rclcpp는 이미 깔려 있기 때문이다. 차이는 <strong>남의 컴퓨터</strong>에서 드러난다 —
+    새 노트북이나 로봇에서 <code>rosdep</code>이 이 파일을 보고 깔 것을 정하는데, 적혀 있지 않은 것은 깔지 않는다.
+    빌드가 대신 확인해 주지 않는 줄이라, 의존성을 더하거나 뺄 때는 <code>CMakeLists.txt</code>(③절)와 나란히 놓고 이름을 맞춰 보면 덜 헤맨다.
+  </p>
+  <p>
     채우는 세 칸은 7단계까지 미뤄 두었다가 v3에서 한 번에 채운다.
-    지금 채워도 되지만, <strong><code>TODO</code>가 남은 채로도 빌드는 된다</strong>는 것을 먼저 봐 두는 편이 좋다. 그래서 검사 목록에 들어간다(⑪절).
+    지금 채워도 되지만, <strong><code>TODO</code>가 남은 채로도 빌드는 된다</strong>는 것을 먼저 봐 두는 편이 좋다. 이것도 빌드가 잡아 주지 않으니 눈으로 본다.
   </p>
 
   <!-- ── ③ CMakeLists ── -->
@@ -313,6 +317,12 @@ ament_package()</code></pre>
     <tr><td><code>ament_package()</code></td><td>없었다</td><td><strong>이 패키지를 ROS 2에 등록한다</strong> — <code>package.xml</code>을 설치 폴더에 복사하고, 「이 패키지가 여기 있다」는 표시를 남긴다. <strong>맨 마지막 줄</strong>이어야 한다</td></tr>
   </table>
   </div>
+  <p>
+    <code>find_package(rclcpp REQUIRED)</code>는 ②절의 <code>&lt;depend&gt;rclcpp&lt;/depend&gt;</code>와 <strong>같은 의존성을 CMake 쪽에 적은 것</strong>이다.
+    이쪽을 빠뜨리면 증상이 ②절과 반대다. ④절에서 실행 파일에 rclcpp를 붙이는 <code>target_link_libraries</code> 줄이 빠지면
+    컴파일러가 헤더 경로를 받지 못해 <code>fatal error: rclcpp/rclcpp.hpp: No such file or directory</code>로 <strong>빌드가 바로 멈춘다.</strong>
+    내 컴퓨터에서 바로 터지니 알아채기는 쉽다. 정리하면 <strong>의존성 하나는 <code>package.xml</code>의 <code>&lt;depend&gt;</code>와 <code>CMakeLists.txt</code>의 <code>find_package</code> + <code>target_link_libraries</code>, 두 파일 모두에</strong> 적는다.
+  </p>
   <div class="interp">
     <strong>해석:</strong> 빠진 것이 보인다 — <strong><code>add_executable</code>이 없다.</strong> 아직 소스가 없으니 만들 실행 파일도 없다.
     이 상태로도 빌드는 되지만, 실행할 것이 없다.
@@ -368,7 +378,7 @@ No executable found</code></pre>
   <p>
     지금 패키지에는 실행 파일이 없다. 그래서 소스 파일 하나와 <code>CMakeLists.txt</code> 세 줄을 더한다.
     파일 이름은 실행 파일 이름과 같게 <code>hello_node.cpp</code>로 짓는다.
-    ROS 2 패키지에는 실행 파일이 여럿 들어가므로 2부처럼 <code>main.cpp</code> 하나로 두지 않고, 실행 파일마다 소스 이름을 붙인다(20회에 <code>wall_stop.cpp</code>가 옆에 생긴다).
+    ROS 2 패키지에는 실행 파일이 여럿 들어가므로 2부처럼 <code>main.cpp</code> 하나로 두지 않고, 실행 파일마다 소스 이름을 붙인다(20회에 <code>turtle_drive.cpp</code>가 옆에 생긴다).
   </p>
 
   <h3>1단계 (v1) — 소스 하나, CMake 세 줄</h3>
@@ -596,7 +606,7 @@ install(TARGETS hello_node
   </p>
   <p>
     왜 <code>rclcpp::Node</code>를 그대로 쓰지 않고 상속할까? 노드가 할 일은 노드마다 다르기 때문이다.
-    20회에서 <code>wall_stop</code>은 발행자·구독자·타이머를 갖고, 21회에서는 파라미터도 갖는다.
+    20회에서 <code>turtle_drive</code>는 발행자·구독자·타이머를 갖고, 21회에서는 파라미터도 갖는다.
     그런 것들은 노드가 살아 있는 동안 계속 있어야 하니 <strong>멤버 변수</strong>가 되고, 9회의 클래스가 정확히 그 일을 한다.
     이름 짓기·로거·통신 같은 공통 기능은 <code>rclcpp::Node</code>에서 물려받고, 우리 노드만의 상태와 동작을 얹는다 — 10회에서 기반 클래스·파생 클래스로 본 그 구조다.
   </p>
@@ -1173,252 +1183,6 @@ Package 'turtle_drive' not found</code></pre>
     ros2 run 을 쳤더니 아래 오류가 나왔어. 고치기 전에, 이 오류가 「source 를 안 했다」·「install(TARGETS) 이 빠졌다」·「작업공간 최상위가 아닌 곳에서 빌드했다」 중 어느 것인지 먼저 판단하고, 그렇게 판단한 근거가 되는 명령(printenv AMENT_PREFIX_PATH, ros2 pkg executables, ls)을 하나 돌려서 결과를 보여 줘. (오류 붙여 넣기)
   </div>
 
-  <!-- ── ⑩ deps ── -->
-  <h2 id="deps">⑩ 의존성 — <code>package.xml</code>과 <code>CMakeLists.txt</code> <span class="badge b-red">🔴 사람이 한다</span></h2>
-  <p>
-    같은 <code>rclcpp</code>를 두 파일에 적었다. 하나만 적으면 어떻게 될까?
-    ②절에서 말한 대로 두 파일은 <strong>읽는 쪽이 다르다.</strong> 그래서 어느 쪽을 빠뜨렸느냐에 따라 증상이 완전히 다르다.
-  </p>
-  <figure>
-    <img src="assets/img/19_two_files.png" width="720"
-         alt="package.xml 의 depend 줄은 colcon(빌드 순서)과 rosdep(새 컴퓨터 설치)이 읽고, CMakeLists.txt 의 find_package 와 target_link_libraries 는 CMake 가 읽어 헤더와 라이브러리를 붙인다는 그림">
-    <figcaption>왼쪽 파일 둘, 오른쪽에 그것을 읽는 프로그램 셋. <strong>화살표가 서로 섞이지 않는다</strong> — 한쪽에 적은 것을 다른 쪽이 대신 읽어 주지 않는다.</figcaption>
-  </figure>
-
-  <h3><code>CMakeLists.txt</code>에서 빠졌을 때 — 빌드가 바로 멈춘다</h3>
-  <p>v3에서 <code>target_link_libraries</code> 한 줄만 지웠다. <code>package.xml</code>의 <code>&lt;depend&gt;rclcpp&lt;/depend&gt;</code>는 그대로 있다.</p>
-  <pre class="lang-sh"><code>$ colcon build --packages-select turtle_drive
-Starting &gt;&gt;&gt; turtle_drive
---- stderr: turtle_drive
-/home/ubuntu/ros2_ws/src/turtle_drive/src/hello_node.cpp:5:10: fatal error: rclcpp/rclcpp.hpp: No such file or directory
-    5 | #include "rclcpp/rclcpp.hpp"
-      |          ^~~~~~~~~~~~~~~~~~~
-compilation terminated.
-gmake[2]: *** [CMakeFiles/hello_node.dir/build.make:76: CMakeFiles/hello_node.dir/src/hello_node.cpp.o] Error 1
-(… 생략 …)
----
-Failed   &lt;&lt;&lt; turtle_drive [1.02s, exited with code 2]
-
-Summary: 0 packages finished [1.09s]
-  1 package failed: turtle_drive
-  1 package had stderr output: turtle_drive</code></pre>
-  <p>
-    8회 「빌드 오류 3단계」로 읽으면 <strong>컴파일 단계</strong> 오류다. 헤더를 못 찾았다.
-    <code>package.xml</code>에 rclcpp가 있어도 소용이 없다 — 컴파일러에게 헤더 경로를 알려 주는 것은 <code>target_link_libraries</code> 줄이기 때문이다.
-    이쪽은 <strong>내 컴퓨터에서 바로 터지므로</strong> 알아채기 쉽다.
-  </p>
-  <!-- fullcode "전체 코드 — turtle_drive/CMakeLists.txt (변형 · target_link_libraries 를 지운 판. 컴파일이 안 된다)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive   # fatal error 가 난다"
-       l19_pkg/steps/variants/no_link/turtle_drive/CMakeLists.txt as turtle_drive/CMakeLists.txt
-  -->
-<details class="fullcode">
-  <summary>전체 코드 — turtle_drive/CMakeLists.txt (변형 · target_link_libraries 를 지운 판. 컴파일이 안 된다)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive   # fatal error 가 난다</code></p>
-  <div class="codefile"><div class="fname">turtle_drive/CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre class="lang-cmake"><code>cmake_minimum_required(VERSION 3.8)
-project(turtle_drive)
-
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES &quot;Clang&quot;)
-  add_compile_options(-Wall -Wextra -Wpedantic)
-endif()
-
-# find dependencies
-find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
-
-# 19회 — 실행 파일 hello_node 를 만들고 rclcpp 를 붙인다 (8회와 같은 두 줄)
-add_executable(hello_node src/hello_node.cpp)
-
-# 만든 실행 파일을 ros2 run 이 찾는 자리에 설치한다
-install(TARGETS hello_node
-  DESTINATION lib/${PROJECT_NAME})
-
-if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  # the following line skips the linter which checks for copyrights
-  # comment the line when a copyright and license is added to all source files
-  set(ament_cmake_copyright_FOUND TRUE)
-  # the following line skips cpplint (only works in a git repo)
-  # comment the line when this package is in a git repo and when
-  # a copyright and license is added to all source files
-  set(ament_cmake_cpplint_FOUND TRUE)
-  ament_lint_auto_find_test_dependencies()
-endif()
-
-ament_package()</code></pre></div>
-</details>
-<!-- /fullcode -->
-
-  <h3><code>package.xml</code>에서 빠졌을 때 — 아무 일도 없다</h3>
-  <p>이번에는 거꾸로 <code>package.xml</code>의 <code>&lt;depend&gt;rclcpp&lt;/depend&gt;</code> 한 줄만 지웠다.</p>
-  <pre class="lang-sh"><code>$ colcon build --packages-select turtle_drive
-Starting &gt;&gt;&gt; turtle_drive
-Finished &lt;&lt;&lt; turtle_drive [3.23s]
-
-Summary: 1 package finished [3.31s]</code></pre>
-  <p>
-    <strong>빌드가 된다.</strong> 실행도 된다. CMake는 <code>package.xml</code>을 보지 않고 자기 줄대로 rclcpp를 찾았고, rclcpp는 이 컴퓨터에 이미 깔려 있다.
-    그럼 무엇이 달라졌나? <code>package.xml</code>을 읽는 쪽에 물어보면 보인다.
-  </p>
-  <div class="tablewrap">
-  <table>
-    <tr><th><code>colcon info turtle_drive</code>의 <code>dependencies</code></th><th><code>&lt;depend&gt;</code>를 지운 판</th><th>v3</th></tr>
-    <tr><td><code>build:</code></td><td><code>ament_cmake</code></td><td><code>ament_cmake rclcpp</code></td></tr>
-    <tr><td><code>run:</code></td><td>(비어 있다)</td><td><code>rclcpp</code></td></tr>
-  </table>
-  </div>
-  <div class="interp">
-    <strong>해석:</strong> colcon이 아는 이 패키지의 의존성에서 rclcpp가 사라졌다. 지금은 rclcpp가 이미 깔려 있고 작업공간에 패키지가 하나뿐이라 아무 문제가 없다.
-    문제가 보이는 것은 <strong>남의 컴퓨터</strong>에서다 — 새 노트북·로봇에서 <code>rosdep</code>이 「이 패키지에 무엇을 깔아야 하나」를 <code>package.xml</code>로 정하는데, 거기 없는 것은 깔지 않는다.
-    20회에 <code>turtlesim</code>·<code>geometry_msgs</code>를 더하고 28회에 터틀봇 패키지를 더할 때 같은 일이 생길 수 있다.
-  </div>
-  <p>
-    이것이 이 회차에서 가장 흔하다고 보는 실수다. <strong>AI가 쓰는 환경에도 이미 라이브러리가 깔려 있어서 빌드가 된다.</strong>
-    빌드가 되니 아무도 알아채지 못하고, 처음 터지는 곳은 프로젝트 평가 날의 로봇이다.
-    그래서 이 줄은 빌드가 대신 확인해 주지 않는다. <strong>눈으로 두 파일을 나란히 놓고 이름을 맞춰 본다.</strong>
-  </p>
-  <div class="box firstseen">
-    <p class="boxtitle">🆕 이 절에서 처음 나오는 것</p>
-    <dl>
-      <dt>colcon info 패키지</dt>
-      <dd>colcon이 <code>package.xml</code>을 읽어 알아낸 그 패키지의 정보(경로·종류·의존성)를 보여 준다. 빌드는 하지 않는다.</dd>
-      <dt>rosdep</dt>
-      <dd>작업공간의 <code>package.xml</code>들을 읽어, 빠진 의존성을 <code>apt</code>로 깔아 주는 도구다. 28회에 로봇 쪽 컴퓨터를 꾸릴 때 쓴다. 오늘은 이름만 알아 두면 된다.</dd>
-    </dl>
-    <p class="later">제대로 다루는 곳: 28회(실물 로봇 셋업)</p>
-  </div>
-  <!-- fullcode "전체 코드 — turtle_drive/package.xml (변형 · depend 를 지운 판. 빌드는 된다)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && colcon info turtle_drive"
-       l19_pkg/steps/variants/no_xml_dep/turtle_drive/package.xml as turtle_drive/package.xml
-  -->
-<details class="fullcode">
-  <summary>전체 코드 — turtle_drive/package.xml (변형 · depend 를 지운 판. 빌드는 된다)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; colcon info turtle_drive</code></p>
-  <div class="codefile"><div class="fname">turtle_drive/package.xml</div><button onclick="copyCode(this)">복사</button><pre class=""><code>&lt;?xml version=&quot;1.0&quot;?&gt;
-&lt;?xml-model href=&quot;http://download.ros.org/schema/package_format3.xsd&quot; schematypens=&quot;http://www.w3.org/2001/XMLSchema&quot;?&gt;
-&lt;package format=&quot;3&quot;&gt;
-  &lt;name&gt;turtle_drive&lt;/name&gt;
-  &lt;version&gt;0.0.0&lt;/version&gt;
-  &lt;description&gt;로봇공학 3부 실습 — turtlesim 거북이를 움직이는 노드를 모은 패키지&lt;/description&gt;
-  &lt;maintainer email=&quot;student@example.com&quot;&gt;Student Name&lt;/maintainer&gt;
-  &lt;license&gt;MIT&lt;/license&gt;
-
-  &lt;buildtool_depend&gt;ament_cmake&lt;/buildtool_depend&gt;
-
-  &lt;test_depend&gt;ament_lint_auto&lt;/test_depend&gt;
-  &lt;test_depend&gt;ament_lint_common&lt;/test_depend&gt;
-
-  &lt;export&gt;
-    &lt;build_type&gt;ament_cmake&lt;/build_type&gt;
-  &lt;/export&gt;
-&lt;/package&gt;</code></pre></div>
-</details>
-<!-- /fullcode -->
-
-  <!-- ── ⑪ review ── -->
-  <h2 id="review">⑪ 받은 패키지 검사 — 옛 방식 <code>CMakeLists.txt</code>와 여섯 줄 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
-
-  <h3>언제 이게 필요해지나</h3>
-  <p>
-    AI에게 「ROS 2 C++ 패키지의 <code>CMakeLists.txt</code> 써 줘」라고 하면 돌아가는 파일이 온다. 그런데 그 모양이 몇 년 전 튜토리얼 그대로인 경우가 많다.
-    인터넷에 쌓인 ROS 2 예제 대부분이 그 시절 것이기 때문이다. 같은 패키지를 그 모양으로 바꾸면 이렇게 된다.
-  </p>
-  <div class="codelabel bad">흔히 받는 모양 — CMakeLists.txt 전체 🔴</div>
-  <pre class="lang-cmake before"><code>cmake_minimum_required(VERSION 3.5)
-project(turtle_drive)
-
-# Default to C++14
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
-endif()
-
-find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
-
-include_directories(include)
-
-add_executable(hello_node src/hello_node.cpp)
-ament_target_dependencies(hello_node rclcpp)
-
-install(TARGETS
-  hello_node
-  DESTINATION lib/${PROJECT_NAME}
-)
-
-ament_package()</code></pre>
-  <p>이 파일은 그대로 빌드되고, v3와 똑같은 다섯 줄을 찍는다. 컨테이너에서 실제로 돌려 확인했다.</p>
-  <pre class="lang-sh"><code>$ colcon build --packages-select turtle_drive
-Starting &gt;&gt;&gt; turtle_drive
-Finished &lt;&lt;&lt; turtle_drive [3.15s]
-
-Summary: 1 package finished [3.22s]</code></pre>
-  <!-- fullcode "전체 코드 — turtle_drive/CMakeLists.txt (옛 방식 판 · 빌드는 된다)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive hello_node"
-       l19_pkg/steps/variants/ai_old/turtle_drive/CMakeLists.txt as turtle_drive/CMakeLists.txt
-  -->
-<details class="fullcode">
-  <summary>전체 코드 — turtle_drive/CMakeLists.txt (옛 방식 판 · 빌드는 된다)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive hello_node</code></p>
-  <div class="codefile"><div class="fname">turtle_drive/CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre class="lang-cmake"><code>cmake_minimum_required(VERSION 3.5)
-project(turtle_drive)
-
-# Default to C++14
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
-endif()
-
-find_package(ament_cmake REQUIRED)
-find_package(rclcpp REQUIRED)
-
-include_directories(include)
-
-add_executable(hello_node src/hello_node.cpp)
-ament_target_dependencies(hello_node rclcpp)
-
-install(TARGETS
-  hello_node
-  DESTINATION lib/${PROJECT_NAME}
-)
-
-ament_package()</code></pre></div>
-</details>
-<!-- /fullcode -->
-
-  <h3>무엇이 문제인가</h3>
-  <div class="tablewrap">
-  <table>
-    <tr><th>줄</th><th>무엇이 문제인가</th><th>얼마나 급한가</th></tr>
-    <tr><td><code>include_directories(include)</code></td><td>8회 ⑤절의 그 줄이다. <strong>누구에게 거는지가 없어</strong> 이 파일의 모든 타깃에 걸린다. 지금은 <code>include/</code>가 비어 있어 아무 일도 안 하는 줄이기도 하다</td><td>지운다</td></tr>
-    <tr><td><code>set(CMAKE_CXX_STANDARD 14)</code></td><td>C++14로 낮춘다. 14회의 <code>std::optional</code>·구조적 바인딩은 C++17이라 <strong>그 코드를 넣는 순간 컴파일 오류</strong>가 난다. Jazzy는 C++17 기준이다</td><td>지운다</td></tr>
-    <tr><td><code>ament_target_dependencies</code></td><td>⑤절. Jazzy에서는 되지만 다음 배포판에서 사라질 예정이다</td><td>패키지 안에서 한 가지로 맞춘다</td></tr>
-    <tr><td><code>add_compile_options(-Wall …)</code>가 없다</td><td>경고가 꺼져 있다. 형식 문자열과 값이 안 맞는 <code>RCLCPP_INFO</code> 같은 실수를 컴파일러가 알려 주지 않는다</td><td>넣는다</td></tr>
-    <tr><td><code>cmake_minimum_required(VERSION 3.5)</code></td><td>오래된 기준이지만 빌드에는 문제가 없다</td><td>그대로 둬도 된다</td></tr>
-  </table>
-  </div>
-  <div class="interp">
-    <strong>해석:</strong> 다섯 줄 가운데 <strong>오늘 당장 결과를 바꾸는 것은 없다.</strong> 그래서 「빌드되니 됐다」로 넘어가기 쉽다.
-    바뀌는 것은 다음 회차다 — 파일이 커지고, C++17 문법을 넣고, 의존성이 늘어날 때 이 줄들이 하나씩 걸린다.
-  </div>
-  <div class="prompt">
-    <button onclick="copyPrompt(this)">복사</button>
-    이 ROS 2 패키지의 CMakeLists.txt 를 ros2 pkg create(Jazzy)가 만드는 모양에 맞춰 정리해 줘. include_directories 는 지우고, C++ 표준을 14로 낮추는 줄도 지우고, 경고 옵션(-Wall -Wextra -Wpedantic)은 넣어 줘. 의존성은 target_link_libraries(… PRIVATE rclcpp::rclcpp) 로 붙이고, ament_package() 는 맨 끝에 둬. 무엇을 왜 바꿨는지 한 줄씩 적어 줘.
-  </div>
-
-  <h3>✅ 받은 패키지에서 확인할 여섯 줄</h3>
-  <p>
-    여기까지가 이 회차의 결론이다. 에이전트가 만든 패키지든, 인터넷에서 받은 패키지든, 아래 여섯 줄을 위에서부터 눈으로 훑는다.
-    빌드가 성공했다는 것은 이 중 어느 것도 보증하지 않는다.
-  </p>
-  <ul class="check">
-    <li><input type="checkbox" id="r1"><label for="r1">새 의존성이 <code>package.xml</code>(<code>&lt;depend&gt;</code>)과 <code>CMakeLists.txt</code>(<code>find_package</code> + <code>target_link_libraries</code>) <strong>두 곳 모두</strong>에 들어갔나 ← 가장 흔한 실수 (⑩절)</label></li>
-    <li><input type="checkbox" id="r2"><label for="r2">실행 파일마다 <code>install(TARGETS … DESTINATION lib/${PROJECT_NAME})</code>이 있나 — 없으면 <code>No executable found</code> (⑨절 ②)</label></li>
-    <li><input type="checkbox" id="r3"><label for="r3"><code>ament_package()</code>가 <code>CMakeLists.txt</code>의 <strong>맨 마지막</strong>에 있나 (③절)</label></li>
-    <li><input type="checkbox" id="r4"><label for="r4"><code>include_directories(...)</code>, C++14로 낮추는 줄 같은 낡은 방식이 섞이지 않았나 (이 절)</label></li>
-    <li><input type="checkbox" id="r5"><label for="r5">안 쓰는 의존성이 남아 있지 않나 — 템플릿이나 다른 예제에서 딸려 온 <code>&lt;depend&gt;</code>·<code>find_package</code></label></li>
-    <li><input type="checkbox" id="r6"><label for="r6"><code>package.xml</code>의 <code>description</code>·<code>maintainer</code>·<code>license</code>에 <code>TODO</code>가 남지 않았나, 주석이 코드와 맞나 (⑦절)</label></li>
-  </ul>
-  <div class="interp">
-    <strong>해석:</strong> 첫 줄이 왜 가장 흔한가 하면, <strong>AI 본인 환경에는 이미 라이브러리가 깔려 있어서 빌드가 되기 때문</strong>이다.
-    빌드가 되니 문제를 못 알아챈다. 처음 터지는 것은 남의 컴퓨터에서다.
-    마지막 줄은 프로젝트 평가에서도 보는 항목이다(세부 배점은 프로젝트 공지에서 안내한다).
-  </div>
-
   <!-- ── 🧪 실습 ── -->
   <h2 id="lab">🧪 실습 — hello_node 빌드와 실행 <span class="badge b-red">🔴 사람이 한다</span></h2>
   <div class="lab-block">
@@ -1554,8 +1318,8 @@ ament_target_dependencies(greeter rclcpp std_msgs)</code></pre></div>
     <tr><th>고칠 것</th><th>오늘 어디서 했나</th><th>확인하는 법</th></tr>
     <tr><td><code>ros2 run</code>이 실행 파일을 찾게 한다</td><td>④ · ⑨ ②</td><td><code>ros2 pkg executables turtle_greeter</code>에 <code>greeter</code>가 보인다</td></tr>
     <tr><td><code>ament_package()</code>의 자리</td><td>③</td><td>파일 맨 끝 한 줄이다</td></tr>
-    <tr><td><code>include_directories</code>·C++14·<code>ament_target_dependencies</code>를 오늘 방식으로</td><td>⑤ · ⑪</td><td><code>target_link_libraries(greeter PRIVATE rclcpp::rclcpp)</code> 모양이 된다. 빌드에 경고가 없다</td></tr>
-    <tr><td>쓰지 않는 의존성</td><td>⑪ 다섯째 줄</td><td>코드에 없는 패키지가 <code>package.xml</code>·<code>CMakeLists.txt</code> <strong>두 곳 모두</strong>에서 빠졌다. <code>colcon info turtle_greeter</code>로 확인한다</td></tr>
+    <tr><td><code>ament_target_dependencies</code>를 오늘 방식으로. 누구에게 거는지 없는 <code>include_directories</code>, C++14로 낮추는 줄도 정리한다</td><td>⑤ · 8회</td><td><code>target_link_libraries(greeter PRIVATE rclcpp::rclcpp)</code> 모양이 된다. Jazzy는 C++17 기준이다(⑤절 🆕)</td></tr>
+    <tr><td>쓰지 않는 의존성</td><td>② · ③</td><td>코드에 없는 패키지가 <code>package.xml</code>·<code>CMakeLists.txt</code> <strong>두 곳 모두</strong>에서 빠졌다. 두 파일을 나란히 놓고 이름을 맞춰 본다</td></tr>
     <tr><td><code>TODO</code> 세 칸</td><td>⑦</td><td><code>package.xml</code>에 <code>TODO</code>가 없다</td></tr>
     <tr><td><code>std::cout</code> 대신 노드의 로그, 그리고 노드가 살아 있게</td><td>⑥</td><td>다른 터미널의 <code>ros2 node list</code>에 <code>/greeter</code>가 보이고, 로그 줄 머리에 <code>[greeter]</code>가 붙는다</td></tr>
   </table>
@@ -1566,7 +1330,7 @@ ament_target_dependencies(greeter rclcpp std_msgs)</code></pre></div>
   </div>
   <p>
     정답은 하나가 아니다. <strong>위 표의 「확인하는 법」이 전부 통과하면</strong> 된 것이다.
-    받은 결과에서 표의 여섯 줄이 다 됐는지는 사람이 확인한다 — 에이전트가 「완료했습니다」라고 해도 <code>colcon info</code>와 <code>ros2 node list</code>는 직접 친다.
+    받은 결과에서 표의 여섯 줄이 다 됐는지는 사람이 확인한다 — 에이전트가 「완료했습니다」라고 해도 <code>ros2 pkg executables</code>와 <code>ros2 node list</code>는 직접 친다.
   </p>
 
   <!-- ── 프롬프트 모음 ── -->
@@ -1576,15 +1340,15 @@ ament_target_dependencies(greeter rclcpp std_msgs)</code></pre></div>
     <tr><th>이럴 때</th><th>이렇게 말한다</th></tr>
     <tr><td>패키지를 새로 만들 때</td><td>"~/ros2_ws/src 에서 ros2 pkg create 로 ament_cmake 패키지를 만들어 줘. 패키지 이름을 명령 맨 앞에 쓰고, 의존성은 rclcpp 하나만. 만든 뒤 package.xml 의 TODO 세 칸이 무엇인지 알려 줘."</td></tr>
     <tr><td>실행 파일을 더할 때</td><td>"src/이름.cpp 를 실행 파일로 더해 줘. add_executable, target_link_libraries(… PRIVATE rclcpp::rclcpp), install(TARGETS … DESTINATION lib/${PROJECT_NAME}) 세 줄을 ament_package() 위에 넣어 줘."</td></tr>
-    <tr><td>옛 방식 CMake를 받았을 때</td><td>"이 CMakeLists.txt 에서 include_directories, C++14 설정, ament_target_dependencies 를 찾아 오늘 방식으로 바꿔 줘. 바꾼 이유를 한 줄씩."</td></tr>
-    <tr><td>의존성을 더할 때</td><td>"새 의존성을 package.xml 의 &lt;depend&gt; 와 CMakeLists.txt 의 find_package·target_link_libraries 양쪽에 넣어 줘. 넣은 뒤 colcon info 로 package.xml 쪽이 반영됐는지 보여 줘."</td></tr>
+    <tr><td>옛 방식 CMake를 받았을 때</td><td>"이 CMakeLists.txt 에서 ament_target_dependencies 를 target_link_libraries 로 바꾸고, include_directories 와 C++14 설정이 있으면 지워 줘. 바꾼 이유를 한 줄씩."</td></tr>
+    <tr><td>의존성을 더할 때</td><td>"새 의존성을 package.xml 의 &lt;depend&gt; 와 CMakeLists.txt 의 find_package·target_link_libraries 양쪽에 넣어 줘. 넣은 뒤 두 파일에서 그 이름이 들어간 줄을 나란히 보여 줘."</td></tr>
     <tr><td><code>ros2 run</code>이 안 될 때</td><td>"이 오류가 source 를 안 한 것인지, install 이 빠진 것인지, 다른 폴더에서 빌드한 것인지 먼저 판단하고 근거가 되는 명령 하나를 돌려 줘."</td></tr>
     <tr><td>노드 뼈대가 필요할 때</td><td>"rclcpp::Node 를 상속한 클래스로 노드를 만들어 줘. 노드 이름은 생성자의 멤버 초기화 리스트에서 넘기고, main 은 init → make_shared → spin → shutdown 순서로."</td></tr>
   </table>
   </div>
   <div class="interp">
     <strong>해석:</strong> 프롬프트마다 <strong>「어디서 빌드할지」와 「무엇을 보여 달라」</strong>가 들어 있다.
-    에이전트에게 빌드를 맡겨도, 결과를 확인하는 명령(<code>ros2 pkg executables</code>, <code>colcon info</code>, <code>ros2 node list</code>)의 출력은 여러분이 직접 읽습니다.
+    에이전트에게 빌드를 맡겨도, 결과를 확인하는 명령(<code>ros2 pkg executables</code>, <code>ros2 node list</code>)의 출력은 여러분이 직접 읽습니다.
   </div>
 
   <!-- ── ✅ 점검 ── -->
