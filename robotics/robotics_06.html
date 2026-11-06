@@ -28,7 +28,6 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약</a>
   <a href="#speed">① 168배</a>
   <a href="#budget">② 200밀리초 예산</a>
   <a href="#fields">③ 로봇 밖의 예산들</a>
@@ -39,6 +38,7 @@
   <a href="#map">⑦ 2부 아홉 회차</a>
   <a href="#setup">🔧 C++ 세팅</a>
   <a href="#lab">🧪 실습 — 내 노트북에서</a>
+  <a href="#summary">한 장 요약</a>
   <a href="#prompts">🤖 프롬프트 모음</a>
   <a href="#check">✅ 점검</a>
   <a href="#more">조금 더 알아두면</a>
@@ -83,48 +83,6 @@
     거기서 나온 결론 한 줄이 이 강의 2부 전체의 뼈대다 —
     <strong>AI는 틀린 코드를 더 많이 만들지 않았다. 문제는 맞지만 둔한 코드였다.</strong>
   </p>
-
-  <!-- ── 한 장 요약표 ── -->
-  <h2 id="summary">한 장 요약 — 오늘 남는 것은 숫자 다섯 개다</h2>
-  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 왼쪽 숫자 다섯 개</strong>만 외우면 오늘 수업은 남는다. 나머지는 그 숫자를 설명하는 이야기다.</p>
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th>숫자</th><th>무엇을 잰 것인가</th><th>그래서 무엇이 달라지나</th></tr>
-    <tr>
-      <td><strong>168배</strong></td>
-      <td>같은 계산(라이다 값 360개를 걸러 평균, 10만 번)을 C++과 파이썬으로 각각 돌린 시간의 비</td>
-      <td>시간 제약이 걸리는 콜백을 C++로 쓰는 이유다</td>
-    </tr>
-    <tr>
-      <td><strong>200 ms</strong></td>
-      <td>라이다가 초당 5번 들어올 때 한 스캔에 쓸 수 있는 시간</td>
-      <td>내가 짠 코드는 이 안에 끝나야 한다. 넘으면 밀린다.
-          게임은 16.7 ms, 초단타 매매는 수 µs — <strong>예산이 있는 분야마다 C++이 있다</strong></td>
-    </tr>
-    <tr>
-      <td><strong>1.39 / 2 / 0.4배</strong></td>
-      <td>AI가 짠 C++ 코드가 사람이 짠 것과 갈라진 세 자리 — 복사·직접 루프·표준 라이브러리</td>
-      <td>12회(컨테이너 — 복사를 세어 본다)와 13회(STL)가 2부의 중심인 이유다</td>
-    </tr>
-    <tr>
-      <td><strong>0.94배</strong></td>
-      <td>AI 코드의 정확성·안전성 문제 발생률 ÷ 사람 코드의 발생률</td>
-      <td><strong>AI는 틀린 코드를 더 많이 만들지 않는다.</strong> 그러니 "버그 잡기"는 오늘의 논지가 아니다</td>
-    </tr>
-    <tr>
-      <td><strong>약 70%</strong></td>
-      <td>마이크로소프트(2019)와 구글 크롬 팀(2020)이 각자 센, 심각한 보안 결함 중 <strong>메모리를 잘못 다뤄서</strong> 생긴 것의 비율</td>
-      <td>Rust가 나온 이유다. 그리고 C++ 안에서 같은 문제를 다루는 11회가 있는 이유이기도 하다</td>
-    </tr>
-  </table>
-  </div>
-  <div class="interp">
-    <strong>해석:</strong> 첫 줄과 넷째 줄을 같이 읽어야 오늘의 논지가 나온다.
-    C++이 필요한 이유는 <strong>속도</strong>고, C++을 <em>사람이</em> 알아야 하는 이유는 <strong>AI가 속도를 놓친다</strong>는 것이다.
-    두 이유는 다른 것이다. 앞의 것만 있으면 "AI에게 시키면 되지 않나"로 끝난다.
-    마지막 줄은 C++의 <strong>비용</strong>이다. 그 비용을 없애려고 나온 언어가 Rust이고,
-    그것을 알면 C++이 어디에 남고 어디에서 물러나는지가 보인다.
-  </div>
 
   <!-- ── 📐 이론 블록 ① ── -->
   <h2 id="speed">① 같은 일을 시켰더니 파이썬이 168배 오래 걸렸다 <span class="badge b-red">🔴 사람이 한다</span></h2>
@@ -1179,6 +1137,48 @@ python3 --version</code></pre>
       <strong>봐야 할 것은 밀리초 값이 아니라 배수다.</strong>
       100배가 나오든 300배가 나오든 결론은 같다.
     </p>
+  </div>
+
+  <!-- ── 한 장 요약표 ── -->
+  <h2 id="summary">한 장 요약 — 오늘 남는 것은 숫자 다섯 개다</h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 왼쪽 숫자 다섯 개</strong>만 외우면 오늘 수업은 남는다. 나머지는 그 숫자를 설명하는 이야기다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>숫자</th><th>무엇을 잰 것인가</th><th>그래서 무엇이 달라지나</th></tr>
+    <tr>
+      <td><strong>168배</strong></td>
+      <td>같은 계산(라이다 값 360개를 걸러 평균, 10만 번)을 C++과 파이썬으로 각각 돌린 시간의 비</td>
+      <td>시간 제약이 걸리는 콜백을 C++로 쓰는 이유다</td>
+    </tr>
+    <tr>
+      <td><strong>200 ms</strong></td>
+      <td>라이다가 초당 5번 들어올 때 한 스캔에 쓸 수 있는 시간</td>
+      <td>내가 짠 코드는 이 안에 끝나야 한다. 넘으면 밀린다.
+          게임은 16.7 ms, 초단타 매매는 수 µs — <strong>예산이 있는 분야마다 C++이 있다</strong></td>
+    </tr>
+    <tr>
+      <td><strong>1.39 / 2 / 0.4배</strong></td>
+      <td>AI가 짠 C++ 코드가 사람이 짠 것과 갈라진 세 자리 — 복사·직접 루프·표준 라이브러리</td>
+      <td>12회(컨테이너 — 복사를 세어 본다)와 13회(STL)가 2부의 중심인 이유다</td>
+    </tr>
+    <tr>
+      <td><strong>0.94배</strong></td>
+      <td>AI 코드의 정확성·안전성 문제 발생률 ÷ 사람 코드의 발생률</td>
+      <td><strong>AI는 틀린 코드를 더 많이 만들지 않는다.</strong> 그러니 "버그 잡기"는 오늘의 논지가 아니다</td>
+    </tr>
+    <tr>
+      <td><strong>약 70%</strong></td>
+      <td>마이크로소프트(2019)와 구글 크롬 팀(2020)이 각자 센, 심각한 보안 결함 중 <strong>메모리를 잘못 다뤄서</strong> 생긴 것의 비율</td>
+      <td>Rust가 나온 이유다. 그리고 C++ 안에서 같은 문제를 다루는 11회가 있는 이유이기도 하다</td>
+    </tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 첫 줄과 넷째 줄을 같이 읽어야 오늘의 논지가 나온다.
+    C++이 필요한 이유는 <strong>속도</strong>고, C++을 <em>사람이</em> 알아야 하는 이유는 <strong>AI가 속도를 놓친다</strong>는 것이다.
+    두 이유는 다른 것이다. 앞의 것만 있으면 "AI에게 시키면 되지 않나"로 끝난다.
+    마지막 줄은 C++의 <strong>비용</strong>이다. 그 비용을 없애려고 나온 언어가 Rust이고,
+    그것을 알면 C++이 어디에 남고 어디에서 물러나는지가 보인다.
   </div>
 
   <!-- ── 프롬프트 모음 ── -->

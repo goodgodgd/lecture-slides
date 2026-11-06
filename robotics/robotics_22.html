@@ -28,7 +28,6 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약</a>
   <a href="#plan">① wall_range와 turtle_drive v8~v11</a>
   <a href="#qos">② QoS 정책 — Reliability · History · Durability</a>
   <a href="#compat">③ QoS 호환성</a>
@@ -42,6 +41,7 @@
   <a href="#part3">⑪ 3부 정리</a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
+  <a href="#summary">한 장 요약</a>
   <a href="#prompts">🤖 프롬프트 모음</a>
   <a href="#check">✅ 점검</a>
   <a href="#more">조금 더 알아두면</a>
@@ -73,26 +73,6 @@
     거북이가 <strong>돌아서는 자리</strong>로 확인한다. 그다음 콜백마다 찍던 로그를 정리하고(v11), 마지막으로 rqt_plot·<code>ros2 bag</code>·rviz2로 값을 <strong>보는</strong> 방법을 익힌다.
     3부의 마지막 회차라 끝에서 15~22회에 쌓은 것을 한 표로 정리한다.
   </p>
-
-  <!-- ── 한 장 요약표 ── -->
-  <h2 id="summary">한 장 요약</h2>
-  <p class="readme-first">무엇을 먼저 볼지: <strong>오른쪽 열</strong>이 받은 코드를 검사하거나 막혔을 때 보는 기준이다.</p>
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th>용어</th><th>코드·명령에서 이렇게 보인다</th><th>이것만 알면 된다</th></tr>
-    <tr><td>QoS · Reliability</td><td><code>RELIABLE</code> / <code>BEST_EFFORT</code> (<code>ros2 topic info -v</code>)</td><td>잃은 메시지를 다시 보내 주나. <strong>센서는 대개 best effort, 명령은 reliable</strong></td></tr>
-    <tr><td>History · Depth</td><td><code>KEEP_LAST</code>, 큐 깊이 <code>10</code> · <code>5</code> · <code>1</code></td><td>밀렸을 때 몇 개까지 쌓아 두나. <strong>크면 안 잃는 대신 늦어진다</strong></td></tr>
-    <tr><td>QoS 호환성</td><td><code>offering incompatible QoS. … RELIABILITY</code></td><td><strong>발행 best effort + 구독 reliable = 안 붙는다.</strong> 반대 짝은 붙는다. 빌드도 실행도 오류 없이 된다</td></tr>
-    <tr><td>센서 데이터용 QoS</td><td><code>rclcpp::SensorDataQoS()</code></td><td>best effort · 깊이 5. 센서 토픽을 받을 때 둘째 인자에 <code>10</code> 대신 쓴다</td></tr>
-    <tr><td>콜백 처리 시간</td><td><code>std::chrono::steady_clock::now()</code> 앞뒤 차이</td><td>처리 시간이 메시지 주기보다 길면 <strong>큐에 밀리거나 버려진다.</strong> 받은 값의 나이(<code>now() - header.stamp</code>)로 본다</td></tr>
-    <tr><td>로깅</td><td><code>RCLCPP_INFO_THROTTLE(…, 1000, …)</code> · <code>RCLCPP_DEBUG</code> · <code>--log-level 노드:=debug</code></td><td>콜백마다 INFO를 찍지 않는다. 요약은 1초에 한 번, 자세한 줄은 DEBUG로 내렸다가 필요할 때 켠다</td></tr>
-    <tr><td>보는 도구</td><td><code>rqt_graph</code> · <code>rqt_plot</code> · <code>ros2 bag</code> · <code>rviz2</code></td><td>연결 / 시간에 따른 값 / 다시 재생 / 공간에 그려 보기. <strong>rviz2도 QoS를 맞춰야 보인다</strong></td></tr>
-  </table>
-  </div>
-  <div class="interp">
-    <strong>해석:</strong> 일곱 줄 가운데 셋째·다섯째 줄은 <strong>빌드가 잡아 주지 않는다.</strong> QoS가 안 맞아도, 콜백이 느려도 컴파일은 되고 노드는 뜬다.
-    그래서 오늘의 확인은 늘 두 가지로 끝난다 — <code>ros2 topic info -v</code>의 Reliability 두 줄, 그리고 거북이가 <strong>실제로 어디서 돌아섰나.</strong>
-  </div>
 
   <!-- ── ① 오늘 만들 것 ── -->
   <h2 id="plan">① <code>wall_range</code>와 <code>turtle_drive</code> v8~v11 <span class="badge b-red">🔴 사람이 한다</span></h2>
@@ -2241,6 +2221,26 @@ ament_package()</code></pre></div>
   <p>
     정답은 하나가 아니다. 위 표의 「확인하는 법」이 전부 통과하면 된 것이다. 첫째 줄은 돌려 봐야 확실하다 — 받은 코드가 구독 QoS를 숫자로 두었다면 빌드도 실행도 되는데 아무 줄도 안 찍힌다.
   </p>
+
+  <!-- ── 한 장 요약표 ── -->
+  <h2 id="summary">한 장 요약</h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>오른쪽 열</strong>이 받은 코드를 검사하거나 막혔을 때 보는 기준이다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>용어</th><th>코드·명령에서 이렇게 보인다</th><th>이것만 알면 된다</th></tr>
+    <tr><td>QoS · Reliability</td><td><code>RELIABLE</code> / <code>BEST_EFFORT</code> (<code>ros2 topic info -v</code>)</td><td>잃은 메시지를 다시 보내 주나. <strong>센서는 대개 best effort, 명령은 reliable</strong></td></tr>
+    <tr><td>History · Depth</td><td><code>KEEP_LAST</code>, 큐 깊이 <code>10</code> · <code>5</code> · <code>1</code></td><td>밀렸을 때 몇 개까지 쌓아 두나. <strong>크면 안 잃는 대신 늦어진다</strong></td></tr>
+    <tr><td>QoS 호환성</td><td><code>offering incompatible QoS. … RELIABILITY</code></td><td><strong>발행 best effort + 구독 reliable = 안 붙는다.</strong> 반대 짝은 붙는다. 빌드도 실행도 오류 없이 된다</td></tr>
+    <tr><td>센서 데이터용 QoS</td><td><code>rclcpp::SensorDataQoS()</code></td><td>best effort · 깊이 5. 센서 토픽을 받을 때 둘째 인자에 <code>10</code> 대신 쓴다</td></tr>
+    <tr><td>콜백 처리 시간</td><td><code>std::chrono::steady_clock::now()</code> 앞뒤 차이</td><td>처리 시간이 메시지 주기보다 길면 <strong>큐에 밀리거나 버려진다.</strong> 받은 값의 나이(<code>now() - header.stamp</code>)로 본다</td></tr>
+    <tr><td>로깅</td><td><code>RCLCPP_INFO_THROTTLE(…, 1000, …)</code> · <code>RCLCPP_DEBUG</code> · <code>--log-level 노드:=debug</code></td><td>콜백마다 INFO를 찍지 않는다. 요약은 1초에 한 번, 자세한 줄은 DEBUG로 내렸다가 필요할 때 켠다</td></tr>
+    <tr><td>보는 도구</td><td><code>rqt_graph</code> · <code>rqt_plot</code> · <code>ros2 bag</code> · <code>rviz2</code></td><td>연결 / 시간에 따른 값 / 다시 재생 / 공간에 그려 보기. <strong>rviz2도 QoS를 맞춰야 보인다</strong></td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 일곱 줄 가운데 셋째·다섯째 줄은 <strong>빌드가 잡아 주지 않는다.</strong> QoS가 안 맞아도, 콜백이 느려도 컴파일은 되고 노드는 뜬다.
+    그래서 오늘의 확인은 늘 두 가지로 끝난다 — <code>ros2 topic info -v</code>의 Reliability 두 줄, 그리고 거북이가 <strong>실제로 어디서 돌아섰나.</strong>
+  </div>
 
   <!-- ── 프롬프트 모음 ── -->
   <h2 id="prompts">🤖 오늘 나온 프롬프트 모음 <span class="badge b-green">🟢 맡긴다</span></h2>

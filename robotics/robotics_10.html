@@ -28,7 +28,6 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약 — 용어 다섯 개</a>
   <a href="#start">① 오늘 만들 것 — if 문으로 먼저</a>
   <a href="#inherit">② 상속 · <code>: public</code></a>
   <a href="#virtual">③ 가상 함수와 다형성 · <code>virtual</code> · <code>= 0</code></a>
@@ -36,6 +35,7 @@
   <a href="#dtor">⑤ 🔴 가상 소멸자</a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
+  <a href="#summary">한 장 요약 — 용어 다섯 개</a>
   <a href="#prompts">🤖 프롬프트 모음</a>
   <a href="#check">✅ 점검</a>
   <a href="#more">조금 더 알아두면</a>
@@ -65,25 +65,6 @@
     그다음에 <strong>센서 둘의 값을 읽는 작은 프로그램</strong>에 그것을 적용한다.
     프로그램은 <code>if</code> 문으로 먼저 짜 두고, 절이 넘어갈 때마다 문법 하나씩으로 고쳐 간다.
   </p>
-
-  <!-- ── 한 장 요약표 ── -->
-  <h2 id="summary">한 장 요약 — 학기가 끝나도 이 표만 남으면 된다</h2>
-  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 「이것만 알면 된다」 열</strong>만 읽어도 오늘 수업은 끝난다.</p>
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th>용어</th><th>코드에서 이렇게 보인다</th><th>이것만 알면 된다</th></tr>
-    <tr><td>상속 · 기반 클래스 · 파생 클래스</td><td><code>class Lidar : public Sensor</code></td><td><code>Lidar</code>는 <code>Sensor</code>의 멤버를 <strong>전부 물려받고</strong>, <code>Sensor</code> 자리에 들어갈 수 있다</td></tr>
-    <tr><td>가상 함수 · 다형성</td><td><code>virtual float read();</code></td><td><code>Sensor &amp;</code>로 잡고 불러도 <strong>실제 객체(동적 타입)의 함수</strong>가 불린다. <code>virtual</code>이 없으면 참조 타입(정적 타입)의 것이 불린다</td></tr>
-    <tr><td>순수 가상 함수 · 추상 클래스</td><td><code>virtual float read() = 0;</code></td><td>「내용은 파생 클래스가 채운다」. 하나라도 남아 있는 클래스로는 <strong>객체를 만들 수 없다</strong></td></tr>
-    <tr><td><code>override</code></td><td><code>float read() override</code></td><td>「기반 클래스의 가상 함수를 재정의한다」는 선언. 이름을 오타 내면 <strong>컴파일이 멈춘다</strong></td></tr>
-    <tr><td>🔴 가상 소멸자</td><td><code>virtual ~Sensor()</code></td><td>없으면 기반 클래스 포인터로 지울 때 <strong>파생 클래스 소멸자가 아예 안 불린다.</strong> 오류도 크래시도 없다</td></tr>
-  </table>
-  </div>
-  <div class="interp">
-    <strong>해석:</strong> 다섯째 줄에만 🔴가 붙어 있다.
-    나머지는 빠뜨리면 <strong>컴파일러가 알려 주거나 결과가 눈에 띄게 이상해진다.</strong>
-    가상 소멸자만 다르다 — 아무 일도 안 일어난 것처럼 보인다. 그래서 검사 목록에 올려 두지 않으면 영원히 못 찾는다.
-  </div>
 
   <!-- ── ① 시작 ── -->
   <h2 id="start">① 오늘 만들 것 — 센서 둘의 값 읽기, <code>if</code> 문으로 먼저 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
@@ -1156,6 +1137,25 @@ add_executable(battery_read main.cpp)</code></pre></div>
     <code>read_kind</code>처럼 번호로 종류를 따지는 함수는 <code>Sensor &amp;</code> 하나로 받게 바꿔 줘. 찍히는 값은 지금과 같아야 하고, 한 항목 고칠 때마다 빌드해서 확인해 줘.
   </div>
   <p>정답은 하나가 아니다. <strong>위 표의 「확인하는 법」이 전부 통과하면</strong> 된 것이다. 수업 시간에 몇 사람의 결과를 같이 본다.</p>
+
+  <!-- ── 한 장 요약표 ── -->
+  <h2 id="summary">한 장 요약 — 학기가 끝나도 이 표만 남으면 된다</h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 「이것만 알면 된다」 열</strong>이 오늘 수업에서 남길 것이다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>용어</th><th>코드에서 이렇게 보인다</th><th>이것만 알면 된다</th></tr>
+    <tr><td>상속 · 기반 클래스 · 파생 클래스</td><td><code>class Lidar : public Sensor</code></td><td><code>Lidar</code>는 <code>Sensor</code>의 멤버를 <strong>전부 물려받고</strong>, <code>Sensor</code> 자리에 들어갈 수 있다</td></tr>
+    <tr><td>가상 함수 · 다형성</td><td><code>virtual float read();</code></td><td><code>Sensor &amp;</code>로 잡고 불러도 <strong>실제 객체(동적 타입)의 함수</strong>가 불린다. <code>virtual</code>이 없으면 참조 타입(정적 타입)의 것이 불린다</td></tr>
+    <tr><td>순수 가상 함수 · 추상 클래스</td><td><code>virtual float read() = 0;</code></td><td>「내용은 파생 클래스가 채운다」. 하나라도 남아 있는 클래스로는 <strong>객체를 만들 수 없다</strong></td></tr>
+    <tr><td><code>override</code></td><td><code>float read() override</code></td><td>「기반 클래스의 가상 함수를 재정의한다」는 선언. 이름을 오타 내면 <strong>컴파일이 멈춘다</strong></td></tr>
+    <tr><td>🔴 가상 소멸자</td><td><code>virtual ~Sensor()</code></td><td>없으면 기반 클래스 포인터로 지울 때 <strong>파생 클래스 소멸자가 아예 안 불린다.</strong> 오류도 크래시도 없다</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 다섯째 줄에만 🔴가 붙어 있다.
+    나머지는 빠뜨리면 <strong>컴파일러가 알려 주거나 결과가 눈에 띄게 이상해진다.</strong>
+    가상 소멸자만 다르다 — 아무 일도 안 일어난 것처럼 보인다. 그래서 검사 목록에 올려 두지 않으면 영원히 못 찾는다.
+  </div>
 
   <!-- ── 프롬프트 모음 ── -->
   <h2 id="prompts">🤖 오늘 나온 프롬프트 모음 <span class="badge b-green">🟢 맡긴다</span></h2>

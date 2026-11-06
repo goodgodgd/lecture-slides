@@ -28,7 +28,6 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약</a>
   <a href="#plan">① turtle_drive v3~v7</a>
   <a href="#v4">② 파라미터 선언과 읽기 (v3)</a>
   <a href="#v5">③ ros2 param set과 읽는 시점 (v4)</a>
@@ -40,6 +39,7 @@
   <a href="#review">⑨ 받은 코드 검사 목록</a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
+  <a href="#summary">한 장 요약</a>
   <a href="#prompts">🤖 프롬프트 모음</a>
   <a href="#check">✅ 점검</a>
   <a href="#more">조금 더 알아두면</a>
@@ -76,27 +76,6 @@
     YAML 파일에 노드 이름을 틀리게 적어도 아무 말이 없는 것, 서비스 응답을 기다리다 노드 전체가 멈추는 것, launch 파일이 분명히 있는데 못 찾는 것.
     오늘은 그 자리를 하나씩 직접 만나 보고, 무엇을 보면 알아챌 수 있는지 정리한다.
   </p>
-
-  <!-- ── 한 장 요약표 ── -->
-  <h2 id="summary">한 장 요약</h2>
-  <p class="readme-first">무엇을 먼저 볼지: <strong>오른쪽 열</strong>이 받은 코드를 검사할 때 보는 기준이다. 가운데 열은 그것이 코드와 파일에서 어떻게 생겼는지다.</p>
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th>용어</th><th>코드에서 이렇게 보인다</th><th>이것만 알면 된다</th></tr>
-    <tr><td>파라미터 선언 · 읽기</td><td><code>declare_parameter("max_speed", 1.2)</code> · <code>get_parameter("max_speed").as_double()</code></td><td>선언해야 밖에서 보이고 바꿀 수 있다. <strong>타입은 기본값이 정한다</strong> — <code>1.0</code>이면 double, <code>1</code>이면 정수</td></tr>
-    <tr><td>읽는 시점</td><td><code>on_timer()</code> 안의 <code>read_parameters()</code></td><td><code>param set</code>은 노드 안의 값만 바꾼다. <strong>생성자에서 한 번만 읽으면</strong> 멤버는 옛 값 그대로다</td></tr>
-    <tr><td>파라미터 파일 (YAML)</td><td><code>/turtle_drive:</code> → <code>ros__parameters:</code> → <code>max_speed: 0.8</code></td><td>맨 윗줄 <strong>노드 이름이 틀리면 조용히 무시된다.</strong> 실수 파라미터는 <code>2</code>가 아니라 <code>2.0</code></td></tr>
-    <tr><td>서비스 서버</td><td><code>create_service&lt;std_srvs::srv::SetBool&gt;("~/enable", 콜백)</code></td><td>콜백이 요청을 읽고 응답을 채운다. <code>~/</code>는 「내 노드 이름 아래」 — <code>/turtle_drive/enable</code></td></tr>
-    <tr><td>서비스 클라이언트</td><td><code>create_client&lt;turtlesim::srv::SetPen&gt;("/turtle1/set_pen")</code> · <code>async_send_request(req, 콜백)</code></td><td>보내고 <strong>바로 돌아온다.</strong> 응답은 <code>spin</code>이 콜백으로 넘겨준다. <strong>콜백 안에서 응답을 기다리면 노드가 멈춘다</strong></td></tr>
-    <tr><td>launch 파일</td><td><code>launch/turtle_drive.launch.py</code> · <code>ros2 launch turtle_drive turtle_drive.launch.py</code></td><td>노드 여러 개를 파라미터와 함께 한 번에 띄운다. AI가 주는 것은 대개 파이썬(<code>.launch.py</code>)이고, 우리는 <strong>읽고 검사</strong>한다</td></tr>
-    <tr><td>파일 설치</td><td><code>install(DIRECTORY launch config DESTINATION share/${PROJECT_NAME})</code></td><td>실행 파일은 <code>lib/</code>, launch·YAML은 <code>share/</code>. 빠지면 <code>ros2 launch</code>가 <code>was not found</code>. <strong>src의 YAML을 고치면 다시 빌드</strong>해야 반영된다</td></tr>
-    <tr><td>의존성</td><td><code>&lt;depend&gt;std_srvs&lt;/depend&gt;</code> · <code>&lt;exec_depend&gt;ros2launch&lt;/exec_depend&gt;</code></td><td>서비스 타입 패키지도 두 파일 양쪽에. launch는 실행할 때만 필요하니 <code>exec_depend</code></td></tr>
-  </table>
-  </div>
-  <div class="interp">
-    <strong>해석:</strong> 여덟 줄 중 굵게 쓴 경고가 다섯 개다. 다섯 모두 <strong>빌드가 잡아 주지 않는다.</strong> 빌드는 성공하고, 명령도 「성공」이라고 답한다.
-    그래서 오늘의 확인은 늘 같은 질문으로 끝난다 — <strong>그래서 거북이가 실제로 바뀌었나?</strong> 그것은 화면과 <code>ros2 topic echo</code>로 여러분이 봅니다.
-  </div>
 
   <!-- ── ① 오늘 만들 것 ── -->
   <h2 id="plan">① <code>turtle_drive</code> v3~v7 <span class="badge b-red">🔴 사람이 한다</span></h2>
@@ -2510,6 +2489,27 @@ ament_package()</code></pre></div>
     정답은 하나가 아니다. <strong>위 표의 「확인하는 법」이 전부 통과하면</strong> 된 것이다.
     둘째 줄은 돌려 봐야 안다 — 받은 코드가 경고 거리를 생성자에서 한 번만 읽고 있으면 <code>param set</code>이 성공한다고 답하면서도 <code>WARN</code>이 계속 찍힌다.
   </p>
+
+  <!-- ── 한 장 요약표 ── -->
+  <h2 id="summary">한 장 요약</h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>오른쪽 열</strong>이 받은 코드를 검사할 때 보는 기준이다. 가운데 열은 그것이 코드와 파일에서 어떻게 생겼는지다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>용어</th><th>코드에서 이렇게 보인다</th><th>이것만 알면 된다</th></tr>
+    <tr><td>파라미터 선언 · 읽기</td><td><code>declare_parameter("max_speed", 1.2)</code> · <code>get_parameter("max_speed").as_double()</code></td><td>선언해야 밖에서 보이고 바꿀 수 있다. <strong>타입은 기본값이 정한다</strong> — <code>1.0</code>이면 double, <code>1</code>이면 정수</td></tr>
+    <tr><td>읽는 시점</td><td><code>on_timer()</code> 안의 <code>read_parameters()</code></td><td><code>param set</code>은 노드 안의 값만 바꾼다. <strong>생성자에서 한 번만 읽으면</strong> 멤버는 옛 값 그대로다</td></tr>
+    <tr><td>파라미터 파일 (YAML)</td><td><code>/turtle_drive:</code> → <code>ros__parameters:</code> → <code>max_speed: 0.8</code></td><td>맨 윗줄 <strong>노드 이름이 틀리면 조용히 무시된다.</strong> 실수 파라미터는 <code>2</code>가 아니라 <code>2.0</code></td></tr>
+    <tr><td>서비스 서버</td><td><code>create_service&lt;std_srvs::srv::SetBool&gt;("~/enable", 콜백)</code></td><td>콜백이 요청을 읽고 응답을 채운다. <code>~/</code>는 「내 노드 이름 아래」 — <code>/turtle_drive/enable</code></td></tr>
+    <tr><td>서비스 클라이언트</td><td><code>create_client&lt;turtlesim::srv::SetPen&gt;("/turtle1/set_pen")</code> · <code>async_send_request(req, 콜백)</code></td><td>보내고 <strong>바로 돌아온다.</strong> 응답은 <code>spin</code>이 콜백으로 넘겨준다. <strong>콜백 안에서 응답을 기다리면 노드가 멈춘다</strong></td></tr>
+    <tr><td>launch 파일</td><td><code>launch/turtle_drive.launch.py</code> · <code>ros2 launch turtle_drive turtle_drive.launch.py</code></td><td>노드 여러 개를 파라미터와 함께 한 번에 띄운다. AI가 주는 것은 대개 파이썬(<code>.launch.py</code>)이고, 우리는 <strong>읽고 검사</strong>한다</td></tr>
+    <tr><td>파일 설치</td><td><code>install(DIRECTORY launch config DESTINATION share/${PROJECT_NAME})</code></td><td>실행 파일은 <code>lib/</code>, launch·YAML은 <code>share/</code>. 빠지면 <code>ros2 launch</code>가 <code>was not found</code>. <strong>src의 YAML을 고치면 다시 빌드</strong>해야 반영된다</td></tr>
+    <tr><td>의존성</td><td><code>&lt;depend&gt;std_srvs&lt;/depend&gt;</code> · <code>&lt;exec_depend&gt;ros2launch&lt;/exec_depend&gt;</code></td><td>서비스 타입 패키지도 두 파일 양쪽에. launch는 실행할 때만 필요하니 <code>exec_depend</code></td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 여덟 줄 중 굵게 쓴 경고가 다섯 개다. 다섯 모두 <strong>빌드가 잡아 주지 않는다.</strong> 빌드는 성공하고, 명령도 「성공」이라고 답한다.
+    그래서 오늘의 확인은 늘 같은 질문으로 끝난다 — <strong>그래서 거북이가 실제로 바뀌었나?</strong> 그것은 화면과 <code>ros2 topic echo</code>로 여러분이 봅니다.
+  </div>
 
   <!-- ── 프롬프트 모음 ── -->
   <h2 id="prompts">🤖 오늘 나온 프롬프트 모음 <span class="badge b-green">🟢 맡긴다</span></h2>

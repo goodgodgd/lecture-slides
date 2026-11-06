@@ -28,7 +28,6 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약 — 명령어 여섯, 판단 둘</a>
   <a href="#story">📖 열흘 만에 만든 도구</a>
   <a href="#why">① 파일 이름으로 판 관리를 할 때 못 하는 것</a>
   <a href="#setup">② 준비 — GitHub 가입 · 저장소 · <strong>토큰</strong></a>
@@ -42,6 +41,7 @@
   <a href="#ignore">⑨ <code>.gitignore</code> — 올리지 않을 것</a>
   <a href="#size">⑩ 커밋 하나의 크기 — 사람이 정한다</a>
   <a href="#lab">🧪 실습 — 저장소 하나를 처음부터 끝까지</a>
+  <a href="#summary">한 장 요약 — 명령어 여섯, 판단 둘</a>
   <a href="#prompts">🤖 프롬프트 세 개</a>
   <a href="#check">✅ 점검</a>
   <a href="#more">조금 더 알아두면</a>
@@ -98,30 +98,6 @@
       다음 시간에 겪을 일은 전부 <strong>「올리려는데 서버가 안 받아 준다」</strong>에서 시작한다.
       그 자리를 이해하려면 <strong>올리는 것이 무엇인지</strong>부터 알고 있어야 한다.
     </p>
-  </div>
-
-  <!-- ══════════ 한 장 요약 ══════════ -->
-  <h2 id="summary">한 장 요약 — 명령어는 여섯 개, 판단은 두 개</h2>
-  <p class="readme-first">무엇을 먼저 볼지: <strong>왼쪽 「내가 알고 싶은 것」 열</strong>만 읽는다. 아래 두 줄이 오늘의 중심이다.</p>
-
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th>내가 알고 싶은 것 / 하고 싶은 것</th><th>그때 이걸 친다</th><th>수준</th></tr>
-    <tr><td>서버에 있는 저장소를 <strong>내 컴퓨터로 받아 온다</strong></td><td><code>git clone 주소</code></td><td><span class="badge b-lv">[알아보기]</span></td></tr>
-    <tr><td>지금 무엇이 바뀌어 있나</td><td><code>git status</code></td><td><span class="badge b-lv">[요구]</span></td></tr>
-    <tr><td>이번 커밋에 <strong>이것만</strong> 담겠다</td><td><code>git add 파일</code></td><td><span class="badge b-lv">[판단]</span></td></tr>
-    <tr><td>여기까지를 <strong>한 덩어리로 굳힌다</strong></td><td><code>git commit -m "..."</code></td><td><span class="badge b-lv">[판단]</span></td></tr>
-    <tr><td>내 것을 <strong>서버로 올린다</strong></td><td><code>git push</code></td><td><span class="badge b-lv">[알아보기]</span></td></tr>
-    <tr><td>서버에 올라온 것을 <strong>받아 온다</strong></td><td><code>git pull</code></td><td><span class="badge b-lv">[알아보기]</span></td></tr>
-    <tr><td><strong>커밋 하나에 무엇까지 담나</strong> 🔴</td><td><strong>사람이 정한다.</strong> 명령어가 아니다</td><td><span class="badge b-lv">[판단]</span></td></tr>
-    <tr><td><strong>왜 이렇게 고쳤는지 남긴다</strong> 🔴</td><td><strong>커밋 메시지.</strong> 사람이 쓴다</td><td><span class="badge b-lv">[요구]</span></td></tr>
-  </table>
-  </div>
-
-  <div class="interp">
-    <strong>해석:</strong> 위 여섯 줄은 전부 <strong>에이전트가 대신 쳐 줄 수 있다.</strong>
-    아래 두 줄은 <strong>대신 해 줄 수 없다.</strong> 코드를 보면 <em>무엇이</em> 바뀌었는지는 알 수 있지만
-    <strong><em>왜</em> 그렇게 했는지는 코드 어디에도 안 적혀 있기</strong> 때문이다.
   </div>
 
   <p>
@@ -850,6 +826,30 @@ git status</code></pre>
       <p>이 대목은 <strong>에이전트에게 통째로 맡겨도 되는 자리</strong>다 — 아래 문장을 그대로 쓴다.</p>
       <div class="prompt"><button onclick="copyPrompt(this)">복사</button> GitHub에 push 하려는데 인증에서 막혔어. 지금 내 환경에서 가장 간단한 방법으로 인증을 설정해 줘. <strong>토큰을 화면에 그대로 찍지는 마.</strong> 설정이 끝나면 내가 확인할 명령 한 줄을 알려 줘.</div>
     </details>
+  </div>
+
+  <!-- ══════════ 한 장 요약 ══════════ -->
+  <h2 id="summary">한 장 요약 — 명령어는 여섯 개, 판단은 두 개</h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>왼쪽 「내가 알고 싶은 것」 열</strong>만 읽는다. 아래 두 줄이 오늘의 중심이다.</p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>내가 알고 싶은 것 / 하고 싶은 것</th><th>그때 이걸 친다</th><th>수준</th></tr>
+    <tr><td>서버에 있는 저장소를 <strong>내 컴퓨터로 받아 온다</strong></td><td><code>git clone 주소</code></td><td><span class="badge b-lv">[알아보기]</span></td></tr>
+    <tr><td>지금 무엇이 바뀌어 있나</td><td><code>git status</code></td><td><span class="badge b-lv">[요구]</span></td></tr>
+    <tr><td>이번 커밋에 <strong>이것만</strong> 담겠다</td><td><code>git add 파일</code></td><td><span class="badge b-lv">[판단]</span></td></tr>
+    <tr><td>여기까지를 <strong>한 덩어리로 굳힌다</strong></td><td><code>git commit -m "..."</code></td><td><span class="badge b-lv">[판단]</span></td></tr>
+    <tr><td>내 것을 <strong>서버로 올린다</strong></td><td><code>git push</code></td><td><span class="badge b-lv">[알아보기]</span></td></tr>
+    <tr><td>서버에 올라온 것을 <strong>받아 온다</strong></td><td><code>git pull</code></td><td><span class="badge b-lv">[알아보기]</span></td></tr>
+    <tr><td><strong>커밋 하나에 무엇까지 담나</strong> 🔴</td><td><strong>사람이 정한다.</strong> 명령어가 아니다</td><td><span class="badge b-lv">[판단]</span></td></tr>
+    <tr><td><strong>왜 이렇게 고쳤는지 남긴다</strong> 🔴</td><td><strong>커밋 메시지.</strong> 사람이 쓴다</td><td><span class="badge b-lv">[요구]</span></td></tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 위 여섯 줄은 전부 <strong>에이전트가 대신 쳐 줄 수 있다.</strong>
+    아래 두 줄은 <strong>대신 해 줄 수 없다.</strong> 코드를 보면 <em>무엇이</em> 바뀌었는지는 알 수 있지만
+    <strong><em>왜</em> 그렇게 했는지는 코드 어디에도 안 적혀 있기</strong> 때문이다.
   </div>
 
   <!-- ══════════ 🤖 프롬프트 ══════════ -->

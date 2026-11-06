@@ -28,7 +28,6 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약</a>
   <a href="#story">📖 STL은 어디서 왔나</a>
   <a href="#program">⓪ 오늘의 프로그램</a>
   <a href="#block1">① 가장 작은 값 찾기</a>
@@ -39,6 +38,7 @@
   <a href="#trap">⚠️ 라이다의 NaN</a>
   <a href="#lab">🧪 실습</a>
   <a href="#hw">📝 HW3 배부</a>
+  <a href="#summary">한 장 요약</a>
   <a href="#prompts">🤖 프롬프트 모음</a>
   <a href="#check">✅ 점검</a>
   <a href="#more">조금 더 알아두면</a>
@@ -76,29 +76,6 @@
     그리고 마지막에 함정이 하나 있다. <strong>표준 알고리즘으로 바꿔도 실제 라이다에서만 틀리는 코드</strong>다.
     그 함정이 이 회차에서 가장 중요하다.
   </p>
-
-  <!-- ── 한 장 요약표 ── -->
-  <h2 id="summary">한 장 요약 — 학기가 끝나도 이 표만 남으면 된다</h2>
-  <p class="readme-first">무엇을 먼저 볼지: <strong>가운데 「이 for문이 보이면」 열</strong>만 읽어도 판단이 선다. 왼쪽 이름은 외우지 않아도 된다.</p>
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th>이걸 쓴다</th><th>이 for문이 보이면 바꾼다</th><th>수준</th></tr>
-    <tr><td><code>std::min_element</code> / <code>max_element</code></td><td>가장 작은(큰) 것을 찾는 루프</td><td><span class="badge b-lv">[요구]</span></td></tr>
-    <tr><td><code>std::count_if</code></td><td>조건에 맞는 것의 개수를 세는 루프</td><td><span class="badge b-lv">[요구]</span></td></tr>
-    <tr><td><code>std::copy_if</code></td><td>조건에 맞는 것만 다른 컨테이너에 담는 루프</td><td><span class="badge b-lv">[요구]</span></td></tr>
-    <tr><td><code>std::find_if</code></td><td>조건에 맞는 <strong>첫 번째</strong>를 찾는 루프</td><td><span class="badge b-lv">[요구]</span></td></tr>
-    <tr><td><code>std::transform</code></td><td>전부 바꿔서 다른 컨테이너에 담는 루프</td><td><span class="badge b-lv">[요구]</span></td></tr>
-    <tr><td><code>std::accumulate</code></td><td>합계를 내는 루프</td><td><span class="badge b-lv">[판단]</span></td></tr>
-    <tr><td><code>std::any_of</code> / <code>all_of</code></td><td>"하나라도 / 전부"를 확인하는 루프</td><td><span class="badge b-lv">[판단]</span></td></tr>
-    <tr><td><code>std::sort</code> / <code>nth_element</code></td><td>정렬하거나 중앙값을 구하는 루프</td><td><span class="badge b-lv">[판단]</span></td></tr>
-  </table>
-  </div>
-  <div class="interp">
-    <strong>해석:</strong> 외울 것은 함수 이름이 아니라 <strong>가운데 열</strong>이다.
-    받은 코드에서 저런 모양의 for문이 보이면 <strong>"이건 표준에 이미 있는 것 아닌가"</strong>를 의심하면 된다.
-    <strong>이 표에 없는 알고리즘이 훨씬 많다.</strong> 다 알 필요도 없고 알 수도 없다.
-    <em>모양을 알아보는 것</em>이 이 표의 목적이다.
-  </div>
 
   <!-- ── 📖 이야기 블록 ── -->
   <details class="story" id="story">
@@ -1732,6 +1709,29 @@ int main()
   <p>
     → <a href="hw/hw3/hw3.html"><strong>HW3 — 클래스·상속으로 객체화하고 STL을 적용한다</strong></a>
   </p>
+
+  <!-- ── 한 장 요약표 ── -->
+  <h2 id="summary">한 장 요약 — 학기가 끝나도 이 표만 남으면 된다</h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>가운데 「이 for문이 보이면」 열</strong>만 읽어도 판단이 선다. 왼쪽 이름은 외우지 않아도 된다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>이걸 쓴다</th><th>이 for문이 보이면 바꾼다</th><th>수준</th></tr>
+    <tr><td><code>std::min_element</code> / <code>max_element</code></td><td>가장 작은(큰) 것을 찾는 루프</td><td><span class="badge b-lv">[요구]</span></td></tr>
+    <tr><td><code>std::count_if</code></td><td>조건에 맞는 것의 개수를 세는 루프</td><td><span class="badge b-lv">[요구]</span></td></tr>
+    <tr><td><code>std::copy_if</code></td><td>조건에 맞는 것만 다른 컨테이너에 담는 루프</td><td><span class="badge b-lv">[요구]</span></td></tr>
+    <tr><td><code>std::find_if</code></td><td>조건에 맞는 <strong>첫 번째</strong>를 찾는 루프</td><td><span class="badge b-lv">[요구]</span></td></tr>
+    <tr><td><code>std::transform</code></td><td>전부 바꿔서 다른 컨테이너에 담는 루프</td><td><span class="badge b-lv">[요구]</span></td></tr>
+    <tr><td><code>std::accumulate</code></td><td>합계를 내는 루프</td><td><span class="badge b-lv">[판단]</span></td></tr>
+    <tr><td><code>std::any_of</code> / <code>all_of</code></td><td>"하나라도 / 전부"를 확인하는 루프</td><td><span class="badge b-lv">[판단]</span></td></tr>
+    <tr><td><code>std::sort</code> / <code>nth_element</code></td><td>정렬하거나 중앙값을 구하는 루프</td><td><span class="badge b-lv">[판단]</span></td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 외울 것은 함수 이름이 아니라 <strong>가운데 열</strong>이다.
+    받은 코드에서 저런 모양의 for문이 보이면 <strong>"이건 표준에 이미 있는 것 아닌가"</strong>를 의심하면 된다.
+    <strong>이 표에 없는 알고리즘이 훨씬 많다.</strong> 다 알 필요도 없고 알 수도 없다.
+    <em>모양을 알아보는 것</em>이 이 표의 목적이다.
+  </div>
 
   <!-- ── 프롬프트 모음 ── -->
   <h2 id="prompts">🤖 오늘 나온 프롬프트 모음 <span class="badge b-green">🟢 맡긴다</span></h2>

@@ -28,7 +28,6 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약</a>
   <a href="#plan">① turtle_drive와 두 토픽</a>
   <a href="#pub">② 발행자 create_publisher</a>
   <a href="#v1">③ 타이머와 콜백 (v1)</a>
@@ -37,6 +36,7 @@
   <a href="#checks">⑥ 확인할 것</a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
+  <a href="#summary">한 장 요약</a>
   <a href="#prompts">🤖 프롬프트 모음</a>
   <a href="#check">✅ 점검</a>
   <a href="#more">조금 더 알아두면</a>
@@ -72,27 +72,6 @@
   <p>
     마지막 ⑥절에서는 다 만든 노드에서 확인할 것 — 두 파일의 의존성, Ctrl+C 때 거북이, 받은 노드 코드에서 볼 일곱 줄 — 을 짧게 짚는다.
   </p>
-
-  <!-- ── 한 장 요약표 ── -->
-  <h2 id="summary">한 장 요약</h2>
-  <p class="readme-first">무엇을 먼저 볼지: <strong>오른쪽 열</strong>이 받은 노드 코드를 검사할 때 보는 기준이다. 가운데 열은 그것이 코드에서 어떻게 생겼는지다.</p>
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th>용어</th><th>코드에서 이렇게 보인다</th><th>이것만 알면 된다</th></tr>
-    <tr><td>발행자(publisher)</td><td><code>create_publisher&lt;geometry_msgs::msg::Twist&gt;("/turtle1/cmd_vel", 10)</code></td><td>토픽 이름과 메시지 타입을 정해 만들고, <code>publish(msg)</code>로 보낸다. 노드의 <strong>멤버</strong>로 들고 있는다</td></tr>
-    <tr><td>타이머(timer)</td><td><code>create_wall_timer(500ms, [this]() { on_timer(); })</code></td><td>「주기마다 할 일」은 <code>while</code> + <code>sleep</code>이 아니라 타이머로 적는다</td></tr>
-    <tr><td>콜백(callback) · <code>rclcpp::spin</code></td><td><code>rclcpp::spin(node);</code></td><td>타이머·구독 콜백은 <strong><code>spin</code> 안에서만</strong> 불린다. <code>spin</code>이 없으면 구독은 붙어 있어도 콜백이 안 불린다</td></tr>
-    <tr><td>구독자(subscription)</td><td><code>create_subscription&lt;turtlesim::msg::Pose&gt;("/turtle1/pose", 10, 콜백)</code></td><td>메시지가 올 때마다 콜백이 불린다. 콜백은 <strong>받아 두기만</strong> 하고, 판단은 타이머 쪽에서 한다</td></tr>
-    <tr><td><code>ConstSharedPtr</code></td><td><code>void on_pose(turtlesim::msg::Pose::ConstSharedPtr msg)</code></td><td><code>std::shared_ptr&lt;const Pose&gt;</code>의 타입 별칭. <strong>복사 없이, 고치지 못하게</strong> 받고, 그대로 멤버에 들고 있을 수 있다</td></tr>
-    <tr><td>큐 깊이(depth)</td><td><code>…("/turtle1/cmd_vel", <strong>10</strong>)</code></td><td>밀렸을 때 쌓아 둘 메시지 수. 보통 10. 뜻을 모르고 1000·1로 바꾸지 않는다 (22회)</td></tr>
-    <tr><td>의존성 두 곳</td><td><code>&lt;depend&gt;turtlesim&lt;/depend&gt;</code> · <code>${turtlesim_TARGETS}</code></td><td>메시지 패키지도 19회 규칙 그대로 <strong><code>package.xml</code>과 <code>CMakeLists.txt</code> 양쪽</strong>에</td></tr>
-    <tr><td>cmd_vel 타임아웃</td><td>(turtlesim 쪽의 규칙)</td><td>turtlesim은 속도 명령이 <strong>약 1초</strong> 끊기면 거북이를 세운다. 그 1초 동안은 마지막 속도로 간다</td></tr>
-  </table>
-  </div>
-  <div class="interp">
-    <strong>해석:</strong> 여덟 줄 중 셋째 줄이 나머지를 묶는다. 타이머도 구독도 「무엇을 할지 함수로 넘겨 두면, <code>spin</code>이 때가 됐을 때 불러 준다」는 같은 구조다.
-    이 구조를 알면 <code>spin</code> 없이 <code>while</code>로 도는 코드에서 <strong>구독 콜백이 왜 한 번도 안 불리는지</strong>가 한 줄로 설명된다(⑥절).
-  </div>
 
   <!-- ── ① 오늘 만들 것 ── -->
   <h2 id="plan">① <code>turtle_drive</code>와 두 토픽 — <code>/turtle1/cmd_vel</code> · <code>/turtle1/pose</code> <span class="badge b-red">🔴 사람이 한다</span></h2>
@@ -1260,6 +1239,27 @@ ament_package()</code></pre></div>
     특히 셋째 줄은 직접 해 봐야 안다 — <code>wall_watch</code>를 먼저 띄우고 몇 초 뒤에 turtlesim을 띄워, 그 사이에 엉뚱한 거리가 찍히지 않는지 본다.
     원본은 그 사이에 아무것도 안 찍지만(<code>g_received</code>), 고친 코드에서 그것을 빠뜨리기 쉽다.
   </p>
+
+  <!-- ── 한 장 요약표 ── -->
+  <h2 id="summary">한 장 요약</h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>오른쪽 열</strong>이 받은 노드 코드를 검사할 때 보는 기준이다. 가운데 열은 그것이 코드에서 어떻게 생겼는지다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>용어</th><th>코드에서 이렇게 보인다</th><th>이것만 알면 된다</th></tr>
+    <tr><td>발행자(publisher)</td><td><code>create_publisher&lt;geometry_msgs::msg::Twist&gt;("/turtle1/cmd_vel", 10)</code></td><td>토픽 이름과 메시지 타입을 정해 만들고, <code>publish(msg)</code>로 보낸다. 노드의 <strong>멤버</strong>로 들고 있는다</td></tr>
+    <tr><td>타이머(timer)</td><td><code>create_wall_timer(500ms, [this]() { on_timer(); })</code></td><td>「주기마다 할 일」은 <code>while</code> + <code>sleep</code>이 아니라 타이머로 적는다</td></tr>
+    <tr><td>콜백(callback) · <code>rclcpp::spin</code></td><td><code>rclcpp::spin(node);</code></td><td>타이머·구독 콜백은 <strong><code>spin</code> 안에서만</strong> 불린다. <code>spin</code>이 없으면 구독은 붙어 있어도 콜백이 안 불린다</td></tr>
+    <tr><td>구독자(subscription)</td><td><code>create_subscription&lt;turtlesim::msg::Pose&gt;("/turtle1/pose", 10, 콜백)</code></td><td>메시지가 올 때마다 콜백이 불린다. 콜백은 <strong>받아 두기만</strong> 하고, 판단은 타이머 쪽에서 한다</td></tr>
+    <tr><td><code>ConstSharedPtr</code></td><td><code>void on_pose(turtlesim::msg::Pose::ConstSharedPtr msg)</code></td><td><code>std::shared_ptr&lt;const Pose&gt;</code>의 타입 별칭. <strong>복사 없이, 고치지 못하게</strong> 받고, 그대로 멤버에 들고 있을 수 있다</td></tr>
+    <tr><td>큐 깊이(depth)</td><td><code>…("/turtle1/cmd_vel", <strong>10</strong>)</code></td><td>밀렸을 때 쌓아 둘 메시지 수. 보통 10. 뜻을 모르고 1000·1로 바꾸지 않는다 (22회)</td></tr>
+    <tr><td>의존성 두 곳</td><td><code>&lt;depend&gt;turtlesim&lt;/depend&gt;</code> · <code>${turtlesim_TARGETS}</code></td><td>메시지 패키지도 19회 규칙 그대로 <strong><code>package.xml</code>과 <code>CMakeLists.txt</code> 양쪽</strong>에</td></tr>
+    <tr><td>cmd_vel 타임아웃</td><td>(turtlesim 쪽의 규칙)</td><td>turtlesim은 속도 명령이 <strong>약 1초</strong> 끊기면 거북이를 세운다. 그 1초 동안은 마지막 속도로 간다</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 여덟 줄 중 셋째 줄이 나머지를 묶는다. 타이머도 구독도 「무엇을 할지 함수로 넘겨 두면, <code>spin</code>이 때가 됐을 때 불러 준다」는 같은 구조다.
+    이 구조를 알면 <code>spin</code> 없이 <code>while</code>로 도는 코드에서 <strong>구독 콜백이 왜 한 번도 안 불리는지</strong>가 한 줄로 설명된다(⑥절).
+  </div>
 
   <!-- ── 프롬프트 모음 ── -->
   <h2 id="prompts">🤖 오늘 나온 프롬프트 모음 <span class="badge b-green">🟢 맡긴다</span></h2>

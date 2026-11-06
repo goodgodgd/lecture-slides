@@ -28,7 +28,6 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약</a>
   <a href="#distro">① 배포판과 우분투 버전</a>
   <a href="#install">② 설치 명령 (apt 저장소 등록)</a>
   <a href="#source">③ <code>source</code>와 환경변수</a>
@@ -38,6 +37,7 @@
   <a href="#talker">⑦ talker / listener 통신 확인</a>
   <a href="#verify">🔧 설치 확인 다섯 줄</a>
   <a href="#lab">🧪 실습</a>
+  <a href="#summary">한 장 요약</a>
   <a href="#prompts">🤖 프롬프트 모음</a>
   <a href="#check">✅ 점검</a>
   <a href="#more">조금 더 알아두면</a>
@@ -79,25 +79,6 @@
   <p class="readme-first">이 자료의 출력은 전부 우분투 24.04 + ROS 2 Jazzy 컨테이너에서 실제로 쳐서 받은 것이다.
     출력에 보이는 <code>/home/ubuntu</code>는 검증한 컴퓨터의 사용자 이름이다. 여러분 화면에는 <code>/home/ros</code>처럼 자기 계정 이름이 보인다.</p>
 
-  <!-- ── 한 장 요약표 ── -->
-  <h2 id="summary">한 장 요약</h2>
-  <p class="readme-first">무엇을 먼저 볼지: <strong>오른쪽 「확인하는 법」 열</strong>이다. 그 칸을 직접 쳐 보지 않았으면 그 줄은 안 끝난 것이다.</p>
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th>무엇</th><th>무엇이 바뀌나</th><th>확인하는 법</th><th>누가</th></tr>
-    <tr><td>apt 저장소 등록</td><td><code>apt</code>가 ROS 패키지를 받아 올 주소와 서명 키가 생긴다</td><td><code>cat /etc/apt/sources.list.d/ros2.list</code>에 <code>noble main</code>이 보이나</td><td><span class="badge b-green">🟢</span></td></tr>
-    <tr><td><code>ros-jazzy-desktop</code> 설치</td><td><code>/opt/ros/jazzy</code> 아래에 ROS 2 전체가 깔린다</td><td><code>ls /opt/ros/jazzy</code>에 <code>setup.bash</code>가 있나</td><td><span class="badge b-green">🟢</span></td></tr>
-    <tr><td><strong><code>source</code></strong> 🔴</td><td>지금 이 터미널의 <strong>환경변수</strong>(<code>PATH</code>·<code>ROS_DISTRO</code> 등)가 채워진다</td><td><code>printenv | grep ROS</code>에 <code>ROS_DISTRO=jazzy</code>가 보이나</td><td><span class="badge b-red">🔴</span></td></tr>
-    <tr><td><code>.bashrc</code>에 한 줄</td><td>새 터미널이 열릴 때마다 위 <code>source</code>가 저절로 된다</td><td><strong>새 터미널</strong>에서 <code>ros2 --help</code>가 뜨나</td><td><span class="badge b-green">🟢</span></td></tr>
-    <tr><td><strong>작업공간</strong> <code>~/ros2_ws</code> 🔴</td><td>내 패키지를 두고 빌드하는 폴더. <code>src/</code>에 소스, <code>install/</code>에 결과</td><td><code>colcon build</code> 뒤 <code>ls</code>에 <code>build install log src</code>가 보이나</td><td><span class="badge b-red">🔴</span></td></tr>
-    <tr><td>talker / listener</td><td>ROS 2 프로그램 둘이 실제로 글을 주고받는다</td><td>listener 창에 <code>I heard: [Hello World: N]</code>이 올라가나</td><td><span class="badge b-red">🔴</span></td></tr>
-  </table>
-  </div>
-  <div class="interp">
-    <strong>해석:</strong> 🔴가 붙은 세 줄이 오늘 사람이 쥐는 것이다.
-    <strong>설치는 한 번 하고 끝나지만 <code>source</code>와 작업공간은 30회까지 매일 쓴다.</strong>
-    「명령이 없다」·「패키지를 못 찾는다」는 말을 들으면 이 표의 셋째·다섯째 줄로 돌아오면 대체로 답이 있다.
-  </div>
 
 
   <!-- ══════════ ① 배포판 ══════════ -->
@@ -887,6 +868,26 @@ ls</code></pre>
     <p>그리고 <code>ls ~/ros2_ws</code>가 <code>build  install  log  src</code>를 찍는다.</p>
   </div>
 
+
+  <!-- ── 한 장 요약표 ── -->
+  <h2 id="summary">한 장 요약</h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>오른쪽 「확인하는 법」 열</strong>이다. 그 칸을 직접 쳐 보지 않았으면 그 줄은 안 끝난 것이다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>무엇</th><th>무엇이 바뀌나</th><th>확인하는 법</th><th>누가</th></tr>
+    <tr><td>apt 저장소 등록</td><td><code>apt</code>가 ROS 패키지를 받아 올 주소와 서명 키가 생긴다</td><td><code>cat /etc/apt/sources.list.d/ros2.list</code>에 <code>noble main</code>이 보이나</td><td><span class="badge b-green">🟢</span></td></tr>
+    <tr><td><code>ros-jazzy-desktop</code> 설치</td><td><code>/opt/ros/jazzy</code> 아래에 ROS 2 전체가 깔린다</td><td><code>ls /opt/ros/jazzy</code>에 <code>setup.bash</code>가 있나</td><td><span class="badge b-green">🟢</span></td></tr>
+    <tr><td><strong><code>source</code></strong> 🔴</td><td>지금 이 터미널의 <strong>환경변수</strong>(<code>PATH</code>·<code>ROS_DISTRO</code> 등)가 채워진다</td><td><code>printenv | grep ROS</code>에 <code>ROS_DISTRO=jazzy</code>가 보이나</td><td><span class="badge b-red">🔴</span></td></tr>
+    <tr><td><code>.bashrc</code>에 한 줄</td><td>새 터미널이 열릴 때마다 위 <code>source</code>가 저절로 된다</td><td><strong>새 터미널</strong>에서 <code>ros2 --help</code>가 뜨나</td><td><span class="badge b-green">🟢</span></td></tr>
+    <tr><td><strong>작업공간</strong> <code>~/ros2_ws</code> 🔴</td><td>내 패키지를 두고 빌드하는 폴더. <code>src/</code>에 소스, <code>install/</code>에 결과</td><td><code>colcon build</code> 뒤 <code>ls</code>에 <code>build install log src</code>가 보이나</td><td><span class="badge b-red">🔴</span></td></tr>
+    <tr><td>talker / listener</td><td>ROS 2 프로그램 둘이 실제로 글을 주고받는다</td><td>listener 창에 <code>I heard: [Hello World: N]</code>이 올라가나</td><td><span class="badge b-red">🔴</span></td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 🔴가 붙은 세 줄이 오늘 사람이 쥐는 것이다.
+    <strong>설치는 한 번 하고 끝나지만 <code>source</code>와 작업공간은 30회까지 매일 쓴다.</strong>
+    「명령이 없다」·「패키지를 못 찾는다」는 말을 들으면 이 표의 셋째·다섯째 줄로 돌아오면 대체로 답이 있다.
+  </div>
 
   <!-- ══════════ 🤖 프롬프트 모음 ══════════ -->
   <h2 id="prompts">🤖 오늘 나온 프롬프트 모음 <span class="badge b-green">🟢 맡긴다</span></h2>

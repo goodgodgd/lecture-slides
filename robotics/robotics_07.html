@@ -28,7 +28,6 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약 — 기호 여덟 개</a>
   <a href="#start">① 오늘 만들 것 — 옛날 방식으로 먼저</a>
   <a href="#include">② 전처리기 · <code>#include</code> · <code>std::</code></a>
   <a href="#vector">③ 템플릿 · <code>&lt;&gt;</code></a>
@@ -41,6 +40,7 @@
   <a href="#header">⑩ 헤더와 소스 나누기</a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
+  <a href="#summary">한 장 요약 — 기호 여덟 개</a>
   <a href="#prompts">🤖 프롬프트 모음</a>
   <a href="#check">✅ 점검</a>
   <a href="#more">조금 더 알아두면</a>
@@ -78,69 +78,6 @@
     프로그램은 옛날 C 방식으로 먼저 짜 두고, 절이 넘어갈 때마다 문법 하나씩으로 고쳐 간다.
     깊은 이야기는 그 문법이 실제로 문제를 일으키는 회차에서 다시 한다.
   </p>
-
-  <!-- ── 한 장 요약표 ── -->
-  <h2 id="summary">한 장 요약 — 학기가 끝나도 이 표만 남으면 된다</h2>
-  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 「이것만 알면 된다」 열</strong>만 읽어도 오늘 수업은 끝난다. 순서는 오늘 프로그램에 적용하는 순서다.</p>
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th>기호</th><th>이름</th><th>코드에서 이렇게 보인다</th><th>이것만 알면 된다</th></tr>
-    <tr>
-      <td><code>#include</code></td>
-      <td>전처리기 지시문</td>
-      <td><code>#include &lt;vector&gt;</code></td>
-      <td>컴파일 전에 헤더 파일의 <strong>선언을 그 자리에 붙인다.</strong> 없으면 이름을 못 알아본다</td>
-    </tr>
-    <tr>
-      <td><code>&lt;&gt;</code></td>
-      <td>템플릿 인자</td>
-      <td><code>std::vector&lt;float&gt;</code></td>
-      <td><code>vector</code>는 <strong>클래스 템플릿</strong>이고, 꺾쇠 안의 원소 타입을 넣어야 실제 타입이 된다</td>
-    </tr>
-    <tr>
-      <td><code>auto</code></td>
-      <td>타입 추론</td>
-      <td><code>auto n = ranges.size();</code></td>
-      <td>타입을 <strong>컴파일러가 오른쪽을 보고 채운다.</strong> 실행 중에 바뀌는 것이 아니다</td>
-    </tr>
-    <tr>
-      <td><code>&amp;</code></td>
-      <td>참조</td>
-      <td><code>void f(std::vector&lt;float&gt; &amp; r)</code></td>
-      <td><strong>원본에 붙인 다른 이름. 복사가 아니다.</strong> 이 한 글자가 없으면 고친 것이 원본에 안 남는다</td>
-    </tr>
-    <tr>
-      <td><code>const</code></td>
-      <td>상수 한정자</td>
-      <td><code>float g(const Scan &amp; s)</code></td>
-      <td><strong>못 바꾼다는 약속.</strong> 어기면 컴파일이 안 된다</td>
-    </tr>
-    <tr>
-      <td><code>struct</code> · <code>.</code></td>
-      <td>구조체 · 멤버 접근</td>
-      <td><code>struct Scan { ... };</code> / <code>scan.frame</code></td>
-      <td>값 여러 개를 <strong>한 타입으로 묶는다.</strong> 객체의 멤버는 점으로 꺼낸다</td>
-    </tr>
-    <tr>
-      <td><code>namespace</code> · <code>::</code></td>
-      <td>네임스페이스 · 범위 지정 연산자</td>
-      <td><code>std::cout</code>, <code>lidar::Scan</code></td>
-      <td>이름들을 <strong>상자에 넣어 부딪치지 않게 한다.</strong> 앞이 네임스페이스, 뒤가 그 안의 이름</td>
-    </tr>
-    <tr>
-      <td><code>*</code> · <code>-&gt;</code> · <code>nullptr</code></td>
-      <td>포인터 · 멤버 접근 · 널 포인터</td>
-      <td><code>Scan * p = nullptr;</code> / <code>p-&gt;frame</code></td>
-      <td>포인터는 <strong>객체의 주소를 담는 변수</strong>다. 비어 있을 수 있고, 빈 채로 <code>-&gt;</code>를 쓰면 죽는다</td>
-    </tr>
-  </table>
-  </div>
-  <div class="interp">
-    <strong>해석:</strong> 여덟 줄 중 <strong>넷째 줄(참조 <code>&amp;</code>)만 색이 다르다고 생각하면 된다.</strong>
-    나머지는 "알아보면 끝"이지만, <code>&amp;</code>는 있고 없고에 따라 <strong>프로그램이 실제로 하는 일이 달라진다.</strong>
-    오늘 ⑤절에서 그 차이가 출력에 그대로 찍힌다.
-    이 강의에서 AI 코드를 고치는 일의 절반이 이 한 글자를 넣는 일이다. 깊은 이야기는 12회에서 복사 횟수를 실제로 세면서 한다.
-  </div>
 
   <!-- ── ① 시작 ── -->
   <h2 id="start">① 오늘 만들 것 — 정면 장애물 판정기, 옛날 방식으로 먼저 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
@@ -1972,6 +1909,69 @@ RIGHT</code></pre>
     수업 시간에 몇 사람의 결과를 같이 본다.
   </p>
 
+  <!-- ── 한 장 요약표 ── -->
+  <h2 id="summary">한 장 요약 — 학기가 끝나도 이 표만 남으면 된다</h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 「이것만 알면 된다」 열</strong>이 오늘 수업에서 남길 것이다. 순서는 오늘 프로그램에 적용한 순서다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>기호</th><th>이름</th><th>코드에서 이렇게 보인다</th><th>이것만 알면 된다</th></tr>
+    <tr>
+      <td><code>#include</code></td>
+      <td>전처리기 지시문</td>
+      <td><code>#include &lt;vector&gt;</code></td>
+      <td>컴파일 전에 헤더 파일의 <strong>선언을 그 자리에 붙인다.</strong> 없으면 이름을 못 알아본다</td>
+    </tr>
+    <tr>
+      <td><code>&lt;&gt;</code></td>
+      <td>템플릿 인자</td>
+      <td><code>std::vector&lt;float&gt;</code></td>
+      <td><code>vector</code>는 <strong>클래스 템플릿</strong>이고, 꺾쇠 안의 원소 타입을 넣어야 실제 타입이 된다</td>
+    </tr>
+    <tr>
+      <td><code>auto</code></td>
+      <td>타입 추론</td>
+      <td><code>auto n = ranges.size();</code></td>
+      <td>타입을 <strong>컴파일러가 오른쪽을 보고 채운다.</strong> 실행 중에 바뀌는 것이 아니다</td>
+    </tr>
+    <tr>
+      <td><code>&amp;</code></td>
+      <td>참조</td>
+      <td><code>void f(std::vector&lt;float&gt; &amp; r)</code></td>
+      <td><strong>원본에 붙인 다른 이름. 복사가 아니다.</strong> 이 한 글자가 없으면 고친 것이 원본에 안 남는다</td>
+    </tr>
+    <tr>
+      <td><code>const</code></td>
+      <td>상수 한정자</td>
+      <td><code>float g(const Scan &amp; s)</code></td>
+      <td><strong>못 바꾼다는 약속.</strong> 어기면 컴파일이 안 된다</td>
+    </tr>
+    <tr>
+      <td><code>struct</code> · <code>.</code></td>
+      <td>구조체 · 멤버 접근</td>
+      <td><code>struct Scan { ... };</code> / <code>scan.frame</code></td>
+      <td>값 여러 개를 <strong>한 타입으로 묶는다.</strong> 객체의 멤버는 점으로 꺼낸다</td>
+    </tr>
+    <tr>
+      <td><code>namespace</code> · <code>::</code></td>
+      <td>네임스페이스 · 범위 지정 연산자</td>
+      <td><code>std::cout</code>, <code>lidar::Scan</code></td>
+      <td>이름들을 <strong>상자에 넣어 부딪치지 않게 한다.</strong> 앞이 네임스페이스, 뒤가 그 안의 이름</td>
+    </tr>
+    <tr>
+      <td><code>*</code> · <code>-&gt;</code> · <code>nullptr</code></td>
+      <td>포인터 · 멤버 접근 · 널 포인터</td>
+      <td><code>Scan * p = nullptr;</code> / <code>p-&gt;frame</code></td>
+      <td>포인터는 <strong>객체의 주소를 담는 변수</strong>다. 비어 있을 수 있고, 빈 채로 <code>-&gt;</code>를 쓰면 죽는다</td>
+    </tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 여덟 줄 중 <strong>넷째 줄(참조 <code>&amp;</code>)만 색이 다르다고 생각하면 된다.</strong>
+    나머지는 "알아보면 끝"이지만, <code>&amp;</code>는 있고 없고에 따라 <strong>프로그램이 실제로 하는 일이 달라진다.</strong>
+    오늘 ⑤절에서 그 차이가 출력에 그대로 찍혔다.
+    이 강의에서 AI 코드를 고치는 일의 절반이 이 한 글자를 넣는 일이다. 깊은 이야기는 12회에서 복사 횟수를 실제로 세면서 한다.
+  </div>
+
   <!-- ── 프롬프트 모음 ── -->
   <h2 id="prompts">🤖 오늘 나온 프롬프트 모음 <span class="badge b-green">🟢 맡긴다</span></h2>
   <div class="tablewrap">
@@ -2086,7 +2086,7 @@ const auto &amp; b = r;   // 복사가 없다      (직접 적어 줘야 한다)
     </div>
     <p>
       <strong>이 표는 "안 배웠으니 모르는 게 정상"이라는 뜻이다.</strong>
-      코드에서 만나면 그때 물어보면 된다. 지금 외워 둘 것은 <strong>맨 위 요약표 여덟 줄뿐</strong>이다.
+      코드에서 만나면 그때 물어보면 된다. 지금 외워 둘 것은 <strong>앞의 한 장 요약표 여덟 줄뿐</strong>이다.
     </p>
   </details>
 

@@ -28,7 +28,6 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약</a>
   <a href="#block1">① 람다가 무엇인가</a>
   <a href="#block2">② 캡처 네 가지</a>
   <a href="#trap">⚠️ 가리키던 것이 먼저 사라지면</a>
@@ -38,6 +37,7 @@
   <a href="#block6">⑥ std::optional</a>
   <a href="#block7">⑦ 구조적 바인딩과 if 안 선언</a>
   <a href="#lab">🧪 실습</a>
+  <a href="#summary">한 장 요약</a>
   <a href="#prompts">🤖 프롬프트 모음</a>
   <a href="#skill">🛠 2부를 스킬 하나로 굳힌다</a>
   <a href="#check">✅ 점검</a>
@@ -88,28 +88,6 @@
     <li>컴파일 오류나 이상한 값을 보여 주는 자리는 <strong>한 글자만 바꾼 「변형」 파일</strong>을 따로 접어 뒀다. 그것도 전체 파일이다.</li>
     <li>「실제로 나온 출력」에는 그 절이 새로 찍는 줄만 보인다. 전체 출력은 실습 「성공 화면」에 있다.</li>
   </ul>
-
-  <!-- ── 한 장 요약표 ── -->
-  <h2 id="summary">한 장 요약 — 학기가 끝나도 이 표만 남으면 된다</h2>
-  <p class="readme-first">무엇을 먼저 볼지: <strong>오른쪽 「무엇을 막아 주나」 열</strong>이다. 왼쪽은 그 수단일 뿐이다.</p>
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th>이걸 쓴다</th><th>무슨 뜻인가</th><th>무엇을 막아 주나</th><th>수준</th></tr>
-    <tr><td><code>[this]</code> 캡처</td><td>이 객체의 멤버를 쓴다</td><td>무엇을 쓰는지 코드에 드러난다</td><td><span class="badge b-lv">[요구]</span></td></tr>
-    <tr><td><code>[&amp;x]</code> 캡처</td><td><code>x</code>만 원본을 가리킨다</td><td>필요 없는 것까지 끌고 오지 않는다</td><td><span class="badge b-lv">[요구]</span></td></tr>
-    <tr><td><code>[=]</code> 캡처 🔴</td><td>바깥의 모든 것을 <strong>복사</strong>한다</td><td>—  <strong>큰 것이 통째로 복사된다</strong></td><td><span class="badge b-lv">[판단]</span></td></tr>
-    <tr><td><code>500ms</code></td><td>500밀리초짜리 시간 값</td><td>초인지 밀리초인지 헷갈리는 것</td><td><span class="badge b-lv">[요구]</span></td></tr>
-    <tr><td><code>const</code> 멤버 함수</td><td>이 함수는 상태를 안 바꾼다</td><td>실수로 멤버를 고치는 것 — <strong>컴파일이 막는다</strong></td><td><span class="badge b-lv">[요구]</span></td></tr>
-    <tr><td><code>std::optional&lt;T&gt;</code></td><td>값이 있을 수도, 없을 수도</td><td><code>-1</code>을 거리로 읽는 것</td><td><span class="badge b-lv">[요구]</span></td></tr>
-    <tr><td>구조적 바인딩 <code>auto [x, y]</code></td><td>묶여 온 값을 한 줄로 푼다</td><td><code>.first</code>·<code>.second</code>를 헷갈리는 것</td><td><span class="badge b-lv">[판단]</span></td></tr>
-    <tr><td><code>if (auto p = ...; ...)</code></td><td>이 <code>if</code> 안에서만 사는 변수</td><td>이름이 밖으로 새는 것</td><td><span class="badge b-lv">[알아보기]</span></td></tr>
-  </table>
-  </div>
-  <div class="interp">
-    <strong>해석:</strong> 세 번째 줄만 🔴다. <strong><code>[=]</code>는 쓰지 말라는 뜻이 아니라 "왜 <code>[=]</code>인지 말할 수 있어야 한다"는 뜻이다.</strong>
-    실제로 오늘 함정 상자에서는 <code>[=]</code>가 맞는 답인 경우가 나온다.
-    나머지 일곱 줄은 전부 <strong>AI에게 그대로 요구할 수 있는 것</strong>들이다.
-  </div>
 
   <!-- ── ① 람다 ── -->
   <h2 id="block1">① 이름 없는 함수를 그 자리에서 만드는 것이 람다다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
@@ -2152,6 +2130,28 @@ int main()
       8번에서 AI가 처음에는 못 찾았다면 그것도 성공이다 — <strong>그게 오늘의 요점이다.</strong>
       <span style="color:var(--muted)">확인한 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0 <code>-O2</code>)</span>
     </p>
+  </div>
+
+  <!-- ── 한 장 요약표 ── -->
+  <h2 id="summary">한 장 요약 — 학기가 끝나도 이 표만 남으면 된다</h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>오른쪽 「무엇을 막아 주나」 열</strong>이다. 왼쪽은 그 수단일 뿐이다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>이걸 쓴다</th><th>무슨 뜻인가</th><th>무엇을 막아 주나</th><th>수준</th></tr>
+    <tr><td><code>[this]</code> 캡처</td><td>이 객체의 멤버를 쓴다</td><td>무엇을 쓰는지 코드에 드러난다</td><td><span class="badge b-lv">[요구]</span></td></tr>
+    <tr><td><code>[&amp;x]</code> 캡처</td><td><code>x</code>만 원본을 가리킨다</td><td>필요 없는 것까지 끌고 오지 않는다</td><td><span class="badge b-lv">[요구]</span></td></tr>
+    <tr><td><code>[=]</code> 캡처 🔴</td><td>바깥의 모든 것을 <strong>복사</strong>한다</td><td>—  <strong>큰 것이 통째로 복사된다</strong></td><td><span class="badge b-lv">[판단]</span></td></tr>
+    <tr><td><code>500ms</code></td><td>500밀리초짜리 시간 값</td><td>초인지 밀리초인지 헷갈리는 것</td><td><span class="badge b-lv">[요구]</span></td></tr>
+    <tr><td><code>const</code> 멤버 함수</td><td>이 함수는 상태를 안 바꾼다</td><td>실수로 멤버를 고치는 것 — <strong>컴파일이 막는다</strong></td><td><span class="badge b-lv">[요구]</span></td></tr>
+    <tr><td><code>std::optional&lt;T&gt;</code></td><td>값이 있을 수도, 없을 수도</td><td><code>-1</code>을 거리로 읽는 것</td><td><span class="badge b-lv">[요구]</span></td></tr>
+    <tr><td>구조적 바인딩 <code>auto [x, y]</code></td><td>묶여 온 값을 한 줄로 푼다</td><td><code>.first</code>·<code>.second</code>를 헷갈리는 것</td><td><span class="badge b-lv">[판단]</span></td></tr>
+    <tr><td><code>if (auto p = ...; ...)</code></td><td>이 <code>if</code> 안에서만 사는 변수</td><td>이름이 밖으로 새는 것</td><td><span class="badge b-lv">[알아보기]</span></td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 세 번째 줄만 🔴다. <strong><code>[=]</code>는 쓰지 말라는 뜻이 아니라 "왜 <code>[=]</code>인지 말할 수 있어야 한다"는 뜻이다.</strong>
+    실제로 오늘 함정 상자에서는 <code>[=]</code>가 맞는 답인 경우가 나왔다.
+    나머지 일곱 줄은 전부 <strong>AI에게 그대로 요구할 수 있는 것</strong>들이다.
   </div>
 
   <!-- ── 프롬프트 모음 ── -->

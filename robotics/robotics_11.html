@@ -28,7 +28,6 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약 — 용어 여섯 개</a>
   <a href="#start">① 오늘 만들 것 — <code>new</code>와 <code>delete</code>로 먼저</a>
   <a href="#raii">② RAII — 스마트 포인터를 직접 만든다</a>
   <a href="#copy">③ 복사 생성자와 <code>= delete</code></a>
@@ -37,6 +36,7 @@
   <a href="#alias">⑥ 타입 별칭 · <code>using</code></a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
+  <a href="#summary">한 장 요약 — 용어 여섯 개</a>
   <a href="#prompts">🤖 프롬프트 모음</a>
   <a href="#check">✅ 점검</a>
   <a href="#more">조금 더 알아두면</a>
@@ -67,25 +67,6 @@
     오늘은 <strong>용어 여섯 개</strong>를 다룬다. 절마다 <strong>먼저 그 문법이 무엇이고 왜 생겼는지를 설명하고</strong>,
     그다음에 <strong>센서를 켜고 끄는 작은 프로그램</strong>에 그것을 적용한다. 프로그램은 <code>new</code>와 <code>delete</code>로 먼저 짜 두고, 절이 넘어갈 때마다 고쳐 간다.
   </p>
-
-  <!-- ── 한 장 요약표 ── -->
-  <h2 id="summary">한 장 요약 — 학기가 끝나도 이 표만 남으면 된다</h2>
-  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 「이것만 알면 된다」 열</strong>만 읽어도 오늘 수업은 끝난다.</p>
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th>용어</th><th>코드에서 이렇게 보인다</th><th>이것만 알면 된다</th></tr>
-    <tr><td>동적 할당 · <code>new</code> / <code>delete</code> · 메모리 누수</td><td><code>Sensor * s = new Sensor(...);</code></td><td>스코프를 벗어나도 안 사라진다. 함수를 나가는 길마다 <code>delete</code>를 맞춰야 하고, 하나라도 빠뜨리면 <strong>샌다</strong></td></tr>
-    <tr><td>RAII · 스마트 포인터</td><td><code>~SensorPtr() { delete p_; }</code></td><td>자원을 생성자에서 받고 <strong>소멸자에서 돌려준다.</strong> 어느 길로 나가든 스코프를 벗어나는 순간 정리된다</td></tr>
-    <tr><td>🔴 복사 생성자 · <code>= delete</code></td><td><code>SensorPtr(const SensorPtr &amp;) = delete;</code></td><td>지울 책임을 진 객체를 복사하면 <strong>같은 것을 두 번 지운다.</strong> 그래서 복사를 막는다</td></tr>
-    <tr><td><code>unique_ptr</code> · <code>make_unique</code> · 소유권 · <code>std::move</code></td><td><code>auto p = std::make_unique&lt;Sensor&gt;(...);</code></td><td><strong>기본값.</strong> 소유자가 하나다. 복사는 안 되고 <code>std::move</code>로 소유권을 넘긴다. 넘긴 쪽은 빈다</td></tr>
-    <tr><td><code>shared_ptr</code> · <code>make_shared</code> · 참조 횟수</td><td><code>auto p = std::make_shared&lt;Sensor&gt;(...);</code></td><td>소유자가 <strong>여럿</strong>일 때만. 소유자 수를 세다가 마지막이 지운다</td></tr>
-    <tr><td>타입 별칭</td><td><code>using SharedPtr = std::shared_ptr&lt;T&gt;;</code></td><td>긴 타입의 <strong>다른 이름</strong>일 뿐이다. <code>…::SharedPtr</code>이 보이면 <code>shared_ptr</code>로 읽는다</td></tr>
-  </table>
-  </div>
-  <div class="interp">
-    <strong>해석:</strong> 셋째 줄에만 🔴가 붙어 있다. 복사를 막지 않은 채로 두면 <strong>빌드는 되고 실행하다가 망가진다</strong> — 어떻게 망가질지도 정해져 있지 않다.
-    나머지는 빠뜨리면 컴파일러가 알려 주거나 결과가 눈에 띄게 이상해진다.
-  </div>
 
   <!-- ── ① 시작 ── -->
   <h2 id="start">① 오늘 만들 것 — 센서를 켜고 끄는 함수, <code>new</code>와 <code>delete</code>로 먼저 <span class="badge b-red">🔴 사람이 한다</span></h2>
@@ -1298,6 +1279,25 @@ add_executable(health_log main.cpp)</code></pre></div>
     <code>shared_ptr</code>은 소유자가 정말 여럿인지 보고, 아니면 그냥 변수로 바꿔 줘. 파일에 남는 줄은 지금과 같아야 하고, 한 항목 고칠 때마다 빌드해서 확인해 줘.
   </div>
   <p>정답은 하나가 아니다. <strong>위 표의 「확인하는 법」이 전부 통과하면</strong> 된 것이다. 수업 시간에 몇 사람의 결과를 같이 본다.</p>
+
+  <!-- ── 한 장 요약표 ── -->
+  <h2 id="summary">한 장 요약 — 학기가 끝나도 이 표만 남으면 된다</h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 「이것만 알면 된다」 열</strong>이 오늘 수업에서 남길 것이다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>용어</th><th>코드에서 이렇게 보인다</th><th>이것만 알면 된다</th></tr>
+    <tr><td>동적 할당 · <code>new</code> / <code>delete</code> · 메모리 누수</td><td><code>Sensor * s = new Sensor(...);</code></td><td>스코프를 벗어나도 안 사라진다. 함수를 나가는 길마다 <code>delete</code>를 맞춰야 하고, 하나라도 빠뜨리면 <strong>샌다</strong></td></tr>
+    <tr><td>RAII · 스마트 포인터</td><td><code>~SensorPtr() { delete p_; }</code></td><td>자원을 생성자에서 받고 <strong>소멸자에서 돌려준다.</strong> 어느 길로 나가든 스코프를 벗어나는 순간 정리된다</td></tr>
+    <tr><td>🔴 복사 생성자 · <code>= delete</code></td><td><code>SensorPtr(const SensorPtr &amp;) = delete;</code></td><td>지울 책임을 진 객체를 복사하면 <strong>같은 것을 두 번 지운다.</strong> 그래서 복사를 막는다</td></tr>
+    <tr><td><code>unique_ptr</code> · <code>make_unique</code> · 소유권 · <code>std::move</code></td><td><code>auto p = std::make_unique&lt;Sensor&gt;(...);</code></td><td><strong>기본값.</strong> 소유자가 하나다. 복사는 안 되고 <code>std::move</code>로 소유권을 넘긴다. 넘긴 쪽은 빈다</td></tr>
+    <tr><td><code>shared_ptr</code> · <code>make_shared</code> · 참조 횟수</td><td><code>auto p = std::make_shared&lt;Sensor&gt;(...);</code></td><td>소유자가 <strong>여럿</strong>일 때만. 소유자 수를 세다가 마지막이 지운다</td></tr>
+    <tr><td>타입 별칭</td><td><code>using SharedPtr = std::shared_ptr&lt;T&gt;;</code></td><td>긴 타입의 <strong>다른 이름</strong>일 뿐이다. <code>…::SharedPtr</code>이 보이면 <code>shared_ptr</code>로 읽는다</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 셋째 줄에만 🔴가 붙어 있다. 복사를 막지 않은 채로 두면 <strong>빌드는 되고 실행하다가 망가진다</strong> — 어떻게 망가질지도 정해져 있지 않다.
+    나머지는 빠뜨리면 컴파일러가 알려 주거나 결과가 눈에 띄게 이상해진다.
+  </div>
 
   <!-- ── 🤖 프롬프트 모음 ── -->
   <h2 id="prompts">🤖 오늘 나온 프롬프트 모음 <span class="badge b-green">🟢 맡긴다</span></h2>

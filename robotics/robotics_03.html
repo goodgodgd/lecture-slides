@@ -28,7 +28,6 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약 — 세 층으로 나눈다</a>
   <a href="#path">① 경로와 이동 — <code>pwd</code> · <code>cd</code></a>
   <a href="#files">② 폴더와 파일 — <code>mkdir</code> · <code>cp</code> · <code>mv</code> · <code>rm</code></a>
   <a href="#redirect">③ 파일 만들기 — <code>echo</code> · <code>cat</code> · <code>&gt;</code></a>
@@ -42,6 +41,7 @@
   <a href="#delegate" class="sub">같은 일을 문장으로 시키면</a>
   <a href="#lab">🧪 실습 — 처음부터 끝까지 따라 치기</a>
   <a href="#verify">📝 확인한 것을 적는 연습</a>
+  <a href="#summary">한 장 요약 — 세 층으로 나눈다</a>
   <a href="#check">✅ 점검</a>
   <a href="#more">조금 더 알아두면</a>
 </nav>
@@ -93,39 +93,6 @@
     앞 절에서 만든 폴더와 파일을 뒤 절에서 계속 쓴다.
     중간을 건너뛰면 뒤에서 파일이 없다.
   </p>
-
-  <!-- ══════════ 한 장 요약 ══════════ -->
-  <h2 id="summary">한 장 요약 — 세 층으로 나눈다</h2>
-  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 열</strong>이다. 위 두 층은 오늘 손으로 다 쳐 보고, 아래층만 문장으로 바꾼다.</p>
-
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th>층</th><th>무엇</th><th>어떻게 대하나</th></tr>
-    <tr>
-      <td>⌨ <strong>손에 익힐 기본</strong><br>(①②③절)</td>
-      <td><code>pwd</code> <code>cd</code> <code>ls</code> <code>mkdir</code> <code>cp</code> <code>mv</code> <code>rm</code> <code>echo</code> <code>cat</code> <code>&gt;</code></td>
-      <td><strong>오늘 한 번씩 다 쳐 본다.</strong> 매일 쓰므로 곧 손에 붙는다</td>
-    </tr>
-    <tr>
-      <td>🔴 <strong>뜻까지 알아야 하는 다섯</strong><br>(④~⑧절)</td>
-      <td>경로 · <strong>실행 권한</strong> · <strong>환경변수</strong> · 표준 출력/오류 · 프로세스</td>
-      <td><strong>모르면 학기 내내 같은 자리에서 막힌다.</strong> 오늘의 알맹이</td>
-    </tr>
-    <tr>
-      <td>🟢 <strong>알고 나서 시키는 것</strong><br>(⑨절)</td>
-      <td>조건이 여럿 붙은 <code>find</code>, 여러 파일 속 <code>grep</code>, 파이프 세 개짜리 한 줄, 이름 일괄 변경</td>
-      <td><strong>무엇을 하는 것인지 안 다음에</strong> 문장으로 시키고 <strong>결과를 내가 확인한다</strong></td>
-    </tr>
-  </table>
-  </div>
-
-  <div class="interp">
-    <strong>해석:</strong> 세 층을 가르는 기준은 <strong>어렵고 쉽고가 아니라 「틀렸을 때 알아볼 수 있나」</strong>다.
-    <code>ls</code>가 틀리면 화면을 보면 바로 안다. 그런데 <strong><code>find</code> 한 줄에 조건이 네 개 붙으면
-    빠진 파일이 있어도 화면에 안 나타난다.</strong> 그래서 아래층은 <strong>결과를 따로 확인해야</strong> 하고,
-    확인할 줄 알려면 <strong>그 명령이 무엇을 하는 것인지는 알고 있어야</strong> 한다.
-    가운데 다섯 중에서도 <strong>환경변수(⑥절)</strong> 하나가 남은 27회차 내내 따라다닌다.
-  </div>
 
   <p>
     아래 출력은 전부 실제로 실행해서 얻은 것이다.
@@ -1191,6 +1158,39 @@ mv notes/note3.txt notes/2026-09-10_note3.txt</code></pre>
     치는 것은 내가 친다 — 그래야 확인이 된다.
   </p>
   <div class="prompt"><button onclick="copyPrompt(this)">복사</button> 이 작업을 해 줘. 다 하고 나면 "완료" 대신, <strong>내가 직접 쳐서 결과를 눈으로 볼 수 있는 확인 명령을 세 개</strong> 알려 줘. 그중 하나는 <strong>새 터미널을 열었을 때도 되는지</strong> 확인하는 것이어야 해.</div>
+
+  <!-- ══════════ 한 장 요약 ══════════ -->
+  <h2 id="summary">한 장 요약 — 세 층으로 나눈다</h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 열</strong>이다. 위 두 층은 오늘 손으로 다 쳐 봤고, 아래층만 문장으로 바꿨다.</p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>층</th><th>무엇</th><th>어떻게 대하나</th></tr>
+    <tr>
+      <td>⌨ <strong>손에 익힐 기본</strong><br>(①②③절)</td>
+      <td><code>pwd</code> <code>cd</code> <code>ls</code> <code>mkdir</code> <code>cp</code> <code>mv</code> <code>rm</code> <code>echo</code> <code>cat</code> <code>&gt;</code></td>
+      <td><strong>오늘 한 번씩 다 쳐 봤다.</strong> 매일 쓰므로 곧 손에 붙는다</td>
+    </tr>
+    <tr>
+      <td>🔴 <strong>뜻까지 알아야 하는 다섯</strong><br>(④~⑧절)</td>
+      <td>경로 · <strong>실행 권한</strong> · <strong>환경변수</strong> · 표준 출력/오류 · 프로세스</td>
+      <td><strong>모르면 학기 내내 같은 자리에서 막힌다.</strong> 오늘의 알맹이</td>
+    </tr>
+    <tr>
+      <td>🟢 <strong>알고 나서 시키는 것</strong><br>(⑨절)</td>
+      <td>조건이 여럿 붙은 <code>find</code>, 여러 파일 속 <code>grep</code>, 파이프 세 개짜리 한 줄, 이름 일괄 변경</td>
+      <td><strong>무엇을 하는 것인지 안 다음에</strong> 문장으로 시키고 <strong>결과를 내가 확인한다</strong></td>
+    </tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 세 층을 가르는 기준은 <strong>어렵고 쉽고가 아니라 「틀렸을 때 알아볼 수 있나」</strong>다.
+    <code>ls</code>가 틀리면 화면을 보면 바로 안다. 그런데 <strong><code>find</code> 한 줄에 조건이 네 개 붙으면
+    빠진 파일이 있어도 화면에 안 나타난다.</strong> 그래서 아래층은 <strong>결과를 따로 확인해야</strong> 하고,
+    확인할 줄 알려면 <strong>그 명령이 무엇을 하는 것인지는 알고 있어야</strong> 한다.
+    가운데 다섯 중에서도 <strong>환경변수(⑥절)</strong> 하나가 남은 27회차 내내 따라다닌다.
+  </div>
 
   <!-- ══════════ ✅ 점검 ══════════ -->
   <h2 id="check">✅ 오늘의 점검</h2>

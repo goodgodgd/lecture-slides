@@ -28,7 +28,6 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약</a>
   <a href="#ready">ros2 명령의 구조와 실습 준비</a>
   <a href="#node">① ros2 node list · info</a>
   <a href="#topiclist">② ros2 topic list -t</a>
@@ -46,6 +45,7 @@
   <a href="#doctor">⑫ ros2 doctor</a>
   <a href="#order">⑬ 막혔을 때 보는 순서</a>
   <a href="#lab">🧪 실습</a>
+  <a href="#summary">한 장 요약</a>
   <a href="#prompts">🤖 프롬프트 모음</a>
   <a href="#check">✅ 점검</a>
   <a href="#more">조금 더 알아두면</a>
@@ -85,36 +85,6 @@
     세 번째 칸이 알맹이다. 에이전트에게 명령을 맡기더라도 <strong>돌아온 출력을 읽는 것은 여러분</strong>이고,
     그 읽기가 되어야 "잘 연결되었습니다"라는 말이 맞는지 판단할 수 있다.
   </p>
-
-  <!-- ══════════ 한 장 요약 ══════════ -->
-  <h2 id="summary">한 장 요약</h2>
-  <p class="readme-first">무엇을 먼저 볼지: <strong>왼쪽 「무엇이 궁금한가」 열</strong>이다. 이 열의 질문을 떠올릴 수 있으면 명령은 에이전트에게 물어도 된다.</p>
-
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th>무엇이 궁금한가</th><th>그때 이걸 친다</th><th>출력에서 볼 곳</th><th>절</th></tr>
-    <tr><td>내 노드가 떠 있나</td><td><code>ros2 node list</code></td><td>노드 이름이 목록에 있나</td><td>①</td></tr>
-    <tr><td>이 노드가 무엇을 받고 무엇을 내보내나</td><td><code>ros2 node info /노드</code></td><td><code>Subscribers</code> · <code>Publishers</code></td><td>①</td></tr>
-    <tr><td>어떤 토픽이 있고 타입이 무엇인가</td><td><code>ros2 topic list -t</code></td><td>이름 한 글자, 대괄호 안 타입</td><td>②</td></tr>
-    <tr><td>값이 실제로 흐르나, 값이 얼마인가</td><td><code>ros2 topic echo /토픽</code></td><td>숫자가 바뀌나</td><td>③</td></tr>
-    <tr><td>초당 몇 번 오나</td><td><code>ros2 topic hz /토픽</code></td><td><code>average rate</code></td><td>④</td></tr>
-    <tr><td>메시지 안에 무엇이 들었나</td><td><code>ros2 interface show 타입</code></td><td>필드 이름과 타입</td><td>⑤</td></tr>
-    <tr><td>노드 없이 메시지를 보내 보고 싶다</td><td><code>ros2 topic pub</code></td><td>받는 쪽(거북이)이 움직이나</td><td>⑥</td></tr>
-    <tr><td>누가 보내고 누가 받나, 둘이 붙을 수 있나</td><td><code>ros2 topic info -v /토픽</code></td><td><code>count</code> · <code>Reliability</code></td><td>⑦</td></tr>
-    <tr><td>연결을 한눈에 보고 싶다</td><td><code>rqt_graph</code></td><td>화살표가 이어지나</td><td>⑧</td></tr>
-    <tr><td>서비스를 불러 보고 싶다</td><td><code>ros2 service list</code> · <code>type</code> · <code>call</code></td><td><code>response</code></td><td>⑨</td></tr>
-    <tr><td>설정값을 읽고 바꾸고 싶다</td><td><code>ros2 param list</code> · <code>get</code> · <code>set</code></td><td><code>Set parameter successful</code></td><td>⑩</td></tr>
-    <tr><td>방금 그 장면을 다시 보고 싶다</td><td><code>ros2 bag record</code> · <code>play</code></td><td><code>Messages</code> 개수</td><td>⑪</td></tr>
-    <tr><td>설치·환경 자체가 이상하다</td><td><code>ros2 doctor</code></td><td><code>checks passed</code></td><td>⑫</td></tr>
-  </table>
-  </div>
-
-  <div class="interp">
-    <strong>해석:</strong> 열세 줄 중 <strong>위의 일곱 줄</strong>에서 진단이 끝나는 경우가 많다.
-    "거북이가 안 움직인다"는 하나의 증상도 원인은 여러 가지인데 —
-    노드가 안 떴거나, 토픽 이름이 다르거나, 값이 안 흐르거나, 둘의 설정이 안 맞거나 —
-    위 일곱 줄이 그 원인을 <strong>하나씩 지워 가는 순서</strong>이기도 하다. 그 순서는 ⑬절에 따로 정리했다.
-  </div>
 
   <p>
     아래 출력은 전부 실제로 실행해서 받은 것이다.
@@ -1541,6 +1511,36 @@ ros2 topic pub --rate 1 --qos-reliability best_effort /turtle1/cmd_vel geometry_
       <li>rqt_graph에서 체크를 끄면 <code>/turtle1/cmd_val</code>이 화살표 없이 따로 뜬다 (⑧절 두 번째 그림).</li>
       <li>재생한 길이 몰았던 길과 같은 모양이다 (⑪절 그림).</li>
     </ul>
+  </div>
+
+  <!-- ══════════ 한 장 요약 ══════════ -->
+  <h2 id="summary">한 장 요약</h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>왼쪽 「무엇이 궁금한가」 열</strong>이다. 이 열의 질문을 떠올릴 수 있으면 명령은 에이전트에게 물어도 된다.</p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>무엇이 궁금한가</th><th>그때 이걸 친다</th><th>출력에서 볼 곳</th><th>절</th></tr>
+    <tr><td>내 노드가 떠 있나</td><td><code>ros2 node list</code></td><td>노드 이름이 목록에 있나</td><td>①</td></tr>
+    <tr><td>이 노드가 무엇을 받고 무엇을 내보내나</td><td><code>ros2 node info /노드</code></td><td><code>Subscribers</code> · <code>Publishers</code></td><td>①</td></tr>
+    <tr><td>어떤 토픽이 있고 타입이 무엇인가</td><td><code>ros2 topic list -t</code></td><td>이름 한 글자, 대괄호 안 타입</td><td>②</td></tr>
+    <tr><td>값이 실제로 흐르나, 값이 얼마인가</td><td><code>ros2 topic echo /토픽</code></td><td>숫자가 바뀌나</td><td>③</td></tr>
+    <tr><td>초당 몇 번 오나</td><td><code>ros2 topic hz /토픽</code></td><td><code>average rate</code></td><td>④</td></tr>
+    <tr><td>메시지 안에 무엇이 들었나</td><td><code>ros2 interface show 타입</code></td><td>필드 이름과 타입</td><td>⑤</td></tr>
+    <tr><td>노드 없이 메시지를 보내 보고 싶다</td><td><code>ros2 topic pub</code></td><td>받는 쪽(거북이)이 움직이나</td><td>⑥</td></tr>
+    <tr><td>누가 보내고 누가 받나, 둘이 붙을 수 있나</td><td><code>ros2 topic info -v /토픽</code></td><td><code>count</code> · <code>Reliability</code></td><td>⑦</td></tr>
+    <tr><td>연결을 한눈에 보고 싶다</td><td><code>rqt_graph</code></td><td>화살표가 이어지나</td><td>⑧</td></tr>
+    <tr><td>서비스를 불러 보고 싶다</td><td><code>ros2 service list</code> · <code>type</code> · <code>call</code></td><td><code>response</code></td><td>⑨</td></tr>
+    <tr><td>설정값을 읽고 바꾸고 싶다</td><td><code>ros2 param list</code> · <code>get</code> · <code>set</code></td><td><code>Set parameter successful</code></td><td>⑩</td></tr>
+    <tr><td>방금 그 장면을 다시 보고 싶다</td><td><code>ros2 bag record</code> · <code>play</code></td><td><code>Messages</code> 개수</td><td>⑪</td></tr>
+    <tr><td>설치·환경 자체가 이상하다</td><td><code>ros2 doctor</code></td><td><code>checks passed</code></td><td>⑫</td></tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    <strong>해석:</strong> 열세 줄 중 <strong>위의 일곱 줄</strong>에서 진단이 끝나는 경우가 많다.
+    "거북이가 안 움직인다"는 하나의 증상도 원인은 여러 가지인데 —
+    노드가 안 떴거나, 토픽 이름이 다르거나, 값이 안 흐르거나, 둘의 설정이 안 맞거나 —
+    위 일곱 줄이 그 원인을 <strong>하나씩 지워 가는 순서</strong>이기도 하다. 그 순서는 ⑬절에 따로 정리했다.
   </div>
 
   <!-- ══════════ 프롬프트 모음 ══════════ -->

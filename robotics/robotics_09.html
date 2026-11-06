@@ -28,7 +28,6 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약 — 용어 일곱 개</a>
   <a href="#start">① 오늘 만들 것 — 클래스 없이 먼저</a>
   <a href="#class">② 클래스와 객체 · <code>class</code></a>
   <a href="#ctor">③ 생성자와 소멸자 · <code>~</code></a>
@@ -38,6 +37,7 @@
   <a href="#header">⑦ 헤더와 소스로 나눈다 · <code>::</code></a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
+  <a href="#summary">한 장 요약 — 용어 일곱 개</a>
   <a href="#prompts">🤖 프롬프트 모음</a>
   <a href="#check">✅ 점검</a>
   <a href="#more">조금 더 알아두면</a>
@@ -74,55 +74,6 @@
     그다음에 <strong>라이다 값에서 못 쓰는 것을 걸러내는 작은 필터 프로그램</strong>에 그것을 적용한다.
     프로그램은 클래스 없이 먼저 짜 두고, 절이 넘어갈 때마다 문법 하나씩으로 고쳐 간다.
   </p>
-
-  <!-- ── 한 장 요약표 ── -->
-  <h2 id="summary">한 장 요약 — 학기가 끝나도 이 표만 남으면 된다</h2>
-  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 「이것만 알면 된다」 열</strong>만 읽어도 오늘 수업은 끝난다. 순서는 오늘 프로그램에 적용하는 순서다.</p>
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th>용어</th><th>코드에서 이렇게 보인다</th><th>이것만 알면 된다</th></tr>
-    <tr>
-      <td>클래스 · 객체</td>
-      <td><code>class RangeFilter { ... };</code> / <code>RangeFilter front(...)</code></td>
-      <td>클래스는 <strong>값과 그 값을 다루는 함수를 묶은 타입</strong>이고, 객체는 그 타입의 변수다. 객체마다 자기 값을 따로 가진다</td>
-    </tr>
-    <tr>
-      <td>멤버 변수 · 멤버 함수</td>
-      <td><code>float lo_;</code> / <code>keep_valid(...)</code></td>
-      <td>클래스 안에 선언한 변수와 함수. 멤버 함수 안에서는 멤버 변수를 <strong>이름만으로</strong> 쓴다</td>
-    </tr>
-    <tr>
-      <td>생성자 · 소멸자</td>
-      <td><code>RangeFilter(...)</code> / <code>~RangeFilter()</code></td>
-      <td>객체가 <strong>만들어질 때</strong>와 <strong>사라질 때</strong> 자동으로 불리는 멤버 함수. 아무도 직접 부르지 않는다</td>
-    </tr>
-    <tr>
-      <td><strong>멤버 초기화 리스트</strong> 🔴</td>
-      <td><code>: name_(name), lo_(lo), hi_(hi)</code></td>
-      <td>생성자 <strong>본문이 아니라 콜론 뒤에서</strong> 멤버를 초기화한다. AI가 가장 자주 빠뜨리는 자리다</td>
-    </tr>
-    <tr>
-      <td><code>public</code> · <code>private</code></td>
-      <td>클래스 안의 구역 표시</td>
-      <td>멤버 변수는 <strong>전부 <code>private</code></strong>. 밖에서 읽을 것만 함수로 연다</td>
-    </tr>
-    <tr>
-      <td><code>const</code> 멤버 함수</td>
-      <td><code>int dropped() const;</code></td>
-      <td>이름 뒤의 <code>const</code>는 <strong>「이 함수는 멤버를 안 바꾼다」는 약속</strong>이다. 읽기만 하는 함수에 붙인다</td>
-    </tr>
-    <tr>
-      <td>헤더 / 소스 분리</td>
-      <td><code>range_filter.hpp</code> + <code>range_filter.cpp</code></td>
-      <td>클래스 정의는 헤더에, 멤버 함수의 내용은 소스에. 소스가 둘이면 <strong><code>add_executable</code>에 둘 다 적는다</strong></td>
-    </tr>
-  </table>
-  </div>
-  <div class="interp">
-    <strong>해석:</strong> 넷째 줄에만 🔴가 붙어 있다.
-    나머지는 빠뜨리면 <strong>컴파일러가 알려 준다.</strong> 멤버 초기화 리스트만 다르다 —
-    빠뜨려도 빌드가 되고 출력도 같다. 그래서 사람이 눈으로 보는 검사 목록에 올려 둔다.
-  </div>
 
   <!-- ── ① 시작 ── -->
   <h2 id="start">① 오늘 만들 것 — 라이다 값 필터, 클래스 없이 먼저 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
@@ -1701,7 +1652,7 @@ rear: 남은 값 2개, 버린 값 5개
     <div class="interp">
       <strong>해석:</strong> 마지막 줄이 오늘의 핵심이다. <strong>멤버 초기화 리스트를 빼도 빌드가 되고 출력도 같다.</strong>
       7회에서 <code>&amp;</code>를 지웠을 때와 같은 종류의 문제다 — 컴파일러도 출력도 알려 주지 않는 것은 사람이 코드를 읽어야만 잡힌다.
-      그래서 한 장 요약표에서 그 줄에만 🔴가 붙어 있다.
+      그래서 맨 끝 한 장 요약표에서도 그 줄에만 🔴를 붙였다.
     </div>
   </div>
 
@@ -1801,6 +1752,55 @@ front_mean: 최근 3개 평균 0.7 m
     정답은 하나가 아니다. <strong>위 표의 「확인하는 법」이 전부 통과하고, 출력이 원본과 같으면</strong> 된 것이다.
     수업 시간에 몇 사람의 결과를 같이 본다.
   </p>
+
+  <!-- ── 한 장 요약표 ── -->
+  <h2 id="summary">한 장 요약 — 학기가 끝나도 이 표만 남으면 된다</h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 「이것만 알면 된다」 열</strong>이 오늘 수업에서 남길 것이다. 순서는 오늘 프로그램에 적용한 순서다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>용어</th><th>코드에서 이렇게 보인다</th><th>이것만 알면 된다</th></tr>
+    <tr>
+      <td>클래스 · 객체</td>
+      <td><code>class RangeFilter { ... };</code> / <code>RangeFilter front(...)</code></td>
+      <td>클래스는 <strong>값과 그 값을 다루는 함수를 묶은 타입</strong>이고, 객체는 그 타입의 변수다. 객체마다 자기 값을 따로 가진다</td>
+    </tr>
+    <tr>
+      <td>멤버 변수 · 멤버 함수</td>
+      <td><code>float lo_;</code> / <code>keep_valid(...)</code></td>
+      <td>클래스 안에 선언한 변수와 함수. 멤버 함수 안에서는 멤버 변수를 <strong>이름만으로</strong> 쓴다</td>
+    </tr>
+    <tr>
+      <td>생성자 · 소멸자</td>
+      <td><code>RangeFilter(...)</code> / <code>~RangeFilter()</code></td>
+      <td>객체가 <strong>만들어질 때</strong>와 <strong>사라질 때</strong> 자동으로 불리는 멤버 함수. 아무도 직접 부르지 않는다</td>
+    </tr>
+    <tr>
+      <td><strong>멤버 초기화 리스트</strong> 🔴</td>
+      <td><code>: name_(name), lo_(lo), hi_(hi)</code></td>
+      <td>생성자 <strong>본문이 아니라 콜론 뒤에서</strong> 멤버를 초기화한다. AI가 가장 자주 빠뜨리는 자리다</td>
+    </tr>
+    <tr>
+      <td><code>public</code> · <code>private</code></td>
+      <td>클래스 안의 구역 표시</td>
+      <td>멤버 변수는 <strong>전부 <code>private</code></strong>. 밖에서 읽을 것만 함수로 연다</td>
+    </tr>
+    <tr>
+      <td><code>const</code> 멤버 함수</td>
+      <td><code>int dropped() const;</code></td>
+      <td>이름 뒤의 <code>const</code>는 <strong>「이 함수는 멤버를 안 바꾼다」는 약속</strong>이다. 읽기만 하는 함수에 붙인다</td>
+    </tr>
+    <tr>
+      <td>헤더 / 소스 분리</td>
+      <td><code>range_filter.hpp</code> + <code>range_filter.cpp</code></td>
+      <td>클래스 정의는 헤더에, 멤버 함수의 내용은 소스에. 소스가 둘이면 <strong><code>add_executable</code>에 둘 다 적는다</strong></td>
+    </tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 넷째 줄에만 🔴가 붙어 있다.
+    나머지는 빠뜨리면 <strong>컴파일러가 알려 준다.</strong> 멤버 초기화 리스트만 다르다 —
+    빠뜨려도 빌드가 되고 출력도 같다. 그래서 사람이 눈으로 보는 검사 목록에 올려 둔다.
+  </div>
 
   <!-- ── 프롬프트 모음 ── -->
   <h2 id="prompts">🤖 오늘 나온 프롬프트 모음 <span class="badge b-green">🟢 맡긴다</span></h2>

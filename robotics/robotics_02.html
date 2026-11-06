@@ -28,7 +28,6 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약</a>
   <a href="#why">① 왜 리눅스인가</a>
   <a href="#storysec">② 게임 하나에서 시작했다 📖</a>
   <a href="#layers">③ 커널·쉘·배포판</a>
@@ -42,6 +41,7 @@
   <a href="#agy">🔧 Antigravity CLI(<code>agy</code>) 설치</a>
   <a href="#approve">🔧 무엇을 물어보게 할 것인가</a>
   <a href="#lab">🧪 실습</a>
+  <a href="#summary">한 장 요약</a>
   <a href="#check">✅ 점검</a>
   <a href="#more">조금 더 알아두면</a>
 </nav>
@@ -81,65 +81,6 @@
     <strong>어떤 사람이 자기가 만든 게임을 돌려 보려고 3주 동안 만든 것</strong>에서 시작했다.
     그 3주가 50년을 갔다.
   </p>
-
-  <!-- ── 한 장 요약표 ── -->
-  <h2 id="summary">한 장 요약 — 학기가 끝나도 이 표만 남으면 된다</h2>
-  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 「확인하는 법」 열</strong>. 이 강의는 이름을 외우게 하지 않고 확인하게 한다.</p>
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th>이름</th><th>한 줄로 말하면</th><th>우리 경우</th><th>확인하는 법</th></tr>
-    <tr>
-      <td><strong>커널</strong> (kernel)</td>
-      <td>하드웨어를 직접 다루는 <strong>알맹이</strong>. 이것이 곧 운영체제다</td>
-      <td>리눅스 커널</td>
-      <td><code>uname -r</code></td>
-    </tr>
-    <tr>
-      <td><strong>쉘</strong> (shell)</td>
-      <td>내가 친 글자를 커널에게 전하는 <strong>통역</strong></td>
-      <td>bash</td>
-      <td>커서 왼쪽에 <code>$</code>가 보이나</td>
-    </tr>
-    <tr>
-      <td><strong>배포판</strong> (distribution)</td>
-      <td>커널에 도구와 화면을 <strong>한 벌로 묶어</strong> 나눠 주는 것</td>
-      <td>우분투 24.04 LTS</td>
-      <td><code>cat /etc/os-release</code></td>
-    </tr>
-    <tr>
-      <td><strong>WSL 2</strong></td>
-      <td>윈도우 안에서 <strong>진짜 리눅스 커널을</strong> 돌리는 장치</td>
-      <td>우리가 오늘 켜는 것</td>
-      <td><code>wsl --install</code> 뒤 터미널이 바뀌나</td>
-    </tr>
-    <tr>
-      <td><strong>apt</strong></td>
-      <td>배포판이 관리하는 창고에서 <strong>프로그램을 받아 까는</strong> 명령</td>
-      <td>모든 설치가 이걸로 된다</td>
-      <td><code>apt policy 이름</code></td>
-    </tr>
-    <tr>
-      <td><strong>Antigravity IDE</strong></td>
-      <td>코드를 <strong>눈으로 보고 손으로 고치는</strong> 편집기. <strong>윈도우</strong>에 깐다</td>
-      <td>리눅스 쪽 파일을 열어서 본다</td>
-      <td>왼쪽 아래에 <code>WSL: Ubuntu</code>가 뜨나</td>
-    </tr>
-    <tr>
-      <td><strong>Antigravity CLI</strong> (<code>agy</code>)</td>
-      <td>말로 <strong>일을 시키는</strong> 도구. <strong>리눅스 안</strong>에 깐다</td>
-      <td>명령 실행과 파일 수정이 이쪽이다</td>
-      <td><code>agy --version</code></td>
-    </tr>
-  </table>
-  </div>
-  <div class="interp">
-    <strong>해석:</strong> 일곱 줄이 두 덩이로 나뉜다.
-    위 세 줄은 <strong>리눅스가 층으로 쌓여 있다</strong>는 이야기이고,
-    아래 네 줄은 <strong>그 층을 내 노트북에 올리고 그 위에 도구를 얹는 방법</strong>이다.
-    오늘 수업은 위 세 줄을 설명하고 아래 네 줄을 실행한다.
-    <strong>맨 오른쪽 열이 없으면 아무것도 끝난 것이 아니다</strong> — 오늘은 「깔았다」가 아니라
-    <strong>「깔린 것을 내 눈으로 봤다」</strong>까지 간다.
-  </div>
 
   <!-- ── ① 왜 리눅스인가 ── -->
   <h2 id="why">① 로봇 개발에 리눅스가 필요한 이유 <span class="badge b-red">🔴 사람이 한다</span></h2>
@@ -1479,6 +1420,65 @@ agy --version</code></pre>
       </table>
       </div>
     </div>
+  </div>
+
+  <!-- ── 한 장 요약표 ── -->
+  <h2 id="summary">한 장 요약 — 학기가 끝나도 이 표만 남으면 된다</h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 「확인하는 법」 열</strong>. 이 강의는 이름을 외우게 하지 않고 확인하게 한다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>이름</th><th>한 줄로 말하면</th><th>우리 경우</th><th>확인하는 법</th></tr>
+    <tr>
+      <td><strong>커널</strong> (kernel)</td>
+      <td>하드웨어를 직접 다루는 <strong>알맹이</strong>. 이것이 곧 운영체제다</td>
+      <td>리눅스 커널</td>
+      <td><code>uname -r</code></td>
+    </tr>
+    <tr>
+      <td><strong>쉘</strong> (shell)</td>
+      <td>내가 친 글자를 커널에게 전하는 <strong>통역</strong></td>
+      <td>bash</td>
+      <td>커서 왼쪽에 <code>$</code>가 보이나</td>
+    </tr>
+    <tr>
+      <td><strong>배포판</strong> (distribution)</td>
+      <td>커널에 도구와 화면을 <strong>한 벌로 묶어</strong> 나눠 주는 것</td>
+      <td>우분투 24.04 LTS</td>
+      <td><code>cat /etc/os-release</code></td>
+    </tr>
+    <tr>
+      <td><strong>WSL 2</strong></td>
+      <td>윈도우 안에서 <strong>진짜 리눅스 커널을</strong> 돌리는 장치</td>
+      <td>우리가 오늘 켜는 것</td>
+      <td><code>wsl --install</code> 뒤 터미널이 바뀌나</td>
+    </tr>
+    <tr>
+      <td><strong>apt</strong></td>
+      <td>배포판이 관리하는 창고에서 <strong>프로그램을 받아 까는</strong> 명령</td>
+      <td>모든 설치가 이걸로 된다</td>
+      <td><code>apt policy 이름</code></td>
+    </tr>
+    <tr>
+      <td><strong>Antigravity IDE</strong></td>
+      <td>코드를 <strong>눈으로 보고 손으로 고치는</strong> 편집기. <strong>윈도우</strong>에 깐다</td>
+      <td>리눅스 쪽 파일을 열어서 본다</td>
+      <td>왼쪽 아래에 <code>WSL: Ubuntu</code>가 뜨나</td>
+    </tr>
+    <tr>
+      <td><strong>Antigravity CLI</strong> (<code>agy</code>)</td>
+      <td>말로 <strong>일을 시키는</strong> 도구. <strong>리눅스 안</strong>에 깐다</td>
+      <td>명령 실행과 파일 수정이 이쪽이다</td>
+      <td><code>agy --version</code></td>
+    </tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 일곱 줄이 두 덩이로 나뉜다.
+    위 세 줄은 <strong>리눅스가 층으로 쌓여 있다</strong>는 이야기이고,
+    아래 네 줄은 <strong>그 층을 내 노트북에 올리고 그 위에 도구를 얹는 방법</strong>이다.
+    오늘 수업은 위 세 줄을 설명했고 아래 네 줄을 실행했다.
+    <strong>맨 오른쪽 열이 없으면 아무것도 끝난 것이 아니다</strong> — 오늘은 「깔았다」가 아니라
+    <strong>「깔린 것을 내 눈으로 봤다」</strong>까지가 오늘의 끝이었다.
   </div>
 
   <!-- ── ✅ 점검 ── -->
