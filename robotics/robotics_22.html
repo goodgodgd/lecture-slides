@@ -1104,7 +1104,7 @@ const double took_ms = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).
   <h3>예제에 적용 — 무거운 처리를 흉내 내고 큐 깊이를 바꿔 본다</h3>
   <p>
     지금 <code>on_range()</code>는 받은 것을 들고 있기만 해서 거의 0 ms다. 실제 노드라면 여기서 라이다 값 360개를 거르고(9회), 정렬해 중앙값을 찾고(13회), 콘을 찾는 일을 한다.
-    그것을 흉내 내려고 파라미터 <code>work_ms</code>만큼 일부러 쉬게 한다(20회 ⑧절 <code>sleep_for</code>). 큐 깊이도 파라미터 <code>range_depth</code>로 꺼낸다.
+    그것을 흉내 내려고 파라미터 <code>work_ms</code>만큼 일부러 쉬게 한다(20회 연습문제의 <code>sleep_for</code>). 큐 깊이도 파라미터 <code>range_depth</code>로 꺼낸다.
     두 값은 <strong>구독을 만들 때 한 번만</strong> 쓰므로 생성자에서 한 번 읽는다 — 21회 ③절의 「실행 중에 다시 읽나」를 여기서는 일부러 하지 않는 것이다. 바꾸려면 노드를 다시 띄운다.
   </p>
 

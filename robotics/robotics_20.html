@@ -34,9 +34,7 @@
   <a href="#v1">③ 타이머와 콜백 (v1)</a>
   <a href="#echo">④ 내 노드의 발행 확인</a>
   <a href="#v2">⑤ 구독자와 ConstSharedPtr (v2)</a>
-  <a href="#deps">⑥ 의존성 — 두 파일 양쪽</a>
-  <a href="#ctrlc">⑦ Ctrl+C와 cmd_vel 타임아웃</a>
-  <a href="#review">⑧ 받은 코드 검사 목록</a>
+  <a href="#checks">⑥ 확인할 것</a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
   <a href="#prompts">🤖 프롬프트 모음</a>
@@ -56,7 +54,7 @@
       <li>「0.5초마다 한 번」을 코드로는 어떻게 적나? <code>while</code>과 <code>sleep</code>으로 적으면 무엇이 안 되나?</li>
       <li>받은 메시지는 콜백에서 어떤 모양으로 받아 두나? 왜 <code>ConstSharedPtr</code>인가?</li>
       <li>달리는 중에 내 노드를 Ctrl+C로 끊으면 거북이는 서나, 마지막 속도로 계속 가나?</li>
-      <li>AI가 준 노드 코드가 빌드도 되고 실행도 되는데 거북이가 가운데서 맴돌기만 한다. 무엇부터 보면 되나?</li>
+      <li>AI가 준 노드 코드가 빌드된다. 그래도 무엇을 확인하면 되나?</li>
     </ol>
   </div>
 
@@ -72,9 +70,7 @@
     두 단계 모두 「함수를 넘겨 두면 때가 됐을 때 불러 주는」 <strong>콜백</strong>으로 움직이고, 그 콜백을 부르는 것은 19회의 <code>rclcpp::spin</code>이다.
   </p>
   <p>
-    그리고 ⑧절에서는 「돌아다니다가 벽 근처에서 되돌아오는 노드를 만들어 줘」라고 하면 돌아오는 그럴듯한 코드를 하나 놓고,
-    11·12·13회에서 쌓은 검사 목록으로 한 줄씩 훑는다. 그 코드는 빌드되고 실행되는데, 거북이는 가운데서 맴돌기만 하고, Ctrl+C를 누르면 <code>Segmentation fault</code>가 난다.
-    왜 그런지를 ①~⑦절에서 배운 것으로 짚을 수 있으면 오늘의 목표에 닿은 것이다.
+    마지막 ⑥절에서는 다 만든 노드에서 확인할 것 — 두 파일의 의존성, Ctrl+C 때 거북이, 받은 노드 코드에서 볼 일곱 줄 — 을 짧게 짚는다.
   </p>
 
   <!-- ── 한 장 요약표 ── -->
@@ -95,7 +91,7 @@
   </div>
   <div class="interp">
     <strong>해석:</strong> 여덟 줄 중 셋째 줄이 나머지를 묶는다. 타이머도 구독도 「무엇을 할지 함수로 넘겨 두면, <code>spin</code>이 때가 됐을 때 불러 준다」는 같은 구조다.
-    이 구조를 알면 ⑧절의 받은 코드에서 <strong>구독 콜백이 왜 한 번도 안 불렸는지</strong>가 한 줄로 설명된다.
+    이 구조를 알면 <code>spin</code> 없이 <code>while</code>로 도는 코드에서 <strong>구독 콜백이 왜 한 번도 안 불리는지</strong>가 한 줄로 설명된다(⑥절).
   </div>
 
   <!-- ── ① 오늘 만들 것 ── -->
@@ -236,7 +232,7 @@ int main(int argc, char ** argv)
   <div class="interp">
     <strong>해석:</strong> 규칙은 둘이다. 첫째, <strong>콜백은 <code>spin</code> 안에서만 불린다.</strong> 메시지가 컴퓨터에 도착해도 <code>spin</code>이 돌지 않으면 아무도 그 콜백을 부르지 않는다.
     둘째, 기본 <code>rclcpp::spin</code>은 <strong>콜백을 한 번에 하나씩</strong> 부른다. 한 콜백이 오래 걸리면 다른 콜백이 그만큼 기다린다 — 그래서 콜백은 짧게 쓴다. 이 기다림이 실제로 얼마나 되는지는 22회에서 시간을 재어 본다.
-    v1만 놓고 보면 <code>while</code>과 차이가 안 보인다. 차이는 구독이 더해지는 v2에서 드러나고, ⑧절의 받은 코드가 정확히 이 자리에서 무너진다.
+    v1만 놓고 보면 <code>while</code>과 차이가 안 보인다. 차이는 구독이 더해지는 v2에서 드러난다. ⑥절 검사 목록의 첫 줄이 이 자리다.
   </div>
   <p>
     19회 v3의 로그에서 「<code>spin</code> 에 들어갑니다」와 「<code>signal_handler</code>」 사이가 3초쯤 비어 있었다. 그때는 부를 콜백이 없어서 그냥 기다리기만 했다.
@@ -796,7 +792,7 @@ private:
   </div>
   <p>
     <code>CMakeLists.txt</code>와 <code>package.xml</code>에도 <code>turtlesim</code>이 들어간다. 바뀌는 줄은 v1과 같은 자리다 — <code>find_package(turtlesim REQUIRED)</code>,
-    <code>target_link_libraries</code>에 <code>${turtlesim_TARGETS}</code>, <code>&lt;depend&gt;turtlesim&lt;/depend&gt;</code>. 한쪽만 넣으면 어떻게 되는지는 바로 다음 ⑥절에서 본다.
+    <code>target_link_libraries</code>에 <code>${turtlesim_TARGETS}</code>, <code>&lt;depend&gt;turtlesim&lt;/depend&gt;</code>. 한쪽만 넣으면 어떻게 되는지는 ⑥절에서 짧게 본다.
   </p>
 
   <h3>실제로 나온 출력</h3>
@@ -1027,408 +1023,78 @@ ament_package()</code></pre></div>
   </table>
   </div>
 
-  <!-- ── ⑥ deps ── -->
-  <h2 id="deps">⑥ 의존성 — <code>package.xml</code>과 <code>CMakeLists.txt</code> 양쪽에 <code>turtlesim</code> <span class="badge b-red">🔴 사람이 한다</span></h2>
+  <!-- ── ⑥ 확인할 것 ── -->
+  <h2 id="checks">⑥ 확인할 것 — 의존성 · Ctrl+C · 받은 노드 코드 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
   <p>
-    19회 ②·③절에서 「한쪽만 빠뜨리면 어떻게 되나」를 짧게 짚었다. 오늘은 그것을 메시지 패키지로 직접 빼 본다. 메시지 패키지는 AI가 의존성을 빠뜨리기 가장 쉬운 자리다 —
-    코드에서 <code>#include</code>만 한 줄 더하고 끝내기 쉽기 때문이다. v2에서 <code>turtlesim</code>을 한쪽에서만 뺀 판 세 가지를 빌드했다.
+    v2로 오늘 만들 기능은 다 갖췄다. 실제로는 이런 노드를 에이전트에게 받는 일이 더 많을 텐데, 받은 코드를 쓰기 전에 무엇을 보면 될까?
+    세 가지만 짧게 짚는다.
   </p>
-  <h3><code>CMakeLists.txt</code>에서 뺐을 때</h3>
-  <p><code>find_package(turtlesim REQUIRED)</code>와 <code>${turtlesim_TARGETS}</code>를 둘 다 뺐다. <code>package.xml</code>에는 그대로 있다.</p>
-  <pre class="lang-sh"><code>$ colcon build --packages-select turtle_drive
-Starting &gt;&gt;&gt; turtle_drive
---- stderr: turtle_drive
-/home/ubuntu/ros2_ws/src/turtle_drive/src/turtle_drive.cpp:10:10: fatal error: turtlesim/msg/pose.hpp: No such file or directory
-   10 | #include "turtlesim/msg/pose.hpp"
-      |          ^~~~~~~~~~~~~~~~~~~~~~~~
-compilation terminated.
-gmake[2]: *** [CMakeFiles/turtle_drive.dir/build.make:76: CMakeFiles/turtle_drive.dir/src/turtle_drive.cpp.o] Error 1
-(… 생략 …)
----
-Failed   &lt;&lt;&lt; turtle_drive [2.38s, exited with code 2]
 
-Summary: 0 packages finished [2.45s]
-  1 package failed: turtle_drive
-  1 package had stderr output: turtle_drive</code></pre>
+  <h3>의존성 — <code>turtlesim</code>이 두 파일 양쪽에 있나</h3>
   <p>
-    19회 ③절에서 본 것과 같은 <strong>컴파일 단계</strong> 오류다. 그런데 <code>find_package</code>는 남기고 <strong><code>target_link_libraries</code>에서 <code>${turtlesim_TARGETS}</code>만</strong> 빼도 <strong>똑같은 글자</strong>가 나온다.
-    <code>find_package</code>는 패키지를 찾아 불러올 뿐이고, 헤더 경로를 이 실행 파일에 거는 것은 링크 줄이기 때문이다. 오류 글자만 보고는 두 경우가 구별되지 않으니 두 줄을 다 본다.
+    19회 ②·③절의 규칙이 메시지 패키지에도 그대로 적용된다. <code>#include "turtlesim/msg/pose.hpp"</code>를 더했으면
+    <code>package.xml</code>의 <code>&lt;depend&gt;turtlesim&lt;/depend&gt;</code>, <code>CMakeLists.txt</code>의 <code>find_package(turtlesim REQUIRED)</code>와 링크 줄의 <code>${turtlesim_TARGETS}</code>에 이름이 다 있어야 한다.
+    <code>CMakeLists.txt</code> 쪽이 빠지면 빌드가 <code>fatal error: turtlesim/msg/pose.hpp: No such file or directory</code>로 멈추니 바로 알 수 있다.
+    <strong><code>package.xml</code> 쪽이 빠지면 빌드는 그대로 된다.</strong> 그래서 이쪽은 <code>colcon info</code>로 확인해 두면 덜 헤맨다.
   </p>
-  <h3><code>package.xml</code>에서 뺐을 때</h3>
-  <pre class="lang-sh"><code>$ colcon build --packages-select turtle_drive
-Starting &gt;&gt;&gt; turtle_drive
-Finished &lt;&lt;&lt; turtle_drive [5.57s]
-
-Summary: 1 package finished [5.63s]
-$ colcon info turtle_drive
+  <pre class="lang-sh"><code>$ colcon info turtle_drive
 path: src/turtle_drive
   type: ros.ament_cmake
   name: turtle_drive
   dependencies:
-    build: ament_cmake geometry_msgs rclcpp
-    run: geometry_msgs rclcpp
-    test: ament_lint_auto ament_lint_common
+    build: ament_cmake geometry_msgs rclcpp turtlesim
+    run: geometry_msgs rclcpp turtlesim
 (… 생략 …)</code></pre>
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 명령에서 처음 나오는 것</p>
     <dl>
       <dt>colcon info 패키지</dt>
-      <dd>colcon이 <code>package.xml</code>을 읽어 알아낸 그 패키지의 정보(경로·종류·의존성)를 보여 준다. 빌드는 하지 않는다. <code>dependencies</code> 아래 <code>build:</code>·<code>run:</code>이 <code>&lt;depend&gt;</code> 줄에서 온 것이다.</dd>
+      <dd>colcon이 <code>package.xml</code>을 읽어 알아낸 그 패키지의 정보(경로·종류·의존성)를 보여 준다. 빌드는 하지 않는다. <code>build:</code>·<code>run:</code>이 <code>&lt;depend&gt;</code> 줄에서 온 것이다. 여기에 <code>turtlesim</code>이 없으면 <code>package.xml</code> 쪽이 빠진 것이다.</dd>
     </dl>
   </div>
+
+  <h3>Ctrl+C — 거북이는 1초쯤 더 가다가 선다</h3>
+  <p>
+    우리 노드에는 Ctrl+C 때 「서라」를 보내는 줄이 없다. 그래도 거북이는 선다. 다만 바로 서지 않고, <strong>마지막 명령대로 약 1초 더 간 뒤에</strong> 선다(컨테이너에서 재 보니 마지막 명령 뒤 1.08초).
+    우리 노드가 한 일이 아니라 ③절 첫머리에서 본 turtlesim의 규칙, 곧 속도 명령이 1초 넘게 안 오면 세우는 <strong>명령 타임아웃</strong>이다.
+    모든 로봇의 구동 노드가 이렇게 만들어져 있다는 보장은 없어서, 프로젝트 노드에는 내 노드 쪽에서도 타임아웃 정지를 넣는다(27회).
+  </p>
+
+  <h3>받은 노드 코드 — 빌드가 돼도 보는 일곱 줄</h3>
+  <p>
+    「돌아다니다가 벽 근처에서 되돌아오는 노드를 만들어 줘」라고 하면 오는 코드에는 ROS 1 시절 예제의 모양이 자주 섞여 있다(「조금 더 알아두면」).
+    아래 일곱 줄은 <strong>모두 빌드를 막지 않는다.</strong> 그래서 빌드 성공은 이 중 어느 것도 보증하지 않는다.
+  </p>
   <div class="tablewrap">
   <table>
-    <tr><th>무엇을 뺐나</th><th>빌드</th><th>알아채는 법</th></tr>
-    <tr><td><code>CMakeLists.txt</code>의 <code>find_package</code> + 링크 줄</td><td><strong>멈춘다</strong> — <code>pose.hpp: No such file or directory</code></td><td>내 컴퓨터에서 바로 터진다</td></tr>
-    <tr><td><code>CMakeLists.txt</code>의 링크 줄(<code>${turtlesim_TARGETS}</code>)만</td><td><strong>멈춘다</strong> — 위와 같은 글자</td><td>같은 글자라서 두 줄을 다 본다</td></tr>
-    <tr><td><code>package.xml</code>의 <code>&lt;depend&gt;turtlesim&lt;/depend&gt;</code></td><td><strong>된다</strong></td><td><code>colcon info</code>의 <code>build:</code>·<code>run:</code>에 <code>turtlesim</code>이 없다. 고친 판은 <code>ament_cmake geometry_msgs rclcpp turtlesim</code></td></tr>
+    <tr><th></th><th>검사할 것</th><th>이렇게 오는 경우가 많다</th><th>오늘 어디서</th></tr>
+    <tr><td>1</td><td><strong>콜백이 불리는 자리(<code>spin</code>)가 있나</strong></td><td><code>main</code>이 <code>while (rclcpp::ok())</code> + <code>sleep_for</code>로 돌고 <code>spin</code>이 없다. 구독 콜백이 한 번도 안 불려 자세가 처음 값 (0, 0)에 머문다</td><td>③</td></tr>
+    <tr><td>2</td><td>주기마다 할 일이 타이머인가</td><td><code>while</code> 반복이 <code>sleep_for</code>로 주기를 직접 센다</td><td>③</td></tr>
+    <tr><td>3</td><td>콜백 인자를 <code>ConstSharedPtr</code>로 받나</td><td><code>const Pose msg</code> — 값 전달. 콜백마다 복사한다</td><td>⑤</td></tr>
+    <tr><td>4</td><td>발행자·구독자·상태가 노드의 멤버인가</td><td>전역 변수. 전역 변수는 <code>shutdown</code> 뒤에 지워져서 Ctrl+C 때 <code>Segmentation fault</code>로 끝나기도 한다</td><td>19회 노드 상속 · ②</td></tr>
+    <tr><td>5</td><td>「아직 못 받음」을 따로 다루나</td><td>기본값 <code>x = 0</code>, <code>y = 0</code>을 진짜 자세처럼 읽는다</td><td>⑤</td></tr>
+    <tr><td>6</td><td>숫자에 이름이 있나</td><td>큐 깊이 1000, <code>1.0</code>·<code>10.0</code>·<code>1.5</code>가 맨숫자로 흩어져 있다</td><td>② · ⑤</td></tr>
+    <tr><td>7</td><td>새 의존성이 두 파일 양쪽에 있나</td><td><code>#include</code>만 더하고 <code>package.xml</code>은 그대로다</td><td>이 절 위</td></tr>
   </table>
   </div>
   <div class="interp">
-    <strong>해석:</strong> 19회 결론이 그대로 맞다. 빌드가 잡아 주는 것은 <code>CMakeLists.txt</code> 쪽뿐이고, <code>package.xml</code> 쪽은 <strong>사람이 두 파일을 나란히 놓고 이름을 맞춰 봐야</strong> 한다.
-    v2의 <code>#include</code> 중 ROS 패키지는 셋(<code>rclcpp</code>·<code>geometry_msgs</code>·<code>turtlesim</code>)이고, 이 셋이 두 파일에 다 있어야 한다.
-    <strong>「코드의 <code>#include</code> → <code>&lt;depend&gt;</code> → <code>find_package</code> → 링크 줄」 네 곳의 이름이 맞나</strong>가 검사 한 줄이다.
+    <strong>해석:</strong> 1번은 거북이를 엉뚱하게 움직이고, 4번은 끝낼 때 프로그램을 죽인다. 나머지는 지금 거북이의 움직임을 바꾸지 않아서 「돌아가니 됐다」로 넘어가기 쉽다.
+    받은 코드는 <strong>⑤절의 v2와 나란히 놓고</strong> 이 일곱 줄을 훑으면 된다. 모양이 조금 달라도 된다(예: 람다 대신 <code>std::bind</code> — 「조금 더 알아두면」).
   </div>
-  <div class="prompt">
-    <button onclick="copyPrompt(this)">복사</button>
-    turtle_drive 패키지의 src/*.cpp 에서 #include 하는 ROS 패키지(rclcpp, 메시지 패키지)를 전부 뽑아서, 각각이 package.xml 의 &lt;depend&gt;, CMakeLists.txt 의 find_package, target_link_libraries 세 곳에 있는지 표로 보여 줘. 빠진 칸은 고치지 말고 표에만 표시해 줘.
-  </div>
-
-  <!-- ── ⑦ Ctrl+C ── -->
-  <h2 id="ctrlc">⑦ Ctrl+C와 cmd_vel 타임아웃 <span class="badge b-red">🔴 사람이 한다</span></h2>
-  <p>
-    거북이가 달리는 도중에 <code>turtle_drive</code>를 Ctrl+C로 끊으면 어떻게 될까? 마지막으로 보낸 명령은 「이 속도로 가라」다. 그 명령대로 계속 갈까, 그 자리에 설까?
-    코드만 읽어서는 답이 안 나온다. 우리 노드에는 Ctrl+C 때 「서라」를 보내는 줄이 없다 — <code>spin</code>이 돌아오면 그대로 <code>shutdown</code>하고 끝난다.
-    그럼 거북이 쪽에 달렸다. <strong>돌려 봐야 아는 것</strong>이라 직접 쟀다.
-  </p>
-  <p>v1을 띄우고 3초쯤 뒤에 Ctrl+C를 눌렀다. 다른 터미널에서 Ctrl+C 전과 뒤에 자세를 한 번씩 받았다.</p>
-  <pre class="lang-sh"><code>$ ros2 topic echo --once /turtle1/pose      # Ctrl+C 1초쯤 전
-x: 6.824798107147217
-y: 5.866145133972168
-theta: 0.4768603444099426
-linear_velocity: 0.7677249908447266
-angular_velocity: 0.42173296213150024
----
-$ ros2 topic echo --once /turtle1/pose      # Ctrl+C 2초쯤 뒤
-x: 7.336749076843262
-y: 6.262693405151367
-theta: 0.8344898819923401
-linear_velocity: 0.0
-angular_velocity: 0.0
----</code></pre>
-  <p>
-    <strong>섰다.</strong> 다만 바로 서지는 않았다. 언제 섰는지 보려고 0.1초마다 자세와 「마지막 명령이 온 지 몇 초」를 함께 찍는 검증용 노드를 하나 더 띄워 잰 결과다(이 노드는 자료에 싣지 않는다).
-    마지막 명령은 「0.50 m/s로 가라」였고, Ctrl+C는 그 명령 0.36초 뒤에 눌렀다.
-  </p>
-  <div class="tablewrap">
-  <table>
-    <tr><th>마지막 명령 뒤</th><th>x, y</th><th><code>linear_velocity</code></th></tr>
-    <tr><td>0.28초 (Ctrl+C 직전)</td><td>7.143, 5.137</td><td>0.50</td></tr>
-    <tr><td>0.48초</td><td>7.226, 5.074</td><td>0.50</td></tr>
-    <tr><td>0.98초</td><td>7.421, 4.920</td><td>0.50</td></tr>
-    <tr><td><strong>1.08초</strong></td><td><strong>7.433, 4.910</strong></td><td><strong>0.00</strong></td></tr>
-    <tr><td>3.08초</td><td>7.433, 4.910</td><td>0.00</td></tr>
-  </table>
-  </div>
-  <div class="interp">
-    <strong>해석:</strong> 명령이 끊긴 뒤 <strong>약 1초 동안은 마지막 속도 그대로</strong> 갔고(약 0.5 m), 1초가 넘자 섰다.
-    이것은 우리 노드가 한 일이 아니라 <strong>turtlesim이 정해 둔 규칙</strong>이다 — 속도 명령이 1초 넘게 안 오면 거북이를 세운다(18회 <code>topic pub --once</code>에서 거북이가 짧게 가다 선 것도 이 규칙이다).
-    이런 규칙을 <strong>명령 타임아웃</strong>이라고 부른다. 측정 환경: 컨테이너(우분투 24.04, ROS 2 Jazzy, turtlesim). 여러분 노트북에서도 1초 언저리가 나올 것이다.
-  </div>
-  <div class="box trap">
-    <div class="boxtitle">⚠️ 「끊으면 선다」는 turtlesim의 성질이지 모든 로봇의 성질이 아니다</div>
-    <p>
-      turtlesim은 마침 타임아웃이 있어서 1초 뒤에 섰다. <strong>모든 로봇의 구동 노드가 이렇게 만들어져 있다는 보장은 없다.</strong>
-      타임아웃이 없는 구동 노드라면 마지막 명령대로 계속 가고, 타임아웃이 있더라도 그 1초 동안 1 m/s 로봇은 1 m를 더 간다.
-      그래서 프로젝트 노드에는 <strong>내 노드 쪽에서도</strong> 「센서 값이 일정 시간 안 오면 선다」를 넣는다 — 27회의 「타임아웃 정지」가 그것이다.
-      실물 터틀봇이 명령이 끊겼을 때 어떻게 하는지는 로봇 앞에서 직접 확인해 볼 자리다(28회).
-    </p>
-  </div>
-  <p>
-    이 규칙은 반대쪽에서도 우리 노드에 영향을 준다. ③절에서 타이머 주기를 1초가 아니라 0.5초로 둔 것이 그래서다 — 1초에 한 번 보내면 명령과 명령 사이에 거북이가 섰다 가기를 되풀이할 수 있다.
-    남는 구멍은 <strong>달리는 도중에 노드가 끝나는 경우</strong>이고, 그때는 받는 쪽의 타임아웃에 맡겨진다. 이 구멍을 어떻게 막을지는 여러분이 실습에서 직접 보고 판단할 거리다.
-  </p>
-
-  <!-- ── ⑧ review ── -->
-  <h2 id="review">⑧ 받은 노드 코드 검사 — 콜백·전역 변수·<code>while</code>+<code>sleep</code>·큐 깊이 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
-
-  <h3>언제 이게 필요해지나</h3>
-  <p>
-    여기까지 두 단계를 직접 따라왔다. 실제로는 이 노드를 처음부터 손으로 쓸 일이 드물다. 에이전트에게 「turtlesim 거북이를 무작위로 돌아다니게 하다가 벽 근처에 가면 되돌아오게 하는 ROS 2 C++ 노드를 만들어 줘」라고 하면 몇 초 만에 코드가 온다.
-    아래는 그렇게 받은 답들에서 <strong>자주 보이는 모양을 모아 이 자료에서 만든 대표 코드</strong>다. 특정 AI의 답을 그대로 옮긴 것은 아니지만, 한 줄 한 줄은 인터넷 예제와 AI 답에서 흔히 보는 것들이다.
-  </p>
-  <div class="codelabel bad">흔히 받는 모양 — turtle_drive/src/turtle_drive.cpp 전체 🔴</div>
-  <pre class="lang-cpp before"><code>#include &lt;chrono&gt;
-#include &lt;cstdlib&gt;
-#include &lt;ctime&gt;
-#include &lt;thread&gt;
-#include "rclcpp/rclcpp.hpp"
-#include "geometry_msgs/msg/twist.hpp"
-#include "turtlesim/msg/pose.hpp"
-
-using namespace std::chrono_literals;
-
-rclcpp::Publisher&lt;geometry_msgs::msg::Twist&gt;::SharedPtr cmd_pub;
-turtlesim::msg::Pose current_pose;
-
-void pose_callback(const turtlesim::msg::Pose msg)
-{
-  current_pose = msg;
-}
-
-int main(int argc, char ** argv)
-{
-  rclcpp::init(argc, argv);
-  auto node = rclcpp::Node::make_shared("turtle_drive");
-  cmd_pub = node-&gt;create_publisher&lt;geometry_msgs::msg::Twist&gt;("/turtle1/cmd_vel", 1000);
-  auto pose_sub = node-&gt;create_subscription&lt;turtlesim::msg::Pose&gt;(
-    "/turtle1/pose", 1000, pose_callback);
-  RCLCPP_INFO(node-&gt;get_logger(), "turtle_drive node started");
-  std::srand(std::time(nullptr));
-
-  while (rclcpp::ok()) {
-    geometry_msgs::msg::Twist cmd;
-    if (current_pose.x &lt; 1.0 || current_pose.x &gt; 10.0 ||
-        current_pose.y &lt; 1.0 || current_pose.y &gt; 10.0) {
-      // Near the wall: turn while moving slowly to get back inside
-      cmd.linear.x = 0.5;
-      cmd.angular.z = 1.5;
-      RCLCPP_INFO(node-&gt;get_logger(), "Near wall! Turning back.");
-    } else {
-      // Random walk
-      cmd.linear.x = 0.2 + (std::rand() % 100) / 100.0;
-      cmd.angular.z = (std::rand() % 200 - 100) / 100.0;
-    }
-    cmd_pub-&gt;publish(cmd);
-    std::this_thread::sleep_for(500ms);
-  }
-  rclcpp::shutdown();
-  return 0;
-}</code></pre>
-  <div class="box firstseen">
-    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
-    <dl>
-      <dt>std::this_thread::sleep_for(500ms)</dt>
-      <dd><code>&lt;thread&gt;</code>의 함수. 지금 실행 흐름을 그 시간만큼 <strong>그냥 멈춰 세운다.</strong> 그동안은 아무 일도 하지 않는다 — 콜백도 부르지 않는다.</dd>
-      <dt>rclcpp::ok()</dt>
-      <dd>Ctrl+C 같은 끝내라는 신호가 아직 안 왔으면 <code>true</code>. <code>spin</code>을 쓰지 않고 직접 반복할 때 반복 조건으로 쓴다.</dd>
-      <dt>rclcpp::Node::make_shared("이름")</dt>
-      <dd>19회 ⑥절 표의 「<code>main</code> 안에서 바로 만들기」. 클래스를 만들지 않고 <code>rclcpp::Node</code> 객체를 그대로 만든다.</dd>
-      <dt>std::srand · std::rand()</dt>
-      <dd>C 언어 시절의 난수 함수(<code>&lt;cstdlib&gt;</code>). <code>srand</code>로 씨앗을 한 번 주고, <code>rand()</code>가 0 이상의 정수를 낸다. <code>% 100</code>으로 0 ~ 99를 만든 뒤 나눠서 실수로 바꿨다. v1의 <code>&lt;random&gt;</code>과 하는 일은 같지만 범위와 분포를 손으로 맞춰야 한다.</dd>
-    </dl>
-  </div>
-  <p>
-    컴파일 오류도 경고도 없이 빌드된다. 그리고 실행하면 — 18회처럼 증상부터 본다.
-  </p>
-  <pre class="lang-sh"><code>$ colcon build --packages-select turtle_drive
-Starting &gt;&gt;&gt; turtle_drive
-Finished &lt;&lt;&lt; turtle_drive [5.55s]
-
-Summary: 1 package finished [5.61s]
-$ source install/setup.bash
-$ ros2 run turtle_drive turtle_drive
-[INFO] [1793759530.260185975] [turtle_drive]: turtle_drive node started
-[INFO] [1793759530.260258204] [turtle_drive]: Near wall! Turning back.
-[INFO] [1793759530.760344929] [turtle_drive]: Near wall! Turning back.
-[INFO] [1793759531.260568389] [turtle_drive]: Near wall! Turning back.
-[INFO] [1793759531.760751214] [turtle_drive]: Near wall! Turning back.
-(… 0.5초마다 같은 줄 …)</code></pre>
-  <p>
-    거북이는 창 <strong>한가운데</strong>에서 작은 원만 그리며 맴돈다. 벽 근처에는 가 본 적도 없는데, 노드는 첫 줄부터 「벽 근처다, 돌아선다」를 찍는다.
-  </p>
-
-  <h3>원인 찾기 — 18회 순서대로</h3>
-  <p>
-    「벽 근처가 아닌데 벽 근처라고 한다」를 보면 판정 숫자 <code>1.0</code>·<code>10.0</code>부터 바꿔 보고 싶어진다. 그런데 숫자를 바꿔서 될 일인지부터 가르는 편이 덜 헤맨다.
-    18회 순서대로 보내는 쪽과 받는 쪽을 하나씩 본다.
-  </p>
-  <pre class="lang-sh"><code>$ ros2 topic hz /turtle1/cmd_vel
-average rate: 2.000
-	min: 0.500s max: 0.500s std dev: 0.00004s window: 3
-$ ros2 topic echo --once /turtle1/cmd_vel
-linear:
-  x: 0.5
-  y: 0.0
-  z: 0.0
-angular:
-  x: 0.0
-  y: 0.0
-  z: 1.5
----
-$ ros2 topic info /turtle1/pose
-Type: turtlesim/msg/Pose
-Publisher count: 1
-Subscription count: 1
-$ ros2 topic echo --once /turtle1/pose
-x: 5.2539238929748535
-y: 5.707402229309082
-theta: -1.0463706254959106
-linear_velocity: 0.5
-angular_velocity: 1.5
----</code></pre>
-  <div class="tablewrap">
-  <table>
-    <tr><th>물음</th><th>답</th><th>그러니</th></tr>
-    <tr><td>명령은 나가나</td><td><code>hz</code> 2.000, 값은 늘 <code>0.5</code> · <code>1.5</code></td><td>발행은 된다. 그런데 매번 「돌아서기」 쪽 값이다</td></tr>
-    <tr><td>자세 토픽에 내 노드가 붙었나</td><td><code>Subscription count: 1</code></td><td>구독도 있다</td></tr>
-    <tr><td>자세가 실제로 오나</td><td><code>x: 5.25…</code>, <code>y: 5.70…</code> — 한가운데다</td><td>값도 흐른다. 그런데 노드는 「범위 밖」으로 판단했다</td></tr>
-  </table>
-  </div>
-  <p>
-    구독은 붙어 있고 값도 오는데, 노드는 거북이가 범위 밖에 있다고 판단했다. 그렇다면 <code>current_pose</code>가 한 번도 바뀌지 않은 것 아닐까?
-    확인하는 방법은 간단하다. <strong>콜백 안에 로그 한 줄</strong>을 넣고 다시 돌린다.
-  </p>
-  <div class="codelabel bad">확인용으로 한 줄 넣은 판</div>
-  <pre class="lang-cpp before"><code>void pose_callback(const turtlesim::msg::Pose msg)
-{
-  current_pose = msg;
-  RCLCPP_INFO(rclcpp::get_logger("turtle_drive"), "pose_callback: x = %.2f", msg.x);   // 확인용 한 줄
-}</code></pre>
-  <pre class="lang-sh"><code>$ ros2 run turtle_drive turtle_drive
-[INFO] [1793759552.555910860] [turtle_drive]: turtle_drive node started
-[INFO] [1793759552.555971065] [turtle_drive]: Near wall! Turning back.
-[INFO] [1793759553.056059031] [turtle_drive]: Near wall! Turning back.
-(…)
-[INFO] [1793759556.057096538] [turtle_drive]: Near wall! Turning back.
-[INFO] [1793759556.413904199] [rclcpp]: signal_handler(SIGINT/SIGTERM)</code></pre>
-  <p>
-    4초 가까이 도는 동안 자세가 200번 넘게 왔을 텐데 <code>pose_callback</code> 줄이 <strong>한 번도</strong> 없다. 콜백이 불리지 않았다.
-    ③절의 첫째 규칙 그대로다 — <strong>이 코드에는 <code>spin</code>이 없다.</strong> <code>main</code>이 <code>while</code>을 도는 동안 메시지는 도착해서 쌓이지만, 그것을 꺼내 콜백을 불러 줄 자리가 없다.
-    그래서 <code>current_pose</code>는 만들어질 때의 값, <strong><code>x = 0</code>, <code>y = 0</code></strong>에 머물러 있었고, 0은 1보다 작으니 「범위 밖이다, 돌아선다」를 계속 보냈다.
-    (확인이 끝나면 이 로그 줄은 지운다. 초당 62.5번 찍히는 로그는 그 자체로 짐이 된다 — 22회.)
-  </p>
-  <div class="box trap">
-    <div class="boxtitle">⚠️ Ctrl+C를 누르면 <code>Segmentation fault</code></div>
-    <p>받은 코드를 Ctrl+C로 끊었을 때 실제로 찍힌 것이다(가운데는 줄였다).</p>
-    <pre><code>[INFO] [1793759542.122116502] [rclcpp]: signal_handler(SIGINT/SIGTERM)
-Failed to delete datawriter, at ./src/publisher.cpp:45 during '__function__'
-[ERROR] [1793759542.366452174] [turtle_drive.rclcpp]: Error in destruction of rcl publisher handle: cannot publish data, at ./src/rmw_publish.cpp:66, at ./src/rcl/publisher.c:201
-(… 생략 …)
-__function__:80: 'destroy_subscription' failed
-[ros2run]: Segmentation fault</code></pre>
-    <p>
-      네 번 더 돌려 네 번 다 비정상으로 끝났다(세 번은 <code>Segmentation fault</code>, 한 번은 <code>terminate called after throwing an instance of 'std::system_error'</code> 뒤 <code>Aborted</code>).
-      원인은 <strong>발행자를 전역 변수에 둔 것</strong>이다. 전역 변수는 <code>main</code>이 끝난 <strong>뒤에야</strong> 지워진다.
-      그때는 이미 <code>rclcpp::shutdown()</code>이 ROS 2 통신을 정리한 뒤라, 발행자가 자기를 정리하려다 실패하고 프로그램이 죽는다.
-      11회 RAII에서 본 「얻은 것은 돌려준다」가, <strong>돌려주는 순서</strong>가 어긋나서 터진 것이다.
-      확인하려고 <strong>다른 곳은 그대로 두고 발행자만 <code>main</code> 안의 지역 변수로</strong> 옮겨 돌렸더니 Ctrl+C 때 <code>signal_handler</code> 한 줄만 찍히고 깨끗하게 끝났다.
-      v2처럼 발행자를 노드의 멤버로 두면 노드와 함께, <code>shutdown</code>보다 먼저 없어지니 이 일이 생기지 않는다.
-    </p>
-  </div>
-
-  <h3>무엇이 문제인가 — 검사 목록</h3>
-  <p class="readme-first">무엇을 먼저 볼지: <strong>「받은 코드에서」 열</strong>. 일곱 줄 모두 빌드를 막지 않는다. 그래서 빌드 성공은 이 중 어느 것도 보증하지 않는다.</p>
-  <div class="tablewrap">
-  <table>
-    <tr><th></th><th>검사할 것</th><th>받은 코드에서</th><th>어디서 배웠나</th><th>고친 모양 (v2)</th></tr>
-    <tr><td>1</td><td><strong>콜백이 불리는 자리(<code>spin</code>)가 있나</strong></td><td><code>while</code> + <code>sleep_for</code> — <code>spin</code>이 없어 구독 콜백이 한 번도 안 불린다. <strong>거북이가 가운데서 맴돈 원인</strong></td><td>19회 <code>spin</code> · 오늘 ③</td><td><code>rclcpp::spin(node);</code></td></tr>
-    <tr><td>2</td><td>주기마다 할 일이 타이머인가</td><td><code>while</code> 반복이 주기를 직접 센다</td><td>13회 「이미 있는 것을 먼저」 · 14회 <code>500ms</code> · 오늘 ③</td><td><code>create_wall_timer(500ms, …)</code></td></tr>
-    <tr><td>3</td><td>콜백 인자를 <code>ConstSharedPtr</code>로 받나</td><td><code>const Pose msg</code> — <strong>값 전달</strong>. 콜백마다 복사</td><td>12회 값 전달·<code>const &amp;</code> · 11회 <code>shared_ptr</code> · 오늘 ⑤</td><td><code>Pose::ConstSharedPtr msg</code></td></tr>
-    <tr><td>4</td><td>발행자·구독자·상태가 노드의 멤버인가</td><td>발행자와 자세가 <strong>전역 변수</strong>. Ctrl+C 때 <code>Segmentation fault</code></td><td>9회 클래스 · 11회 RAII · 19회 노드 상속</td><td><code>class TurtleDrive : public rclcpp::Node</code>의 멤버</td></tr>
-    <tr><td>5</td><td>「아직 못 받음」을 따로 다루나</td><td>기본값 <code>x = 0</code>, <code>y = 0</code>을 진짜 자세처럼 읽는다 — 「모른다」가 「범위 밖이다」가 됐다</td><td>14회 <code>std::optional</code> · 오늘 ⑤</td><td><code>if (!pose_) return;</code></td></tr>
-    <tr><td>6</td><td>숫자의 뜻을 말할 수 있나</td><td>큐 깊이 <strong>1000</strong>, <code>1.0</code>·<code>10.0</code>·<code>0.5</code>·<code>1.5</code>가 곳곳에 맨숫자로 — 왜 그 값인지 코드에 없다. 돌아설 때도 앞으로 가면서 돌아서 경계 밖으로 더 나갈 수 있다</td><td>오늘 ② · ⑤ (큐 깊이는 22회, 파라미터는 21회)</td><td>깊이 10 · <code>margin_</code> · <code>map_size_</code> 같은 이름 붙은 멤버</td></tr>
-    <tr><td>7</td><td>새 의존성이 두 파일 양쪽에 있나</td><td>(이 대표 코드는 v2의 패키지 파일을 그대로 썼다. 받은 패키지라면 반드시 본다)</td><td>19회 ②·③ · 오늘 ⑥</td><td><code>&lt;depend&gt;</code> · <code>find_package</code> · 링크 줄</td></tr>
-  </table>
-  </div>
-  <div class="interp">
-    <strong>해석:</strong> 1번 하나가 거북이를 가운데서 맴돌게 했고, 4번 하나가 Ctrl+C 때 프로그램을 죽였다. 나머지 다섯은 <strong>오늘은 결과를 바꾸지 않는다.</strong>
-    큐 깊이 1000이나 10이나, 값 전달이나 <code>ConstSharedPtr</code>나, 지금 거북이의 움직임은 똑같다. 그래서 「돌아가니 됐다」로 넘어가기 쉽다.
-    결과가 바뀌는 것은 메시지가 커지고(24회 <code>LaserScan</code>), 콜백이 느려지고(22회), 숫자를 바꿔 가며 튜닝할 때(21회)다. 그때 고치면 늦으니 받을 때 고친다.
-  </div>
-
-  <h3>이렇게 말하면 된다</h3>
-  <p>
-    「코드 좀 개선해 줘」나 「효율적으로 고쳐 줘」로는 위 일곱 줄이 다 고쳐져 오지 않는 경우가 많다. 고칠 자리를 <strong>짚어서</strong> 말한다.
-    AI가 만든 C++ 코드를 조사한 한 연구는 C++ 함수 50개를 요청 방식만 달리해 다시 짜게 했다. 아무 말 없이 받은 코드의 효율 점수가 0.294였고, 「효율적으로」라는 일반적인 요구로는 0.342, <strong>무엇이 문제인지 범주를 짚어서 요구했을 때 0.385</strong>였다.
-    차이를 만든 것은 무엇이 잘못됐는지 아는 것이었다.
-  </p>
-  <div class="prompt">
-    <button onclick="copyPrompt(this)">복사</button>
-    이 turtle_drive.cpp 를 아래 기준으로 고쳐 줘. 고치기 전에 기준마다 지금 코드의 어느 줄이 어긋나는지 먼저 표로 보여 줘.
-    ① rclcpp::Node 를 상속한 TurtleDrive 클래스로 만들고, 발행자·구독자·타이머·마지막 자세는 전부 멤버로 둬(전역 변수 금지).
-    ② while + sleep_for 대신 create_wall_timer(500ms, …) 를 쓰고 main 은 init → make_shared → spin → shutdown.
-    ③ 구독 콜백 인자는 turtlesim::msg::Pose::ConstSharedPtr 로 받고, 콜백에서는 포인터를 멤버에 저장만 해.
-    ④ 자세를 아직 못 받았으면 타이머 콜백에서 아무것도 보내지 마.
-    ⑤ x·y 가 1 ~ 10 밖이고 「바라보는 방향과 중앙(5.5, 5.5)으로 가는 방향 사이의 각」이 20° 보다 크면 제자리에서 돌고(linear.x 0), 아니면 무작위로 가. 범위·여유·속도는 이름 붙은 멤버로.
-    ⑥ 큐 깊이는 10, 난수는 &lt;random&gt; 의 mt19937 과 uniform_real_distribution.
-    빌드는 ~/ros2_ws 에서 colcon build --packages-select turtle_drive 로 하고, 실행 결과는 내가 직접 볼게.
-  </div>
-  <p>
-    받은 결과는 <strong>⑤절의 v2와 나란히 놓고</strong> 일곱 줄을 다시 훑는다. 모양이 조금 달라도 된다(예: 람다 대신 <code>std::bind</code> — 「조금 더 알아두면」).
-    마지막 확인은 여러분이 합니다 — 거북이가 벽에 닿기 전에 돌아서는지, <code>hz</code>가 2인지, Ctrl+C 때 <code>Segmentation fault</code>가 없는지.
-  </p>
-  <!-- fullcode "전체 코드 — turtle_drive/src/turtle_drive.cpp (받은 코드 판 · 빌드는 되고 가운데서 맴돈다. CMakeLists.txt·package.xml 은 v2 그대로)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive turtle_drive"
-       l20_topic/steps/variants/ai_given/turtle_drive/src/turtle_drive.cpp as turtle_drive/src/turtle_drive.cpp
-  -->
-<details class="fullcode">
-  <summary>전체 코드 — turtle_drive/src/turtle_drive.cpp (받은 코드 판 · 빌드는 되고 가운데서 맴돈다. CMakeLists.txt·package.xml 은 v2 그대로)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive turtle_drive</code></p>
-  <div class="codefile"><div class="fname">turtle_drive/src/turtle_drive.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>#include &lt;chrono&gt;
-#include &lt;cstdlib&gt;
-#include &lt;ctime&gt;
-#include &lt;thread&gt;
-#include &quot;rclcpp/rclcpp.hpp&quot;
-#include &quot;geometry_msgs/msg/twist.hpp&quot;
-#include &quot;turtlesim/msg/pose.hpp&quot;
-
-using namespace std::chrono_literals;
-
-rclcpp::Publisher&lt;geometry_msgs::msg::Twist&gt;::SharedPtr cmd_pub;
-turtlesim::msg::Pose current_pose;
-
-void pose_callback(const turtlesim::msg::Pose msg)
-{
-  current_pose = msg;
-}
-
-int main(int argc, char ** argv)
-{
-  rclcpp::init(argc, argv);
-  auto node = rclcpp::Node::make_shared(&quot;turtle_drive&quot;);
-  cmd_pub = node-&gt;create_publisher&lt;geometry_msgs::msg::Twist&gt;(&quot;/turtle1/cmd_vel&quot;, 1000);
-  auto pose_sub = node-&gt;create_subscription&lt;turtlesim::msg::Pose&gt;(
-    &quot;/turtle1/pose&quot;, 1000, pose_callback);
-  RCLCPP_INFO(node-&gt;get_logger(), &quot;turtle_drive node started&quot;);
-  std::srand(std::time(nullptr));
-
-  while (rclcpp::ok()) {
-    geometry_msgs::msg::Twist cmd;
-    if (current_pose.x &lt; 1.0 || current_pose.x &gt; 10.0 ||
-        current_pose.y &lt; 1.0 || current_pose.y &gt; 10.0) {
-      // Near the wall: turn while moving slowly to get back inside
-      cmd.linear.x = 0.5;
-      cmd.angular.z = 1.5;
-      RCLCPP_INFO(node-&gt;get_logger(), &quot;Near wall! Turning back.&quot;);
-    } else {
-      // Random walk
-      cmd.linear.x = 0.2 + (std::rand() % 100) / 100.0;
-      cmd.angular.z = (std::rand() % 200 - 100) / 100.0;
-    }
-    cmd_pub-&gt;publish(cmd);
-    std::this_thread::sleep_for(500ms);
-  }
-  rclcpp::shutdown();
-  return 0;
-}</code></pre></div>
-</details>
-<!-- /fullcode -->
-<!-- /fullcode -->
 
   <!-- ── 🧪 실습 ── -->
-  <h2 id="lab">🧪 실습 — turtle_drive 실행과 받은 코드 검사 <span class="badge b-red">🔴 사람이 한다</span></h2>
+  <h2 id="lab">🧪 실습 — turtle_drive 실행과 숫자 맞춰 보기 <span class="badge b-red">🔴 사람이 한다</span></h2>
   <div class="lab-block">
     <p class="boxtitle">🧪 이걸 해 보면 무엇을 알게 되나</p>
     <p>
       <strong>코드에 적은 숫자(<code>500ms</code>, <code>margin_</code>)가 명령 출력과 화면에 그대로 나타나는지</strong>를 자기 손으로 맞춰 본다.
-      그리고 「빌드는 되는데 틀린 코드」 두 가지(<code>spin</code>이 없는 것, 발행자가 전역인 것)를 직접 돌려 증상을 본다.
     </p>
 
     <p class="boxtitle">준비물</p>
     <ul>
       <li>WSL 터미널 넷 (16회에 <code>.bashrc</code>에 넣은 <code>source /opt/ros/jazzy/setup.bash</code>가 걸린 상태)</li>
       <li>19회 실습까지 끝낸 <code>~/ros2_ws/src/turtle_drive</code></li>
-      <li>⑤절 끝의 📄 「2단계 · v2 완성본」, ⑧절 끝의 📄 「받은 코드 판」</li>
+      <li>⑤절 끝의 📄 「2단계 · v2 완성본」</li>
     </ul>
 
     <p class="boxtitle">절차</p>
@@ -1444,8 +1110,8 @@ $ ros2 pkg executables turtle_drive</code></pre>
       <li><strong>(4분)</strong> <code>margin_</code>을 <code>2.0</code>으로 바꿔 다시 빌드하고, 터미널 4에서 <code>ros2 service call /reset std_srvs/srv/Empty</code>(18회)로 거북이를 처음 자리로 돌린 뒤 다시 실행한다.
         이번에는 첫 줄이 <code>2.0 ~ 9.0 안에서 돌아다닙니다</code>로 바뀌고, 「범위 밖」 줄의 x·y가 2 언저리나 9 언저리에서 찍히면 된다.
         숫자 하나를 바꾸는 데 빌드를 다시 해야 했다는 것을 기억해 둔다 — 21회에 이 숫자를 파라미터로 빼면 <strong>노드를 세우지 않고</strong> 바꿀 수 있다. 끝나면 1.0으로 되돌린다.</li>
-      <li><strong>(4분)</strong> <code>turtle_drive.cpp</code>를 ⑧절의 받은 코드 판으로 바꾸고 다시 빌드·실행한다. 거북이가 가운데서 맴도는지, <code>Near wall! Turning back.</code>이 첫 줄부터 찍히는지 본다. Ctrl+C를 눌러 <code>Segmentation fault</code>가 나는지 본다.</li>
-      <li><strong>(3분)</strong> 받은 코드 판에서 <strong>한 곳만</strong> 고친다 — 발행자 전역 변수 줄을 지우고 <code>main</code> 안에서 <code>auto cmd_pub = …</code>로 만든다. 다시 빌드해 Ctrl+C를 누르고 <code>Segmentation fault</code>가 사라졌는지 본다. 거북이는 여전히 맴돈다 — <code>spin</code>이 없는 것은 그대로이기 때문이다. 끝나면 v2 완성본으로 되돌린다.</li>
+      <li><strong>(2분)</strong> 거북이가 달리는 중에 터미널 1에서 Ctrl+C를 누른다. 거북이가 바로 서는지, 1초쯤 더 가다가 서는지 본다(⑥절).
+        그리고 <code>colcon info turtle_drive</code>의 <code>build:</code>·<code>run:</code>에 <code>turtlesim</code>이 있는지 본다.</li>
     </ol>
 
     <p class="boxtitle">이렇게 되면 성공이다</p>
@@ -1566,6 +1232,8 @@ ament_package()</code></pre></div>
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
     <dl>
+      <dt>std::this_thread::sleep_for(500ms) · rclcpp::ok()</dt>
+      <dd><code>sleep_for</code>는 <code>&lt;thread&gt;</code>의 함수로, 지금 실행 흐름을 그 시간만큼 <strong>그냥 멈춰 세운다.</strong> 그동안은 콜백도 부르지 않는다. <code>rclcpp::ok()</code>는 Ctrl+C 같은 끝내라는 신호가 아직 안 왔으면 <code>true</code>라서, <code>spin</code> 없이 직접 반복할 때 반복 조건으로 쓴다.</dd>
       <dt>rclcpp::spin_some(node)</dt>
       <dd>지금까지 도착해 있는 일만 처리하고 <strong>바로 돌아온다.</strong> <code>spin</code>이 「끝날 때까지 기다리며 처리」라면 이것은 「밀린 것만 한 번 처리」다. 그래서 <code>while</code> 안에서 부르면 콜백이 불리기는 한다 — 대신 주기를 지키고 끝낼 때를 살피는 일을 반복문이 다 떠맡는다.</dd>
     </dl>
@@ -1575,9 +1243,9 @@ ament_package()</code></pre></div>
   <div class="tablewrap">
   <table>
     <tr><th>고칠 것</th><th>오늘 어디서 했나</th><th>확인하는 법</th></tr>
-    <tr><td><code>rclcpp::Node</code>를 상속한 클래스, 구독자와 마지막 자세는 멤버로 (전역 변수 없이)</td><td>⑤ · ⑧ 검사 4</td><td>파일에 전역 변수가 없다</td></tr>
-    <tr><td><code>while</code> + <code>spin_some</code> + <code>sleep_for</code> 대신 타이머 500 ms와 <code>spin</code></td><td>③ · ⑧ 검사 1·2</td><td><code>main</code>이 <code>init → make_shared → spin → shutdown</code> 네 줄이다. 로그 줄의 시각 간격이 0.5초다</td></tr>
-    <tr><td>콜백 인자를 <code>ConstSharedPtr</code>로, 「아직 못 받음」을 따로</td><td>⑤ · ⑧ 검사 3·5</td><td>turtlesim을 <strong>나중에</strong> 띄워도, 그 전에는 아무것도 안 찍히고 띄운 뒤부터 찍힌다</td></tr>
+    <tr><td><code>rclcpp::Node</code>를 상속한 클래스, 구독자와 마지막 자세는 멤버로 (전역 변수 없이)</td><td>⑤ · ⑥ 검사 4</td><td>파일에 전역 변수가 없다</td></tr>
+    <tr><td><code>while</code> + <code>spin_some</code> + <code>sleep_for</code> 대신 타이머 500 ms와 <code>spin</code></td><td>③ · ⑥ 검사 1·2</td><td><code>main</code>이 <code>init → make_shared → spin → shutdown</code> 네 줄이다. 로그 줄의 시각 간격이 0.5초다</td></tr>
+    <tr><td>콜백 인자를 <code>ConstSharedPtr</code>로, 「아직 못 받음」을 따로</td><td>⑤ · ⑥ 검사 3·5</td><td>turtlesim을 <strong>나중에</strong> 띄워도, 그 전에는 아무것도 안 찍히고 띄운 뒤부터 찍힌다</td></tr>
     <tr><td>큐 깊이 1000과 <code>11.0889f</code></td><td>② · ⑤</td><td>깊이는 10. 창 크기는 이름 붙은 멤버 하나에만 있다</td></tr>
     <tr><td><code>std::cout</code> 대신 노드의 로그</td><td>19회 ⑥</td><td>줄 머리에 <code>[INFO] … [wall_watch]</code>가 붙는다</td></tr>
     <tr><td>의존성 두 곳</td><td>⑥</td><td><code>colcon info turtle_watch</code>의 <code>build:</code>·<code>run:</code>에 <code>turtlesim</code>이 보인다 (지금은 <code>ament_cmake rclcpp</code>뿐이다)</td></tr>
@@ -1602,7 +1270,7 @@ ament_package()</code></pre></div>
     <tr><td>내 노드의 발행을 확인할 때</td><td>"ros2 topic hz, echo --once, info -v 를 차례로 돌려서 원문을 붙여 줘. 요약하지 말고 average rate, 값, Publisher 쪽 Node name 만 굵게."</td></tr>
     <tr><td>의존성을 맞출 때</td><td>"src/*.cpp 의 #include 에서 ROS 패키지를 뽑아 package.xml &lt;depend&gt;, find_package, target_link_libraries 세 곳에 있는지 표로 보여 줘. 고치지는 말고."</td></tr>
     <tr><td>구독 콜백이 안 불리는 것 같을 때</td><td>"구독 콜백 첫 줄에 RCLCPP_INFO 로 확인용 로그를 한 줄 넣어 줘. 그리고 main 에 rclcpp::spin 이 있는지, while 반복이 spin 을 막고 있지 않은지 짚어 줘."</td></tr>
-    <tr><td>받은 노드를 고칠 때</td><td>⑧절의 여섯 기준 프롬프트 — 고치기 전에 어긋나는 줄을 표로 먼저</td></tr>
+    <tr><td>받은 노드를 고칠 때</td><td>"이 turtle_drive.cpp 를 아래 일곱 기준으로 검사해서 어긋나는 줄을 표로 먼저 보여 줘. 고치는 것은 표를 본 뒤에. ① main 에 rclcpp::spin 이 있나 ② 주기 일은 create_wall_timer 인가 ③ 구독 콜백 인자가 ConstSharedPtr 인가 ④ 발행자·구독자·상태가 노드 클래스의 멤버인가(전역 변수 없이) ⑤ 자세를 아직 못 받았을 때를 따로 다루나 ⑥ 큐 깊이는 10, 숫자는 이름 붙은 멤버인가 ⑦ #include 한 ROS 패키지가 package.xml 과 CMakeLists.txt 양쪽에 있나"</td></tr>
     <tr><td>Ctrl+C 때 오류가 날 때</td><td>"Ctrl+C 때 이 오류가 나. 전역 변수나 static 으로 둔 ROS 객체(발행자·구독자·노드)가 있는지 찾고, 있으면 노드 클래스의 멤버로 옮겨 줘."</td></tr>
   </table>
   </div>
@@ -1614,7 +1282,7 @@ ament_package()</code></pre></div>
   <!-- ── ✅ 점검 ── -->
   <h2 id="check">✅ 오늘의 점검</h2>
   <ul class="check">
-    <li><input type="checkbox" id="c1"><label for="c1">「콜백은 <code>spin</code> 안에서만 불린다」를 받은 코드의 증상(구독은 붙었는데 콜백이 안 불림)으로 설명할 수 있나?</label></li>
+    <li><input type="checkbox" id="c1"><label for="c1">「콜백은 <code>spin</code> 안에서만 불린다」로 <code>spin</code> 없이 <code>while</code>로 도는 코드의 증상(구독은 붙었는데 콜백이 안 불림)을 설명할 수 있나?</label></li>
     <li><input type="checkbox" id="c2"><label for="c2">발행자·구독자·타이머를 왜 노드의 <strong>멤버</strong>로 들고 있는지, 전역 변수에 두면 Ctrl+C 때 무슨 일이 생기는지 말할 수 있나?</label></li>
     <li><input type="checkbox" id="c3"><label for="c3">콜백 인자 네 모양(값·<code>const &amp;</code>·<code>SharedPtr</code>·<code>ConstSharedPtr</code>) 중 무엇을 왜 쓰는지 말할 수 있나?</label></li>
     <li><input type="checkbox" id="c4"><label for="c4"><code>ros2 topic hz</code>·<code>echo --once</code>·<code>info -v</code>로 내 노드의 발행을 코드의 숫자(<code>500ms</code>, 노드 이름)와 로그 줄에 맞춰 봤나?</label></li>
@@ -1659,7 +1327,7 @@ timer_ = this-&gt;create_wall_timer(500ms, std::bind(&amp;TurtleDrive::on_timer,
     <p>
       ROS 1 시절의 기본 예제(talker)는 <code>ros::Rate loop_rate(10); while (ros::ok()) { …; ros::spinOnce(); loop_rate.sleep(); }</code> 모양이었다.
       반복문 안에서 <code>spinOnce</code>(오늘 연습문제의 <code>spin_some</code>에 해당)로 콜백을 처리하고, <code>Rate</code>로 주기를 맞췄다.
-      이 모양의 예제가 오랫동안 인터넷에 쌓였고, ROS 2로 옮기면서 <code>spinOnce</code>만 빠뜨린 것이 ⑧절의 받은 코드다.
+      이 모양의 예제가 오랫동안 인터넷에 쌓였고, ROS 2로 옮기면서 <code>spinOnce</code>만 빠뜨리면 ⑥절 검사 1번의 코드가 된다.
       ROS 2의 기본 예제는 타이머와 <code>spin</code>으로 짜여 있다. 받은 코드에 <code>Rate</code>나 <code>while (rclcpp::ok())</code>가 보이면 ROS 1 버릇이 섞였을 수 있다고 읽으면 된다(17회 「ROS 1 방식이 섞여 있으면」).
     </p>
   </details>
