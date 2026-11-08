@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HW4 · ROS 2 토픽 명령어로 rviz2와 메시지 주고받기 | 로봇공학</title>
+<script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}})();</script>
+<link rel="stylesheet" href="../../../assets/site.css">
+<link rel="stylesheet" href="../../assets/lecture.css">
+</head>
+<body>
+<header class="bar">
+  <div class="barin wide">
+    <a class="up" href="../../index.html" aria-label="로봇공학 회차 목록"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a>
+    <nav class="crumb" aria-label="경로">
+      <a href="../../../index.html">강의자료</a><span class="sep">/</span><a href="../../index.html">로봇공학</a><span class="sep">/</span><span class="here">HW4 · ROS 2 토픽 명령어</span>
+    </nav>
+    <span class="spacer"></span>
+    <div class="seg" data-theme-switch role="group" aria-label="밝기">
+      <button type="button" data-mode="auto" aria-pressed="true">자동</button>
+      <button type="button" data-mode="light" aria-pressed="false">밝게</button>
+      <button type="button" data-mode="dark" aria-pressed="false">어둡게</button>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="toc-title">이 과제</div>
+  <a href="#why">왜 이걸 하나요</a>
+  <a href="#before">시작하기 전에</a>
+  <a href="#taskA">작업 A — 받기</a>
+  <a href="#taskB">작업 B — 보내기</a>
+  <a href="#ai-log">AI와의 대화 요약</a>
+  <a href="#form">제출 양식</a>
+  <a href="#submit">제출 방법과 점수</a>
+</nav>
+
+<main>
+
+  <div class="lec-no">로봇공학 · HW4</div>
+  <h1>ROS 2 토픽 명령어로 rviz2와 메시지 주고받기</h1>
+
+  <!-- ▼ 마감일은 이 한 줄만 고치면 된다 ▼ -->
+  <p class="deadline">📅 제출 마감 — <strong>2026년 11월 22일 (일) 23:59</strong></p>
+
+  <div class="questions">
+    <span class="lab">이 과제가 묻는 것</span>
+    <ol>
+      <li>처음 보는 토픽에 메시지를 보내려면 <strong>무엇부터 차례로</strong> 쳐 봐야 할까요?</li>
+      <li><code>ros2 interface show</code>의 들여쓰기는 <code>ros2 topic pub</code>에 적는 <strong>중괄호와 어떻게 이어질까요?</strong></li>
+      <li>노드 하나가 같은 토픽을 <strong>보내기도 하고 받기도</strong> 할 수 있을까요?</li>
+    </ol>
+  </div>
+
+  <h2 id="why">왜 이걸 하나요</h2>
+  <p>
+    <a href="../../robotics_18.html">ROS 명령어 수업</a>에서는 turtlesim으로 명령어를 하나씩 쳐 봤습니다.
+    그때는 토픽 이름도 타입도 자료에 미리 적혀 있었습니다.
+    그런데 실제로 로봇을 다루다 보면 <strong>이름도 타입도 모르는 토픽</strong>을 자주 만납니다.
+  </p>
+  <p>
+    그럴 때 쓰는 순서는 늘 같습니다. <strong>목록에서 이름과 타입을 찾고 → 그 타입의 구조를 보고 →
+    받아 보고 → 보내 봅니다.</strong> 이번 과제는 turtlesim이 아닌 다른 프로그램, <strong>rviz2</strong>를 상대로
+    이 순서를 혼자 한 바퀴 돌아 보는 것입니다.
+  </p>
+  <div class="interp">
+    <strong>새로 배우는 명령은 없습니다.</strong> 18회에 나온 <code>node list</code> · <code>topic list -t</code> ·
+    <code>interface show</code> · <code>topic echo</code> · <code>topic pub</code> · <code>topic info -v</code>만 씁니다.
+    다음 과제에서는 이 토픽들을 코드로 주고받게 되는데, 그 전에 터미널에서 한 번 손에 익혀 두면 덜 헤맵니다.
+  </div>
+
+  <h2 id="before">시작하기 전에</h2>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 rviz2 — ROS 데이터를 그림으로 보여 주는 프로그램</p>
+    <p>
+      <strong>rviz2</strong>는 토픽으로 오가는 위치·라이다 점·지도 같은 것을 3차원 화면에 그려 주는 ROS 2 기본 도구입니다.
+      16회에 설치한 <code>ros-jazzy-desktop</code>에 이미 들어 있습니다. 제대로 쓰는 법은 <strong>22회</strong>에서 다룹니다.
+      이번 과제에서는 <strong>버튼 하나(2D Goal Pose)와 Add 버튼 하나</strong>만 씁니다.
+    </p>
+    <p>
+      rviz2는 이 과제에서 <strong>두 가지 역할</strong>을 합니다. 화면을 누르면 토픽으로 메시지를 <strong>보내고</strong>,
+      토픽으로 메시지가 오면 화면에 화살표로 <strong>그립니다.</strong>
+    </p>
+  </div>
+
+  <p><strong>터미널을 세 개</strong> 엽니다. 이 과제가 끝날 때까지 셋 다 닫지 않습니다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>터미널</th><th>무엇을 띄워 두나</th></tr>
+    <tr><td>1</td><td><code>rviz2</code> — 창이 뜨면 이 터미널은 그대로 둡니다</td></tr>
+    <tr><td>2</td><td>목록·구조를 본 뒤 <code>ros2 topic echo</code>를 <strong>계속 켜 둡니다</strong></td></tr>
+    <tr><td>3</td><td><code>ros2 topic pub</code> · <code>ros2 topic info</code>를 칩니다</td></tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    rviz2 창 왼쪽에 주황색으로 <strong><code>Global Status: Warn</code></strong>과 <code>No tf data</code>가 보입니다.
+    <strong>이 과제에서는 그대로 두어도 됩니다.</strong> 좌표계를 서로 이어 주는 TF는 26회에서 다룹니다.
+  </div>
+
+  <h2 id="taskA">작업 A — 받기 (rviz2 → 터미널)</h2>
+  <div class="tablewrap">
+  <table>
+    <tr><th>#</th><th>터미널</th><th>무엇을 합니다</th></tr>
+    <tr><td>①</td><td>1</td><td><code>rviz2</code>를 칩니다. 격자가 깔린 창이 뜹니다</td></tr>
+    <tr><td>②</td><td>2</td><td><code>ros2 node list</code> — rviz2가 어떤 이름의 노드로 떠 있나 봅니다</td></tr>
+    <tr><td>③</td><td>2</td><td><code>ros2 topic list -t</code> — 목록에서 <code>/goal_pose</code>와 <strong>그 옆 대괄호 안의 타입</strong>을 찾습니다</td></tr>
+    <tr><td>④</td><td>2</td><td><code>ros2 interface show <em>(③에서 찾은 타입)</em></code> — 이 타입의 메시지에 어떤 필드가 들어 있나 봅니다</td></tr>
+    <tr><td>⑤</td><td>2</td><td><code>ros2 topic echo /goal_pose</code>를 칩니다. <strong>아무것도 안 나옵니다.</strong> 끄지 말고 그대로 둡니다</td></tr>
+    <tr><td>⑥</td><td>rviz2</td><td>위쪽 도구 막대의 <strong>2D Goal Pose</strong>를 누르고, 격자 위에서 <strong>마우스를 누른 채 한쪽으로 끌었다가 놓습니다.</strong>
+      <strong>두 번</strong>, 자리와 방향을 바꿔서 합니다. 터미널 2에 메시지가 하나씩 찍힙니다</td></tr>
+  </table>
+  </div>
+
+  <figure>
+    <img src="../../assets/img/hw4_goal_pose.png" width="760"
+         alt="rviz2 창. 위쪽 도구 막대의 2D Goal Pose 버튼에 1번 표시, 격자 위 한 점에 2번 표시가 있고 그 점에서 초록 화살표가 오른쪽 위로 뻗어 있다. 왼쪽 Displays의 주황색 Global Status: Warn 줄에 「그대로 둔다」는 표시가 있다">
+    <figcaption>⑥에서 누르는 곳. <strong>① 2D Goal Pose</strong>를 누르고, <strong>② 격자 위 한 점에서 누른 채 끌었다가 놓습니다.</strong>
+      끄는 동안 초록 화살표가 따라오고, <strong>놓는 순간</strong> 메시지가 한 번 나갑니다. 왼쪽의 주황색 경고는 그대로 둡니다.</figcaption>
+  </figure>
+
+  <div class="box trap">
+    <div class="boxtitle">⚠️ ⑤에서 아무것도 안 나오는 것이 정상입니다</div>
+    <p>
+      ③의 목록에 <code>/goal_pose</code>가 있다는 것은 <strong>누군가 그 이름으로 보내겠다고 해 둔 것</strong>일 뿐입니다
+      (<a href="../../robotics_18.html#echo">ROS 명령어 자료 ③절</a>).
+      메시지가 실제로 나가는 때는 ⑥에서 버튼으로 화면을 찍는 순간입니다.
+    </p>
+  </div>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 ⑥의 출력에서 처음 보는 것</p>
+    <dl>
+      <dt><code>frame_id: map</code></dt>
+      <dd>이 위치가 <strong>어느 좌표계 기준인지</strong>를 적은 이름입니다(17회 <code>header.frame_id</code>).
+          rviz2 왼쪽 위 <code>Fixed Frame</code> 칸의 값이 <code>map</code>이라서 그 이름이 들어갑니다.</dd>
+      <dt><code>orientation</code>의 <code>x</code> · <code>y</code> · <code>z</code> · <code>w</code></dt>
+      <dd>화살표가 <strong>어느 방향을 보는지</strong>를 네 개의 숫자로 적은 것입니다(쿼터니언이라고 합니다).
+          이 수업에서는 계산하지 않습니다. 작업 B에서 <strong>받은 값을 그대로 옮겨 쓰기만</strong> 합니다.
+          ④의 출력에서 <code>w</code> 옆에만 <code>1</code>이 붙어 있는데, 이것이 <strong>적지 않았을 때 들어가는 기본값</strong>입니다.
+          그래서 작업 B-②처럼 <code>orientation</code>을 안 적고 보내면 <code>w=1.0</code>(돌지 않은 방향)이 들어갑니다.</dd>
+    </dl>
+  </div>
+
+  <h2 id="taskB">작업 B — 보내기 (터미널 → rviz2)</h2>
+  <p>이번에는 거꾸로, 터미널에서 <code>/goal_pose</code>로 메시지를 보내 rviz2 화면에 화살표를 띄웁니다. <strong>터미널 2의 <code>echo</code>는 켜 둔 채로</strong> 합니다.</p>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>#</th><th>터미널</th><th>무엇을 합니다</th></tr>
+    <tr><td>①</td><td>rviz2</td><td>왼쪽 아래 <strong>Add</strong> → 위쪽 <strong>By topic</strong> 탭 → <code>/goal_pose</code> 아래의 <strong>Pose</strong> → <strong>OK</strong>.
+      왼쪽 목록에 <code>Pose</code>가 생깁니다. 이제 rviz2가 <code>/goal_pose</code>를 <strong>받아서 그립니다</strong></td></tr>
+    <tr><td>②</td><td>3</td><td>표 아래의 명령을 그대로 칩니다. rviz2에 <strong>빨간 화살표</strong>가 나타나면 <strong>rviz2 창을 그림으로 남깁니다</strong></td></tr>
+    <tr><td>③</td><td>3</td><td><strong>내 값으로 보냅니다.</strong> <code>position</code>의 <code>x</code> · <code>y</code>는 여러분이 정하고(②와 다른 값),
+      <code>orientation</code>에는 작업 A-⑥에서 받은 메시지 하나의 <code>x</code> · <code>y</code> · <code>z</code> · <code>w</code>를 <strong>그대로 옮겨</strong> 넣습니다.
+      화살표가 그때 끌었던 방향을 향하면 됩니다. <strong>rviz2 창을 그림으로 남깁니다</strong></td></tr>
+    <tr><td>④</td><td>3</td><td><code>ros2 topic info /goal_pose -v</code> — 지금 이 토픽을 <strong>누가 보내고 누가 받는지</strong> 봅니다</td></tr>
+  </table>
+  </div>
+
+  <figure>
+    <img src="../../assets/img/hw4_add_pose.png" width="760"
+         alt="rviz2 창 왼쪽 아래의 Add 버튼에 1번, 열린 대화상자의 By topic 탭에 2번, /goal_pose 아래 Pose 줄에 3번, OK 버튼에 4번 표시가 있다">
+    <figcaption>①에서 누르는 곳. <strong>① Add → ② By topic → ③ <code>/goal_pose</code> 아래의 Pose → ④ OK</strong>.
+      By topic 탭에는 <strong>지금 있는 토픽 중 rviz2가 그릴 수 있는 것</strong>만 나옵니다.</figcaption>
+  </figure>
+
+  <p>②에서 칠 명령:</p>
+<pre class="lang-sh"><code>ros2 topic pub --once /goal_pose geometry_msgs/msg/PoseStamped '{header: {frame_id: map}, pose: {position: {x: 2.0, y: 1.0}}}'</code></pre>
+
+  <figure>
+    <img src="../../assets/img/hw4_pose_arrow.png" width="760"
+         alt="rviz2 창. 왼쪽 Displays에 새로 생긴 Pose 줄이 표시되어 있고, 격자 가운데 원점에서 왼쪽 아래로 떨어진 자리에 빨간 화살표가 하나 그려져 있다">
+    <figcaption>②를 보낸 뒤의 화면. 격자 한 칸이 1이고, 가운데가 <strong>원점 (0, 0)</strong>입니다.
+      <code>orientation</code>을 안 적었으므로 화살표는 <strong>x축 방향</strong>을 봅니다.
+      ②와 ③에서 <strong>이 창을 그림으로 남겨</strong> 보고서에 붙입니다.</figcaption>
+  </figure>
+
+  <div class="box trap">
+    <div class="boxtitle">⚠️ <code>header: {frame_id: map}</code>을 빼면 화살표가 안 바뀝니다 — 오류도 안 납니다</div>
+    <p>
+      터미널에는 <code>publishing #1:</code>이 정상으로 찍히고, 메시지도 분명히 나갑니다.
+      그런데 rviz2는 <strong>어느 좌표계 기준인지 적혀 있지 않은 위치</strong>를 그리지 않고 넘깁니다.
+      ③에서 화살표가 그대로라면 <code>frame_id</code>부터 확인해 보세요.
+    </p>
+  </div>
+
+  <div class="interp">
+    <strong>③의 값은 작업 A-④의 <code>interface show</code> 출력을 보고 적습니다.</strong>
+    들여 쓴 줄이 한 겹 안쪽이면 중괄호도 한 겹 안쪽입니다(<a href="../../robotics_18.html#pub">ROS 명령어 자료 ⑥절</a>).
+    <code>Failed to populate field</code>가 나오면 필드 이름이나 감싸는 자리가 다른 것입니다.
+    <strong>②를 보내면 터미널 2의 <code>echo</code>에도 같은 메시지가 찍힙니다.</strong> 받는 쪽이 둘이라서 그렇습니다.
+  </div>
+
+  <h2 id="ai-log">AI와의 대화 요약</h2>
+  <p>
+    명령이 무슨 뜻인지, 출력의 어느 줄을 봐야 하는지 막히면 <strong>AI에게 물어봐도 됩니다.</strong>
+    그 대화는 다른 과제처럼 <strong>요약해서 보고서 맨 뒤(C절)에 붙입니다.</strong>
+    세션을 닫기 전에 아래 글을 그대로 보내고, 출력을 <strong>고치지 않고 그대로</strong> 붙여 넣습니다.
+    세션을 여러 번 열었으면 세션마다 받아 이어 붙입니다.
+  </p>
+  <div class="copyform">
+    <button onclick="copyPrompt(this)">복사</button>
+<pre><code>이 세션을 끝내기 전에 지금까지의 대화를 아래 규칙대로 정리해 줘.
+- 내가 보낸 메시지는 요약하지 말고 순서대로 원문 그대로 적어. 한 글자도 바꾸지 마.
+- 네 대답은 중간 과정(탐색·시도·되묻기)을 빼고, 그 질문에 실제로 알려 준 것만 두세 줄로 요약해.
+  네가 직접 실행한 명령이 있으면 그 명령을 그대로 적어.
+- 대화 순서대로 번호를 붙여 아래 형식으로 써. 이 형식 밖의 말은 붙이지 마.
+
+### 1
+**나:** (원문 그대로)
+**AI:** (알려 준 것 · 실행한 명령 요약)
+
+### 2
+**나:** …
+**AI:** …</code></pre>
+  </div>
+  <div class="interp">
+    <strong>명령은 여러분이 직접 칩니다.</strong> AI가 대신 쳐 준 출력을 붙이면 퀴즈에서 묻는 화면을 직접 보지 못하게 됩니다.
+    AI를 쓰지 않았으면 C절에 「쓰지 않았다」와, 막혔을 때 무엇을 보고 풀었는지 두 줄을 적으면 됩니다.
+  </div>
+
+  <h2 id="form">제출 양식</h2>
+  <p class="readme-first">
+    아래 <strong>「복사」 버튼</strong>을 누르면 양식이 통째로 복사됩니다.
+    보고서에 붙여 넣고 <strong>빈 칸을 채우면</strong> 됩니다.
+  </p>
+  <p>
+    칸 안에는 <strong>친 명령과 화면에 나온 것을 통째로</strong> 붙여 넣습니다.
+    <strong>고르거나 다듬지 마세요.</strong> 그림은 rviz2 창 두 장뿐입니다. 괄호 안 안내 글은 지웁니다.
+  </p>
+
+  <div class="copyform">
+    <button onclick="copyPrompt(this)">복사</button>
+<pre><code># HW4 제출 — 이름 ______  학번 ______
+
+## A. 받기 (rviz2 → 터미널)
+
+### A-1. 노드와 토픽 목록 (지시 ②③)
+```
+여기에 친 명령과 화면에 나온 것을 그대로 붙여 넣습니다
+```
+
+### A-2. 메시지 구조 (지시 ④)
+```
+
+```
+
+### A-3. rviz2가 보낸 메시지 두 개 (지시 ⑤⑥)
+```
+
+```
+
+
+## B. 보내기 (터미널 → rviz2)
+
+### B-1. 터미널에서 보내기 (지시 ②)
+```
+
+```
+여기에 화살표가 보이는 rviz2 창 그림을 붙입니다
+
+**pub 명령에서 position 을 pose: {…} 안에 넣은 이유 — A-2 출력의 어디를 보고 알았는지 한 줄:**
+
+
+### B-2. 내 값으로 보내기 (지시 ③)
+```
+
+```
+여기에 화살표가 보이는 rviz2 창 그림을 붙입니다
+
+### B-3. 누가 보내고 누가 받나 (지시 ④)
+```
+
+```
+
+**Publisher 와 Subscription 이 각각 어느 노드인지 한 줄:**
+
+
+## C. AI와의 대화 요약
+
+(세션을 끝내기 전에 「AI와의 대화 요약」의 프롬프트를 보내고, 받은 출력을 고치지 않고 그대로 붙입니다. 세션이 여럿이면 이어 붙입니다.
+AI를 쓰지 않았으면 그렇게 적고, 막혔을 때 무엇을 보고 풀었는지 두 줄)
+
+### 1
+**나:**
+**AI:**
+</code></pre>
+  </div>
+
+  <div class="interp">
+    <strong>명령과 출력은 그림이 아니라 글자로 붙여 넣으세요.</strong>
+    터미널에서 드래그해 복사하면 됩니다. 그림으로 찍으면 흐려서 안 읽히고,
+    무엇보다 <strong>여러분이 다시 찾아보기 어렵습니다.</strong> (rviz2 창 두 장만 그림입니다)
+  </div>
+
+  <h2 id="submit">제출 방법과 점수</h2>
+  <p>
+    채운 보고서를 <strong>PDF 한 개</strong>로 만들어 LMS에 올립니다.
+    파일 이름은 <strong><code>HW4_이름_학번.pdf</code></strong>로,
+    <code>HW4_홍길동_20251234.pdf</code>처럼 자기 이름과 학번을 넣으면 됩니다.
+  </p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>무엇</th><th>점수</th><th>어떻게 봅니다</th></tr>
+    <tr><td>제출</td><td><strong>10점</strong></td><td>기한 안에 냈으면 받습니다</td></tr>
+    <tr><td>보고서</td><td><strong>25점</strong></td><td>양식의 칸이 채워져 있는지, 한 줄 답 두 개가 맞는 방향인지, AI와의 대화 요약이 붙어 있는지를 봅니다</td></tr>
+    <tr><td>확인 퀴즈</td><td><strong>15점</strong></td><td>제출 후 다음 수업 시간에 짧게 봅니다. 객관식이고 <strong>정답은 그 자리에서 공개합니다</strong></td></tr>
+    <tr><td><strong>합계</strong></td><td><strong>50점</strong></td><td></td></tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    퀴즈는 <strong>여러분이 이 과제에서 직접 친 명령과 본 화면</strong>에서 나옵니다.
+  </div>
+
+  <footer>
+    로봇공학 · 순천향대학교 전자정보공학과 ·
+    같이 볼 것: <a href="../../robotics_17.html">ROS 2 통신 개념</a> ·
+    <a href="../../robotics_18.html">ROS 명령어</a>
+  </footer>
+</main>
+</div>
+
+<script src="../../../assets/site.js" defer></script>
+</body>
+</html>
