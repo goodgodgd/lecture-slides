@@ -34,7 +34,7 @@
   <a href="#map">④ 14회의 지도 — 세 부</a>
   <a href="#classic">⑤ 왜 고전 SLAM인가</a>
   <a href="#ai">⑥ 코드를 맡기면 무엇이 남나</a>
-  <a href="#ai" class="sub">신호등 · 코드와 프롬프트</a>
+  <a href="#ai" class="sub">6-1 신호등 · 6-2 코드와 프롬프트</a>
   <a href="#verify">⑦ 맞는지 어떻게 아나</a>
   <a href="#see">⑧ 눈으로 본다 — 시각화</a>
   <a href="#env">⑨ 환경과 데이터</a>
@@ -127,32 +127,32 @@
     <p class="later">이 이름들은 뒤 회차에서 하나씩 다시 나옵니다. 지금은 대충 감만 잡아 두면 됩니다.</p>
   </div>
 
-  <h3>안에 무엇이 들어가나 — 여섯 덩이</h3>
+  <h3>1-1 안에 무엇이 들어가나 — 여섯 덩이</h3>
 
   <p>
     한 번에 통째로 만들지 않는다. <strong>덩이를 하나씩 만들고, 매번 「이제 이건 돌아간다」를 하나씩 늘린다.</strong>
     아래가 학기 끝에 손에 남을 구조다.
   </p>
 
-  <pre>영상 · IMU  →  ① 데이터 소스  →  ② 특징 추적  ─┐
-                                                 ├→  ④ 백엔드  →  ⑤ 루프 클로징  →  궤적 · 지도
-                    ③ IMU 사전적분  ─────────────┘
-                                        ⑥ 평가 (ATE · 일관성)</pre>
+  <pre>영상 · IMU  →  (1) 데이터 소스  →  (2) 특징 추적  ─┐
+                                                     ├→  (4) 백엔드  →  (5) 루프 클로징  →  궤적 · 지도
+                    (3) IMU 사전적분  ───────────────┘
+                                            (6) 평가 (ATE · 일관성)</pre>
 
   <div class="tablewrap">
   <table class="summary-table">
     <tr><th style="width:8%">덩이</th><th>하는 일</th><th>언제 만드나</th></tr>
-    <tr><td>①</td><td><strong>데이터 소스</strong> — 파일을 읽어 영상과 IMU를 시각 맞춰 내놓는다</td><td>1~2회</td></tr>
-    <tr><td>②</td><td><strong>특징 추적</strong> — 영상에서 「무엇이 무엇과 같은 점인가」를 뽑는다</td><td>5·9회</td></tr>
-    <tr><td>③</td><td><strong>IMU 사전적분</strong> — 영상 사이의 IMU를 하나로 묶는다</td><td>10회</td></tr>
-    <tr><td>④</td><td><strong>백엔드</strong> — 관측을 모아 위치와 지도를 푼다. 초기화(11회)와 슬라이딩 윈도우(12회)</td><td>이론 7·8회 · 구현 11·12회</td></tr>
-    <tr><td>⑤</td><td><strong>루프 클로징</strong> — 예전에 온 곳을 알아보고 과거를 고친다</td><td>13회</td></tr>
-    <tr><td>⑥</td><td><strong>평가</strong> — 얼마나 맞는지 숫자로 낸다</td><td>내내</td></tr>
+    <tr><td>(1)</td><td><strong>데이터 소스</strong> — 파일을 읽어 영상과 IMU를 시각 맞춰 내놓는다</td><td>1~2회</td></tr>
+    <tr><td>(2)</td><td><strong>특징 추적</strong> — 영상에서 「무엇이 무엇과 같은 점인가」를 뽑는다</td><td>5·9회</td></tr>
+    <tr><td>(3)</td><td><strong>IMU 사전적분</strong> — 영상 사이의 IMU를 하나로 묶는다</td><td>10회</td></tr>
+    <tr><td>(4)</td><td><strong>백엔드</strong> — 관측을 모아 위치와 지도를 푼다. 초기화(11회)와 슬라이딩 윈도우(12회)</td><td>이론 7·8회 · 구현 11·12회</td></tr>
+    <tr><td>(5)</td><td><strong>루프 클로징</strong> — 예전에 온 곳을 알아보고 과거를 고친다</td><td>13회</td></tr>
+    <tr><td>(6)</td><td><strong>평가</strong> — 얼마나 맞는지 숫자로 낸다</td><td>내내</td></tr>
   </table>
   </div>
 
   <div class="interp">
-    <strong>해석:</strong> ④번 백엔드에는 <strong>두 가지 틀</strong>이 있다 — 필터와 최적화.
+    <strong>해석:</strong> (4) 백엔드에는 <strong>두 가지 틀</strong>이 있다 — 필터와 최적화.
     둘 다 7·8회에서 식으로 세우고, 구현은 VINS-Mono처럼 최적화(슬라이딩 윈도우)로 한다.
     프론트엔드는 그대로 두고 <strong>백엔드만 갈아 끼우면 같은 데이터에서 두 틀을 숫자로 비교</strong>할 수 있다.
     <strong>그러려면 처음부터 갈아 끼워지도록 설계돼 있어야 한다</strong> —
@@ -189,7 +189,7 @@
     아래 표는 EuRoC 데이터에서 실제로 재 본 값이다.
   </p>
 
-  <h3>실패 ① — IMU만 적분하면</h3>
+  <h3>2-1 첫 번째 실패 — IMU만 적분하면</h3>
 
   <p>
     가속도를 두 번 적분하면 위치가 나온다. 원리는 맞다. 결과는 이렇다.
@@ -219,7 +219,7 @@
     왜 이렇게 되는지는 10회에서 숫자로 따라가 본다.
   </div>
 
-  <h3>실패 ② — 카메라만 쓰면</h3>
+  <h3>2-2 두 번째 실패 — 카메라만 쓰면</h3>
 
   <p>
     영상만으로도 궤적을 만들 수 있다. 다만 <strong>크기를 정하지 못한다.</strong>
@@ -260,7 +260,7 @@
     ⑦절에서 나올 「어느 모듈이 범인인지 가르는 일」이 가능한 것은 이 구조 덕분이다.
   </div>
 
-  <h3>IMU의 첫 줄 — 이 한 줄이 10회의 절반이다</h3>
+  <h3>3-1 IMU의 첫 줄 — 이 한 줄이 10회의 절반이다</h3>
 
   <p><span class="mono">imu0/data.csv</span>의 첫 줄은 이렇게 생겼다.</p>
 
@@ -314,7 +314,7 @@
     보이지도 않고 크지도 않은 값 하나가 <strong>10초 만에 방을 스무 번 벗어나게 만든다.</strong>
   </div>
 
-  <h3>정답에 무엇이 들어 있나 — 자세만이 아니다</h3>
+  <h3>3-2 정답에 무엇이 들어 있나 — 자세만이 아니다</h3>
 
   <p><span class="mono">state_groundtruth_estimate0/data.csv</span>의 열은 17개다.</p>
 
@@ -441,7 +441,7 @@ b_w_RS_S_{x,y,z}, b_a_RS_S_{x,y,z}</pre>
     「정상적으로 동작합니다」라는 문장뿐이다. 그 문장은 SLAM에서 아무 정보도 아니다 — ⑥절.
   </div>
 
-  <h3>신호등 — 자료 곳곳에 붙어 있는 표시</h3>
+  <h3>6-1 신호등 — 자료 곳곳에 붙어 있는 표시</h3>
 
   <p>
     매 회차 절 제목 옆에 배지가 하나씩 붙어 있습니다.
@@ -462,7 +462,7 @@ b_w_RS_S_{x,y,z}, b_a_RS_S_{x,y,z}</pre>
   </table>
   </div>
 
-  <h3>자료에 코드가 나올 때와 프롬프트가 나올 때</h3>
+  <h3>6-2 자료에 코드가 나올 때와 프롬프트가 나올 때</h3>
 
   <p>
     강의자료에 코드를 그대로 싣는 경우와, 코드 대신 <strong>그 코드를 받아내는 의뢰서</strong>를 싣는 경우가 있습니다.
@@ -562,7 +562,7 @@ b_w_RS_S_{x,y,z}, b_a_RS_S_{x,y,z}</pre>
   </table>
   </div>
 
-  <h3>쓰는 도구</h3>
+  <h3>8-1 쓰는 도구</h3>
 
   <div class="tablewrap">
   <table>
@@ -574,7 +574,7 @@ b_w_RS_S_{x,y,z}, b_a_RS_S_{x,y,z}</pre>
   </table>
   </div>
 
-  <h3>그리는 길은 두 개입니다</h3>
+  <h3>8-2 그리는 길은 두 개입니다</h3>
 
   <p>
     쓰임이 다릅니다. 둘 다 만들어 두고 번갈아 씁니다.
@@ -671,7 +671,7 @@ b_w_RS_S_{x,y,z}, b_a_RS_S_{x,y,z}</pre>
     </p>
   </div>
 
-  <h3>데이터를 받는 법</h3>
+  <h3>9-1 데이터를 받는 법</h3>
 
   <div class="tablewrap">
   <table>
@@ -735,8 +735,8 @@ b_w_RS_S_{x,y,z}, b_a_RS_S_{x,y,z}</pre>
     <strong>[단위]</strong> 시각은 <span class="mono">int64_t</span> 나노초로만 다뤄 줘.
     <strong>double 초로 바꾸지 말아 줘.</strong><br><br>
     <strong>[검증]</strong> 아래 두 시험을 같이 써 줘.
-    ① 영상 한 장 사이의 IMU 샘플 수를 세어 <strong>10이 아니면 실패</strong>로 출력하는 시험.
-    ② 첫 영상보다 앞선 시각에서 <span class="mono">groundTruth()</span>가
+    (1) 영상 한 장 사이의 IMU 샘플 수를 세어 <strong>10이 아니면 실패</strong>로 출력하는 시험.
+    (2) 첫 영상보다 앞선 시각에서 <span class="mono">groundTruth()</span>가
     <span class="mono">nullopt</span>를 주는지 보는 시험.
     <strong>실패하면 어느 프레임에서 몇 개가 나왔는지 함께 찍어 줘.</strong><br><br>
     <strong>[함정]</strong> 정답 궤적은 첫 영상보다 <strong>1.040초 늦게</strong> 시작한다.<br><br>

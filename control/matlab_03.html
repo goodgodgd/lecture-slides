@@ -34,14 +34,14 @@
   <a href="#summary">한 장 요약</a>
   <a href="#s1">① 데이터 준비 — 시간 축과 함수값</a>
   <a href="#s2">② 선 그래프 — plot</a>
-  <a class="sub" href="#s2-spec">선 스타일 지정자</a>
+  <a class="sub" href="#s2-spec">2-1 선 스타일 지정자</a>
   <a href="#s3">③ 그래프 서식 — title · xlabel · axis · legend</a>
   <a href="#s4">④ 그림 창 관리 — hold · figure</a>
   <a href="#s5">⑤ 창 나누기 — subplot</a>
   <a href="#s6">⑥ 2차 시스템 계단응답을 식으로 그리기</a>
-  <a class="sub" href="#s6-peak">그래프에서 값 읽기 — max</a>
+  <a class="sub" href="#s6-peak">6-1 그래프에서 값 읽기 — max</a>
   <a href="#s7">⑦ 반복문 — for</a>
-  <a class="sub" href="#s7-pz">극점과 응답을 나란히</a>
+  <a class="sub" href="#s7-pz">7-1 극점과 응답을 나란히</a>
   <a href="#s8">⑧ 그림 저장 — exportgraphics</a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
@@ -184,7 +184,7 @@ plot(x, y1, x, y2)</code></pre>
     <figcaption><code>plot(x, y1, x, y2)</code> — 진동하는 \(\cos x\)(파랑)와 줄어드는 \(e^{-x}\)(주황). ⑥절의 계단응답 식이 바로 이 둘의 곱 모양이다.</figcaption>
   </figure>
 
-  <h3 id="s2-spec">선 스타일 지정자 — <code>'r.'</code> · <code>'k--'</code></h3>
+  <h3 id="s2-spec">2-1 선 스타일 지정자 — <code>'r.'</code> · <code>'k--'</code></h3>
   <p>각 (x, y) 쌍 뒤에 글자 몇 개로 된 <strong>선 스타일 지정자</strong>(line spec)를 붙이면 색·표시·선 모양을 고를 수 있다.</p>
 
 <!-- mcode 03/b04_plot_style -->
@@ -562,7 +562,7 @@ grid on</code></pre>
     </dl>
   </div>
 
-  <h3 id="s6-peak">그래프에서 값 읽기 — <code>max</code></h3>
+  <h3 id="s6-peak">6-1 그래프에서 값 읽기 — <code>max</code></h3>
   <p>
     그래프를 보고 「대략 1.4쯤 올라간다」고 말할 수 있다. 그 값을 <strong>숫자로</strong> 뽑으려면 데이터 벡터 <code>y</code>에서 가장 큰 값을 찾으면 된다.
     그 값이 어느 시간에 나왔는지도 함께 찾는다.
@@ -725,7 +725,7 @@ zeta = 0.9 : 그래프 최대초과 0.2%, 식 0.2%</code></pre>
     </dl>
   </div>
 
-  <h3 id="s7-pz">극점과 응답을 나란히 — <code>subplot</code> + <code>for</code></h3>
+  <h3 id="s7-pz">7-1 극점과 응답을 나란히 — <code>subplot</code> + <code>for</code></h3>
   <p>
     2회에서 극점의 위치가 \(\zeta\), \(\omega_n\)을 담고 있다는 것을 봤다. 같은 \(\zeta\)의 <strong>극점(왼쪽)</strong>과 <strong>계단응답(오른쪽)</strong>을 같은 색으로 나란히 그려 본다.
     한 반복 안에서 <code>subplot</code>으로 칸을 오가며 그린다.

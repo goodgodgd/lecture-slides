@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>4회 · Git ① 혼자 쓰는 git — 열흘 만에 만든 도구 | 로봇공학</title>
+<title>4회 · Git 1편 혼자 쓰는 git — 열흘 만에 만든 도구 | 로봇공학</title>
 <script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}})();</script>
 <link rel="stylesheet" href="../assets/site.css">
 <link rel="stylesheet" href="assets/lecture.css">
@@ -13,7 +13,7 @@
   <div class="barin wide">
     <a class="up" href="index.html" aria-label="로봇공학 회차 목록"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a>
     <nav class="crumb" aria-label="경로">
-      <a href="../index.html">강의자료</a><span class="sep">/</span><a href="index.html">로봇공학</a><span class="sep">/</span><span class="here">4회 · Git ① 혼자 쓰는 git — 열흘 만에 만든 도구</span>
+      <a href="../index.html">강의자료</a><span class="sep">/</span><a href="index.html">로봇공학</a><span class="sep">/</span><span class="here">4회 · Git 1편 혼자 쓰는 git — 열흘 만에 만든 도구</span>
     </nav>
     <span class="spacer"></span>
     <div class="navlinks"><a class="navlink" href="robotics_03.html" aria-label="이전 회차"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a><a class="navlink" href="robotics_05.html" aria-label="다음 회차"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></a></div>
@@ -36,7 +36,7 @@
   <a href="#status">⑤ <code>git status</code> — 지금 무엇이 바뀌어 있나</a>
   <a href="#addcommit">⑥ <code>git add</code>와 <code>git commit</code></a>
   <a href="#push">⑦ <code>git push</code> — 토큰을 쓰는 자리</a>
-  <a href="#push" class="sub"><code>origin/main</code>은 서버가 아니다</a>
+  <a href="#push" class="sub">7-3 <code>origin/main</code>은 서버가 아니다</a>
   <a href="#concept">⑧ 파일의 상태와 저장소의 세 자리</a>
   <a href="#ignore">⑨ <code>.gitignore</code> — 올리지 않을 것</a>
   <a href="#size">⑩ 커밋 하나의 크기 — 사람이 정한다</a>
@@ -50,7 +50,7 @@
 <main>
 
   <div class="lec-no">로봇공학 · 4회 · 1부 환경과 도구</div>
-  <h1>Git ① 혼자 쓰는 git — 열흘 만에 만든 도구</h1>
+  <h1>Git 1편 혼자 쓰는 git — 열흘 만에 만든 도구</h1>
 
   <div class="questions">
     <span class="lab">오늘 답할 질문</span>
@@ -109,7 +109,7 @@
   <details class="story" id="story">
     <summary>화가 나서 만든 도구가 열흘 만에 세계 표준이 됐다 (15분 · 건너뛰어도 됩니다)</summary>
 
-    <h4>① 2002년 — 수천 명이 고치는 프로젝트에 쓸 도구가 없었다</h4>
+    <h4>(1) 2002년 — 수천 명이 고치는 프로젝트에 쓸 도구가 없었다</h4>
     <p>
       리눅스 커널은 전 세계 수천 명이 동시에 고치는 프로젝트다.
       당시 무료로 쓸 수 있던 버전 관리 도구들은 <strong>그 규모를 감당하지 못했다.</strong>
@@ -118,7 +118,7 @@
       조건이 하나 붙었다 — <strong>경쟁 도구를 만들지 말 것.</strong>
     </p>
 
-    <h4>② 2005년 — 조건이 깨지고, 하루아침에 도구가 사라졌다</h4>
+    <h4>(2) 2005년 — 조건이 깨지고, 하루아침에 도구가 사라졌다</h4>
     <p>
       커널 개발자 앤드루 트리젤(Andrew Tridgell)이 비트키퍼와 통신하는 도구를 직접 만들었다.
       회사는 곧바로 <strong>무료 라이선스를 거둬들였다.</strong>
@@ -126,7 +126,7 @@
       대안을 찾을 시간이 없었고, 마음에 드는 대안도 없었다.
     </p>
 
-    <h4>③ 여기가 재미있다 — 나흘 만에 자기 자신을 관리하기 시작했다</h4>
+    <h4>(3) 여기가 재미있다 — 나흘 만에 자기 자신을 관리하기 시작했다</h4>
     <p>
       토르발스는 <strong>2005년 4월 3일</strong> 새 도구를 짜기 시작했다.
       <strong>4월 7일</strong>, 그 도구는 <strong>자기 자신의 소스 코드를 그 도구로 관리하기 시작했다.</strong>
@@ -145,13 +145,13 @@
       그리고 그 농담을 20년째 아무도 못 바꾸고 있다.
     </p>
 
-    <h4>④ 그래서 지금 우리 손에 남은 것</h4>
+    <h4>(4) 그래서 지금 우리 손에 남은 것</h4>
     <p>
       그 열흘의 목표는 딱 두 가지였다 — <strong>빠를 것, 그리고 망가진 데이터를 즉시 알아챌 것.</strong>
       <strong>git의 명령어가 이상하고 예쁘지 않은 이유가 이것이다. 속도와 무결성 말고 나머지를 포기하고 만든 도구다.</strong>
     </p>
 
-    <h4>⑤ 숫자로 확인한다</h4>
+    <h4>(5) 숫자로 확인한다</h4>
     <div class="tablewrap">
     <table>
       <tr><th>무엇</th><th>숫자</th><th>어디서 확인했나</th></tr>
@@ -174,7 +174,7 @@ $ git commit -m "콘 트랙 주행 노드 뼈대 추가"
       나중에 누가 무엇을 왜 넣었는지 되짚을 수 있다.
     </p>
 
-    <h4>⑥ 출처</h4>
+    <h4>(6) 출처</h4>
     <ul class="src">
       <li>Linux Journal, "A Git Origin Story" — 비트키퍼 라이선스 회수 경위</li>
       <li>Wikipedia — Git (2005년 4월 3일 개발 시작, 4월 7일 self-hosting, 12월 21일 1.0.0)</li>
@@ -235,20 +235,20 @@ $ git commit -m "콘 트랙 주행 노드 뼈대 추가"
     그래서 <strong>인터넷에 사본을 하나 둔다.</strong> 그 자리를 빌려주는 곳이 GitHub이다.
   </p>
 
-  <h3>2-1. 가입하고 저장소를 하나 만든다</h3>
+  <h3>2-1 가입하고 저장소를 하나 만든다</h3>
 
   <div class="tablewrap">
   <table class="summary-table">
     <tr><th>순서</th><th>무엇을 하나</th><th>내가 확인하는 것 ✅</th></tr>
-    <tr><td>①</td><td><a href="https://github.com/">github.com</a>에서 가입한다</td><td>로그인한 화면이 나오나</td></tr>
-    <tr><td>②</td><td>초록색 <strong>New</strong> 버튼 → 저장소 이름 <code>sch-robotics</code></td><td>이름 칸에 초록색 체크가 뜨나</td></tr>
-    <tr><td>③</td><td><strong><code>Add a README file</code>을 꼭 켠다</strong></td><td>체크 상자가 켜져 있나</td></tr>
-    <tr><td>④</td><td><strong>Create repository</strong></td><td>저장소 화면에 <code>README.md</code> 한 줄이 보이나</td></tr>
+    <tr><td>(1)</td><td><a href="https://github.com/">github.com</a>에서 가입한다</td><td>로그인한 화면이 나오나</td></tr>
+    <tr><td>(2)</td><td>초록색 <strong>New</strong> 버튼 → 저장소 이름 <code>sch-robotics</code></td><td>이름 칸에 초록색 체크가 뜨나</td></tr>
+    <tr><td>(3)</td><td><strong><code>Add a README file</code>을 꼭 켠다</strong></td><td>체크 상자가 켜져 있나</td></tr>
+    <tr><td>(4)</td><td><strong>Create repository</strong></td><td>저장소 화면에 <code>README.md</code> 한 줄이 보이나</td></tr>
   </table>
   </div>
 
   <div class="box trap">
-    <div class="boxtitle">⚠️ ③의 README 체크를 빼지 않는다</div>
+    <div class="boxtitle">⚠️ (3)의 README 체크를 빼지 않는다</div>
     <p>
       이걸 켜면 GitHub이 <strong>커밋 하나가 들어 있는 저장소</strong>를 만들어 준다.
       끄면 <strong>완전히 빈 저장소</strong>가 되는데, 빈 저장소는 받아 와도 아무것도 없어서
@@ -256,7 +256,7 @@ $ git commit -m "콘 트랙 주행 노드 뼈대 추가"
     </p>
   </div>
 
-  <h3>2-2. 토큰을 만든다 — <strong>비밀번호로는 올릴 수 없다</strong></h3>
+  <h3>2-2 토큰을 만든다 — <strong>비밀번호로는 올릴 수 없다</strong></h3>
 
   <p>
     GitHub은 <strong>2021년부터 계정 비밀번호로 올리는 것을 막았다.</strong>
@@ -267,13 +267,13 @@ $ git commit -m "콘 트랙 주행 노드 뼈대 추가"
   <div class="tablewrap">
   <table class="summary-table">
     <tr><th>순서</th><th>어디를 누르나</th></tr>
-    <tr><td>①</td><td>오른쪽 위 <strong>내 사진</strong> → <strong>Settings</strong></td></tr>
-    <tr><td>②</td><td>왼쪽 목록 맨 아래 <strong>Developer settings</strong></td></tr>
-    <tr><td>③</td><td><strong>Personal access tokens</strong> → <strong>Tokens (classic)</strong></td></tr>
-    <tr><td>④</td><td><strong>Generate new token (classic)</strong></td></tr>
-    <tr><td>⑤</td><td>이름(Note)은 <code>wsl-robotics</code>, 기간(Expiration)은 <strong>학기 끝 이후</strong>로</td></tr>
-    <tr><td>⑥</td><td>권한(Scopes)에서 <strong><code>repo</code> 하나만</strong> 켠다</td></tr>
-    <tr><td>⑦</td><td><strong>Generate token</strong> → <strong>나온 글자를 복사해 둔다</strong></td></tr>
+    <tr><td>(1)</td><td>오른쪽 위 <strong>내 사진</strong> → <strong>Settings</strong></td></tr>
+    <tr><td>(2)</td><td>왼쪽 목록 맨 아래 <strong>Developer settings</strong></td></tr>
+    <tr><td>(3)</td><td><strong>Personal access tokens</strong> → <strong>Tokens (classic)</strong></td></tr>
+    <tr><td>(4)</td><td><strong>Generate new token (classic)</strong></td></tr>
+    <tr><td>(5)</td><td>이름(Note)은 <code>wsl-robotics</code>, 기간(Expiration)은 <strong>학기 끝 이후</strong>로</td></tr>
+    <tr><td>(6)</td><td>권한(Scopes)에서 <strong><code>repo</code> 하나만</strong> 켠다</td></tr>
+    <tr><td>(7)</td><td><strong>Generate token</strong> → <strong>나온 글자를 복사해 둔다</strong></td></tr>
   </table>
   </div>
 
@@ -294,7 +294,7 @@ $ git commit -m "콘 트랙 주행 노드 뼈대 추가"
     <div class="prompt"><button onclick="copyPrompt(this)">복사</button> GitHub에 push 하려는데 인증에서 막혔어. 지금 내 환경에서 가장 간단한 방법으로 인증을 설정해 줘. <strong>토큰을 화면에 그대로 찍지는 마.</strong> 설정이 끝나면 내가 확인할 명령 한 줄을 알려 줘.</div>
   </div>
 
-  <h3>2-3. git이 깔려 있는지 본다</h3>
+  <h3>2-3 git이 깔려 있는지 본다</h3>
   <p>WSL 우분투에는 보통 이미 들어 있다. 3회에서 배운 대로 <strong>확인부터 한다.</strong></p>
 
 <pre><code>$ git --version
@@ -309,13 +309,13 @@ git version 2.43.0</code></pre>
   <!-- ══════════ ③ config ══════════ -->
   <h2 id="config">③ <code>git config</code> — 누가 고쳤는지 남긴다 <span class="badge b-green">🟢 맡긴다</span></h2>
 
-  <h3>무엇이 궁금한가</h3>
+  <h3>3-1 무엇이 궁금한가</h3>
   <p>
     git은 변경마다 <strong>누가 했는지</strong>를 같이 적는다. 그래서 <strong>이름과 메일을 한 번 등록해 둬야</strong>
     첫 커밋이 된다. 안 하면 커밋할 때 오류가 난다.
   </p>
 
-  <h3>그때 이걸 친다</h3>
+  <h3>3-2 그때 이걸 친다</h3>
 <pre><code>$ git config --global user.name "Hong Gildong"
 $ git config --global user.email "gildong@example.com"
 $ git config --global init.defaultBranch main
@@ -348,14 +348,14 @@ init.defaultbranch=main</code></pre>
   <!-- ══════════ ④ clone ══════════ -->
   <h2 id="clone">④ <code>git clone</code> — 원격 저장소를 내 컴퓨터로 <span class="badge b-green">🟢 맡긴다</span></h2>
 
-  <h3>무엇이 궁금한가</h3>
+  <h3>4-1 무엇이 궁금한가</h3>
   <p>
     ②절에서 만든 저장소는 <strong>GitHub 서버에 있다.</strong> 이걸 <strong>원격(remote) 저장소</strong>라고 한다.
     실제 작업은 내 컴퓨터에서 하므로 <strong>사본을 하나 받아 와야</strong> 한다.
     받아 온 쪽을 <strong>로컬(local) 저장소</strong>라고 한다.
   </p>
 
-  <h3>그때 이걸 친다</h3>
+  <h3>4-2 그때 이걸 친다</h3>
   <p>주소는 GitHub 저장소 화면의 초록색 <strong>Code</strong> 버튼 → <strong>HTTPS</strong>에서 복사한다.</p>
 
 <pre><code>$ cd ~/robotics
@@ -393,13 +393,13 @@ README.md</code></pre>
   <!-- ══════════ ⑤ status ══════════ -->
   <h2 id="status">⑤ <code>git status</code> — 지금 무엇이 바뀌어 있나 <span class="badge b-lv">[요구]</span></h2>
 
-  <h3>무엇이 궁금한가</h3>
+  <h3>5-1 무엇이 궁금한가</h3>
   <p>
     <strong>무언가를 하기 전에 언제나 이것부터 본다.</strong>
     받아 온 직후에는 아무것도 안 바뀌었을 테니, <strong>「깨끗한 상태」가 어떻게 보이는지</strong>부터 눈에 넣는다.
   </p>
 
-  <h3>그때 이걸 친다</h3>
+  <h3>5-2 그때 이걸 친다</h3>
 <pre><code>$ git status
 On branch main
 Your branch is up to date with 'origin/main'.
@@ -434,14 +434,14 @@ nothing added to commit but untracked files present (use "git add" to track)</co
   <!-- ══════════ ⑥ add / commit ══════════ -->
   <h2 id="addcommit">⑥ <code>git add</code>와 <code>git commit</code> — 고르고, 굳힌다 <span class="badge b-red">🔴 사람이 판단</span></h2>
 
-  <h3>무엇이 궁금한가</h3>
+  <h3>6-1 무엇이 궁금한가</h3>
   <p>
     왜 두 단계인가? <strong>「고친 것」과 「이번에 기록할 것」이 같지 않기 때문이다.</strong>
     파일 다섯 개를 고쳤어도 <strong>그중 둘만 한 덩어리로 묶고 싶을 때가 있다.</strong>
     <code>add</code>가 <strong>고르는 명령</strong>이고 <code>commit</code>이 <strong>굳히는 명령</strong>이다.
   </p>
 
-  <h3>그때 이걸 친다</h3>
+  <h3>6-2 그때 이걸 친다</h3>
 <pre><code>$ git add hello.py
 $ git status
 On branch main
@@ -493,14 +493,14 @@ $ git log --oneline
   <!-- ══════════ ⑦ push ══════════ -->
   <h2 id="push">⑦ <code>git push</code> — 토큰을 쓰는 자리 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
-  <h3>무엇이 궁금한가</h3>
+  <h3>7-1 무엇이 궁금한가</h3>
   <p>
     지금까지 굳힌 것은 <strong>전부 내 노트북 안에만 있다.</strong>
     <code>git log</code>에는 보이지만 <strong>GitHub 웹 화면에는 아직 없다.</strong>
     올려야 사본이 생긴다.
   </p>
 
-  <h3>그때 이걸 친다</h3>
+  <h3>7-2 그때 이걸 친다</h3>
 <pre><code>$ git push origin main
 Username for 'https://github.com': 내계정
 Password for 'https://내계정@github.com': ← 여기에 ②절의 토큰을 붙여 넣는다
@@ -542,7 +542,7 @@ fatal: Authentication failed for 'https://github.com/…'</code></pre>
     </dl>
   </div>
 
-  <h3><code>origin/main</code>은 서버가 아니다 — <strong>내가 마지막으로 받아 온 사본</strong>이다</h3>
+  <h3>7-3 <code>origin/main</code>은 서버가 아니다 — <strong>내가 마지막으로 받아 온 사본</strong>이다</h3>
 
   <p>
     ⑤절의 <code>git status</code>에 <code>Your branch is up to date with 'origin/main'</code>이라는 줄이 있었다.
@@ -639,7 +639,7 @@ fatal: Authentication failed for 'https://github.com/…'</code></pre>
       <code>add</code>가 두 줄에서 출발하는 것을 본다 — 새 파일도 고친 파일도 같은 명령으로 담는다.</figcaption>
   </figure>
 
-  <h3>무엇이 달라졌는지 줄 단위로 본다 — <code>git diff</code></h3>
+  <h3>8-1 무엇이 달라졌는지 줄 단위로 본다 — <code>git diff</code></h3>
   <p>이미 추적 중인 파일을 고치면 <strong>어느 줄이 달라졌는지</strong>까지 볼 수 있다.</p>
 
 <pre><code>$ echo "print('one more')" &gt;&gt; hello.py
@@ -661,13 +661,13 @@ index b555dab..f2106c4 100644
   <!-- ══════════ ⑨ .gitignore ══════════ -->
   <h2 id="ignore">⑨ <code>.gitignore</code> — 올리지 않을 것을 적어 둔다 <span class="badge b-green">🟢 맡긴다</span></h2>
 
-  <h3>무엇이 궁금한가</h3>
+  <h3>9-1 무엇이 궁금한가</h3>
   <p>
     소스를 빌드하면 <strong>결과물 폴더가 생긴다.</strong> 이건 <strong>소스에서 언제든 다시 만들 수 있는 것</strong>이라
     올릴 이유가 없다. 그런데 <code>git status</code>는 그것도 꼬박꼬박 알려 준다.
   </p>
 
-  <h3>그때 이걸 친다</h3>
+  <h3>9-2 그때 이걸 친다</h3>
 <pre><code>$ mkdir -p build &amp;&amp; echo "binary" &gt; build/out
 $ git status --short
 ?? build/
@@ -727,7 +727,7 @@ $ git status --short
     <strong>이 절만은 대신해 줄 수 없다.</strong>
   </p>
 
-  <h3>무엇이 궁금한가</h3>
+  <h3>10-1 무엇이 궁금한가</h3>
   <p>
     지금 <code>.gitignore</code>를 새로 만들었고 <code>hello.py</code>에 줄도 하나 더 넣었다.
     <strong>둘 다 안 담긴 상태다.</strong> <code>git add .</code> 한 번이면 편한데, 그래도 되나?
@@ -760,7 +760,7 @@ d081e4d 빌드 결과는 올리지 않는다
 
   <p><strong>영어로 쓸 필요는 없다.</strong> 중요한 것은 언어가 아니라 <strong>목록을 훑었을 때 무엇을 한 커밋인지 읽히는가</strong>이다.</p>
 
-  <h3>에이전트에게 시키면 🤖</h3>
+  <h3>10-2 에이전트에게 시키면 🤖</h3>
   <div class="prompt"><button onclick="copyPrompt(this)">복사</button> 지금 변경사항을 <strong>논리적으로 나눠서</strong> 커밋해 줘. 메시지는 무엇을 왜 바꿨는지 한국어로 써 줘. <strong>커밋하기 전에 어떻게 나눌지 안을 먼저 보여 줘.</strong></div>
   <p>
     <strong>"나눌 안을 먼저 보여 줘"</strong>가 이 프롬프트의 값어치다.
@@ -780,7 +780,7 @@ d081e4d 빌드 결과는 올리지 않는다
         만든 뒤 초록색 <strong>Code</strong> 버튼에서 <strong>HTTPS 주소를 복사</strong>한다.
       </li>
       <li><strong>토큰을 만든다.</strong> (5분)
-        <br>②절의 일곱 단계를 따른다. 권한은 <code>repo</code> 하나만 켠다.
+        <br>2-2의 일곱 단계를 따른다. 권한은 <code>repo</code> 하나만 켠다.
         <strong>나온 글자를 안전한 곳에 복사해 둔다.</strong> 이 창을 닫으면 다시 못 본다.
       </li>
       <li><strong>이름과 메일을 등록하고 받아 온다.</strong> (5분)
@@ -801,7 +801,7 @@ git status</code></pre>
       </li>
       <li><strong>커밋하고 올린다.</strong> (7분)
         <br><code>git commit -m "첫 프로그램 hello.py 추가"</code> 뒤 <code>git push origin main</code>.
-        <strong>비밀번호 자리에 ②의 토큰을 붙여 넣는다.</strong> 화면에 글자가 안 보이는 것이 정상이다.
+        <strong>비밀번호 자리에 ②절의 토큰을 붙여 넣는다.</strong> 화면에 글자가 안 보이는 것이 정상이다.
         <strong>GitHub 웹 화면을 새로 고쳐 <code>hello.py</code>가 보이는지 눈으로 확인한다.</strong>
       </li>
       <li><strong><code>.gitignore</code>를 만들고 커밋을 둘로 나눈다.</strong> (8분)
@@ -814,9 +814,9 @@ git status</code></pre>
       </li>
     </ol>
     <p><strong>이렇게 되면 성공이다.</strong>
-      <br>① GitHub 웹 화면에 <code>hello.py</code>와 <code>.gitignore</code>가 보이고 <strong><code>build</code>는 없다.</strong>
-      <br>② <code>git log --oneline</code>에 <strong>내가 만든 커밋이 각각 한 줄씩</strong> 보인다.
-      <br>③ <strong>커밋 메시지가 서로 다른 일을 말하고 있다.</strong> ③이 안 되면 6단계를 다시 한다.</p>
+      <br>(1) GitHub 웹 화면에 <code>hello.py</code>와 <code>.gitignore</code>가 보이고 <strong><code>build</code>는 없다.</strong>
+      <br>(2) <code>git log --oneline</code>에 <strong>내가 만든 커밋이 각각 한 줄씩</strong> 보인다.
+      <br>(3) <strong>커밋 메시지가 서로 다른 일을 말하고 있다.</strong> (3)이 안 되면 6단계를 다시 한다.</p>
     <details>
       <summary><strong>5단계에서 <code>Authentication failed</code>가 나오면 여기를 본다</strong></summary>
       <p>
@@ -941,7 +941,7 @@ git status</code></pre>
 
   <footer>
     로봇공학 · 순천향대학교 전자정보공학과 ·
-    다음 회차: <a href="robotics_05.html">5회 Git ② 여럿이 쓰는 git</a>
+    다음 회차: <a href="robotics_05.html">5회 Git 2편 여럿이 쓰는 git</a>
   </footer>
 </main>
 </div>

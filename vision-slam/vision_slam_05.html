@@ -32,17 +32,17 @@
   <div class="toc-title">이 회차 목차</div>
   <a href="#summary">한 장 요약 — 알 수 있는 것과 없는 것</a>
   <a href="#constraint">① 대응점 하나가 주는 제약</a>
-  <a href="#constraint" class="sub">에피폴라 제약을 유도한다</a>
+  <a href="#constraint" class="sub">1-1 에피폴라 제약을 유도한다</a>
   <a href="#EF">② E와 F의 성질</a>
-  <a href="#EF" class="sub">특이값이 왜 \((\sigma,\sigma,0)\)인가</a>
+  <a href="#EF" class="sub">2-1 특이값이 왜 \((\sigma,\sigma,0)\)인가</a>
   <a href="#solve">③ E를 푸는 법</a>
-  <a href="#solve" class="sub">8점 — \(V_A\)의 마지막 열</a>
-  <a href="#solve" class="sub">Hartley 정규화와 되돌리기</a>
-  <a href="#solve" class="sub">5점 · RANSAC 반복 횟수</a>
+  <a href="#solve" class="sub">3-1 8점 — \(V_A\)의 마지막 열</a>
+  <a href="#solve" class="sub">3-3 Hartley 정규화와 되돌리기</a>
+  <a href="#solve" class="sub">3-5 5점 · 3-6 RANSAC 반복 횟수</a>
   <a href="#decompose">④ E에서 자세를 꺼낸다</a>
   <a href="#scale">⑤ 스케일 모호성 <span class="mono">🔴</span></a>
   <a href="#tri">⑥ 삼각측량 — 두 방법</a>
-  <a href="#tri" class="sub">네 해 중 하나 고르기 (\(Z&gt;0\))</a>
+  <a href="#tri" class="sub">6-3 네 해 중 하나 고르기 (\(Z&gt;0\))</a>
   <a href="#parallax">⑦ 시차 — 언제 잘 되고 언제 안 되나</a>
   <a href="#degenerate">⑧ 퇴화 조건과 homography</a>
   <a href="#prompt">🤖 의뢰서 — 두 시점 재구성</a>
@@ -124,7 +124,7 @@
       <strong>9회 매칭이 실제로 이 성질을 쓴다.</strong></figcaption>
   </figure>
 
-  <h3>제약을 유도한다 — 세 벡터가 한 평면에 있다</h3>
+  <h3>1-1 제약을 유도한다 — 세 벡터가 한 평면에 있다</h3>
 
   <p>
     유도의 뼈대는 한 줄이다 — <strong>「두 광선과 기선이 한 평면 위에 있다」</strong>는 사실을 식으로 쓰는 것이다.
@@ -282,7 +282,7 @@
   </table>
   </div>
 
-  <h3>왜 특이값 둘이 같고 하나가 0인가 — \(E\)의 정의에서 바로 나온다</h3>
+  <h3>2-1 왜 특이값 둘이 같고 하나가 0인가 — \(E\)의 정의에서 바로 나온다</h3>
 
   <p>
     위 표의 「랭크 2」와 「특이값 \((\sigma, \sigma, 0)\)」은 외워 둘 사실이 아니다.
@@ -394,7 +394,7 @@ x2ᵀ E x1      = -1.735e-18                   ← 정답 대응점에서 0이�
 
   <h2 id="solve">③ \(E\)를 푸는 법 <span class="badge b-green">맡긴다</span></h2>
 
-  <h3>8점 알고리즘 — 선형이라 간단하다</h3>
+  <h3>3-1 8점 알고리즘 — 선형이라 간단하다</h3>
 
   <p>
     제약식 \(\mathbf{x}_2^\top E\mathbf{x}_1 = 0\)은 \(E\)의 아홉 성분에 대해 <strong>선형</strong>이다.
@@ -455,7 +455,7 @@ x2ᵀ E x1      = -1.735e-18                   ← 정답 대응점에서 0이�
   \;\underbrace{\operatorname{vec}(E)}_{9\times1} = 0
   $$
 
-  <h3>여덟 쌍을 모아 푼다 — 어떤 행렬의 어느 열이 답인가</h3>
+  <h3>3-2 여덟 쌍을 모아 푼다 — 어떤 행렬의 어느 열이 답인가</h3>
 
   <p>
     위 행벡터를 대응점마다 한 줄씩 쌓는다. 여덟 쌍이면 행이 여덟 개이므로
@@ -569,7 +569,7 @@ x2ᵀ E x1      = -1.735e-18                   ← 정답 대응점에서 0이�
     </p>
   </div>
 
-  <h3>Hartley 정규화 — 어떤 식으로 옮기고, 푼 뒤에 어떻게 되돌리나</h3>
+  <h3>3-3 Hartley 정규화 — 어떤 식으로 옮기고, 푼 뒤에 어떻게 되돌리나</h3>
 
   <p>
     하는 일은 <strong>「평균을 0으로 옮기고, 원점에서의 평균 거리를 \(\sqrt2\)로 키운다」</strong> 두 줄이다.
@@ -613,7 +613,7 @@ x2ᵀ E x1      = -1.735e-18                   ← 정답 대응점에서 0이�
     마지막 행이 \((0,0,1)\)이라 <strong>동차좌표의 1이 1로 남는다</strong> — 이 점이 중요하다.
   </p>
 
-  <h3>정규화해서 푼 행렬은 \(E\)가 아니다 — 되돌려야 한다</h3>
+  <h3>3-4 정규화해서 푼 행렬은 \(E\)가 아니다 — 되돌려야 한다</h3>
 
   <p>
     이 질문을 꼭 짚어야 한다. <strong>정규화한 좌표로 풀면 나오는 것이 \(E\)인가?</strong> 아니다.
@@ -665,7 +665,7 @@ x2ᵀ E x1      = -1.735e-18                   ← 정답 대응점에서 0이�
     </p>
   </div>
 
-  <h3>5점 알고리즘 — 제약을 다 쓴다</h3>
+  <h3>3-5 5점 알고리즘 — 제약을 다 쓴다</h3>
 
   <p>
     자유도가 5이므로 <strong>다섯 쌍이면 충분</strong>하다.
@@ -677,7 +677,7 @@ x2ᵀ E x1      = -1.735e-18                   ← 정답 대응점에서 0이�
     그런데도 실전에서 5점을 쓴다. 이유는 다음 절에 있다.
   </p>
 
-  <h3>RANSAC — 왜 뽑는 점이 적을수록 유리한가</h3>
+  <h3>3-6 RANSAC — 왜 뽑는 점이 적을수록 유리한가</h3>
 
   <p>
     실제 데이터에는 <strong>잘못 짝지어진 대응점</strong>이 섞여 있다(9회).
@@ -791,7 +791,7 @@ x2ᵀ E x1      = -1.735e-18                   ← 정답 대응점에서 0이�
     부호가 어긋나 있으면 그 열만 뒤집으면 된다. <strong>공짜로 얻는 조건</strong>이다.
   </p>
 
-  <h3>이동 방향은 \(U\)의 마지막 열이다</h3>
+  <h3>4-1 이동 방향은 \(U\)의 마지막 열이다</h3>
 
   <p>
     ②절 끝에서 \(E^\top\mathbf{t} = \mathbf{0}\)을 봤다. <strong>\(\mathbf{t}\)가 \(E^\top\)의 영벡터</strong>라는 것이다.
@@ -826,7 +826,7 @@ x2ᵀ E x1      = -1.735e-18                   ← 정답 대응점에서 0이�
     <strong>네 개의 해 중 두 배가 여기서 나온다.</strong>
   </p>
 
-  <h3>회전도 두 가지가 나온다 — 그 둘을 적는 것이 \(W\)다</h3>
+  <h3>4-2 회전도 두 가지가 나온다 — 그 둘을 적는 것이 \(W\)다</h3>
 
   <p>
     남은 것은 \(R\)이다. 이쪽도 후보가 둘이고, 아래 3×3 행렬 \(W\) 하나로 둘을 적을 수 있다.
@@ -856,14 +856,14 @@ x2ᵀ E x1      = -1.735e-18                   ← 정답 대응점에서 0이�
       필요한 도구가 둘이다.
     </p>
     <p>
-      <strong>도구 ①</strong> — 회전행렬을 외적 행렬 안팎으로 옮기는 항등식.
+      <strong>도구 (1)</strong> — 회전행렬을 외적 행렬 안팎으로 옮기는 항등식.
       \(\det U = 1\)로 맞춰 뒀으므로 쓸 수 있다(3회 Adjoint와 같은 식이다).
     </p>
     $$
     [\,U\mathbf{a}\,]_\times = U\,[\mathbf{a}]_\times\,U^\top
     $$
     <p>
-      <strong>도구 ②</strong> — \(\hat{\mathbf{z}} = (0,0,1)^\top\)의 외적 행렬을 성분으로 써 보면
+      <strong>도구 (2)</strong> — \(\hat{\mathbf{z}} = (0,0,1)^\top\)의 외적 행렬을 성분으로 써 보면
       \(\Sigma\)와 \(W\)의 곱으로 <strong>정확히 갈라진다.</strong>
       \(W\)가 나온 자리가 이 한 줄이다.
     </p>
@@ -876,7 +876,7 @@ x2ᵀ E x1      = -1.735e-18                   ← 정답 대응점에서 0이�
     $$
     <p>
       \(\mathbf{t} = +\mathbf{u}_3 = U\hat{\mathbf{z}}\)인 경우부터 넣는다.
-      도구 ①로 \(U\)를 밖으로 빼고, 도구 ②로 \(\Sigma W\)로 갈아 쓴다.
+      도구 (1)로 \(U\)를 밖으로 빼고, 도구 (2)로 \(\Sigma W\)로 갈아 쓴다.
     </p>
     $$
     [\mathbf{t}]_\times
@@ -931,7 +931,7 @@ x2ᵀ E x1      = -1.735e-18                   ← 정답 대응점에서 0이�
     </p>
   </details>
 
-  <h3>네 후보 중 하나를 고르는 기준은 식 밖에 있다</h3>
+  <h3>4-3 네 후보 중 하나를 고르는 기준은 식 밖에 있다</h3>
 
   <p>
     네 후보 중 <strong>어느 것이 실제 자세인가.</strong>
@@ -1003,7 +1003,7 @@ x2ᵀ E x1      = -1.735e-18                   ← 정답 대응점에서 0이�
     당장은 배율을 하나 정해 두고 간다. 보통 <strong>\(\lVert\mathbf{t}\rVert = 1\)</strong>로 놓는다.
     그러면 지도의 단위가 「첫 두 프레임 사이 거리」가 된다. <strong>미터가 아니다.</strong>
     이 사실을 잊고 미터인 것처럼 평가하면 ATE가 이유 없이 크게 나온다 —
-    <strong>⑨절 의뢰서의 마지막 증상이 그것이다.</strong>
+    <strong>🤖 의뢰서의 마지막 증상이 그것이다.</strong>
   </p>
 
   <h2 id="tri">⑥ 삼각측량 — 두 직선의 교점을 찾는다</h2>
@@ -1033,7 +1033,7 @@ x2ᵀ E x1      = -1.735e-18                   ← 정답 대응점에서 0이�
     그래서 <strong>두 직선에 가장 가까운 점</strong>을 찾는 최소제곱 문제로 바꾼다.
   </p>
 
-  <h3>방법 ① 중점법 — 3차원 거리를 최소화한다</h3>
+  <h3>6-1 중점법 — 3차원 거리를 최소화한다</h3>
 
   <p>두 직선이 만난다고 두고 식을 세운 뒤, 해가 없으므로 최소제곱으로 푼다.</p>
 
@@ -1148,7 +1148,7 @@ x2ᵀ E x1      = -1.735e-18                   ← 정답 대응점에서 0이�
     ⑦절에서 깊이 오차 1 m를 얻는 것이 이 숫자의 다른 얼굴이다.
   </p>
 
-  <h3>방법 ② DLT — 투영식을 그대로 선형화한다</h3>
+  <h3>6-2 DLT — 투영식을 그대로 선형화한다</h3>
 
   <p>
     투영식은 \(\tilde{\mathbf{u}} \sim P\tilde{\mathbf{X}}\)다. <strong>동차좌표라 배율이 자유</strong>이므로
@@ -1277,7 +1277,7 @@ x2ᵀ E x1      = -1.735e-18                   ← 정답 대응점에서 0이�
       <strong>조건수를 재서 미리 걸러야 한다.</strong>
     </p>
   </div>
-  <h3>④절에서 미뤄 둔 것 — 네 개의 해 중 하나를 고른다</h3>
+  <h3>6-3 ④절에서 미뤄 둔 것 — 네 개의 해 중 하나를 고른다</h3>
 
   <p>
     ④절에서 후보 \((R, \mathbf{t})\)가 <strong>넷</strong> 나왔고, 고르는 기준이
@@ -1364,7 +1364,7 @@ x2ᵀ E x1      = -1.735e-18                   ← 정답 대응점에서 0이�
   <p>
     이제 \(\Delta u\)를 재는데 \(\sigma_{px}\)만큼 틀린다고 하자.
     <strong>\(\Delta u\)가 조금 흔들릴 때 \(Z\)가 얼마나 흔들리는지</strong>는 미분 한 번이다
-    (4회 ⑤절에서 야코비안을 구할 때와 같은 방식이다).
+    (4회 ④절에서 야코비안을 구할 때와 같은 방식이다).
   </p>
 
   $$
@@ -1391,7 +1391,7 @@ x2ᵀ E x1      = -1.735e-18                   ← 정답 대응점에서 0이�
   $$
 
   <p>
-    식의 모양이 4회 ⑤절의 야코비안과 같다 — <strong>\(Z^2\)이 위에 있다.</strong>
+    식의 모양이 4회 ④절의 야코비안과 같다 — <strong>\(Z^2\)이 위에 있다.</strong>
     거기서 「먼 점은 픽셀이 덜 움직인다」고 했던 것이 여기서 「먼 점은 깊이가 더 흔들린다」가 된다.
     같은 사실의 앞뒤다.
   </p>
@@ -1522,7 +1522,7 @@ x2ᵀ E x1      = -1.735e-18                   ← 정답 대응점에서 0이�
     </p>
   </div>
 
-  <h3>homography — 평면일 때 쓰는 다른 관계</h3>
+  <h3>8-1 homography — 평면일 때 쓰는 다른 관계</h3>
 
   <p>
     기선이 0이거나 장면이 평면이면 \(E\)를 못 푼다. 그런데 <strong>그때도 두 영상 사이에는 관계가 있다.</strong>
@@ -1632,21 +1632,21 @@ x2ᵀ E x1      = -1.735e-18                   ← 정답 대응점에서 0이�
     <strong>[규약]</strong> 첨부한 <span class="mono">conventions.md</span>를 따라 줘.
     자세는 <span class="mono">T_WC</span> 표기이고, 카메라는 <span class="mono">+z</span> 광축이다.<br><br>
     <strong>[인터페이스]</strong> 아래 두 함수를 만들어 줘.<br>
-    ① <span class="mono">Sophus::SE3d recoverPose(const vector&lt;Vector2d&gt;&amp; uv1, const vector&lt;Vector2d&gt;&amp; uv2, vector&lt;bool&gt;&amp; inlier)</span><br>
-    ② <span class="mono">optional&lt;Vector3d&gt; triangulate(const SE3d&amp; T_WC1, const SE3d&amp; T_WC2, const Vector2d&amp; uv1, const Vector2d&amp; uv2)</span><br>
-    ②는 <strong>시차가 임계값 아래면 <span class="mono">nullopt</span></strong>을 돌려줘 — 값을 지어내지 말아 줘.<br><br>
+    (1) <span class="mono">Sophus::SE3d recoverPose(const vector&lt;Vector2d&gt;&amp; uv1, const vector&lt;Vector2d&gt;&amp; uv2, vector&lt;bool&gt;&amp; inlier)</span><br>
+    (2) <span class="mono">optional&lt;Vector3d&gt; triangulate(const SE3d&amp; T_WC1, const SE3d&amp; T_WC2, const Vector2d&amp; uv1, const Vector2d&amp; uv2)</span><br>
+    (2)는 <strong>시차가 임계값 아래면 <span class="mono">nullopt</span></strong>을 돌려줘 — 값을 지어내지 말아 줘.<br><br>
     <strong>[참조]</strong> OpenCV <span class="mono">findEssentialMat</span> + <span class="mono">recoverPose</span>를 쓰되,
     <strong>삼각측량은 중점법으로 직접</strong> 짜 줘. 조건수를 보고 판정해야 하기 때문이다.<br><br>
     <strong>[검증]</strong> 아래 다섯 시험을 같이 써 줘. <strong>기준을 넘으면 실패로 출력한다.</strong><br>
-    ① <strong>무잡음 합성 데이터</strong>로 — 3차원 점 100개와 카메라 두 대를 직접 만들고,
+    (1) <strong>무잡음 합성 데이터</strong>로 — 3차원 점 100개와 카메라 두 대를 직접 만들고,
     정확한 픽셀 좌표를 계산해 넣는다. <strong>재구성 오차 <span class="mono">&lt; 1e-8</span></strong><br>
-    ② 같은 데이터에서 회전 오차 <span class="mono">&lt; 1e-8</span> rad, 이동 <strong>방향</strong> 오차 <span class="mono">&lt; 1e-8</span> rad
+    (2) 같은 데이터에서 회전 오차 <span class="mono">&lt; 1e-8</span> rad, 이동 <strong>방향</strong> 오차 <span class="mono">&lt; 1e-8</span> rad
     (<strong>크기는 비교하지 말아 줘</strong> — 원리적으로 모른다)<br>
-    ③ 두 카메라를 <strong>같은 위치</strong>에 두고 회전만 시켰을 때 <span class="mono">triangulate</span>가
+    (3) 두 카메라를 <strong>같은 위치</strong>에 두고 회전만 시켰을 때 <span class="mono">triangulate</span>가
     <strong>전부 <span class="mono">nullopt</span></strong>을 돌려주는가<br>
-    ④ 픽셀에 <span class="mono">σ = 1 px</span> 잡음을 넣었을 때 깊이 3 m·기선 20 cm에서
+    (4) 픽셀에 <span class="mono">σ = 1 px</span> 잡음을 넣었을 때 깊이 3 m·기선 20 cm에서
     <strong>오차가 0.10 m 근처</strong>인가 (표와 대조)<br>
-    ⑤ \(E\)의 <strong>특이값 앞 둘이 같고 셋째가 0</strong>인가 — 상대오차 <span class="mono">1e-6</span><br>
+    (5) \(E\)의 <strong>특이값 앞 둘이 같고 셋째가 0</strong>인가 — 상대오차 <span class="mono">1e-6</span><br>
     <strong>실패하면 어느 점에서 얼마나 벌어졌는지 함께 찍어 줘.</strong><br><br>
     <strong>[함정]</strong> <span class="mono">findEssentialMat</span>은 <strong>정규화 좌표</strong>를 받는다 —
     왜곡을 먼저 풀어야 한다(4회). \(E\)에서 나오는 자세 후보는 <strong>네 개</strong>이고
@@ -1658,12 +1658,12 @@ x2ᵀ E x1      = -1.735e-18                   ← 정답 대응점에서 0이�
 
   <p class="readme-first">받은 코드에서 확인할 것</p>
 
-  <pre>□ 시험 ①이 <strong>정말 무잡음</strong>인가 — 합성 픽셀에 반올림이 섞이지 않았는가
+  <pre>□ 시험 (1)이 <strong>정말 무잡음</strong>인가 — 합성 픽셀에 반올림이 섞이지 않았는가
 □ 이동 <strong>크기</strong>를 비교하는 시험이 있는가            ← 있으면 잘못된 시험이다
 □ 시차 임계값이 <strong>어디서 왔는지</strong> 적혀 있는가
 □ recoverPose 의 방향(T_C1C2 인가)이 주석에 적혀 있는가
 □ det R = 1 을 확인하는가                       ← 아니면 뒤집힌 해가 통과한다
-□ 시험 ③이 nullopt 를 <strong>실제로</strong> 확인하는가, 값이 크다는 것만 보는가</pre>
+□ 시험 (3)이 nullopt 를 <strong>실제로</strong> 확인하는가, 값이 크다는 것만 보는가</pre>
 
   <p>그리고 결과가 이상할 때.</p>
 
@@ -1693,10 +1693,10 @@ x2ᵀ E x1      = -1.735e-18                   ← 정답 대응점에서 0이�
     <strong>[인터페이스]</strong> 잡음 표준편차와 기선 길이를 <strong>인자로 받게</strong> 해 줘.
     <span class="mono">sigma_px = 0</span>이 <strong>기본값</strong>이어야 한다.<br><br>
     <strong>[검증]</strong> 생성기 자체를 시험하는 코드도 같이 써 줘.<br>
-    ① <span class="mono">sigma_px = 0</span>일 때, 만든 픽셀을 다시 역투영해 광선을 만들면
+    (1) <span class="mono">sigma_px = 0</span>일 때, 만든 픽셀을 다시 역투영해 광선을 만들면
     <strong>원래 3차원 점을 정확히 지나는가</strong> — 점과 광선의 거리 <span class="mono">&lt; 1e-12</span><br>
-    ② 화면 밖으로 나가거나 <span class="mono">Z &lt;= 0</span>인 점이 <strong>결과에 섞이지 않는가</strong><br>
-    ③ 요청한 기선 길이가 <strong>실제로 그 값인가</strong> — <span class="mono">1e-12</span><br><br>
+    (2) 화면 밖으로 나가거나 <span class="mono">Z &lt;= 0</span>인 점이 <strong>결과에 섞이지 않는가</strong><br>
+    (3) 요청한 기선 길이가 <strong>실제로 그 값인가</strong> — <span class="mono">1e-12</span><br><br>
     <strong>[함정]</strong> 픽셀 좌표를 <strong>정수로 반올림하지 말아 줘.</strong>
     반올림하는 순간 「무잡음」이 아니게 되고, 3단 시험의 기준 <span class="mono">1e-8</span>을 절대 통과할 수 없다.
     점을 <strong>한 평면에 몰아 뿌리지 말아 줘</strong> — 퇴화 조건에 걸린다(⑧절).<br><br>
@@ -1708,7 +1708,7 @@ x2ᵀ E x1      = -1.735e-18                   ← 정답 대응점에서 0이�
   <pre>□ 픽셀 좌표가 <strong>실수</strong>인가, 정수로 반올림됐는가
 □ 투영에 <strong>4회에 만든 함수를 그대로</strong> 썼는가, 새로 짰는가   ← 새로 짰으면 두 벌이 된다
 □ 잡음 기본값이 0 인가
-□ 시험 ①이 <strong>1e-12</strong> 로 통과하는가
+□ 시험 (1)이 <strong>1e-12</strong> 로 통과하는가
 □ 점을 뿌린 모양이 <strong>한 평면에 몰려 있지 않은가</strong>        ← 평면이면 E 가 잘 안 풀린다</pre>
 
   <div class="interp">
@@ -1830,9 +1830,9 @@ x2ᵀ E x1      = -1.735e-18                   ← 정답 대응점에서 0이�
       「이 카메라로는 3 m 넘어가면 깊이를 못 믿는다」가 <strong>설계 단계에서 정해진다.</strong>
     </p>
     <p>
-      그럼 왜 단안을 하나. 이유가 둘이다. <strong>①</strong> 단안 + IMU가
+      그럼 왜 단안을 하나. 이유가 둘이다. <strong>(1)</strong> 단안 + IMU가
       <strong>더 어렵고 더 일반적인 문제</strong>다 — 스테레오를 할 줄 알아도 단안을 못 하지만 반대는 아니다.
-      <strong>②</strong> 스케일을 IMU에서 얻는 과정(11회 초기화)이
+      <strong>(2)</strong> 스케일을 IMU에서 얻는 과정(11회 초기화)이
       <strong>이 강의에서 가장 배울 것이 많은 자리</strong>인데, 스테레오면 그 자리가 통째로 없어진다.
     </p>
   </details>

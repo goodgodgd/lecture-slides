@@ -88,7 +88,7 @@
     콘 찾는 부분만 따로 시험해 보고 싶어도 모터 코드까지 같이 떠야 한다.
   </p>
 
-  <h3>정의</h3>
+  <h3>1-1 정의</h3>
   <p>
     <strong>노드(node)는 ROS 안에서 따로 도는 실행 단위 하나</strong>다. 보통 프로그램 하나(프로세스 하나)가 노드 하나다.
     ROS로 만든 시스템은 <strong>노드 여러 개를 동시에 띄우고, 노드끼리 데이터를 주고받아</strong> 하나의 일을 한다.
@@ -99,7 +99,7 @@
     경로 계획 노드는 라이다 값과 현재 위치만 정해진 형식으로 받으면 되므로, 그 로봇이 바퀴로 가든 다리로 가든 상관하지 않는다.
   </p>
 
-  <h3>실행 파일 이름과 노드 이름</h3>
+  <h3>1-2 실행 파일 이름과 노드 이름</h3>
   <p>
     입문할 때 가장 많이 헷갈리는 자리다. 노드에는 이름이 <strong>두 개</strong> 보인다.
   </p>
@@ -133,7 +133,7 @@
     받는 쪽이 하나 늘 때마다 드라이버 코드를 고쳐야 한다.
   </p>
 
-  <h3>정의</h3>
+  <h3>2-1 정의</h3>
   <p>
     <strong>토픽(topic)은 이름이 붙은 데이터 흐름</strong>이다. 데이터를 보내는 쪽을 <strong>발행자(publisher)</strong>,
     받는 쪽을 <strong>구독자(subscriber)</strong>라고 한다. 발행자는 「<code>/scan</code>이라는 이름으로 이 데이터를 내보낸다」고만 하고,
@@ -186,7 +186,7 @@
     이 과목 3부 내내 쓸 실습 대상은 <strong>turtlesim</strong>이다. 거북이 한 마리가 파란 창 안을 돌아다니는 작은 시뮬레이터다.
   </p>
 
-  <h3>터미널 1 — 거북이 창을 띄운다</h3>
+  <h3>3-1 터미널 1 — 거북이 창을 띄운다</h3>
 <pre class="lang-sh"><code>$ ros2 run turtlesim turtlesim_node
 [INFO] [1792271205.278925372] [turtlesim]: Starting turtlesim with node name /turtlesim
 [INFO] [1792271205.282625545] [turtlesim]: Spawning turtle [turtle1] at x=[5.544445], y=[5.544445], theta=[0.000000]</code></pre>
@@ -208,7 +208,7 @@
     </dl>
   </div>
 
-  <h3>터미널 2 — 키보드로 조종하는 노드를 띄운다</h3>
+  <h3>3-2 터미널 2 — 키보드로 조종하는 노드를 띄운다</h3>
   <p>새 터미널을 하나 더 열고 친다.</p>
 <pre class="lang-sh"><code>$ ros2 run turtlesim turtle_teleop_key
 Reading from keyboard
@@ -248,7 +248,7 @@ Use g|b|v|c|d|e|r|t keys to rotate to absolute orientations. 'f' to cancel a rot
     </p>
   </div>
 
-  <h3>터미널 3 — 연결을 그림으로 본다</h3>
+  <h3>3-3 터미널 3 — 연결을 그림으로 본다</h3>
   <p>세 번째 터미널에서 친다. 창이 하나 더 뜬다.</p>
 <pre class="lang-sh"><code>$ rqt_graph</code></pre>
   <p>
@@ -314,7 +314,7 @@ Use g|b|v|c|d|e|r|t keys to rotate to absolute orientations. 'f' to cancel a rot
     그리고 이 부탁은 계속 흐르는 데이터가 아니라 <strong>한 번 하고 마는 일</strong>이다.
   </p>
 
-  <h3>정의</h3>
+  <h3>4-1 정의</h3>
   <p>
     <strong>서비스(service)는 요청(request) 하나에 응답(response) 하나가 돌아오는 통신 방식</strong>이다.
     요청하는 쪽을 <strong>서비스 클라이언트(service client)</strong>, 요청을 받아 일을 하고 응답을 돌려주는 쪽을
@@ -354,7 +354,7 @@ Use g|b|v|c|d|e|r|t keys to rotate to absolute orientations. 'f' to cancel a rot
     서비스는 짧게 끝나는 일에 맞춰진 방식이다.
   </p>
 
-  <h3>정의</h3>
+  <h3>5-1 정의</h3>
   <p>
     <strong>액션(action)은 오래 걸리는 일을 맡기는 통신 방식</strong>이다. 세 가지가 오간다.
   </p>
@@ -422,8 +422,8 @@ Use g|b|v|c|d|e|r|t keys to rotate to absolute orientations. 'f' to cancel a rot
   </table>
   </div>
   <div class="interp">
-    <strong>해석:</strong> 고르는 질문은 이 순서다. ① <strong>계속 새로 나오는가?</strong> → 토픽.
-    ② 아니라면 <strong>몇 초 넘게 걸리거나 중간에 그만두게 할 일이 있는가?</strong> → 액션. ③ 둘 다 아니면 → 서비스.
+    <strong>해석:</strong> 고르는 질문은 이 순서다. (1) <strong>계속 새로 나오는가?</strong> → 토픽.
+    (2) 아니라면 <strong>몇 초 넘게 걸리거나 중간에 그만두게 할 일이 있는가?</strong> → 액션. (3) 둘 다 아니면 → 서비스.
     AI에게 기능을 시키면 대개 맞게 고르지만, <strong>센서 값을 서비스로 하나씩 물어 오게 짜는 경우</strong>가 가끔 있다.
     그 코드는 돌기는 돌지만 로봇이 늦게 반응한다.
   </div>
@@ -447,7 +447,7 @@ Use g|b|v|c|d|e|r|t keys to rotate to absolute orientations. 'f' to cancel a rot
     튜닝은 값을 수십 번 바꿔 보는 일이다.
   </p>
 
-  <h3>정의</h3>
+  <h3>7-1 정의</h3>
   <p>
     <strong>파라미터(parameter)는 노드가 가진 이름 붙은 설정값</strong>이다. 노드는 시작할 때 자기 파라미터를 선언하고 그 값을 읽어 쓴다.
     그리고 <strong>밖에서 그 값을 읽거나(get) 바꿀(set) 수 있다. 노드를 끄지도, 다시 빌드하지도 않고.</strong>
@@ -521,7 +521,7 @@ Use g|b|v|c|d|e|r|t keys to rotate to absolute orientations. 'f' to cancel a rot
     게다가 ROS에서는 두 노드가 다른 언어(C++·파이썬)로 짜였을 수도 있다.
   </p>
 
-  <h3>정의</h3>
+  <h3>9-1 정의</h3>
   <p>
     노드끼리 주고받는 데이터의 형식을 <strong>인터페이스(interface)</strong>라고 한다. 통신 방식마다 한 종류씩, 세 가지다.
   </p>
@@ -542,7 +542,7 @@ Use g|b|v|c|d|e|r|t keys to rotate to absolute orientations. 'f' to cancel a rot
 필드타입2 필드이름2
 필드타입3 필드이름3</code></pre>
 
-  <h3>필드 타입 — 기본 타입과 C++ 타입</h3>
+  <h3>9-2 필드 타입 — 기본 타입과 C++ 타입</h3>
   <p class="readme-first">무엇을 먼저 볼지: <strong>가운데 C++ 열</strong>이다. 20회부터 코드에서 이 타입으로 값을 꺼낸다.</p>
   <div class="tablewrap">
   <table>
@@ -562,7 +562,7 @@ Use g|b|v|c|d|e|r|t keys to rotate to absolute orientations. 'f' to cancel a rot
     그래서 큰 메시지가 작은 메시지들로 쌓여 있다. 아래에서 <code>Twist</code>가 <code>Vector3</code> 두 개로 되어 있는 것을 본다.
   </div>
 
-  <h3>인터페이스의 이름 — 패키지/종류/타입</h3>
+  <h3>9-3 인터페이스의 이름 — 패키지/종류/타입</h3>
   <p>
     인터페이스는 언제나 <strong>세 토막 이름</strong>으로 부른다. <code>geometry_msgs/msg/Twist</code>라면
     <code>geometry_msgs</code>가 그 정의가 들어 있는 <strong>패키지</strong>, <code>msg</code>가 <strong>종류</strong>(msg·srv·action),
@@ -667,7 +667,7 @@ float32 remaining</code></pre>
     <strong>각 메시지가 무엇을 담으려고 그 칸들을 갖고 있는지</strong>만 보면 된다.
   </p>
 
-  <h3><code>geometry_msgs/msg/Twist</code> — 속도 명령</h3>
+  <h3>10-1 <code>geometry_msgs/msg/Twist</code> — 속도 명령</h3>
   <p>
     위에서 본 그대로 <code>linear</code>(직선 속도)와 <code>angular</code>(회전 속도)가 각각 x·y·z 세 칸이다. 3차원 공간의 모든 움직임을 담을 수 있게 여섯 칸을 둔 것이다.
     바퀴 두 개로 움직이는 로봇(turtlesim 거북이, 터틀봇)은 보통 그중 <strong>두 칸만</strong> 쓴다.
@@ -694,7 +694,7 @@ float32 remaining</code></pre>
     <p class="later">좌표 규약(x 앞·y 왼쪽·반시계 양수)은 25회에서 제대로 다룬다.</p>
   </div>
 
-  <h3><code>sensor_msgs/msg/LaserScan</code> — 라이다 한 바퀴</h3>
+  <h3>10-2 <code>sensor_msgs/msg/LaserScan</code> — 라이다 한 바퀴</h3>
   <p>라이다가 한 바퀴 돌며 잰 거리를 한 메시지에 담는다. 정의에 주석이 많아 길지만 그대로 싣는다.</p>
 <pre class="lang-sh"><code>$ ros2 interface show sensor_msgs/msg/LaserScan
 # Single scan from a planar laser range-finder
@@ -747,7 +747,7 @@ float32[] intensities        # intensity data [device-specific units].  If your
     읽는 법을 메시지가 같이 들고 다닌다. <code>ranges[i]</code>가 몇 도 방향인지 계산하는 법은 24회에서 이 필드들로 직접 해 본다.
   </div>
 
-  <h3><code>geometry_msgs/msg/PointStamped</code> — 기준이 붙은 점 하나</h3>
+  <h3>10-3 <code>geometry_msgs/msg/PointStamped</code> — 기준이 붙은 점 하나</h3>
 <pre class="lang-sh"><code>$ ros2 interface show geometry_msgs/msg/PointStamped
 # This represents a Point with reference coordinate frame and timestamp
 
@@ -792,7 +792,7 @@ Point point
     콘 사이 폭이 수십 cm인 트랙에서 0.1 m는 작은 차이가 아니다. 게다가 실제로는 앞뒤뿐 아니라 좌우·높이·방향까지 어긋날 수 있다.
   </p>
 
-  <h3>정의</h3>
+  <h3>11-1 정의</h3>
   <p>
     <strong><code>header.frame_id</code>는 이 메시지의 숫자가 어느 좌표계(frame)를 기준으로 잰 것인지 적는 글자 칸</strong>이다.
     「라이다 좌표계」, 「로봇 몸체 좌표계」, 「지도 좌표계」처럼 좌표계마다 이름을 붙여 두고, 메시지에 그 이름을 적어 보낸다.
@@ -873,8 +873,8 @@ float32 angular_velocity</code></pre>
       <li><strong>(3분)</strong> 터미널 2에서 키보드 노드를 띄우고, <strong>터미널 2를 클릭한 채로</strong> 화살표 키로 거북이를 움직인다.
 <pre class="lang-sh"><code>$ ros2 run turtlesim turtle_teleop_key</code></pre></li>
       <li><strong>(5분)</strong> 터미널 3에서 <code>rqt_graph</code>를 띄우고, 새로고침 → <strong>Nodes/Topics (active)</strong>를 고른다.
-        다음 세 가지를 찾아 적는다. ① 타원 두 개의 이름 ② 두 타원을 잇는 네모의 이름 ③ 화살표 방향(누가 발행자인가).
-        그리고 ①의 이름 중 <strong>실행 파일 이름과 다른 것</strong>이 무엇인지 적는다.
+        다음 세 가지를 찾아 적는다. (1) 타원 두 개의 이름 (2) 두 타원을 잇는 네모의 이름 (3) 화살표 방향(누가 발행자인가).
+        그리고 (1)의 이름 중 <strong>실행 파일 이름과 다른 것</strong>이 무엇인지 적는다.
 <pre class="lang-sh"><code>$ rqt_graph</code></pre></li>
       <li><strong>(3분)</strong> 터미널 2를 클릭하고 <kbd>e</kbd>를 누른다. 거북이가 돌아 멈추면 <strong>터미널 1</strong>에
         <code>Rotation goal completed successfully</code>가 찍혔는지 본다.

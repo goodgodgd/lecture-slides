@@ -32,13 +32,13 @@
   <div class="toc-title">이 회차 목차</div>
   <a href="#summary">한 장 요약 — 다섯 단계</a>
   <a href="#pinhole">① 핀홀 모델</a>
-  <a href="#pinhole" class="sub">투영이 보존하는 것과 잃는 것</a>
+  <a href="#pinhole" class="sub">1-1 투영이 보존하는 것과 잃는 것</a>
   <a href="#intrinsic">② 내부 파라미터 <span class="mono">K</span></a>
-  <a href="#intrinsic" class="sub">픽셀 하나가 보는 각도</a>
+  <a href="#intrinsic" class="sub">2-2 픽셀 하나가 보는 각도</a>
   <a href="#distort">③ 왜곡</a>
-  <a href="#distort" class="sub">어느 계수가 일하나</a>
-  <a href="#distort" class="sub">모델의 종류</a>
-  <a href="#unproject" class="sub">역투영 — 거꾸로 가는 길</a>
+  <a href="#distort" class="sub">3-2 어느 계수가 일하나</a>
+  <a href="#distort" class="sub">3-4 모델의 종류</a>
+  <a href="#unproject" class="sub">3-5 역투영 — 거꾸로 가는 길</a>
   <a href="#reproj">④ 재투영 오차 — 이 함수가 쓰이는 자리</a>
   <a href="#prompt">🤖 의뢰서 — 카메라 모델</a>
   <a href="#lab">🧪 점군 오버레이 — 사다리 4단</a>
@@ -168,7 +168,7 @@
       이상적으로는 영상 한가운데지만, 실제로는 조금 벗어나 있다 — 그 값이 \(c_u, c_v\)다.</figcaption>
   </figure>
 
-  <h3>투영이 보존하는 것과 잃는 것</h3>
+  <h3>1-1 투영이 보존하는 것과 잃는 것</h3>
 
   <p>
     \(Z\)로 나누는 이 한 번의 동작이 투영의 전부이고, 여기서 <strong>무엇이 살아남고 무엇이 죽는지</strong>가 정해진다.
@@ -230,7 +230,7 @@ rate_hz:           20</pre>
     </dl>
   </div>
 
-  <h3>초점거리가 픽셀 단위라는 것이 무슨 뜻인가</h3>
+  <h3>2-1 초점거리가 픽셀 단위라는 것이 무슨 뜻인가</h3>
 
   <figure>
     <img src="assets/img/04_focal_length.png"
@@ -246,7 +246,7 @@ rate_hz:           20</pre>
     <strong>\(f\)가 커진다.</strong>
   </div>
 
-  <h3>픽셀 하나가 보는 각도 — 이 강의의 오차 감각</h3>
+  <h3>2-2 픽셀 하나가 보는 각도 — 이 강의의 오차 감각</h3>
 
   <p>
     \(f = 458.65\) px이라는 값을 각도로 바꾸면 <strong>이 카메라의 분해능</strong>이 나온다.
@@ -270,7 +270,7 @@ rate_hz:           20</pre>
     5회의 삼각측량 불확실도 표가 이 숫자에서 그대로 나온다.
   </div>
 
-  <h3>동차좌표로 묶으면 익숙한 3×3 행렬이 된다</h3>
+  <h3>2-3 동차좌표로 묶으면 익숙한 3×3 행렬이 된다</h3>
 
   $$
   \tilde{\mathbf{u}} =
@@ -290,7 +290,7 @@ rate_hz:           20</pre>
 
   <h2 id="distort">③ 왜곡 — EuRoC의 실제 숫자로 <span class="badge b-yellow">맡기되 검사한다</span></h2>
 
-  <h3>왜 생기나 — 두 가지 원인</h3>
+  <h3>3-1 왜 생기나 — 두 가지 원인</h3>
 
   <div class="tablewrap">
   <table>
@@ -356,7 +356,7 @@ rate_hz:           20</pre>
     「몇 개는 잘 맞는데 몇 개는 이상하다」는 증상이 나오면 여기부터 본다.
   </div>
 
-  <h3>여덟 숫자 중 무엇이 실제로 일하나 🔴</h3>
+  <h3>3-2 여덟 숫자 중 무엇이 실제로 일하나 🔴</h3>
 
   <p>
     계수가 넷이니 넷 다 중요할 것 같지만, <strong>실제로는 그렇지 않다.</strong>
@@ -389,7 +389,7 @@ rate_hz:           20</pre>
     이 강의에서 계속 연습하는 방식이다.
   </div>
 
-  <h3>시야각으로 보면 더 분명하다</h3>
+  <h3>3-3 시야각으로 보면 더 분명하다</h3>
 
   <div class="tablewrap">
   <table>
@@ -405,7 +405,7 @@ rate_hz:           20</pre>
     「이 프레임에 그 랜드마크가 보일까」를 판단하는 코드에서 이 차이가 그대로 오차가 된다.
   </p>
 
-  <h3>모델의 종류 — 왜 이 데이터셋을 골랐나</h3>
+  <h3>3-4 모델의 종류 — 왜 이 데이터셋을 골랐나</h3>
 
   <div class="tablewrap">
   <table class="summary-table">
@@ -430,7 +430,7 @@ rate_hz:           20</pre>
     아래에서 볼 반복이 훨씬 비싸진다. <strong>「첫 구현이 살아남게 하는 조건」을 데이터셋 선택에서 이미 확보한 것</strong>이다.
   </div>
 
-  <h3 id="unproject">역투영 — 거꾸로 가는 길에는 닫힌 해가 없다</h3>
+  <h3 id="unproject">3-5 역투영 — 거꾸로 가는 길에는 닫힌 해가 없다</h3>
 
   <p>
     투영은 넣으면 바로 나온다. <strong>거꾸로는 그렇지 않다.</strong>
@@ -513,17 +513,17 @@ rate_hz:           20</pre>
     <strong>[인터페이스]</strong> 아래 시그니처를 <strong>바꾸지 말고</strong> 구현해 줘.<br>
     <span class="mono">optional&lt;Vector2d&gt; project(const Vector3d&amp; p_C) const</span> — <span class="mono">Z &lt;= 0</span> 이면 <span class="mono">nullopt</span><br>
     <span class="mono">Vector3d unproject(const Vector2d&amp; uv) const</span> — 길이 1인 방향 벡터를 돌려준다.
-    <strong>반복을 직접 짜도 되고 <span class="mono">cv::undistortPoints</span>를 불러도 된다</strong> — 판정은 아래 시험 ①이 한다<br>
+    <strong>반복을 직접 짜도 되고 <span class="mono">cv::undistortPoints</span>를 불러도 된다</strong> — 판정은 아래 시험 (1)이 한다<br>
     <span class="mono">bool inImage(const Vector2d&amp; uv) const</span><br><br>
     <strong>[모델]</strong> pinhole + radial-tangential, 계수는 <span class="mono">k1 k2 p1 p2</span> 넷.
     <span class="mono">yaml</span>에서 읽어 오되 <strong>skew 는 0으로 둔다.</strong><br><br>
     <strong>[검증]</strong> 아래 세 시험을 같이 써 줘. <strong>기준을 넘으면 실패로 출력한다.</strong><br>
-    ① <span class="mono">project</span> → <span class="mono">unproject</span> 왕복 — 픽셀 오차 <span class="mono">&lt; 1e-6 px</span>.
+    (1) <span class="mono">project</span> → <span class="mono">unproject</span> 왕복 — 픽셀 오차 <span class="mono">&lt; 1e-6 px</span>.
     영상 전체에 <strong>고르게 뿌린 1000점</strong>과 <strong>네 모서리</strong>로 한다 —
     가운데만 쓰면 왜곡 버그도, 반복이 덜 돈 것도 걸리지 않는다<br>
-    ② EuRoC cam0 값으로 <span class="mono">(752, 0)</span> 모서리를 넣었을 때
+    (2) EuRoC cam0 값으로 <span class="mono">(752, 0)</span> 모서리를 넣었을 때
     왜곡 없는 자리와의 거리가 <strong>96.0 ± 0.5 px</strong><br>
-    ③ <span class="mono">Z = -1</span>인 점을 넣었을 때 <strong><span class="mono">nullopt</span>이 나오는가</strong><br>
+    (3) <span class="mono">Z = -1</span>인 점을 넣었을 때 <strong><span class="mono">nullopt</span>이 나오는가</strong><br>
     <strong>실패하면 어느 점에서 얼마나 벌어졌는지 함께 찍어 줘.</strong><br><br>
     <strong>[함정]</strong> 역투영에는 닫힌 해가 없다. <strong>반복 횟수를 고정하지 말고 잔차로 멈춰 줘.</strong>
     왜곡은 반드시 <strong>정규화 좌표에서</strong> 먹인다 — 픽셀 좌표에서 먹이면 틀린다.
@@ -537,8 +537,8 @@ rate_hz:           20</pre>
   <pre>□ 역투영이 <strong>횟수가 아니라 잔차</strong>로 멈추는가
 □ Z &lt;= 0 을 조용히 통과시키지 않는가            ← 통과시키면 뒤에 있는 점이 앞에 찍힌다
 □ 왜곡을 <strong>정규화 좌표에서</strong> 먹이는가, 픽셀 좌표에서 먹이는가
-□ 시험 ①이 <strong>네 모서리에서도</strong> 통과하는가        ← 가운데만 통과하면 아직 틀린 것이다
-□ 시험 ②의 숫자가 96.0 근처로 나오는가          ← 다르면 계수 순서를 의심한다
+□ 시험 (1)이 <strong>네 모서리에서도</strong> 통과하는가        ← 가운데만 통과하면 아직 틀린 것이다
+□ 시험 (2)의 숫자가 96.0 근처로 나오는가          ← 다르면 계수 순서를 의심한다
 □ 임의로 정한 것 목록에 내가 동의하지 않는 항목이 있는가</pre>
 
   <h2 id="lab">🧪 점군 오버레이 — 이 강의 첫 「눈으로 판정하는 검증」 <span class="badge b-red">사람이 한다</span></h2>
@@ -553,14 +553,14 @@ rate_hz:           20</pre>
     <p class="boxtitle">🧪 정답 자세로 Leica 점군을 영상에 투영한다</p>
 
     <p style="margin:.2rem 0">
-      <strong>① 무엇을 보려는 것인가</strong> — <strong>2회의 좌표계와 오늘의 카메라 모델이 둘 다 맞는지.</strong>
+      <strong>(1) 무엇을 보려는 것인가</strong> — <strong>2회의 좌표계와 오늘의 카메라 모델이 둘 다 맞는지.</strong>
       자세를 정답으로 고정해 두므로 <strong>추정한 것이 하나도 없다.</strong>
       그래서 어긋나면 범인은 <strong>1~4회에 내가 만든 것 안에</strong> 있고,
       <strong>어긋나는 모양이 원인마다 다르다.</strong>
     </p>
 
     <p style="margin:.2rem 0">
-      <strong>② 준비물</strong> — 1~2회에 만든 로더(<span class="mono">groundTruth(t)</span> ·
+      <strong>(2) 준비물</strong> — 1~2회에 만든 로더(<span class="mono">groundTruth(t)</span> ·
       <span class="mono">T_BC()</span> · <span class="mono">camera()</span>) ·
       앞 절에서 받은 <span class="mono">CameraModel</span> ·
       <span class="mono">V1_01_easy/mav0/</span>의 <span class="mono">pointcloud0/data.ply</span>와
@@ -568,7 +568,7 @@ rate_hz:           20</pre>
     </p>
 
     <p style="margin:.5rem 0 .2rem">
-      <strong>③ 무엇을 하나</strong> — 다섯 단계다. <strong>단계마다 무엇이 나오는지</strong>까지 적었다.
+      <strong>(3) 무엇을 하나</strong> — 다섯 단계다. <strong>단계마다 무엇이 나오는지</strong>까지 적었다.
     </p>
     <ol style="margin:.2rem 0">
       <li><strong>영상 한 장을 골라 그 시각의 정답 자세를 얻는다</strong> → \(T_{WB}\) 하나.
@@ -588,7 +588,7 @@ rate_hz:           20</pre>
     </ol>
 
     <p style="margin:.2rem 0">
-      <strong>④ 이렇게 되면 성공이다</strong> — <strong>점들이 영상 속 벽·기둥·바닥의 모서리와 겹친다.</strong>
+      <strong>(4) 이렇게 되면 성공이다</strong> — <strong>점들이 영상 속 벽·기둥·바닥의 모서리와 겹친다.</strong>
       숫자를 볼 필요가 없다. 겹치면 맞은 것이다.
     </p>
   </div>
@@ -660,7 +660,7 @@ rate_hz:           20</pre>
     <button onclick="copyPrompt(this)">복사</button>
     <strong>[할 일]</strong> 점군 오버레이 <strong>세 판</strong>을 한 장으로 붙이는 파이썬 스크립트를 써 줘.
     입력은 영상 한 장과 <strong>C++이 남긴 csv 세 개</strong>(<span class="mono">u, v, Z</span> 세 열)다 —
-    ① 제대로 한 것 ② <span class="mono">T_BC</span>를 뺀 것 ③ 왜곡을 뺀 것.
+    (1) 제대로 한 것 (2) <span class="mono">T_BC</span>를 뺀 것 (3) 왜곡을 뺀 것.
     <strong>가로로 나란히</strong> 놓고 각 판에 제목을 붙여 줘.<br><br>
     <strong>[하지 말 것]</strong> <strong>투영을 파이썬에서 다시 계산하지 말아 줘.</strong>
     csv에 있는 픽셀 좌표를 그대로 찍는다 — 다시 계산하면 C++ 쪽 모델이 검증되지 않는다.<br><br>
@@ -668,7 +668,7 @@ rate_hz:           20</pre>
     반지름은 1 px로 작게 해 줘 —
     <strong>크게 찍으면 어긋난 것이 겹쳐 보여서 오히려 맞은 것처럼 보인다.</strong><br><br>
     <strong>[검증]</strong> 판마다 <strong>찍은 점의 개수</strong>를 제목에 적어 줘.
-    <strong>①번 판의 개수가 ②번보다 적으면 경고를 찍어 줘</strong> —
+    <strong>(1)번 판의 개수가 (2)번보다 적으면 경고를 찍어 줘</strong> —
     보통은 제대로 한 쪽이 더 많이 보인다.<br><br>
     <strong>[함정]</strong> 영상 좌표는 \(v\)가 <strong>아래로</strong> 간다.
     <span class="mono">imshow</span> 위에 <span class="mono">scatter</span>를 그대로 얹으면 맞는다 —
@@ -678,9 +678,9 @@ rate_hz:           20</pre>
 
   <p class="readme-first">받은 그림에서 확인할 것</p>
 
-  <pre>□ ①번 판에서 점이 <strong>벽·기둥의 모서리와 겹치는가</strong>
-□ ②번 판이 통째로 돌아가 있는가                ← 90° 가 맞다
-□ ③번 판이 <strong>가장자리에서만</strong> 밀렸는가          ← 가운데도 밀렸으면 다른 문제다
+  <pre>□ (1)번 판에서 점이 <strong>벽·기둥의 모서리와 겹치는가</strong>
+□ (2)번 판이 통째로 돌아가 있는가                ← 90° 가 맞다
+□ (3)번 판이 <strong>가장자리에서만</strong> 밀렸는가          ← 가운데도 밀렸으면 다른 문제다
 □ 세 판이 <strong>같은 영상·같은 시각</strong>인가              ← 다르면 대조가 성립하지 않는다
 □ 점 크기가 너무 커서 어긋남이 가려지지 않았는가</pre>
 

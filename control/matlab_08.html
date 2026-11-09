@@ -34,16 +34,16 @@
   <a href="#summary">한 장 요약</a>
   <a href="#s1">① 주파수응답</a>
   <a href="#s2">② 보드 선도 그리기 — <code>bode</code></a>
-  <a class="sub" href="#s2-2">여러 시스템 겹쳐 그리기</a>
+  <a class="sub" href="#s2-2">2-1 여러 시스템 겹쳐 그리기</a>
   <a href="#s3">③ 기본 요소의 합으로 보는 보드 선도</a>
   <a href="#s4">④ <code>bode</code>의 출력값 — <code>reshape</code>·<code>squeeze</code></a>
   <a href="#s5">⑤ 직접 그리기 — <code>semilogx</code></a>
   <a href="#s6">⑥ 점근선 근사</a>
-  <a class="sub" href="#s6-2">2차 요소와 제동비</a>
+  <a class="sub" href="#s6-2">6-1 2차 요소와 제동비</a>
   <a href="#s7">⑦ 주파수응답 사양</a>
-  <a class="sub" href="#s7-2"><code>bandwidth</code> · <code>getPeakGain</code></a>
-  <a class="sub" href="#s7-3">공식으로 직접 계산</a>
-  <a class="sub" href="#s7-4">보드 선도에 사양 표시</a>
+  <a class="sub" href="#s7-2">7-1 <code>bandwidth</code> · <code>getPeakGain</code></a>
+  <a class="sub" href="#s7-3">7-2 공식으로 직접 계산</a>
+  <a class="sub" href="#s7-4">7-3 보드 선도에 사양 표시</a>
   <a href="#s8">⑧ 이득 여유와 위상 여유 — <code>margin</code></a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
@@ -201,7 +201,7 @@ Model Properties</code></pre>
     위상 칸의 −90°는 출력이 입력보다 1/4 주기 늦다는 뜻이다.
   </p>
 
-  <h3 id="s2-2">여러 시스템 겹쳐 그리기</h3>
+  <h3 id="s2-2">2-1 여러 시스템 겹쳐 그리기</h3>
   <p>
     <code>bode</code>에 전달함수를 여러 개 넘기면 한 그림에 겹쳐 그린다. 3회의 <code>plot(x1, y1, x2, y2)</code>처럼
     순서대로 색이 바뀌고, <code>legend</code>의 이름도 같은 순서로 붙는다.
@@ -539,7 +539,7 @@ w = 5 에서 실제 phase = -45.0 deg</code></pre>
     이 「3 dB」는 ⑦절의 대역폭 정의에 다시 나온다.
   </p>
 
-  <h3 id="s6-2">2차 요소와 제동비</h3>
+  <h3 id="s6-2">6-1 2차 요소와 제동비</h3>
   <p>
     1차 요소는 점근선에서 많아야 3 dB 벗어난다. 2차 요소는 다르다. 제동비 \(\zeta\)가 작으면 꺾임 주파수 근처에서 곡선이 점근선 <strong>위로</strong> 솟는다.
     \(\omega_n = 5\)로 두고 \(\zeta\)만 바꿔 겹쳐 그린다.
@@ -634,7 +634,7 @@ Model Properties</code></pre>
     <figcaption>\(\zeta = 0.2\)라서 ⑥절 그림의 주황 선과 같은 모양이다. 봉우리가 약 8 dB, 위상은 5 rad/s 근처에서 0°에서 −180°로 가파르게 떨어진다.</figcaption>
   </figure>
 
-  <h3 id="s7-2"><code>bandwidth</code> · <code>getPeakGain</code></h3>
+  <h3 id="s7-2">7-1 <code>bandwidth</code> · <code>getPeakGain</code></h3>
 
 <!-- mcode 08/b09_specs_matlab -->
 <div class="mcode">
@@ -674,7 +674,7 @@ fpeak =
     공진 첨두값 2.5515배는 dB로 \(20\log_{10}2.5515 = 8.14\) dB — 그림의 봉우리 높이다.
   </p>
 
-  <h3 id="s7-3">공식으로 직접 계산</h3>
+  <h3 id="s7-3">7-2 공식으로 직접 계산</h3>
   <p>
     같은 세 값을 교재 공식으로 구해 맞춰 본다. 공식부터 유도한다.
   </p>
@@ -821,7 +821,7 @@ fpeak_exact =
       \(\omega_d = \omega_n\sqrt{1-\zeta^2} = 4.90\) rad/s와 가깝다 — 계단응답이 출렁이는 빠르기다.</p>
   </div>
 
-  <h3 id="s7-4">보드 선도에 사양 표시</h3>
+  <h3 id="s7-4">7-3 보드 선도에 사양 표시</h3>
   <p>
     구한 두 점을 그림에 찍는다. 크기 칸이 dB이므로 공진 첨두값도 <code>20*log10</code>을 거쳐 찍고,
     대역폭 점은 세로 위치를 \(-10\log_{10}2\) dB(= \(1/\sqrt2\))에 둔다.

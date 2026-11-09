@@ -127,7 +127,7 @@ angular_velocity: 0.0
   <!-- ── ② 발행자 ── -->
   <h2 id="pub">② 발행자(publisher) — <code>create_publisher</code>와 <code>publish</code> <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
-  <h3>개념 — 토픽 하나에 보내는 창구</h3>
+  <h3>2-1 개념 — 토픽 하나에 보내는 창구</h3>
   <p>
     17회에서 토픽은 「발행자가 보내고 구독자가 받는, 이름 붙은 데이터 흐름」이었다. 코드에서 <strong>발행자</strong>는 그 흐름에 메시지를 넣는 객체다.
     <strong>토픽 이름 하나와 메시지 타입 하나</strong>로 만들고, 만든 뒤에는 그 타입의 메시지만 넣을 수 있다.
@@ -172,7 +172,7 @@ cmd_pub_-&gt;publish(cmd);</code></pre>
   <!-- ── ③ v1 ── -->
   <h2 id="v1">③ 타이머(timer)와 콜백(callback) — <code>create_wall_timer</code> · <code>rclcpp::spin</code> (v1) <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
-  <h3>개념 — 주기마다 부르는 함수, 그것을 부르는 <code>spin</code></h3>
+  <h3>3-1 개념 — 주기마다 부르는 함수, 그것을 부르는 <code>spin</code></h3>
   <p>
     발행자는 만들었는데 언제 <code>publish</code>를 부를까? 생성자에서 한 번 부르고 끝내면 안 될까?
     18회에서 <code>topic pub --once</code>로 한 번 보냈을 때 거북이가 <strong>짧은 호를 그리고 멈췄다.</strong> turtlesim은 속도 명령이 1초 넘게 안 오면 거북이를 세운다.
@@ -218,7 +218,7 @@ int main(int argc, char ** argv)
     오늘은 그 빈 구간에서 타이머 콜백이 0.5초마다 불린다. v2에서는 여기에 구독 콜백이 0.016초마다 더해진다.
   </p>
 
-  <h3>예제에 적용 — <code>src/turtle_drive.cpp</code>를 새로 만든다</h3>
+  <h3>3-2 예제에 적용 — <code>src/turtle_drive.cpp</code>를 새로 만든다</h3>
   <p>
     19회 패키지에 실행 파일을 하나 더한다. 소스 이름은 실행 파일 이름과 같게 <code>turtle_drive.cpp</code>로 짓는다. 클래스 이름은 <code>TurtleDrive</code>, 노드 이름은 <code>turtle_drive</code>다.
     타이머 콜백 <code>on_timer()</code>는 부를 때마다 <strong>앞으로 가는 속도와 도는 속도를 무작위로 하나씩 골라</strong> 보낸다. 그러면 거북이가 이리저리 돌아다닌다.
@@ -229,7 +229,7 @@ int main(int argc, char ** argv)
     <code>hello_node</code>는 그대로 둔다.
   </p>
 
-  <h3>1단계 (v1) — 발행자와 타이머</h3>
+  <h3>3-3 1단계 (v1) — 발행자와 타이머</h3>
   <div class="codelabel good">turtle_drive/src/turtle_drive.cpp (새 파일)</div>
   <pre class="lang-cpp after"><code>// 20회 turtle_drive — v1 (1단계: create_publisher · create_wall_timer — 무작위로 돌아다닌다)
 #include &lt;chrono&gt;
@@ -335,11 +335,11 @@ install(TARGETS hello_node turtle_drive
       <dt>${geometry_msgs_TARGETS}</dt>
       <dd>메시지 패키지를 붙이는 모양. <code>rclcpp</code>는 <code>rclcpp::rclcpp</code>라는 타깃 하나였는데, 메시지 패키지는 C++·C 등 언어별 타깃이 여럿이라 <code>find_package(geometry_msgs)</code>가 그 목록을 <code>geometry_msgs_TARGETS</code>라는 변수에 담아 둔다. <code>${…}</code>는 8회의 CMake 변수 읽기다. 19회 ⑤절 프롬프트의 「<code>${패키지_TARGETS}</code> 모양」이 이것이다.</dd>
       <dt>install(TARGETS hello_node turtle_drive …)</dt>
-      <dd>실행 파일이 늘면 이 줄에 이름을 더한다. 빠뜨리면 19회 ⑨절 ②의 <code>No executable found</code>를 다시 만난다.</dd>
+      <dd>실행 파일이 늘면 이 줄에 이름을 더한다. 빠뜨리면 19회 9-2의 <code>No executable found</code>를 다시 만난다.</dd>
     </dl>
   </div>
 
-  <h3>실제로 나온 출력</h3>
+  <h3>3-4 실제로 나온 출력</h3>
   <pre class="lang-sh"><code>$ cd ~/ros2_ws
 $ colcon build --packages-select turtle_drive
 Starting &gt;&gt;&gt; turtle_drive
@@ -573,7 +573,7 @@ QoS profile:
   <!-- ── ⑤ v2 ── -->
   <h2 id="v2">⑤ 구독자(subscription)와 <code>ConstSharedPtr</code> — 범위를 벗어나면 중앙으로 (v2) <span class="badge b-red">🔴 사람이 한다</span></h2>
 
-  <h3>개념 — 메시지가 올 때마다 불리는 콜백</h3>
+  <h3>5-1 개념 — 메시지가 올 때마다 불리는 콜백</h3>
   <p>
     벽에 부딪히기 전에 돌아서려면 먼저 <strong>거북이가 어디 있는지</strong> 알아야 한다. turtlesim은 그것을 <code>/turtle1/pose</code>로 초당 62.5번 내보내고 있다.
     그 토픽을 받는 객체가 <strong>구독자</strong>다. 발행자처럼 토픽 이름과 타입으로 만들고, 여기에 <strong>메시지가 오면 부를 콜백</strong>을 하나 더 넘긴다.
@@ -607,7 +607,7 @@ QoS profile:
     <strong>콜백 인자는 처음부터 <code>ConstSharedPtr</code>로 받는 습관</strong>을 들여 두면 메시지가 커져도 고칠 것이 없다.
   </p>
 
-  <h3>개념 — 중앙을 보고 있나: 두 방향 사이의 각</h3>
+  <h3>5-2 개념 — 중앙을 보고 있나: 두 방향 사이의 각</h3>
   <p>
     범위를 벗어났을 때 「중앙 쪽으로 돌아선다」는 것은 무엇을 재면 될까? 거북이가 <strong>바라보는 방향</strong>과 <strong>거북이에서 중앙으로 가는 방향</strong>, 두 방향 사이의 각이다.
     이 각이 0이면 중앙을 똑바로 보고 있고, 180°면 중앙을 등지고 있다.
@@ -637,7 +637,7 @@ QoS profile:
     「벽까지 몇 m 남았나」를 벽 네 개에 대해 따로 계산할 필요가 없다 — 범위 밖인지는 x·y를 1과 10에 비교하면 되고, 어느 쪽으로 갈지는 이 각 하나가 정한다.
   </div>
 
-  <h3>예제에 적용 — 받은 자세는 들고만 있고, 타이머가 판단한다</h3>
+  <h3>5-3 예제에 적용 — 받은 자세는 들고만 있고, 타이머가 판단한다</h3>
   <p>
     구독 콜백(초당 62.5번)과 타이머 콜백(초당 2번)은 <strong>부르는 박자가 다르다.</strong> 그래서 구독 콜백에서 판단까지 하지 않는다.
     구독 콜백은 <strong>받은 것을 멤버에 넣어 두기만</strong> 하고, 판단과 명령은 타이머 콜백이 <strong>그 순간의 최신 자세</strong>로 한다.
@@ -655,7 +655,7 @@ QoS profile:
     범위·여유·속도 같은 숫자는 코드 곳곳에 흩지 않고 9회의 <strong>기본 멤버 초기화자</strong>로 한자리에 모은다. 21회에 이 가운데 둘이 파라미터로 바뀐다.
   </p>
 
-  <h3>2단계 (v2) — 구독자 하나, 판단 하나</h3>
+  <h3>5-4 2단계 (v2) — 구독자 하나, 판단 하나</h3>
   <div class="codelabel bad">고치기 전 (v1) — 생성자와 on_timer, 멤버</div>
   <pre class="lang-cpp before"><code>  TurtleDrive()
   : Node("turtle_drive")
@@ -774,7 +774,7 @@ private:
     <code>target_link_libraries</code>에 <code>${turtlesim_TARGETS}</code>, <code>&lt;depend&gt;turtlesim&lt;/depend&gt;</code>. 한쪽만 넣으면 어떻게 되는지는 ⑥절에서 짧게 본다.
   </p>
 
-  <h3>실제로 나온 출력</h3>
+  <h3>5-5 실제로 나온 출력</h3>
   <pre class="lang-sh"><code>$ colcon build --packages-select turtle_drive
 Starting &gt;&gt;&gt; turtle_drive
 Finished &lt;&lt;&lt; turtle_drive [5.39s]
@@ -1009,7 +1009,7 @@ ament_package()</code></pre></div>
     세 가지만 짧게 짚는다.
   </p>
 
-  <h3>의존성 — <code>turtlesim</code>이 두 파일 양쪽에 있나</h3>
+  <h3>6-1 의존성 — <code>turtlesim</code>이 두 파일 양쪽에 있나</h3>
   <p>
     19회 ②·③절의 규칙이 메시지 패키지에도 그대로 적용된다. <code>#include "turtlesim/msg/pose.hpp"</code>를 더했으면
     <code>package.xml</code>의 <code>&lt;depend&gt;turtlesim&lt;/depend&gt;</code>, <code>CMakeLists.txt</code>의 <code>find_package(turtlesim REQUIRED)</code>와 링크 줄의 <code>${turtlesim_TARGETS}</code>에 이름이 다 있어야 한다.
@@ -1032,14 +1032,14 @@ path: src/turtle_drive
     </dl>
   </div>
 
-  <h3>Ctrl+C — 거북이는 1초쯤 더 가다가 선다</h3>
+  <h3>6-2 Ctrl+C — 거북이는 1초쯤 더 가다가 선다</h3>
   <p>
     우리 노드에는 Ctrl+C 때 「서라」를 보내는 줄이 없다. 그래도 거북이는 선다. 다만 바로 서지 않고, <strong>마지막 명령대로 약 1초 더 간 뒤에</strong> 선다(컨테이너에서 재 보니 마지막 명령 뒤 1.08초).
     우리 노드가 한 일이 아니라 ③절 첫머리에서 본 turtlesim의 규칙, 곧 속도 명령이 1초 넘게 안 오면 세우는 <strong>명령 타임아웃</strong>이다.
     모든 로봇의 구동 노드가 이렇게 만들어져 있다는 보장은 없어서, 프로젝트 노드에는 내 노드 쪽에서도 타임아웃 정지를 넣는다(27회).
   </p>
 
-  <h3>받은 노드 코드 — 빌드가 돼도 보는 일곱 줄</h3>
+  <h3>6-3 받은 노드 코드 — 빌드가 돼도 보는 일곱 줄</h3>
   <p>
     「돌아다니다가 벽 근처에서 되돌아오는 노드를 만들어 줘」라고 하면 오는 코드에는 ROS 1 시절 예제의 모양이 자주 섞여 있다(「조금 더 알아두면」).
     아래 일곱 줄은 <strong>모두 빌드를 막지 않는다.</strong> 그래서 빌드 성공은 이 중 어느 것도 보증하지 않는다.
@@ -1270,7 +1270,7 @@ ament_package()</code></pre></div>
     <tr><td>내 노드의 발행을 확인할 때</td><td>"ros2 topic hz, echo --once, info -v 를 차례로 돌려서 원문을 붙여 줘. 요약하지 말고 average rate, 값, Publisher 쪽 Node name 만 굵게."</td></tr>
     <tr><td>의존성을 맞출 때</td><td>"src/*.cpp 의 #include 에서 ROS 패키지를 뽑아 package.xml &lt;depend&gt;, find_package, target_link_libraries 세 곳에 있는지 표로 보여 줘. 고치지는 말고."</td></tr>
     <tr><td>구독 콜백이 안 불리는 것 같을 때</td><td>"구독 콜백 첫 줄에 RCLCPP_INFO 로 확인용 로그를 한 줄 넣어 줘. 그리고 main 에 rclcpp::spin 이 있는지, while 반복이 spin 을 막고 있지 않은지 짚어 줘."</td></tr>
-    <tr><td>받은 노드를 고칠 때</td><td>"이 turtle_drive.cpp 를 아래 일곱 기준으로 검사해서 어긋나는 줄을 표로 먼저 보여 줘. 고치는 것은 표를 본 뒤에. ① main 에 rclcpp::spin 이 있나 ② 주기 일은 create_wall_timer 인가 ③ 구독 콜백 인자가 ConstSharedPtr 인가 ④ 발행자·구독자·상태가 노드 클래스의 멤버인가(전역 변수 없이) ⑤ 자세를 아직 못 받았을 때를 따로 다루나 ⑥ 큐 깊이는 10, 숫자는 이름 붙은 멤버인가 ⑦ #include 한 ROS 패키지가 package.xml 과 CMakeLists.txt 양쪽에 있나"</td></tr>
+    <tr><td>받은 노드를 고칠 때</td><td>"이 turtle_drive.cpp 를 아래 일곱 기준으로 검사해서 어긋나는 줄을 표로 먼저 보여 줘. 고치는 것은 표를 본 뒤에. (1) main 에 rclcpp::spin 이 있나 (2) 주기 일은 create_wall_timer 인가 (3) 구독 콜백 인자가 ConstSharedPtr 인가 (4) 발행자·구독자·상태가 노드 클래스의 멤버인가(전역 변수 없이) (5) 자세를 아직 못 받았을 때를 따로 다루나 (6) 큐 깊이는 10, 숫자는 이름 붙은 멤버인가 (7) #include 한 ROS 패키지가 package.xml 과 CMakeLists.txt 양쪽에 있나"</td></tr>
     <tr><td>Ctrl+C 때 오류가 날 때</td><td>"Ctrl+C 때 이 오류가 나. 전역 변수나 static 으로 둔 ROS 객체(발행자·구독자·노드)가 있는지 찾고, 있으면 노드 클래스의 멤버로 옮겨 줘."</td></tr>
   </table>
   </div>

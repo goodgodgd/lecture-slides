@@ -78,7 +78,7 @@
   <!-- ── ① 시작 ── -->
   <h2 id="start">① 오늘 만들 것 — 라이다 값 필터, 클래스 없이 먼저 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
-  <h3>무엇을 만드나</h3>
+  <h3>1-1 무엇을 만드나</h3>
   <p>
     라이다 거리 값 중에서 <strong>못 쓰는 것을 걸러내는 필터</strong>다.
     너무 가까운 값(<code>0.10</code>)과 너무 먼 값(<code>9.90</code>)은 버리고,
@@ -87,7 +87,7 @@
     입력 7개 중 남아야 할 것은 <code>0.83 1.24 2.05</code> 세 개다.
   </p>
 
-  <h3>읽는 법</h3>
+  <h3>1-2 읽는 법</h3>
   <ul>
     <li>먼저 이 프로그램을 <strong>클래스 없이</strong> 짠다. 이대로도 돌아간다.</li>
     <li>②절부터는 절마다 <strong>「개념」</strong>이 먼저 온다 — 그 문법이 무엇이고 어떤 문제를 풀려고 생겼는지.
@@ -98,7 +98,7 @@
     <li>빌드는 전부 <strong>CMake</strong>로 한다. 8회에서 읽은 그 네 줄이다. ⑦절에서 소스가 둘이 되면 한 줄이 달라진다.</li>
   </ul>
 
-  <h3>1단계 (v1) — 클래스 없이</h3>
+  <h3>1-3 1단계 (v1) — 클래스 없이</h3>
   <p>
     기준값과 버린 개수를 <strong>함수 밖의 변수</strong>에 두고, 거르는 함수 하나가 그것을 읽고 고친다.
     이렇게 함수 밖에 놓여 프로그램 어디에서나 보이는 변수를 <strong>전역 변수</strong>(global variable)라고 하고, 이름 앞에 <code>g_</code>를 붙여 표시했다.
@@ -130,7 +130,7 @@ std::vector&lt;float&gt; keep_valid(const std::vector&lt;float&gt; &amp; ranges)
     </dl>
   </div>
 
-  <h3>실제로 나온 출력</h3>
+  <h3>1-4 실제로 나온 출력</h3>
   <pre class="lang-sh"><code>$ cmake -S . -B build
 $ cmake --build build
 $ ./build/range_filter
@@ -179,7 +179,7 @@ add_executable(range_filter main.cpp)</code></pre></div>
 </details>
 <!-- /fullcode -->
 
-  <h3>돌아가는데 무엇이 불편한가</h3>
+  <h3>1-5 돌아가는데 무엇이 불편한가</h3>
   <p class="readme-first">무엇을 먼저 볼지: <strong>오른쪽 열</strong>이 「언제 터지나」다. 지금이 아니라 나중에 터진다.</p>
   <div class="tablewrap">
   <table>
@@ -197,7 +197,7 @@ add_executable(range_filter main.cpp)</code></pre></div>
   <!-- ── ② 클래스와 객체 ── -->
   <h2 id="class">② 클래스와 객체 — 값과 함수를 한 타입으로 묶는다 <span class="badge b-green">🟢 맡긴다</span></h2>
 
-  <h3>개념 — 클래스는 사용자가 정의하는 타입이다</h3>
+  <h3>2-1 개념 — 클래스는 사용자가 정의하는 타입이다</h3>
   <p>
     <strong>클래스</strong>(class)는 <strong>값 여러 개와 그 값을 다루는 함수를 하나로 묶어 만든 새 타입</strong>이다.
     클래스 안에 선언한 변수를 <strong>멤버 변수</strong>(member variable), 함수를 <strong>멤버 함수</strong>(member function)라고 한다.
@@ -228,13 +228,13 @@ public:
     ROS 2 코드 스타일이 이 방식을 쓴다.
   </p>
 
-  <h3>예제에 적용 — 라이다가 둘이면 필터도 둘이어야 한다</h3>
+  <h3>2-2 예제에 적용 — 라이다가 둘이면 필터도 둘이어야 한다</h3>
   <p>
     v1의 전역 변수 네 개는 <strong>이 필터의 값</strong>이고 <code>keep_valid</code>는 <strong>그 값을 쓰는 함수</strong>다. 짝이 맞으니 한 클래스로 묶는다.
     묶고 나면 앞 라이다용과 뒤 라이다용 <strong>객체 둘</strong>을 기준값을 다르게 해서 만들 수 있다. 버린 개수도 객체마다 따로 센다.
   </p>
 
-  <h3>2단계 (v2) — 전역 변수와 함수를 클래스 <code>RangeFilter</code>로</h3>
+  <h3>2-3 2단계 (v2) — 전역 변수와 함수를 클래스 <code>RangeFilter</code>로</h3>
   <div class="codelabel bad">고치기 전 (v1)</div>
   <pre class="lang-cpp before"><code>std::string g_name = "front";
 float g_lo = 0.16f;
@@ -296,7 +296,7 @@ int main()
     </dl>
   </div>
 
-  <h3>실제로 나온 출력</h3>
+  <h3>2-4 실제로 나온 출력</h3>
   <pre><code>front: 남은 값 3개, 버린 값 4개
 rear: 남은 값 2개, 버린 값 5개</code></pre>
   <div class="interp">
@@ -354,7 +354,7 @@ int main()
   <!-- ── ③ 생성자와 소멸자 ── -->
   <h2 id="ctor">③ 생성자와 소멸자 — 만들어질 때와 사라질 때 자동으로 불린다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
-  <h3>개념 — 이름이 정해진 특별한 멤버 함수 둘</h3>
+  <h3>3-1 개념 — 이름이 정해진 특별한 멤버 함수 둘</h3>
   <p>
     <strong>생성자</strong>(constructor)는 <strong>객체가 만들어질 때 자동으로 불리는 멤버 함수</strong>다.
     이름은 클래스 이름과 같고, 반환 타입을 적지 않는다. 인자를 받을 수 있으므로 <strong>객체를 만들면서 필요한 값을 넘겨받는 자리</strong>가 된다.
@@ -386,7 +386,7 @@ int main()
     <strong>정리하는 일을 사람이 기억하지 않아도 되게 만드는 것</strong>이 C++의 사고방식이고, 11회(RAII와 스마트 포인터)에서 이것만 따로 다룬다.
   </div>
 
-  <h3>예제에 적용 — 만들 때 값을 받고, 사라질 때 버린 개수를 보고한다</h3>
+  <h3>3-2 예제에 적용 — 만들 때 값을 받고, 사라질 때 버린 개수를 보고한다</h3>
   <p>
     v2는 <code>RangeFilter front{"front", 0.16f, 8.0f}</code>에서 값을 하나 빠뜨려도 컴파일이 된다. 그 자리는 0으로 채워진다.
     생성자를 두면 <strong>세 값을 다 주지 않고는 객체를 만들 수 없다.</strong>
@@ -394,7 +394,7 @@ int main()
     <code>main</code>에는 중괄호 한 쌍을 더 두어 필터 둘이 그 안에서만 살게 한다.
   </p>
 
-  <h3>3단계 (v3) — 생성자와 소멸자를 더한다</h3>
+  <h3>3-3 3단계 (v3) — 생성자와 소멸자를 더한다</h3>
   <div class="codelabel bad">고치기 전 (v2)</div>
   <pre class="lang-cpp before"><code>class RangeFilter
 {
@@ -448,7 +448,7 @@ int main()
   return 0;
 }</code></pre>
 
-  <h3>실제로 나온 출력</h3>
+  <h3>3-4 실제로 나온 출력</h3>
   <pre><code>[생성] front 필터 (0.16~8 m)
 [생성] rear 필터 (0.3~1.5 m)
 front: 남은 값 3개
@@ -527,7 +527,7 @@ int main()
   <!-- ── ④ 멤버 초기화 리스트 ── -->
   <h2 id="initlist">④ 멤버 초기화 리스트 — 생성자 본문에서 대입하지 않는다 <span class="badge b-red">🔴 사람이 한다</span></h2>
 
-  <h3>개념 — 초기화와 대입은 다른 일이다</h3>
+  <h3>4-1 개념 — 초기화와 대입은 다른 일이다</h3>
   <p>
     변수를 <strong>만들면서 값을 넣는 것</strong>이 <strong>초기화</strong>(initialization)이고,
     <strong>이미 있는 변수에 값을 넣는 것</strong>이 <strong>대입</strong>(assignment)이다.
@@ -553,10 +553,10 @@ int main()
     「항상 멤버 초기화 리스트」를 규칙으로 두면 <code>const</code> 멤버나 참조 멤버처럼 <strong>대입 자체가 안 되는 경우</strong>를 따로 기억할 필요가 없다.
   </p>
 
-  <h3>예제에 적용 — 3단계 생성자의 세 줄을 콜론 뒤로 옮긴다</h3>
+  <h3>4-2 예제에 적용 — 3단계 생성자의 세 줄을 콜론 뒤로 옮긴다</h3>
   <p>③절의 생성자가 정확히 「본문에서 대입하는 모양」이었다. 이 절에서 그 자리 하나만 고친다.</p>
 
-  <h3>4단계 (v4) — 멤버 초기화 리스트로</h3>
+  <h3>4-3 4단계 (v4) — 멤버 초기화 리스트로</h3>
   <div class="codelabel bad">고치기 전 (v3) — AI가 흔히 주는 것 🔴</div>
   <pre class="lang-cpp before"><code>  RangeFilter(const std::string &amp; name, float lo, float hi)
   {
@@ -634,7 +634,7 @@ int main()
 </details>
 <!-- /fullcode -->
 
-  <h3>얼마나 차이가 나는지 재 봤다</h3>
+  <h3>4-4 얼마나 차이가 나는지 재 봤다</h3>
   <p>
     <code>RangeFilter</code>는 두 번만 만들어지니 차이를 잴 수 없다. 그래서 <strong>따로 재는 프로그램</strong>을 하나 두었다.
     문자열 멤버 하나를 <strong>300만 번</strong> 만들면서 두 방식의 시간을 비교했다. 오늘의 필터와는 별개의 프로젝트이고, 아래 상자에 통째로 있다.
@@ -723,7 +723,7 @@ add_executable(init_bench main.cpp)</code></pre></div>
     </p>
   </div>
 
-  <h3>이렇게 말하면 된다</h3>
+  <h3>4-5 이렇게 말하면 된다</h3>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
     생성자 본문에서 멤버에 대입하는 자리가 있으면 전부 멤버 초기화 리스트로 옮겨 줘. 선언 순서와 초기화 순서도 맞춰 줘.
@@ -732,7 +732,7 @@ add_executable(init_bench main.cpp)</code></pre></div>
   <!-- ── ⑤ 접근 제어 ── -->
   <h2 id="access">⑤ 접근 제어 — 멤버 변수는 <code>private</code>에 둔다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
-  <h3>개념 — 누가 멤버를 건드릴 수 있는지 정한다</h3>
+  <h3>5-1 개념 — 누가 멤버를 건드릴 수 있는지 정한다</h3>
   <p>
     클래스 안의 <code>public:</code>과 <code>private:</code>는 <strong>접근 지정자</strong>(access specifier)다.
     그 아래에 적은 멤버가 그 구역에 들어간다. <code>public</code> 멤버는 <strong>클래스 밖 어디서나</strong> 쓸 수 있고,
@@ -757,13 +757,13 @@ add_executable(init_bench main.cpp)</code></pre></div>
   </table>
   </div>
 
-  <h3>예제에 적용 — <code>main</code>이 <code>front.name_</code>을 직접 읽고 있다</h3>
+  <h3>5-2 예제에 적용 — <code>main</code>이 <code>front.name_</code>을 직접 읽고 있다</h3>
   <p>
     v4까지는 멤버 변수가 전부 <code>public</code>이라 <code>main</code>이 <code>front.name_</code>을 직접 읽었다. 읽는 것은 괜찮지만 <code>front.lo_ = 0.0f;</code>도 막지 못한다.
     멤버 변수를 <code>private</code>로 내리고, 밖에서 읽어야 하는 이름과 버린 개수는 접근자로 연다.
   </p>
 
-  <h3>5단계 (v5) — 멤버 변수를 <code>private</code>로, 읽을 것은 접근자로</h3>
+  <h3>5-3 5단계 (v5) — 멤버 변수를 <code>private</code>로, 읽을 것은 접근자로</h3>
   <div class="codelabel bad">고치기 전 (v4)</div>
   <pre class="lang-cpp before"><code>class RangeFilter
 {
@@ -865,7 +865,7 @@ int main()
 </details>
 <!-- /fullcode -->
 
-  <h3>막히는 것을 확인한다 — 밖에서 <code>private</code> 멤버를 건드리면</h3>
+  <h3>5-4 막히는 것을 확인한다 — 밖에서 <code>private</code> 멤버를 건드리면</h3>
   <p>v5의 <code>main</code>에 한 줄을 끼워 넣고 빌드해 봤다.</p>
   <div class="codelabel bad">v5 변형 — 한 줄을 끼운 판</div>
   <pre class="lang-cpp before"><code>    RangeFilter rear("rear", 0.30f, 1.50f);
@@ -950,7 +950,7 @@ int main()
   <!-- ── ⑥ const 멤버 함수 ── -->
   <h2 id="constfn">⑥ <code>const</code> 멤버 함수 — 멤버를 안 바꾼다는 약속 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
-  <h3>개념 — 7회의 <code>const</code>가 객체에도 적용된다</h3>
+  <h3>6-1 개념 — 7회의 <code>const</code>가 객체에도 적용된다</h3>
   <p>
     7회 ⑥절에서 <code>const</code>는 <strong>「안 바꾼다」는 약속이고 어기면 컴파일러가 막는다</strong>고 했다. 그때는 인자에 붙였다.
     멤버 함수에도 붙일 수 있는데, 자리는 <strong>인자 목록 뒤</strong>다.
@@ -978,13 +978,13 @@ int main()
   </table>
   </div>
 
-  <h3>예제에 적용 — 결과를 찍는 함수를 7회 규칙대로 <code>const &amp;</code>로 받았더니</h3>
+  <h3>6-2 예제에 적용 — 결과를 찍는 함수를 7회 규칙대로 <code>const &amp;</code>로 받았더니</h3>
   <p>
     <code>main</code>에서 두 번 되풀이하던 출력 줄을 함수 <code>report</code>로 뺀다. 필터를 읽기만 하니 7회 규칙대로 <code>const RangeFilter &amp;</code>로 받는다.
     그런데 v5의 접근자에는 <code>const</code>가 없다.
   </p>
 
-  <h3>6단계 (v6, 고치기 전) — 빌드가 막힌다</h3>
+  <h3>6-3 6단계 (v6, 고치기 전) — 빌드가 막힌다</h3>
   <pre class="lang-cpp"><code>// 결과를 찍기만 하는 함수 — 7회 규칙대로 const 참조로 받는다
 void report(const RangeFilter &amp; f, const std::vector&lt;float&gt; &amp; good)
 {
@@ -1068,7 +1068,7 @@ int main()
 </details>
 <!-- /fullcode -->
 
-  <h3>무엇이 문제인가</h3>
+  <h3>6-4 무엇이 문제인가</h3>
   <p>
     <code>discards qualifiers</code>는 「<code>const</code>라는 한정자를 버리게 된다」는 뜻이다.
     <code>f</code>는 <code>const</code>로 잡혀 있는데 <code>name()</code>은 <code>const</code> 멤버 함수가 아니다.
@@ -1076,7 +1076,7 @@ int main()
     <strong>고칠 곳은 <code>report</code>가 아니라 클래스 쪽이다</strong> — 읽기만 하는 함수라고 클래스에 적어 주면 된다.
   </p>
 
-  <h3>6단계 (v6) — 접근자에 <code>const</code>를 붙인다</h3>
+  <h3>6-5 6단계 (v6) — 접근자에 <code>const</code>를 붙인다</h3>
   <div class="codelabel bad">고치기 전</div>
   <pre class="lang-cpp before"><code>  std::string name() { return name_; }
   int dropped() { return dropped_; }</code></pre>
@@ -1084,7 +1084,7 @@ int main()
   <pre class="lang-cpp after"><code>  std::string name() const { return name_; }   // 읽기만 한다 — const 멤버 함수
   int dropped() const { return dropped_; }</code></pre>
 
-  <h3>실제로 나온 출력</h3>
+  <h3>6-6 실제로 나온 출력</h3>
   <pre><code>[생성] front 필터 (0.16~8 m)
 [생성] rear 필터 (0.3~1.5 m)
 front: 남은 값 3개, 버린 값 4개
@@ -1245,7 +1245,7 @@ int main()
     </p>
   </div>
 
-  <h3>이렇게 말하면 된다</h3>
+  <h3>6-7 이렇게 말하면 된다</h3>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
     이 클래스에서 멤버를 바꾸지 않는 멤버 함수에 전부 <code>const</code>를 붙여 줘. 붙일 수 없는 함수가 있으면 고치지 말고 어느 멤버를 바꾸는지 알려 줘.
@@ -1254,7 +1254,7 @@ int main()
   <!-- ── ⑦ 헤더와 소스 ── -->
   <h2 id="header">⑦ 헤더와 소스로 나눈다 — 클래스는 <code>.hpp</code>에, 함수 내용은 <code>.cpp</code>에 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
-  <h3>개념 — 클래스도 선언과 정의로 나뉜다</h3>
+  <h3>7-1 개념 — 클래스도 선언과 정의로 나뉜다</h3>
   <p>
     7회 ⑩절에서 함수 하나를 <strong>선언</strong>(헤더)과 <strong>정의</strong>(소스)로 나눴다. 클래스도 같은 규칙이다.
     <strong>클래스 정의</strong>(class definition) — 어떤 멤버 변수와 멤버 함수가 있는지의 목록 — 는 헤더에 두고,
@@ -1288,14 +1288,14 @@ int RangeFilter::dropped() const { return dropped_; }   // RangeFilter:: 가 「
   </table>
   </div>
 
-  <h3>예제에 적용 — 파일이 셋이 되니 <code>CMakeLists.txt</code>가 한 줄 달라진다</h3>
+  <h3>7-2 예제에 적용 — 파일이 셋이 되니 <code>CMakeLists.txt</code>가 한 줄 달라진다</h3>
   <p>
     v6의 <code>main.cpp</code> 하나를 <code>range_filter.hpp</code> · <code>range_filter.cpp</code> · <code>main.cpp</code> 셋으로 나눈다.
     <code>main.cpp</code>는 헤더 한 줄만 <code>#include</code>하고, 거르는 방법이 바뀌어도 한 글자도 안 고친다.
     소스가 둘이 됐으니 8회에서 배운 대로 <strong><code>add_executable</code> 뒤에 둘 다 적는다.</strong>
   </p>
 
-  <h3>7단계 (v7, 완성본) — 파일 셋과 <code>CMakeLists.txt</code></h3>
+  <h3>7-3 7단계 (v7, 완성본) — 파일 셋과 <code>CMakeLists.txt</code></h3>
   <div class="codelabel good">range_filter.hpp — 목록만</div>
   <pre class="lang-cpp after"><code>#ifndef RANGE_FILTER_HPP_
 #define RANGE_FILTER_HPP_
@@ -1464,7 +1464,7 @@ int main()
 </details>
 <!-- /fullcode -->
 
-  <h3>소스를 빠뜨리면 — 8회 ⑧절 ③번과 같은 링크 오류가 난다</h3>
+  <h3>7-4 소스를 빠뜨리면 — 8회 8-3과 같은 링크 오류가 난다</h3>
   <p><code>add_executable</code>에 <code>range_filter.cpp</code>를 안 적고 빌드해 봤다.</p>
   <div class="codelabel bad">CMakeLists.txt — 소스 하나를 빠뜨린 판</div>
   <pre class="lang-cmake before"><code>add_executable(range_filter main.cpp)      # range_filter.cpp 를 빠뜨렸다</code></pre>
@@ -1582,17 +1582,17 @@ int main()
   <!-- ── 실습 ── -->
   <h2 id="lab">🧪 실습 — 완성본을 빌드하고, 세 군데를 일부러 망가뜨려 본다 <span class="badge b-green">🟢 맡긴다</span></h2>
   <div class="lab-block">
-    <p class="boxtitle">① 이걸 해 보면 무엇을 알게 되나</p>
+    <p class="boxtitle">(1) 이걸 해 보면 무엇을 알게 되나</p>
     <p>
       클래스 하나를 <strong>세 파일로 나눠 CMake로 빌드</strong>해 보고, 출력에서 <strong>소멸자가 불리는 자리</strong>를 확인한다.
       그다음 <strong>컴파일러가 잡아 주는 실수 둘</strong>(소스 빠뜨리기, <code>const</code> 빼기)과 <strong>안 잡아 주는 실수 하나</strong>(멤버 초기화 리스트 빼기)를 직접 내 본다.
     </p>
-    <p class="boxtitle">② 준비물</p>
+    <p class="boxtitle">(2) 준비물</p>
     <ul>
       <li>WSL 우분투 터미널 하나, VS Code (WSL에 연결된 상태)</li>
       <li><code>g++</code>과 <code>cmake</code> — 6회에서 깔았다</li>
     </ul>
-    <p class="boxtitle">③ 절차</p>
+    <p class="boxtitle">(3) 절차</p>
     <ol>
       <li>
         <strong>(2분) 작업 폴더를 만든다.</strong>
@@ -1631,7 +1631,7 @@ cmake --build build
         빌드가 되는지, 출력이 달라지는지 본다. 확인이 끝나면 <strong>완성본으로 되돌린다.</strong>
       </li>
     </ol>
-    <p class="boxtitle">④ 이렇게 되면 성공이다</p>
+    <p class="boxtitle">(4) 이렇게 되면 성공이다</p>
     <p>절차 3에서 아래 일곱 줄이 <strong>이 순서로</strong> 나온다.</p>
     <pre><code>[생성] front 필터 (0.16~8 m)
 [생성] rear 필터 (0.3~1.5 m)

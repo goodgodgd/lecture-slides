@@ -256,7 +256,7 @@ Model Properties</code></pre>
     </dl>
   </div>
 
-  <h3>공식을 그대로 쳐도 되나</h3>
+  <h3>2-1 공식을 그대로 쳐도 되나</h3>
   <p>
     \(G/(1+GH)\)라는 공식을 알고 있으니 <code>feedback</code> 없이 공식을 그대로 쳐도 될 것 같다. 해 본다.
   </p>
@@ -937,7 +937,7 @@ settling_time_envelope =
     <strong>4/σ는 그 두 값 사이에 있는 편리한 숫자</strong>인 셈이다.
   </p>
 
-  <h3>오류 없이 틀린 값을 찍는 두 가지 실수</h3>
+  <h3>9-1 오류 없이 틀린 값을 찍는 두 가지 실수</h3>
   <p>
     값을 찍거나 공식을 코드로 옮길 때 이렇게 쓰기 쉬운 줄이 둘 있다. 둘 다 MATLAB이 오류를 내지 않아서 그냥 지나가기 쉽다.
     첫째는 <code>damp</code>가 돌려준 벡터를 그대로 <code>sprintf</code>에 넣는 것이다.
@@ -972,12 +972,12 @@ settling_time = 4 / real(poles(1))</code></pre>
   <div class="box trap">
     <p class="boxtitle">⚠️ 두 줄이 틀린 이유와 고치는 법</p>
     <p>
-      <strong>① 벡터를 서식 문자열에 넣으면 서식이 되풀이된다.</strong> <code>sprintf</code>·<code>fprintf</code>는 인자를 전부 한 줄로 펴서
+      <strong>(1) 벡터를 서식 문자열에 넣으면 서식이 되풀이된다.</strong> <code>sprintf</code>·<code>fprintf</code>는 인자를 전부 한 줄로 펴서
       <code>[omega(1) omega(2) zeta(1) zeta(2)]</code> = <code>[3 3 0.5 0.5]</code> 순서로 <code>%1.4f</code> 자리에 채운다.
       그래서 「zeta: 3.0000」이라는 틀린 글자가 찍혔다. 하나만 꺼내서 <code>omega(1)</code>, <code>zeta(1)</code>로 넣는다.
     </p>
     <p>
-      <strong>② 안정한 극점의 실수부는 음수다.</strong> \(T_s = 4/\sigma\)의 \(\sigma\)는 실수부의 <strong>크기</strong>다.
+      <strong>(2) 안정한 극점의 실수부는 음수다.</strong> \(T_s = 4/\sigma\)의 \(\sigma\)는 실수부의 <strong>크기</strong>다.
       <code>real(poles(1))</code>은 −1.5이므로 그대로 나누면 −2.6667초라는 있을 수 없는 시간이 나온다. <code>abs(real(…))</code>로 크기를 쓴다.
       첨두시간도 같은 이유로 <code>abs(imag(…))</code>를 쓰면 켤레 중 어느 쪽이 먼저 나와도 안전하다.
     </p>

@@ -74,13 +74,13 @@
   <!-- ── ① 시작 ── -->
   <h2 id="start">① 오늘 만들 것 — 라이다 스캔과 바퀴 속도, AI가 준 그대로 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
-  <h3>무엇을 만드나</h3>
+  <h3>1-1 무엇을 만드나</h3>
   <p>
     라이다 메시지를 흉내 낸 구조체 <code>ScanMsg</code>에서 <strong>정면 거리</strong>를 꺼내고, 바퀴 네 개의 속도를 찍는 프로그램이다.
     실제 ROS 2에서는 <code>ScanMsg</code> 자리에 <code>sensor_msgs::msg::LaserScan</code>이라는 긴 이름이 오고, 모양과 성질은 같다. 이 메시지가 <strong>초당 5번 이상</strong> 들어온다.
   </p>
 
-  <h3>읽는 법</h3>
+  <h3>1-2 읽는 법</h3>
   <ul>
     <li>먼저 <strong>AI에게 시켜서 받은 코드를 그대로</strong> 돌린다. 맞는 값이 나온다.</li>
     <li>②절부터는 절마다 <strong>「개념」</strong>이 먼저 온다 — 그 문법이 무엇이고 어떤 문제를 풀려고 생겼는지. 그다음 <strong>「예제에 적용」</strong>에서 프로그램의 한 곳을 고치거나 <strong>세는 장치를 몇 줄 더한다.</strong></li>
@@ -91,7 +91,7 @@
     <li>빌드는 <strong>CMake</strong>다. <code>CMakeLists.txt</code>는 ①절 상자에 한 번 있고, 뒤 단계에서도 그대로 쓴다.</li>
   </ul>
 
-  <h3>1단계 (v1) — 값으로 받고, C 배열에 담는다</h3>
+  <h3>1-3 1단계 (v1) — 값으로 받고, C 배열에 담는다</h3>
   <pre class="lang-cpp"><code>const int kScanSize = 360;             // 라이다 한 바퀴의 거리 값 개수
 
 struct ScanMsg {
@@ -125,7 +125,7 @@ int main()
       <dd>원소가 360개이고 <strong>전부 1.0으로 채워진</strong> <code>vector</code>를 만든다. 라이다 한 바퀴의 거리 값이 전부 1.0 m라고 치고 메시지를 채우는 데 썼다.</dd>
     </dl>
   </div>
-  <h3>실제로 나온 출력</h3>
+  <h3>1-4 실제로 나온 출력</h3>
   <pre class="lang-sh"><code>$ cmake -S . -B build
 $ cmake --build build
 $ ./build/scan_list
@@ -178,7 +178,7 @@ add_executable(scan_list main.cpp)</code></pre></div>
   <!-- ── ② 컨테이너 ── -->
   <h2 id="container">② 컨테이너 — <code>vector</code>가 기본값, 개수가 박혀 있으면 <code>array</code> <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
-  <h3>개념 — 값 여러 개를 담는 타입</h3>
+  <h3>2-1 개념 — 값 여러 개를 담는 타입</h3>
   <p>
     <strong>컨테이너</strong>(container)는 같은 타입의 값 여러 개를 담는 클래스 템플릿이다(7회 ③절). 표준에 여러 개가 있지만 <strong>이 과목의 코드는 <code>std::vector</code> 하나로 거의 전부 돌아간다.</strong>
     <code>std::vector&lt;T&gt;</code>는 <strong>크기가 실행 중에 정해지고 변하는 배열</strong>이다. <code>push_back</code>으로 늘고 <code>size()</code>가 개수를 답한다.
@@ -194,9 +194,9 @@ add_executable(scan_list main.cpp)</code></pre></div>
   </table>
   </div>
 
-  <h3>예제에 적용 — <code>wheel_count</code>를 없애고, 둘의 크기를 물어본다</h3>
+  <h3>2-2 예제에 적용 — <code>wheel_count</code>를 없애고, 둘의 크기를 물어본다</h3>
   <p>v1의 <code>wheel_count</code>가 「개수를 따로 들고 다닌다」의 그 모양이다. 바퀴 개수는 변하지 않으니 <code>std::array</code>로 바꾼다. 맨 위에 <code>#include &lt;array&gt;</code>를 더한다.</p>
-  <h3>2단계 (v2) — <code>std::array</code>로 바꾸고 <code>main</code>에 한 묶음</h3>
+  <h3>2-3 2단계 (v2) — <code>std::array</code>로 바꾸고 <code>main</code>에 한 묶음</h3>
   <div class="codelabel bad">고치기 전 (v1)</div>
   <pre class="lang-cpp before"><code>  float wheel[4] = {0.5f, 0.5f, 0.5f, 0.5f};   // 바퀴 속도 4개
   int wheel_count = 4;                          // 개수는 따로 들고 다닌다
@@ -210,7 +210,7 @@ add_executable(scan_list main.cpp)</code></pre></div>
   std::cout &lt;&lt; "  vector : 크기 " &lt;&lt; msg.ranges.size() &lt;&lt; "  (실행 중에 정했다)\n";
   msg.ranges.push_back(2.0f);                    // vector 는 이렇게 늘릴 수 있다
   std::cout &lt;&lt; "  vector : push_back 뒤 크기 " &lt;&lt; msg.ranges.size() &lt;&lt; "  (array 는 이렇게 늘릴 수 없다)\n";</code></pre>
-  <h3>실제로 나온 출력</h3>
+  <h3>2-4 실제로 나온 출력</h3>
   <pre><code>  바퀴 4개, 첫 바퀴 0.5 m/s
 
 ② array 와 vector — 크기가 언제 정해지나
@@ -267,7 +267,7 @@ int main()
   <!-- ── ③ 값 전달과 참조 전달 ── -->
   <h2 id="byref">③ 값 전달과 참조 전달 — 읽기만 할 인자는 <code>const &amp;</code>로 받는다 <span class="badge b-red">🔴 사람이 한다</span></h2>
 
-  <h3>개념 — 함수는 인자를 두 가지 방식으로 받는다</h3>
+  <h3>3-1 개념 — 함수는 인자를 두 가지 방식으로 받는다</h3>
   <p>
     <strong>값 전달</strong>(pass by value)은 <code>float f(ScanMsg msg)</code> 모양이다. 함수가 시작될 때 <strong>넘긴 것의 사본이 하나 만들어지고</strong> 함수는 그 사본을 쓴다(7회 ⑤절).
     <strong>참조 전달</strong>(pass by reference)은 <code>float f(ScanMsg &amp; msg)</code> 모양이다. 사본 없이 <strong>원본에 다른 이름을 붙여</strong> 쓴다.
@@ -291,12 +291,12 @@ int main()
     <strong>AI는 틀린 코드보다 둔한 코드를 더 많이 만드는 것 같다.</strong> 둔한 코드는 맞는 답을 내므로 출력만 봐서는 드러나지 않는다.
   </p>
 
-  <h3>예제에 적용 — 복사가 나는지 세는 장치를 붙인다</h3>
+  <h3>3-2 예제에 적용 — 복사가 나는지 세는 장치를 붙인다</h3>
   <p>
     v2의 <code>front(ScanMsg msg)</code>가 정말 사본을 만드는지는 출력으로 알 수 없다. 11회 ③절에서 본 <strong>복사 생성자</strong> — 객체가 다른 객체의 사본으로 만들어질 때 불리는 생성자 — 를
     <code>ScanMsg</code>에 직접 쓰고 그 안에 <strong>숫자를 하나 올리는 줄</strong>을 넣으면 복사가 보인다. 비교하려고 값으로 받는 판을 <code>front_by_value</code>라는 이름으로 남겨 둔다.
   </p>
-  <h3>3단계 (v3) — 세는 줄을 넣고, <code>front()</code>를 <code>const &amp;</code>로</h3>
+  <h3>3-3 3단계 (v3) — 세는 줄을 넣고, <code>front()</code>를 <code>const &amp;</code>로</h3>
   <pre class="lang-cpp"><code>int g_copy = 0;                        // ScanMsg 가 복사된 횟수
 
 struct ScanMsg {
@@ -338,7 +338,7 @@ float front(const ScanMsg &amp; msg)
       <dd>복사 생성자를 손으로 쓴 것이다. <code>ranges(o.ranges)</code>로 원본의 값을 복사하는 일은 컴파일러가 만들어 주던 것과 같고, 거기에 <code>++g_copy</code> 한 줄을 더했다. 사본이 하나 생길 때마다 <code>g_copy</code>가 1씩 는다.</dd>
     </dl>
   </div>
-  <h3>실제로 나온 출력</h3>
+  <h3>3-4 실제로 나온 출력</h3>
   <pre><code>③ 값 전달과 참조 전달 — 함수에 넘길 때 복사가 나나
   front_by_value(msg) : ScanMsg 복사 1회
   front(msg)          : ScanMsg 복사 0회</code></pre>
@@ -401,7 +401,7 @@ int main()
 </details>
 <!-- /fullcode -->
   <div class="interp">
-    <strong>해석:</strong> <strong>1회와 0회</strong>다. 1회가 작아 보이지만 그 한 번에 거리 값 361개(②에서 하나 늘렸다)가 통째로 새로 만들어졌고, 이 함수는 메시지가 들어올 때마다 불린다.
+    <strong>해석:</strong> <strong>1회와 0회</strong>다. 1회가 작아 보이지만 그 한 번에 거리 값 361개(②절에서 하나 늘렸다)가 통째로 새로 만들어졌고, 이 함수는 메시지가 들어올 때마다 불린다.
     고친 뒤에도 정면 거리는 똑같이 나온다 — <strong>세는 장치가 없으면 고친 것이 맞는지 확인할 방법이 없었다.</strong>
   </div>
   <div class="prompt">
@@ -412,7 +412,7 @@ int main()
   <!-- ── ④ reserve ── -->
   <h2 id="reserve">④ 용량과 재할당 — <code>reserve()</code> 한 줄이 재할당 열 번을 없앤다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
-  <h3>개념 — 크기와 용량은 다르다</h3>
+  <h3>4-1 개념 — 크기와 용량은 다르다</h3>
   <p>
     <code>vector</code>에는 숫자가 둘 있다. <strong>크기</strong>(size)는 지금 들어 있는 원소의 개수이고, <strong>용량</strong>(capacity)은 지금 잡아 둔 자리의 개수다.
     <code>push_back</code>으로 하나 더 넣을 때 용량이 남아 있으면 그냥 들어가고, 꽉 찼으면 <strong>더 큰 자리를 새로 잡고 있던 값을 전부 옮긴 뒤 옛 자리를 반납한다.</strong> 이것을 <strong>재할당</strong>(reallocation)이라고 한다.
@@ -427,13 +427,13 @@ int main()
     재할당은 공짜가 아니고 담는 동안 여러 번 일어난다. <strong>몇 개가 들어올지 미리 안다면</strong> <code>v.reserve(n)</code>으로 자리를 한 번에 잡아 둘 수 있다. 값이 들어가는 것은 아니다 — <code>size()</code>는 그대로 0이고 <code>capacity()</code>만 <code>n</code>이 된다.
   </p>
 
-  <h3>예제에 적용 — 360개를 담는 동안 재할당이 몇 번 나는지 본다</h3>
+  <h3>4-2 예제에 적용 — 360개를 담는 동안 재할당이 몇 번 나는지 본다</h3>
   <p>
     라이다 값 360개를 <code>push_back</code>으로 하나씩 담으면 재할당이 몇 번 날까? 재할당은 화면에 아무것도 찍지 않는다. 그런데 재할당이 나면 <strong><code>capacity()</code>가 바뀐다.</strong>
     그러니 한 개 넣을 때마다 용량을 들여다보고, <strong>바뀐 순간에만 한 줄</strong> 찍으면 재할당이 하나씩 보인다.
     이것만 보려고 이 단계는 <strong>짧은 프로그램으로 따로</strong> 만든다. <code>ScanMsg</code>도 앞 절의 함수도 없이 <code>vector&lt;float&gt;</code> 하나만 남겼다.
   </p>
-  <h3>4단계 (v4) — 용량이 바뀔 때만 찍는 함수 하나</h3>
+  <h3>4-3 4단계 (v4) — 용량이 바뀔 때만 찍는 함수 하나</h3>
   <pre class="lang-cpp"><code>// 거리 값 kScanSize 개를 push_back 으로 담는다 — 용량이 바뀔 때만 한 줄 찍는다
 void fill_scan(bool use_reserve)
 {
@@ -476,7 +476,7 @@ int main()
       <dd>자리를 <code>n</code>칸 미리 잡는다. 값은 넣지 않는다 — <code>size()</code>는 0 그대로다.</dd>
     </dl>
   </div>
-  <h3>실제로 나온 출력</h3>
+  <h3>4-4 실제로 나온 출력</h3>
   <pre><code>④ reserve 없이 360개를 담는다
   시작          : size 0, capacity 0칸
   재할당 1번째 : size 1에서 0칸 → 1칸
@@ -552,7 +552,7 @@ int main()
   <!-- ── ⑤ 범위 for ── -->
   <h2 id="rangefor">⑤ 범위 기반 for — <code>const auto &amp;</code>를 빼면 매 바퀴 복사가 난다 <span class="badge b-red">🔴 사람이 한다</span></h2>
 
-  <h3>개념 — 반복 변수가 사본인지 참조인지</h3>
+  <h3>5-1 개념 — 반복 변수가 사본인지 참조인지</h3>
   <p>
     <strong>범위 기반 for</strong>(range-based for) <code>for (선언 : 컨테이너)</code>는 컨테이너의 원소를 앞에서부터 하나씩 꺼내 선언한 변수에 담는다. 번호를 세는 변수가 없으므로 범위를 넘어갈 자리 자체가 없다(7회 ④절).
     문제는 <strong>「담는다」가 어떻게 담느냐</strong>다. 7회 「조금 더」에서 <code>auto</code>는 <code>const</code>와 <code>&amp;</code>를 떼어 버린다고 했다. 그래서 <code>for (auto x : v)</code>는 <strong>한 바퀴마다 원소의 사본을 만든다</strong> — ③절의 값 전달과 같은 일이다.
@@ -568,8 +568,8 @@ int main()
   </table>
   </div>
 
-  <h3>예제에 적용 — 스캔 100개를 두 방식으로 돌면서 복사를 센다</h3>
-  <h3>5단계 (v5) — 스캔 100개를 두 방식으로 돈다</h3>
+  <h3>5-2 예제에 적용 — 스캔 100개를 두 방식으로 돌면서 복사를 센다</h3>
+  <h3>5-3 5단계 (v5) — 스캔 100개를 두 방식으로 돈다</h3>
   <p>이 단계도 <strong>짧은 프로그램으로 따로</strong> 만든다. v3의 <code>ScanMsg</code> — 복사될 때마다 <code>g_copy</code>를 하나 올리는 그 구조체 — 만 가져오고, 나머지는 반복문 둘이다.</p>
   <pre class="lang-cpp"><code>int main()
 {
@@ -588,7 +588,7 @@ int main()
   std::cout &lt;&lt; "  스캔 " &lt;&lt; history.size() &lt;&lt; "개를 두 번 돌았다 (sum=" &lt;&lt; sum &lt;&lt; ")\n";
   return 0;
 }</code></pre>
-  <h3>실제로 나온 출력</h3>
+  <h3>5-4 실제로 나온 출력</h3>
   <pre><code>⑤ 범위 for — const auto &amp; 를 빼면 매 바퀴 복사가 난다
   for (auto s : history)         : ScanMsg 복사 100회
   for (const auto &amp; s : history) : ScanMsg 복사 0회
@@ -643,7 +643,7 @@ int main()
   <!-- ── ⑥ list 와 deque ── -->
   <h2 id="listdeque">⑥ <code>list</code>와 <code>deque</code> — <code>vector</code>와 무엇이 다른가 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
-  <h3>개념 — <code>vector</code>는 앞과 중간에서 넣고 빼는 것이 비싸다</h3>
+  <h3>6-1 개념 — <code>vector</code>는 앞과 중간에서 넣고 빼는 것이 비싸다</h3>
   <p>
     지금까지 <code>vector</code> 하나로 다 했다. 그런데 표준에는 왜 다른 컨테이너가 또 있을까?
     <code>vector</code>는 값을 메모리에 <strong>빈틈없이 나란히</strong> 둔다. 그래서 번호로 바로 꺼낼 수 있고(<code>v[3]</code>) 한 바퀴 도는 것도 빠르다.
@@ -655,7 +655,7 @@ int main()
     <figcaption><code>vector</code>의 중간에 넣고 빼기. 35를 넣으려고 뒤의 두 개를 <strong>밀고</strong>(복사 2회), 30을 빼려고 뒤의 세 개를 <strong>당겼다</strong>(복사 3회). 맨 앞에서 빼면 나머지 전부를 당긴다.</figcaption>
   </figure>
 
-  <h3>개념 — <code>std::list</code>: 연결 리스트</h3>
+  <h3>6-2 개념 — <code>std::list</code>: 연결 리스트</h3>
   <p>
     <strong><code>std::list&lt;T&gt;</code></strong>는 <strong>연결 리스트</strong>(linked list)다. 원소 하나하나가 <strong>노드</strong>(node)라는 따로 떨어진 조각에 들고, 노드마다 <strong>값과 다음 노드의 주소</strong>를 함께 가진다(<code>std::list</code>는 이전 노드의 주소도 가진다).
     노드들은 메모리 여기저기에 흩어져 있고 주소로만 이어진다. 그래서 어디에 넣든 아무것도 밀 필요가 없다 — <strong>새 노드를 만들고 연결만 바꾸면 끝</strong>이다. 빼는 것도 연결을 끊고 그 노드만 지우면 된다.
@@ -669,7 +669,7 @@ int main()
     대신 <strong>번호로 바로 갈 수 없다.</strong> 네 번째 원소를 보려면 첫 노드부터 연결을 세 번 따라가야 한다. 그래서 <code>list</code>에는 <code>[]</code>와 <code>at()</code>이 아예 없다. 노드마다 주소를 따로 들고 있어 메모리도 더 쓰고, 값이 흩어져 있어 한 바퀴 도는 것도 <code>vector</code>보다 느린 편이다.
   </p>
 
-  <h3>개념 — <code>std::deque</code>: 앞뒤가 다 열린 컨테이너</h3>
+  <h3>6-3 개념 — <code>std::deque</code>: 앞뒤가 다 열린 컨테이너</h3>
   <p>
     <strong><code>std::deque&lt;T&gt;</code></strong>(「덱」이라고 읽는다. double-ended queue — 양쪽이 열린 대기열)는 둘의 중간쯤이다. 값을 <strong>일정한 크기의 블록 여러 개</strong>에 나눠 담고, 블록들의 주소를 <strong>블록 목록</strong>으로 따로 관리한다.
   </p>
@@ -683,7 +683,7 @@ int main()
     다만 <strong>중간에 넣으면</strong> <code>vector</code>처럼 밀어야 한다(앞쪽과 뒤쪽 중 짧은 쪽을 민다).
   </p>
 
-  <h3>개념 — 셋을 나란히 놓으면</h3>
+  <h3>6-4 개념 — 셋을 나란히 놓으면</h3>
   <p class="readme-first">무엇을 먼저 볼지: <strong>맨 오른쪽 열</strong>에서 자기 상황을 찾는다.</p>
   <div class="tablewrap">
   <table>
@@ -695,13 +695,13 @@ int main()
   </div>
   <p>세 컨테이너는 <code>push_back</code>·<code>size()</code>·<code>insert</code>·<code>erase</code>·범위 for 를 <strong>같은 이름으로</strong> 쓴다. 그래서 타입 이름 하나만 바꿔 끼워 볼 수 있다.</p>
 
-  <h3>예제에 적용 — 최근 스캔 값 10개만 남기는 기록</h3>
+  <h3>6-5 예제에 적용 — 최근 스캔 값 10개만 남기는 기록</h3>
   <p>
     로봇은 보통 <strong>최근 몇 개</strong>만 기억한다 — 새 값이 들어오면 뒤에 붙이고, 10개를 넘으면 가장 오래된 맨 앞을 버린다. 이것을 세 컨테이너로 똑같이 짜서, 버리는 동안 <strong>원소가 몇 번 복사되는지</strong> 센다.
     세는 장치는 ③절과 같다. 이번에는 원소 하나(<code>Range</code>)에 <strong>복사 생성자</strong>와 <strong>복사 대입 연산자</strong>(11회) 둘 다 세는 줄을 넣는다 — 밀고 당기는 것은 「옆 칸에 대입」이기 때문이다.
     이 단계도 <strong>짧은 프로그램으로 따로</strong> 만든다.
   </p>
-  <h3>6단계 (v6) — 컨테이너 셋에 같은 일을 시킨다</h3>
+  <h3>6-6 6단계 (v6) — 컨테이너 셋에 같은 일을 시킨다</h3>
   <pre class="lang-cpp"><code>const size_t kKeep = 10;               // 최근 몇 개만 남기나
 int g_copy = 0;                        // Range 가 복사된 횟수 (복사 생성 + 복사 대입)
 
@@ -747,7 +747,7 @@ int main()
       <dd>맨 앞 자리에서 3칸 간 자리다. <code>vector</code>는 <code>v.begin() + 3</code>으로 한 번에 건너뛰지만, <code>list</code>는 번호로 못 가므로 <code>std::next</code>로 한 칸씩 따라가야 한다.</dd>
     </dl>
   </div>
-  <h3>실제로 나온 출력</h3>
+  <h3>6-7 실제로 나온 출력</h3>
   <pre><code>⑥ 최근 10개만 남긴다 — 100개가 들어오는 동안 앞에서 버린다
   vector : 원소 복사 900회
   deque  : 원소 복사 0회
@@ -833,7 +833,7 @@ int main()
   <!-- ── ⑦ 반복자 ── -->
   <h2 id="iterator">⑦ 반복자 — 원소의 자리를 가리키는 객체 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
-  <h3>개념 — 반복자(iterator)</h3>
+  <h3>7-1 개념 — 반복자(iterator)</h3>
   <p>
     ⑥절에서 <code>v.erase(v.begin())</code>라고 썼다. <code>erase</code>에 인덱스(<code>v[i]</code>의 <code>i</code>처럼 0부터 세는 원소 번호)가 아니라 <code>v.begin()</code>을 넘겼다. 그것은 정확히 무엇일까?
   </p>
@@ -855,7 +855,7 @@ it != v.end()          // 아직 끝에 닿지 않았나</code></pre>
     <code>it</code>의 타입은 <code>std::vector&lt;float&gt;::iterator</code>처럼 길어서 보통 <code>auto</code>로 받는다(7회 ④절).
   </p>
 
-  <h3>개념 — 반열린 구간 <code>[begin, end)</code></h3>
+  <h3>7-2 개념 — 반열린 구간 <code>[begin, end)</code></h3>
   <p>
     <code>begin()</code>은 첫 원소를 가리킨다. 그럼 <code>end()</code>는 마지막 원소를 가리킬까?
     그렇지 않다. <code>end()</code>는 <strong>마지막 원소의 다음 자리</strong> — 원소가 없는 자리를 가리킨다.
@@ -886,7 +886,7 @@ it != v.end()          // 아직 끝에 닿지 않았나</code></pre>
 }</code></pre>
   <p>그래서 범위 기반 for는 <code>begin()</code>과 <code>end()</code>가 있는 것이면 무엇이든 돈다. 인덱스가 없는 <code>list</code>도 돈 이유가 이것이다.</p>
 
-  <h3>개념 — 반복자의 종류</h3>
+  <h3>7-3 개념 — 반복자의 종류</h3>
   <p>
     반복자가 같은 모양의 연산을 내준다고 했지만 전부 같지는 않다. 컨테이너가 원소를 두는 방식에 따라 <strong>할 수 있는 연산이 다르다.</strong>
   </p>
@@ -907,12 +907,12 @@ it != v.end()          // 아직 끝에 닿지 않았나</code></pre>
     <li><code>std::distance(a, b)</code> — <code>a</code>에서 <code>b</code>까지 몇 칸인지.</li>
   </ul>
 
-  <h3>예제에 적용 — <code>vector</code>와 <code>list</code>를 같은 반복문으로 돈다</h3>
+  <h3>7-4 예제에 적용 — <code>vector</code>와 <code>list</code>를 같은 반복문으로 돈다</h3>
   <p>
     ⑥절의 <code>list</code>는 인덱스가 없어서 <code>for (int i = 0; …; ++i)</code>로 돌 수 없었다. 반복자로는 <code>vector</code>와 글자까지 같은 반복문으로 돈다.
     최근 거리 값 5개를 두 컨테이너에 똑같이 담고, 반복자로 돌고, 고치고, 건너뛰어 본다. 이 단계도 <strong>짧은 프로그램으로 따로</strong> 만든다.
   </p>
-  <h3>7단계 (v7) — 반복자로 돌고, 고치고, 건너뛴다</h3>
+  <h3>7-5 7단계 (v7) — 반복자로 돌고, 고치고, 건너뛴다</h3>
   <pre class="lang-cpp"><code>std::vector&lt;float&gt; v{0.83f, 1.24f, 0.42f, 2.05f, 0.55f};   // 최근 거리 값 5개
 std::list&lt;float&gt; l{0.83f, 1.24f, 0.42f, 2.05f, 0.55f};     // 같은 값을 list 에도 담았다
 
@@ -939,7 +939,7 @@ auto l2 = std::next(l.begin(), 2);   // list 는 한 칸씩 두 번 따라간다
       <dd>두 자리 사이가 몇 칸인지다. 처음부터 끝까지 쟀으니 원소 개수와 같다.</dd>
     </dl>
   </div>
-  <h3>실제로 나온 출력</h3>
+  <h3>7-6 실제로 나온 출력</h3>
   <pre><code>⑦ 반복자로 한 바퀴 돈다 — vector 와 list 가 같은 모양이다
   vector: 0.83 1.24 0.42 2.05 0.55
   list: 0.83 1.24 0.42 2.05 0.55
@@ -1004,7 +1004,7 @@ int main()
     셋째 묶음에서 인덱스 2의 값이 <code>vector</code>는 0.42, <code>list</code>는 0.5로 갈린 것은 둘째 묶음에서 <code>list</code>만 고쳤기 때문이다 — <code>*it = 0.5f</code>가 원본을 바꿨다는 증거다.
   </div>
 
-  <h3>막히는 것을 확인한다 — <code>list</code> 반복자에 <code>+ 2</code>를 하면</h3>
+  <h3>7-7 막히는 것을 확인한다 — <code>list</code> 반복자에 <code>+ 2</code>를 하면</h3>
   <p>v7에서 <code>std::next</code> 한 줄을 <code>vector</code>처럼 <code>+ 2</code>로 바꾸고 빌드해 봤다.</p>
   <div class="codelabel bad">v7 변형 — 한 줄을 바꾼 판</div>
   <pre class="lang-cpp before"><code>auto l2 = l.begin() + 2;             // list 도 vector 처럼 건너뛰어 본다</code></pre>
@@ -1074,7 +1074,7 @@ int main()
   <!-- ── ⑧ 반복자 무효화 ── -->
   <h2 id="invalidation">⑧ 반복자 무효화 — 지우거나 넣은 뒤에는 반복자를 다시 받는다 <span class="badge b-red">🔴 사람이 한다</span></h2>
 
-  <h3>개념 — 반복자 무효화(iterator invalidation)</h3>
+  <h3>8-1 개념 — 반복자 무효화(iterator invalidation)</h3>
   <p>
     반복자는 원소의 자리를 가리킨다. 그런데 그 원소가 다른 자리로 옮겨 가거나 지워지면 어떻게 될까?
     반복자는 그것을 모른 채 <strong>옛 자리를 계속 가리킨다.</strong> 이렇게 더는 쓸 수 없게 된 반복자를 <strong>무효화된 반복자</strong>(invalidated iterator)라고 한다.
@@ -1106,13 +1106,13 @@ int main()
   }
 }</code></pre>
 
-  <h3>예제에 적용 — 잴 수 없는 거리를 돌면서 지운다</h3>
+  <h3>8-2 예제에 적용 — 잴 수 없는 거리를 돌면서 지운다</h3>
   <p>
     이 과목의 라이다(LDS-02)는 0.16 m보다 가까운 것을 재지 못한다. 그보다 작은 값은 측정 실패이므로 스캔에서 빼야 한다.
     「돌면서 지우는」 반복문은 AI 코드에 흔히 나오고, 반복자 무효화 실수도 바로 거기서 나온다. 앞부분에서는 ④절의 재할당이 정말 원소를 옮기는지도 확인한다.
     이 단계도 <strong>짧은 프로그램으로 따로</strong> 만든다.
   </p>
-  <h3>8단계 (v8) — 재할당이 원소를 옮기는지 보고, 돌면서 지운다</h3>
+  <h3>8-3 8단계 (v8) — 재할당이 원소를 옮기는지 보고, 돌면서 지운다</h3>
   <pre class="lang-cpp"><code>std::vector&lt;float&gt; a{0.83f, 1.24f, 0.42f};   // reserve 없이 3개
 std::vector&lt;float&gt; b{0.83f, 1.24f, 0.42f};
 b.reserve(10);                               // 10개 자리를 미리 잡았다
@@ -1149,7 +1149,7 @@ for (auto it = scan.begin(); it != scan.end();) {
       <dd><code>erase</code>는 <strong>지운 원소 바로 다음 원소의 자리</strong>를 돌려준다. 지운 뒤 <code>it</code>는 무효이므로 이 새 자리로 바꿔 끼운다.</dd>
     </dl>
   </div>
-  <h3>실제로 나온 출력</h3>
+  <h3>8-4 실제로 나온 출력</h3>
   <p>고치기 전 판의 돌면서 지우는 부분:</p>
   <pre><code>⑧ 돌면서 지운다 — 0.16 m 보다 작은 값(잴 수 없는 거리)을 뺀다
   지우기 전: 0.1 0.05 0.83 1.24 0.12 0.42
@@ -1267,14 +1267,14 @@ int main()
   <!-- ── 실습 ── -->
   <h2 id="lab">🧪 실습 — 개수를 열 배로 늘리면 재할당은 몇 번 늘어나나 <span class="badge b-green">🟢 맡긴다</span></h2>
   <div class="lab-block">
-    <p class="boxtitle">① 이걸 해 보면 무엇을 알게 되나</p>
+    <p class="boxtitle">(1) 이걸 해 보면 무엇을 알게 되나</p>
     <p><strong>담는 개수를 열 배로 늘리면 재할당 횟수가 어떻게 되는지</strong> 확인하고, 숫자를 이름 붙은 상수 하나로 둔 덕을 본다.</p>
-    <p class="boxtitle">② 준비물</p>
+    <p class="boxtitle">(2) 준비물</p>
     <ul>
       <li>WSL 우분투 터미널 하나, VS Code (WSL에 연결된 상태)</li>
       <li><code>g++</code>과 <code>cmake</code> — 6회에서 깔았다</li>
     </ul>
-    <p class="boxtitle">③ 절차</p>
+    <p class="boxtitle">(3) 절차</p>
     <ol>
       <li>
         <strong>(3분) 작업 폴더를 만들고</strong> ④절의 📄 <strong>「v4」</strong> 상자에서 <code>main.cpp</code>를, ①절 상자에서 <code>CMakeLists.txt</code>를 「복사」해 만든다. <strong>타이핑하지 않는다.</strong>
@@ -1293,7 +1293,7 @@ cmake --build build
       <li><strong>(7분) 3번과 4번의 재할당 횟수와 최종 capacity를 나란히 적고,</strong> 개수를 열 배로 늘렸는데 재할당이 왜 열 배가 되지 않는지 한 줄로 쓴다.</li>
       <li><strong>(2분) <code>kScanSize</code>를 360으로 되돌리고</strong> 한 번 더 빌드해서 되는지 확인한다.</li>
     </ol>
-    <p class="boxtitle">④ 이렇게 되면 성공이다</p>
+    <p class="boxtitle">(4) 이렇게 되면 성공이다</p>
     <p><strong>성공 화면</strong> — 2번에서 ④절의 「실제로 나온 출력」과 같은 화면이 나온다. 마지막 두 묶음의 줄은 이렇다.</p>
     <pre><code>  재할당 10번째 : size 257에서 256칸 → 512칸
   끝            : size 360, capacity 512칸, 재할당 10번

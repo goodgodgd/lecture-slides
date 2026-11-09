@@ -34,11 +34,11 @@
   <a href="#summary">한 장 요약</a>
   <a href="#s1">① 무엇을 만드나 — 원판이 달린 DC 모터</a>
   <a href="#s2">② 직류전동기의 모델링</a>
-  <a class="sub" href="#s2-2">인덕턴스를 뺀 1차 모델</a>
+  <a class="sub" href="#s2-2">2-1 인덕턴스를 뺀 1차 모델</a>
   <a href="#s3">③ 부하의 효과 — 관성과 마찰</a>
   <a href="#s4">④ PI 속도 제어기 설계</a>
   <a href="#s5">⑤ Simscape로 모터와 원판 조립하기</a>
-  <a class="sub" href="#s5-2">서브시스템으로 묶기</a>
+  <a class="sub" href="#s5-2">5-1 서브시스템으로 묶기</a>
   <a href="#s6">⑥ 속도 제어 루프와 실행</a>
   <a href="#s7">⑦ Simscape 모델과 식의 비교</a>
   <a href="#s8">⑧ 원판을 3차원 물체로 — Simscape Multibody</a>
@@ -218,7 +218,7 @@ D =
   $$(Js + D)\,\Omega = K\,\frac{E_a - K\Omega}{L_a s + R_a}$$
   $$\frac{\Omega(s)}{E_a(s)} = \frac{K}{(L_a s + R_a)(Js + D) + K^2}$$
 
-  <h3 id="s2-2">인덕턴스를 뺀 1차 모델</h3>
+  <h3 id="s2-2">2-1 인덕턴스를 뺀 1차 모델</h3>
   <p>
     분모가 2차라 극점이 둘이다. 둘 다 필요할까? 숫자를 넣어 극점부터 본다.
   </p>
@@ -464,7 +464,7 @@ PI : 최종 400 rpm,  처음 전압 10.64 V,  최종 전압 5.03 V</code></pre>
     <figcaption>원판의 관성. <span class="mk">1</span> 값 칸에 변수 <code>JL</code>(작업공간의 0.00125가 흐리게 보인다) <span class="mk">2</span> 단위 kg·m². 원판을 바꾸려면 작업공간의 <code>JL</code>만 바꾸면 된다.</figcaption>
   </figure>
 
-  <h3 id="s5-2">서브시스템으로 묶기</h3>
+  <h3 id="s5-2">5-1 서브시스템으로 묶기</h3>
   <p>
     이 모델을 제어 루프에 그대로 펼쳐 놓으면 화면이 너무 복잡하다. 모터 부분을 블록 하나로 접는다.
   </p>

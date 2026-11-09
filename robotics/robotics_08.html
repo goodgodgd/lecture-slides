@@ -84,7 +84,7 @@
   <!-- ── 📐 이론 블록 ── -->
   <h2 id="stages">① g++ 로 빌드한다 — 파일이 둘이 되면 한 줄로는 안 된다 <span class="badge b-red">🔴 사람이 한다</span></h2>
 
-  <h3>1단계 — 지금 있는 파일 세 개</h3>
+  <h3>1-1 1단계 — 지금 있는 파일 세 개</h3>
   <p>
     라이다가 준 거리 값 중 <strong>쓸 만한 것만 골라 평균을 내는 함수</strong> 하나를 만들었다고 하자.
     7회 끝에서 본 대로 선언은 헤더에, 정의는 소스에, 그것을 쓰는 쪽은 <code>main.cpp</code>에 있다.
@@ -168,7 +168,7 @@ int main()
     </dl>
   </div>
 
-  <h3>기존 방법으로 해 보면 — 두 번 막힌다</h3>
+  <h3>1-2 기존 방법으로 해 보면 — 두 번 막힌다</h3>
   <p>여태 쓰던 대로 <code>scan_tools/</code> 안에서 <code>g++</code>에 소스 둘을 넘겨 본다. <strong>첫 번째 벽</strong>은 헤더를 못 찾는 것이다.</p>
   <pre class="lang-sh"><code>$ g++ -std=c++17 src/main.cpp src/scan_math.cpp -o scan_app
 src/main.cpp:1:10: fatal error: scan_math.hpp: No such file or directory
@@ -260,15 +260,15 @@ int main()
 </details>
 <!-- /fullcode -->
 
-  <h3>컴파일과 링크 — g++ 한 줄은 사실 두 단계다</h3>
+  <h3>1-3 컴파일과 링크 — g++ 한 줄은 사실 두 단계다</h3>
   <p>
     위에서 두 번 막힌 자리는 서로 다른 단계에서 났다. 첫 번째(헤더를 못 찾음)는 <strong>컴파일</strong>에서,
     두 번째(<code>undefined reference</code>)는 <strong>링크</strong>에서 났다.
     <code>g++</code>에 소스 둘을 한꺼번에 넘기면 이 두 단계가 한 줄에 숨어서 지나간다.
     <strong>둘을 손으로 갈라서 쳐 보면</strong> 무엇이 만들어지는지가 보인다.
   </p>
-  <pre class="lang-sh"><code>$ g++ -std=c++17 -Iinclude -c src/scan_math.cpp -o scan_math.o   # ① 컴파일: 소스 하나 → .o 하나
-$ g++ -std=c++17 -Iinclude -c src/main.cpp -o main.o             # ① 컴파일: 소스 하나 → .o 하나
+  <pre class="lang-sh"><code>$ g++ -std=c++17 -Iinclude -c src/scan_math.cpp -o scan_math.o   # (1) 컴파일: 소스 하나 → .o 하나
+$ g++ -std=c++17 -Iinclude -c src/main.cpp -o main.o             # (1) 컴파일: 소스 하나 → .o 하나
 $ ls
 include  main.o  scan_math.o  src</code></pre>
   <p>
@@ -277,7 +277,7 @@ include  main.o  scan_math.o  src</code></pre>
     그래서 <code>main.cpp</code>를 컴파일할 때 <code>mean_range</code>의 정의가 없어도 아무 말이 없다 —
     헤더가 "있다"고 약속했으니 그대로 믿고 넘어간다. <code>-o</code>는 결과 파일의 이름이다.
   </p>
-  <pre class="lang-sh"><code>$ g++ -o scan_app main.o scan_math.o                             # ② 링크: .o 들 → 실행 파일 하나
+  <pre class="lang-sh"><code>$ g++ -o scan_app main.o scan_math.o                             # (2) 링크: .o 들 → 실행 파일 하나
 $ ./scan_app
 유효값 평균 = 1.373 m</code></pre>
   <p>
@@ -289,8 +289,8 @@ $ ./scan_app
   <div class="tablewrap">
   <table>
     <tr><th>단계</th><th>무슨 일을 하나</th><th>들어가는 것 → 나오는 것</th><th>여기서 나는 대표 메시지</th></tr>
-    <tr><td>① 컴파일</td><td>소스를 <strong>한 개씩</strong> 기계어로 바꾼다. 문법과 헤더를 여기서 본다</td><td><code>.cpp</code> 하나 → <code>.o</code> 하나</td><td><code>No such file or directory</code>, <code>error: …</code></td></tr>
-    <tr><td>② 링크</td><td><code>.o</code>들을 <strong>이어 붙여</strong> 실행 파일 하나로 만든다</td><td><code>.o</code> 여럿 → 실행 파일 하나</td><td><code>undefined reference to …</code></td></tr>
+    <tr><td>(1) 컴파일</td><td>소스를 <strong>한 개씩</strong> 기계어로 바꾼다. 문법과 헤더를 여기서 본다</td><td><code>.cpp</code> 하나 → <code>.o</code> 하나</td><td><code>No such file or directory</code>, <code>error: …</code></td></tr>
+    <tr><td>(2) 링크</td><td><code>.o</code>들을 <strong>이어 붙여</strong> 실행 파일 하나로 만든다</td><td><code>.o</code> 여럿 → 실행 파일 하나</td><td><code>undefined reference to …</code></td></tr>
   </table>
   </div>
   <div class="interp">
@@ -307,7 +307,7 @@ $ ./scan_app
     한 번 빌드에 몇십 분이 걸린다.
   </p>
 
-  <h3>파일이 많아지면 이 일이 감당이 안 된다</h3>
+  <h3>1-4 파일이 많아지면 이 일이 감당이 안 된다</h3>
   <p>
     지금은 소스가 둘이라 손으로 적을 만하다. 그런데 실제 프로젝트는 이렇게 생겼다.
   </p>
@@ -351,7 +351,7 @@ main.o: src/main.cpp include/scan_math.hpp
 scan_math.o: src/scan_math.cpp include/scan_math.hpp
 	g++ -std=c++17 -Iinclude -c src/scan_math.cpp -o scan_math.o</code></pre>
 
-  <h3>Makefile 의 규칙은 두 줄로 돼 있다</h3>
+  <h3>2-1 Makefile 의 규칙은 두 줄로 돼 있다</h3>
   <dl class="lines">
       <dt>만들 것: 필요한 것들  (규칙의 첫 줄)</dt>
       <dd>콜론 왼쪽이 <strong>만들 파일</strong>, 오른쪽이 <strong>그것을 만드는 데 필요한 파일</strong>이다.
@@ -369,7 +369,7 @@ scan_math.o: src/scan_math.cpp include/scan_math.hpp
           헤더가 바뀌면 <code>main.o</code>도 다시 만들어야 한다. 이 줄을 빠뜨리면 헤더를 고쳐도 <code>make</code>가 모른다.</dd>
   </dl>
 
-  <h3>그때 이걸 친다</h3>
+  <h3>2-2 그때 이걸 친다</h3>
   <pre class="lang-sh"><code>$ ls
 include  Makefile  src
 $ make
@@ -383,7 +383,7 @@ $ ./scan_app
     ①절에서 손으로 친 세 줄이 <strong>순서까지 맞게</strong> 나왔다. 사람은 <code>make</code> 네 글자만 쳤다.
   </p>
 
-  <h3>바뀐 것만 다시 만든다</h3>
+  <h3>2-3 바뀐 것만 다시 만든다</h3>
   <p>
     <code>make</code>의 진짜 값어치는 <strong>두 번째부터</strong> 나온다. 아무것도 안 고치고 다시 치면 아무것도 안 한다.
     <code>main.cpp</code>만 고치고 치면 <code>main.o</code>와 링크만 다시 한다. <code>scan_math.o</code>는 건드리지 않는다.
@@ -464,7 +464,7 @@ int main()
 <!-- /fullcode -->
 <!-- /fullcode -->
 
-  <h3>여기서 힘에 부친다</h3>
+  <h3>2-4 여기서 힘에 부친다</h3>
   <p>
     소스가 둘일 때 <code>Makefile</code>은 아홉 줄이다. 그런데 이 아홉 줄에 이미 <strong>사람이 틀릴 자리가 셋</strong> 있다.
   </p>
@@ -485,21 +485,21 @@ int main()
   <details class="story" id="story">
     <summary>탭 문자 하나가 40년을 갔다 — 만든 사람도 실수인 줄 알고 있었다 (10분 · 건너뛰어도 됩니다)</summary>
 
-    <h4>① 1976년, 벨 연구소</h4>
+    <h4>(1) 1976년, 벨 연구소</h4>
     <p>
       스튜어트 펠드먼(Stuart Feldman)은 동료 하나가 프로그램을 고쳐 놓고 <strong>다시 빌드하는 것을 잊어서
       하루를 통째로 날린 것</strong>을 봤다. 고친 코드가 실행 파일에 반영되지 않았는데,
       그 사실을 모른 채 하루 종일 엉뚱한 곳에서 원인을 찾은 것이다.
     </p>
 
-    <h4>② 그래서 무엇을 했나</h4>
+    <h4>(2) 그래서 무엇을 했나</h4>
     <p>
       그는 도구를 하나 만들었다. <strong>make</strong>다.
       생각은 단순하다. <em>"뭐가 뭐에 의존하는지 미리 적어 두면, 바뀐 것만 다시 만들어 준다."</em>
       의존 관계와 만드는 방법을 <code>Makefile</code>이라는 파일에 적어 두는 방식이다.
     </p>
 
-    <h4>③ 여기가 재미있다 — 열두 명 때문에</h4>
+    <h4>(3) 여기가 재미있다 — 열두 명 때문에</h4>
     <p>
       <code>Makefile</code>의 규칙 줄은 <strong>맨 앞이 반드시 탭 문자</strong>여야 한다.
       스페이스 여덟 칸은 안 된다. <strong>눈으로는 구별이 안 되는데 오류가 난다.</strong>
@@ -515,7 +515,7 @@ int main()
       소프트웨어에서 초기 결정이 굳어 버리는 방식의 교과서적인 사례다.
     </p>
 
-    <h4>④ 그래서 지금 우리 손에 남은 것</h4>
+    <h4>(4) 그래서 지금 우리 손에 남은 것</h4>
     <p>
       운영체제마다 <code>Makefile</code>이 달라지는 문제가 다음에 왔고,
       2000년 미국 국립의학도서관이 의료 영상 라이브러리(ITK)를 만들면서
@@ -524,7 +524,7 @@ int main()
       <strong>②절의 <code>Makefile</code>을 우리가 직접 쓸 일이 없는 이유가 여기 있다.</strong>
     </p>
 
-    <h4>⑤ 숫자로 확인한다</h4>
+    <h4>(5) 숫자로 확인한다</h4>
     <ul>
       <li><strong>열두 명</strong> — 설계를 못 바꾼 이유의 전부다. 그때 사용자가 열두 명이었다.</li>
       <li><strong>40년 넘게</strong> — 1976년에 정해진 탭 규칙은 지금도 그대로다. 바꾸면 옛날 <code>Makefile</code>이 전부 깨진다.</li>
@@ -548,7 +548,7 @@ int main()
   <!-- ── 💻 코딩 블록: 정상 프로젝트 ── -->
   <h2 id="project">③ CMakeLists.txt — Makefile 을 대신 써 준다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
-  <h3>2단계 — 파일 하나를 더한다: <code>CMakeLists.txt</code></h3>
+  <h3>3-1 2단계 — 파일 하나를 더한다: <code>CMakeLists.txt</code></h3>
   <p>
     CMake는 <strong>스스로 빌드하지 않는다.</strong> <code>CMakeLists.txt</code>를 읽고 <strong>②절의 <code>Makefile</code>을 대신 만들어 주는</strong> 도구다.
     그래서 <code>CMakeLists.txt</code>에는 <code>Makefile</code>보다 적게 적는다 —
@@ -570,15 +570,15 @@ project(scan_tools CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# ① 라이브러리를 하나 만든다
+# (1) 라이브러리를 하나 만든다
 add_library(scan_math src/scan_math.cpp)
 target_include_directories(scan_math PUBLIC include)
 
-# ② 실행 파일을 만들고 ①을 붙인다
+# (2) 실행 파일을 만들고 (1)을 붙인다
 add_executable(scan_app src/main.cpp)
 target_link_libraries(scan_app PRIVATE scan_math)</code></pre>
 
-  <h3>이 파일을 읽는 단위 — 타깃(target)</h3>
+  <h3>3-2 이 파일을 읽는 단위 — 타깃(target)</h3>
   <p>
     <code>Makefile</code>은 「파일: 필요한 파일 → 명령」의 나열이었다. <code>CMakeLists.txt</code>는 단위가 다르다.
     <strong>빌드가 끝났을 때 손에 남는 결과물</strong> — 실행 파일 하나, 라이브러리 하나 — 을
@@ -591,7 +591,7 @@ target_link_libraries(scan_app PRIVATE scan_math)</code></pre>
     클래스에 빗대면 타깃이 객체, <code>add_*</code>가 생성자, <code>target_*</code>가 멤버를 설정하는 함수다.
   </p>
 
-  <h3>여섯 줄을 한 줄씩 읽는다</h3>
+  <h3>3-3 여섯 줄을 한 줄씩 읽는다</h3>
   <p>위 13줄에서 빈 줄과 주석을 빼면 명령은 여덟 줄이고, 그중 표준을 정하는 <code>set</code> 두 줄을 빼면 여섯 줄이다. 이 여섯 줄은 <strong>외워야 하는 것</strong>이다. 어느 프로젝트의 <code>CMakeLists.txt</code>를 열어도 이 여섯 가지가 뼈대다.</p>
   <dl class="lines">
     <dt>cmake_minimum_required(VERSION 3.16)</dt>
@@ -619,7 +619,7 @@ target_link_libraries(scan_app PRIVATE scan_math)</code></pre>
 
     <dt>target_link_libraries(scan_app PRIVATE scan_math)</dt>
     <dd>②절 <code>Makefile</code>의 <code>scan_app: main.o scan_math.o</code> 줄이 이 줄이다. <code>scan_app</code>을 만들 때 <code>scan_math</code>를 이어 붙이라는 뜻이다.
-        <strong>이 줄이 없으면 <code>undefined reference</code>가 난다</strong> — ⑧절 ③번이 정확히 그 경우다.</dd>
+        <strong>이 줄이 없으면 <code>undefined reference</code>가 난다</strong> — 8-3이 정확히 그 경우다.</dd>
   </dl>
 
   <!-- fullcode "전체 코드 — scan_tools/ (2단계 · CMakeLists.txt 가 더해진 완성본)" build="cmake -S . -B build && cmake --build build && ./build/scan_app"
@@ -637,11 +637,11 @@ project(scan_tools CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# ① 라이브러리를 하나 만든다
+# (1) 라이브러리를 하나 만든다
 add_library(scan_math src/scan_math.cpp)
 target_include_directories(scan_math PUBLIC include)
 
-# ② 실행 파일을 만들고 ①을 붙인다
+# (2) 실행 파일을 만들고 (1)을 붙인다
 add_executable(scan_app src/main.cpp)
 target_link_libraries(scan_app PRIVATE scan_math)</code></pre></div>
   <div class="codefile"><div class="fname">scan_tools/include/scan_math.hpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>#ifndef SCAN_MATH_HPP_
@@ -688,7 +688,7 @@ int main()
     명령은 <code>scan_tools/</code> 안에서 친다. <code>.</code>이 지금 폴더(소스 폴더)이고, 결과물은 <code>build/</code>에 따로 쌓인다.
   </p>
 
-  <h3>그때 이걸 친다 — ① 설정</h3>
+  <h3>4-1 그때 이걸 친다 — 설정</h3>
   <pre class="lang-sh"><code>$ cmake -S . -B build
 -- The CXX compiler identification is GNU 13.3.0
 -- Detecting CXX compiler ABI info
@@ -711,7 +711,7 @@ int main()
     <strong>여기서는 아직 컴파일이 한 줄도 일어나지 않았다.</strong> ②절에서 사람이 쓰던 파일을 기계가 쓴 것까지다.
   </p>
 
-  <h3>그때 이걸 친다 — ② 빌드</h3>
+  <h3>4-2 그때 이걸 친다 — 빌드</h3>
   <pre class="lang-sh"><code>$ cmake --build build
 [ 25%] Building CXX object CMakeFiles/scan_math.dir/src/scan_math.cpp.o
 [ 50%] Linking CXX static library libscan_math.a
@@ -743,7 +743,7 @@ int main()
     소스가 스무 개면 그 줄이 스물두 줄이 된다. <strong>줄 수가 아니라 「순서를 안 틀린다」가 이득이다.</strong>
   </div>
 
-  <h3>그때 이걸 친다 — ③ 실행</h3>
+  <h3>4-3 그때 이걸 친다 — 실행</h3>
   <pre class="lang-sh"><code>$ ./build/scan_app
 유효값 평균 = 1.373 m
 $ ls build
@@ -754,7 +754,7 @@ CMakeCache.txt  CMakeFiles  cmake_install.cmake  libscan_math.a  Makefile  scan_
     나머지는 CMake가 쓰는 부산물이라 통째로 지워도 된다 — 그래서 <code>build/</code>는 git에 올리지 않는다.
   </p>
 
-  <h3><code>cmake</code> 명령의 모양 — <code>cmake .</code>과 무엇이 다른가</h3>
+  <h3>4-4 <code>cmake</code> 명령의 모양 — <code>cmake .</code>과 무엇이 다른가</h3>
   <p>
     인터넷 예제와 옛 자료에는 <code>cmake .</code>이나 <code>cmake ..</code>이 훨씬 많이 나온다. 위에서 친 것과 다른 명령이 아니다.
     <code>cmake</code>가 하는 일은 <strong>설정</strong>과 <strong>빌드</strong> 둘뿐이고, 설정 쪽의 <strong>「어디에 결과를 둘 것인가」</strong>를 적는 방법이 세대마다 달랐을 뿐이다.
@@ -794,11 +794,11 @@ CMakeCache.txt  CMakeFiles  cmake_install.cmake  CMakeLists.txt  include  Makefi
   </table>
   </div>
 
-  <h3>세 방법을 나란히 놓으면</h3>
+  <h3>4-5 세 방법을 나란히 놓으면</h3>
   <p>같은 프로젝트를 세 가지로 빌드해 봤다. 사람이 무엇을 적고 도구가 무엇을 대신하는지만 비교한다.</p>
   <div class="tablewrap">
   <table>
-    <tr><th></th><th>① <code>g++</code> 직접</th><th>② <code>make</code> + <code>Makefile</code></th><th>③ <code>CMake</code> + <code>CMakeLists.txt</code></th></tr>
+    <tr><th></th><th>(1) <code>g++</code> 직접</th><th>(2) <code>make</code> + <code>Makefile</code></th><th>(3) <code>CMake</code> + <code>CMakeLists.txt</code></th></tr>
     <tr><td>사람이 적는 것</td><td>명령 전부, 매번</td><td>명령 전부, 한 번 (<code>Makefile</code>)</td><td><strong>결과물(타깃)과 재료만</strong></td></tr>
     <tr><td><code>.o</code> 이름과 순서</td><td>사람</td><td>사람</td><td><strong>CMake</strong></td></tr>
     <tr><td>헤더 의존</td><td>사람이 기억</td><td>사람이 적는다 (빠뜨리기 쉽다)</td><td><strong>CMake가 소스를 읽어 찾는다</strong></td></tr>
@@ -822,7 +822,7 @@ CMakeCache.txt  CMakeFiles  cmake_install.cmake  CMakeLists.txt  include  Makefi
   <!-- ── 💻 코딩 블록: 낡은 방식 vs 지금 방식 ── -->
   <h2 id="modern">⑤ 낡은 CMake는 한 줄만 보면 알아챌 수 있다 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
-  <h3>언제 이게 필요해지나</h3>
+  <h3>5-1 언제 이게 필요해지나</h3>
   <p>
     AI에게 <code>CMakeLists.txt</code>를 만들어 달라고 하면 대개 <strong>돌아가는 파일</strong>이 온다.
     빌드도 되고 실행도 된다. 그래서 그냥 쓰게 된다.
@@ -898,7 +898,7 @@ int main()
 </details>
 <!-- /fullcode -->
 
-  <h3>무엇이 문제인가</h3>
+  <h3>5-2 무엇이 문제인가</h3>
   <p>
     <code>include_directories(include)</code>는 <strong>이 아래에서 만들어지는 모든 타깃</strong>에 그 폴더를 걸어 버린다.
     지금 만드는 것 하나에만 걸린 것이 아니다.
@@ -913,7 +913,7 @@ int main()
   </table>
   </div>
 
-  <h3>이렇게 말하면 된다 — 이 방식에는 이름이 있다</h3>
+  <h3>5-3 이렇게 말하면 된다 — 이 방식에는 이름이 있다</h3>
   <p>
     타깃마다 「누구에게」를 붙여 설정하는 이 방식을 <strong>Modern CMake</strong>라고 부른다.
     <strong>타깃 기반 CMake(target-based CMake)</strong>라고도 한다. CMake 3.0(2014년)에 <code>target_*</code> 명령이 갖춰지면서 생긴 이름이고,
@@ -950,7 +950,7 @@ target_link_libraries(scan_app PRIVATE scan_math)      # ← 전파 범위를 �
     </p>
   </div>
 
-  <h3>쓸 때 / 안 쓸 때</h3>
+  <h3>5-4 쓸 때 / 안 쓸 때</h3>
   <div class="tablewrap">
   <table>
     <tr><th>이걸 쓴다</th><th>언제</th><th>수준</th></tr>
@@ -961,7 +961,7 @@ target_link_libraries(scan_app PRIVATE scan_math)      # ← 전파 범위를 �
   </table>
   </div>
 
-  <h3>한 줄 점검</h3>
+  <h3>5-5 한 줄 점검</h3>
   <p>받은 <code>CMakeLists.txt</code>에 <code>target_</code>이 안 붙은 <code>include_directories</code>가 남아 있지 않나?</p>
 
   <!-- ── PRIVATE / PUBLIC ── -->
@@ -1001,7 +1001,7 @@ target_link_libraries(scan_app PRIVATE scan_math)      # ← 전파 범위를 �
     </dl>
   </div>
 
-  <h3>정말 그런가 — 완성본에서 한 단어만 바꿔 봤다</h3>
+  <h3>6-1 정말 그런가 — 완성본에서 한 단어만 바꿔 봤다</h3>
   <p><code>PUBLIC</code>을 <code>PRIVATE</code>로 바꾸면 <code>main.cpp</code>가 헤더를 못 찾는다고 했다. 실제로 그런지 2단계 완성본의 9번째 줄만 바꿔 빌드했다.</p>
   <pre class="lang-cmake after"><code>add_library(scan_math src/scan_math.cpp)
 target_include_directories(scan_math PRIVATE include)   # ← PUBLIC 을 PRIVATE 로 바꿨다</code></pre>
@@ -1036,11 +1036,11 @@ project(scan_tools CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# ① 라이브러리를 하나 만든다
+# (1) 라이브러리를 하나 만든다
 add_library(scan_math src/scan_math.cpp)
 target_include_directories(scan_math PRIVATE include)   # PUBLIC 을 PRIVATE 로 바꿔 봤다
 
-# ② 실행 파일을 만들고 ①을 붙인다
+# (2) 실행 파일을 만들고 (1)을 붙인다
 add_executable(scan_app src/main.cpp)
 target_link_libraries(scan_app PRIVATE scan_math)</code></pre></div>
   <div class="codefile"><div class="fname">scan_tools/include/scan_math.hpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>#ifndef SCAN_MATH_HPP_
@@ -1137,7 +1137,7 @@ gmake: *** [Makefile:91: all] Error 2</code></pre>
     <span class="src">잰 곳: 컨테이너(우분투 24.04.4 LTS, g++ 13.3.0, CMake 3.28.3)</span>
   </p>
 
-  <h3>① cmake 단계 — 파일 이름을 <code>mian.cpp</code>로 잘못 적었다</h3>
+  <h3>8-1 cmake 단계 — 파일 이름을 <code>mian.cpp</code>로 잘못 적었다</h3>
   <pre class="lang-cmake before"><code># CMakeLists.txt 12번째 줄 — main 을 mian 으로 잘못 쳤다
 add_executable(scan_app src/mian.cpp)</code></pre>
   <pre class="lang-sh"><code>$ cmake -S . -B build
@@ -1168,14 +1168,14 @@ CMake Generate step failed.  Build files cannot be regenerated correctly.</code>
     <strong>파일 이름과 줄 번호가 그대로 나온다</strong> — <code>CMakeLists.txt</code>의 12번째 줄, 그중에서도 <code>add_executable</code> 명령이다.
     그 밑 <code>src/mian.cpp</code>가 못 찾은 파일 이름이다. <code>main</code>이 <code>mian</code>이 됐다.
   </p>
-  <!-- fullcode "전체 코드 — scan_tools/ (① cmake 단계가 터지는 판)" build="cmake -S . -B build"
+  <!-- fullcode "전체 코드 — scan_tools/ (8-1 cmake 단계가 터지는 판)" build="cmake -S . -B build"
        l08_cmake/steps/step5_bad_cmake/CMakeLists.txt as scan_tools/CMakeLists.txt
        l08_cmake/steps/step5_bad_cmake/include/scan_math.hpp as scan_tools/include/scan_math.hpp
        l08_cmake/steps/step5_bad_cmake/src/scan_math.cpp as scan_tools/src/scan_math.cpp
        l08_cmake/steps/step5_bad_cmake/src/main.cpp as scan_tools/src/main.cpp
   -->
 <details class="fullcode">
-  <summary>전체 코드 — scan_tools/ (① cmake 단계가 터지는 판)</summary>
+  <summary>전체 코드 — scan_tools/ (8-1 cmake 단계가 터지는 판)</summary>
   <p class="how">빌드해서 돌리는 법: <code>cmake -S . -B build</code></p>
   <div class="codefile"><div class="fname">scan_tools/CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre class="lang-cmake"><code>cmake_minimum_required(VERSION 3.16)
 project(scan_tools CXX)
@@ -1183,11 +1183,11 @@ project(scan_tools CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# ① 라이브러리를 하나 만든다
+# (1) 라이브러리를 하나 만든다
 add_library(scan_math src/scan_math.cpp)
 target_include_directories(scan_math PUBLIC include)
 
-# ② 실행 파일을 만들고 ①을 붙인다
+# (2) 실행 파일을 만들고 (1)을 붙인다
 add_executable(scan_app src/mian.cpp)
 target_link_libraries(scan_app PRIVATE scan_math)</code></pre></div>
   <div class="codefile"><div class="fname">scan_tools/include/scan_math.hpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>#ifndef SCAN_MATH_HPP_
@@ -1223,7 +1223,7 @@ int main()
     소스를 하나도 못 찾았으니 타깃이 빈 것이다. <strong>첫 번째를 고치면 같이 사라진다.</strong>
   </p>
 
-  <h3>② 컴파일 단계 — 세미콜론을 빠뜨렸다</h3>
+  <h3>8-2 컴파일 단계 — 세미콜론을 빠뜨렸다</h3>
   <pre class="lang-cpp before"><code>// src/main.cpp 7번째 줄 — 끝의 세미콜론이 빠졌다
   std::printf("유효값 평균 = %.3f m\n", mean_range(raw, 0.16f, 8.0f))</code></pre>
   <pre class="lang-sh"><code>$ cmake --build build
@@ -1251,14 +1251,14 @@ gmake: *** [Makefile:91: all] Error 2</code></pre>
     라이브러리는 이미 만들어졌고 <code>main.cpp</code> 하나에서만 터진 것이다.
     <strong>성공한 줄과 실패한 줄이 한 화면에 섞여 나온다</strong>는 것을 알아 두면 덜 당황한다.
   </p>
-  <!-- fullcode "전체 코드 — scan_tools/ (② 컴파일 단계가 터지는 판)" build="cmake -S . -B build && cmake --build build"
+  <!-- fullcode "전체 코드 — scan_tools/ (8-2 컴파일 단계가 터지는 판)" build="cmake -S . -B build && cmake --build build"
        l08_cmake/steps/step5_bad_compile/CMakeLists.txt as scan_tools/CMakeLists.txt
        l08_cmake/steps/step5_bad_compile/include/scan_math.hpp as scan_tools/include/scan_math.hpp
        l08_cmake/steps/step5_bad_compile/src/scan_math.cpp as scan_tools/src/scan_math.cpp
        l08_cmake/steps/step5_bad_compile/src/main.cpp as scan_tools/src/main.cpp
   -->
 <details class="fullcode">
-  <summary>전체 코드 — scan_tools/ (② 컴파일 단계가 터지는 판)</summary>
+  <summary>전체 코드 — scan_tools/ (8-2 컴파일 단계가 터지는 판)</summary>
   <p class="how">빌드해서 돌리는 법: <code>cmake -S . -B build &amp;&amp; cmake --build build</code></p>
   <div class="codefile"><div class="fname">scan_tools/CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre class="lang-cmake"><code>cmake_minimum_required(VERSION 3.16)
 project(scan_tools CXX)
@@ -1266,11 +1266,11 @@ project(scan_tools CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# ① 라이브러리를 하나 만든다
+# (1) 라이브러리를 하나 만든다
 add_library(scan_math src/scan_math.cpp)
 target_include_directories(scan_math PUBLIC include)
 
-# ② 실행 파일을 만들고 ①을 붙인다
+# (2) 실행 파일을 만들고 (1)을 붙인다
 add_executable(scan_app src/main.cpp)
 target_link_libraries(scan_app PRIVATE scan_math)</code></pre></div>
   <div class="codefile"><div class="fname">scan_tools/include/scan_math.hpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>#ifndef SCAN_MATH_HPP_
@@ -1301,7 +1301,7 @@ int main()
 </details>
 <!-- /fullcode -->
 
-  <h3>③ 링크 단계 — <code>target_link_libraries</code> 줄을 통째로 빠뜨렸다</h3>
+  <h3>8-3 링크 단계 — <code>target_link_libraries</code> 줄을 통째로 빠뜨렸다</h3>
   <pre class="lang-cmake before"><code># CMakeLists.txt 아랫부분 — target_link_libraries 줄이 없고 그 자리에 헤더 경로만 걸었다
 add_executable(scan_app src/main.cpp)
 target_include_directories(scan_app PRIVATE include)</code></pre>
@@ -1336,14 +1336,14 @@ target_link_libraries(scan_app PRIVATE scan_math)</code></pre>
 [ 75%] Linking CXX executable scan_app
 [100%] Built target scan_app
 유효값 평균 = 1.373 m</code></pre>
-  <!-- fullcode "전체 코드 — scan_tools/ (③ 링크 단계가 터지는 판)" build="cmake -S . -B build && cmake --build build"
+  <!-- fullcode "전체 코드 — scan_tools/ (8-3 링크 단계가 터지는 판)" build="cmake -S . -B build && cmake --build build"
        l08_cmake/steps/step5_bad_link/CMakeLists.txt as scan_tools/CMakeLists.txt
        l08_cmake/steps/step5_bad_link/include/scan_math.hpp as scan_tools/include/scan_math.hpp
        l08_cmake/steps/step5_bad_link/src/scan_math.cpp as scan_tools/src/scan_math.cpp
        l08_cmake/steps/step5_bad_link/src/main.cpp as scan_tools/src/main.cpp
   -->
 <details class="fullcode">
-  <summary>전체 코드 — scan_tools/ (③ 링크 단계가 터지는 판)</summary>
+  <summary>전체 코드 — scan_tools/ (8-3 링크 단계가 터지는 판)</summary>
   <p class="how">빌드해서 돌리는 법: <code>cmake -S . -B build &amp;&amp; cmake --build build</code></p>
   <div class="codefile"><div class="fname">scan_tools/CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre class="lang-cmake"><code>cmake_minimum_required(VERSION 3.16)
 project(scan_tools CXX)
@@ -1351,11 +1351,11 @@ project(scan_tools CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# ① 라이브러리를 하나 만든다
+# (1) 라이브러리를 하나 만든다
 add_library(scan_math src/scan_math.cpp)
 target_include_directories(scan_math PUBLIC include)
 
-# ② 실행 파일을 만든다 — ①을 붙이는 줄이 빠졌다
+# (2) 실행 파일을 만든다 — (1)을 붙이는 줄이 빠졌다
 add_executable(scan_app src/main.cpp)
 target_include_directories(scan_app PRIVATE include)</code></pre></div>
   <div class="codefile"><div class="fname">scan_tools/include/scan_math.hpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>#ifndef SCAN_MATH_HPP_
@@ -1389,11 +1389,11 @@ int main()
   <div class="box trap">
     <div class="boxtitle">⚠️ 이 셋 중 셋째만 성격이 다르다</div>
     <p>
-      ①과 ②는 <strong>화면이 고칠 자리를 직접 짚어 준다.</strong> 파일 이름도, 줄 번호도 나온다.
+      8-1과 8-2는 <strong>화면이 고칠 자리를 직접 짚어 준다.</strong> 파일 이름도, 줄 번호도 나온다.
       그대로 가서 고치면 된다.
     </p>
     <p>
-      ③은 다르다. <strong>화면이 가리키는 파일과 고쳐야 할 파일이 다르다.</strong>
+      8-3은 다르다. <strong>화면이 가리키는 파일과 고쳐야 할 파일이 다르다.</strong>
       메시지에는 <code>main.cpp</code>가 나오는데 고칠 곳은 <code>CMakeLists.txt</code>다.
       <strong>이 어긋남 때문에 셋째가 학생을 가장 오래 붙잡는다.</strong>
       <code>undefined reference</code>를 보면 <strong>소스를 열기 전에 <code>CMakeLists.txt</code>부터 연다</strong>는 습관을 만든다.
@@ -1442,12 +1442,12 @@ cd ~/robot_ws/l08/scan_tools
 code .</code></pre>
         <code>cmake -S . -B build</code> → <code>cmake --build build</code> → <code>./build/scan_app</code>.
         <strong><code>유효값 평균 = 1.373 m</code></strong>가 나오는 것을 눈으로 확인한다.</li>
-      <li><strong>(7분) ① cmake 단계를 일부러 낸다.</strong> <code>CMakeLists.txt</code>의 <code>src/main.cpp</code>를 <code>src/mian.cpp</code>로 고치고 <code>cmake -S . -B build</code>를 친다.
+      <li><strong>(7분) (1) cmake 단계를 일부러 낸다.</strong> <code>CMakeLists.txt</code>의 <code>src/main.cpp</code>를 <code>src/mian.cpp</code>로 고치고 <code>cmake -S . -B build</code>를 친다.
         화면에서 <strong><code>CMakeLists.txt:</code> 뒤의 숫자</strong>를 찾아 적는다. 그 줄을 열어 되돌린 뒤 다시 설정한다.</li>
-      <li><strong>(7분) ② 컴파일 단계를 일부러 낸다.</strong> <code>src/main.cpp</code>의 <code>printf</code> 줄 끝 세미콜론을 지우고 <code>cmake --build build</code>를 친다.
+      <li><strong>(7분) (2) 컴파일 단계를 일부러 낸다.</strong> <code>src/main.cpp</code>의 <code>printf</code> 줄 끝 세미콜론을 지우고 <code>cmake --build build</code>를 친다.
         <strong>맨 아래가 아니라 위로 올라가서</strong> 첫 <code>error:</code> 줄을 찾는다.
         <code>파일:줄:칸</code>을 적고 그 자리를 되돌린다.</li>
-      <li><strong>(10분) ③ 링크 단계를 일부러 낸다.</strong> <code>CMakeLists.txt</code>의 <code>target_link_libraries</code> 줄을 지우고
+      <li><strong>(10분) (3) 링크 단계를 일부러 낸다.</strong> <code>CMakeLists.txt</code>의 <code>target_link_libraries</code> 줄을 지우고
         그 자리에 <code>target_include_directories(scan_app PRIVATE include)</code>를 넣은 뒤 <code>cmake -S . -B build</code> → <code>cmake --build build</code>를 친다.
         <strong>소스는 절대 열지 않는다.</strong> <code>CMakeLists.txt</code>만 보고 빠진 한 줄을 되살린다.</li>
       <li><strong>(3분)</strong> 다시 빌드해 실행하고 <strong><code>1.373 m</code></strong>가 나오는지 확인한다.

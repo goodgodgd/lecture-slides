@@ -103,21 +103,21 @@
     QoS는 여러 <strong>정책</strong>(policy)으로 이루어지고, 이 과목에서 볼 것은 셋이다.
   </p>
 
-  <h3>Reliability — 잃은 메시지를 다시 보내나</h3>
+  <h3>2-1 Reliability — 잃은 메시지를 다시 보내나</h3>
   <p>
     <strong>RELIABLE</strong>은 받는 쪽이 「받았다」고 확인해 주고, 확인이 안 온 메시지는 보내는 쪽이 다시 보낸다. 늦어지더라도 빠짐없이 가는 쪽이다.
     <strong>BEST_EFFORT</strong>는 한 번 보내고 끝이다. 네트워크에서 하나가 사라지면 그대로 사라진다. 대신 다시 보내는 일로 뒤 메시지가 늦어지지 않는다.
     무선(Wi-Fi)으로 로봇과 노트북이 이어진 경우처럼 잃는 일이 실제로 생기는 곳에서 차이가 커진다.
   </p>
 
-  <h3>History와 Depth — 밀린 메시지를 몇 개까지 쌓아 두나</h3>
+  <h3>2-2 History와 Depth — 밀린 메시지를 몇 개까지 쌓아 두나</h3>
   <p>
     20회 ②절 🆕에서 <code>create_publisher(…, 10)</code>의 <code>10</code>을 <strong>큐 깊이</strong>라고 했다. 정확히는 두 정책이다. <strong>History</strong>는 쌓는 방식이고, 보통은 <strong>KEEP_LAST</strong>(최근 N개만 둔다)다.
     그 N이 <strong>Depth</strong>다. 받는 쪽 콜백이 아직 앞 메시지를 처리하는 동안 새 메시지가 오면 큐에 쌓이고, N개가 넘으면 <strong>가장 오래된 것부터 버린다.</strong>
     History를 KEEP_ALL로 두면 버리지 않고 다 쌓지만, 이 과목에서는 쓸 일이 거의 없다.
   </p>
 
-  <h3>Durability — 늦게 온 구독자에게 지난 메시지를 주나</h3>
+  <h3>2-3 Durability — 늦게 온 구독자에게 지난 메시지를 주나</h3>
   <p>
     <strong>VOLATILE</strong>은 구독자가 붙은 <strong>뒤에</strong> 보낸 것만 준다. 대부분의 토픽이 이것이다.
     <strong>TRANSIENT_LOCAL</strong>은 보내는 쪽이 마지막 몇 개를 들고 있다가 나중에 붙은 구독자에게도 준다. 지도나 로봇 모양처럼 「한 번 보내 두고 잘 안 바뀌는」 토픽에 쓴다(4부에서 만난다). 오늘은 이름만 봐 둔다.
@@ -177,7 +177,7 @@ angular_velocity: 0.0
   <!-- ── ④ v8 ── -->
   <h2 id="v8">④ <code>sensor_msgs/msg/Range</code> 발행 — <code>wall_range</code> 노드 (v8) <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
-  <h3>개념 — 거리 하나를 담는 센서 메시지</h3>
+  <h3>4-1 개념 — 거리 하나를 담는 센서 메시지</h3>
   <p>
     초음파·적외선 거리 센서처럼 <strong>거리 하나</strong>를 재는 센서는 <code>sensor_msgs/msg/Range</code>로 보낸다(라이다처럼 여러 방향을 한꺼번에 재는 센서는 24회의 <code>LaserScan</code>이다).
     17회처럼 정의부터 본다. 주석이 길어 필드 줄만 남겼다.
@@ -208,7 +208,7 @@ float32 variance        # variance of the range sensor
   </table>
   </div>
 
-  <h3>예제에 적용 — 벽까지 거리를 재는 일을 새 노드로 뺀다</h3>
+  <h3>4-2 예제에 적용 — 벽까지 거리를 재는 일을 새 노드로 뺀다</h3>
   <p>
     가장 가까운 벽까지 거리는 어떻게 구할까? 지도 한 변이 11 m이니 네 벽까지 거리는 왼쪽 <code>x</code>, 아래 <code>y</code>, 오른쪽 <code>11 − x</code>, 위 <code>11 − y</code>이고, 그중 <strong>가장 작은 값</strong>이 답이다.
     20회 v2의 범위 판정 「x나 y가 1보다 작거나 10보다 크다」는 「이 값이 1(<code>margin</code>)보다 작다」와 같은 말이다. 그래서 거리 하나만 받으면 <code>turtle_drive</code>의 판정을 그대로 바꿔 쓸 수 있다(⑤절).
@@ -219,7 +219,7 @@ float32 variance        # variance of the range sensor
     이번 단계에서 <code>turtle_drive.cpp</code>는 v7 그대로다.
   </p>
 
-  <h3>8단계 (v8) — 새 실행 파일 <code>wall_range</code></h3>
+  <h3>4-3 8단계 (v8) — 새 실행 파일 <code>wall_range</code></h3>
   <div class="codelabel good">새 파일 src/wall_range.cpp — 생성자와 콜백</div>
   <pre class="lang-cpp after"><code>#include "sensor_msgs/msg/range.hpp"
   // …
@@ -277,7 +277,7 @@ install(TARGETS hello_node turtle_drive wall_range
     launch 파일에도 <code>wall_range</code> 노드를 한 덩어리 더해 셋이 함께 뜨게 했다(📄 상자). <code>turtle_drive</code>는 아직 이 토픽을 안 쓰므로 거북이는 v7과 똑같이 움직인다.
   </p>
 
-  <h3>실제로 나온 출력</h3>
+  <h3>4-4 실제로 나온 출력</h3>
   <p>turtlesim을 띄운 옆 터미널에서 <code>ros2 run turtle_drive wall_range</code>를 띄우고, 또 다른 터미널에서 토픽을 본다.</p>
   <pre class="lang-sh"><code>$ ros2 pkg executables turtle_drive
 turtle_drive hello_node
@@ -497,7 +497,7 @@ def generate_launch_description():
   <!-- ── ⑤ v9 ── -->
   <h2 id="v9">⑤ QoS 불일치 진단과 <code>SensorDataQoS</code> 구독 (v9) <span class="badge b-red">🔴 사람이 한다</span></h2>
 
-  <h3>예제에 적용 — 범위 판정을 받은 거리로 한다</h3>
+  <h3>5-1 예제에 적용 — 범위 판정을 받은 거리로 한다</h3>
   <p>
     이제 <code>turtle_drive</code>가 <code>wall_range</code>의 값을 쓰게 바꾼다. 구독자를 하나 더하고, 범위 판정을 <code>range_-&gt;range &lt; margin_</code> 한 줄로 바꾸면 된다.
     자세 구독은 그대로 둔다 — 「중앙을 보고 있나」(20회 ⑤절)는 여전히 자세의 방향으로 판단하기 때문이다.
@@ -761,7 +761,7 @@ int main(int argc, char ** argv)
 <!-- /fullcode -->
 <!-- /fullcode -->
 
-  <h3>9단계 (v9) — 받는 쪽도 <code>SensorDataQoS()</code></h3>
+  <h3>5-2 9단계 (v9) — 받는 쪽도 <code>SensorDataQoS()</code></h3>
   <div class="codelabel bad">고치기 전 (v9 변형)</div>
   <pre class="lang-cpp before"><code>    range_sub_ = this-&gt;create_subscription&lt;sensor_msgs::msg::Range&gt;(
       "/turtle1/wall_range", 10,</code></pre>
@@ -773,7 +773,7 @@ int main(int argc, char ** argv)
     바뀌는 것은 숫자 하나다. <code>sensor_msgs</code>는 v8에서 <code>package.xml</code>·<code>find_package</code>에 이미 넣었으니, <code>CMakeLists.txt</code>에서는 <code>turtle_drive</code>의 <code>target_link_libraries</code>에 <code>${sensor_msgs_TARGETS}</code>만 더한다(20회 ⑥절과 같은 일).
   </p>
 
-  <h3>실제로 나온 출력</h3>
+  <h3>5-3 실제로 나온 출력</h3>
   <pre class="lang-sh"><code>$ ros2 run turtle_drive turtle_drive
 [INFO] [1794001778.830305282] [turtle_drive]: max_speed = 1.20 m/s, margin = 1.00 m (1.0 ~ 10.0 안에서 돌아다닙니다)
 [INFO] [1794001785.830492696] [turtle_drive]: 범위 밖 (벽까지 0.95 m) — 중앙 쪽으로 돕니다
@@ -1058,7 +1058,7 @@ ament_package()</code></pre></div>
   <!-- ── ⑥ v10 ── -->
   <h2 id="v10">⑥ 콜백 처리 시간과 지연 — <code>std::chrono::steady_clock</code> (v10) <span class="badge b-red">🔴 사람이 한다</span></h2>
 
-  <h3>개념 — 처리 시간이 주기보다 길면</h3>
+  <h3>6-1 개념 — 처리 시간이 주기보다 길면</h3>
   <p>
     콜백이 조금 느리면 무엇이 달라질까? 20회 ③절의 규칙을 다시 적으면 — 기본 <code>spin</code>은 콜백을 <strong>한 번에 하나씩</strong> 부른다. 21회 ⑥절은 그 극단이었다. 콜백 안에서 응답을 기다리자 다른 콜백이 하나도 안 불리고 노드가 멈췄다.
     오늘 보는 것은 멈추지는 않고 <strong>느리기만 한</strong> 경우다. 거리는 16 ms마다(초당 62.5번) 오는데 콜백 하나가 50 ms 걸린다면, 콜백이 하나를 처리하는 동안 세 개쯤이 더 도착한다.
@@ -1081,14 +1081,14 @@ const double age_ms = (this-&gt;now() - rclcpp::Time(msg-&gt;header.stamp)).seco
 const auto t1 = std::chrono::steady_clock::now();                       // 콜백 끝
 const double took_ms = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count();      // 처리 시간</code></pre>
 
-  <h3>예제에 적용 — 무거운 처리를 흉내 내고 큐 깊이를 바꿔 본다</h3>
+  <h3>6-2 예제에 적용 — 무거운 처리를 흉내 내고 큐 깊이를 바꿔 본다</h3>
   <p>
     지금 <code>on_range()</code>는 받은 것을 들고 있기만 해서 거의 0 ms다. 실제 노드라면 여기서 라이다 값 360개를 거르고(9회), 정렬해 중앙값을 찾고(13회), 콘을 찾는 일을 한다.
     그것을 흉내 내려고 파라미터 <code>work_ms</code>만큼 일부러 쉬게 한다(20회 연습문제의 <code>sleep_for</code>). 큐 깊이도 파라미터 <code>range_depth</code>로 꺼낸다.
     두 값은 <strong>구독을 만들 때 한 번만</strong> 쓰므로 생성자에서 한 번 읽는다 — 21회 ③절의 「실행 중에 다시 읽나」를 여기서는 일부러 하지 않는 것이다. 바꾸려면 노드를 다시 띄운다.
   </p>
 
-  <h3>10단계 (v10) — 처리 시간과 나이를 콜백마다 찍는다</h3>
+  <h3>6-3 10단계 (v10) — 처리 시간과 나이를 콜백마다 찍는다</h3>
   <div class="codelabel bad">고치기 전 (v9) — 구독자와 on_range</div>
   <pre class="lang-cpp before"><code>    range_sub_ = this-&gt;create_subscription&lt;sensor_msgs::msg::Range&gt;(
       "/turtle1/wall_range", rclcpp::SensorDataQoS(),
@@ -1139,7 +1139,7 @@ const double took_ms = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).
     </dl>
   </div>
 
-  <h3>실제로 나온 출력</h3>
+  <h3>6-4 실제로 나온 출력</h3>
   <p>turtlesim과 <code>wall_range</code>를 띄우고 <code>turtle_drive</code>만 설정을 바꿔 가며 1분씩 띄웠다. 매번 turtlesim을 새로 띄워 거북이를 가운데에서 출발시켰다. 먼저 처리 시간 0, 깊이 5(기본).</p>
   <pre class="lang-sh"><code>$ ros2 run turtle_drive turtle_drive --ros-args -p work_ms:=0 -p range_depth:=5
 [INFO] [1794001831.908027759] [turtle_drive]: max_speed = 1.20 m/s, margin = 1.00 m, work_ms = 0, range_depth = 5
@@ -1410,7 +1410,7 @@ int main(int argc, char ** argv)
   <!-- ── ⑦ v11 ── -->
   <h2 id="v11">⑦ 로깅 — <code>RCLCPP_INFO_THROTTLE</code> · <code>RCLCPP_DEBUG</code> · <code>--log-level</code> (v11) <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
 
-  <h3>개념 — 로그 수준과 주기 제한</h3>
+  <h3>7-1 개념 — 로그 수준과 주기 제한</h3>
   <p>
     v10의 터미널은 읽을 수 있었나? 처리 0 ms일 때 1초에 <strong>63줄</strong>이 올라갔다. 1분이면 3,800줄이고, 그 사이에 「범위 밖 — 돕니다」 몇 줄이 묻힌다. 실물 로봇에서는 SSH로 붙은 터미널(28회)이 이 속도를 못 따라가기도 한다.
     한 줄 찍는 데 드는 시간도 0은 아니다. 검증용으로 <code>RCLCPP_INFO</code> 한 줄의 앞뒤를 재 보니 <strong>평균 약 20~26 µs</strong>였고, 찍지 않은 판은 0.04 µs였다(같은 컨테이너, 출력을 파일로 보낸 경우 — 화면에 그리는 터미널은 더 느릴 수 있다).
@@ -1429,8 +1429,8 @@ int main(int argc, char ** argv)
   </table>
   </div>
 
-  <h3>예제에 적용 — 콜백마다 찍는 줄은 DEBUG로, 요약은 1초에 한 번</h3>
-  <h3>11단계 (v11)</h3>
+  <h3>7-2 예제에 적용 — 콜백마다 찍는 줄은 DEBUG로, 요약은 1초에 한 번</h3>
+  <h3>7-3 11단계 (v11)</h3>
   <div class="codelabel bad">고치기 전 (v10) — on_range 의 마지막 줄</div>
   <pre class="lang-cpp before"><code>    RCLCPP_INFO(this-&gt;get_logger(), "거리 %.2f m · 나이 %.1f ms · 처리 %.1f ms", msg-&gt;range, age_ms, took_ms);</code></pre>
   <div class="codelabel good">고친 뒤 (v11) — 멤버 std::size_t range_count_ = 0; 하나 더</div>
@@ -1455,7 +1455,7 @@ int main(int argc, char ** argv)
     </dl>
   </div>
 
-  <h3>실제로 나온 출력</h3>
+  <h3>7-4 실제로 나온 출력</h3>
   <pre class="lang-sh"><code>$ ros2 run turtle_drive turtle_drive
 [INFO] [1794002236.945651972] [turtle_drive]: max_speed = 1.20 m/s, margin = 1.00 m, work_ms = 0, range_depth = 5
 [INFO] [1794002237.383477789] [turtle_drive]: 받은 거리 1개 · 지금 거리 5.46 m · 나이 333.5 ms · 처리 0.0 ms
@@ -1907,7 +1907,7 @@ def generate_launch_description():
   <p>
     로그는 한 줄씩 읽는 도구다. 노드가 셋으로 늘었으니 연결을 한눈에 보고 싶고, 벽까지 거리가 시간에 따라 어떻게 오르내렸는지를 숫자 수천 개가 아니라 선 하나로 보고 싶다. 둘 다 rqt로 본다.
   </p>
-  <h3><code>rqt_graph</code> — 노드가 하나 끼어든 연결</h3>
+  <h3>8-1 <code>rqt_graph</code> — 노드가 하나 끼어든 연결</h3>
   <p>turtlesim · <code>wall_range</code> · <code>turtle_drive</code> 셋을 띄운 채 18회처럼 <code>rqt_graph</code>를 열었다(Nodes/Topics (active)).</p>
   <figure>
     <img src="assets/img/22_rqt_graph.png" width="640"
@@ -1918,7 +1918,7 @@ def generate_launch_description():
     18회 ⑧절의 해석이 여기에도 그대로다 — QoS가 안 맞아도 화살표는 그려진다. ⑤절의 v9 변형을 띄웠을 때도 <code>info</code>의 개수는 1과 1이었다. rqt_graph는 「이 이름을 쓰겠다고 한 노드」를 잇는 것이지 메시지가 실제로 흐르는지를 보는 것이 아니다. 화살표가 있는데 반응이 없으면 <code>info -v</code>로 간다.
   </p>
 
-  <h3><code>rqt_plot</code> — 필드 하나를 시간축에 그린다</h3>
+  <h3>8-2 <code>rqt_plot</code> — 필드 하나를 시간축에 그린다</h3>
   <pre class="lang-sh"><code>$ ros2 run rqt_plot rqt_plot /turtle1/wall_range/range</code></pre>
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 명령에서 처음 나오는 것</p>

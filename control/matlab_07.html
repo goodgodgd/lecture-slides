@@ -36,7 +36,7 @@
   <a href="#target">② 목표 극점 정하기</a>
   <a href="#ponly">③ 비례 제어의 한계 — 각도 조건</a>
   <a href="#pd">④ PD 제어기의 영점 — 각도 조건</a>
-  <a class="sub" href="#pdfunc">함수 파일 design_pd_controller</a>
+  <a class="sub" href="#pdfunc">4-1 함수 파일 design_pd_controller</a>
   <a href="#gain">⑤ 이득 K — 크기 조건과 evalfr</a>
   <a href="#pdcheck">⑥ PD 보상 결과 확인</a>
   <a href="#pi">⑦ PI 제어기의 영점 — 원점 가까이</a>
@@ -85,14 +85,14 @@
   <div class="tablewrap">
   <table class="summary-table">
     <tr><th>함수·코드</th><th>하는 일</th><th>설계 절차에서 쓰는 자리</th></tr>
-    <tr><td><code>draw_overshoot_line</code> · <code>draw_peak_time_line</code> · <code>draw_settling_time_line</code></td><td>사양을 s 평면의 경계선으로 그리고 ζ·ω<sub>d</sub>·σ를 돌려준다 (6회에서 만든 함수)</td><td>① 목표 극점 정하기</td></tr>
-    <tr><td><code>angle(evalfr(G, s0))</code></td><td>복소수 s<sub>0</sub>에서 G의 위상</td><td>② 비례 제어로 되는지 판정 (각도 조건)</td></tr>
-    <tr><td><code>design_pd_controller(otf, p)</code></td><td>극점·영점 벡터의 각도를 더해 모자란 각도를 구하고, 그 각도를 채우는 영점 위치를 계산한다 (오늘 만드는 함수)</td><td>③ PD 영점 정하기</td></tr>
-    <tr><td><code>K = -1/evalfr(otf_pd, p)</code></td><td>목표 극점에서 \(KG = -1\)이 되는 K</td><td>④ 이득 정하기 (크기 조건)</td></tr>
-    <tr><td><code>otf_pd*(s - zero_pi)/s</code></td><td>원점 극점과 원점 가까운 영점을 더한다</td><td>⑤ PI로 정상상태 오차 없애기</td></tr>
-    <tr><td><code>mark_closed_pole(K*otf)</code></td><td>폐루프 극점을 근궤적 위에 찍는다 (오늘 만드는 함수)</td><td>⑥ 극점이 목표에 왔는지 확인</td></tr>
-    <tr><td><code>stepinfo(y, t, 1)</code></td><td>최종값을 직접 정해 주고 성능 지표를 계산한다</td><td>⑦ 사양을 만족하는지 검증</td></tr>
-    <tr><td><code>pid(Kp, Ki, Kd)</code> · <code>pidtune</code></td><td>PID 제어기 객체 · 자동 조정</td><td>⑧ 이득을 Kp·Ki·Kd로 읽기, 비교</td></tr>
+    <tr><td><code>draw_overshoot_line</code> · <code>draw_peak_time_line</code> · <code>draw_settling_time_line</code></td><td>사양을 s 평면의 경계선으로 그리고 ζ·ω<sub>d</sub>·σ를 돌려준다 (6회에서 만든 함수)</td><td>(1) 목표 극점 정하기</td></tr>
+    <tr><td><code>angle(evalfr(G, s0))</code></td><td>복소수 s<sub>0</sub>에서 G의 위상</td><td>(2) 비례 제어로 되는지 판정 (각도 조건)</td></tr>
+    <tr><td><code>design_pd_controller(otf, p)</code></td><td>극점·영점 벡터의 각도를 더해 모자란 각도를 구하고, 그 각도를 채우는 영점 위치를 계산한다 (오늘 만드는 함수)</td><td>(3) PD 영점 정하기</td></tr>
+    <tr><td><code>K = -1/evalfr(otf_pd, p)</code></td><td>목표 극점에서 \(KG = -1\)이 되는 K</td><td>(4) 이득 정하기 (크기 조건)</td></tr>
+    <tr><td><code>otf_pd*(s - zero_pi)/s</code></td><td>원점 극점과 원점 가까운 영점을 더한다</td><td>(5) PI로 정상상태 오차 없애기</td></tr>
+    <tr><td><code>mark_closed_pole(K*otf)</code></td><td>폐루프 극점을 근궤적 위에 찍는다 (오늘 만드는 함수)</td><td>(6) 극점이 목표에 왔는지 확인</td></tr>
+    <tr><td><code>stepinfo(y, t, 1)</code></td><td>최종값을 직접 정해 주고 성능 지표를 계산한다</td><td>(7) 사양을 만족하는지 검증</td></tr>
+    <tr><td><code>pid(Kp, Ki, Kd)</code> · <code>pidtune</code></td><td>PID 제어기 객체 · 자동 조정</td><td>(8) 이득을 Kp·Ki·Kd로 읽기, 비교</td></tr>
   </table>
   </div>
   <div class="interp">
@@ -247,7 +247,7 @@ phase_at_target = rad2deg(angle(evalfr(otf, target_pole)))</code></pre>
     그 각도가 정확히 80.84°가 되는 자리에 영점을 놓으면 근궤적이 목표 극점을 지나게 된다.
   </p>
 
-  <h3 id="pdfunc">함수 파일 <code>design_pd_controller</code></h3>
+  <h3 id="pdfunc">4-1 함수 파일 <code>design_pd_controller</code></h3>
   <p>
     이 계산은 <strong>함수 파일</strong>로 만들어 둔다.
     플랜트나 사양이 바뀌어도 같은 계산을 다시 하기 때문이다. 4회에서 함수 파일을 만들 때처럼

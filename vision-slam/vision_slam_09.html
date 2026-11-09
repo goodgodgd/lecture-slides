@@ -36,9 +36,9 @@
   <a href="#tensor">① 특징점과 구조 텐서</a>
   <a href="#corner">② Harris 코너와 Shi-Tomasi 코너</a>
   <a href="#klt">③ KLT 광류 추적</a>
-  <a href="#klt" class="sub">2×2 정규방정식</a>
-  <a href="#klt" class="sub">\(G\)의 조건과 모서리 선택</a>
-  <a href="#klt" class="sub">영상 피라미드</a>
+  <a href="#klt" class="sub">3-2 2×2 정규방정식</a>
+  <a href="#klt" class="sub">3-3 \(G\)의 조건과 모서리 선택</a>
+  <a href="#klt" class="sub">3-4 영상 피라미드</a>
   <a href="#fb">④ 순방향-역방향 검사</a>
   <a href="#orb">⑤ FAST·ORB와 기술자 매칭</a>
   <a href="#compare">⑥ KLT 추적과 기술자 매칭의 비교</a>
@@ -206,7 +206,7 @@ class Tracker {
     이것을 식으로 쓰면 구조 텐서가 나온다.
   </p>
 
-  <h3>창을 \(\mathbf{d}\)만큼 옮겼을 때의 변화</h3>
+  <h3>1-1 창을 \(\mathbf{d}\)만큼 옮겼을 때의 변화</h3>
 
   <p>
     점 \(\mathbf{u}_0\) 둘레의 창을 \(\mathbf{d}\)만큼 옮겼을 때, 창 안 픽셀마다 밝기 차이를 제곱해 더한다.
@@ -257,7 +257,7 @@ class Tracker {
     \(S(\mathbf{d})\)를 알려면 이제 영상을 다시 볼 필요 없이 \(\mathbf{d}^\top M\mathbf{d}\)만 계산하면 된다.
   </p>
 
-  <h3>구조 텐서의 고윳값</h3>
+  <h3>1-2 구조 텐서의 고윳값</h3>
 
   <p>
     \(M\)은 대칭이므로 서로 수직인 고유벡터 두 개 \(\mathbf{e}_1, \mathbf{e}_2\)(각각 2×1, 길이 1)와
@@ -330,7 +330,7 @@ class Tracker {
     </p>
   </div>
 
-  <h3>구조 텐서의 성질</h3>
+  <h3>1-3 구조 텐서의 성질</h3>
 
   <div class="tablewrap">
   <table>
@@ -370,7 +370,7 @@ class Tracker {
     </dl>
   </div>
 
-  <h3>Harris 점수 — 고윳값을 구하지 않는 판정</h3>
+  <h3>2-1 Harris 점수 — 고윳값을 구하지 않는 판정</h3>
 
   <p>
     2×2 행렬의 고윳값은 \(\det M = \lambda_1\lambda_2\), \(\operatorname{tr} M = \lambda_1 + \lambda_2\)로 묶인다.
@@ -387,7 +387,7 @@ class Tracker {
     <strong>제곱근을 쓰는 고윳값 계산을 피한 것</strong>이 1988년의 계산 환경에서 의미가 있었다.
   </p>
 
-  <h3>Shi-Tomasi 점수 — 작은 고윳값</h3>
+  <h3>2-2 Shi-Tomasi 점수 — 작은 고윳값</h3>
 
   $$
   \text{점수} = \min(\lambda_1, \lambda_2) = \lambda_2
@@ -428,7 +428,7 @@ class Tracker {
     ③절에서 보듯 <strong>추적 방정식이 얼마나 잘 풀리는지</strong>와 직접 같은 양이다. 이 강의가 Shi-Tomasi를 쓰는 이유다.
   </div>
 
-  <h3><span class="mono">goodFeaturesToTrack</span></h3>
+  <h3>2-3 <span class="mono">goodFeaturesToTrack</span></h3>
 
 <pre class="lang-cpp"><code>std::vector&lt;cv::Point2f&gt; pts;
 cv::goodFeaturesToTrack(img, pts,
@@ -491,7 +491,7 @@ cv::goodFeaturesToTrack(img, pts,
     </dl>
   </div>
 
-  <h3>KLT의 세 가정</h3>
+  <h3>3-1 KLT의 세 가정</h3>
 
   <div class="tablewrap">
   <table>
@@ -505,7 +505,7 @@ cv::goodFeaturesToTrack(img, pts,
   </table>
   </div>
 
-  <h3>2×2 정규방정식</h3>
+  <h3>3-2 2×2 정규방정식</h3>
 
   <p>
     가정 1이 정확히 성립하지는 않으므로, 창 안에서 <strong>차이의 제곱합이 가장 작은 \(\mathbf{d}\)</strong>를 찾는다.
@@ -568,7 +568,7 @@ cv::goodFeaturesToTrack(img, pts,
     <strong>점을 고를 때 본 바로 그 창의 행렬</strong>이다.
   </p>
 
-  <h3>\(G\)의 조건과 모서리 선택</h3>
+  <h3>3-3 \(G\)의 조건과 모서리 선택</h3>
 
   <p>
     추적이 되려면 \(G\mathbf{d} = \mathbf{g}\)가 <strong>하나의 답으로 잘 풀려야</strong> 한다.
@@ -601,7 +601,7 @@ cv::goodFeaturesToTrack(img, pts,
     <strong>검출 기준을 추적 방정식에서 거꾸로 정의했다.</strong>
   </div>
 
-  <h3>영상 피라미드</h3>
+  <h3>3-4 영상 피라미드</h3>
 
   <p>
     가정 3은 실제로 얼마나 성립할까? V1_01 전 구간 2,911쌍에서 추적에 성공한 점(⑦절의 세 겹을 통과한 점)의 프레임 사이 이동을 쟀다.
@@ -657,7 +657,7 @@ cv::goodFeaturesToTrack(img, pts,
     이것이 ④절의 출발점이다.
   </div>
 
-  <h3>OpenCV에서 쓰는 법과 반환값</h3>
+  <h3>3-5 OpenCV에서 쓰는 법과 반환값</h3>
 
 <pre class="lang-cpp"><code>std::vector&lt;cv::Point2f&gt; p1;     // 다음 영상에서의 위치 (서브픽셀)
 std::vector&lt;uchar&gt; status;        // 1 = 수렴했다, 0 = 실패
@@ -727,7 +727,7 @@ std::vector&lt;uchar&gt; trackFB(const cv::Mat&amp; img0, const cv::Mat&amp; img
     9.37 px짜리는 <strong>이 검사가 아니었으면 그대로 백엔드로 갔다.</strong>
   </p>
 
-  <h3>오차 분포와 임계값</h3>
+  <h3>4-1 오차 분포와 임계값</h3>
 
   <p>
     V1_01 전 구간에서 KLT가 양쪽 다 <span class="mono">status = 1</span>을 준 점 337,961개의 순방향-역방향 오차를 모았다.
@@ -759,7 +759,7 @@ std::vector&lt;uchar&gt; trackFB(const cv::Mat&amp; img0, const cv::Mat&amp; img
     이 강의는 1 px를 쓴다. 어느 쪽이든 <strong>왜 그 값인지를 분포로 말할 수 있으면 된다.</strong>
   </div>
 
-  <h3>순방향-역방향 검사와 RANSAC의 역할 분담</h3>
+  <h3>4-2 순방향-역방향 검사와 RANSAC의 역할 분담</h3>
 
   <p>
     뒤에서 5회의 RANSAC으로 한 번 더 거른다(⑦절). 그러면 순방향-역방향 검사는 빼도 되지 않을까?
@@ -822,7 +822,7 @@ std::vector&lt;uchar&gt; trackFB(const cv::Mat&amp; img0, const cv::Mat&amp; img
     </dl>
   </div>
 
-  <h3>FAST</h3>
+  <h3>5-1 FAST</h3>
 
   <p>
     후보 픽셀 \(p\)의 밝기를 \(I_p\), 문턱을 \(\Delta\)라 하자. \(p\) 둘레 반지름 3 px 원 위의 16픽셀 중
@@ -843,7 +843,7 @@ std::vector&lt;uchar&gt; trackFB(const cv::Mat&amp; img0, const cv::Mat&amp; img
     이 영상 한 장에서 FAST(\(\Delta = 20\))가 잡은 점은 2,321개였다.
   </p>
 
-  <h3>ORB — 방향과 크기</h3>
+  <h3>5-2 ORB — 방향과 크기</h3>
 
   <p>
     FAST 점에는 방향도 크기도 없다. 그대로 기술자를 만들면 카메라가 돌거나 다가가면 같은 점의 기술자가 달라진다.
@@ -851,12 +851,12 @@ std::vector&lt;uchar&gt; trackFB(const cv::Mat&amp; img0, const cv::Mat&amp; img
   </p>
 
   <p>
-    <strong>① 크기 — 피라미드.</strong> 원본을 포함해 1.2배씩 줄인 8층에서 각각 FAST를 돌린다(③절의 KLT 피라미드는
+    <strong>(1) 크기 — 피라미드.</strong> 원본을 포함해 1.2배씩 줄인 8층에서 각각 FAST를 돌린다(③절의 KLT 피라미드는
     2배씩 줄인다). 큰 구조는 작은 층에서 모서리로 잡힌다.
   </p>
 
   <p>
-    <strong>② 방향 — 밝기 무게중심.</strong> 점 둘레 원형 패치에서 밝기를 무게로 보고 무게중심을 구한다.
+    <strong>(2) 방향 — 밝기 무게중심.</strong> 점 둘레 원형 패치에서 밝기를 무게로 보고 무게중심을 구한다.
     \(m_{pq}\)는 스칼라 모멘트이고, 좌표 \((u, v)\)는 점을 원점으로 둔 상대 좌표다.
   </p>
 
@@ -868,7 +868,7 @@ std::vector&lt;uchar&gt; trackFB(const cv::Mat&amp; img0, const cv::Mat&amp; img
 
   <p>점에서 무게중심으로 향하는 방향 \(\theta\)가 그 점의 방향이 된다. 영상이 돌면 무게중심도 같이 돌므로 \(\theta\)도 같이 돈다.</p>
 
-  <h3>BRIEF와 rBRIEF</h3>
+  <h3>5-3 BRIEF와 rBRIEF</h3>
 
   <p>
     패치 안에 미리 정해 둔 픽셀 쌍 \((\mathbf{a}_i, \mathbf{a}'_i)\)를 256개 두고(각각 2×1 상대 좌표), 쌍마다 한 비트를 만든다.
@@ -886,7 +886,7 @@ std::vector&lt;uchar&gt; trackFB(const cv::Mat&amp; img0, const cv::Mat&amp; img
     이미 고른 쌍들과의 상관이 낮은 것만 차례로 받아 256쌍을 채웠다. 그렇게 고른 쌍으로 만든 기술자가 rBRIEF다.
   </p>
 
-  <h3>Hamming 거리, cross check, ratio test</h3>
+  <h3>5-4 Hamming 거리, cross check, ratio test</h3>
 
   <p>
     두 기술자의 거리는 <strong>XOR 한 뒤 1인 비트를 센 것</strong>, 즉 Hamming 거리다.
@@ -1036,7 +1036,7 @@ std::vector&lt;uchar&gt; trackFB(const cv::Mat&amp; img0, const cv::Mat&amp; img
     넷째 겹은 IMU로 다음 자세를 예측할 수 있게 된 뒤(10회)에 붙인다.
   </p>
 
-  <h3>F-RANSAC과 왜곡 보정 좌표</h3>
+  <h3>7-1 F-RANSAC과 왜곡 보정 좌표</h3>
 
   <p>
     5회에서는 「\(K\)를 알므로 \(E\)를 쓴다」고 했다. 그런데 이 겹에서는 \(F\)를 쓴다. 이유가 있다.
@@ -1076,7 +1076,7 @@ cv::findFundamentalMat(u0, u1, cv::FM_RANSAC, 1.0, 0.99, inlier);   // 1 px · 9
     \(N \approx 2.7\times10^5\)이 된다.
   </p>
 
-  <h3>예시 한 쌍에서 세 겹이 걸러 낸 것</h3>
+  <h3>7-2 예시 한 쌍에서 세 겹이 걸러 낸 것</h3>
 
   <figure>
     <img src="assets/img/09_pair_layers.png"
@@ -1134,7 +1134,7 @@ cv::findFundamentalMat(u0, u1, cv::FM_RANSAC, 1.0, 0.99, inlier);   // 1 px · 9
     점이 영상 전체에 퍼져 있으면 시야 가장자리에서 두 운동의 모양이 달라져 갈린다.
   </div>
 
-  <h3>마스크와 보충 검출</h3>
+  <h3>8-1 마스크와 보충 검출</h3>
 
   <p>
     추적을 계속하면 점은 영상 밖으로 나가거나 겹에서 버려져 줄어든다. 줄어들면 새로 뽑아야 하는데,
@@ -1163,7 +1163,7 @@ void refill(const cv::Mat&amp; img, std::vector&lt;cv::Point2f&gt;&amp; pts,
     시험을 쓸 때 기준을 「≥ 30」으로 두면 이 함수가 맞는데도 실패한다. 기준은 「≥ 29」 정도로 두는 편이 맞다.
   </p>
 
-  <h3>특징점 보충 규칙</h3>
+  <h3>8-2 특징점 보충 규칙</h3>
 
   <p>
     이 강의는 <strong>100개 밑으로 떨어질 때만</strong> 150개까지 채운다.
@@ -1263,7 +1263,7 @@ void refill(const cv::Mat&amp; img, std::vector&lt;cv::Point2f&gt;&amp; pts,
     \(I_t\)에 <strong>움직임과 상관없는 큰 값</strong>이 생기고, 그것을 설명하려고 \(\mathbf{d}\)가 엉뚱한 곳으로 간다.
   </div>
 
-  <h3>밝기 변화 합성 실험</h3>
+  <h3>9-1 밝기 변화 합성 실험</h3>
 
   <p>
     상관은 원인이 아니다. 그래서 <strong>밝기만 바꾼 합성 실험</strong>을 했다.
@@ -1285,7 +1285,7 @@ void refill(const cv::Mat&amp; img, std::vector&lt;cv::Point2f&gt;&amp; pts,
     ④절 끝에서 말한 「앞뒤로 똑같이 틀리는」 경우다.
   </p>
 
-  <h3>CLAHE</h3>
+  <h3>9-2 CLAHE</h3>
 
   <div class="box firstseen">
     <p class="boxtitle">🆕 CLAHE — Contrast Limited Adaptive Histogram Equalization</p>
@@ -1371,12 +1371,12 @@ clahe-&gt;apply(raw, img);       // 검출·추적 전에 한 번. 두 영상 �
     (CLAHE → LK → 경계 → <span class="mono">rejectWithF</span> → 마스크 → 검출)을 따르되,
     LK 다음에 순방향-역방향 검사를 넣어 줘.<br><br>
     <strong>[검증]</strong> 아래 시험을 같이 써 줘. 기준을 넘으면 실패로 출력한다.<br>
-    ① <strong>정수 이동 합성</strong>: EuRoC 영상 한 장을 정확히 (3, −2) px 옮긴 영상을 만들어 추적한다.
+    (1) <strong>정수 이동 합성</strong>: EuRoC 영상 한 장을 정확히 (3, −2) px 옮긴 영상을 만들어 추적한다.
     가장자리 15 px 안쪽 점의 위치 오차 <strong>최대 <span class="mono">&lt; 0.01</span> px</strong>, 통과 비율 <span class="mono">≥ 99 %</span><br>
-    ② 같은 합성에서 다음 영상 밝기만 0.8배 했을 때 — CLAHE를 끄면 통과 비율 <span class="mono">≤ 60 %</span>,
+    (2) 같은 합성에서 다음 영상 밝기만 0.8배 했을 때 — CLAHE를 끄면 통과 비율 <span class="mono">≤ 60 %</span>,
     켜면 <span class="mono">≥ 95 %</span>. 두 숫자를 다 찍는다<br>
-    ③ 새로 뽑은 점과 기존 점 사이 최소 거리 <span class="mono">≥ 29</span> px<br>
-    ④ 한 번 버린 id가 <strong>다시 나오지 않는가</strong>, 새 점은 <strong>새 id</strong>를 받는가<br>
+    (3) 새로 뽑은 점과 기존 점 사이 최소 거리 <span class="mono">≥ 29</span> px<br>
+    (4) 한 번 버린 id가 <strong>다시 나오지 않는가</strong>, 새 점은 <strong>새 id</strong>를 받는가<br>
     실패하면 어느 점이 얼마나 벗어났는지 좌표와 함께 찍어 줘.<br><br>
     <strong>[기록]</strong> 프레임마다 <span class="mono">frames.jsonl</span>에 한 줄:
     <span class="mono">t_ns · n_tracked · n_new · n_l1_reject · n_l2_reject · n_l3_reject · inlier_ratio ·
@@ -1395,13 +1395,13 @@ clahe-&gt;apply(raw, img);       // 검출·추적 전에 한 번. 두 영상 �
 
   <pre>□ trackFB() · refill() 이 자료와 글자까지 같은가                    ← 바뀌었으면 그 이유를 묻는다
 □ CLAHE 기본값이 꺼져 있는가
-□ 시험 ①의 이동이 <strong>정수</strong>인가 (서브픽셀이면 보간 오차 때문에 0.01 을 못 넘는다)
-□ 시험 ②가 CLAHE 를 끈 숫자와 켠 숫자를 <strong>둘 다</strong> 찍는가
+□ 시험 (1)의 이동이 <strong>정수</strong>인가 (서브픽셀이면 보간 오차 때문에 0.01 을 못 넘는다)
+□ 시험 (2)가 CLAHE 를 끈 숫자와 켠 숫자를 <strong>둘 다</strong> 찍는가
 □ RANSAC 에 넣는 좌표가 undistortPoints 를 거쳤는가 — P = K 를 줬는가
 □ fb_err.csv 에 2겹에서 버린 점도 들어 있는가 (살아남은 점만 있으면 분포의 작은 봉우리가 안 보인다)</pre>
 
   <div class="interp">
-    <strong>해석:</strong> 시험 ①의 기준 0.01 px는 이렇게 정했다. 정수로 옮긴 영상은 보간이 없어 정답이 정확하고,
+    <strong>해석:</strong> 시험 (1)의 기준 0.01 px는 이렇게 정했다. 정수로 옮긴 영상은 보간이 없어 정답이 정확하고,
     KLT는 <strong>한 번에 고치는 양이 0.01 px보다 작아지면</strong> 멈춘다. 정답 근처에서 고치는 양이 그만큼 작아졌다면
     남은 오차도 그 수준이라고 보는 것이다. 실측 최대는 0.0032 px였다.
     <strong>(2.37, −1.61)처럼 서브픽셀로 옮기면</strong> 영상을 옮기는 보간 자체가 흐림을 만들어
@@ -1470,18 +1470,18 @@ clahe-&gt;apply(raw, img);       // 검출·추적 전에 한 번. 두 영상 �
     <p class="boxtitle">🧪 V1_01 2,912장을 <span class="mono">KltTracker</span>로 끝까지 돌린다</p>
 
     <p style="margin:.2rem 0">
-      <strong>① 무엇을 보려는 것인가</strong> — 오늘 만든 추적기가 <strong>145초 내내 끊기지 않는지</strong>,
+      <strong>(1) 무엇을 보려는 것인가</strong> — 오늘 만든 추적기가 <strong>145초 내내 끊기지 않는지</strong>,
       끊긴다면 <strong>어디서 왜</strong> 끊기는지.
     </p>
 
     <p style="margin:.2rem 0">
-      <strong>② 준비물</strong> — HW1의 로더(<span class="mono">DataSource</span>) · 4회의 <span class="mono">CameraModel</span>
+      <strong>(2) 준비물</strong> — HW1의 로더(<span class="mono">DataSource</span>) · 4회의 <span class="mono">CameraModel</span>
       (<span class="mono">undistortPoints</span>에 쓸 \(K\)·왜곡 계수) · 위 의뢰서로 받은 <span class="mono">KltTracker</span>와 계기판 스크립트.
     </p>
 
-    <p style="margin:.2rem 0"><strong>③ 단계와 각 단계에서 나오는 것</strong> — 1~4단계는 <strong>CLAHE를 끈 기본 설정</strong>이다.</p>
+    <p style="margin:.2rem 0"><strong>(3) 단계와 각 단계에서 나오는 것</strong> — 1~4단계는 <strong>CLAHE를 끈 기본 설정</strong>이다.</p>
     <ol style="margin:.2rem 0 .6rem">
-      <li><strong>의뢰서의 시험 ①~④를 돌린다</strong> → 통과/실패 네 줄. 하나라도 실패면 다음 단계로 가지 않는다.</li>
+      <li><strong>의뢰서의 시험 (1)~(4)를 돌린다</strong> → 통과/실패 네 줄. 하나라도 실패면 다음 단계로 가지 않는다.</li>
       <li><strong>예시 한 쌍(1200 → 1201)만 돌린다</strong> → 겹마다 남은 수. 자료의 150 · 148 · 147 · 144와 비교한다.</li>
       <li><strong>전 구간을 돌린다</strong> → <span class="mono">frames.jsonl</span> 2,911줄 · <span class="mono">tracks.csv</span> · <span class="mono">fb_err.csv</span>.</li>
       <li><strong>계기판을 그린다</strong> → <span class="mono">frontend.png</span> 한 장 (🎨절).</li>
@@ -1489,7 +1489,7 @@ clahe-&gt;apply(raw, img);       // 검출·추적 전에 한 번. 두 영상 �
     </ol>
 
     <p style="margin:.2rem 0">
-      <strong>④ 다 되면 손에 남는 것</strong> — 기본 설정의 계기판 한 장, 그리고 옵션까지 했다면
+      <strong>(4) 다 되면 손에 남는 것</strong> — 기본 설정의 계기판 한 장, 그리고 옵션까지 했다면
       「점 수 최저 · 100 밑 프레임 비율 · 한 쌍에서 잃는 비율」 세 숫자의 CLAHE 전후 비교.
     </p>
   </div>
@@ -1540,7 +1540,7 @@ clahe-&gt;apply(raw, img);       // 검출·추적 전에 한 번. 두 영상 �
   <div class="tablewrap">
   <table class="summary-table">
     <tr><th style="width:7%">단</th><th>시험</th><th style="width:26%">통과 기준</th><th>여기서 걸리는 것</th></tr>
-    <tr><td><strong>3</strong></td><td><strong>의뢰서의 시험 ①~④</strong> — 정수 이동 합성, 밝기 ×0.8 합성, 보충 거리, id</td>
+    <tr><td><strong>3</strong></td><td><strong>의뢰서의 시험 (1)~(4)</strong> — 정수 이동 합성, 밝기 ×0.8 합성, 보충 거리, id</td>
       <td>의뢰서에 적은 숫자 그대로</td><td>좌표 원점 반 픽셀 어긋남, CLAHE를 한 영상에만 건 실수, 마스크 누락, id 재사용</td></tr>
     <tr><td>4</td><td>C++ 결과와 기준값 대조 — 예시 한 쌍, CLAHE 끔</td>
       <td>겹마다 150 · 148 · 147 · 144에서 ±3 안</td><td>RANSAC에 왜곡된 좌표를 넣었다, 겹 순서가 다르다</td></tr>
@@ -1633,11 +1633,11 @@ python tools/match_pairs.py      --feats feats/   --model lightglue  --out match
     기록 파일(<span class="mono">frames.jsonl</span> · <span class="mono">tracks.csv</span>)은 <span class="mono">KltTracker</span>와 같은 형식으로 낸다.<br><br>
     <strong>[참조]</strong> SuperPoint와 LightGlue는 <span class="mono">cvg/LightGlue</span> 저장소의 공개 가중치와 예제 사용법을 따라 줘.<br><br>
     <strong>[검증]</strong> 아래 시험을 같이 써 줘. 기준을 넘으면 실패로 출력한다.<br>
-    ① 같은 영상을 두 번 넣었을 때 짝이 <strong>자기 자신</strong>으로 나오는 비율 <span class="mono">≥ 99 %</span><br>
-    ② 프레임 1200 → 1201에서 짝에 RANSAC(F, 왜곡 편 좌표, <strong>1 px</strong>, 0.99)을 걸어 inlier 비율을 찍는다.
+    (1) 같은 영상을 두 번 넣었을 때 짝이 <strong>자기 자신</strong>으로 나오는 비율 <span class="mono">≥ 99 %</span><br>
+    (2) 프레임 1200 → 1201에서 짝에 RANSAC(F, 왜곡 편 좌표, <strong>1 px</strong>, 0.99)을 걸어 inlier 비율을 찍는다.
     <span class="mono">KltTracker</span>의 같은 쌍(같은 조건에서 147 → 144, 0.980)과 나란히 출력하고,
     <strong>inlier 비율이 0.68 미만이면 실패</strong>로 찍는다 — 같은 조건에서 ORB가 낸 값(0.676)보다 못하면 갈아 끼울 이유가 없다<br>
-    ③ <span class="mono">PrecomputedTracker</span>가 내는 특징 id가 <strong>프레임을 건너 이어지는가</strong> —
+    (3) <span class="mono">PrecomputedTracker</span>가 내는 특징 id가 <strong>프레임을 건너 이어지는가</strong> —
     세 프레임 연속으로 같은 id가 나오는 점의 수를 찍는다. 0이면 실패다<br>
     실패하면 어느 프레임에서 몇 개가 어긋났는지 찍어 줘.<br><br>
     <strong>[함정]</strong> LightGlue는 <strong>두 영상씩</strong> 짝을 준다. id는 저절로 이어지지 않으므로
@@ -1648,10 +1648,10 @@ python tools/match_pairs.py      --feats feats/   --model lightglue  --out match
 
   <p class="readme-first">받은 코드에서 확인할 것</p>
 
-  <pre>□ 시험 ③이 있는가 — id 를 프레임 너머로 물려주는 코드가 실제로 있는가   ← 없으면 11회에 쓸 수 없다
+  <pre>□ 시험 (3)이 있는가 — id 를 프레임 너머로 물려주는 코드가 실제로 있는가   ← 없으면 11회에 쓸 수 없다
 □ 점 좌표가 752×480 원본 기준인가 (축소한 영상 기준이 아닌가)
 □ 기술자를 C++ 이 다시 계산하지 않는가 — 파일을 읽기만 하는가
-□ 시험 ②가 KLT 와 <strong>같은 쌍 · 같은 RANSAC 조건(1 px, 0.99)</strong>으로 비교하는가
+□ 시험 (2)가 KLT 와 <strong>같은 쌍 · 같은 RANSAC 조건(1 px, 0.99)</strong>으로 비교하는가
 □ 정한 값 목록이 스크립트 맨 위에 있는가</pre>
 
   <!-- ─────────────────────────────────────────────── ✅ -->

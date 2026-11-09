@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>5회 · Git ② 여럿이 쓰는 git — 갈라지고, 부딪히고, 합쳐진다 | 로봇공학</title>
+<title>5회 · Git 2편 여럿이 쓰는 git — 갈라지고, 부딪히고, 합쳐진다 | 로봇공학</title>
 <script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}})();</script>
 <link rel="stylesheet" href="../assets/site.css">
 <link rel="stylesheet" href="assets/lecture.css">
@@ -13,7 +13,7 @@
   <div class="barin wide">
     <a class="up" href="index.html" aria-label="로봇공학 회차 목록"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a>
     <nav class="crumb" aria-label="경로">
-      <a href="../index.html">강의자료</a><span class="sep">/</span><a href="index.html">로봇공학</a><span class="sep">/</span><span class="here">5회 · Git ② 여럿이 쓰는 git</span>
+      <a href="../index.html">강의자료</a><span class="sep">/</span><a href="index.html">로봇공학</a><span class="sep">/</span><span class="here">5회 · Git 2편 여럿이 쓰는 git</span>
     </nav>
     <span class="spacer"></span>
     <div class="navlinks"><a class="navlink" href="robotics_04.html" aria-label="이전 회차"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a><a class="navlink" href="robotics_06.html" aria-label="다음 회차"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></a></div>
@@ -46,7 +46,7 @@
 <main>
 
   <div class="lec-no">로봇공학 · 5회 · 1부 환경과 도구</div>
-  <h1>Git ② 여럿이 쓰는 git — 갈라지고, 부딪히고, 합쳐진다</h1>
+  <h1>Git 2편 여럿이 쓰는 git — 갈라지고, 부딪히고, 합쳐진다</h1>
 
   <div class="questions">
     <span class="lab">오늘 답할 질문</span>
@@ -134,14 +134,14 @@
   <!-- ══════════ ② 갈래 만들기 ══════════ -->
   <h2 id="branch">② 갈래를 만들고 오간다 — <code>git branch</code>와 <code>git switch</code> <span class="badge b-red">🔴 손에 익힌다</span></h2>
 
-  <h3>무엇이 궁금한가</h3>
+  <h3>2-1 무엇이 궁금한가</h3>
   <p>
     <strong>무엇을 하기 전에 언제나 「지금 어디에 서 있나」부터 본다.</strong>
     4회의 <code>git status</code> 첫 줄에 이미 나와 있었다 — <code>On branch main</code>.
     갈래가 하나뿐일 때는 볼 일이 없었지만, 오늘부터는 <strong>잘못된 갈래에서 커밋하는 일</strong>이 생긴다.
   </p>
 
-  <h3>그때 이걸 친다</h3>
+  <h3>2-2 그때 이걸 친다</h3>
   <p>4회에서 만든 <code>sch-robotics</code> 폴더에서 이어 간다.</p>
 
 <pre><code>$ cd ~/robotics/sch-robotics
@@ -190,7 +190,7 @@ $ git branch
     </p>
   </div>
 
-  <h3>갈래 안에서 커밋을 쌓는다</h3>
+  <h3>2-3 갈래 안에서 커밋을 쌓는다</h3>
   <p>인사말을 만드는 함수를 새 파일로 만들고, <code>hello.py</code>가 그것을 쓰게 고친다. <strong>커밋 두 개다.</strong></p>
 
 <pre><code>$ cat &gt; greet.py
@@ -234,7 +234,7 @@ $ git commit -m "hello.py 가 greet 를 쓰도록 바꿈"</code></pre>
     <strong>④절에서 이 모양이 왜 중요한지 나온다.</strong>
   </p>
 
-  <h3>갈래를 옮기면 폴더 안의 파일이 바뀐다</h3>
+  <h3>2-4 갈래를 옮기면 폴더 안의 파일이 바뀐다</h3>
   <p>
     <strong>이것을 한 번 눈으로 보는 것이 이 절의 목적이다.</strong>
     <code>main</code>으로 돌아가서 폴더를 본다.
@@ -264,13 +264,13 @@ print('hello robotics')</code></pre>
   <!-- ══════════ ③ 갈래를 올린다 ══════════ -->
   <h2 id="pushbranch">③ 갈래를 서버에 올린다 — <code>-u</code>가 하는 일 <span class="badge b-red">🔴 손에 익힌다</span></h2>
 
-  <h3>무엇이 궁금한가</h3>
+  <h3>3-1 무엇이 궁금한가</h3>
   <p>
     4회에서는 <code>git push</code>만 치면 올라갔다. <strong>새로 만든 갈래에서 그냥 치면 안 된다.</strong>
     한번 그대로 쳐 보고 <strong>git이 무엇을 알려 주는지</strong> 읽는다.
   </p>
 
-  <h3>그때 이걸 친다</h3>
+  <h3>3-2 그때 이걸 친다</h3>
 
 <pre><code>$ git switch feature/greet
 $ git push
@@ -346,7 +346,7 @@ To https://github.com/내계정/sch-robotics.git
       <strong>①은 합친 자리가 안 남고, ②는 남고, ③은 갈라진 적이 없었던 것처럼 된다.</strong></figcaption>
   </figure>
 
-  <h3>① fast-forward — 그냥 앞으로 감는다</h3>
+  <h3>4-1 fast-forward — 그냥 앞으로 감는다</h3>
   <p>
     <strong>갈라진 뒤로 <code>main</code>이 한 칸도 안 움직였을 때</strong> 일어난다.
     지금이 정확히 그 상황이다 — ②절의 <code>--graph</code>에 갈래 표시가 없었던 것이 그 뜻이었다.
@@ -372,7 +372,7 @@ $ git log --oneline --graph
     그래서 <strong>새 커밋이 안 생긴다.</strong> 로그를 보면 <strong>갈래가 있었다는 흔적이 아예 없다.</strong>
   </div>
 
-  <h3>② 병합 커밋 — 양쪽을 이어 붙이고 그 자리를 남긴다</h3>
+  <h3>4-2 병합 커밋 — 양쪽을 이어 붙이고 그 자리를 남긴다</h3>
   <p>
     <strong>내가 갈래에서 일하는 사이에 <code>main</code>도 움직였다면</strong> 이야기가 달라진다.
     이름표만 옮길 수가 없다 — 양쪽에 서로 없는 커밋이 있기 때문이다.
@@ -415,7 +415,7 @@ $ git log --oneline --graph
     </dl>
   </div>
 
-  <h3>③ rebase — 갈래를 통째로 떼어 <code>main</code> 끝에 옮겨 붙인다</h3>
+  <h3>4-3 rebase — 갈래를 통째로 떼어 <code>main</code> 끝에 옮겨 붙인다</h3>
   <p>
     같은 상황에서 <strong>합치는 대신 옮겨 붙일 수도 있다.</strong>
     <strong>「내 커밋들을 <code>main</code>의 최신 상태 위에서 다시 만든다」</strong>는 뜻이라 <em>rebase</em>(밑을 다시 잡다)다.
@@ -432,7 +432,7 @@ $ git log --oneline --graph --all
 * c3735c1 첫 프로그램 hello.py 추가</code></pre>
 
   <p>
-    <strong>갈라진 모양이 사라졌다.</strong> 이제 <code>main</code>에서 합치면 ①의 fast-forward가 된다.
+    <strong>갈라진 모양이 사라졌다.</strong> 이제 <code>main</code>에서 합치면 4-1의 fast-forward가 된다.
   </p>
 
   <div class="box trap">
@@ -449,7 +449,7 @@ $ git log --oneline --graph --all
     </p>
   </div>
 
-  <h3>그래서 언제 무엇을 쓰나</h3>
+  <h3>4-4 그래서 언제 무엇을 쓰나</h3>
   <p class="readme-first">무엇을 먼저 볼지: <strong>맨 왼쪽 열</strong>이다. 상황이 정해지면 나머지는 따라온다.</p>
 
   <div class="tablewrap">
@@ -506,7 +506,7 @@ $ git log --oneline --graph --all
       <strong>거절은 사고가 아니라 사고를 막은 것</strong>이다 — 그냥 올렸으면 집에서 한 일이 사라진다.</figcaption>
   </figure>
 
-  <h3>집에서 고쳐서 올린다</h3>
+  <h3>5-1 집에서 고쳐서 올린다</h3>
   <p>
     집 컴퓨터를 흉내 내려고 <strong>같은 저장소를 다른 이름으로 한 벌 더 받는다.</strong>
     (실제로는 집 노트북에서 <code>git clone</code>을 한 번 하는 것이다.)
@@ -530,7 +530,7 @@ $ git add hello.py
 $ git commit -m "인사말 뒤에 어디서 돌린 것인지 붙임"
 $ git push origin main</code></pre>
 
-  <h3>학교에서는 그것을 모르고 같은 줄을 고친다</h3>
+  <h3>5-2 학교에서는 그것을 모르고 같은 줄을 고친다</h3>
   <p>
     <strong>여기서 <code>git pull</code>을 안 한 것이 오늘의 사고 원인이다.</strong>
     ③절에서 본 대로, 학교 저장소의 <code>origin/main</code>은 <strong>낡은 쪽지</strong>다.
@@ -561,7 +561,7 @@ hint: 'git pull' before pushing again.</code></pre>
     <strong>이 거절이 없었다면 집에서 한 커밋이 그대로 사라졌을 것이다.</strong>
   </div>
 
-  <h3>받아 오려는데 git이 <strong>합치는 방식부터 정하라</strong>고 한다</h3>
+  <h3>5-3 받아 오려는데 git이 <strong>합치는 방식부터 정하라</strong>고 한다</h3>
   <p>시키는 대로 <code>git pull</code>을 치면 <strong>또 멈춘다.</strong> 이 화면도 처음에는 당황스럽다.</p>
 
 <pre><code>$ git pull origin main
@@ -615,13 +615,13 @@ Automatic merge failed; fix conflicts and then commit the result.</code></pre>
   <!-- ══════════ ⑥ 충돌 표시 ══════════ -->
   <h2 id="markers">⑥ 충돌 표시를 읽고 고른다 <span class="badge b-red">🔴 사람이 한다</span></h2>
 
-  <h3>무엇이 궁금한가</h3>
+  <h3>6-1 무엇이 궁금한가</h3>
   <p>
     <strong>파일을 열면 없던 글자가 들어가 있다.</strong> 프로그램도 당연히 안 돈다.
     처음 보면 <strong>파일이 망가진 것처럼 보인다.</strong> 망가진 것이 아니다.
   </p>
 
-  <h3>그때 이걸 친다</h3>
+  <h3>6-2 그때 이걸 친다</h3>
 
 <pre><code>$ git status
 On branch main
@@ -675,7 +675,7 @@ print(greet('robotics'), '- from home')
     <strong>충돌이 무서운 이유는 어렵기 때문이 아니라, 판단을 요구하기 때문이다.</strong>
   </div>
 
-  <h3>고른 다음 — 표시 세 줄을 <strong>지운다</strong></h3>
+  <h3>6-3 고른 다음 — 표시 세 줄을 <strong>지운다</strong></h3>
   <p>
     <strong>편집기로 파일을 열어 남길 것만 남기고 나머지를 지운다.</strong>
     여기서는 집에서 붙인 표시를 남기기로 한다.
@@ -700,7 +700,7 @@ print(greet('robotics'), '- from home')</code></pre>
     </p>
   </div>
 
-  <h3>담고 굳히면 끝난다</h3>
+  <h3>6-4 담고 굳히면 끝난다</h3>
   <p>
     <strong><code>git add</code>가 여기서는 「이 파일은 해결했다」는 표시</strong>가 된다.
     <code>git status</code>의 괄호에 그렇게 적혀 있었다 — <code>use "git add &lt;file&gt;..." to mark resolution</code>.
@@ -730,7 +730,7 @@ To https://github.com/내계정/sch-robotics.git
    1841fd4..216eee4  main -&gt; main</code></pre>
 
   <div class="interp">
-    <strong>해석:</strong> <strong>④절 ②에서 본 병합 커밋과 같은 모양</strong>이 나왔다.
+    <strong>해석:</strong> <strong>4-2에서 본 병합 커밋과 같은 모양</strong>이 나왔다.
     갈라졌다가(<code>|\</code>) 다시 하나가 됐다(<code>|/</code>).
     <strong>충돌을 해결한 커밋은 언제나 병합 커밋</strong>이고,
     <strong>그 커밋 하나가 「여기서 두 사람의 작업을 합쳤다」는 기록</strong>이 된다.
@@ -749,7 +749,7 @@ To https://github.com/내계정/sch-robotics.git
     </p>
   </div>
 
-  <h3>이 사고를 안 내는 방법 한 줄</h3>
+  <h3>6-5 이 사고를 안 내는 방법 한 줄</h3>
   <p>
     <strong>일을 시작하기 전에 <code>git pull</code>부터 한다.</strong>
     집에서 하고 온 다음 날 학교에서 앉자마자 치는 것이 이것이다.
@@ -765,7 +765,7 @@ To https://github.com/내계정/sch-robotics.git
   <!-- ══════════ ⑦ PR ══════════ -->
   <h2 id="pr">⑦ PR — 합치기 전에 봐 달라고 하는 자리 <span class="badge b-red">🔴 사람이 한다</span></h2>
 
-  <h3>무엇이 궁금한가</h3>
+  <h3>7-1 무엇이 궁금한가</h3>
   <p>
     ④절에서 <code>git merge</code>로 직접 합쳤다. <strong>혼자면 그래도 된다.</strong>
     그런데 팀에서는 그렇게 하지 않는다. <strong>왜 한 단계를 더 두는가.</strong>
@@ -788,7 +788,7 @@ To https://github.com/내계정/sch-robotics.git
     </dl>
   </div>
 
-  <h3>만드는 순서 — 화면에서 하는 일이다</h3>
+  <h3>7-2 만드는 순서 — 화면에서 하는 일이다</h3>
   <p>
     ③절에서 <strong><code>git push -u origin feature/greet</code>까지 이미 했다면</strong>
     나머지는 웹 화면에서 몇 번 누르는 것이 전부다.
@@ -797,12 +797,12 @@ To https://github.com/내계정/sch-robotics.git
   <div class="tablewrap">
   <table class="summary-table">
     <tr><th>순서</th><th>무엇을 하나</th><th>내가 확인하는 것 ✅</th></tr>
-    <tr><td>①</td><td>갈래를 서버에 올린다 — <code>git push -u origin feature/greet</code></td><td><code>[new branch]</code> 줄이 나왔나</td></tr>
-    <tr><td>②</td><td>GitHub 저장소 화면을 새로 고친다</td><td><strong>노란 띠에 방금 올린 갈래 이름</strong>과 <code>Compare &amp; pull request</code> 단추가 보이나</td></tr>
-    <tr><td>③</td><td>그 단추를 누른다. 안 보이면 <code>Pull requests</code> 칸 → <code>New pull request</code></td><td>위쪽에 <code>main ← feature/greet</code>처럼 <strong>방향</strong>이 맞나</td></tr>
-    <tr><td>④</td><td><strong>제목과 설명을 쓴다</strong> (아래 다섯 줄)</td><td>설명 칸이 비어 있지 않나</td></tr>
-    <tr><td>⑤</td><td><code>Create pull request</code></td><td><code>Files changed</code> 칸에 <strong>내가 고친 파일만</strong> 있나</td></tr>
-    <tr><td>⑥</td><td>동의를 얻은 뒤 <code>Merge pull request</code></td><td>저장소 첫 화면의 <code>main</code>에 내 파일이 보이나</td></tr>
+    <tr><td>(1)</td><td>갈래를 서버에 올린다 — <code>git push -u origin feature/greet</code></td><td><code>[new branch]</code> 줄이 나왔나</td></tr>
+    <tr><td>(2)</td><td>GitHub 저장소 화면을 새로 고친다</td><td><strong>노란 띠에 방금 올린 갈래 이름</strong>과 <code>Compare &amp; pull request</code> 단추가 보이나</td></tr>
+    <tr><td>(3)</td><td>그 단추를 누른다. 안 보이면 <code>Pull requests</code> 칸 → <code>New pull request</code></td><td>위쪽에 <code>main ← feature/greet</code>처럼 <strong>방향</strong>이 맞나</td></tr>
+    <tr><td>(4)</td><td><strong>제목과 설명을 쓴다</strong> (아래 다섯 줄)</td><td>설명 칸이 비어 있지 않나</td></tr>
+    <tr><td>(5)</td><td><code>Create pull request</code></td><td><code>Files changed</code> 칸에 <strong>내가 고친 파일만</strong> 있나</td></tr>
+    <tr><td>(6)</td><td>동의를 얻은 뒤 <code>Merge pull request</code></td><td>저장소 첫 화면의 <code>main</code>에 내 파일이 보이나</td></tr>
   </table>
   </div>
 
@@ -810,12 +810,12 @@ To https://github.com/내계정/sch-robotics.git
        git 명령 쪽(push -u, branch -a, merge, rebase, 충돌)은 컨테이너에서 실제로 돌려 확인했다 (git 2.43.0) -->
 
   <div class="interp">
-    <strong>해석:</strong> <strong>③의 방향을 한 번 본다.</strong> 화살표가 거꾸로 되어 있으면
+    <strong>해석:</strong> <strong>(3)의 방향을 한 번 본다.</strong> 화살표가 거꾸로 되어 있으면
     <strong>내 갈래에 <code>main</code>을 합치는 PR</strong>이 되어 정반대 일이 벌어진다.
     <strong>왼쪽이 받는 쪽, 오른쪽이 주는 쪽</strong>이다.
   </div>
 
-  <h3>PR 설명 다섯 줄 — <strong>이것이 프로젝트 평가 항목이다</strong></h3>
+  <h3>7-3 PR 설명 다섯 줄 — <strong>이것이 프로젝트 평가 항목이다</strong></h3>
   <p>
     형식은 자유지만 <strong>이 다섯 가지가 들어 있으면 읽는 사람이 판단할 수 있다.</strong>
     <strong>29~30회 프로젝트에서 이 다섯 줄을 채점한다</strong>(C항목 5점).
@@ -845,7 +845,7 @@ To https://github.com/내계정/sch-robotics.git
     </p>
   </div>
 
-  <h3>합쳐진 뒤 — 내 컴퓨터도 맞춰 놓는다</h3>
+  <h3>7-4 합쳐진 뒤 — 내 컴퓨터도 맞춰 놓는다</h3>
   <p>
     <strong>GitHub에서 합쳐진 것은 서버에서 일어난 일이다.</strong>
     내 컴퓨터의 <code>main</code>은 아직 옛날 그대로다(③절의 「낡은 쪽지」).
@@ -914,9 +914,9 @@ $ git branch
       </li>
     </ol>
     <p><strong>이렇게 되면 성공이다.</strong>
-      <br>① GitHub의 <code>Pull requests</code> 칸에 <strong>내가 쓴 설명 다섯 줄</strong>이 남아 있다.
-      <br>② <code>git log --oneline --graph</code>에 <strong><code>|\</code>와 <code>|/</code>가 보인다.</strong> 갈라졌다 합쳐진 자리다.
-      <br>③ <code>python3 hello.py</code>가 <strong>오류 없이 돈다.</strong> 표시줄이 안 남았다는 뜻이다.</p>
+      <br>(1) GitHub의 <code>Pull requests</code> 칸에 <strong>내가 쓴 설명 다섯 줄</strong>이 남아 있다.
+      <br>(2) <code>git log --oneline --graph</code>에 <strong><code>|\</code>와 <code>|/</code>가 보인다.</strong> 갈라졌다 합쳐진 자리다.
+      <br>(3) <code>python3 hello.py</code>가 <strong>오류 없이 돈다.</strong> 표시줄이 안 남았다는 뜻이다.</p>
     <details>
       <summary><strong>7단계에서 겁이 나면 여기를 본다</strong></summary>
       <p>
@@ -984,21 +984,21 @@ $ git branch
     <strong>아래 셋은 사정이 다르다.</strong>
   </p>
 
-  <h3>① 충돌이 났는데 양쪽이 무엇을 하려던 건지 모르겠을 때</h3>
+  <h3>(1) 충돌이 났는데 양쪽이 무엇을 하려던 건지 모르겠을 때</h3>
   <p>
     <strong>고르는 것은 내가 한다.</strong> 시키는 것은 <strong>두 쪽을 읽어 주는 일</strong>까지다.
     <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code> 위아래가 남이 쓴 코드일 때 특히 값어치가 있다.
   </p>
   <div class="prompt"><button onclick="copyPrompt(this)">복사</button> 충돌 난 부분에서 <strong>위쪽과 아래쪽이 각각 무엇을 하려는 코드인지</strong> 설명해 줘. <strong>파일은 고치지 마.</strong> 고르는 것은 내가 한다.</div>
 
-  <h3>② PR 설명 초안이 필요할 때</h3>
+  <h3>(2) PR 설명 초안이 필요할 때</h3>
   <p>
     커밋 기록에서 <strong>네 줄은 뽑아낼 수 있다.</strong>
     <strong>세 번째 줄만은 비워 두게 한다</strong> — 내가 화면에서 본 것은 기록 어디에도 없다(⑦절).
   </p>
   <div class="prompt"><button onclick="copyPrompt(this)">복사</button> 이 갈래의 커밋을 보고 <strong>무엇을 · 왜 · 안 한 것 · 봐 줬으면 하는 곳</strong> 네 줄로 PR 설명 초안을 써 줘. <strong>「어떻게 확인했나」는 비워 둬</strong> — 내가 채운다.</div>
 
-  <h3>③ 갈래가 여럿인데 지금 상태를 모르겠을 때</h3>
+  <h3>(3) 갈래가 여럿인데 지금 상태를 모르겠을 때</h3>
   <p>
     <code>--graph</code> 출력을 눈으로 읽는 데 익숙해지기 전까지 쓴다.
     <strong>익숙해지면 안 쓰게 된다</strong> — <code>git log --oneline --graph --all</code>이 더 빠르기 때문이다.

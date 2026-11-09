@@ -36,23 +36,23 @@
   <a href="#problem">① SLAM을 확률로 세운다</a>
   <a href="#rules">② 확률의 네 규칙</a>
   <a href="#bayes">③ 베이즈 필터의 유도</a>
-  <a href="#grid" class="sub">격자 위에서 한 번 돌려 보기</a>
+  <a href="#grid" class="sub">3-3 격자 위에서 한 번 돌려 보기</a>
   <a href="#gauss">④ 가우시안 — 필터에 필요한 네 가지</a>
-  <a href="#quad" class="sub">지수 안이 이차식이면 가우시안이다</a>
+  <a href="#quad" class="sub">4-4 지수 안이 이차식이면 가우시안이다</a>
   <a href="#kf">⑤ 칼만 필터(KF)</a>
-  <a href="#kf-map" class="sub">갱신 — 곱을 최소제곱으로</a>
-  <a href="#kf-algo" class="sub">알고리즘 — 일곱 줄과 그 뜻</a>
-  <a href="#kf-num" class="sub">숫자로 한 걸음</a>
-  <a href="#kf-use" class="sub">쓰는 법 — Q와 W · 측정이 없을 때 · gating</a>
-  <a href="#kf-check" class="sub">필터가 맞게 도는지 — NIS · NEES</a>
-  <a href="#kf-joseph" class="sub">Joseph 형 — 같은 P를 다르게 계산하는 식</a>
+  <a href="#kf-map" class="sub">5-2 갱신 — 곱을 최소제곱으로</a>
+  <a href="#kf-algo" class="sub">5-3 알고리즘 — 일곱 줄과 그 뜻</a>
+  <a href="#kf-num" class="sub">5-4 숫자로 한 걸음</a>
+  <a href="#kf-use" class="sub">5-5 쓰는 법 — Q와 W · 측정이 없을 때 · gating</a>
+  <a href="#kf-check" class="sub">5-6 필터가 맞게 도는지 — NIS · NEES</a>
+  <a href="#kf-joseph" class="sub">5-7 Joseph 형 — 같은 P를 다르게 계산하는 식</a>
   <a href="#ekf">⑥ 확장 칼만 필터(EKF)</a>
-  <a href="#ekf-ex" class="sub">운동 모델과 거리-방위 측정의 야코비안</a>
-  <a href="#ekf-use" class="sub">쓰는 법 — 자주 틀리는 세 자리</a>
-  <a href="#ekf-loss" class="sub">선형화가 잃는 것</a>
+  <a href="#ekf-ex" class="sub">6-1 · 6-2 운동 모델과 거리-방위 측정의 야코비안</a>
+  <a href="#ekf-use" class="sub">6-3 쓰는 법 — 자주 틀리는 세 자리</a>
+  <a href="#ekf-loss" class="sub">6-4 선형화가 잃는 것</a>
   <a href="#ekfslam">⑦ EKF-SLAM</a>
-  <a href="#ekfslam-loop" class="sub">상관과 루프 클로징</a>
-  <a href="#consistency" class="sub">계산량과 일관성</a>
+  <a href="#ekfslam-loop" class="sub">7-4 상관과 루프 클로징</a>
+  <a href="#consistency" class="sub">7-5 계산량과 일관성</a>
   <a href="#marginal">⑧ 필터가 하는 일 — 과거를 주변화한다</a>
   <a href="#handcheck">✍️ 식이 맞는지 손으로 확인하는 법</a>
   <a href="#check">✅ 오늘의 점검</a>
@@ -352,7 +352,7 @@
     목표는 \(\mathrm{bel}(\mathbf{x}_{k-1})\)에서 \(\mathrm{bel}(\mathbf{x}_k)\)로 가는 식이다. 두 단계로 나눈다.
   </p>
 
-  <h3>갱신 — 측정 \(\mathbf{z}_k\)를 넣는다</h3>
+  <h3>3-1 갱신 — 측정 \(\mathbf{z}_k\)를 넣는다</h3>
 
   <p>\(\mathrm{bel}(\mathbf{x}_k)\)의 조건에서 \(\mathbf{z}_k\)만 떼어 내 베이즈 정리를 쓴다. 나머지 조건(\(\mathbf{z}_{1:k-1}, \mathbf{u}_{1:k}\))은 모든 항에 그대로 붙어 다닌다.</p>
 
@@ -370,7 +370,7 @@
   \end{aligned}
   $$
 
-  <h3>예측 — 입력 \(\mathbf{u}_k\)로 한 걸음 옮긴다</h3>
+  <h3>3-2 예측 — 입력 \(\mathbf{u}_k\)로 한 걸음 옮긴다</h3>
 
   <p>\(\overline{\mathrm{bel}}(\mathbf{x}_k)\)에는 \(\mathbf{x}_{k-1}\)이 없다. 그래서 \(\mathbf{x}_{k-1}\)을 끌어들였다가 적분으로 다시 지운다(규칙 2).</p>
 
@@ -409,7 +409,7 @@
     이 두 줄이 이후 모든 필터의 뼈대다. 오늘 볼 칼만 필터와 EKF는 — 그리고 이름이 다른 여러 필터들도 — <strong>이 적분과 곱셈을 어떻게 계산할지</strong>에 대한 서로 다른 답이다.
   </p>
 
-  <h3 id="grid">격자 위에서 한 번 돌려 보기</h3>
+  <h3 id="grid">3-3 격자 위에서 한 번 돌려 보기</h3>
 
   <p>
     분포가 어떤 모양이든 상관없이 위 두 줄을 그대로 계산하는 가장 단순한 방법은 상태 공간을 칸으로 나누는 것이다.
@@ -430,7 +430,7 @@
       (마)에서 다시 「문」을 읽자 <strong>「문 → 3칸 → 문」과 맞는 6번 칸만</strong> 솟는다.</figcaption>
   </figure>
 
-  <p>숫자로 확인한다 (<code>src/filter_numbers.py</code> ①).</p>
+  <p>숫자로 확인한다 (<code>src/filter_numbers.py</code> [1]).</p>
 
   $$
   \begin{aligned}
@@ -496,7 +496,7 @@
     </dl>
   </div>
 
-  <h3>성질 1 — 선형변환해도 가우시안이다</h3>
+  <h3>4-1 성질 1 — 선형변환해도 가우시안이다</h3>
 
   <p>\(\mathbf{x}\sim\mathcal{N}(\boldsymbol\mu, \Sigma)\)이고 \(\mathbf{y} = A\mathbf{x} + \mathbf{b}\)라고 하자(\(A\), \(\mathbf{b}\)는 정해진 상수). 평균은 기댓값의 선형성 — 상수는 기댓값 밖으로 나온다 — 으로 바로 나온다.</p>
 
@@ -546,7 +546,7 @@
     <strong>칼만 필터의 예측이 이 성질이다.</strong>
   </p>
 
-  <h3>성질 2 — 독립인 가우시안의 합도 가우시안이고, 공분산이 더해진다</h3>
+  <h3>4-2 성질 2 — 독립인 가우시안의 합도 가우시안이고, 공분산이 더해진다</h3>
 
   <p>\(\mathbf{x}\sim\mathcal{N}(\boldsymbol\mu, \Sigma)\)와 \(\mathbf{w}\sim\mathcal{N}(\mathbf{0}, Q)\)가 독립이라고 하자. 합의 평균은 평균의 합이다.</p>
 
@@ -603,7 +603,7 @@
   = \Sigma + Q
   $$
 
-  <h3>성질 3 — 일부만 보려면 그 블록만 떼면 된다</h3>
+  <h3>4-3 성질 3 — 일부만 보려면 그 블록만 떼면 된다</h3>
 
   <p>두 덩이 \(\mathbf{a}\), \(\mathbf{b}\)를 한 벡터로 쌓은 결합 가우시안을 이렇게 쓴다.</p>
 
@@ -636,7 +636,7 @@
     ⑦절의 EKF-SLAM에서 상태에 랜드마크가 수백 개 들어 있어도, <strong>랜드마크 하나의 불확실도는 \(P\)에서 그 블록만 읽으면</strong> 된다.
   </p>
 
-  <h3 id="quad">성질 4 — 지수 안이 이차식이면 가우시안이다</h3>
+  <h3 id="quad">4-4 성질 4 — 지수 안이 이차식이면 가우시안이다</h3>
 
   <p>
     거꾸로 물어 보자. 어떤 분포가 \(p(\mathbf{x}) \propto \exp\!\big(-J(\mathbf{x})\big)\) 꼴이고 \(J\)가 \(\mathbf{x}\)의 이차식이라면, 그 분포의 평균과 공분산은 무엇일까?
@@ -719,7 +719,7 @@
     이 가정 아래에서 믿음은 매 스텝 가우시안으로 남고, 그 평균과 공분산이 어떻게 바뀌는지가 칼만 필터다.
   </p>
 
-  <h3>예측 — 성질 1과 2</h3>
+  <h3>5-1 예측 — 성질 1과 2</h3>
 
   <p>
     \(\mathrm{bel}(\mathbf{x}_{k-1}) = \mathcal{N}(\hat{\mathbf{x}}_{k-1}, P_{k-1})\)라고 하자. 예측의 적분 \(\int p(\mathbf{x}_k\mid\mathbf{x}_{k-1},\mathbf{u}_k)\,\mathrm{bel}(\mathbf{x}_{k-1})\,d\mathbf{x}_{k-1}\)은
@@ -748,7 +748,7 @@
   \end{aligned}
   $$
 
-  <h3 id="kf-map">갱신 — 두 가우시안의 곱을 최소제곱으로 푼다</h3>
+  <h3 id="kf-map">5-2 갱신 — 두 가우시안의 곱을 최소제곱으로 푼다</h3>
 
   <p>
     갱신은 베이즈 필터의 둘째 줄 \(\mathrm{bel}(\mathbf{x}) = \eta\,p(\mathbf{z}\mid\mathbf{x})\,\overline{\mathrm{bel}}(\mathbf{x})\)이다. 아래첨자 \(k\)는 잠시 뗀다.
@@ -857,11 +857,19 @@
   $$
 
   <p>
-    스칼라에서는 「정보의 합」 \(1/P^- + 1/W\)을 뒤집는 대신 「불확실도의 합」 \(P^- + W\) 하나로 나누게 됐다. 이것이 \(m\times m\) 역행렬 \(S^{-1}\)의 정체다.
+    스칼라에서는 「정보의 합」 \(1/P^- + 1/W\)을 뒤집는 대신 「불확실도의 합」 \(P^- + W\) 하나로 나누게 됐다.
     행렬에서도 똑같은 일을 한다. 나눗셈이 역행렬이 되어 곱하는 순서를 지켜야 할 뿐이다. 스칼라의 세 결과 — 「예측 + 고침」 꼴, \(K = P^-/(P^-+W)\), \(P = (1-K)P^-\) — 를 하나씩 행렬로 옮긴다.
+    스칼라의 분모 \(P^- + W\)에 해당하는 행렬은 앞으로 계속 나오므로 미리 한 글자로 줄여 둔다.
   </p>
 
-  <p><strong>① 평균을 「예측 + 고침」 꼴로.</strong> 스칼라의 셋째 줄처럼 \(\boldsymbol\eta\) 안의 \(\hat{\mathbf{x}}^-\) 항을 \(\Lambda\hat{\mathbf{x}}^-\)로 만든다. \(H^\top W^{-1}H\hat{\mathbf{x}}^-\)를 더하고 뺀다.</p>
+  $$
+  S = HP^-H^\top + W
+  \qquad\big(H = 1\text{이면 } S = P^- + W\big)
+  $$
+
+  <p>\(S\)는 측정 크기 \(m\times m\)다. 이것을 뒤집는 것이 \(n\times n\)인 \(\Lambda\)를 뒤집는 것보다 훨씬 싸다.</p>
+
+  <p><strong>(1) 평균을 「예측 + 고침」 꼴로.</strong> 스칼라의 셋째 줄처럼 \(\boldsymbol\eta\) 안의 \(\hat{\mathbf{x}}^-\) 항을 \(\Lambda\hat{\mathbf{x}}^-\)로 만든다. \(H^\top W^{-1}H\hat{\mathbf{x}}^-\)를 더하고 뺀다.</p>
 
   $$
   \begin{aligned}
@@ -881,59 +889,84 @@
   </p>
 
   <p>
-    <strong>② \(K\)에서 \(\Lambda^{-1}\)을 없앤다.</strong> 스칼라에서는 분자·분모에 \(P^-W\)를 곱했다. 행렬에서는 정리한 답 \(P^-H^\top(\,\cdot\,)^{-1}\)이 어떤 꼴일지 스칼라에서 짐작이 되므로,
-    \(P^-H^\top\)에 \(\Lambda\)를 곱해 보고 무엇이 나오는지 본다.
+    <strong>(2) \(K\)에서 \(\Lambda^{-1}\)을 없앤다.</strong> 바라는 답은 스칼라의 \(P^-/(P^-+W)\), 행렬로 쓰면 \(P^-H^\top S^{-1}\)이다.
+    답의 오른쪽 끝에 \(S^{-1}\)이 있어야 하므로, <strong>\(K\)의 오른쪽 끝에 \(I = SS^{-1}\)을 끼워 넣고</strong> 시작한다.
+    \(I\)를 곱했으니 값은 그대로다. 그다음 \(S\)를 펴서 정리하면 맨 왼쪽 \(\Lambda^{-1}\) 바로 옆에 \(\Lambda\)가 만들어지고, 둘이 지워진다.
   </p>
 
   $$
   \begin{aligned}
-  \Lambda\,P^-H^\top &= \big((P^-)^{-1} + H^\top W^{-1}H\big)\,P^-H^\top
-    &&\Lambda\text{를 펴 쓴다} \\
-  &= (P^-)^{-1}P^-H^\top + H^\top W^{-1}HP^-H^\top
+  K &= \Lambda^{-1}H^\top W^{-1}
+    &&\text{(1)에서 얻은 }K \\
+  &= \Lambda^{-1}H^\top W^{-1}\,S\,S^{-1}
+    &&\text{오른쪽 끝에 }I = SS^{-1} \\
+  &= \Lambda^{-1}H^\top W^{-1}\big(HP^-H^\top + W\big)\,S^{-1}
+    &&\text{가운데 }S\text{를 편다} \\
+  &= \Lambda^{-1}\big(H^\top + H^\top W^{-1}HP^-H^\top\big)\,S^{-1}
+    &&\text{분배 — }W^{-1}W = I \\
+  &= \Lambda^{-1}\big((P^-)^{-1}P^-H^\top + H^\top W^{-1}H\,P^-H^\top\big)\,S^{-1}
+    &&H^\top = (P^-)^{-1}P^-H^\top \\
+  &= \Lambda^{-1}\underbrace{\big((P^-)^{-1} + H^\top W^{-1}H\big)}_{\Lambda}\,P^-H^\top S^{-1}
+    &&\text{두 항의 오른쪽 }P^-H^\top\text{로 묶는다} \\
+  &= P^-H^\top S^{-1}
+    &&\Lambda^{-1}\Lambda = I
+  \end{aligned}
+  $$
+
+  <p>스칼라(\(H = 1\))로 같은 줄을 따라가면 이렇다. 등호 하나가 위의 줄 하나와 짝이다.</p>
+
+  $$
+  K = \frac{1/W}{\Lambda}
+    = \frac{1/W}{\Lambda}\cdot\frac{S}{S}
+    = \frac{(P^- + W)/W}{\Lambda S}
+    = \frac{1 + P^-/W}{\Lambda S}
+    = \frac{P^-\big(1/P^- + 1/W\big)}{\Lambda S}
+    = \frac{P^-\Lambda}{\Lambda S}
+    = \frac{P^-}{P^- + W}
+  $$
+
+  <p>
+    끼워 넣은 \(I = SS^{-1}\)이 이 유도의 유일한 요령이다. 무엇을 끼울지는 바라는 답(끝에 \(S^{-1}\))이 정해 준다.
+    \(S\)를 풀어서 결과를 다시 쓰면 이렇다.
+  </p>
+
+  $$
+  K = \Lambda^{-1}H^\top W^{-1} = P^-H^\top S^{-1} = P^-H^\top\big(HP^-H^\top + W\big)^{-1}
+  $$
+
+  <p>
+    스칼라로 줄이면(\(H = 1\)) \(K = P^-/(P^- + W)\) — 위 스칼라 유도의 \(K\) 그대로다.
+    뒤집는 것은 이제 \(n\times n\)인 \(\Lambda\)가 아니라 \(m\times m\)인 \(HP^-H^\top + W\) 하나다.
+  </p>
+
+  <p>
+    <strong>(3) 공분산도 \(P^-\)로.</strong> 스칼라에서는 \(P = (1-K)P^-\)였다. 이번에는 답의 오른쪽 끝에 \(P^-\)가 있어야 하므로
+    <strong>\(P = \Lambda^{-1}\)의 오른쪽 끝에 \(I = (P^-)^{-1}P^-\)를 끼워 넣는다.</strong> 요령은 (2)와 같다.
+  </p>
+
+  $$
+  \begin{aligned}
+  P &= \Lambda^{-1}
+    &&\text{정보 형식의 답} \\
+  &= \Lambda^{-1}(P^-)^{-1}P^-
+    &&\text{오른쪽 끝에 }I = (P^-)^{-1}P^- \\
+  &= \Lambda^{-1}\big(\Lambda - H^\top W^{-1}H\big)\,P^-
+    &&\Lambda\text{의 정의를 }(P^-)^{-1}\text{에 대해 푼 것} \\
+  &= \big(\Lambda^{-1}\Lambda - \Lambda^{-1}H^\top W^{-1}H\big)\,P^-
     &&\text{분배} \\
-  &= H^\top + H^\top W^{-1}HP^-H^\top
-    &&(P^-)^{-1}P^- = I \\
-  &= H^\top W^{-1}W + H^\top W^{-1}HP^-H^\top
-    &&H^\top = H^\top W^{-1}W \\
-  &= H^\top W^{-1}\underbrace{\big(W + HP^-H^\top\big)}_{S}
-    &&H^\top W^{-1}\text{를 왼쪽으로 묶는다}
+  &= (I - KH)\,P^-
+    &&\Lambda^{-1}\Lambda = I,\ \ \Lambda^{-1}H^\top W^{-1} = K\ \text{((1)의 }K\text{)}
   \end{aligned}
   $$
 
-  <p>마지막 줄 \(\Lambda P^-H^\top = H^\top W^{-1}S\)의 양변에 오른쪽에서 \(S^{-1}\), 왼쪽에서 \(\Lambda^{-1}\)을 곱한다.</p>
+  <p>스칼라로 따라가면 같은 네 걸음이다.</p>
 
   $$
-  \begin{aligned}
-  \Lambda\,P^-H^\top S^{-1} &= H^\top W^{-1}
-    &&\text{오른쪽에 }S^{-1} \\
-  P^-H^\top S^{-1} &= \Lambda^{-1}H^\top W^{-1} = K
-    &&\text{왼쪽에 }\Lambda^{-1}\text{ — 오른쪽이 ①의 }K
-  \end{aligned}
-  $$
-
-  <p>
-    \(K = P^-H^\top S^{-1}\)이다. 스칼라로 줄이면 \(P^-/(P^- + W)\) — 위에서 본 그대로다. 남은 역행렬은 \(S^{-1}\) 하나이고, \(S\)는 측정 크기 \(m\times m\)다.
-    덤으로 첫 줄에서 \(\Lambda K = H^\top W^{-1}\)도 얻었다. ③에서 쓴다.
-  </p>
-
-  <p>
-    <strong>③ 공분산도 \(P^-\)로.</strong> 스칼라에서는 \(P = (1-K)P^-\)였다. 행렬에서도 \((I-KH)P^-\)가 \(\Lambda^{-1}\)인지 — 즉 \(\Lambda\)를 곱하면 \(I\)가 되는지 — 확인한다.
-  </p>
-
-  $$
-  \begin{aligned}
-  \Lambda\,(I - KH)\,P^-
-  &= \Lambda P^- - (\Lambda K)\,HP^-
-    &&\text{괄호를 푼다} \\
-  &= \Lambda P^- - H^\top W^{-1}HP^-
-    &&\Lambda K = H^\top W^{-1}\ \text{(②)} \\
-  &= \big((P^-)^{-1} + H^\top W^{-1}H\big)P^- - H^\top W^{-1}HP^-
-    &&\Lambda\text{를 펴 쓴다} \\
-  &= I + H^\top W^{-1}HP^- - H^\top W^{-1}HP^- = I
-    &&\text{둘째와 셋째 항이 지워진다} \\
-  \Longrightarrow\quad P = \Lambda^{-1} &= (I - KH)\,P^-
-    &&\Lambda\text{를 곱해 }I\text{가 되는 행렬이 곧 }\Lambda^{-1}
-  \end{aligned}
+  P = \frac{1}{\Lambda}
+    = \frac{1}{\Lambda}\cdot\frac{1}{P^-}\cdot P^-
+    = \frac{1}{\Lambda}\Big(\Lambda - \frac1W\Big)P^-
+    = \Big(1 - \frac{1/W}{\Lambda}\Big)P^-
+    = (1 - K)\,P^-
   $$
 
   <p>
@@ -960,7 +993,7 @@
     </dl>
   </div>
 
-  <h3 id="kf-algo">알고리즘 — 일곱 줄과 그 뜻</h3>
+  <h3 id="kf-algo">5-3 알고리즘 — 일곱 줄과 그 뜻</h3>
 
   <div class="box lab-block">
     <p class="boxtitle">칼만 필터 — 한 스텝</p>
@@ -1005,9 +1038,9 @@
     마지막 줄은 같은 것을 \(P^- - KSK^\top\)로 쓰기도 한다(\(KSK^\top = P^-H^\top S^{-1}SS^{-1}HP^- = KHP^-\)). ⑦절의 EKF-SLAM에서 이 꼴을 쓴다.
   </p>
 
-  <h3 id="kf-num">숫자로 한 걸음</h3>
+  <h3 id="kf-num">5-4 숫자로 한 걸음</h3>
 
-  <p>상황을 먼저 세운다 (<code>src/filter_numbers.py</code> ②).</p>
+  <p>상황을 먼저 세운다 (<code>src/filter_numbers.py</code> [2]).</p>
 
   <ul>
     <li>1차원 복도의 로봇. 지금 위치 추정은 \(\hat x = 2.0\) m, 분산 \(P = 0.04\) m² (표준편차 0.2 m).</li>
@@ -1060,7 +1093,7 @@
     갱신 분산 \(P = P^-W/(P^-+W)\)는 \(P^-\)와 \(W\) <strong>둘 중 어느 것보다도 작다</strong> — 두 정보를 합쳤으니 당연하다.
   </p>
 
-  <h3 id="kf-use">쓰는 법 — 무엇을 정하고, 돌리면 어떻게 되나</h3>
+  <h3 id="kf-use">5-5 쓰는 법 — 무엇을 정하고, 돌리면 어떻게 되나</h3>
 
   <p>
     칼만 필터를 실제 문제에 쓰려면 사람이 무엇을 정해야 할까? 일곱 줄 안에서 바뀌지 않는 것들이 전부 사람 몫이다.
@@ -1079,7 +1112,7 @@
   </div>
 
   <p>
-    정한 대로 30 스텝을 돌려 보았다(<code>src/filter_numbers.py</code> ⑤). 로봇은 매 스텝 1 m 가라는 명령을 받고 실제로는 \(Q\)만큼 흔들리며 간다.
+    정한 대로 30 스텝을 돌려 보았다(<code>src/filter_numbers.py</code> [5]). 로봇은 매 스텝 1 m 가라는 명령을 받고 실제로는 \(Q\)만큼 흔들리며 간다.
     측정은 매 스텝 오지만 <strong>11~16번 스텝에는 오지 않고</strong>, <strong>23번 스텝의 측정은 엉뚱하다</strong>(다른 벽을 잡아 1 m를 더 읽었다).
     아래 그림은 추정 오차와, 필터가 스스로 믿는 \(\pm1\sigma\) 띠를 함께 그린 것이다.
   </p>
@@ -1091,7 +1124,7 @@
       23번 스텝의 엉뚱한 측정(빨간 X)은 버려서 추정이 끌려가지 않았다. (나) 이득은 몇 스텝 만에 0.5로 자리 잡고, 띠가 넓어진 뒤에는 잠시 커진다.</figcaption>
   </figure>
 
-  <p><strong>① 이득은 무엇이 정하나 — 예측의 불확실도와 측정의 불확실도의 비.</strong>
+  <p><strong>(1) 이득은 무엇이 정하나 — 예측의 불확실도와 측정의 불확실도의 비.</strong>
     스칼라(\(H = 1\))로 보면 이득의 식이 그대로 읽힌다.
   </p>
 
@@ -1109,7 +1142,7 @@
     \(P\)와 \(K\)의 식에는 잰 값 \(\mathbf{z}\)가 없으므로, 모델과 \(Q, W\)만 정해지면 이 흐름은 측정과 상관없이 미리 정해진다.
   </p>
 
-  <p>그림 (나)의 처음 몇 스텝을 이 식으로 따라가면 이렇다(<code>src/filter_numbers.py</code> ⑤). 처음 \(P_0 = 0.04\)가 커서 측정을 많이 받고, 그 뒤로 0.50에 다가간다.</p>
+  <p>그림 (나)의 처음 몇 스텝을 이 식으로 따라가면 이렇다(<code>src/filter_numbers.py</code> [5]). 처음 \(P_0 = 0.04\)가 커서 측정을 많이 받고, 그 뒤로 0.50에 다가간다.</p>
 
   <div class="tablewrap">
   <table>
@@ -1162,14 +1195,14 @@
     그래서 튜닝은 보통 \(W\)를 센서에서 재 놓고 \(Q\)를 움직이며 한다. 크기 자체는 \(P\) — 필터가 말하는 불확실도 — 를 정하므로, 비만 맞고 크기가 틀리면 추정은 괜찮은데 \(P\)가 거짓말을 한다(아래 NEES).
   </p>
 
-  <p><strong>② 측정이 안 오면 예측만 한다.</strong>
+  <p><strong>(2) 측정이 안 오면 예측만 한다.</strong>
     갱신 다섯 줄을 건너뛰고 \(\hat{\mathbf{x}} = \hat{\mathbf{x}}^-\), \(P = P^-\)로 둔다. 11~16번 스텝에서 \(P\)는 스텝마다 \(Q\)씩 커져 0.01에서 0.07로(표준편차 0.100 → 0.265 m) 넓어졌다.
     17번 스텝에 측정이 돌아오자 \(P^-\)가 컸던 만큼 이득이 0.8로 커져 측정을 크게 받아들이고, \(P\)는 0.016으로 바로 줄었다.
     실제 시스템에서는 이것이 예외가 아니라 일상이다. EuRoC는 IMU가 200 Hz, 카메라가 20 Hz라서 <strong>예측 열 번에 갱신 한 번</strong>이 기본 박자다.
     측정이 여러 개 한꺼번에 오면 \(\mathbf{z}\), \(H\)를 세로로 쌓고 \(W\)를 블록 대각으로 놓아 한 번에 갱신하거나, 측정 잡음이 서로 독립이면 하나씩 차례로 갱신해도 같은 답이 나온다.
   </p>
 
-  <p><strong>③ 이상한 측정은 혁신으로 거른다.</strong>
+  <p><strong>(3) 이상한 측정은 혁신으로 거른다.</strong>
     모형이 맞다면 혁신 \(\mathbf{y}\)는 평균 0, 공분산 \(S\)인 가우시안이다. 그래서 혁신을 \(S\)로 잰 마할라노비스 제곱 — 이것을 NIS라고 한다 — 은 대개 작다.
     너무 크면 그 측정이 모형 밖에서 왔다고 보고 <strong>갱신하지 않는다</strong>. 이것을 gating이라고 부른다.
   </p>
@@ -1198,10 +1231,10 @@
     </dl>
   </div>
 
-  <h3 id="kf-check">필터가 맞게 도는지 — NIS · NEES</h3>
+  <h3 id="kf-check">5-6 필터가 맞게 도는지 — NIS · NEES</h3>
 
   <p>
-    ③의 NIS는 측정 하나를 거르는 데도 쓰지만, <strong>필터 전체가 맞게 돌고 있는지</strong>를 재는 데도 쓴다. 모형이 맞다면 그 평균이 \(m\)이어야 한다.
+    5-5의 (3)에서 본 NIS는 측정 하나를 거르는 데도 쓰지만, <strong>필터 전체가 맞게 돌고 있는지</strong>를 재는 데도 쓴다. 모형이 맞다면 그 평균이 \(m\)이어야 한다.
     정답 궤적이 있으면(EuRoC처럼) 추정 오차를 \(P\)로 잰 NEES도 쓸 수 있다.
   </p>
 
@@ -1222,7 +1255,7 @@
     이것이 ⑦절에서 말할 「일관성(consistency)」의 정의다 — <strong>필터가 믿는 공분산이 실제 오차의 크기와 맞는가.</strong>
   </p>
 
-  <h3 id="kf-joseph">Joseph 형 — 같은 \(P\)를 다르게 계산하는 식</h3>
+  <h3 id="kf-joseph">5-7 Joseph 형 — 같은 \(P\)를 다르게 계산하는 식</h3>
 
   <p>
     칼만 필터를 구현한 코드나 다른 교재를 보면 갱신 공분산이 \((I-KH)P^-\)가 아니라 이렇게 적혀 있는 경우가 많다.
@@ -1308,7 +1341,7 @@
   <p>
     <strong>그럼 왜 긴 쪽을 쓰나 — 컴퓨터가 계산한 \(K\)는 정확히 최적이 아니다.</strong>
     반올림 오차 때문에 계산된 \(K\)는 최적에서 조금 벗어나 있고, 그 순간 줄임 꼴은 더 이상 실제 오차의 공분산이 아니다.
-    얼마나 다른지 보려고 앞의 숫자 예(\(P^- = 0.05\), \(W = 0.02\), 최적 \(K = 0.7143\))에 \(K\)를 일부러 최적보다 5 % 큰 0.75로 넣어 본다 (<code>src/filter_numbers.py</code> ⑦).
+    얼마나 다른지 보려고 앞의 숫자 예(\(P^- = 0.05\), \(W = 0.02\), 최적 \(K = 0.7143\))에 \(K\)를 일부러 최적보다 5 % 큰 0.75로 넣어 본다 (<code>src/filter_numbers.py</code> [7]).
   </p>
 
   $$
@@ -1444,7 +1477,7 @@
     이 절 끝과 ⑦절의 일관성 이야기가 이 한 줄에서 나온다.
   </p>
 
-  <h3 id="ekf-ex">예 1 — 2차원 로봇의 운동 모델</h3>
+  <h3 id="ekf-ex">6-1 예 1 — 2차원 로봇의 운동 모델</h3>
 
   <p>
     평면 위 로봇의 상태 \(\mathbf{x} = (p_x, p_y, \theta)\), 입력은 앞으로 가는 속력 \(v\)와 도는 각속도 \(\omega\), 시간 간격 \(\Delta t\)다.
@@ -1468,7 +1501,7 @@
     방향을 1° 잘못 알고 10 m를 가면 옆으로 17 cm 벗어나는 바로 그 효과다.
   </p>
 
-  <h3>예 2 — 거리-방위 측정</h3>
+  <h3>6-2 예 2 — 거리-방위 측정</h3>
 
   <p>
     로봇이 랜드마크 \(\mathbf{l} = (l_x, l_y)\)까지의 거리 \(r\)와, 로봇 앞쪽에서 잰 방위 \(\phi\)를 잰다.
@@ -1488,7 +1521,7 @@
   <p>
     방위 줄은 \(\partial\,\mathrm{atan2}(\Delta_y,\Delta_x)/\partial\Delta_x = -\Delta_y/q\), \(\partial/\partial\Delta_y = \Delta_x/q\)에서 나오고,
     \(p\)로 미분할 때는 \(\Delta = l - p\)이라 부호가 한 번 더 뒤집힌다.
-    로봇이 원점 \((0, 0, 0)\)에, 랜드마크가 \((3, 1)\)에 있으면 (<code>src/filter_numbers.py</code> ③)
+    로봇이 원점 \((0, 0, 0)\)에, 랜드마크가 \((3, 1)\)에 있으면 (<code>src/filter_numbers.py</code> [3])
   </p>
 
   $$
@@ -1508,7 +1541,7 @@
     그리고 <strong>둘을 똑같이 옮기면(\(\delta p = \delta l\)) 측정이 안 바뀐다</strong> — 이 「보이지 않는 방향」이 ⑦절 일관성 이야기의 열쇠다.
   </p>
 
-  <h3 id="ekf-use">쓰는 법 — EKF에서 자주 틀리는 세 자리</h3>
+  <h3 id="ekf-use">6-3 쓰는 법 — EKF에서 자주 틀리는 세 자리</h3>
 
   <p>
     EKF의 일곱 줄은 KF와 거의 같지만, 실제로 구현해 보면 틀리는 자리는 KF에 없던 곳에 몰려 있다.
@@ -1524,12 +1557,12 @@
       갱신 뒤의 값으로 \(H\)를 다시 계산해 같은 측정을 또 넣으면 같은 정보를 두 번 쓰게 되어 \(P\)가 부당하게 줄어든다.</li>
   </ul>
 
-  <h3 id="ekf-loss">선형화가 잃는 것</h3>
+  <h3 id="ekf-loss">6-4 선형화가 잃는 것</h3>
 
   <p>
     EKF가 무엇을 포기했는지 그림으로 보자. 가장 단순한 비선형 — 극좌표를 직교좌표로 바꾸는 것 하나만 본다.
     거리 \(r\sim\mathcal{N}(1, 0.02^2)\)는 잘 알고, 방향 \(\theta\sim\mathcal{N}(90°, 0.35^2)\)(약 20°)는 잘 모르는 상황이다.
-    \((x, y) = (r\cos\theta, r\sin\theta)\)의 분포는 어떻게 생겼을까? (<code>src/filter_numbers.py</code> ④)
+    \((x, y) = (r\cos\theta, r\sin\theta)\)의 분포는 어떻게 생겼을까? (<code>src/filter_numbers.py</code> [4])
   </p>
 
   <figure>
@@ -1585,7 +1618,7 @@
     세 연산 — 예측, 랜드마크 추가, 갱신 — 이 이 행렬의 어느 블록을 건드리는지 하나씩 본다.
   </p>
 
-  <h3>예측 — 로봇 블록과 그 줄만</h3>
+  <h3>7-1 예측 — 로봇 블록과 그 줄만</h3>
 
   <p>
     랜드마크는 움직이지 않으므로 운동 모델은 로봇에만 걸린다: \(F = \mathrm{blkdiag}(F_r, I)\). 운동 잡음도 로봇 칸에만 들어간다.
@@ -1616,7 +1649,7 @@
     랜드마크끼리의 블록 \(P_{ll}\)은 그대로이고, 로봇 줄만 바뀐다. 계산량은 랜드마크 수에 <strong>선형</strong>이다.
   </p>
 
-  <h3>랜드마크 추가 — 상태가 늘고, 상관이 생긴다</h3>
+  <h3>7-2 랜드마크 추가 — 상태가 늘고, 상관이 생긴다</h3>
 
   <p>
     처음 본 랜드마크는 측정을 거꾸로 풀어 위치를 정한다: \(\mathbf{l}_{\text{새}} = g(\mathbf{x}_r, \mathbf{z})\) (예: 거리-방위를 직교좌표로).
@@ -1665,9 +1698,9 @@
   \end{aligned}
   $$
 
-  <p>(<code>src/history_numbers.py</code> ⓪)</p>
+  <p>(<code>src/history_numbers.py</code> [0])</p>
 
-  <h3>갱신 — \(H\)는 희소한데 \(K\)는 꽉 차 있다</h3>
+  <h3>7-3 갱신 — \(H\)는 희소한데 \(K\)는 꽉 차 있다</h3>
 
   <p>
     시각 \(k\)에 랜드마크 \(j\)를 봤다. 측정은 로봇과 그 랜드마크에만 달려 있으므로 \(H\)는 두 블록만 0이 아니다 (⑥절 예 2의 \(H\)가 정확히 이 꼴이었다).
@@ -1684,7 +1717,7 @@
   </p>
 
   <p>
-    1차원 숫자로 본다(<code>src/history_numbers.py</code> ⑤). 로봇 \(x\)가 표시 \(p_1\)을 처음 보고, 1 m 가서 \(p_2\)를 처음 보고, 1 m 돌아와 \(p_1\)을 <strong>다시</strong> 봤다.
+    1차원 숫자로 본다(<code>src/history_numbers.py</code> [5]). 로봇 \(x\)가 표시 \(p_1\)을 처음 보고, 1 m 가서 \(p_2\)를 처음 보고, 1 m 돌아와 \(p_1\)을 <strong>다시</strong> 봤다.
     \(\sigma_r = 0.10\), \(\sigma_z = 0.05\), 한 걸음 주행 잡음 0.10 m. 측정 \(z = p_1 - x\)이므로 \(H = [-1\ \ 1\ \ 0]\)이다.
   </p>
 
@@ -1708,7 +1741,7 @@
     표준편차는 \(P\)의 대각에서 읽는다(④절 성질 3) — \((0.173,\ 0.112,\ 0.150) \to (0.118,\ 0.111,\ 0.136)\) m로 셋 다 줄었다.
   </p>
 
-  <h3 id="ekfslam-loop">상관과 루프 클로징</h3>
+  <h3 id="ekfslam-loop">7-4 상관과 루프 클로징</h3>
 
   <p>
     이 상관이 실제로 무엇을 해 주는지는 루프에서 보인다. 반지름 3 m인 원을 한 바퀴(자세 41개) 돌며 표시 8개를 보고, 마지막 자세에서 처음 본 표시를 다시 본다.
@@ -1723,7 +1756,7 @@
   </figure>
 
   <p>
-    그리고 그 상관은 시간이 갈수록 행렬을 채운다. 같은 원 궤적에서 EKF-SLAM 공분산의 상관계수를 세 시점에 찍었다(<code>src/filter_numbers.py</code> ⑥).
+    그리고 그 상관은 시간이 갈수록 행렬을 채운다. 같은 원 궤적에서 EKF-SLAM 공분산의 상관계수를 세 시점에 찍었다(<code>src/filter_numbers.py</code> [6]).
   </p>
 
   <figure>
@@ -1739,9 +1772,9 @@
     상관을 다 들고 다니면 행렬이 꽉 차서 \(O(N^2)\)이 된다. 8회는 이 딜레마를 「정보행렬은 꽉 차지 않는다」로 푼다.
   </div>
 
-  <h3 id="consistency">계산량과 일관성 — EKF-SLAM의 세 한계</h3>
+  <h3 id="consistency">7-5 계산량과 일관성 — EKF-SLAM의 세 한계</h3>
 
-  <p><strong>① 계산량.</strong> 상태가 \(n\)이면 공분산 원소가 \(n^2\)이고, 갱신 하나마다 \(O(n^2)\)이다. 6회의 MonoSLAM처럼 카메라 13차원 + 점마다 3차원이면 (<code>src/history_numbers.py</code> ①)</p>
+  <p><strong>(1) 계산량.</strong> 상태가 \(n\)이면 공분산 원소가 \(n^2\)이고, 갱신 하나마다 \(O(n^2)\)이다. 6회의 MonoSLAM처럼 카메라 13차원 + 점마다 3차원이면 (<code>src/history_numbers.py</code> [1])</p>
 
   $$
   \begin{aligned}
@@ -1755,12 +1788,12 @@
   </p>
 
   <p>
-    <strong>② 재선형화를 못 한다.</strong> EKF는 측정을 쓰는 순간 그때의 추정값에서 선형화하고, 결과를 \(P\)에 녹여 넣는다. 측정 자체는 버린다.
+    <strong>(2) 재선형화를 못 한다.</strong> EKF는 측정을 쓰는 순간 그때의 추정값에서 선형화하고, 결과를 \(P\)에 녹여 넣는다. 측정 자체는 버린다.
     나중에 추정이 훨씬 좋아져도 그 측정을 더 나은 점에서 다시 펼 방법이 없다. 초기에 크게 틀린 선형화는 영원히 남는다.
   </p>
 
   <p>
-    <strong>③ 일관성 붕괴.</strong> 셋 중 가장 고약하다. SLAM에는 측정으로는 <strong>원리적으로 알 수 없는 방향</strong>이 있다.
+    <strong>(3) 일관성 붕괴.</strong> 셋 중 가장 고약하다. SLAM에는 측정으로는 <strong>원리적으로 알 수 없는 방향</strong>이 있다.
     2차원이면 「장면 전체를 통째로 옮기거나 돌리는 것」(3자유도)이다 — 로봇과 모든 랜드마크를 같이 옮겨도 모든 상대 측정이 그대로다.
     ⑥절 예 2에서 \(H\)의 로봇 칸과 랜드마크 칸이 부호만 달랐던 것이 「통째로 옮기기」가 안 보인다는 표시였다.
   </p>
@@ -1778,7 +1811,7 @@
   </figure>
 
   <p>
-    숫자로 (<code>src/history_numbers.py</code> ②): 로봇이 제자리에서 같은 표시를 두 번 쟀고(측정 잡음 0.05 m), 그 사이 표시 추정이 5 cm 옮겨졌다.
+    숫자로 (<code>src/history_numbers.py</code> [2]): 로봇이 제자리에서 같은 표시를 두 번 쟀고(측정 잡음 0.05 m), 그 사이 표시 추정이 5 cm 옮겨졌다.
   </p>
 
   $$
@@ -1841,9 +1874,9 @@
   <div class="tablewrap">
   <table>
     <tr><th style="width:34%">지운 것</th><th>그래서 못 하는 것</th><th style="width:14%">본 자리</th></tr>
-    <tr><td>지난 상태 \(\mathbf{x}_{0:k-1}\)</td><td>루프를 닫아도 <strong>지나온 궤적을 못 고친다</strong></td><td>⑦ 루프 그림 (나)</td></tr>
-    <tr><td>지난 측정 (선형화 결과만 남긴다)</td><td><strong>다시 선형화하지 못한다</strong></td><td>⑦ 한계 ②</td></tr>
-    <tr><td>지난 상태를 지우며 생긴 연결</td><td>랜드마크끼리 상관이 <strong>꽉 찬다</strong> → \(O(N^2)\)</td><td>⑦ 상관 그림</td></tr>
+    <tr><td>지난 상태 \(\mathbf{x}_{0:k-1}\)</td><td>루프를 닫아도 <strong>지나온 궤적을 못 고친다</strong></td><td>7-4 루프 그림 (나)</td></tr>
+    <tr><td>지난 측정 (선형화 결과만 남긴다)</td><td><strong>다시 선형화하지 못한다</strong></td><td>7-5의 (2)</td></tr>
+    <tr><td>지난 상태를 지우며 생긴 연결</td><td>랜드마크끼리 상관이 <strong>꽉 찬다</strong> → \(O(N^2)\)</td><td>7-4 상관 그림</td></tr>
   </table>
   </div>
 

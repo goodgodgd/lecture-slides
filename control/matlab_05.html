@@ -35,8 +35,8 @@
   <a href="#s1">① 근궤적 — <code>rlocus</code></a>
   <a href="#s2">② 각도 조건과 크기 조건</a>
   <a href="#s3">③ 근궤적 작도 규칙</a>
-  <a class="sub" href="#s3-real">실수축 구간</a>
-  <a class="sub" href="#s3-plan">규칙마다 함수 하나</a>
+  <a class="sub" href="#s3-real">3-1 실수축 구간</a>
+  <a class="sub" href="#s3-plan">3-2 규칙마다 함수 하나</a>
   <a href="#s4">④ 점근선 — <code>find_asymptote</code></a>
   <a href="#s5">⑤ 분기점 — <code>find_break_point</code></a>
   <a href="#s6">⑥ 허수축 교차 — Routh 표</a>
@@ -261,7 +261,7 @@ ans =
     \(K\to\infty\)에서는 \(N(s)=0\)에 다가가므로 <strong>개루프 영점에서 끝난다</strong>. 영점이 \(m\)개뿐이니 남은 \(n-m\)개 가지는 무한대로 간다.
   </p>
 
-  <h3 id="s3-real">실수축 구간</h3>
+  <h3 id="s3-real">3-1 실수축 구간</h3>
   <p>
     실수축 위의 점 \(\sigma\)에서 각도를 따지면 이렇게 된다. 복소 극점·영점은 켤레 쌍이라 각도가 \(+\theta\)와 \(-\theta\)로 서로 지운다.
     \(\sigma\)보다 왼쪽의 실수 극점·영점은 벡터 \(\sigma - p\)가 오른쪽을 향하므로 0°다. 오른쪽에 있는 것만 180°씩 보탠다.
@@ -271,7 +271,7 @@ ans =
     예제에서는 \(-1\)과 \(-2\) 사이(오른쪽에 극점 1개), 그리고 \(-3\)보다 왼쪽(오른쪽에 3개)이 근궤적이다. \(-2\)와 \(-3\) 사이는 오른쪽에 2개라 근궤적이 아니다.
   </p>
 
-  <h3 id="s3-plan">규칙마다 함수 하나</h3>
+  <h3 id="s3-plan">3-2 규칙마다 함수 하나</h3>
   <p>
     나머지 규칙은 숫자를 계산해야 한다. 이 회차에서는 규칙 하나마다 <strong>식을 세우고, 그 식을 계산하는 함수 파일을 하나씩</strong> 만든다.
     함수 파일은 4회에서처럼 파일 이름을 함수 이름과 같게 해서 현재 폴더에 저장한다. 마지막 ⑧절에서 이 함수들을 한데 묶어 근궤적 그림 위에 겹쳐 그린다.
@@ -283,7 +283,7 @@ ans =
     <tr><td>⑤</td><td>분기점</td><td><code>find_break_point.m</code></td><td>분기점 위치와 그때의 \(K\)</td></tr>
     <tr><td>⑥</td><td>허수축 교차</td><td><code>routh_table.m</code></td><td>Routh 표 — 안정 한계 \(K\)와 교차 주파수 \(\omega\)</td></tr>
     <tr><td>⑦</td><td>출발각 · 도착각</td><td><code>find_start_angle.m</code></td><td>복소 극점의 출발각, 복소 영점의 도착각</td></tr>
-    <tr><td>⑧</td><td>한데 묶기</td><td><code>root_locus.m</code></td><td>근궤적 위에 ④⑤⑦의 결과를 그린 그림</td></tr>
+    <tr><td>⑧</td><td>한데 묶기</td><td><code>root_locus.m</code></td><td>근궤적 위에 ④⑤⑦절의 결과를 그린 그림</td></tr>
   </table>
   </div>
 
@@ -947,7 +947,7 @@ dep =
   <!-- ─────────────── ⑧ ─────────────── -->
   <h2 id="s8">⑧ 규칙을 한데 묶기 — <code>root_locus</code></h2>
   <p>
-    ④~⑦의 함수는 숫자를 낸다. 그 숫자가 그림의 어디에 해당하는지는 근궤적 위에 겹쳐 그려 봐야 한눈에 보인다.
+    ④~⑦절의 함수는 숫자를 낸다. 그 숫자가 그림의 어디에 해당하는지는 근궤적 위에 겹쳐 그려 봐야 한눈에 보인다.
     그래서 <code>rlocus</code>로 근궤적을 그리고, 그 위에 점근선·분기점·출발각을 겹쳐 그리는 함수 <code>root_locus</code>를 만든다.
     어느 규칙을 그릴지는 부를 때 <strong><code>asymptote=0</code>처럼 이름과 값으로</strong> 고른다. 아무것도 주지 않으면 셋 다 그린다.
   </p>
@@ -1084,7 +1084,7 @@ root_locus(GH4, asymptote=0)      % 점근선은 빼고 분기점과 출발·도
     명령 창 출력은 길어서 접어 두었다. 그림을 보고 궁금한 숫자가 있으면 펼쳐 본다.
   </p>
 
-  <h3>실수 극점만 있는 경우 — 극점이 하나씩 늘면</h3>
+  <h3>9-1 실수 극점만 있는 경우 — 극점이 하나씩 늘면</h3>
 <!-- mcode 05/b12_gallery_real code -->
 <div class="mcode">
 <pre class="lang-matlab"><code>close all
@@ -1135,7 +1135,7 @@ root_locus(sys4)</code></pre>
 <!-- /mcode -->
   </details>
 
-  <h3>겹친 극점과 복소 극점</h3>
+  <h3>9-2 겹친 극점과 복소 극점</h3>
 <!-- mcode 05/b13_gallery_complex code -->
 <div class="mcode">
 <pre class="lang-matlab"><code>close all
@@ -1195,7 +1195,7 @@ root_locus(sys4)</code></pre>
 <!-- /mcode -->
   </details>
 
-  <h3>영점을 더하면</h3>
+  <h3>9-3 영점을 더하면</h3>
 <!-- mcode 05/b14_gallery_zero code -->
 <div class="mcode">
 <pre class="lang-matlab"><code>close all
@@ -1252,7 +1252,7 @@ root_locus(sys4)</code></pre>
 <!-- /mcode -->
   </details>
 
-  <h3>복소 극점 두 쌍과 여러 영점</h3>
+  <h3>9-4 복소 극점 두 쌍과 여러 영점</h3>
 <!-- mcode 05/b15_gallery_misc code -->
 <div class="mcode">
 <pre class="lang-matlab"><code>close all
@@ -1324,7 +1324,7 @@ root_locus(sys4)</code></pre>
 <!-- /mcode -->
   </details>
 
-  <h3>더 많은 예</h3>
+  <h3>9-5 더 많은 예</h3>
   <p>규칙마다 옵션을 골라 그린 예 넷이다. 그리지 않을 규칙은 <code>이름=0</code>으로 껐다.</p>
 <!-- mcode 05/b16_more_examples code -->
 <div class="mcode">

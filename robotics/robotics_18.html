@@ -185,7 +185,7 @@ Use g|b|v|c|d|e|r|t keys to rotate to absolute orientations. 'f' to cancel a rot
   <!-- ══════════ ① node ══════════ -->
   <h2 id="node">① ros2 node list · info <span class="badge b-red">🔴 출력은 내가 읽는다</span></h2>
 
-  <h3>무엇이 궁금한가</h3>
+  <h3>1-1 무엇이 궁금한가</h3>
   <p>
     "노드를 띄웠다"는 말은 사실 두 가지를 뜻할 수 있다. 프로그램이 실행됐다는 것과,
     그 프로그램이 <strong>ROS 노드로서 다른 노드에게 보인다</strong>는 것이다.
@@ -193,12 +193,12 @@ Use g|b|v|c|d|e|r|t keys to rotate to absolute orientations. 'f' to cancel a rot
     <strong>지금 이 컴퓨터에서 보이는 노드는 무엇 무엇인가?</strong>
   </p>
 
-  <h3>그때 이걸 친다</h3>
+  <h3>1-2 그때 이걸 친다</h3>
 <pre class="lang-sh"><code>$ ros2 node list
 /teleop_turtle
 /turtlesim</code></pre>
 
-  <h3>출력을 이렇게 읽는다</h3>
+  <h3>1-3 출력을 이렇게 읽는다</h3>
   <p>
     두 줄이 나왔다. 터미널 1·2에서 띄운 두 노드다. 그런데 이름을 잘 보면 <strong>친 것과 다르다.</strong>
   </p>
@@ -300,7 +300,7 @@ Unable to find node '/turtlesim_node'</code></pre>
     그래서 둘이 이어진다. 두 출력을 나란히 놓고 이름을 맞춰 보는 것 — 이것이 연결을 확인하는 가장 기본적인 방법이다.
   </p>
 
-  <h3>에이전트에게 시키면</h3>
+  <h3>1-4 에이전트에게 시키면</h3>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
     지금 떠 있는 ROS 2 노드 목록을 보여 주고, 노드마다 발행하는 토픽과 구독하는 토픽을 표로 정리해 줘. 표 아래에 네가 실행한 명령과 출력 원문을 그대로 붙여 줘.
@@ -313,14 +313,14 @@ Unable to find node '/turtlesim_node'</code></pre>
   <!-- ══════════ ② topic list ══════════ -->
   <h2 id="topiclist">② ros2 topic list -t <span class="badge b-red">🔴 이름은 내가 대조한다</span></h2>
 
-  <h3>무엇이 궁금한가</h3>
+  <h3>2-1 무엇이 궁금한가</h3>
   <p>
     노드를 하나씩 <code>info</code>로 열어 보는 것은 노드가 많아지면 번거롭다.
     거꾸로 물을 수도 있다 — <strong>지금 이 컴퓨터에 어떤 토픽들이 있고, 각각 어떤 타입인가?</strong>
     내 코드에 적은 토픽 이름이 이 목록에 <strong>글자 하나 틀리지 않고</strong> 있는지 보는 것이 이 명령의 주된 쓰임이다.
   </p>
 
-  <h3>그때 이걸 친다</h3>
+  <h3>2-2 그때 이걸 친다</h3>
 <pre class="lang-sh"><code>$ ros2 topic list
 /parameter_events
 /rosout
@@ -348,7 +348,7 @@ $ ros2 topic list -t
     </dl>
   </div>
 
-  <h3>출력을 이렇게 읽는다</h3>
+  <h3>2-3 출력을 이렇게 읽는다</h3>
   <div class="tablewrap">
   <table>
     <tr><th>토픽</th><th>누가 만든 것인가</th><th>어떻게 대하나</th></tr>
@@ -364,7 +364,7 @@ $ ros2 topic list -t
     ⑥절 끝의 함정 상자에서 실제로 보게 된다.
   </div>
 
-  <h3>에이전트에게 시키면</h3>
+  <h3>2-4 에이전트에게 시키면</h3>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
     ros2 topic list -t 결과를 보여 주고, 내 코드에 적힌 토픽 이름(아래에 붙임)이 그 목록에 글자 그대로 있는지 하나씩 대조해 줘. 없는 것은 목록에서 가장 비슷한 이름을 같이 알려 줘.
@@ -373,13 +373,13 @@ $ ros2 topic list -t
   <!-- ══════════ ③ echo ══════════ -->
   <h2 id="echo">③ ros2 topic echo <span class="badge b-red">🔴 값은 내가 본다</span></h2>
 
-  <h3>무엇이 궁금한가</h3>
+  <h3>3-1 무엇이 궁금한가</h3>
   <p>
     토픽이 목록에 있다는 것은 <strong>누군가 그 이름을 쓰겠다고 했다</strong>는 뜻일 뿐이다.
     실제로 값이 흐르는지는 다른 질문이다. <strong>지금 이 토픽에 무엇이 오가고 있나? 그 값은 얼마인가?</strong>
   </p>
 
-  <h3>그때 이걸 친다</h3>
+  <h3>3-2 그때 이걸 친다</h3>
   <p>거북이의 현재 위치를 한 번만 받아 본다.</p>
 <pre class="lang-sh"><code>$ ros2 topic echo --once /turtle1/pose
 <strong>x: 5.544444561004639</strong>
@@ -400,7 +400,7 @@ angular_velocity: 0.0
     </dl>
   </div>
 
-  <h3>출력을 이렇게 읽는다</h3>
+  <h3>3-3 출력을 이렇게 읽는다</h3>
   <p>
     <code>x</code>와 <code>y</code>는 창 안에서의 위치, <code>theta</code>는 거북이가 바라보는 방향이다.
     <code>theta</code>의 단위는 도가 아니라 <strong>라디안</strong>이다(0이면 오른쪽, 약 1.57이면 위쪽).
@@ -472,7 +472,7 @@ Could not determine the type for the passed topic</code></pre>
     </p>
   </div>
 
-  <h3>에이전트에게 시키면</h3>
+  <h3>3-4 에이전트에게 시키면</h3>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
     /turtle1/pose 토픽을 --once로 한 번 받아서 보여 줘. 그다음 내가 거북이를 움직일 테니, 5초 뒤에 한 번 더 받아서 두 결과의 x, y, theta를 나란히 비교해 줘. 두 출력 원문도 같이 붙여 줘.
@@ -481,7 +481,7 @@ Could not determine the type for the passed topic</code></pre>
   <!-- ══════════ ④ hz ══════════ -->
   <h2 id="hz">④ ros2 topic hz <span class="badge b-red">🔴 숫자는 내가 판단한다</span></h2>
 
-  <h3>무엇이 궁금한가</h3>
+  <h3>4-1 무엇이 궁금한가</h3>
   <p>
     값이 흐르는 것을 봤다. 그런데 <strong>얼마나 자주</strong> 오는가?
     로봇에서는 이것이 자주 문제가 된다. 라이다가 초당 다섯 번 재는데 내 노드가 초당 두 번밖에 처리하지 못하면,
@@ -489,7 +489,7 @@ Could not determine the type for the passed topic</code></pre>
     <strong>이 토픽은 초당 몇 번 오고, 그 간격은 고른가?</strong>
   </p>
 
-  <h3>그때 이걸 친다</h3>
+  <h3>4-2 그때 이걸 친다</h3>
 <pre class="lang-sh"><code>$ ros2 topic hz /turtle1/pose
 average rate: <strong>62.552</strong>
 	min: 0.015s max: 0.017s std dev: 0.00047s window: 64
@@ -503,7 +503,7 @@ average rate: <strong>62.514</strong>
 	min: <strong>0.015s</strong> max: <strong>0.017s</strong> std dev: 0.00046s window: 316</code></pre>
   <p><code>Ctrl+C</code>를 누를 때까지 1초마다 두 줄씩 찍는다. 위는 5초쯤 받은 것이다.</p>
 
-  <h3>출력을 이렇게 읽는다</h3>
+  <h3>4-3 출력을 이렇게 읽는다</h3>
   <div class="tablewrap">
   <table>
     <tr><th>칸</th><th>뜻</th><th>위 출력에서</th></tr>
@@ -532,7 +532,7 @@ average rate: <strong>62.514</strong>
 
   <p class="readme-first">27회에서는 이 명령이 이렇게 쓰인다 — 터틀봇의 라이다 토픽 <code>/scan</code>을 재면 <code>average rate</code>가 라이다 사양(초당 몇 번 재는가)에 가깝게 나와야 하고, 내 노드가 발행하는 속도 명령도 같은 방법으로 잰다. 지금은 turtlesim의 62.5와 10.0으로 읽는 법만 익혀 두면 된다.</p>
 
-  <h3>에이전트에게 시키면</h3>
+  <h3>4-4 에이전트에게 시키면</h3>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
     /turtle1/pose 토픽의 주기를 10초 동안 ros2 topic hz로 재서 average rate, min, max를 알려 줘. 출력 원문의 마지막 두 줄도 그대로 붙여 줘. 아무것도 안 찍히면 그렇다고 말해 줘.
@@ -545,7 +545,7 @@ average rate: <strong>62.514</strong>
   <!-- ══════════ ⑤ interface ══════════ -->
   <h2 id="iface">⑤ ros2 interface show <span class="badge b-green">🟢 맡겨도 된다</span></h2>
 
-  <h3>무엇이 궁금한가</h3>
+  <h3>5-1 무엇이 궁금한가</h3>
   <p>
     ③절에서 <code>/turtle1/cmd_vel</code>의 메시지에는 <code>linear</code>와 <code>angular</code>가 있었고, 각각 안에 <code>x</code>·<code>y</code>·<code>z</code>가 있었다.
     그것은 <strong>마침 그 메시지에 그런 값이 들어 있었던 것</strong>일까, 아니면 정해진 모양일까?
@@ -553,7 +553,7 @@ average rate: <strong>62.514</strong>
     <strong>이 타입의 메시지에는 어떤 필드가 어떤 타입으로 들어 있나?</strong>
   </p>
 
-  <h3>그때 이걸 친다</h3>
+  <h3>5-2 그때 이걸 친다</h3>
   <p>②절의 <code>-t</code>가 알려 준 타입 이름을 그대로 넣는다.</p>
 <pre class="lang-sh"><code>$ ros2 interface show geometry_msgs/msg/Twist
 # This expresses velocity in free space broken into its linear and angular parts.
@@ -575,7 +575,7 @@ float32 theta
 float32 linear_velocity
 float32 angular_velocity</code></pre>
 
-  <h3>출력을 이렇게 읽는다</h3>
+  <h3>5-3 출력을 이렇게 읽는다</h3>
   <p>
     한 줄이 필드 하나이고 <strong><code>타입 이름</code></strong> 순서다. <code>#</code>으로 시작하는 줄은 설명(주석)이다.
     <code>Twist</code>는 <code>Vector3</code> 타입 필드 두 개(<code>linear</code>·<code>angular</code>)로 되어 있고,
@@ -599,7 +599,7 @@ float32 angular_velocity</code></pre>
     <code>pose.theta</code>인지 <code>pose.angle</code>인지는 이 출력에 답이 있다.
   </div>
 
-  <h3>에이전트에게 시키면</h3>
+  <h3>5-4 에이전트에게 시키면</h3>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
     ros2 interface show로 geometry_msgs/msg/Twist와 turtlesim/msg/Pose의 정의를 보여 주고, 필드마다 무슨 뜻인지 한 줄씩 한국어로 설명해 줘. turtlesim 거북이가 실제로 쓰는 필드가 어느 것인지도 표시해 줘.
@@ -608,7 +608,7 @@ float32 angular_velocity</code></pre>
   <!-- ══════════ ⑥ pub ══════════ -->
   <h2 id="pub">⑥ ros2 topic pub <span class="badge b-yellow">🟡 맡기되 결과는 내가 본다</span></h2>
 
-  <h3>무엇이 궁금한가</h3>
+  <h3>6-1 무엇이 궁금한가</h3>
   <p>
     지금까지는 읽기만 했다. 거꾸로, <strong>노드를 하나도 만들지 않고 터미널에서 직접 메시지를 보낼</strong> 수는 없을까?
     이것이 되면 쓸모가 크다. 20회에서 거북이를 모는 노드를 짜게 되는데, 그 노드가 안 움직일 때
@@ -616,7 +616,7 @@ float32 angular_velocity</code></pre>
     터미널에서 보낸 메시지로 거북이가 움직이면 받는 쪽은 멀쩡한 것이다.
   </p>
 
-  <h3>그때 이걸 친다</h3>
+  <h3>6-2 그때 이걸 친다</h3>
   <p>모양은 <code>ros2 topic pub [옵션] 토픽 타입 '값'</code>이다. ⑤절에서 본 필드 이름을 그대로 쓴다.</p>
 <pre class="lang-sh"><code>$ ros2 topic pub --once /turtle1/cmd_vel geometry_msgs/msg/Twist '{linear: {x: 2.0}, angular: {z: 1.8}}'
 publisher: beginning loop
@@ -637,7 +637,7 @@ publishing #1: geometry_msgs.msg.Twist(linear=geometry_msgs.msg.Vector3(x=2.0, y
     </dl>
   </div>
 
-  <h3>출력을 이렇게 읽는다</h3>
+  <h3>6-3 출력을 이렇게 읽는다</h3>
   <p>
     <code>publishing #1:</code> 줄은 <strong>보냈다</strong>는 뜻이지 <strong>누가 받았다</strong>는 뜻이 아니다.
     받았는지는 받는 쪽에서 확인한다. 이 경우에는 <strong>거북이가 움직였나</strong>를 보면 된다.
@@ -734,7 +734,7 @@ Publisher count: 1
     </p>
   </div>
 
-  <h3>에이전트에게 시키면</h3>
+  <h3>6-4 에이전트에게 시키면</h3>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
     ros2 topic pub으로 /turtle1/cmd_vel에 geometry_msgs/msg/Twist를 초당 1번 보내서 turtlesim 거북이가 원을 그리게 해 줘(앞으로 2.0, 회전 1.8). 실행한 명령을 그대로 보여 주고, 멈추는 방법도 알려 줘.
@@ -747,14 +747,14 @@ Publisher count: 1
   <!-- ══════════ ⑦ info -v ══════════ -->
   <h2 id="info">⑦ ros2 topic info -v <span class="badge b-red">🔴 출력은 내가 읽는다</span></h2>
 
-  <h3>무엇이 궁금한가</h3>
+  <h3>7-1 무엇이 궁금한가</h3>
   <p>
     ⑥절의 함정에서 <code>topic info</code>로 보내는 쪽과 받는 쪽의 <strong>개수</strong>를 봤다.
     개수가 1과 1이면 이어진 것일까? 대부분은 그렇다. 그런데 이름도 맞고 개수도 맞는데 <strong>그래도 안 붙는</strong> 경우가 있다.
     그것을 보려면 <strong>보내는 쪽과 받는 쪽이 각각 누구이고, 어떤 방식으로 주고받겠다고 했는지</strong>까지 봐야 한다.
   </p>
 
-  <h3>그때 이걸 친다</h3>
+  <h3>7-2 그때 이걸 친다</h3>
 <pre class="lang-sh"><code>$ ros2 topic info -v /turtle1/cmd_vel
 Type: geometry_msgs/msg/Twist
 
@@ -807,7 +807,7 @@ QoS profile:
     <p class="later">제대로 다루는 곳: 22회(QoS — 왜 두 가지가 있고 언제 무엇을 쓰나)</p>
   </div>
 
-  <h3>출력을 이렇게 읽는다</h3>
+  <h3>7-3 출력을 이렇게 읽는다</h3>
   <p class="readme-first">무엇을 먼저 볼지: 출력은 <strong>보내는 쪽 덩어리</strong>(<code>Publisher count</code> 아래)와 <strong>받는 쪽 덩어리</strong>(<code>Subscription count</code> 아래)로 나뉜다. 오늘은 각 덩어리에서 <strong>세 줄만</strong> 본다.</p>
   <div class="tablewrap">
   <table>
@@ -917,7 +917,7 @@ angular_velocity: 0.0
     </dl>
   </div>
 
-  <h3>에이전트에게 시키면</h3>
+  <h3>7-4 에이전트에게 시키면</h3>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
     ros2 topic info -v /turtle1/cmd_vel 을 실행하고, 보내는 노드와 받는 노드의 이름과 Reliability를 표로 정리해 줘. 양쪽 Reliability가 다른 짝이 있으면 따로 표시해 줘. 출력 원문도 붙여 줘.
@@ -926,14 +926,14 @@ angular_velocity: 0.0
   <!-- ══════════ ⑧ rqt_graph ══════════ -->
   <h2 id="rqt">⑧ rqt_graph <span class="badge b-red">🔴 그림은 사람이 읽는다</span></h2>
 
-  <h3>무엇이 궁금한가</h3>
+  <h3>8-1 무엇이 궁금한가</h3>
   <p>
     ①·②·⑦절의 명령은 노드 하나, 토픽 하나씩을 들여다본다. 노드가 열 개쯤 되면
     <strong>무엇이 무엇에 이어져 있는지 한눈에</strong> 보고 싶어진다. 출력 열 장을 머릿속에서 맞춰 보는 대신,
     <strong>연결 전체를 그림으로</strong> 볼 수는 없을까?
   </p>
 
-  <h3>그때 이걸 친다</h3>
+  <h3>8-2 그때 이걸 친다</h3>
 <pre class="lang-sh"><code>$ rqt_graph</code></pre>
   <p>
     창이 하나 뜬다. 왼쪽 위 상자에서 <strong><code>Nodes/Topics (all)</code></strong>을 고르면 노드와 토픽이 함께 그려진다.
@@ -941,7 +941,7 @@ angular_velocity: 0.0
     노드가 새로 뜨거나 꺼졌을 때도 이 버튼을 눌러야 그림이 바뀐다.
   </p>
 
-  <h3>출력을 이렇게 읽는다</h3>
+  <h3>8-3 출력을 이렇게 읽는다</h3>
   <figure>
     <img src="assets/img/18_rqt_graph.png" width="760"
          alt="rqt_graph 창. 타원 /turtlesim 과 /teleop_turtle 이 있고, teleop_turtle 에서 사각형 /turtle1/cmd_vel 을 거쳐 turtlesim 으로 화살표가 이어진다. 위쪽에는 rotate_absolute 액션 토픽 두 개가 turtlesim 에서 teleop_turtle 쪽으로 이어진다">
@@ -980,7 +980,7 @@ angular_velocity: 0.0
     결론은 명령 출력으로 낸다. 그림을 읽는 일은 에이전트에게 맡기기 어렵다 — 에이전트는 이 창을 볼 수 없다.
   </div>
 
-  <h3>에이전트에게 시키면</h3>
+  <h3>8-4 에이전트에게 시키면</h3>
   <p>
     시키지 않는다. 대신 <strong>그림에서 이상한 자리를 찾은 뒤</strong> 그 자리를 명령으로 확인해 달라고 할 수는 있다.
   </p>
@@ -992,14 +992,14 @@ angular_velocity: 0.0
   <!-- ══════════ ⑨ service ══════════ -->
   <h2 id="service">⑨ ros2 service list · type · call <span class="badge b-yellow">🟡 맡기되 결과는 내가 본다</span></h2>
 
-  <h3>무엇이 궁금한가</h3>
+  <h3>9-1 무엇이 궁금한가</h3>
   <p>
     토픽은 계속 흐르는 것이었다. 그런데 「거북이를 하나 더 만들어라」, 「그림을 지워라」처럼
     <strong>한 번 시키고 끝나는 일</strong>은 토픽으로 하기 어색하다. 받았는지, 성공했는지 답을 들어야 하기 때문이다.
     이런 일은 서비스로 한다. <strong>이 노드는 어떤 서비스를 받아 주고, 그것을 어떻게 부르나?</strong>
   </p>
 
-  <h3>그때 이걸 친다</h3>
+  <h3>9-2 그때 이걸 친다</h3>
 <pre class="lang-sh"><code>$ ros2 service list -t
 /clear [std_srvs/srv/Empty]
 /kill [turtlesim/srv/Kill]
@@ -1049,7 +1049,7 @@ requester: making request: turtlesim.srv.Spawn_Request(x=2.0, y=2.0, theta=0.0, 
 turtlesim.srv.Spawn_Response(name='turtle2')</strong>
 </code></pre>
 
-  <h3>출력을 이렇게 읽는다</h3>
+  <h3>9-3 출력을 이렇게 읽는다</h3>
   <p>
     <code>requester:</code> 줄은 <strong>보낸 요청</strong>, <code>response:</code> 아래가 <strong>받은 답</strong>이다.
     답이 왔다는 것 자체가 토픽과의 차이다 — 서비스는 상대가 받아서 처리하고 답을 돌려줘야 끝난다.
@@ -1110,7 +1110,7 @@ waiting for service to become available...</code></pre>
     </p>
   </div>
 
-  <h3>에이전트에게 시키면</h3>
+  <h3>9-4 에이전트에게 시키면</h3>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
     turtlesim의 /spawn 서비스로 (8.0, 2.0) 자리에 거북이를 하나 더 만들어 줘. 부르기 전에 ros2 interface show로 요청 필드를 확인하고, 부른 뒤에는 response에 돌아온 이름과 ros2 topic list에 새로 생긴 토픽을 보여 줘.
@@ -1123,7 +1123,7 @@ waiting for service to become available...</code></pre>
   <!-- ══════════ ⑩ param ══════════ -->
   <h2 id="param">⑩ ros2 param list · get · set <span class="badge b-yellow">🟡 맡기되 결과는 내가 본다</span></h2>
 
-  <h3>무엇이 궁금한가</h3>
+  <h3>10-1 무엇이 궁금한가</h3>
   <p>
     거북이 창의 파란 배경은 코드에 박혀 있는 색일까? 그렇다면 색을 바꾸려면 코드를 고치고 다시 빌드해야 한다.
     파라미터로 빼 두었다면 <strong>노드를 켠 채로</strong> 바꿀 수 있다. 프로젝트에서 조향 이득이나 속도를 맞출 때
@@ -1131,7 +1131,7 @@ waiting for service to become available...</code></pre>
     <strong>이 노드는 어떤 설정값을 갖고 있고, 지금 값은 얼마이고, 바꿀 수 있나?</strong>
   </p>
 
-  <h3>그때 이걸 친다</h3>
+  <h3>10-2 그때 이걸 친다</h3>
 <pre class="lang-sh"><code>$ ros2 param list /turtlesim
   <strong>background_b</strong>
   <strong>background_g</strong>
@@ -1178,7 +1178,7 @@ Integer value is: 255</code></pre>
       거북이도, 앞 절에서 그린 선도 그대로다 — 바뀐 것은 <strong>설정값 하나</strong>뿐이다.</figcaption>
   </figure>
 
-  <h3>출력을 이렇게 읽는다</h3>
+  <h3>10-3 출력을 이렇게 읽는다</h3>
   <p><code>set</code>이 실패할 때는 그 이유가 한 줄로 나온다. 흔한 네 가지를 실제로 쳐 보면 이렇다.</p>
 <pre class="lang-sh"><code>$ ros2 param set /turtlesim background_r 300
 Setting parameter failed: Parameter {background_r} doesn't comply with integer range.
@@ -1229,7 +1229,7 @@ Parameter not set</code></pre>
     </p>
   </div>
 
-  <h3>에이전트에게 시키면</h3>
+  <h3>10-4 에이전트에게 시키면</h3>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
     /turtlesim 노드의 파라미터 목록과 현재 값을 보여 줘. 그다음 배경색을 노란색 계열로 바꾸고 싶은데, 먼저 ros2 param describe로 각 값의 허용 범위를 확인한 뒤 set 명령을 실행해 줘. 실행한 명령과 출력을 줄마다 그대로 붙여 줘.
@@ -1242,7 +1242,7 @@ Parameter not set</code></pre>
   <!-- ══════════ ⑪ bag ══════════ -->
   <h2 id="bag">⑪ ros2 bag record · play <span class="badge b-yellow">🟡 맡기되 결과는 내가 본다</span></h2>
 
-  <h3>무엇이 궁금한가</h3>
+  <h3>11-1 무엇이 궁금한가</h3>
   <p>
     로봇이 방금 이상하게 움직였다. 코드를 고쳐서 다시 시험하고 싶은데, <strong>방금과 똑같은 상황</strong>을 다시 만들 수 있을까?
     사람이 비슷하게 몰아도, 센서는 매번 조금씩 다른 값을 낸다. 같은 데이터로 시험하지 못하면 결과가 좋아졌을 때
@@ -1250,7 +1250,7 @@ Parameter not set</code></pre>
     <strong>흘러간 메시지를 그대로 저장해 뒀다가, 같은 시간 간격으로 다시 내보낼 수 있나?</strong>
   </p>
 
-  <h3>그때 이걸 친다</h3>
+  <h3>11-2 그때 이걸 친다</h3>
   <p>
     작업용 폴더를 하나 만들고 그 안에서 기록한다. 기록을 시작한 뒤 <strong>터미널 2에서 방향키로 거북이를 몰고</strong>,
     다 몰았으면 기록하던 터미널에서 <code>Ctrl+C</code>를 누른다.
@@ -1282,7 +1282,7 @@ $ ros2 bag record -o drive1 --topics /turtle1/cmd_vel
     </dl>
   </div>
 
-  <h3>출력을 이렇게 읽는다</h3>
+  <h3>11-3 출력을 이렇게 읽는다</h3>
   <p>
     기록 중의 출력에서 볼 줄은 <code>Subscribed to topic '/turtle1/cmd_vel'</code> 하나다. 이 줄이 안 나오면 <strong>아무것도 기록되지 않고 있다</strong>(토픽 이름 오타가 여기서도 같다).
     제대로 남았는지는 끝난 뒤 <code>info</code>로 본다.
@@ -1336,7 +1336,7 @@ $ ros2 bag play drive1
     그래도 <strong>같은 입력을 몇 번이고 다시 줄 수 있다</strong>는 점이 중요하다.
   </div>
 
-  <h3>에이전트에게 시키면</h3>
+  <h3>11-4 에이전트에게 시키면</h3>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
     ~/bags 폴더에서 /turtle1/cmd_vel 토픽만 drive2 라는 이름으로 ros2 bag record 해 줘. 내가 거북이를 다 몰았다고 말하면 Ctrl+C로 끝내고, ros2 bag info 결과에서 Messages 개수와 Duration을 알려 줘.
@@ -1349,14 +1349,14 @@ $ ros2 bag play drive1
   <!-- ══════════ ⑫ doctor ══════════ -->
   <h2 id="doctor">⑫ ros2 doctor <span class="badge b-green">🟢 맡겨도 된다</span></h2>
 
-  <h3>무엇이 궁금한가</h3>
+  <h3>12-1 무엇이 궁금한가</h3>
   <p>
     ①~⑪은 노드와 토픽을 하나씩 짚었다. 그런데 문제가 <strong>노드가 아니라 설치나 환경</strong>에 있을 수도 있다.
     배포판이 안 맞거나, 네트워크 설정이 이상하거나, 받는 사람 없는 토픽이 여기저기 있거나.
     <strong>ROS 2 설치와 지금 상태를 한꺼번에 점검해 줄 수 있나?</strong>
   </p>
 
-  <h3>그때 이걸 친다</h3>
+  <h3>12-2 그때 이걸 친다</h3>
   <p>⑥절의 오타 난 <code>/turtle1/cmd_val</code> 보내기를 걸어 둔 채로 쳤다.</p>
 <pre class="lang-sh"><code>$ ros2 doctor
 /opt/ros/jazzy/lib/python3.12/site-packages/ros2doctor/api/package.py: 122: UserWarning: ros2cli has been updated to a new version. local: 0.32.10 &lt; latest: 0.32.13
@@ -1368,7 +1368,7 @@ $ ros2 bag play drive1
 
 <strong>All 5 checks passed</strong></code></pre>
 
-  <h3>출력을 이렇게 읽는다</h3>
+  <h3>12-3 출력을 이렇게 읽는다</h3>
   <p class="readme-first">무엇을 먼저 볼지: <strong>맨 마지막 줄</strong>이다. 그 위의 경고는 줄 끝의 파일 이름(<code>package.py</code> / <code>topic.py</code>)으로 두 종류를 가른다.</p>
   <div class="tablewrap">
   <table>
@@ -1409,7 +1409,7 @@ publisher count     : 1
 subscriber count    : 1
 (…)</code></pre>
 
-  <h3>에이전트에게 시키면</h3>
+  <h3>12-4 에이전트에게 시키면</h3>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
     ros2 doctor를 실행하고, 패키지 버전 경고는 개수만 세어 주고, 그 밖의 경고와 오류는 한 줄씩 무슨 뜻인지와 지금 고쳐야 하는 것인지 알려 줘. 마지막 줄(checks passed 또는 failed)은 원문 그대로 붙여 줘.
