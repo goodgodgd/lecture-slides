@@ -222,6 +222,21 @@ den = conv(conv([1 3], [1 5]), [1 10])</code></pre>
     칸에는 숫자만이 아니라 <strong>MATLAB 식</strong>도 적을 수 있다. 분모 칸에 <code>conv(conv([1 3],[1 5]),[1 10])</code>를 그대로 적어도 돌아간다.
     다만 그러면 블록 겉면에는 수식 대신 \(1/U(s)\)라고만 보인다. 모델을 볼 때 플랜트가 무엇인지 바로 읽히도록 오늘은 펼친 숫자를 적었다.
   </p>
+  <p>
+    여기까지 만들었으면 <strong>Ctrl+S</strong>로 저장한다. 이름은 <code>plant_step</code>으로 적는다 — 확장자 <code>.slx</code>는 저절로 붙는다.
+    저장 창은 MATLAB의 <strong>현재 폴더</strong>(1회 7-1)에서 열리니 그대로 저장하면 된다. 뒤에서 코드로 모델을 돌릴 때 MATLAB이 이 폴더에서 모델을 찾는다.
+  </p>
+
+  <details class="fold">
+    <summary>④절까지의 전체 코드</summary>
+<!-- mcode 09/b01_den upto -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% (s+3)(s+5)(s+10) 을 펼친 계수 — Transfer Fcn 블록의 Denominator 칸에 넣을 값
+den = conv(conv([1 3], [1 5]), [1 10])</code></pre>
+<button onclick="copyCode(this)">복사</button>
+</div>
+<!-- /mcode -->
+  </details>
 
   <!-- ─────────────────────────── ⑤ ─────────────────────────── -->
   <h2 id="s5">⑤ 시뮬레이션 실행과 Scope</h2>
@@ -268,11 +283,30 @@ fprintf('dcgain(G) = %.5f,  1/150 = %.5f\n', dcgain(G), 1/150)</code></pre>
     플랜트에 1을 넣었는데 0.0067밖에 나오지 않는다. 입력을 따라가게 하려면 출력을 되먹여 오차를 줄여야 한다. ⑥에서 루프를 닫는다.
   </p>
 
+  <details class="fold">
+    <summary>⑤절까지의 전체 코드</summary>
+<!-- mcode 09/b02_dcgain upto -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% (s+3)(s+5)(s+10) 을 펼친 계수 — Transfer Fcn 블록의 Denominator 칸에 넣을 값
+den = conv(conv([1 3], [1 5]), [1 10])
+
+% Scope 에서 읽은 최종값을 MATLAB 으로 확인한다
+G = tf(1, den);
+fprintf('dcgain(G) = %.5f,  1/150 = %.5f\n', dcgain(G), 1/150)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+</div>
+<!-- /mcode -->
+  </details>
+
   <!-- ─────────────────────────── ⑥ ─────────────────────────── -->
   <h2 id="s6">⑥ 피드백 루프와 P 제어 — Sum · Gain</h2>
   <p>
     출력을 입력 쪽으로 되돌려 「목표 − 출력」을 만들려면 블록 선도에 무엇이 필요할까? 교재의 단위 피드백 그림을 그대로 옮긴다.
     빼기를 하는 <strong>Sum</strong>, 오차에 상수를 곱하는 <strong>Gain</strong>(비례 제어기), 그리고 출력선에서 갈라져 Sum으로 돌아가는 선 하나다.
+  </p>
+  <p>
+    Step · Transfer Fcn · Scope는 ⑤의 모델에 이미 있으니 처음부터 다시 놓지 않아도 된다. <code>plant_step</code>을 다른 이름으로 저장해 두고 그 위에서 고친다.
+    SIMULATION 탭의 <strong>Save</strong> 아래 화살표 → <strong>Save As</strong>를 누르고 이름을 <code>p_control</code>로 적는다. 원래 <code>plant_step</code>은 그대로 남는다.
   </p>
   <figure>
     <img src="assets/img/09_p_canvas.png" width="700" alt="Step, 둥근 Sum(+ −), 삼각형 Gain(K), Transfer Fcn, Scope가 이어져 있고, Transfer Fcn 출력선에서 갈라진 선이 아래로 돌아 Sum의 − 입력으로 들어간다">
@@ -282,7 +316,7 @@ fprintf('dcgain(G) = %.5f,  1/150 = %.5f\n', dcgain(G), 1/150)</code></pre>
     <li><span class="mk">1</span><strong>Sum</strong> — 설정 창의 List of signs를 <code>|+-</code>로 바꾼다(아래 그림). 왼쪽 입력이 +, 아래 입력이 −가 된다.</li>
     <li><span class="mk">2</span><strong>Gain</strong> — 값 칸에 숫자 대신 변수 이름 <code>K</code>를 적었다. 값은 MATLAB 작업공간에서 읽는다.</li>
     <li><span class="mk">3</span><strong>분기점</strong> — 되먹임 선은 블록에서가 아니라 <strong>이미 있는 선 위에서</strong> 시작한다. 선 위에서 마우스 오른쪽 버튼을 누른 채 끌거나, Ctrl을 누른 채 왼쪽 버튼으로 끈다. 갈라지는 자리에 검은 점이 찍힌다.</li>
-    <li><span class="mk">4</span><strong>기록 표시</strong>(안테나 모양) — 이 신호를 기록한다는 뜻이다. 신호 이름 <code>y</code>는 선을 더블클릭해 적는다. 7-1에서 다시 본다.</li>
+    <li><span class="mk">4</span><strong>기록 표시</strong>(안테나 모양) — 이 신호를 기록한다는 뜻이다. 출력선을 클릭해 고르면 툴스트립에 SIGNAL 탭이 새로 생기는데, 거기서 <strong>Log Signals</strong>를 누르면 붙는다(선을 오른쪽 클릭 → <strong>Log Selected Signals</strong>도 된다). 신호 이름 <code>y</code>는 선을 더블클릭해 적는다. 7-1에서 다시 본다.</li>
   </ol>
   <figure class="dlg">
     <img src="assets/img/09_dlg_sum.png" alt="Block Parameters: Sum 창. Icon shape round, List of signs 칸에 |+-">
@@ -301,7 +335,8 @@ fprintf('dcgain(G) = %.5f,  1/150 = %.5f\n', dcgain(G), 1/150)</code></pre>
     <figcaption>P 제어(K = 242)의 Scope. 0.73까지 솟았다가 0.62 근처에서 멈춘다.</figcaption>
   </figure>
   <p>
-    Run 버튼 대신 코드로 돌릴 수도 있다. 돌린 뒤 기록된 출력을 꺼내 3초의 값을 찍으면 아래와 같다.
+    Run 버튼을 누르는 대신 명령 창에서 <code>sim('p_control')</code>을 실행해도 모델이 돈다. 앞에서 저장한 모델 이름을 글자로 주는 것이다.
+    이렇게 돌리면 결과가 변수로 남아 기록된 출력을 바로 꺼내 볼 수 있다. 3초의 값을 찍으면 아래와 같다.
   </p>
 <!-- mcode 09/b03_open_p -->
 <div class="mcode">
@@ -319,10 +354,16 @@ fprintf('t = 3 s 의 출력 %.4f,  K/(150+K) = %.4f\n', y.Data(end), K/(150 + K)
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
     <dl>
       <dt>out = sim(model)</dt>
-      <dd>모델을 Stop Time까지 시뮬레이션하고 결과 묶음(<code>Simulink.SimulationOutput</code>)을 돌려준다. 모델 이름은 글자로 준다. 여기서는 Run 버튼과 같은 일을 코드로 했다.</dd>
+      <dd>모델을 Stop Time까지 시뮬레이션하고 결과 묶음(<code>Simulink.SimulationOutput</code>)을 돌려준다. 모델 이름은 확장자 없이 글자로 주고, 그 <code>.slx</code> 파일이 현재 폴더에 있어야 찾는다. 여기서는 Run 버튼과 같은 일을 코드로 했다.</dd>
       <dt>out.logsout.getElement('이름').Values</dt>
       <dd><code>logsout</code>은 기록 표시(안테나)를 붙인 신호들의 모음이고, <code>getElement</code>가 신호선 이름으로 하나를 꺼낸다. <code>.Values</code>는 시계열(timeseries)이라 <code>.Time</code>과 <code>.Data</code>로 시간과 값을 꺼낸다. 여기서는 3초에서의 출력 <code>y.Data(end)</code>를 읽었다.</dd>
     </dl>
+  </div>
+  <div class="box trap">
+    <p class="boxtitle">⚠️ 「"logsout"은(는) 인식할 수 없는 필드 이름입니다」</p>
+    <p>기록 표시를 붙인 신호가 하나도 없으면 <code>out</code>에 <code>logsout</code>이 아예 생기지 않아 이 오류가 난다.
+      출력선에 안테나가 보이는지 확인하고, 없으면 위 <span class="mk">4</span>대로 <strong>Log Signals</strong>를 눌러 붙인 뒤 저장하고 다시 돌린다.
+      안테나는 있는데 「<code>'y'</code>를 쓰는 Dataset 요소를 찾지 못했다」는 경고가 먼저 뜨고 오류가 나면 선 이름이 <code>y</code>가 아닌 경우다. 선을 더블클릭해 이름을 고친다.</p>
   </div>
   <div class="box theory">
     <p class="boxtitle">📐 이론과 잇기 — P 제어의 정상상태 오차</p>
@@ -366,7 +407,7 @@ for K = Ks
     plot(y.Time, y.Data, 'DisplayName', sprintf('K = %d', K))
 end
 hold off; grid on; legend('Location', 'northwest')
-ylim([-0.5 2])
+axis([0 3 -1 3])
 xlabel('시간 (s)'); ylabel('출력 y')
 title('P 제어 — 이득 K 에 따른 응답')</code></pre>
 <button onclick="copyCode(this)">복사</button>
@@ -381,11 +422,49 @@ title('P 제어 — 이득 K 에 따른 응답')</code></pre>
     4회의 Routh 판별법으로 그 선을 구하면 특성방정식 \(s^3 + 18s^2 + 95s + (150 + K) = 0\)에서 \(18 \times 95 > 150 + K\), 곧 <strong>K &lt; 1560</strong>이다. 1800이 발산하는 이유다.
   </p>
 
+  <details class="fold">
+    <summary>⑥절까지의 전체 코드</summary>
+<!-- mcode 09/b04_ksweep upto -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% (s+3)(s+5)(s+10) 을 펼친 계수 — Transfer Fcn 블록의 Denominator 칸에 넣을 값
+den = conv(conv([1 3], [1 5]), [1 10])
+
+% Scope 에서 읽은 최종값을 MATLAB 으로 확인한다
+G = tf(1, den);
+fprintf('dcgain(G) = %.5f,  1/150 = %.5f\n', dcgain(G), 1/150)
+
+% Gain 블록이 읽을 변수 K 를 만든 뒤 모델을 시뮬레이션한다
+K = 242;
+out = sim('p_control');
+y = out.logsout.getElement('y').Values;     % 기록 표시를 붙인 신호 y
+fprintf('t = 3 s 의 출력 %.4f,  K/(150+K) = %.4f\n', y.Data(end), K/(150 + K))
+
+% K 를 바꿔 가며 같은 모델을 여러 번 돌린다
+Ks = [50 242 1000 1800];
+figure; hold on
+for K = Ks
+    out = sim('p_control');
+    y = out.logsout.getElement('y').Values;
+    plot(y.Time, y.Data, 'DisplayName', sprintf('K = %d', K))
+end
+hold off; grid on; legend('Location', 'northwest')
+axis([0 3 -1 3])
+xlabel('시간 (s)'); ylabel('출력 y')
+title('P 제어 — 이득 K 에 따른 응답')</code></pre>
+<button onclick="copyCode(this)">복사</button>
+</div>
+<!-- /mcode -->
+  </details>
+
   <!-- ─────────────────────────── ⑦ ─────────────────────────── -->
   <h2 id="s7">⑦ PID Controller 블록</h2>
   <p>
     그럼 오차를 없애면서 빠르게 하려면 무엇을 바꿔야 하나? 7회에서 본 것처럼 제어기에 미분(D)과 적분(I)을 더한다.
     Gain 블록 자리에 <strong>PID Controller</strong> 블록을 넣으면 세 이득을 한 블록에서 바꿀 수 있다.
+  </p>
+  <p>
+    이번에도 ⑥처럼 <code>p_control</code>을 <strong>Save As</strong>로 <code>pid_control</code>이라는 이름으로 저장해 두고 고친다.
+    Gain 블록을 지우고 그 자리에 PID Controller를 놓은 뒤 양쪽 선을 다시 잇는다.
   </p>
   <figure>
     <img src="assets/img/09_dlg_pid.png" width="620" alt="Block Parameters: PID Controller 창. Controller PID, Form Parallel, 보상기 식 P + I/s + D N/(1+N/s), Main 탭에 Proportional Kp(852), Integral Ki(84), Derivative Kd(120), Filter coefficient 100, 오른쪽 아래 Tune 버튼">
@@ -467,6 +546,52 @@ PID   최대값 1.173 (t = 0.30 s)   t = 3 s 의 출력 0.993   오차 0.007</co
       <dd>기록된 신호를 실행별로 모아 보여 주는 창. 실행을 여러 번 하면 결과가 지워지지 않고 쌓인다. Compare 탭에서 두 실행의 차이를 그래프로 볼 수도 있다.</dd>
     </dl>
   </div>
+
+  <details class="fold">
+    <summary>⑦절까지의 전체 코드</summary>
+<!-- mcode 09/b05_compare upto -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% (s+3)(s+5)(s+10) 을 펼친 계수 — Transfer Fcn 블록의 Denominator 칸에 넣을 값
+den = conv(conv([1 3], [1 5]), [1 10])
+
+% Scope 에서 읽은 최종값을 MATLAB 으로 확인한다
+G = tf(1, den);
+fprintf('dcgain(G) = %.5f,  1/150 = %.5f\n', dcgain(G), 1/150)
+
+% Gain 블록이 읽을 변수 K 를 만든 뒤 모델을 시뮬레이션한다
+K = 242;
+out = sim('p_control');
+y = out.logsout.getElement('y').Values;     % 기록 표시를 붙인 신호 y
+fprintf('t = 3 s 의 출력 %.4f,  K/(150+K) = %.4f\n', y.Data(end), K/(150 + K))
+
+% K 를 바꿔 가며 같은 모델을 여러 번 돌린다
+Ks = [50 242 1000 1800];
+figure; hold on
+for K = Ks
+    out = sim('p_control');
+    y = out.logsout.getElement('y').Values;
+    plot(y.Time, y.Data, 'DisplayName', sprintf('K = %d', K))
+end
+hold off; grid on; legend('Location', 'northwest')
+axis([0 3 -1 3])
+xlabel('시간 (s)'); ylabel('출력 y')
+title('P 제어 — 이득 K 에 따른 응답')
+
+% 같은 모델에 P · PD · PID 이득을 차례로 넣고 응답을 잰다
+gains = [242 0 0; 861 0 123; 960 840 120];     % 한 줄 = [Kp Ki Kd]
+names = {'P', 'PD', 'PID'};
+for k = 1:3
+    Kp = gains(k,1); Ki = gains(k,2); Kd = gains(k,3);
+    out = sim('pid_control');
+    y = out.logsout.getElement('y').Values;
+    [ymax, i] = max(y.Data);
+    fprintf('%-4s  최대값 %.3f (t = %.2f s)   t = 3 s 의 출력 %.3f   오차 %.3f\n', ...
+        names{k}, ymax, y.Time(i), y.Data(end), 1 - y.Data(end))
+end</code></pre>
+<button onclick="copyCode(this)">복사</button>
+</div>
+<!-- /mcode -->
+  </details>
 
   <!-- ─────────────────────────── 실습 ─────────────────────────── -->
   <h2 id="lab">🧪 실습</h2>

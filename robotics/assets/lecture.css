@@ -151,6 +151,12 @@ figure.wide img { max-width: 100%; }
 .lab-block { border: 1px solid var(--accent); border-radius: 8px; padding: 1rem 1.15rem; margin: 1.4rem 0; }
 .lab-block .boxtitle { color: var(--accent); font-weight: 700; margin: 0 0 .5rem; }
 
+/* ⌨ 그 절에서 학생이 그대로 칠 핵심 명령 한두 줄 — 경로까지 다 적는다. 출력 블록보다 먼저 눈에 들어와야 한다 */
+.keycmd { border: 2px solid var(--accent); border-radius: 8px; background: var(--accent-soft); padding: .9rem 1.15rem; margin: 1.4rem 0; }
+.keycmd .boxtitle { color: var(--accent); font-weight: 700; margin: 0 0 .4rem; }
+.keycmd p { font-size: .95rem; margin: .4rem 0; }
+.keycmd pre { background: var(--bg); border-left-color: var(--accent); font-size: .92rem; margin: .5rem 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+
 /* ── 점검 체크박스 ── */
 ul.check { list-style: none; padding: 0; }
 ul.check li { margin: .45rem 0; }
