@@ -31,7 +31,6 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약</a>
   <a href="#tf">① 전달함수 만들기 — tf</a>
   <a href="#feedback">② 피드백 시스템 — feedback</a>
   <a href="#pz">③ 극점과 영점 — pole · zero · pzmap</a>
@@ -45,6 +44,7 @@
   <a href="#stability">⑪ 안정도 — isstable · if</a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
+  <a href="#summary">한 장 요약</a>
   <a href="#check">✅ 점검</a>
   <a href="#more">조금 더 알아두면</a>
 </nav>
@@ -80,31 +80,6 @@
     <strong>함수 파일</strong>로 만들면서 MATLAB에서 함수를 만드는 법과 <code>if</code> 문을 배운다.
     함수 안의 코드를 한 줄씩 읽어 두면, 나중에 같은 계산이 필요할 때 필요한 줄만 골라 쓸 수 있다.
   </p>
-
-  <!-- ── 한 장 요약 ── -->
-  <h2 id="summary">한 장 요약</h2>
-  <p class="readme-first">읽는 법: 오른쪽 열이 교재의 어느 장면인지를 먼저 본다. 함수 이름은 그 장면에서 꺼내 쓰는 도구다.</p>
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th>함수</th><th>하는 일</th><th>제어공학에서 쓰는 자리</th></tr>
-    <tr><td><code>tf(num, den)</code> · <code>s = tf('s')</code></td><td>전달함수 객체를 만든다</td><td>블록선도의 블록 하나</td></tr>
-    <tr><td><code>feedback(G, H)</code></td><td>\(G/(1+GH)\)를 약분까지 해서 돌려준다</td><td>폐루프 전달함수</td></tr>
-    <tr><td><code>pole</code> · <code>zero</code> · <code>pzmap</code></td><td>극점·영점을 구하고 s 평면에 찍는다</td><td>응답의 모양과 안정도를 읽는 출발점</td></tr>
-    <tr><td><code>[y, t] = step(sys)</code></td><td>단위계단응답을 계산한다</td><td>과도응답 · 정상상태</td></tr>
-    <tr><td><code>[y, t] = lsim(sys, u, t)</code></td><td>아무 입력에 대한 응답을 계산한다</td><td>경사·포물선 입력, 정상상태 오차</td></tr>
-    <tr><td><code>dcgain</code> · <code>evalfr</code></td><td>\(s=0\)(또는 임의의 \(s\))에서 전달함수의 값</td><td>최종값 정리 · 정적 오차 상수 \(K_p, K_v, K_a\)</td></tr>
-    <tr><td><code>[wn, zeta, p] = damp(sys)</code></td><td>극점마다 고유주파수와 제동비</td><td>2차 표준형 \(\omega_n, \zeta\)</td></tr>
-    <tr><td><code>S = stepinfo(sys)</code></td><td>상승·정착·첨두시간, 최대초과를 잰다</td><td>과도응답 성능 지표</td></tr>
-    <tr><td><code>isstable(sys)</code> · <code>all</code></td><td>안정한지 참/거짓으로 답한다</td><td>모든 극점이 좌반면에 있나</td></tr>
-    <tr><td><code>function</code> · <code>if/else</code></td><td>함수 파일을 만들고, 조건에 따라 갈라진다</td><td>같은 분석을 여러 시스템에 되풀이</td></tr>
-  </table>
-  </div>
-  <div class="interp">
-    <strong>해석:</strong> 오늘 함수의 절반은 <strong>교재에서 손으로 하던 계산 하나와 짝</strong>을 이룬다 —
-    <code>feedback</code>은 블록선도 정리, <code>damp</code>는 2차 표준형에 맞춰 \(\omega_n\)·\(\zeta\) 읽기,
-    <code>stepinfo</code>는 성능 공식, <code>dcgain</code>은 최종값 정리다.
-    그래서 이 회차는 <strong>MATLAB 결과를 손계산과 숫자로 맞춰 보는 것</strong>으로 진행한다.
-  </div>
 
   <!-- ── ① tf ── -->
   <h2 id="tf">① 전달함수 만들기 — <code>tf</code></h2>
@@ -1343,6 +1318,31 @@ grid on</code></pre>
       그 \(K\)에서 폐루프가 여전히 안정한지 <code>stability_check</code>로 확인하라.
     </li>
   </ol>
+
+  <!-- ── 한 장 요약 ── -->
+  <h2 id="summary">한 장 요약</h2>
+  <p class="readme-first">읽는 법: 오른쪽 열이 교재의 어느 장면인지를 먼저 본다. 함수 이름은 그 장면에서 꺼내 쓰는 도구다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>함수</th><th>하는 일</th><th>제어공학에서 쓰는 자리</th></tr>
+    <tr><td><code>tf(num, den)</code> · <code>s = tf('s')</code></td><td>전달함수 객체를 만든다</td><td>블록선도의 블록 하나</td></tr>
+    <tr><td><code>feedback(G, H)</code></td><td>\(G/(1+GH)\)를 약분까지 해서 돌려준다</td><td>폐루프 전달함수</td></tr>
+    <tr><td><code>pole</code> · <code>zero</code> · <code>pzmap</code></td><td>극점·영점을 구하고 s 평면에 찍는다</td><td>응답의 모양과 안정도를 읽는 출발점</td></tr>
+    <tr><td><code>[y, t] = step(sys)</code></td><td>단위계단응답을 계산한다</td><td>과도응답 · 정상상태</td></tr>
+    <tr><td><code>[y, t] = lsim(sys, u, t)</code></td><td>아무 입력에 대한 응답을 계산한다</td><td>경사·포물선 입력, 정상상태 오차</td></tr>
+    <tr><td><code>dcgain</code> · <code>evalfr</code></td><td>\(s=0\)(또는 임의의 \(s\))에서 전달함수의 값</td><td>최종값 정리 · 정적 오차 상수 \(K_p, K_v, K_a\)</td></tr>
+    <tr><td><code>[wn, zeta, p] = damp(sys)</code></td><td>극점마다 고유주파수와 제동비</td><td>2차 표준형 \(\omega_n, \zeta\)</td></tr>
+    <tr><td><code>S = stepinfo(sys)</code></td><td>상승·정착·첨두시간, 최대초과를 잰다</td><td>과도응답 성능 지표</td></tr>
+    <tr><td><code>isstable(sys)</code> · <code>all</code></td><td>안정한지 참/거짓으로 답한다</td><td>모든 극점이 좌반면에 있나</td></tr>
+    <tr><td><code>function</code> · <code>if/else</code></td><td>함수 파일을 만들고, 조건에 따라 갈라진다</td><td>같은 분석을 여러 시스템에 되풀이</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 오늘 함수의 절반은 <strong>교재에서 손으로 하던 계산 하나와 짝</strong>을 이룬다 —
+    <code>feedback</code>은 블록선도 정리, <code>damp</code>는 2차 표준형에 맞춰 \(\omega_n\)·\(\zeta\) 읽기,
+    <code>stepinfo</code>는 성능 공식, <code>dcgain</code>은 최종값 정리다.
+    그래서 이 회차에서는 <strong>MATLAB 결과를 손계산과 숫자로 맞춰 봤다</strong>.
+  </div>
 
   <!-- ── ✅ 점검 ── -->
   <h2 id="check">✅ 점검</h2>

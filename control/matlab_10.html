@@ -31,7 +31,6 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약</a>
   <a href="#s1">① Simscape는 무엇인가</a>
   <a href="#s2">② 질량-스프링-댐퍼의 전달함수</a>
   <a href="#s3">③ Simscape 모델 시작 — <code>ssc_new</code></a>
@@ -43,6 +42,7 @@
   <a href="#s7">⑦ 회전 운동 — 관성과 회전 댐퍼</a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
+  <a href="#summary">한 장 요약</a>
   <a href="#check">✅ 점검</a>
   <a href="#more">조금 더 알아두면</a>
 </nav>
@@ -72,27 +72,6 @@
     운동방정식을 스스로 세우고 푼다. 첫 예제로 4장의 기계 소자 셋(질량 · 댐퍼 · 스프링)을 이어 보고, 손으로 구한 전달함수와 같은 답이 나오는지 확인한다.
     다음 11회에서는 같은 방법으로 DC 모터를 만든다.
   </p>
-
-  <h2 id="summary">한 장 요약</h2>
-  <p class="readme-first">왼쪽은 오늘 쓰는 블록과 함수, 오른쪽은 그것이 모델링의 어느 자리인지다.</p>
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th>블록 · 함수</th><th>하는 일</th><th>모델링에서 쓰는 자리</th></tr>
-    <tr><td><code>ssc_new</code></td><td>Simscape용 빈 모델을 기본 블록과 함께 연다</td><td>시작</td></tr>
-    <tr><td><strong>Mass</strong> · <strong>Translational Spring</strong> · <strong>Translational Damper</strong></td><td>질량 \(M\) · 스프링 \(k\) · 댐퍼 \(b\)</td><td>기계 소자 (4장)</td></tr>
-    <tr><td><strong>Mechanical Translational Reference</strong></td><td>움직이지 않는 바닥(벽)</td><td>기준점</td></tr>
-    <tr><td><strong>Ideal Force Source</strong></td><td>입력 신호만큼의 힘을 낸다</td><td>입력 \(F(t)\)</td></tr>
-    <tr><td><strong>Ideal Translational Motion Sensor</strong></td><td>위치 · 속도를 잰다</td><td>출력 \(x(t)\)</td></tr>
-    <tr><td><strong>Simulink-PS Converter</strong> · <strong>PS-Simulink Converter</strong></td><td>Simulink 신호 ↔ 물리 신호, 단위를 붙이고 뗀다</td><td>두 세계의 경계</td></tr>
-    <tr><td><strong>Solver Configuration</strong></td><td>물리 네트워크의 계산 설정</td><td>모든 Simscape 모델에 하나</td></tr>
-    <tr><td><code>out.simlog</code> · Simscape Results Explorer</td><td>모든 부품의 힘 · 속도 · 위치 기록</td><td>모델 속 들여다보기</td></tr>
-    <tr><td><strong>Inertia</strong> · <strong>Rotational Damper</strong> · <strong>Ideal Torque Source</strong> · <strong>Ideal Rotational Motion Sensor</strong></td><td>회전 관성 \(J\) · 회전 댐퍼 \(D\) · 토크 입력 · 각속도 측정</td><td>회전 기계 (11회 모터)</td></tr>
-  </table>
-  </div>
-  <div class="interp">
-    <strong>해석:</strong> Simulink 블록은 <strong>식</strong>이고 Simscape 블록은 <strong>부품</strong>이다.
-    Simulink에서는 식을 세운 사람이 블록을 그리고, Simscape에서는 부품을 이으면 식은 프로그램이 세운다.
-  </div>
 
   <!-- ─────────────────────────── ① ─────────────────────────── -->
   <h2 id="s1">① Simscape는 무엇인가</h2>
@@ -578,6 +557,27 @@ tau =
     <li>④의 모델에서 PS-Simulink Converter의 단위를 <code>mm</code>로 바꾸면 Scope의 숫자는 어떻게 되나? 코드의 <code>x.values('m')</code>는 바뀌나? 각각 예상하고 확인하라.</li>
     <li>⑦의 모델에서 \(J\)를 두 배로 하면 최종 속도와 시정수가 각각 어떻게 바뀌어야 하나? \(D\)를 두 배로 하면? 식으로 예상하고 돌려서 확인하라.</li>
   </ol>
+
+  <h2 id="summary">한 장 요약</h2>
+  <p class="readme-first">왼쪽은 오늘 쓴 블록과 함수, 오른쪽은 그것이 모델링의 어느 자리인지다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>블록 · 함수</th><th>하는 일</th><th>모델링에서 쓰는 자리</th></tr>
+    <tr><td><code>ssc_new</code></td><td>Simscape용 빈 모델을 기본 블록과 함께 연다</td><td>시작</td></tr>
+    <tr><td><strong>Mass</strong> · <strong>Translational Spring</strong> · <strong>Translational Damper</strong></td><td>질량 \(M\) · 스프링 \(k\) · 댐퍼 \(b\)</td><td>기계 소자 (4장)</td></tr>
+    <tr><td><strong>Mechanical Translational Reference</strong></td><td>움직이지 않는 바닥(벽)</td><td>기준점</td></tr>
+    <tr><td><strong>Ideal Force Source</strong></td><td>입력 신호만큼의 힘을 낸다</td><td>입력 \(F(t)\)</td></tr>
+    <tr><td><strong>Ideal Translational Motion Sensor</strong></td><td>위치 · 속도를 잰다</td><td>출력 \(x(t)\)</td></tr>
+    <tr><td><strong>Simulink-PS Converter</strong> · <strong>PS-Simulink Converter</strong></td><td>Simulink 신호 ↔ 물리 신호, 단위를 붙이고 뗀다</td><td>두 세계의 경계</td></tr>
+    <tr><td><strong>Solver Configuration</strong></td><td>물리 네트워크의 계산 설정</td><td>모든 Simscape 모델에 하나</td></tr>
+    <tr><td><code>out.simlog</code> · Simscape Results Explorer</td><td>모든 부품의 힘 · 속도 · 위치 기록</td><td>모델 속 들여다보기</td></tr>
+    <tr><td><strong>Inertia</strong> · <strong>Rotational Damper</strong> · <strong>Ideal Torque Source</strong> · <strong>Ideal Rotational Motion Sensor</strong></td><td>회전 관성 \(J\) · 회전 댐퍼 \(D\) · 토크 입력 · 각속도 측정</td><td>회전 기계 (11회 모터)</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> Simulink 블록은 <strong>식</strong>이고 Simscape 블록은 <strong>부품</strong>이다.
+    Simulink에서는 식을 세운 사람이 블록을 그리고, Simscape에서는 부품을 이으면 식은 프로그램이 세운다.
+  </div>
 
   <h2 id="check">✅ 점검</h2>
   <ul class="check">

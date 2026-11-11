@@ -31,7 +31,6 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약</a>
   <a href="#problem">① 문제 정의 — 개루프 전달함수와 사양</a>
   <a href="#target">② 목표 극점 정하기</a>
   <a href="#ponly">③ 비례 제어의 한계 — 각도 조건</a>
@@ -44,6 +43,7 @@
   <a href="#gains">⑨ Kp · Ki · Kd로 읽기 — pid</a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
+  <a href="#summary">한 장 요약</a>
   <a href="#check">✅ 점검</a>
   <a href="#more">조금 더 알아두면</a>
 </nav>
@@ -79,27 +79,6 @@
     계산의 알맹이는 근궤적의 두 조건 — <strong>각도 조건</strong>과 <strong>크기 조건</strong> — 이다.
     5회에서 근궤적을 그릴 때 썼던 바로 그 두 식이 이번에는 <strong>제어기를 설계하는 식</strong>으로 쓰인다.
   </p>
-
-  <h2 id="summary">한 장 요약</h2>
-  <p class="readme-first">왼쪽은 오늘 쓰는 함수, 오른쪽은 그 함수가 설계 절차의 어느 단계인지다. 위에서 아래로 읽으면 설계 순서가 된다.</p>
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th>함수·코드</th><th>하는 일</th><th>설계 절차에서 쓰는 자리</th></tr>
-    <tr><td><code>draw_overshoot_line</code> · <code>draw_peak_time_line</code> · <code>draw_settling_time_line</code></td><td>사양을 s 평면의 경계선으로 그리고 ζ·ω<sub>d</sub>·σ를 돌려준다 (6회에서 만든 함수)</td><td>(1) 목표 극점 정하기</td></tr>
-    <tr><td><code>angle(evalfr(G, s0))</code></td><td>복소수 s<sub>0</sub>에서 G의 위상</td><td>(2) 비례 제어로 되는지 판정 (각도 조건)</td></tr>
-    <tr><td><code>design_pd_controller(otf, p)</code></td><td>극점·영점 벡터의 각도를 더해 모자란 각도를 구하고, 그 각도를 채우는 영점 위치를 계산한다 (오늘 만드는 함수)</td><td>(3) PD 영점 정하기</td></tr>
-    <tr><td><code>K = -1/evalfr(otf_pd, p)</code></td><td>목표 극점에서 \(KG = -1\)이 되는 K</td><td>(4) 이득 정하기 (크기 조건)</td></tr>
-    <tr><td><code>otf_pd*(s - zero_pi)/s</code></td><td>원점 극점과 원점 가까운 영점을 더한다</td><td>(5) PI로 정상상태 오차 없애기</td></tr>
-    <tr><td><code>mark_closed_pole(K*otf)</code></td><td>폐루프 극점을 근궤적 위에 찍는다 (오늘 만드는 함수)</td><td>(6) 극점이 목표에 왔는지 확인</td></tr>
-    <tr><td><code>stepinfo(y, t, 1)</code></td><td>최종값을 직접 정해 주고 성능 지표를 계산한다</td><td>(7) 사양을 만족하는지 검증</td></tr>
-    <tr><td><code>pid(Kp, Ki, Kd)</code> · <code>pidtune</code></td><td>PID 제어기 객체 · 자동 조정</td><td>(8) 이득을 Kp·Ki·Kd로 읽기, 비교</td></tr>
-  </table>
-  </div>
-  <div class="interp">
-    <strong>해석:</strong> 오늘의 설계는 결국 <strong>복소수 하나</strong>(목표 극점)에서 전달함수의 값을 계산하는 일이다.
-    그 값의 <strong>각도</strong>가 −180°가 되게 영점을 고르고, 그 값의 <strong>크기</strong>가 1이 되게 K를 고른다.
-    MATLAB에서 그 계산은 <code>evalfr</code> 한 줄과 <code>atan2</code> 몇 줄이면 된다.
-  </div>
 
   <!-- ─────────────────────────── ① ─────────────────────────── -->
   <h2 id="problem">① 문제 정의 — 개루프 전달함수와 사양</h2>
@@ -785,6 +764,27 @@ difference =
     <li><strong>PI 영점의 맞바꿈.</strong> PI 영점을 −0.01, −0.1, −0.5로 바꿔 가며 <code>for</code> 문으로 비교한다.
       영점마다 K를 크기 조건으로 다시 구하고, 최대초과와 정착시간(최종값 1, 시간 구간 600초)을 표로 정리한다. ⑧의 해석에서 말한 맞바꿈이 표의 숫자로 어떻게 드러나는지 설명한다.</li>
   </ol>
+
+  <h2 id="summary">한 장 요약</h2>
+  <p class="readme-first">왼쪽은 오늘 쓴 함수, 오른쪽은 그 함수가 설계 절차의 어느 단계인지다. 위에서 아래로 읽으면 설계 순서가 된다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>함수·코드</th><th>하는 일</th><th>설계 절차에서 쓰는 자리</th></tr>
+    <tr><td><code>draw_overshoot_line</code> · <code>draw_peak_time_line</code> · <code>draw_settling_time_line</code></td><td>사양을 s 평면의 경계선으로 그리고 ζ·ω<sub>d</sub>·σ를 돌려준다 (6회에서 만든 함수)</td><td>(1) 목표 극점 정하기</td></tr>
+    <tr><td><code>angle(evalfr(G, s0))</code></td><td>복소수 s<sub>0</sub>에서 G의 위상</td><td>(2) 비례 제어로 되는지 판정 (각도 조건)</td></tr>
+    <tr><td><code>design_pd_controller(otf, p)</code></td><td>극점·영점 벡터의 각도를 더해 모자란 각도를 구하고, 그 각도를 채우는 영점 위치를 계산한다 (오늘 만든 함수)</td><td>(3) PD 영점 정하기</td></tr>
+    <tr><td><code>K = -1/evalfr(otf_pd, p)</code></td><td>목표 극점에서 \(KG = -1\)이 되는 K</td><td>(4) 이득 정하기 (크기 조건)</td></tr>
+    <tr><td><code>otf_pd*(s - zero_pi)/s</code></td><td>원점 극점과 원점 가까운 영점을 더한다</td><td>(5) PI로 정상상태 오차 없애기</td></tr>
+    <tr><td><code>mark_closed_pole(K*otf)</code></td><td>폐루프 극점을 근궤적 위에 찍는다 (오늘 만든 함수)</td><td>(6) 극점이 목표에 왔는지 확인</td></tr>
+    <tr><td><code>stepinfo(y, t, 1)</code></td><td>최종값을 직접 정해 주고 성능 지표를 계산한다</td><td>(7) 사양을 만족하는지 검증</td></tr>
+    <tr><td><code>pid(Kp, Ki, Kd)</code> · <code>pidtune</code></td><td>PID 제어기 객체 · 자동 조정</td><td>(8) 이득을 Kp·Ki·Kd로 읽기, 비교</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 오늘의 설계는 결국 <strong>복소수 하나</strong>(목표 극점)에서 전달함수의 값을 계산하는 일이다.
+    그 값의 <strong>각도</strong>가 −180°가 되게 영점을 고르고, 그 값의 <strong>크기</strong>가 1이 되게 K를 고른다.
+    MATLAB에서 그 계산은 <code>evalfr</code> 한 줄과 <code>atan2</code> 몇 줄이면 된다.
+  </div>
 
   <!-- ─────────────────────────── 점검 ─────────────────────────── -->
   <h2 id="check">✅ 점검</h2>

@@ -31,7 +31,6 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약</a>
   <a href="#s1">① 문제 — 사양을 만족하는 \(K\)</a>
   <a href="#s2">② 2차 시스템의 성능 지표와 극점 위치</a>
   <a class="sub" href="#s2-tp">2-1 첨두시간 \(T_p\)</a>
@@ -44,6 +43,7 @@
   <a href="#s7">⑦ 우세극점 근사가 어긋나는 이유</a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
+  <a href="#summary">한 장 요약</a>
   <a href="#check">✅ 점검</a>
   <a href="#more">조금 더 알아두면</a>
 </nav>
@@ -71,19 +71,6 @@
     경계선을 그린 뒤 근궤적이 경계를 지나는 두 점의 \(K\)를 읽으면 범위의 양 끝이 된다.
     마지막에는 계단응답을 직접 돌려 그 범위가 사양을 정말 만족하는지 확인한다. 확인해 보면 <strong>근사로 구한 범위와 실제 범위가 꽤 다르다</strong> — 이 회차에서 가장 중요한 결과다.
   </p>
-
-  <h2 id="summary">한 장 요약</h2>
-  <p class="readme-first">가운데 열의 식 셋이 사양을 극점 위치로 바꾸는 전부다.</p>
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th>사양</th><th>극점 조건</th><th>s 평면의 경계</th><th>그리는 함수</th></tr>
-    <tr><td>첨두시간 \(T_p \le 1.5\) s</td><td>\(\omega_d \ge \pi / T_p = 2.0944\)</td><td>수평선 \(\mathrm{Im}\,s = \pm\omega_d\) 바깥</td><td><code>draw_peak_time_line</code></td></tr>
-    <tr><td>최대초과 %OS \(\le 20\%\)</td><td>\(\zeta \ge 0.4559\)</td><td>음의 실수축에서 \(\theta = 62.87^\circ\) 인 두 직선 안쪽</td><td><code>draw_overshoot_line</code></td></tr>
-    <tr><td>정착시간 \(T_s \le 3.5\) s</td><td>\(\sigma \ge 4 / T_s = 1.1429\)</td><td>수직선 \(\mathrm{Re}\,s = -\sigma\) 왼쪽</td><td><code>draw_settling_time_line</code></td></tr>
-  </table>
-  </div>
-  <div class="interp"><strong>해석:</strong> 세 함수는 7회 PID 설계에서도 그대로 쓴다. 그리고 이 표의 식은 모두 <strong>극점 두 개뿐인 2차 시스템</strong>에서 유도한 것이다.
-    극점이 셋 이상이거나 영점이 있으면 「근사」가 된다 — ⑦절에서 그 차이를 숫자로 본다.</div>
 
   <!-- ─────────────── ① ─────────────── -->
   <h2 id="s1">① 문제 — 사양을 만족하는 \(K\)</h2>
@@ -597,6 +584,19 @@ K = 36.68 | 셋째 극점 -3.762 | %OS 예측 19.98 / 실제 29.85 | Tp 예측 0
     <li>\(G(s)H(s) = \dfrac{1}{s(s+4)(s+6)}\)에서 %OS \(\le 16\%\), \(T_s \le 4\) s를 만족하는 \(K\) 범위를 ③·⑤절 방법으로 구하시오. 이 시스템에서는 어느 조건이 아래 끝을 정하는가?</li>
     <li>2번의 범위 양 끝에서 <code>stepinfo</code>를 돌려 실제로 사양을 만족하는지 확인하고, 이 회차의 예와 결과가 어떻게 다른지 영점 유무로 설명하시오.</li>
   </ol>
+
+  <h2 id="summary">한 장 요약</h2>
+  <p class="readme-first">가운데 열의 식 셋이 사양을 극점 위치로 바꾸는 전부다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>사양</th><th>극점 조건</th><th>s 평면의 경계</th><th>그리는 함수</th></tr>
+    <tr><td>첨두시간 \(T_p \le 1.5\) s</td><td>\(\omega_d \ge \pi / T_p = 2.0944\)</td><td>수평선 \(\mathrm{Im}\,s = \pm\omega_d\) 바깥</td><td><code>draw_peak_time_line</code></td></tr>
+    <tr><td>최대초과 %OS \(\le 20\%\)</td><td>\(\zeta \ge 0.4559\)</td><td>음의 실수축에서 \(\theta = 62.87^\circ\) 인 두 직선 안쪽</td><td><code>draw_overshoot_line</code></td></tr>
+    <tr><td>정착시간 \(T_s \le 3.5\) s</td><td>\(\sigma \ge 4 / T_s = 1.1429\)</td><td>수직선 \(\mathrm{Re}\,s = -\sigma\) 왼쪽</td><td><code>draw_settling_time_line</code></td></tr>
+  </table>
+  </div>
+  <div class="interp"><strong>해석:</strong> 세 함수는 7회 PID 설계에서도 그대로 쓴다. 그리고 이 표의 식은 모두 <strong>극점 두 개뿐인 2차 시스템</strong>에서 유도한 것이다.
+    극점이 셋 이상이거나 영점이 있으면 「근사」가 된다 — ⑦절에서 그 차이를 숫자로 봤다.</div>
 
   <!-- ─────────────── 점검 ─────────────── -->
   <h2 id="check">✅ 점검</h2>

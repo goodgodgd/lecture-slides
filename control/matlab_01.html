@@ -31,7 +31,6 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약</a>
   <a href="#s1">① MATLAB이란</a>
   <a class="sub" href="#story">📖 MATLAB의 첫 무대</a>
   <a href="#s2">② 제어공학과 MATLAB</a>
@@ -48,6 +47,7 @@
   <a href="#s9">⑨ 도움말 — <code>help</code> · <code>doc</code></a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
+  <a href="#summary">한 장 요약</a>
   <a href="#check">✅ 점검</a>
   <a href="#more">조금 더 알아두면</a>
 </nav>
@@ -78,27 +78,6 @@
     <strong>코드 한 줄이 이론의 어느 식과 이어지는지</strong>를 따라간다. 오늘은 그 첫 회로,
     MATLAB이 무엇인지, 어떻게 설치하는지, 화면은 어떻게 생겼는지, 코드를 어디에 쓰고 어떻게 실행하는지를 본다.
   </p>
-
-  <!-- ── 한 장 요약 ── -->
-  <h2 id="summary">한 장 요약</h2>
-  <p class="readme-first">읽는 법: 왼쪽은 오늘 나오는 화면 요소와 명령, 가운데는 하는 일, 오른쪽은 실습 내내 쓰게 되는 자리다.</p>
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th>이름</th><th>하는 일</th><th>이 실습에서 쓰는 자리</th></tr>
-    <tr><td>명령 창 (Command Window)</td><td>한 줄씩 치고 바로 결과를 본다</td><td>값 확인, 짧은 계산, 도움말</td></tr>
-    <tr><td>편집기 (Editor) · 스크립트 <code>.m</code></td><td>명령을 파일에 모아 두고 한 번에 실행한다</td><td><strong>모든 실습과 과제 코드</strong></td></tr>
-    <tr><td>라이브 스크립트 <code>.mlx</code></td><td>글·코드·출력·그림을 한 문서에 담는다</td><td>코드와 결과를 한 문서로 정리할 때</td></tr>
-    <tr><td>작업공간 (Workspace)</td><td>지금 메모리에 있는 변수 목록</td><td>변수가 제대로 만들어졌는지 확인</td></tr>
-    <tr><td><code>;</code> · <code>%</code> · <code>%%</code></td><td>출력 숨기기 · 주석 · 섹션 나누기</td><td>모든 코드</td></tr>
-    <tr><td><code>whos</code> · <code>clear</code> · <code>clc</code> · <code>close all</code></td><td>변수 보기 · 변수 지우기 · 화면 지우기 · 그림 창 닫기</td><td>스크립트 첫 줄 <code>clc; clear; close all</code></td></tr>
-    <tr><td><code>help</code> · <code>doc</code></td><td>함수 설명 보기</td><td>처음 보는 함수를 만났을 때</td></tr>
-    <tr><td><code>version</code></td><td>설치된 MATLAB 버전 확인</td><td>설치 직후 한 번</td></tr>
-  </table>
-  </div>
-  <div class="interp">
-    <strong>해석:</strong> 오늘 외울 것은 거의 없다. 대신 <strong>코드를 스크립트 파일에 쓰고 실행해서 명령 창과 그림 창으로 결과를 확인하는 흐름</strong>
-    하나를 손에 익히면 된다. 뒤 회차는 전부 이 흐름 위에서 돈다.
-  </div>
 
   <!-- ── ① ── -->
   <h2 id="s1">① MATLAB이란</h2>
@@ -729,6 +708,27 @@ y =
     <li><code>help abs</code>를 치고, <code>abs</code>가 무엇을 하는 함수인지 <code>Syntax</code> 줄을 이용해 한 줄로 설명하세요.</li>
     <li><code>first_script.m</code> 맨 아래에 <code>z = x + y</code>를 더하고 세미콜론을 붙여 저장·실행하세요. 명령 창에는 <code>z</code>가 찍히지 않는데, <code>z</code>의 값은 어디서 확인할 수 있나요? 두 가지 방법을 적으세요.</li>
   </ol>
+
+  <!-- ── 한 장 요약 ── -->
+  <h2 id="summary">한 장 요약</h2>
+  <p class="readme-first">읽는 법: 왼쪽은 오늘 나온 화면 요소와 명령, 가운데는 하는 일, 오른쪽은 실습 내내 쓰게 되는 자리다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>이름</th><th>하는 일</th><th>이 실습에서 쓰는 자리</th></tr>
+    <tr><td>명령 창 (Command Window)</td><td>한 줄씩 치고 바로 결과를 본다</td><td>값 확인, 짧은 계산, 도움말</td></tr>
+    <tr><td>편집기 (Editor) · 스크립트 <code>.m</code></td><td>명령을 파일에 모아 두고 한 번에 실행한다</td><td><strong>모든 실습과 과제 코드</strong></td></tr>
+    <tr><td>라이브 스크립트 <code>.mlx</code></td><td>글·코드·출력·그림을 한 문서에 담는다</td><td>코드와 결과를 한 문서로 정리할 때</td></tr>
+    <tr><td>작업공간 (Workspace)</td><td>지금 메모리에 있는 변수 목록</td><td>변수가 제대로 만들어졌는지 확인</td></tr>
+    <tr><td><code>;</code> · <code>%</code> · <code>%%</code></td><td>출력 숨기기 · 주석 · 섹션 나누기</td><td>모든 코드</td></tr>
+    <tr><td><code>whos</code> · <code>clear</code> · <code>clc</code> · <code>close all</code></td><td>변수 보기 · 변수 지우기 · 화면 지우기 · 그림 창 닫기</td><td>스크립트 첫 줄 <code>clc; clear; close all</code></td></tr>
+    <tr><td><code>help</code> · <code>doc</code></td><td>함수 설명 보기</td><td>처음 보는 함수를 만났을 때</td></tr>
+    <tr><td><code>version</code></td><td>설치된 MATLAB 버전 확인</td><td>설치 직후 한 번</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 오늘 외울 것은 거의 없다. 대신 <strong>코드를 스크립트 파일에 쓰고 실행해서 명령 창과 그림 창으로 결과를 확인하는 흐름</strong>
+    하나를 손에 익히면 된다. 뒤 회차는 전부 이 흐름 위에서 돈다.
+  </div>
 
   <!-- ── 점검 ── -->
   <h2 id="check">✅ 점검</h2>

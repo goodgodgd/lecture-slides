@@ -31,7 +31,6 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약</a>
   <a href="#s1">① 무엇을 만드나 — 원판이 달린 DC 모터</a>
   <a href="#s2">② 직류전동기의 모델링</a>
   <a class="sub" href="#s2-2">2-1 인덕턴스를 뺀 1차 모델</a>
@@ -45,6 +44,7 @@
   <a href="#s9">⑨ 원판 질량을 바꾸면 — 포화와 와인드업</a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
+  <a href="#summary">한 장 요약</a>
   <a href="#check">✅ 점검</a>
   <a href="#more">조금 더 알아두면</a>
 </nav>
@@ -71,23 +71,6 @@
     제어공학 4장의 방법으로 식을 세우고, 그 식으로 속도 제어기를 설계하고, Simscape로 조립한 모터에 붙여 검증한다.
     마지막에는 원판을 모양과 질량이 있는 3차원 물체로 바꿔 실제로 도는 모습을 본다.
   </p>
-
-  <h2 id="summary">한 장 요약</h2>
-  <p class="readme-first">위에서 아래로 읽으면 오늘의 순서가 된다 — 식 → 설계 → 조립 → 검증.</p>
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th>단계</th><th>쓰는 것</th><th>결과</th></tr>
-    <tr><td>① 상황 정하기</td><td>12 V 모터 · 1 kg 원판 · 목표 400 rpm · 1초에 브레이크</td><td>무엇을 재고 무엇을 맞출지</td></tr>
-    <tr><td>② 모델링</td><td>KVL · 토크 평형 · \(v_b = K\omega\) · \(T_m = K i_a\)</td><td>\(\Omega/E_a = \dfrac{K}{(L_a s + R_a)(Js + D) + K^2}\) → 1차 \(\dfrac{b}{s+a}\)</td></tr>
-    <tr><td>③ 부하의 효과</td><td><code>step</code>으로 원판 있음/없음 비교</td><td>관성은 느리게, 마찰은 낮게</td></tr>
-    <tr><td>④ 제어기 설계</td><td>PI 영점으로 모터 극점 지우기 · <code>minreal</code></td><td>\(K_p = 0.254\), \(K_i = 1.20\), 폐루프 시정수 0.1 s</td></tr>
-    <tr><td>⑤ Simscape 조립</td><td>Controlled Voltage Source · Resistor · Inductor · Rotational Electromechanical Converter · Inertia · Rotational Damper · Ideal Torque Source · Ideal Rotational Motion Sensor</td><td>식을 적지 않은 모터 모델</td></tr>
-    <tr><td>⑥ 제어 루프</td><td>Step · Sum · PID Controller(PI) · Saturation(±12 V) · Subsystem · Scope</td><td>400 rpm 추종, 브레이크를 이겨 냄</td></tr>
-    <tr><td>⑦ 검증</td><td><code>lsim</code>으로 식의 응답 · Simscape와 겹치기</td><td>두 곡선이 겹친다 — 모델링이 맞다</td></tr>
-    <tr><td>⑧ 3D로 보기</td><td>Simscape Multibody — World Frame · Rigid Transform · Revolute Joint · Cylindrical Solid · Inertia · Rotational Multibody Interface · Multibody Explorer</td><td>원판이 3D로 돈다, 관성 \(\tfrac12 mr^2\)을 모양에서 구한다</td></tr>
-    <tr><td>⑨ 한계</td><td>원판 질량을 바꿔 가며 <code>sim</code></td><td>무거우면 전압 포화 → 와인드업</td></tr>
-  </table>
-  </div>
 
   <!-- ─────────────────────────── ① ─────────────────────────── -->
   <h2 id="s1">① 무엇을 만드나 — 원판이 달린 DC 모터</h2>
@@ -776,6 +759,23 @@ m_disc = 1;  JL = 0.5*m_disc*r_disc^2;         % 원래 값으로 되돌린다</
     <li>원판의 마찰 \(D_L\)을 10배(\(10^{-2}\))로 키우면 400 rpm을 유지하는 데 드는 전압은 얼마인가? ④의 📐 식으로 계산하고 시뮬레이션으로 확인하라. 이 원판으로 낼 수 있는 최고 속도는 몇 rpm인가?</li>
     <li>⑨에서 4 kg 원판을 쓸 때 PI를 그 원판에 맞춰 다시 설계하라(\(a\)와 \(b\)를 다시 계산). 와인드업이 사라지나? 사라지지 않는다면 그 이유를 처음 전압으로 설명하라.</li>
   </ol>
+
+  <h2 id="summary">한 장 요약</h2>
+  <p class="readme-first">위에서 아래로 읽으면 오늘 거쳐 온 순서다 — 식 → 설계 → 조립 → 검증.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>단계</th><th>쓰는 것</th><th>결과</th></tr>
+    <tr><td>① 상황 정하기</td><td>12 V 모터 · 1 kg 원판 · 목표 400 rpm · 1초에 브레이크</td><td>무엇을 재고 무엇을 맞출지</td></tr>
+    <tr><td>② 모델링</td><td>KVL · 토크 평형 · \(v_b = K\omega\) · \(T_m = K i_a\)</td><td>\(\Omega/E_a = \dfrac{K}{(L_a s + R_a)(Js + D) + K^2}\) → 1차 \(\dfrac{b}{s+a}\)</td></tr>
+    <tr><td>③ 부하의 효과</td><td><code>step</code>으로 원판 있음/없음 비교</td><td>관성은 느리게, 마찰은 낮게</td></tr>
+    <tr><td>④ 제어기 설계</td><td>PI 영점으로 모터 극점 지우기 · <code>minreal</code></td><td>\(K_p = 0.254\), \(K_i = 1.20\), 폐루프 시정수 0.1 s</td></tr>
+    <tr><td>⑤ Simscape 조립</td><td>Controlled Voltage Source · Resistor · Inductor · Rotational Electromechanical Converter · Inertia · Rotational Damper · Ideal Torque Source · Ideal Rotational Motion Sensor</td><td>식을 적지 않은 모터 모델</td></tr>
+    <tr><td>⑥ 제어 루프</td><td>Step · Sum · PID Controller(PI) · Saturation(±12 V) · Subsystem · Scope</td><td>400 rpm 추종, 브레이크를 이겨 냄</td></tr>
+    <tr><td>⑦ 검증</td><td><code>lsim</code>으로 식의 응답 · Simscape와 겹치기</td><td>두 곡선이 겹친다 — 모델링이 맞다</td></tr>
+    <tr><td>⑧ 3D로 보기</td><td>Simscape Multibody — World Frame · Rigid Transform · Revolute Joint · Cylindrical Solid · Inertia · Rotational Multibody Interface · Multibody Explorer</td><td>원판이 3D로 돈다, 관성 \(\tfrac12 mr^2\)을 모양에서 구한다</td></tr>
+    <tr><td>⑨ 한계</td><td>원판 질량을 바꿔 가며 <code>sim</code></td><td>무거우면 전압 포화 → 와인드업</td></tr>
+  </table>
+  </div>
 
   <h2 id="check">✅ 점검</h2>
   <ul class="check">

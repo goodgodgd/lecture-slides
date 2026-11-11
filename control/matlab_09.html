@@ -31,19 +31,19 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약</a>
   <a href="#s1">① Simulink는 무엇인가</a>
   <a href="#s2">② 시작 화면과 모델 편집기</a>
   <a href="#s3">③ 블록 놓기 — Library Browser · 빠른 삽입</a>
   <a href="#s4">④ 신호선 잇기와 블록 설정</a>
   <a href="#s5">⑤ 시뮬레이션 실행과 Scope</a>
-  <a class="sub" href="#s5-2">5-1 최대 스텝 크기 — Model Settings</a>
   <a href="#s6">⑥ 피드백 루프와 P 제어 — Sum · Gain</a>
-  <a class="sub" href="#s6-2">6-1 코드로 K 바꿔 가며 돌리기</a>
+  <a class="sub" href="#s6-2">6-1 최대 스텝 크기 — Model Settings</a>
+  <a class="sub" href="#s6-3">6-2 코드로 K 바꿔 가며 돌리기</a>
   <a href="#s7">⑦ PID Controller 블록</a>
   <a class="sub" href="#s7-2">7-1 신호 기록과 Data Inspector</a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
+  <a href="#summary">한 장 요약</a>
   <a href="#check">✅ 점검</a>
   <a href="#more">조금 더 알아두면</a>
 </nav>
@@ -76,27 +76,6 @@
     화면 그림의 <span class="mk">1</span><span class="mk">2</span> 같은 빨간 번호는 본문의 같은 번호와 짝을 이룬다.
     그림만 보고 따라 눌러도 되도록 번호 순서가 곧 누르는 순서가 되게 붙였다.
   </p>
-
-  <h2 id="summary">한 장 요약</h2>
-  <p class="readme-first">왼쪽은 오늘 쓰는 블록과 화면, 오른쪽은 그것이 제어공학의 어느 자리인지다.</p>
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th>블록 · 기능</th><th>하는 일</th><th>제어공학에서 쓰는 자리</th></tr>
-    <tr><td><strong>Step</strong> (Sources)</td><td>정해진 시각에 값이 한 번 뛰는 신호</td><td>계단 입력 \(r(t)\)</td></tr>
-    <tr><td><strong>Transfer Fcn</strong> (Continuous)</td><td>분자·분모 계수로 전달함수를 적는다</td><td>플랜트 \(G(s)\)</td></tr>
-    <tr><td><strong>Scope</strong> (Sinks)</td><td>신호를 시간 그래프로 보여 준다</td><td>응답 \(y(t)\) 확인</td></tr>
-    <tr><td><strong>Sum</strong> · <strong>Gain</strong> (Math Operations)</td><td>더하고 빼기 · 상수 곱하기</td><td>오차 \(e = r - y\), 비례 제어 \(K e\)</td></tr>
-    <tr><td><strong>PID Controller</strong> (Continuous)</td><td>\(K_p + K_i/s + K_d s\)를 한 블록에</td><td>제어기 \(C(s)\)</td></tr>
-    <tr><td>Library Browser · 빠른 삽입</td><td>블록을 찾아 캔버스에 놓는다</td><td>블록 선도 그리기</td></tr>
-    <tr><td>Stop Time · Run · Model Settings</td><td>시뮬레이션 시간과 계산 방법을 정하고 돌린다</td><td>미분방정식 풀기</td></tr>
-    <tr><td>Log Signals · Data Inspector</td><td>신호를 기록하고, 여러 번 돌린 결과를 겹쳐 본다</td><td>제어기 비교</td></tr>
-    <tr><td><code>out = sim(model)</code> · <code>out.logsout</code></td><td>코드로 돌리고 기록된 신호를 꺼낸다</td><td>파라미터를 바꿔 가며 반복</td></tr>
-  </table>
-  </div>
-  <div class="interp">
-    <strong>해석:</strong> Simulink 모델은 교재에 그리던 <strong>블록 선도 그 자체</strong>다.
-    블록 하나가 식 하나이고, 선 하나가 신호 하나다. 그래서 모델을 보면 신호가 어디서 와서 어디로 가는지가 그대로 읽힌다.
-  </div>
 
   <!-- ─────────────────────────── ① ─────────────────────────── -->
   <h2 id="s1">① Simulink는 무엇인가</h2>
@@ -147,7 +126,7 @@
     <li><span class="mk">3</span><strong>Stop Time</strong> — 시뮬레이션을 몇 초까지 할지. 기본값은 10초다.</li>
     <li><span class="mk">4</span><strong>Run</strong> — 시뮬레이션을 돌린다. 블록이 하나도 없으면 흐리게 꺼져 있다.</li>
     <li><span class="mk">5</span><strong>캔버스</strong> — 블록을 놓고 선을 긋는 곳. 마우스 휠로 확대·축소하고, 빈 곳을 끌어 화면을 옮긴다.</li>
-    <li><span class="mk">6</span><strong>Solver 표시</strong> — 미분방정식을 푸는 방법. <code>VariableStepAuto</code>는 「계산 간격을 알아서 바꿔 가며 푼다」는 뜻이다. ⑤에서 다시 본다.</li>
+    <li><span class="mk">6</span><strong>Solver 표시</strong> — 미분방정식을 푸는 방법. <code>VariableStepAuto</code>는 「계산 간격을 알아서 바꿔 가며 푼다」는 뜻이다. 6-1에서 다시 본다.</li>
   </ol>
 
   <!-- ─────────────────────────── ③ ─────────────────────────── -->
@@ -289,29 +268,6 @@ fprintf('dcgain(G) = %.5f,  1/150 = %.5f\n', dcgain(G), 1/150)</code></pre>
     플랜트에 1을 넣었는데 0.0067밖에 나오지 않는다. 입력을 따라가게 하려면 출력을 되먹여 오차를 줄여야 한다. ⑥에서 루프를 닫는다.
   </p>
 
-  <h3 id="s5-2">5-1 최대 스텝 크기 — Model Settings</h3>
-  <p>
-    루프를 닫기 전에 하나 짚어 둔다. ⑥의 P 제어 결과를 Scope로 보면 곡선이 <strong>꺾은선처럼 각져</strong> 보인다.
-  </p>
-  <figure>
-    <img src="assets/img/09_scope_p242.png" width="620" alt="Scope 창. 곡선이 0.73까지 올랐다가 0.62 근처에서 평평해지는데, 곡선이 짧은 직선을 이어 붙인 것처럼 각져 있다">
-    <figcaption>⑥의 P 제어(K = 242) 결과를 기본 설정으로 돌린 것. 봉우리 근처가 각져 있다.</figcaption>
-  </figure>
-  <div class="box trap">
-    <p class="boxtitle">⚠️ 곡선이 각진 것은 계산이 틀려서가 아니다</p>
-    <p>기본 Solver(<code>VariableStepAuto</code>)는 신호가 완만하면 계산 간격을 크게 벌린다. Scope는 <strong>계산한 점만</strong> 직선으로 잇기 때문에 간격이 벌어진 곳이 각져 보인다.
-      점 하나하나는 정확하다. 그래도 봉우리 높이를 읽거나 다른 곡선과 겹쳐 비교하려면 점이 촘촘한 편이 낫다.
-      아래처럼 <strong>최대 스텝 크기</strong>를 정해 주면 간격이 그 이상 벌어지지 않는다. 오늘 쓰는 모델은 모두 0.01초로 맞춰 두었다.</p>
-  </div>
-  <figure>
-    <img src="assets/img/09_modeling_tab.png" alt="MODELING 탭의 툴스트립. Model Settings 버튼에 빨간 상자가 쳐져 있다">
-    <figcaption><span class="mk">1</span> <strong>MODELING</strong> 탭 → <span class="mk">2</span> <strong>Model Settings</strong> (단축키 Ctrl+E).</figcaption>
-  </figure>
-  <figure>
-    <img src="assets/img/09_config_solver.png" width="620" alt="Configuration Parameters 창. 왼쪽 목록에서 Solver가 선택돼 있고, Solver details를 펼치니 Max step size 칸에 0.01이 적혀 있다">
-    <figcaption><span class="mk">1</span> Solver → <span class="mk">2</span> Solver details를 펼친다 → <span class="mk">3</span> <strong>Max step size</strong>를 <code>auto</code>에서 <code>0.01</code>로. Stop Time도 이 창 맨 위에서 바꿀 수 있다.</figcaption>
-  </figure>
-
   <!-- ─────────────────────────── ⑥ ─────────────────────────── -->
   <h2 id="s6">⑥ 피드백 루프와 P 제어 — Sum · Gain</h2>
   <p>
@@ -326,7 +282,7 @@ fprintf('dcgain(G) = %.5f,  1/150 = %.5f\n', dcgain(G), 1/150)</code></pre>
     <li><span class="mk">1</span><strong>Sum</strong> — 설정 창의 List of signs를 <code>|+-</code>로 바꾼다(아래 그림). 왼쪽 입력이 +, 아래 입력이 −가 된다.</li>
     <li><span class="mk">2</span><strong>Gain</strong> — 값 칸에 숫자 대신 변수 이름 <code>K</code>를 적었다. 값은 MATLAB 작업공간에서 읽는다.</li>
     <li><span class="mk">3</span><strong>분기점</strong> — 되먹임 선은 블록에서가 아니라 <strong>이미 있는 선 위에서</strong> 시작한다. 선 위에서 마우스 오른쪽 버튼을 누른 채 끌거나, Ctrl을 누른 채 왼쪽 버튼으로 끈다. 갈라지는 자리에 검은 점이 찍힌다.</li>
-    <li><span class="mk">4</span><strong>기록 표시</strong>(안테나 모양) — 이 신호를 기록한다는 뜻이다. 신호 이름 <code>y</code>는 선을 더블클릭해 적는다. ⑦에서 다시 본다.</li>
+    <li><span class="mk">4</span><strong>기록 표시</strong>(안테나 모양) — 이 신호를 기록한다는 뜻이다. 신호 이름 <code>y</code>는 선을 더블클릭해 적는다. 7-1에서 다시 본다.</li>
   </ol>
   <figure class="dlg">
     <img src="assets/img/09_dlg_sum.png" alt="Block Parameters: Sum 창. Icon shape round, List of signs 칸에 |+-">
@@ -338,7 +294,14 @@ fprintf('dcgain(G) = %.5f,  1/150 = %.5f\n', dcgain(G), 1/150)</code></pre>
   </figure>
   <p>
     <code>K</code>를 정하지 않고 Run을 누르면 「K가 정의되지 않았다」는 오류가 난다. 명령 창에서 <code>K = 242</code>를 먼저 실행하고 돌린다.
-    242는 보상 전 근궤적이 최대초과 20% 선(ζ = 0.456)과 만나는 이득이다. 코드로 돌리고 기록된 출력을 꺼내면 아래와 같다.
+    242는 보상 전 근궤적이 최대초과 20% 선(ζ = 0.456)과 만나는 이득이다. Run을 누르고 Scope를 열면 아래와 같다.
+  </p>
+  <figure>
+    <img src="assets/img/09_scope_p242.png" width="620" alt="Scope 창. 곡선이 0.73까지 올랐다가 0.62 근처에서 평평해지는데, 곡선이 짧은 직선을 이어 붙인 것처럼 각져 있다">
+    <figcaption>P 제어(K = 242)의 Scope. 0.73까지 솟았다가 0.62 근처에서 멈춘다.</figcaption>
+  </figure>
+  <p>
+    Run 버튼 대신 코드로 돌릴 수도 있다. 돌린 뒤 기록된 출력을 꺼내 3초의 값을 찍으면 아래와 같다.
   </p>
 <!-- mcode 09/b03_open_p -->
 <div class="mcode">
@@ -368,7 +331,26 @@ fprintf('t = 3 s 의 출력 %.4f,  K/(150+K) = %.4f\n', y.Data(end), K/(150 + K)
     <p>Scope의 0.62와 같다. 오차 \(1 - 0.617 = 0.383\)이 남는다. 4회에서 본 「0형 시스템의 계단 입력 정상상태 오차 \(1/(1+K_p)\)」 그대로다(\(K_p = K G(0) = 1.61\)).</p>
   </div>
 
-  <h3 id="s6-2">6-1 코드로 K 바꿔 가며 돌리기</h3>
+  <h3 id="s6-2">6-1 최대 스텝 크기 — Model Settings</h3>
+  <p>
+    K를 바꿔 가며 돌리기 전에 하나 짚어 둔다. 위 Scope 그림을 다시 보면 봉우리 근처의 곡선이 <strong>꺾은선처럼 각져</strong> 있다. 왜 그럴까?
+  </p>
+  <div class="box trap">
+    <p class="boxtitle">⚠️ 곡선이 각진 것은 계산이 틀려서가 아니다</p>
+    <p>기본 Solver(<code>VariableStepAuto</code>)는 신호가 완만하면 계산 간격을 크게 벌린다. Scope는 <strong>계산한 점만</strong> 직선으로 잇기 때문에 간격이 벌어진 곳이 각져 보인다.
+      점 하나하나는 정확하다. 그래도 봉우리 높이를 읽거나 다른 곡선과 겹쳐 비교하려면 점이 촘촘한 편이 낫다.
+      아래처럼 <strong>최대 스텝 크기</strong>를 정해 주면 간격이 그 이상 벌어지지 않는다. 오늘 쓰는 모델은 모두 0.01초로 맞춰 두었다.</p>
+  </div>
+  <figure>
+    <img src="assets/img/09_modeling_tab.png" alt="MODELING 탭의 툴스트립. Model Settings 버튼에 빨간 상자가 쳐져 있다">
+    <figcaption><span class="mk">1</span> <strong>MODELING</strong> 탭 → <span class="mk">2</span> <strong>Model Settings</strong> (단축키 Ctrl+E).</figcaption>
+  </figure>
+  <figure>
+    <img src="assets/img/09_config_solver.png" width="620" alt="Configuration Parameters 창. 왼쪽 목록에서 Solver가 선택돼 있고, Solver details를 펼치니 Max step size 칸에 0.01이 적혀 있다">
+    <figcaption><span class="mk">1</span> Solver → <span class="mk">2</span> Solver details를 펼친다 → <span class="mk">3</span> <strong>Max step size</strong>를 <code>auto</code>에서 <code>0.01</code>로. Stop Time도 이 창 맨 위에서 바꿀 수 있다.</figcaption>
+  </figure>
+
+  <h3 id="s6-3">6-2 코드로 K 바꿔 가며 돌리기</h3>
   <p>
     K를 키우면 오차가 줄어드니 마냥 키우면 될까? 모델을 마우스로 매번 고치는 대신, 작업공간의 <code>K</code>만 바꿔 가며 <code>sim</code>을 반복한다.
     블록이 변수 이름을 읽게 해 둔 덕분에 모델 파일은 손대지 않아도 된다.
@@ -508,6 +490,27 @@ PID   최대값 1.173 (t = 0.30 s)   t = 3 s 의 출력 0.993   오차 0.007</co
     <li>⑥의 P 제어 루프에서 Scope의 최종값이 0.9가 되게 하는 K를 \(K/(150 + K)\) 식으로 구하고, 그 K로 모델을 돌려 확인하라. 그 K는 안정한가? Scope의 모양은 어떤가?</li>
     <li>Step 블록의 Step time을 기본값 1로 둔 채 ⑤의 모델을 돌리면 Scope 그래프가 어떻게 달라지나? MATLAB의 <code>step(G, 3)</code> 그래프와 나란히 놓고 차이를 설명하라.</li>
   </ol>
+
+  <h2 id="summary">한 장 요약</h2>
+  <p class="readme-first">왼쪽은 오늘 쓴 블록과 화면, 오른쪽은 그것이 제어공학의 어느 자리인지다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>블록 · 기능</th><th>하는 일</th><th>제어공학에서 쓰는 자리</th></tr>
+    <tr><td><strong>Step</strong> (Sources)</td><td>정해진 시각에 값이 한 번 뛰는 신호</td><td>계단 입력 \(r(t)\)</td></tr>
+    <tr><td><strong>Transfer Fcn</strong> (Continuous)</td><td>분자·분모 계수로 전달함수를 적는다</td><td>플랜트 \(G(s)\)</td></tr>
+    <tr><td><strong>Scope</strong> (Sinks)</td><td>신호를 시간 그래프로 보여 준다</td><td>응답 \(y(t)\) 확인</td></tr>
+    <tr><td><strong>Sum</strong> · <strong>Gain</strong> (Math Operations)</td><td>더하고 빼기 · 상수 곱하기</td><td>오차 \(e = r - y\), 비례 제어 \(K e\)</td></tr>
+    <tr><td><strong>PID Controller</strong> (Continuous)</td><td>\(K_p + K_i/s + K_d s\)를 한 블록에</td><td>제어기 \(C(s)\)</td></tr>
+    <tr><td>Library Browser · 빠른 삽입</td><td>블록을 찾아 캔버스에 놓는다</td><td>블록 선도 그리기</td></tr>
+    <tr><td>Stop Time · Run · Model Settings</td><td>시뮬레이션 시간과 계산 방법을 정하고 돌린다</td><td>미분방정식 풀기</td></tr>
+    <tr><td>Log Signals · Data Inspector</td><td>신호를 기록하고, 여러 번 돌린 결과를 겹쳐 본다</td><td>제어기 비교</td></tr>
+    <tr><td><code>out = sim(model)</code> · <code>out.logsout</code></td><td>코드로 돌리고 기록된 신호를 꺼낸다</td><td>파라미터를 바꿔 가며 반복</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> Simulink 모델은 교재에 그리던 <strong>블록 선도 그 자체</strong>다.
+    블록 하나가 식 하나이고, 선 하나가 신호 하나다. 그래서 모델을 보면 신호가 어디서 와서 어디로 가는지가 그대로 읽힌다.
+  </div>
 
   <h2 id="check">✅ 점검</h2>
   <ul class="check">

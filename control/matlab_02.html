@@ -31,7 +31,6 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약</a>
   <a href="#s1">① 산술 연산자</a>
   <a href="#s2">② 변수와 데이터 타입</a>
   <a href="#s3">③ 내장 함수</a>
@@ -45,6 +44,7 @@
   <a href="#s9">⑨ 출력 — disp · fprintf · sprintf</a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
+  <a href="#summary">한 장 요약</a>
   <a href="#check">✅ 점검</a>
   <a href="#more">조금 더 알아두면</a>
 </nav>
@@ -80,25 +80,6 @@
     여러분도 스크립트 파일 하나(<code>basic.m</code> 등)에 차례로 붙여 가며 실행하면 같은 출력을 얻는다.
     「명령 창 출력」은 그 코드를 실제로 돌렸을 때 명령 창에 찍힌 그대로다.
   </p>
-
-  <h2 id="summary">한 장 요약</h2>
-  <p class="readme-first">가운데 열은 문법, 오른쪽 열은 그 문법을 4회 이후 어디서 다시 만나는지다.</p>
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th>문법 · 함수</th><th>하는 일</th><th>제어공학에서 쓰는 자리</th></tr>
-    <tr><td><code>+ - * / \ ^</code></td><td>산술 연산. 행렬에 쓰면 <strong>행렬 연산</strong></td><td>전달함수끼리 곱하기(직렬 연결), 연립방정식 풀기</td></tr>
-    <tr><td><code>.*  ./  .^</code></td><td><strong>원소별 연산</strong></td><td>시간 벡터 <code>t</code>로 응답 식 \(y(t)\)를 계산할 때</td></tr>
-    <tr><td><code>[1 2; 3 4]</code> · <code>zeros</code> · <code>ones</code> · <code>eye</code></td><td>행렬 만들기</td><td>상태공간 행렬, 결과를 담을 빈 배열</td></tr>
-    <tr><td><code>0:0.01:5</code></td><td>등간격 수열 (콜론 연산자)</td><td>시뮬레이션 시간 축 <code>t</code></td></tr>
-    <tr><td><code>A(2,:)</code> · <code>A(end,:)</code></td><td>인덱싱 · 슬라이싱</td><td>극점 여러 개 중 하나 고르기 <code>p(1)</code></td></tr>
-    <tr><td><code>1i</code> · <code>real</code> · <code>imag</code> · <code>abs</code> · <code>angle</code></td><td>복소수 만들기와 분해</td><td>극점의 실수부(감쇠)·허수부(진동)·크기(\(\omega_n\))·각도(\(\zeta\))</td></tr>
-    <tr><td><code>[1 3 2]</code> · <code>roots</code> · <code>poly</code> · <code>conv</code> · <code>polyval</code></td><td>다항식 = 계수 벡터와 그 계산</td><td>특성방정식의 근 = 극점, 전달함수 분모 만들기</td></tr>
-    <tr><td><code>disp</code> · <code>fprintf</code> · <code>sprintf</code></td><td>값을 원하는 모양으로 출력</td><td>설계 과정의 중간값 보고, 그래프 범례 글자</td></tr>
-  </table>
-  </div>
-  <div class="interp"><strong>해석:</strong> 이 표에서 가장 중요한 줄은 <strong>원소별 연산</strong>과 <strong>다항식</strong> 두 줄이다.
-    MATLAB을 처음 쓰는 사람이 가장 많이 내는 오류가 <code>*</code>와 <code>.*</code>를 헷갈리는 것이고,
-    제어공학에서 MATLAB이 하는 계산의 절반은 다항식(분자·분모)의 계산이다.</div>
 
   <!-- ─────────────────────────── ① ─────────────────────────── -->
   <h2 id="s1">① 산술 연산자 — <code>+ - * / \ ^</code></h2>
@@ -1411,6 +1392,25 @@ fprintf('2*zeta*wn = %.4f (계수 2.3), wn^2 = %.4f (계수 5.4)\n', 2*zeta*wn, 
     <li>\(\dfrac{s+3}{(s+1)(s+2)} = \dfrac{K_1}{s+1} + \dfrac{K_2}{s+2}\)의 \(K_1, K_2\)를 ⑥절처럼 연립방정식으로 세워 <code>\</code>로 푸시오.</li>
     <li>극점 벡터 <code>p = roots([1 2 5])</code>를 <code>fprintf</code> 한 줄로 「극점: -1.00 + j2.00」, 「극점: -1.00 + j-2.00」 두 줄이 나오게 찍으시오. (힌트: <code>[real(p) imag(p)].'</code>)</li>
   </ol>
+
+  <h2 id="summary">한 장 요약</h2>
+  <p class="readme-first">가운데 열은 문법, 오른쪽 열은 그 문법을 4회 이후 어디서 다시 만나는지다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>문법 · 함수</th><th>하는 일</th><th>제어공학에서 쓰는 자리</th></tr>
+    <tr><td><code>+ - * / \ ^</code></td><td>산술 연산. 행렬에 쓰면 <strong>행렬 연산</strong></td><td>전달함수끼리 곱하기(직렬 연결), 연립방정식 풀기</td></tr>
+    <tr><td><code>.*  ./  .^</code></td><td><strong>원소별 연산</strong></td><td>시간 벡터 <code>t</code>로 응답 식 \(y(t)\)를 계산할 때</td></tr>
+    <tr><td><code>[1 2; 3 4]</code> · <code>zeros</code> · <code>ones</code> · <code>eye</code></td><td>행렬 만들기</td><td>상태공간 행렬, 결과를 담을 빈 배열</td></tr>
+    <tr><td><code>0:0.01:5</code></td><td>등간격 수열 (콜론 연산자)</td><td>시뮬레이션 시간 축 <code>t</code></td></tr>
+    <tr><td><code>A(2,:)</code> · <code>A(end,:)</code></td><td>인덱싱 · 슬라이싱</td><td>극점 여러 개 중 하나 고르기 <code>p(1)</code></td></tr>
+    <tr><td><code>1i</code> · <code>real</code> · <code>imag</code> · <code>abs</code> · <code>angle</code></td><td>복소수 만들기와 분해</td><td>극점의 실수부(감쇠)·허수부(진동)·크기(\(\omega_n\))·각도(\(\zeta\))</td></tr>
+    <tr><td><code>[1 3 2]</code> · <code>roots</code> · <code>poly</code> · <code>conv</code> · <code>polyval</code></td><td>다항식 = 계수 벡터와 그 계산</td><td>특성방정식의 근 = 극점, 전달함수 분모 만들기</td></tr>
+    <tr><td><code>disp</code> · <code>fprintf</code> · <code>sprintf</code></td><td>값을 원하는 모양으로 출력</td><td>설계 과정의 중간값 보고, 그래프 범례 글자</td></tr>
+  </table>
+  </div>
+  <div class="interp"><strong>해석:</strong> 이 표에서 가장 중요한 줄은 <strong>원소별 연산</strong>과 <strong>다항식</strong> 두 줄이다.
+    MATLAB을 처음 쓰는 사람이 가장 많이 내는 오류가 <code>*</code>와 <code>.*</code>를 헷갈리는 것이고,
+    제어공학에서 MATLAB이 하는 계산의 절반은 다항식(분자·분모)의 계산이다.</div>
 
   <!-- ─────────────────────────── 점검 ─────────────────────────── -->
   <h2 id="check">✅ 점검</h2>

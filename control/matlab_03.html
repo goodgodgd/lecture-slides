@@ -31,7 +31,6 @@
 
 <nav class="toc">
   <div class="toc-title">이 회차 목차</div>
-  <a href="#summary">한 장 요약</a>
   <a href="#s1">① 데이터 준비 — 시간 축과 함수값</a>
   <a href="#s2">② 선 그래프 — plot</a>
   <a class="sub" href="#s2-spec">2-1 선 스타일 지정자</a>
@@ -45,6 +44,7 @@
   <a href="#s8">⑧ 그림 저장 — exportgraphics</a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
+  <a href="#summary">한 장 요약</a>
   <a href="#check">✅ 점검</a>
   <a href="#more">조금 더 알아두면</a>
 </nav>
@@ -75,25 +75,6 @@
     그 도구로 <strong>2차 시스템의 계단응답 식을 직접 그려 본다</strong>. 4회에서 <code>step</code> 함수가 그려 줄 그래프를
     오늘은 교재의 식으로 먼저 그려 보는 것이다. 그래야 4회에 <code>step</code>이 무엇을 대신 해 주는지가 보인다.
   </p>
-
-  <h2 id="summary">한 장 요약</h2>
-  <p class="readme-first">가운데 열의 동작을 기억하면 된다. 오른쪽 열은 그 함수를 4회 이후 어디서 다시 쓰는지다.</p>
-  <div class="tablewrap">
-  <table class="summary-table">
-    <tr><th>함수</th><th>하는 일</th><th>제어공학에서 쓰는 자리</th></tr>
-    <tr><td><code>plot(x, y, '스타일')</code></td><td>점 (x, y)들을 이어 그린다</td><td>응답 곡선 \(y(t)\), 극점 위치(<code>'x'</code> 표시)</td></tr>
-    <tr><td><code>title</code> · <code>xlabel</code> · <code>ylabel</code> · <code>legend</code> · <code>grid</code></td><td>제목·축 이름·범례·눈금선</td><td>입력과 응답을 구별하는 범례, 보고서용 서식</td></tr>
-    <tr><td><code>axis([x1 x2 y1 y2])</code></td><td>보이는 범위 지정</td><td>근궤적을 관심 영역으로 확대</td></tr>
-    <tr><td><code>hold on</code> / <code>hold off</code></td><td>겹쳐 그리기 켜기/끄기</td><td>근궤적 위에 성능 경계선 겹치기 (6·7회)</td></tr>
-    <tr><td><code>figure</code> · <code>subplot(m,n,k)</code></td><td>새 창 / 한 창을 m×n 칸으로</td><td>보드 선도의 이득·위상 두 칸 (8회)</td></tr>
-    <tr><td><code>for k = 1:n … end</code></td><td>같은 일을 n번 반복</td><td>제동비·이득을 바꿔 가며 곡선 여러 개</td></tr>
-    <tr><td><code>max</code></td><td>가장 큰 값과 그 위치</td><td>최대초과·첨두시간을 숫자로</td></tr>
-    <tr><td><code>exportgraphics</code></td><td>그림 창을 파일로 저장</td><td>과제 보고서</td></tr>
-  </table>
-  </div>
-  <div class="interp"><strong>해석:</strong> 이 표의 함수들은 4회 이후 <strong>모든 회차</strong>에서 나온다.
-    특히 <code>hold on</code>은 6·7회에서 근궤적 위에 선을 겹쳐 그리는 코드의 뼈대이고,
-    <code>subplot</code>은 5회 근궤적 예제 네 개를 한 창에 모으는 데 쓴다.</div>
 
   <!-- ─────────────────────────── ① ─────────────────────────── -->
   <h2 id="s1">① 데이터 준비 — 시간 축과 함수값</h2>
@@ -852,6 +833,25 @@ exportgraphics(gcf, 'zeta_compare.png', 'Resolution', 200)</code></pre>
     <li>⑦절 코드에서 <code>zetas</code>에 1.0을 넣으면 어떤 경고나 이상한 그래프가 나오는가? 식의 어느 부분 때문인지 설명하시오.</li>
     <li>\(\zeta = 0.5\), \(\omega_n = 3\)인 응답에서 <strong>처음으로 0.9를 넘는 시간</strong>을 찾으시오. (힌트: <code>y &gt; 0.9</code>는 0과 1로 된 벡터를 만든다. <code>find</code> 함수를 찾아보고, 쓴다면 무엇을 하는 함수인지 한 줄로 적으시오.)</li>
   </ol>
+
+  <h2 id="summary">한 장 요약</h2>
+  <p class="readme-first">가운데 열의 동작을 기억하면 된다. 오른쪽 열은 그 함수를 4회 이후 어디서 다시 쓰는지다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>함수</th><th>하는 일</th><th>제어공학에서 쓰는 자리</th></tr>
+    <tr><td><code>plot(x, y, '스타일')</code></td><td>점 (x, y)들을 이어 그린다</td><td>응답 곡선 \(y(t)\), 극점 위치(<code>'x'</code> 표시)</td></tr>
+    <tr><td><code>title</code> · <code>xlabel</code> · <code>ylabel</code> · <code>legend</code> · <code>grid</code></td><td>제목·축 이름·범례·눈금선</td><td>입력과 응답을 구별하는 범례, 보고서용 서식</td></tr>
+    <tr><td><code>axis([x1 x2 y1 y2])</code></td><td>보이는 범위 지정</td><td>근궤적을 관심 영역으로 확대</td></tr>
+    <tr><td><code>hold on</code> / <code>hold off</code></td><td>겹쳐 그리기 켜기/끄기</td><td>근궤적 위에 성능 경계선 겹치기 (6·7회)</td></tr>
+    <tr><td><code>figure</code> · <code>subplot(m,n,k)</code></td><td>새 창 / 한 창을 m×n 칸으로</td><td>보드 선도의 이득·위상 두 칸 (8회)</td></tr>
+    <tr><td><code>for k = 1:n … end</code></td><td>같은 일을 n번 반복</td><td>제동비·이득을 바꿔 가며 곡선 여러 개</td></tr>
+    <tr><td><code>max</code></td><td>가장 큰 값과 그 위치</td><td>최대초과·첨두시간을 숫자로</td></tr>
+    <tr><td><code>exportgraphics</code></td><td>그림 창을 파일로 저장</td><td>과제 보고서</td></tr>
+  </table>
+  </div>
+  <div class="interp"><strong>해석:</strong> 이 표의 함수들은 4회 이후 <strong>모든 회차</strong>에서 나온다.
+    특히 <code>hold on</code>은 6·7회에서 근궤적 위에 선을 겹쳐 그리는 코드의 뼈대이고,
+    <code>subplot</code>은 5회 근궤적 예제 네 개를 한 창에 모으는 데 쓴다.</div>
 
   <!-- ─────────────────────────── 점검 ─────────────────────────── -->
   <h2 id="check">✅ 점검</h2>
