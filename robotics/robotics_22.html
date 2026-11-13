@@ -16,7 +16,7 @@
       <a href="../index.html">강의자료</a><span class="sep">/</span><a href="index.html">로봇공학</a><span class="sep">/</span><span class="here">22회 · QoS와 콜백 처리 시간, 디버깅 도구</span>
     </nav>
     <span class="spacer"></span>
-    <div class="navlinks"><a class="navlink" href="robotics_21.html" aria-label="이전 회차"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a></div>
+    <div class="navlinks"><a class="navlink" href="robotics_21.html" aria-label="이전 회차"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a><a class="navlink" href="robotics_23.html" aria-label="다음 회차"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></a></div>
     <div class="seg" data-theme-switch role="group" aria-label="밝기">
       <button type="button" data-mode="auto" aria-pressed="true">자동</button>
       <button type="button" data-mode="light" aria-pressed="false">밝게</button>
@@ -323,7 +323,7 @@ Subscription count: 0</code></pre>
     <code>info -v</code>의 보내는 쪽 Reliability가 <strong>BEST_EFFORT</strong> — <code>SensorDataQoS()</code>가 그렇게 정했다. 받는 쪽은 아직 없다(<code>Subscription count: 0</code>).
   </p>
 
-  <!-- fullcode "전체 코드 — turtle_drive/ (8단계 · v8. wall_range.cpp 새 파일, CMakeLists.txt·package.xml·launch 에 한 덩어리씩. turtle_drive.cpp 는 21회 v7 그대로)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive wall_range"
+  <!-- fullcode "전체 코드 — turtle_drive/ (8단계 · v8. wall_range.cpp 새 파일, CMakeLists.txt·package.xml·launch 에 한 덩어리씩. turtle_drive.cpp 는 21회 v7 그대로)" build="cd ~/ros_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive wall_range"
        l22_qos_debug/steps/step8/turtle_drive/src/wall_range.cpp as turtle_drive/src/wall_range.cpp
        l22_qos_debug/steps/step8/turtle_drive/CMakeLists.txt as turtle_drive/CMakeLists.txt
        l22_qos_debug/steps/step8/turtle_drive/package.xml as turtle_drive/package.xml
@@ -331,7 +331,7 @@ Subscription count: 0</code></pre>
   -->
 <details class="fullcode">
   <summary>전체 코드 — turtle_drive/ (8단계 · v8. wall_range.cpp 새 파일, CMakeLists.txt·package.xml·launch 에 한 덩어리씩. turtle_drive.cpp 는 21회 v7 그대로)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive wall_range</code></p>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive wall_range</code></p>
   <div class="codefile"><div class="fname">turtle_drive/src/wall_range.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 22회 벽 거리 센서 — wall_range v8 (8단계: 거북이 자세로 가장 가까운 벽까지 거리를 재서 센서처럼 best effort 로 발행한다)
 #include &lt;algorithm&gt;
 #include &lt;memory&gt;
@@ -574,12 +574,12 @@ QoS profile:
   <p>
     <code>echo</code>가 받은 이유는 18회에서 본 대로다. <code>echo</code>는 보내는 쪽의 QoS를 보고 붙을 수 있게 스스로 고른다. 우리 코드는 그러지 않는다.
   </p>
-  <!-- fullcode "전체 코드 — turtle_drive/src/turtle_drive.cpp (v9 변형 · 구독 QoS 가 숫자 10 — 빌드는 되는데 거리 콜백이 한 번도 안 불린다)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive turtle_drive"
+  <!-- fullcode "전체 코드 — turtle_drive/src/turtle_drive.cpp (v9 변형 · 구독 QoS 가 숫자 10 — 빌드는 되는데 거리 콜백이 한 번도 안 불린다)" build="cd ~/ros_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive turtle_drive"
        l22_qos_debug/steps/variants/qos_mismatch/turtle_drive/src/turtle_drive.cpp as turtle_drive/src/turtle_drive.cpp
   -->
 <details class="fullcode">
   <summary>전체 코드 — turtle_drive/src/turtle_drive.cpp (v9 변형 · 구독 QoS 가 숫자 10 — 빌드는 되는데 거리 콜백이 한 번도 안 불린다)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive turtle_drive</code></p>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive turtle_drive</code></p>
   <div class="codefile"><div class="fname">turtle_drive/src/turtle_drive.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 22회 turtle_drive — v9 변형 (거리 구독을 큐 깊이 10 만 주어 만든 판 · 빌드는 되고 거북이가 출발하지 않는다)
 #include &lt;algorithm&gt;
 #include &lt;chrono&gt;
@@ -814,13 +814,13 @@ Node name: turtle_drive
     <button onclick="copyPrompt(this)">복사</button>
     이 노드가 /turtle1/wall_range 를 구독하는데 콜백이 한 번도 안 불려. ros2 topic echo 로는 값이 보여. 먼저 ros2 topic info -v /turtle1/wall_range 를 실행해서 발행 쪽과 구독 쪽 노드 이름과 Reliability 를 표로 보여 주고, 두 값이 다르면 구독 코드의 QoS 를 발행 쪽에 맞추는 방법(SensorDataQoS 등)을 제안해 줘. 토픽 이름은 맞으니 이름은 바꾸지 마.
   </div>
-  <!-- fullcode "전체 코드 — turtle_drive/ (9단계 · v9. wall_range.cpp·package.xml·launch 는 v8 그대로)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 launch turtle_drive turtle_drive.launch.py"
+  <!-- fullcode "전체 코드 — turtle_drive/ (9단계 · v9. wall_range.cpp·package.xml·launch 는 v8 그대로)" build="cd ~/ros_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 launch turtle_drive turtle_drive.launch.py"
        l22_qos_debug/steps/step9/turtle_drive/src/turtle_drive.cpp as turtle_drive/src/turtle_drive.cpp
        l22_qos_debug/steps/step9/turtle_drive/CMakeLists.txt as turtle_drive/CMakeLists.txt
   -->
 <details class="fullcode">
   <summary>전체 코드 — turtle_drive/ (9단계 · v9. wall_range.cpp·package.xml·launch 는 v8 그대로)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 launch turtle_drive turtle_drive.launch.py</code></p>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 launch turtle_drive turtle_drive.launch.py</code></p>
   <div class="codefile"><div class="fname">turtle_drive/src/turtle_drive.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 22회 turtle_drive — v9 (9단계: 범위 판정을 wall_range 의 /turtle1/wall_range 로 한다 — SensorDataQoS 로 구독)
 #include &lt;algorithm&gt;
 #include &lt;chrono&gt;
@@ -1202,12 +1202,12 @@ const double took_ms = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).
       받은 코드에 시간 측정이 있으면 무엇을 재고 있는지 본다 — 콜백 안의 시간인지, 데이터가 묵은 시간인지. <code>ros2 topic hz</code>(18회 ⑬ 6번)는 <strong>보내는</strong> 쪽의 주기를 보여 줄 뿐이라, 이 경우에도 62.5 Hz로 멀쩡하게 나온다.
     </p>
   </div>
-  <!-- fullcode "전체 코드 — turtle_drive/src/turtle_drive.cpp (10단계 · v10. 나머지 파일은 v9 그대로)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive turtle_drive --ros-args -p work_ms:=50 -p range_depth:=100"
+  <!-- fullcode "전체 코드 — turtle_drive/src/turtle_drive.cpp (10단계 · v10. 나머지 파일은 v9 그대로)" build="cd ~/ros_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive turtle_drive --ros-args -p work_ms:=50 -p range_depth:=100"
        l22_qos_debug/steps/step10/turtle_drive/src/turtle_drive.cpp as turtle_drive/src/turtle_drive.cpp
   -->
 <details class="fullcode">
   <summary>전체 코드 — turtle_drive/src/turtle_drive.cpp (10단계 · v10. 나머지 파일은 v9 그대로)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive turtle_drive --ros-args -p work_ms:=50 -p range_depth:=100</code></p>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive turtle_drive --ros-args -p work_ms:=50 -p range_depth:=100</code></p>
   <div class="codefile"><div class="fname">turtle_drive/src/turtle_drive.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 22회 turtle_drive — v10 (10단계: std::chrono::steady_clock 으로 콜백 처리 시간을 재고, 받은 값의 나이를 찍는다)
 #include &lt;algorithm&gt;
 #include &lt;chrono&gt;
@@ -1518,7 +1518,7 @@ int main(int argc, char ** argv)
     <button onclick="copyPrompt(this)">복사</button>
     이 노드의 콜백 안에 있는 RCLCPP_INFO·RCLCPP_WARN 줄을 전부 찾아서, 메시지가 올 때마다(또는 타이머마다) 찍히는 줄이면 RCLCPP_DEBUG 로 내리거나 RCLCPP_INFO_THROTTLE(…, *this->get_clock(), 1000, …) 으로 1초에 한 번만 찍게 바꿔 줘. 상태가 바뀌는 순간에 한 번 찍는 줄(예: 범위 밖 — 중앙 쪽으로 돕니다)은 그대로 둬. 어느 줄을 어떻게 바꿨는지 표로 먼저 보여 줘.
   </div>
-  <!-- fullcode "전체 코드 — turtle_drive/ (11단계 · v11 완성본. 22회가 끝난 패키지 전체)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 launch turtle_drive turtle_drive.launch.py"
+  <!-- fullcode "전체 코드 — turtle_drive/ (11단계 · v11 완성본. 22회가 끝난 패키지 전체)" build="cd ~/ros_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 launch turtle_drive turtle_drive.launch.py"
        l22_qos_debug/steps/step11/turtle_drive/src/turtle_drive.cpp as turtle_drive/src/turtle_drive.cpp
        l22_qos_debug/steps/step11/turtle_drive/src/wall_range.cpp as turtle_drive/src/wall_range.cpp
        l22_qos_debug/steps/step11/turtle_drive/CMakeLists.txt as turtle_drive/CMakeLists.txt
@@ -1528,7 +1528,7 @@ int main(int argc, char ** argv)
   -->
 <details class="fullcode">
   <summary>전체 코드 — turtle_drive/ (11단계 · v11 완성본. 22회가 끝난 패키지 전체)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 launch turtle_drive turtle_drive.launch.py</code></p>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 launch turtle_drive turtle_drive.launch.py</code></p>
   <div class="codefile"><div class="fname">turtle_drive/src/turtle_drive.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 22회 turtle_drive — v11 (11단계: 콜백마다 찍던 로그를 RCLCPP_DEBUG 로 내리고, 요약은 RCLCPP_INFO_THROTTLE 로 1초에 한 번)
 #include &lt;algorithm&gt;
 #include &lt;chrono&gt;
@@ -2048,7 +2048,7 @@ $ ros2 bag play drive1 --topics /turtle1/wall_range /turtle1/pose       # 터미
   <table>
     <tr><th>회</th><th>쌓은 것</th><th>남은 질문 (막혔을 때 이 회차를 다시 연다)</th></tr>
     <tr><td>15</td><td>ROS 설계 철학 — 노드로 쪼갠다</td><td>왜 함수가 아니라 프로세스로 나누나</td></tr>
-    <tr><td>16</td><td>설치, <code>source</code>, 작업공간 <code>~/ros2_ws</code>, <code>colcon build</code></td><td><code>ros2: command not found</code>가 뜬다</td></tr>
+    <tr><td>16</td><td>설치, <code>source</code>, 작업공간 <code>~/ros_ws</code>, <code>colcon build</code></td><td><code>ros2: command not found</code>가 뜬다</td></tr>
     <tr><td>17</td><td>노드·토픽·서비스·액션·파라미터, 메시지 정의, <code>frame_id</code></td><td>이 일에는 토픽인가 서비스인가</td></tr>
     <tr><td>18</td><td><code>ros2 node/topic/service/param/bag</code>, rqt_graph, 막혔을 때 보는 순서 0~6</td><td>값이 안 흐른다 — 어디부터 보나</td></tr>
     <tr><td>19</td><td>패키지 <code>turtle_drive</code>, <code>package.xml</code>, <code>install(TARGETS)</code>, <code>hello_node</code></td><td><code>ros2 run</code>이 못 찾는다</td></tr>
@@ -2072,13 +2072,13 @@ $ ros2 bag play drive1 --topics /turtle1/wall_range /turtle1/pose       # 터미
     <p class="boxtitle">준비물</p>
     <ul>
       <li>WSL 터미널 셋 (16회 <code>.bashrc</code>가 걸린 상태)</li>
-      <li>21회 실습까지 끝낸 <code>~/ros2_ws/src/turtle_drive</code></li>
+      <li>21회 실습까지 끝낸 <code>~/ros_ws/src/turtle_drive</code></li>
       <li>⑦절 끝의 📄 「11단계 · v11 완성본」(파일 여섯), ⑤절의 📄 「v9 변형」</li>
     </ul>
     <p class="boxtitle">절차</p>
     <ol>
       <li><strong>(4분)</strong> v11 완성본의 파일을 같은 경로로 넣고(<code>src/wall_range.cpp</code>는 새 파일) 빌드한다. 터미널 1에서 launch로 띄우고, 터미널 2에서 <code>ros2 topic info -v /turtle1/wall_range</code>의 Reliability 두 줄이 둘 다 <code>BEST_EFFORT</code>인지 본다.
-        <pre class="lang-sh"><code>$ cd ~/ros2_ws
+        <pre class="lang-sh"><code>$ cd ~/ros_ws
 $ colcon build --packages-select turtle_drive
 $ source install/setup.bash
 $ ros2 launch turtle_drive turtle_drive.launch.py</code></pre></li>
@@ -2121,14 +2121,14 @@ $ ros2 launch turtle_drive turtle_drive.launch.py</code></pre></li>
 [WARN] [1793759513.240989580] [wall_watch]: 벽이 가깝습니다: 0.63 m
 [WARN] [1793759513.256347288] [wall_watch]: 벽이 가깝습니다: 0.63 m</code></pre>
   <p>(검증에서는 10초 동안 600줄이 찍혔다.)</p>
-  <!-- fullcode open "연습문제 — 오늘 배운 것이 없는 원본 (turtle_watch/)" build="cd ~/ros2_ws && colcon build --packages-select turtle_watch && source install/setup.bash && ros2 run turtle_watch wall_watch"
+  <!-- fullcode open "연습문제 — 오늘 배운 것이 없는 원본 (turtle_watch/)" build="cd ~/ros_ws && colcon build --packages-select turtle_watch && source install/setup.bash && ros2 run turtle_watch wall_watch"
        l22_qos_debug/steps/exercise_old/turtle_watch/src/wall_watch.cpp as turtle_watch/src/wall_watch.cpp
        l22_qos_debug/steps/exercise_old/turtle_watch/CMakeLists.txt as turtle_watch/CMakeLists.txt
        l22_qos_debug/steps/exercise_old/turtle_watch/package.xml as turtle_watch/package.xml
   -->
 <details class="fullcode" open>
   <summary>연습문제 — 오늘 배운 것이 없는 원본 (turtle_watch/)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_watch &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_watch wall_watch</code></p>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select turtle_watch &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_watch wall_watch</code></p>
   <div class="codefile"><div class="fname">turtle_watch/src/wall_watch.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 22회 연습문제 — wall_watch 원본 (자세가 올 때마다 로그를 찍는다. QoS·처리 시간·throttle 이 없다)
 #include &lt;algorithm&gt;
 #include &lt;memory&gt;
@@ -2206,7 +2206,7 @@ ament_package()</code></pre></div>
 &lt;/package&gt;</code></pre></div>
 </details>
 <!-- /fullcode -->
-  <p>앞 회차 연습문제를 했으면 <code>~/ros2_ws/src/turtle_watch/</code>의 파일을 이 세 파일로 바꾼다. <code>turtle_drive</code>는 띄우지 않고 turtlesim과 <code>wall_range</code>만 띄운 뒤, 거북이는 <code>turtle_teleop_key</code>(18회)로 벽 쪽으로 몰아 본다.</p>
+  <p>앞 회차 연습문제를 했으면 <code>~/ros_ws/src/turtle_watch/</code>의 파일을 이 세 파일로 바꾼다. <code>turtle_drive</code>는 띄우지 않고 turtlesim과 <code>wall_range</code>만 띄운 뒤, 거북이는 <code>turtle_teleop_key</code>(18회)로 벽 쪽으로 몰아 본다.</p>
   <h3>할 일</h3>
   <div class="tablewrap">
   <table>
@@ -2220,7 +2220,7 @@ ament_package()</code></pre></div>
   </div>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
-    ~/ros2_ws/src/turtle_watch 패키지의 wall_watch 노드를 고쳐 줘. 고치기 전에 아래 기준마다 어느 파일·줄을 바꿀지 표로 먼저 보여 줘. 기준: /turtle1/pose 로 직접 계산하는 대신 /turtle1/wall_range(sensor_msgs/msg/Range, best effort 로 발행됨)를 rclcpp::SensorDataQoS() 로 구독하고 range 값이 1.5 m 보다 작으면 경고, sensor_msgs 는 package.xml 과 CMakeLists.txt 양쪽에 넣고 안 쓰게 된 turtlesim 의존성은 뺄 것, 콜백 처리 시간을 std::chrono::steady_clock 으로 재서 ms 로, 메시지마다 찍는 줄은 RCLCPP_DEBUG, 요약(받은 개수·거리·처리 시간)은 RCLCPP_INFO_THROTTLE 로 1000 ms 에 한 번, 경고도 RCLCPP_WARN_THROTTLE 로 1000 ms 에 한 번. 빌드는 ~/ros2_ws 에서 colcon build --packages-select turtle_watch 로 해 줘. 확인은 내가 할게.
+    ~/ros_ws/src/turtle_watch 패키지의 wall_watch 노드를 고쳐 줘. 고치기 전에 아래 기준마다 어느 파일·줄을 바꿀지 표로 먼저 보여 줘. 기준: /turtle1/pose 로 직접 계산하는 대신 /turtle1/wall_range(sensor_msgs/msg/Range, best effort 로 발행됨)를 rclcpp::SensorDataQoS() 로 구독하고 range 값이 1.5 m 보다 작으면 경고, sensor_msgs 는 package.xml 과 CMakeLists.txt 양쪽에 넣고 안 쓰게 된 turtlesim 의존성은 뺄 것, 콜백 처리 시간을 std::chrono::steady_clock 으로 재서 ms 로, 메시지마다 찍는 줄은 RCLCPP_DEBUG, 요약(받은 개수·거리·처리 시간)은 RCLCPP_INFO_THROTTLE 로 1000 ms 에 한 번, 경고도 RCLCPP_WARN_THROTTLE 로 1000 ms 에 한 번. 빌드는 ~/ros_ws 에서 colcon build --packages-select turtle_watch 로 해 줘. 확인은 내가 할게.
   </div>
   <p>
     정답은 하나가 아니다. 위 표의 「확인하는 법」이 전부 통과하면 된 것이다. 첫째 줄은 돌려 봐야 확실하다 — 받은 코드가 구독 QoS를 숫자로 두었다면 빌드도 실행도 되는데 아무 줄도 안 찍힌다.

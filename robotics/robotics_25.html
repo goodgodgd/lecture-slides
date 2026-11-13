@@ -1,0 +1,1164 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>25회 · 좌표계와 좌표 변환 | 로봇공학</title>
+<script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}})();</script>
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="assets/lecture.css">
+</head>
+<body>
+<header class="bar">
+  <div class="barin wide">
+    <a class="up" href="index.html" aria-label="로봇공학 회차 목록"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a>
+    <nav class="crumb" aria-label="경로">
+      <a href="../index.html">강의자료</a><span class="sep">/</span><a href="index.html">로봇공학</a><span class="sep">/</span><span class="here">25회 · 좌표계와 좌표 변환</span>
+    </nav>
+    <span class="spacer"></span>
+    <div class="navlinks"><a class="navlink" href="robotics_24.html" aria-label="이전 회차"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a><a class="navlink" href="robotics_26.html" aria-label="다음 회차"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></a></div>
+    <div class="seg" data-theme-switch role="group" aria-label="밝기">
+      <button type="button" data-mode="auto" aria-pressed="true">자동</button>
+      <button type="button" data-mode="light" aria-pressed="false">밝게</button>
+      <button type="button" data-mode="dark" aria-pressed="false">어둡게</button>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="toc-title">이 회차 목차</div>
+  <a href="#why">① 극좌표와 직교좌표</a>
+  <a href="#rep">② ROS 좌표 규약</a>
+  <a href="#toxy">③ 극좌표 → 직교좌표 (v1)</a>
+  <a href="#dist">④ 두 점 사이의 거리 (v2)</a>
+  <a href="#transform">⑤ 2차원 회전과 평행이동 (v3)</a>
+  <a href="#homogeneous">⑥ 동차좌표</a>
+  <a href="#lab">🧪 실습</a>
+  <a href="#exercise">📝 연습문제</a>
+  <a href="#summary">한 장 요약</a>
+  <a href="#prompts">🤖 프롬프트 모음</a>
+  <a href="#check">✅ 점검</a>
+  <a href="#more">조금 더 알아두면</a>
+</nav>
+
+<main>
+
+  <div class="lec-no">로봇공학 · 25회 · 4부 로봇과 프로젝트</div>
+  <h1>좌표계와 좌표 변환</h1>
+
+  <div class="questions">
+    <span class="lab">오늘 답할 질문</span>
+    <ol>
+      <li>라이다가 준 「이 방향으로 몇 m」 두 개만으로 <strong>두 물체 사이의 간격</strong>을 알 수 있나?</li>
+      <li>로봇에서 <strong>x는 어느 쪽이고 y는 어느 쪽</strong>인가? 화면 좌표와 무엇이 다른가?</li>
+      <li>거리와 각도를 <strong>x, y로 바꾸는 식</strong>은 무엇이고, C++에서 쓸 때 무엇을 조심하나?</li>
+      <li>같은 점인데 <strong>기준을 바꾸면 좌표가 달라진다.</strong> 무엇과 무엇을 하면 한 기준의 좌표를 다른 기준으로 옮길 수 있나?</li>
+    </ol>
+  </div>
+
+  <p>
+    24회에서 스캔의 값 하나가 「어느 방향으로 몇 m」인지를 읽어 냈고, 정면 한 방향의 거리로 로봇을 세워 봤다.
+    그런데 콘 트랙에서 알아야 하는 것은 한 방향의 거리가 아니다. <strong>왼쪽 콘과 오른쪽 콘 사이가 얼마나 벌어졌는지, 그 사이의 가운데가 어디인지</strong>다.
+    그것은 방향과 거리를 따로 봐서는 나오지 않는다.
+  </p>
+  <p>
+    오늘은 스캔의 값들을 <strong>평면 위의 점 (x, y)</strong>로 편다. 식은 두 줄이고 고등학교 때 본 삼각함수다. 새 프로그램 <code>scan_points</code>를 24회의 <code>cone_drive</code> 패키지 안에 하나 더 만들어 세 단계로 키운다 —
+    점으로 펴고(v1), 두 점 사이를 재고(v2), 기준을 라이다에서 로봇 몸체로 옮긴다(v3).
+    <code>cone_drive</code>에 바로 이어 붙이지 않는 것은 오늘 볼 것(좌표)만 남기기 위해서다. 바퀴는 오늘 돌리지 않는다. 27회에서 둘을 합친다.
+  </p>
+  <p>
+    이 변환도 에이전트에게 맡기면 금방 나온다. 다만 여기에는 <strong>틀려도 그럴듯한 숫자가 나오는 자리</strong>가 둘 있다 — 각도의 단위와 좌우의 부호다.
+    둘 다 빌드가 잡아 주지 않고, 로봇 앞에 물건을 놓고 자로 재 봐야만 드러난다.
+  </p>
+
+
+  <!-- ══════════ ① 극좌표와 직교좌표 ══════════ -->
+  <h2 id="why">① 극좌표와 직교좌표 <span class="badge b-red">🔴 사람이 이해한다</span></h2>
+
+  <p>
+    24회 ④절에서 이 로봇은 0도 방향 0.76m에, 90도 방향 3.2m에 무언가가 있었다. 이 둘 사이는 얼마나 떨어져 있을까?
+    두 거리를 빼면 3.2 − 0.76 = 2.44m가 나온다. 맞는 답일까?
+  </p>
+  <p>
+    아니다. 둘이 <strong>같은 방향</strong>에 있을 때만 거리의 차가 간격이 된다. 한쪽은 앞에, 한쪽은 왼쪽에 있으니 둘 사이는 비스듬한 선이고, 그 길이는 2.44m보다 길다.
+    거꾸로 두 물체가 <strong>같은 거리</strong>에 있으면 거리의 차는 0인데, 방향이 다르면 둘은 분명히 떨어져 있다. 「방향과 거리」로 적은 위치끼리는 <strong>빼서 간격을 구할 수 없다.</strong>
+  </p>
+
+  <h3>1-1 정의</h3>
+  <div class="tablewrap">
+  <table>
+    <tr><th>이름</th><th>점 하나를 무엇으로 적나</th><th>어디서 나오나</th><th>무엇에 편한가</th></tr>
+    <tr><td><strong>극좌표</strong> (polar coordinates)</td><td>거리 r 과 각도 θ</td><td>라이다가 재는 방식 그대로 — <code>ranges[i]</code>와 그 각도</td><td>「이 방향에 뭐가 있나」</td></tr>
+    <tr><td><strong>직교좌표</strong> (Cartesian coordinates)</td><td>서로 직각인 두 축 위의 값 x 와 y</td><td>극좌표에서 계산해 만든다</td><td>두 점 사이의 간격, 가운데 점, 옮기기</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 같은 점을 적는 두 가지 방법이고, 어느 쪽이 더 옳은 것은 아니다. 라이다는 돌면서 재므로 극좌표로 내놓고,
+    <strong>점끼리 견주는 계산</strong>은 직교좌표에서 해야 뺄셈이 뜻을 가진다. 그래서 받자마자 직교좌표로 바꿔 놓고 시작한다. 이것을 흔히 「극좌표를 편다」고 한다.
+  </div>
+
+
+  <!-- ══════════ ② ROS 좌표 규약 ══════════ -->
+  <h2 id="rep">② ROS 좌표 규약 <span class="badge b-red">🔴 사람이 외운다</span></h2>
+
+  <p>
+    x와 y로 적으려면 <strong>어느 쪽이 x이고 어느 쪽이 +인지</strong>부터 정해야 한다. 사람마다 다르게 정하면 남의 노드가 보낸 좌표를 쓸 수 없으므로 ROS는 이것을 약속으로 못 박아 두었다.
+  </p>
+
+  <h3>2-1 정의</h3>
+  <div class="tablewrap">
+  <table>
+    <tr><th>무엇</th><th>약속</th><th>24회에서 본 것과의 연결</th></tr>
+    <tr><td><strong>x</strong></td><td>로봇의 <strong>앞</strong>이 +</td><td>각도 0도의 방향</td></tr>
+    <tr><td><strong>y</strong></td><td>로봇의 <strong>왼쪽</strong>이 +</td><td>각도 90도의 방향</td></tr>
+    <tr><td><strong>z</strong></td><td><strong>위</strong>가 +</td><td>(바닥을 달리는 로봇은 거의 쓰지 않는다)</td></tr>
+    <tr><td><strong>회전</strong></td><td>위에서 내려다봤을 때 <strong>반시계 방향</strong>이 +</td><td>각도가 커지는 방향. <code>angular.z</code>가 +이면 왼쪽으로 돈다</td></tr>
+    <tr><td>단위</td><td>길이 m · 각도 rad · 시간 s</td><td><code>angle_increment</code>가 rad였던 까닭</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 수학 시간의 좌표평면(x가 오른쪽, y가 위)을 <strong>왼쪽으로 90도 돌려 놓은 것</strong>이라고 보면 된다. x축에서 y축 쪽으로 도는 방향이 +인 것은 수학과 같다.
+    다른 것은 화면 좌표다 — 그림 파일이나 게임 화면은 x가 오른쪽, <strong>y가 아래</strong>다. 그쪽에 익숙하면 좌우를 뒤집기 쉽고,
+    「왼쪽 콘인데 로봇이 오른쪽으로 돈다」는 일의 상당수가 여기서 나온다. 이 약속은 ROS의 표준 문서 REP 103에 적혀 있다.
+  </div>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 처음 나오는 이름</p>
+    <dl>
+      <dt>REP</dt>
+      <dd>ROS Enhancement Proposal의 약자. ROS 커뮤니티가 합의한 표준을 번호를 붙여 모아 둔 문서들이다. 103번이 단위와 좌표 규약이다.</dd>
+      <dt>y가 +이면 왼쪽</dt>
+      <dd>오늘 내내 쓰는 판정이다. 점의 y가 +이면 로봇의 왼쪽에, −이면 오른쪽에 있다. 27회에서 콘을 좌우로 나눌 때 이 한 줄을 쓴다.</dd>
+    </dl>
+  </div>
+
+
+  <!-- ══════════ ③ 극좌표 → 직교좌표 ══════════ -->
+  <h2 id="toxy">③ 극좌표 → 직교좌표 (v1) <span class="badge b-red">🔴 사람이 확인한다</span></h2>
+
+  <h3>3-1 개념 — 식 두 줄</h3>
+  <p>
+    거리 r, 각도 θ인 점을 ②절의 축 위에 놓으면 직각삼각형이 하나 생긴다. 빗변이 r이고, x축 쪽 변이 x, 그것과 직각인 변이 y다.
+  </p>
+<pre><code>θ = angle_min + i × angle_increment        (24회)
+
+x = r × cos θ
+y = r × sin θ</code></pre>
+  <figure class="narrow">
+    <img src="assets/img/25_polar_to_xy.png" width="520"
+         alt="아래 오른쪽의 검은 점(라이다)에서 위로 붉은 x축, 왼쪽으로 초록 y축이 뻗는다. 라이다에서 왼쪽 위의 점 P까지 파란 선 r 0.195미터가 x축과 30도를 이룬다. P에서 x축과 y축으로 내린 점선에 x는 r 코사인 세타 0.169, y는 r 사인 세타 0.097이라고 적혀 있다">
+    <figcaption>이 로봇의 스캔에서 인덱스 18의 값. 위에서 내려다본 모습이라 <strong>x(앞)가 위, y(왼쪽)가 왼쪽</strong>이다.
+      각도 θ는 x축에서 y축 쪽으로 잰다.</figcaption>
+  </figure>
+
+  <h3>3-2 숫자를 넣어 본다</h3>
+  <p>그림의 점이다. 인덱스 18, <code>angle_min</code> 0.0024 rad, <code>angle_increment</code> 0.02896 rad, 거리 0.195 m.</p>
+<pre><code>θ = 0.0024 + 18 × 0.02896 = 0.5237 rad   (= 30.0도)
+
+x = 0.195 × cos(0.5237) = 0.195 × 0.866 = 0.169 m     앞으로 16.9 cm
+y = 0.195 × sin(0.5237) = 0.195 × 0.500 = 0.097 m     왼쪽으로 9.7 cm</code></pre>
+  <p>
+    y가 +이니 로봇의 왼쪽이다. 각도가 0~180도 사이이면 sin이 +라서 y가 +, 180~360도 사이이면 y가 −가 된다. <strong>좌우는 따로 따지지 않아도 부호로 나온다.</strong>
+  </p>
+
+  <h3>3-3 1단계 (v1) — 스캔 전체를 점으로 편다</h3>
+  <p>
+    24회의 <code>cone_drive</code> 패키지에 실행 파일을 하나 더 만든다. <code>~/ros_ws/src/cone_drive/src/scan_points.cpp</code>를 새로 만들고, <code>CMakeLists.txt</code>에 석 줄을 더한다.
+  </p>
+  <div class="codelabel bad">고치기 전 — CMakeLists.txt 의 가운데 (24회 v5)</div>
+<pre class="lang-cmake before"><code># 만든 실행 파일을 ros2 run 이 찾는 자리에 설치한다
+install(TARGETS cone_drive
+  DESTINATION lib/${PROJECT_NAME})</code></pre>
+  <div class="codelabel good">고친 뒤 — 실행 파일 하나 더, install 에 이름 하나</div>
+<pre class="lang-cmake after"><code># 25회 — 실행 파일 scan_points. LaserScan 을 받아 점의 좌표(x, y)로 편다
+add_executable(scan_points src/scan_points.cpp)
+target_link_libraries(scan_points PRIVATE
+  rclcpp::rclcpp ${sensor_msgs_TARGETS})
+
+# 만든 실행 파일을 ros2 run 이 찾는 자리에 설치한다
+install(TARGETS cone_drive scan_points
+  DESTINATION lib/${PROJECT_NAME})</code></pre>
+  <p>점 하나를 담을 타입을 만들고, 식 두 줄을 함수로 옮긴다.</p>
+<pre class="lang-cpp"><code>// 평면 위의 점 하나 (m). x 는 앞, y 는 왼쪽
+struct Point
+{
+  double x;
+  double y;
+};</code></pre>
+<pre class="lang-cpp"><code>  // 스캔의 쓸 수 있는 값을 전부 점으로 편다 — x = r·cos θ, y = r·sin θ
+  std::vector&lt;Point&gt; to_points(const sensor_msgs::msg::LaserScan &amp; scan) const
+  {
+    std::vector&lt;Point&gt; points;
+    points.reserve(scan.ranges.size());          // 많아야 이만큼이다 — 재할당을 피한다 (12회)
+    for (std::size_t i = 0; i &lt; scan.ranges.size(); ++i) {
+      const double r = scan.ranges[i];
+      if (!is_valid(scan.ranges[i])) {
+        continue;
+      }
+      const double theta = scan.angle_min + i * scan.angle_increment;   // rad — cos · sin 은 라디안을 받는다
+      points.push_back(Point{r * std::cos(theta), r * std::sin(theta)});
+    }
+    return points;
+  }</code></pre>
+  <p>
+    <strong>거르기가 변환보다 먼저다.</strong> NaN에 cos을 곱하면 NaN인 점이 생기고, 그 점은 뒤의 모든 계산을 NaN으로 물들인다. <code>is_valid</code>는 24회 것 그대로다.
+    콜백에서는 펴진 점들 가운데 라이다에서 가장 가까운 것을 13회의 <code>std::min_element</code>로 찾아 찍는다.
+  </p>
+<pre class="lang-cpp"><code>    // 원점(라이다)에서 가장 가까운 점 — 거리는 std::hypot(x, y)
+    const auto nearest = std::min_element(
+      points.begin(), points.end(),
+      [](const Point &amp; a, const Point &amp; b) { return std::hypot(a.x, a.y) &lt; std::hypot(b.x, b.y); });</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt><code>std::cos(theta)</code> · <code>std::sin(theta)</code></dt>
+      <dd><code>&lt;cmath&gt;</code>의 삼각함수다. <strong>인자는 라디안</strong>이다. 30도의 cos을 구하려고 <code>std::cos(30)</code>이라고 쓰면 「30 라디안」의 cos이 나온다 — 오류 없이 엉뚱한 값이다.
+        메시지의 각도가 이미 rad라서 <code>angle_min + i * angle_increment</code>를 그대로 넣으면 된다.</dd>
+      <dt><code>std::hypot(a, b)</code></dt>
+      <dd>√(a² + b²)를 돌려준다. 직각삼각형의 빗변(hypotenuse)에서 온 이름이다. 원점에서 점 (x, y)까지의 거리가 <code>std::hypot(x, y)</code>다.</dd>
+      <dt><code>struct Point</code> · <code>Point{a, b}</code></dt>
+      <dd>9회의 클래스와 같은 것인데 멤버가 처음부터 <code>public</code>이다. 함수 없이 값 두 개를 묶기만 할 때 <code>struct</code>를 쓴다. <code>Point{a, b}</code>는 x에 a, y에 b를 넣은 점 하나를 그 자리에서 만든다.</dd>
+      <dt>람다의 인자 <code>(const Point &amp; a, const Point &amp; b)</code></dt>
+      <dd>14회의 람다다. <code>min_element</code>에게 「둘 중 어느 쪽이 더 작은가」를 알려 준다. 여기서는 원점에서 더 가까운 쪽이 작은 쪽이다.</dd>
+    </dl>
+  </div>
+
+  <!-- fullcode "전체 코드 — cone_drive/ (scan_points 1단계 · v1. cone_drive.cpp · package.xml 은 24회 v5 그대로)" build="cd ~/ros_ws && colcon build --packages-select cone_drive && source install/setup.bash && ros2 run cone_drive scan_points"
+       l25_coords/steps/step1/cone_drive/src/scan_points.cpp as cone_drive/src/scan_points.cpp
+       l25_coords/steps/step1/cone_drive/CMakeLists.txt as cone_drive/CMakeLists.txt
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — cone_drive/ (scan_points 1단계 · v1. cone_drive.cpp · package.xml 은 24회 v5 그대로)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select cone_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run cone_drive scan_points</code></p>
+  <div class="codefile"><div class="fname">cone_drive/src/scan_points.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 25회 scan_points — v1 (1단계: 거리와 각도를 좌표 x, y 로 편다 — 가장 가까운 점을 찍는다)
+#include &lt;algorithm&gt;
+#include &lt;cmath&gt;
+#include &lt;memory&gt;
+#include &lt;vector&gt;
+
+#include &quot;rclcpp/rclcpp.hpp&quot;
+#include &quot;sensor_msgs/msg/laser_scan.hpp&quot;
+
+// 평면 위의 점 하나 (m). x 는 앞, y 는 왼쪽
+struct Point
+{
+  double x;
+  double y;
+};
+
+class ScanPoints : public rclcpp::Node
+{
+public:
+  ScanPoints()
+  : Node(&quot;scan_points&quot;)
+  {
+    // 믿을 수 있는 거리 범위 — 라이다 사양표에서 가져온다 (24회. LDS-02 기준)
+    this-&gt;declare_parameter(&quot;range_min&quot;, 0.16);
+    this-&gt;declare_parameter(&quot;range_max&quot;, 8.0);
+    range_min_ = this-&gt;get_parameter(&quot;range_min&quot;).as_double();
+    range_max_ = this-&gt;get_parameter(&quot;range_max&quot;).as_double();
+
+    scan_sub_ = this-&gt;create_subscription&lt;sensor_msgs::msg::LaserScan&gt;(
+      &quot;/scan&quot;, rclcpp::SensorDataQoS(),
+      [this](sensor_msgs::msg::LaserScan::ConstSharedPtr msg) { on_scan(msg); });
+  }
+
+private:
+  // /scan 이 올 때마다 불린다 — 점으로 펴고, 가장 가까운 점을 1초에 한 번 찍는다
+  void on_scan(sensor_msgs::msg::LaserScan::ConstSharedPtr msg)
+  {
+    const std::vector&lt;Point&gt; points = to_points(*msg);
+    if (points.empty()) {
+      RCLCPP_WARN_THROTTLE(this-&gt;get_logger(), *this-&gt;get_clock(), 1000, &quot;쓸 수 있는 점이 없습니다&quot;);
+      return;
+    }
+    // 원점(라이다)에서 가장 가까운 점 — 거리는 std::hypot(x, y)
+    const auto nearest = std::min_element(
+      points.begin(), points.end(),
+      [](const Point &amp; a, const Point &amp; b) { return std::hypot(a.x, a.y) &lt; std::hypot(b.x, b.y); });
+    RCLCPP_INFO_THROTTLE(this-&gt;get_logger(), *this-&gt;get_clock(), 1000,
+                         &quot;점 %zu개 · 가장 가까운 점 x = %.3f m, y = %.3f m (거리 %.3f m)&quot;,
+                         points.size(), nearest-&gt;x, nearest-&gt;y, std::hypot(nearest-&gt;x, nearest-&gt;y));
+  }
+
+  // 쓸 수 있는 거리인가 — NaN · inf 가 아니고 사양 범위 안에 있다 (24회)
+  bool is_valid(float r) const
+  {
+    return std::isfinite(r) &amp;&amp; r &gt;= range_min_ &amp;&amp; r &lt;= range_max_;
+  }
+
+  // 스캔의 쓸 수 있는 값을 전부 점으로 편다 — x = r·cos θ, y = r·sin θ
+  std::vector&lt;Point&gt; to_points(const sensor_msgs::msg::LaserScan &amp; scan) const
+  {
+    std::vector&lt;Point&gt; points;
+    points.reserve(scan.ranges.size());          // 많아야 이만큼이다 — 재할당을 피한다 (12회)
+    for (std::size_t i = 0; i &lt; scan.ranges.size(); ++i) {
+      const double r = scan.ranges[i];
+      if (!is_valid(scan.ranges[i])) {
+        continue;
+      }
+      const double theta = scan.angle_min + i * scan.angle_increment;   // rad — cos · sin 은 라디안을 받는다
+      points.push_back(Point{r * std::cos(theta), r * std::sin(theta)});
+    }
+    return points;
+  }
+
+  double range_min_ = 0.0;        // 파라미터 range_min 에서 읽는다 (m)
+  double range_max_ = 0.0;        // 파라미터 range_max 에서 읽는다 (m)
+
+  rclcpp::Subscription&lt;sensor_msgs::msg::LaserScan&gt;::SharedPtr scan_sub_;
+};
+
+int main(int argc, char ** argv)
+{
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared&lt;ScanPoints&gt;();
+  rclcpp::spin(node);            // 구독 콜백은 이 안에서 불린다
+  rclcpp::shutdown();
+  return 0;
+}</code></pre></div>
+  <div class="codefile"><div class="fname">cone_drive/CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre class="lang-cmake"><code>cmake_minimum_required(VERSION 3.8)
+project(cone_drive)
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES &quot;Clang&quot;)
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+# find dependencies
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+
+# 24회 — 실행 파일 cone_drive. LaserScan(sensor_msgs)을 받는다
+# 24회 5단계 — TwistStamped(geometry_msgs)를 보낸다
+add_executable(cone_drive src/cone_drive.cpp)
+target_link_libraries(cone_drive PRIVATE
+  rclcpp::rclcpp ${sensor_msgs_TARGETS} ${geometry_msgs_TARGETS})
+
+# 25회 — 실행 파일 scan_points. LaserScan 을 받아 점의 좌표(x, y)로 편다
+add_executable(scan_points src/scan_points.cpp)
+target_link_libraries(scan_points PRIVATE
+  rclcpp::rclcpp ${sensor_msgs_TARGETS})
+
+# 만든 실행 파일을 ros2 run 이 찾는 자리에 설치한다
+install(TARGETS cone_drive scan_points
+  DESTINATION lib/${PROJECT_NAME})
+
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  # the following line skips the linter which checks for copyrights
+  # comment the line when a copyright and license is added to all source files
+  set(ament_cmake_copyright_FOUND TRUE)
+  # the following line skips cpplint (only works in a git repo)
+  # comment the line when this package is in a git repo and when
+  # a copyright and license is added to all source files
+  set(ament_cmake_cpplint_FOUND TRUE)
+  ament_lint_auto_find_test_dependencies()
+endif()
+
+ament_package()</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <h3>3-4 실제로 나온 출력</h3>
+  <div class="keycmd">
+    <p class="boxtitle">⌨ 빌드하고 돌리기 — bringup이 떠 있는 채로, 터미널 2에서</p>
+    <pre class="lang-sh"><code>$ cd ~/ros_ws
+$ colcon build --packages-select cone_drive
+$ ros2 run cone_drive scan_points</code></pre>
+    <p>패키지는 <code>cone_drive</code> 그대로이고 <strong>실행 파일 이름</strong>이 <code>scan_points</code>다(17회 — 패키지 하나에 실행 파일 여럿). 패키지 자체는 24회에 이미 알려 두었으므로 <code>source</code>는 다시 치지 않아도 된다.</p>
+  </div>
+<pre class="lang-sh"><code>$ ros2 run cone_drive scan_points
+[INFO] [1794550528.511304476] [scan_points]: 점 195개 · 가장 가까운 점 x = 0.143 m, y = 0.101 m (거리 0.175 m)
+[INFO] [1794550529.551192701] [scan_points]: 점 195개 · 가장 가까운 점 x = 0.143 m, y = 0.099 m (거리 0.174 m)
+[INFO] [1794550530.611134827] [scan_points]: 점 194개 · 가장 가까운 점 x = 0.142 m, y = 0.100 m (거리 0.174 m)
+[INFO] [1794550531.651417575] [scan_points]: 점 187개 · 가장 가까운 점 x = 0.144 m, y = 0.100 m (거리 0.175 m)</code></pre>
+  <p>
+    값 215개쯤 가운데 190개 안팎이 점이 됐다. 가장 가까운 것은 <strong>앞으로 14cm, 왼쪽으로 10cm</strong> 자리에 있다. 「35도 방향 17.5cm」보다 손으로 가리키기 쉬운 말이 됐다.
+    x와 y가 mm 단위에서만 흔들리는 것도 본다 — 가까운 점이라 그렇다(23회).
+  </p>
+  <figure>
+    <img src="assets/img/25_scan_xy.png" width="680"
+         alt="가로세로 1미터 눈금 위에 파란 점 195개가 방의 윤곽을 이룬다. 가운데 검은 점에서 위로 붉은 x축 화살표, 왼쪽으로 초록 y축 화살표가 나간다. x축 위의 점 A 0.76, 0.00과 왼쪽 멀리의 점 B 0.02, 3.23이 주황색으로 표시되고 둘을 잇는 점선에 3.32미터라고 적혀 있다">
+    <figcaption>같은 프레임을 전부 편 모습. 23회 그림과 같은 방인데 이제 <strong>점마다 좌표가 있다.</strong> 눈금 한 칸이 1m다.
+      주황색 A·B는 ④절에서 쓴다 — A는 0도 방향, B는 90도 방향에서 가장 가까운 값이다.</figcaption>
+  </figure>
+
+
+  <!-- ══════════ ④ 두 점 사이의 거리 ══════════ -->
+  <h2 id="dist">④ 두 점 사이의 거리 (v2) <span class="badge b-yellow">🟡 맡기되 확인</span></h2>
+
+  <p>①절의 물음으로 돌아간다. 0도 쪽의 점 A와 90도 쪽의 점 B 사이는 얼마인가? 이제 둘 다 좌표가 있다.</p>
+
+  <h3>4-1 개념 — 식</h3>
+<pre><code>d = √( (x₁ − x₂)² + (y₁ − y₂)² )</code></pre>
+  <p>
+    x끼리의 차와 y끼리의 차를 두 변으로 하는 직각삼각형의 빗변이다. 직교좌표에서는 <strong>같은 축의 값끼리 빼는 것이 뜻을 가진다</strong> — 극좌표에서 안 되던 것이 이것이다.
+  </p>
+
+  <h3>4-2 숫자를 넣어 본다</h3>
+<pre><code>A = (0.763, 0.002)      0도 방향, 거리 0.763 m
+B = (0.015, 3.234)      90도 방향, 거리 3.234 m
+
+x 의 차 = 0.763 − 0.015 =  0.748
+y 의 차 = 0.002 − 3.234 = −3.232
+
+d = √( 0.748² + 3.232² ) = √( 0.560 + 10.446 ) = √11.006 = 3.318 m</code></pre>
+  <div class="interp">
+    <strong>해석:</strong> 3.32m다. ①절에서 거리를 뺀 2.44m보다 88cm나 길다. 위 그림의 주황 점선이 이 길이다.
+    27회에서는 이 식으로 「왼쪽 콘과 오른쪽 콘 사이가 트랙 폭쯤 되는가」와 「이웃한 두 점이 한 콘에 속하는가」를 가린다.
+  </div>
+
+  <h3>4-3 2단계 (v2) — 두 방향의 점과 그 사이 거리</h3>
+  <p>
+    보고 싶은 두 방향을 파라미터 <code>angle_a_deg</code>·<code>angle_b_deg</code>로 받는다(기본 0도와 90도). 그 방향에 가장 가까운 값을 24회의 <code>index_near</code>와 같은 식으로 찾아 점으로 바꾼다.
+    그 값을 못 쟀으면 점이 없으므로 <code>std::optional&lt;Point&gt;</code>를 돌려준다.
+  </p>
+<pre class="lang-cpp"><code>  // 두 점 사이의 거리 — √((x₁ − x₂)² + (y₁ − y₂)²)
+  double distance(const Point &amp; a, const Point &amp; b) const
+  {
+    return std::hypot(a.x - b.x, a.y - b.y);
+  }
+
+  // 각도 deg(도)에 가장 가까운 값을 점으로 — 그 값을 못 쟀으면 「없다」
+  std::optional&lt;Point&gt; point_at(const sensor_msgs::msg::LaserScan &amp; scan, double deg) const
+  {
+    const double rad = deg * M_PI / 180.0;
+    const long n = static_cast&lt;long&gt;(scan.ranges.size());
+    long i = std::lround((rad - scan.angle_min) / scan.angle_increment) % n;   // 24회의 index_near
+    if (i &lt; 0) {
+      i += n;
+    }
+    const double r = scan.ranges[i];
+    if (!is_valid(scan.ranges[i])) {
+      return std::nullopt;
+    }
+    const double theta = scan.angle_min + i * scan.angle_increment;
+    return Point{r * std::cos(theta), r * std::sin(theta)};
+  }</code></pre>
+  <div class="codelabel bad">고치기 전 (v1) — on_scan: 전부 펴서 가장 가까운 점을 찍는다</div>
+<pre class="lang-cpp before"><code>    const std::vector&lt;Point&gt; points = to_points(*msg);
+    if (points.empty()) {
+      RCLCPP_WARN_THROTTLE(this-&gt;get_logger(), *this-&gt;get_clock(), 1000, "쓸 수 있는 점이 없습니다");
+      return;
+    }
+    // 원점(라이다)에서 가장 가까운 점 — 거리는 std::hypot(x, y)
+    const auto nearest = std::min_element(
+      points.begin(), points.end(),
+      [](const Point &amp; a, const Point &amp; b) { return std::hypot(a.x, a.y) &lt; std::hypot(b.x, b.y); });
+    RCLCPP_INFO_THROTTLE(this-&gt;get_logger(), *this-&gt;get_clock(), 1000,
+                         "점 %zu개 · 가장 가까운 점 x = %.3f m, y = %.3f m (거리 %.3f m)",
+                         points.size(), nearest-&gt;x, nearest-&gt;y, std::hypot(nearest-&gt;x, nearest-&gt;y));</code></pre>
+  <div class="codelabel good">고친 뒤 (v2) — 두 방향의 점과 그 사이 거리를 찍는다</div>
+<pre class="lang-cpp after"><code>    const std::optional&lt;Point&gt; a = point_at(*msg, angle_a_deg_);
+    const std::optional&lt;Point&gt; b = point_at(*msg, angle_b_deg_);
+    if (!a || !b) {
+      RCLCPP_WARN_THROTTLE(this-&gt;get_logger(), *this-&gt;get_clock(), 1000,
+                           "%.0f도 또는 %.0f도 방향을 못 봤습니다", angle_a_deg_, angle_b_deg_);
+      return;
+    }
+    RCLCPP_INFO_THROTTLE(this-&gt;get_logger(), *this-&gt;get_clock(), 1000,
+                         "A(%.0f도) x = %.3f, y = %.3f · B(%.0f도) x = %.3f, y = %.3f · 두 점 사이 %.3f m",
+                         angle_a_deg_, a-&gt;x, a-&gt;y, angle_b_deg_, b-&gt;x, b-&gt;y, distance(*a, *b));</code></pre>
+  <p>
+    이 단계는 「두 점」만 보므로 스캔 전체를 펴던 <code>to_points</code>는 뺐다. 27회에서 콘을 찾을 때 다시 가져온다.
+  </p>
+
+  <!-- fullcode "전체 코드 — cone_drive/src/scan_points.cpp (2단계 · v2. CMakeLists.txt 는 v1 그대로)" build="cd ~/ros_ws && colcon build --packages-select cone_drive && ros2 run cone_drive scan_points"
+       l25_coords/steps/step2/cone_drive/src/scan_points.cpp as cone_drive/src/scan_points.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — cone_drive/src/scan_points.cpp (2단계 · v2. CMakeLists.txt 는 v1 그대로)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select cone_drive &amp;&amp; ros2 run cone_drive scan_points</code></p>
+  <div class="codefile"><div class="fname">cone_drive/src/scan_points.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 25회 scan_points — v2 (2단계: 두 방향에 있는 점의 좌표를 구하고, 두 점 사이의 거리를 잰다)
+#include &lt;cmath&gt;
+#include &lt;memory&gt;
+#include &lt;optional&gt;
+#include &lt;vector&gt;
+
+#include &quot;rclcpp/rclcpp.hpp&quot;
+#include &quot;sensor_msgs/msg/laser_scan.hpp&quot;
+
+// 평면 위의 점 하나 (m). x 는 앞, y 는 왼쪽
+struct Point
+{
+  double x;
+  double y;
+};
+
+class ScanPoints : public rclcpp::Node
+{
+public:
+  ScanPoints()
+  : Node(&quot;scan_points&quot;)
+  {
+    // 믿을 수 있는 거리 범위 — 라이다 사양표에서 가져온다 (24회. LDS-02 기준)
+    this-&gt;declare_parameter(&quot;range_min&quot;, 0.16);
+    this-&gt;declare_parameter(&quot;range_max&quot;, 8.0);
+    range_min_ = this-&gt;get_parameter(&quot;range_min&quot;).as_double();
+    range_max_ = this-&gt;get_parameter(&quot;range_max&quot;).as_double();
+    // 좌표를 볼 두 방향 (도) — 물건을 놓은 방향으로 바꿔 가며 쓴다
+    this-&gt;declare_parameter(&quot;angle_a_deg&quot;, 0.0);
+    this-&gt;declare_parameter(&quot;angle_b_deg&quot;, 90.0);
+    angle_a_deg_ = this-&gt;get_parameter(&quot;angle_a_deg&quot;).as_double();
+    angle_b_deg_ = this-&gt;get_parameter(&quot;angle_b_deg&quot;).as_double();
+
+    scan_sub_ = this-&gt;create_subscription&lt;sensor_msgs::msg::LaserScan&gt;(
+      &quot;/scan&quot;, rclcpp::SensorDataQoS(),
+      [this](sensor_msgs::msg::LaserScan::ConstSharedPtr msg) { on_scan(msg); });
+  }
+
+private:
+  // /scan 이 올 때마다 불린다 — 두 방향의 점과 그 사이 거리를 1초에 한 번 찍는다
+  void on_scan(sensor_msgs::msg::LaserScan::ConstSharedPtr msg)
+  {
+    const std::optional&lt;Point&gt; a = point_at(*msg, angle_a_deg_);
+    const std::optional&lt;Point&gt; b = point_at(*msg, angle_b_deg_);
+    if (!a || !b) {
+      RCLCPP_WARN_THROTTLE(this-&gt;get_logger(), *this-&gt;get_clock(), 1000,
+                           &quot;%.0f도 또는 %.0f도 방향을 못 봤습니다&quot;, angle_a_deg_, angle_b_deg_);
+      return;
+    }
+    RCLCPP_INFO_THROTTLE(this-&gt;get_logger(), *this-&gt;get_clock(), 1000,
+                         &quot;A(%.0f도) x = %.3f, y = %.3f · B(%.0f도) x = %.3f, y = %.3f · 두 점 사이 %.3f m&quot;,
+                         angle_a_deg_, a-&gt;x, a-&gt;y, angle_b_deg_, b-&gt;x, b-&gt;y, distance(*a, *b));
+  }
+
+  // 두 점 사이의 거리 — √((x₁ − x₂)² + (y₁ − y₂)²)
+  double distance(const Point &amp; a, const Point &amp; b) const
+  {
+    return std::hypot(a.x - b.x, a.y - b.y);
+  }
+
+  // 각도 deg(도)에 가장 가까운 값을 점으로 — 그 값을 못 쟀으면 「없다」
+  std::optional&lt;Point&gt; point_at(const sensor_msgs::msg::LaserScan &amp; scan, double deg) const
+  {
+    const double rad = deg * M_PI / 180.0;
+    const long n = static_cast&lt;long&gt;(scan.ranges.size());
+    long i = std::lround((rad - scan.angle_min) / scan.angle_increment) % n;   // 24회의 index_near
+    if (i &lt; 0) {
+      i += n;
+    }
+    const double r = scan.ranges[i];
+    if (!is_valid(scan.ranges[i])) {
+      return std::nullopt;
+    }
+    const double theta = scan.angle_min + i * scan.angle_increment;
+    return Point{r * std::cos(theta), r * std::sin(theta)};
+  }
+
+  // 쓸 수 있는 거리인가 — NaN · inf 가 아니고 사양 범위 안에 있다 (24회)
+  bool is_valid(float r) const
+  {
+    return std::isfinite(r) &amp;&amp; r &gt;= range_min_ &amp;&amp; r &lt;= range_max_;
+  }
+
+  double range_min_ = 0.0;        // 파라미터 range_min 에서 읽는다 (m)
+  double range_max_ = 0.0;        // 파라미터 range_max 에서 읽는다 (m)
+  double angle_a_deg_ = 0.0;      // 파라미터 angle_a_deg 에서 읽는다 (도)
+  double angle_b_deg_ = 0.0;      // 파라미터 angle_b_deg 에서 읽는다 (도)
+
+  rclcpp::Subscription&lt;sensor_msgs::msg::LaserScan&gt;::SharedPtr scan_sub_;
+};
+
+int main(int argc, char ** argv)
+{
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared&lt;ScanPoints&gt;();
+  rclcpp::spin(node);            // 구독 콜백은 이 안에서 불린다
+  rclcpp::shutdown();
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <p>실제로 나온 출력이다. 둘째는 B를 180도(뒤)로 바꿔 켠 것이다.</p>
+<pre class="lang-sh"><code>$ ros2 run cone_drive scan_points
+[INFO] [1794550549.562252084] [scan_points]: A(0도) x = 0.765, y = -0.018 · B(90도) x = -0.044, y = 3.189 · 두 점 사이 3.307 m
+[INFO] [1794550550.600949824] [scan_points]: A(0도) x = 0.763, y = 0.000 · B(90도) x = 0.035, y = 3.268 · 두 점 사이 3.348 m
+[INFO] [1794550551.641009000] [scan_points]: A(0도) x = 0.761, y = 0.008 · B(90도) x = -0.029, y = 3.195 · 두 점 사이 3.284 m
+$ ros2 run cone_drive scan_points --ros-args -p angle_a_deg:=0.0 -p angle_b_deg:=180.0
+[INFO] [1794550553.351190713] [scan_points]: A(0도) x = 0.765, y = -0.015 · B(180도) x = -1.467, y = 0.000 · 두 점 사이 2.232 m
+[INFO] [1794550554.391418676] [scan_points]: A(0도) x = 0.765, y = -0.010 · B(180도) x = -1.410, y = 0.012 · 두 점 사이 2.175 m</code></pre>
+  <div class="interp">
+    <strong>해석:</strong> 세 가지를 읽는다. 하나, <strong>0도의 점은 x만 크고 y가 0에 가깝다. 90도의 점은 y만 크고, 180도의 점은 x가 −다.</strong> ②절의 약속이 숫자로 확인된다.
+    둘, A의 y가 −0.018 · 0.000 · 0.008로 0 둘레를 오간다. 「0도에 가장 가까운 값」이 프레임마다 0도에서 1도쯤 벗어난 값이기 때문이다(24회 ④절).
+    셋, 두 점 사이가 3.28 ~ 3.35m로 <strong>7cm쯤 흔들린다.</strong> 3m 밖의 B가 흔들리는 탓이다. 자로 잰 값과 댈 때 이만큼은 다를 수 있다고 봐야 한다.
+  </div>
+
+
+  <!-- ══════════ ⑤ 회전과 평행이동 ══════════ -->
+  <h2 id="transform">⑤ 2차원 회전과 평행이동 (v3) <span class="badge b-red">🔴 사람이 이해한다</span></h2>
+
+  <p>
+    지금까지의 좌표는 전부 <strong>라이다를 원점으로</strong> 한 것이다. 그런데 로봇이 도는 중심은 라이다가 아니라 <strong>두 바퀴 사이의 가운데</strong>다.
+    터틀봇3 버거의 라이다는 그 가운데보다 <strong>3.2cm 뒤</strong>에 달려 있다. 「콘이 내 왼쪽 30cm에 있다」를 로봇 몸체 기준으로 말하려면 좌표를 옮겨야 한다.
+  </p>
+
+  <h3>5-1 개념 — 좌표계(coordinate frame)</h3>
+  <p>
+    <strong>좌표계(coordinate frame)</strong>는 <strong>원점 하나와 축의 방향</strong>을 정해 놓은 기준이다. ROS에서는 흔히 줄여서 <strong>프레임</strong>이라고 부른다.
+    같은 점이라도 어느 좌표계에서 읽느냐에 따라 좌표가 달라진다. 점이 움직인 것이 아니라 <strong>읽는 기준이 다른 것</strong>이다.
+  </p>
+  <figure>
+    <img src="assets/img/25_two_frames.png" width="600"
+         alt="검은 점인 몸체 기준의 원점과 그 3.2센티미터 아래 파란 점인 라이다 기준의 원점. 두 원점에서 각각 위로 붉은 x축, 왼쪽으로 초록 y축 화살표가 나간다. 왼쪽 위의 주황 점 P로 두 원점에서 선이 하나씩 이어진다. 상자에 라이다 기준 P는 0.143, 0.100, 몸체 기준 P는 0.111, 0.100이라고 적혀 있다">
+    <figcaption>③절에서 찾은 가장 가까운 점 P를 두 좌표계에서 읽었다. 두 좌표계는 <strong>축의 방향이 같고 원점만 3.2cm 어긋나 있다</strong>(실제 비율 그대로 그렸다).
+      P는 한 점인데 x가 0.143과 0.111로 다르게 읽힌다.</figcaption>
+  </figure>
+
+  <h3>5-2 개념 — 옮기는 방법은 둘의 조합이다</h3>
+  <p>
+    한 좌표계의 좌표를 다른 좌표계의 좌표로 바꾸는 일을 <strong>좌표 변환(coordinate transformation)</strong>이라고 한다. 평면에서는 두 가지를 차례로 하면 된다.
+  </p>
+<pre><code>(1) 회전 — 두 좌표계의 축이 φ 만큼 틀어져 있으면 그만큼 돌린다
+      x′ = x·cos φ − y·sin φ
+      y′ = x·sin φ + y·cos φ
+
+(2) 평행이동 — 두 원점이 (tx, ty) 만큼 떨어져 있으면 그만큼 민다
+      x″ = x′ + tx
+      y″ = y′ + ty</code></pre>
+  <p>
+    여기서 φ와 (tx, ty)는 <strong>옮겨 갈 좌표계에서 본, 원래 좌표계의 방향과 자리</strong>다. 우리 경우에는 「몸체에서 본 라이다」 — 돌아가지 않았고(φ = 0), 3.2cm 뒤에 있다(tx = −0.032, ty = 0).
+  </p>
+
+  <h3>5-3 숫자를 넣어 본다</h3>
+<pre><code>라이다 기준  P = (0.143, 0.100),   φ = 0,   (tx, ty) = (−0.032, 0)
+
+(1) 회전     cos 0 = 1, sin 0 = 0   →   x′ = 0.143,  y′ = 0.100        (그대로)
+(2) 평행이동                          →   x″ = 0.143 − 0.032 = 0.111
+                                          y″ = 0.100 + 0     = 0.100
+
+몸체 기준  P = (0.111, 0.100)</code></pre>
+  <p>
+    라이다가 뒤에 있으니, 라이다가 「14.3cm 앞」이라고 본 점은 몸체 가운데에서는 「11.1cm 앞」이다. 부호가 헷갈릴 때는 이렇게 말로 확인한다 — <strong>뒤에서 본 것이 더 멀리 보인다.</strong>
+    회전이 들어가는 경우도 하나 해 본다. 라이다를 <strong>거꾸로(180도 돌려)</strong> 달았다고 하자. cos 180° = −1, sin 180° = 0이다.
+  </p>
+<pre><code>라이다 기준  A = (0.762, 0.006),   φ = 180도,   (tx, ty) = (−0.032, 0)
+
+(1) 회전     x′ = 0.762·(−1) − 0.006·0 = −0.762
+             y′ = 0.762·0 + 0.006·(−1) = −0.006
+(2) 평행이동  x″ = −0.762 − 0.032 = −0.794,   y″ = −0.006
+
+몸체 기준  A = (−0.794, −0.006)        라이다가 「앞」이라고 본 것이 실제로는 로봇의 뒤에 있다</code></pre>
+
+  <h3>5-4 3단계 (v3) — 라이다 기준에서 몸체 기준으로</h3>
+  <p>파라미터 셋(<code>lidar_x</code> · <code>lidar_y</code> · <code>lidar_yaw_deg</code>)을 더하고, 5-2의 식을 함수 하나로 옮긴다.</p>
+<pre class="lang-cpp"><code>  // 라이다 기준의 점을 로봇 몸체 기준으로 옮긴다 — 라이다가 돌아간 만큼 돌리고, 라이다가 있는 자리만큼 민다
+  Point to_body(const Point &amp; p) const
+  {
+    const double c = std::cos(lidar_yaw_);
+    const double s = std::sin(lidar_yaw_);
+    const double x_rotated = p.x * c - p.y * s;  // 회전
+    const double y_rotated = p.x * s + p.y * c;
+    return Point{x_rotated + lidar_x_, y_rotated + lidar_y_};   // 평행이동
+  }</code></pre>
+  <div class="codelabel bad">고치기 전 (v2) — 라이다 기준 좌표만 찍는다</div>
+<pre class="lang-cpp before"><code>    RCLCPP_INFO_THROTTLE(this-&gt;get_logger(), *this-&gt;get_clock(), 1000,
+                         "A(%.0f도) x = %.3f, y = %.3f · B(%.0f도) x = %.3f, y = %.3f · 두 점 사이 %.3f m",
+                         angle_a_deg_, a-&gt;x, a-&gt;y, angle_b_deg_, b-&gt;x, b-&gt;y, distance(*a, *b));</code></pre>
+  <div class="codelabel good">고친 뒤 (v3) — 같은 두 점을 몸체 기준으로도 찍는다</div>
+<pre class="lang-cpp after"><code>    const Point a_body = to_body(*a);            // 같은 점을 로봇 몸체 기준으로
+    const Point b_body = to_body(*b);
+    RCLCPP_INFO_THROTTLE(this-&gt;get_logger(), *this-&gt;get_clock(), 1000,
+                         "라이다 기준 A (%.3f, %.3f) B (%.3f, %.3f) 사이 %.3f m · 몸체 기준 A (%.3f, %.3f) B (%.3f, %.3f) 사이 %.3f m",
+                         a-&gt;x, a-&gt;y, b-&gt;x, b-&gt;y, distance(*a, *b),
+                         a_body.x, a_body.y, b_body.x, b_body.y, distance(a_body, b_body));</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt>yaw (요)</dt>
+      <dd>위에서 내려다봤을 때 좌우로 도는 회전, 곧 z축 둘레의 회전을 가리키는 이름이다. 바닥을 달리는 로봇의 방향은 이 각 하나로 적는다. 파라미터는 사람이 읽기 쉽게 도(<code>lidar_yaw_deg</code>)로 받고, 생성자에서 rad로 바꿔 <code>lidar_yaw_</code>에 넣어 둔다.</dd>
+      <dt>회전 뒤에 평행이동</dt>
+      <dd>순서가 있다. 먼저 돌리고 나서 민다. 거꾸로 하면 민 것까지 같이 돌아가 다른 자리가 된다.</dd>
+    </dl>
+  </div>
+
+  <!-- fullcode "전체 코드 — cone_drive/src/scan_points.cpp (3단계 · v3 완성본. 26회가 여기서 이어 간다)" build="cd ~/ros_ws && colcon build --packages-select cone_drive && ros2 run cone_drive scan_points"
+       l25_coords/steps/step3/cone_drive/src/scan_points.cpp as cone_drive/src/scan_points.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — cone_drive/src/scan_points.cpp (3단계 · v3 완성본. 26회가 여기서 이어 간다)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select cone_drive &amp;&amp; ros2 run cone_drive scan_points</code></p>
+  <div class="codefile"><div class="fname">cone_drive/src/scan_points.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 25회 scan_points — v3 (3단계: 회전과 평행이동 — 라이다 기준 좌표를 로봇 몸체 기준으로 옮긴다)
+#include &lt;cmath&gt;
+#include &lt;memory&gt;
+#include &lt;optional&gt;
+#include &lt;vector&gt;
+
+#include &quot;rclcpp/rclcpp.hpp&quot;
+#include &quot;sensor_msgs/msg/laser_scan.hpp&quot;
+
+// 평면 위의 점 하나 (m). x 는 앞, y 는 왼쪽
+struct Point
+{
+  double x;
+  double y;
+};
+
+class ScanPoints : public rclcpp::Node
+{
+public:
+  ScanPoints()
+  : Node(&quot;scan_points&quot;)
+  {
+    // 믿을 수 있는 거리 범위 — 라이다 사양표에서 가져온다 (24회. LDS-02 기준)
+    this-&gt;declare_parameter(&quot;range_min&quot;, 0.16);
+    this-&gt;declare_parameter(&quot;range_max&quot;, 8.0);
+    range_min_ = this-&gt;get_parameter(&quot;range_min&quot;).as_double();
+    range_max_ = this-&gt;get_parameter(&quot;range_max&quot;).as_double();
+    // 좌표를 볼 두 방향 (도) — 물건을 놓은 방향으로 바꿔 가며 쓴다
+    this-&gt;declare_parameter(&quot;angle_a_deg&quot;, 0.0);
+    this-&gt;declare_parameter(&quot;angle_b_deg&quot;, 90.0);
+    angle_a_deg_ = this-&gt;get_parameter(&quot;angle_a_deg&quot;).as_double();
+    angle_b_deg_ = this-&gt;get_parameter(&quot;angle_b_deg&quot;).as_double();
+    // 로봇 몸체에서 본 라이다의 자리와 방향 — 터틀봇3 버거는 3.2 cm 뒤에, 돌아가지 않고 달려 있다
+    this-&gt;declare_parameter(&quot;lidar_x&quot;, -0.032);
+    this-&gt;declare_parameter(&quot;lidar_y&quot;, 0.0);
+    this-&gt;declare_parameter(&quot;lidar_yaw_deg&quot;, 0.0);
+    lidar_x_ = this-&gt;get_parameter(&quot;lidar_x&quot;).as_double();
+    lidar_y_ = this-&gt;get_parameter(&quot;lidar_y&quot;).as_double();
+    lidar_yaw_ = this-&gt;get_parameter(&quot;lidar_yaw_deg&quot;).as_double() * M_PI / 180.0;
+
+    scan_sub_ = this-&gt;create_subscription&lt;sensor_msgs::msg::LaserScan&gt;(
+      &quot;/scan&quot;, rclcpp::SensorDataQoS(),
+      [this](sensor_msgs::msg::LaserScan::ConstSharedPtr msg) { on_scan(msg); });
+  }
+
+private:
+  // /scan 이 올 때마다 불린다 — 두 방향의 점과 그 사이 거리를 1초에 한 번 찍는다
+  void on_scan(sensor_msgs::msg::LaserScan::ConstSharedPtr msg)
+  {
+    const std::optional&lt;Point&gt; a = point_at(*msg, angle_a_deg_);
+    const std::optional&lt;Point&gt; b = point_at(*msg, angle_b_deg_);
+    if (!a || !b) {
+      RCLCPP_WARN_THROTTLE(this-&gt;get_logger(), *this-&gt;get_clock(), 1000,
+                           &quot;%.0f도 또는 %.0f도 방향을 못 봤습니다&quot;, angle_a_deg_, angle_b_deg_);
+      return;
+    }
+    const Point a_body = to_body(*a);            // 같은 점을 로봇 몸체 기준으로
+    const Point b_body = to_body(*b);
+    RCLCPP_INFO_THROTTLE(this-&gt;get_logger(), *this-&gt;get_clock(), 1000,
+                         &quot;라이다 기준 A (%.3f, %.3f) B (%.3f, %.3f) 사이 %.3f m · 몸체 기준 A (%.3f, %.3f) B (%.3f, %.3f) 사이 %.3f m&quot;,
+                         a-&gt;x, a-&gt;y, b-&gt;x, b-&gt;y, distance(*a, *b),
+                         a_body.x, a_body.y, b_body.x, b_body.y, distance(a_body, b_body));
+  }
+
+  // 라이다 기준의 점을 로봇 몸체 기준으로 옮긴다 — 라이다가 돌아간 만큼 돌리고, 라이다가 있는 자리만큼 민다
+  Point to_body(const Point &amp; p) const
+  {
+    const double c = std::cos(lidar_yaw_);
+    const double s = std::sin(lidar_yaw_);
+    const double x_rotated = p.x * c - p.y * s;  // 회전
+    const double y_rotated = p.x * s + p.y * c;
+    return Point{x_rotated + lidar_x_, y_rotated + lidar_y_};   // 평행이동
+  }
+
+  // 두 점 사이의 거리 — √((x₁ − x₂)² + (y₁ − y₂)²)
+  double distance(const Point &amp; a, const Point &amp; b) const
+  {
+    return std::hypot(a.x - b.x, a.y - b.y);
+  }
+
+  // 각도 deg(도)에 가장 가까운 값을 점으로 — 그 값을 못 쟀으면 「없다」
+  std::optional&lt;Point&gt; point_at(const sensor_msgs::msg::LaserScan &amp; scan, double deg) const
+  {
+    const double rad = deg * M_PI / 180.0;
+    const long n = static_cast&lt;long&gt;(scan.ranges.size());
+    long i = std::lround((rad - scan.angle_min) / scan.angle_increment) % n;   // 24회의 index_near
+    if (i &lt; 0) {
+      i += n;
+    }
+    const double r = scan.ranges[i];
+    if (!is_valid(scan.ranges[i])) {
+      return std::nullopt;
+    }
+    const double theta = scan.angle_min + i * scan.angle_increment;
+    return Point{r * std::cos(theta), r * std::sin(theta)};
+  }
+
+  // 쓸 수 있는 거리인가 — NaN · inf 가 아니고 사양 범위 안에 있다 (24회)
+  bool is_valid(float r) const
+  {
+    return std::isfinite(r) &amp;&amp; r &gt;= range_min_ &amp;&amp; r &lt;= range_max_;
+  }
+
+  double range_min_ = 0.0;        // 파라미터 range_min 에서 읽는다 (m)
+  double range_max_ = 0.0;        // 파라미터 range_max 에서 읽는다 (m)
+  double angle_a_deg_ = 0.0;      // 파라미터 angle_a_deg 에서 읽는다 (도)
+  double angle_b_deg_ = 0.0;      // 파라미터 angle_b_deg 에서 읽는다 (도)
+  double lidar_x_ = 0.0;          // 파라미터 lidar_x 에서 읽는다 (m) — 몸체에서 본 라이다의 x
+  double lidar_y_ = 0.0;          // 파라미터 lidar_y 에서 읽는다 (m)
+  double lidar_yaw_ = 0.0;        // 파라미터 lidar_yaw_deg 에서 읽어 rad 로 바꿔 둔다
+
+  rclcpp::Subscription&lt;sensor_msgs::msg::LaserScan&gt;::SharedPtr scan_sub_;
+};
+
+int main(int argc, char ** argv)
+{
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared&lt;ScanPoints&gt;();
+  rclcpp::spin(node);            // 구독 콜백은 이 안에서 불린다
+  rclcpp::shutdown();
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <p>실제로 나온 출력이다. 둘째는 <code>lidar_yaw_deg</code>를 180으로 주고 켠 것이다(5-3의 둘째 계산).</p>
+<pre class="lang-sh"><code>$ ros2 run cone_drive scan_points
+[INFO] [1794550573.461083560] [scan_points]: 라이다 기준 A (0.762, 0.011) B (-0.010, 3.234) 사이 3.314 m · 몸체 기준 A (0.730, 0.011) B (-0.042, 3.234) 사이 3.314 m
+[INFO] [1794550574.511573801] [scan_points]: 라이다 기준 A (0.766, -0.025) B (0.034, 3.165) 사이 3.273 m · 몸체 기준 A (0.734, -0.025) B (0.002, 3.165) 사이 3.273 m
+$ ros2 run cone_drive scan_points --ros-args -p lidar_yaw_deg:=180.0
+[INFO] [1794550577.741364066] [scan_points]: 라이다 기준 A (0.762, 0.006) B (-0.002, 3.161) 사이 3.246 m · 몸체 기준 A (-0.794, -0.006) B (-0.030, -3.161) 사이 3.246 m
+[INFO] [1794550578.781732840] [scan_points]: 라이다 기준 A (0.765, -0.012) B (-0.025, 3.197) 사이 3.305 m · 몸체 기준 A (-0.797, 0.012) B (-0.007, -3.197) 사이 3.305 m</code></pre>
+  <div class="interp">
+    <strong>해석:</strong> 첫 실행에서는 두 점 모두 x만 0.032 줄었다. 둘째 실행에서는 부호가 뒤집히고 0.032가 더 빠졌다 — 5-3에서 손으로 구한 (−0.794, −0.006)이 그대로 찍혔다.
+    그리고 어느 줄에서나 <strong>「사이」의 값은 두 기준에서 똑같다.</strong> 좌표계를 바꾸면 좌표는 바뀌지만 <strong>두 점 사이의 거리는 바뀌지 않는다.</strong> 회전과 평행이동은 모양을 늘이거나 찌그러뜨리지 않기 때문이다.
+    변환을 직접 짰을 때 맞게 짰는지 확인하는 쉬운 방법이 이것이다 — 변환 앞뒤로 거리를 재서 같으면 일단 안심할 수 있다.
+  </div>
+
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 3.2cm, 0도는 어디서 나온 숫자인가</div>
+    <p>
+      <code>lidar_x</code>의 기본값 −0.032는 터틀봇3 버거의 설계값을 코드에 옮겨 적은 것이다. 로봇이 와플이면 다르고, 라이다를 다른 자리에 달면 또 다르다.
+      이렇게 <strong>로봇의 생김새를 내 코드에 숫자로 적어 두면</strong> 로봇이 바뀔 때마다 고쳐야 하고, 고치는 것을 잊으면 조용히 틀린다.
+      로봇은 사실 이 숫자를 스스로 알고 있고, 물어볼 수도 있다. 26회의 TF2가 그것이다. 오늘은 식을 손으로 한 번 짜 보는 데까지다.
+    </p>
+  </div>
+
+
+  <!-- ══════════ ⑥ 동차좌표 ══════════ -->
+  <h2 id="homogeneous">⑥ 동차좌표 <span class="badge b-lv">이유만</span></h2>
+
+  <p>
+    좌표계가 둘이면 ⑤절의 식 네 줄로 끝난다. 그런데 로봇에는 좌표계가 여럿이다 — 라이다, 몸체, 바퀴, 출발한 자리. 라이다 → 몸체 → 출발한 자리로 <strong>두 번, 세 번 이어서</strong> 옮기려면
+    회전하고 밀고, 또 회전하고 밀어야 한다. 식이 길어지고 순서를 틀리기 쉽다.
+  </p>
+  <h3>6-1 정의</h3>
+  <p>
+    <strong>동차좌표(homogeneous coordinates)</strong>는 점 (x, y) 끝에 <strong>1을 하나 덧붙여 (x, y, 1)로 적는</strong> 방법이다. 이렇게 하면 회전과 평행이동을 <strong>3×3 행렬 하나</strong>에 함께 담을 수 있다.
+  </p>
+<pre><code>⎡ x″ ⎤   ⎡ cos φ   −sin φ   tx ⎤ ⎡ x ⎤
+⎢ y″ ⎥ = ⎢ sin φ    cos φ   ty ⎥ ⎢ y ⎥
+⎣ 1  ⎦   ⎣   0        0      1 ⎦ ⎣ 1 ⎦
+
+첫 줄을 풀면   x″ = x·cos φ − y·sin φ + tx      ← ⑤절의 (1)과 (2)를 합친 것과 같다</code></pre>
+  <div class="interp">
+    <strong>해석:</strong> 덧붙인 1이 하는 일은 하나다 — <strong>더하기(평행이동)를 곱하기 안으로 끌어들인다.</strong> 그러면 변환 하나가 행렬 하나가 되고,
+    <strong>변환을 잇는 것은 행렬을 곱하는 것</strong>이 된다. 라이다 → 몸체 행렬과 몸체 → 출발한 자리 행렬을 곱해 두면 라이다 → 출발한 자리가 한 번에 된다.
+    이 과목에서 이 행렬을 손으로 곱할 일은 없다. <strong>ROS가 대신 해 준다</strong> — 26회의 TF2가 속에서 하는 일이 이것이고(3차원이라 4×4 행렬을 쓴다), 우리는 「이 점을 저 좌표계로」라고 부탁만 하면 된다.
+  </div>
+
+
+  <!-- ══════════ 🧪 실습 ══════════ -->
+  <h2 id="lab">🧪 실습 — 좌표를 자로 재서 확인하기 <span class="badge b-red">🔴 사람이 잰다</span></h2>
+
+  <div class="lab-block">
+    <p class="boxtitle">🧪 이걸 해 보면 무엇을 알게 되나</p>
+    <p>
+      노드가 찍는 x, y가 <strong>실제 바닥 위의 그 자리</strong>인지. 식이 맞게 옮겨졌는지는 빌드도 에이전트도 말해 주지 못한다. 물건을 놓고 자로 잰 값과 대 보는 것이 유일한 확인이다.
+    </p>
+
+    <p class="boxtitle">준비물</p>
+    <ul>
+      <li>bringup이 떠 있는 로봇(바퀴는 돌리지 않는다), 터미널 2</li>
+      <li>상자나 두꺼운 책 <strong>두 개</strong>, 30cm 자 또는 줄자</li>
+    </ul>
+
+    <p class="boxtitle">절차</p>
+    <ol>
+      <li><strong>(5분)</strong> v2를 켠다. 상자 하나를 <strong>정면 40cm</strong>에 놓는다(라이다 가운데에서 잰다). A의 x가 0.40쯤, y가 0쯤인지 본다.</li>
+      <li><strong>(5분)</strong> 다른 상자를 <strong>왼쪽 30cm</strong>에 놓는다. B의 x가 0쯤, y가 <strong>+</strong>0.30쯤인지 본다.</li>
+      <li><strong>(5분)</strong> 두 상자에서 라이다를 보는 면 사이를 <strong>자로 잰다.</strong> 노드가 찍은 「두 점 사이」와 견준다. 손으로도 계산해 본다 — √(0.40² + 0.30²)는 얼마인가?</li>
+      <li><strong>(5분)</strong> 왼쪽 상자를 <strong>오른쪽 30cm</strong>로 옮기고 <code>--ros-args -p angle_b_deg:=270.0</code>으로 켠다. B의 y 부호가 어떻게 되는가?</li>
+      <li><strong>(5분)</strong> v3로 바꿔 켠다. 몸체 기준 A의 x가 라이다 기준보다 3.2cm 작은지 본다. 바퀴 축의 가운데에서 상자까지 자로 재서 어느 쪽 숫자와 맞는지 본다.</li>
+    </ol>
+
+    <p class="boxtitle">이렇게 되면 성공이다</p>
+    <div class="tablewrap">
+    <table>
+      <tr><th>단계</th><th>보여야 하는 것</th><th>다르게 나오면</th></tr>
+      <tr><td>1</td><td>A ≒ (0.40, 0.0)</td><td>x가 아니라 y가 0.40이면 24회 실습으로 돌아가 정면이 어느 각도인지 다시 본다</td></tr>
+      <tr><td>2</td><td>B ≒ (0.0, +0.30)</td><td>y가 −이면 좌우가 뒤집혔다</td></tr>
+      <tr><td>3</td><td>자로 잰 값 ≒ 노드의 값 ≒ 0.50m</td><td>몇 cm 차이는 정상이다 — 상자의 어느 점이 잡혔는지에 따라 달라진다</td></tr>
+      <tr><td>4</td><td>B ≒ (0.0, −0.30)</td><td>—</td></tr>
+      <tr><td>5</td><td>몸체 기준 x = 라이다 기준 x − 0.032. 바퀴 축에서 잰 값은 몸체 기준과 맞는다</td><td>—</td></tr>
+    </table>
+    </div>
+    <!-- TODO: 미검증 — 1~5번을 상자를 놓고 자로 잰 결과가 없다 (물건을 놓을 사람이 없었다). 노드의 출력은 방을 그대로 둔 채 받은 것이다 -->
+    <!-- TODO: 캡쳐 필요 — 상자 두 개를 놓은 모습과 그때의 터미널 -->
+  </div>
+
+  <p>
+    이 자료의 출력은 터틀봇3 버거(LDS-02) 한 대를 실내에 그대로 두고 받은 것이다. 좌표의 값은 방과 로봇에 따라 다르고, 받을 때마다 mm에서 cm 단위로 흔들린다.
+    로봇이 없을 때는 24회의 기록 파일 <code>bag_room</code>을 틀어 놓고 같은 노드를 돌릴 수 있다 — 그 방에서는 A가 (0.76, 0.0), B가 (0.0, 3.2)쯤으로 나온다.
+  </p>
+
+
+  <!-- ══════════ 📝 연습문제 ══════════ -->
+  <h2 id="exercise">📝 연습문제 — 간격을 틀리게 재는 노드 고치기 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+  <p>
+    아래 <code>gap_check</code>는 「정면의 물체와 왼쪽의 물체 사이가 얼마나 벌어졌나」를 두 가지 방법으로 재는 노드다. <strong>빌드되고 돌아가고, 숫자도 매번 비슷하게 나온다.</strong>
+  </p>
+<pre class="lang-sh"><code>$ ros2 run gap_check gap_check
+[INFO] [1794550691.231062872] [gap_check]: 정면 0.763 m · 왼쪽 1.223 m · 간격(방법 1) 0.460 m · 간격(방법 2) 1.707 m
+[INFO] [1794550692.281169212] [gap_check]: 정면 0.761 m · 왼쪽 1.224 m · 간격(방법 1) 0.463 m · 간격(방법 2) 1.706 m
+[INFO] [1794550693.331109532] [gap_check]: 정면 0.763 m · 왼쪽 1.218 m · 간격(방법 1) 0.455 m · 간격(방법 2) 1.703 m</code></pre>
+  <p>
+    같은 방에서 ④절의 v2는 3.3m라고 했다. 이 노드의 두 답(0.46m, 1.71m)은 서로도 다르고 3.3m와도 다르다. <strong>흔들리지 않는다고 맞는 것은 아니다.</strong> 어디가 틀렸는지 찾아 고친다.
+  </p>
+
+  <!-- fullcode open "연습문제 — 오늘 배운 것이 없는 원본 (gap_check/)" build="cd ~/ros_ws && colcon build --packages-select gap_check && source install/setup.bash && ros2 run gap_check gap_check"
+       l25_coords/steps/exercise_old/gap_check/src/gap_check.cpp as gap_check/src/gap_check.cpp
+       l25_coords/steps/exercise_old/gap_check/CMakeLists.txt as gap_check/CMakeLists.txt
+       l25_coords/steps/exercise_old/gap_check/package.xml as gap_check/package.xml
+  -->
+<details class="fullcode" open>
+  <summary>연습문제 — 오늘 배운 것이 없는 원본 (gap_check/)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select gap_check &amp;&amp; source install/setup.bash &amp;&amp; ros2 run gap_check gap_check</code></p>
+  <div class="codefile"><div class="fname">gap_check/src/gap_check.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 25회 연습문제 gap_check — 원본 (오늘 배운 것이 반영되지 않았다. 빌드되고 돌아간다)
+#include &lt;cmath&gt;
+#include &lt;memory&gt;
+
+#include &quot;rclcpp/rclcpp.hpp&quot;
+#include &quot;sensor_msgs/msg/laser_scan.hpp&quot;
+
+class GapCheck : public rclcpp::Node
+{
+public:
+  GapCheck()
+  : Node(&quot;gap_check&quot;)
+  {
+    scan_sub_ = this-&gt;create_subscription&lt;sensor_msgs::msg::LaserScan&gt;(
+      &quot;/scan&quot;, rclcpp::SensorDataQoS(),
+      [this](sensor_msgs::msg::LaserScan::ConstSharedPtr msg) { on_scan(msg); });
+  }
+
+private:
+  // /scan 이 올 때마다 불린다 — 정면의 물체와 왼쪽의 물체 사이가 얼마나 벌어졌는지 찍는다
+  void on_scan(sensor_msgs::msg::LaserScan::ConstSharedPtr msg)
+  {
+    const float front = msg-&gt;ranges[0];      // 정면
+    const float left = msg-&gt;ranges[90];      // 왼쪽
+
+    // 방법 1 — 두 거리의 차이
+    const float gap1 = std::abs(front - left);
+
+    // 방법 2 — 좌표로 바꿔서 잰다
+    const float x1 = front * std::cos(0);
+    const float y1 = front * std::sin(0);
+    const float x2 = left * std::cos(90);
+    const float y2 = left * std::sin(90);
+    const float gap2 = std::sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+
+    RCLCPP_INFO_THROTTLE(this-&gt;get_logger(), *this-&gt;get_clock(), 1000,
+                         &quot;정면 %.3f m · 왼쪽 %.3f m · 간격(방법 1) %.3f m · 간격(방법 2) %.3f m&quot;,
+                         front, left, gap1, gap2);
+  }
+
+  rclcpp::Subscription&lt;sensor_msgs::msg::LaserScan&gt;::SharedPtr scan_sub_;
+};
+
+int main(int argc, char ** argv)
+{
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared&lt;GapCheck&gt;();
+  rclcpp::spin(node);
+  rclcpp::shutdown();
+  return 0;
+}</code></pre></div>
+  <div class="codefile"><div class="fname">gap_check/CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre class="lang-cmake"><code>cmake_minimum_required(VERSION 3.8)
+project(gap_check)
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES &quot;Clang&quot;)
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+# find dependencies
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
+
+# 25회 연습문제 — 실행 파일 gap_check. LaserScan 을 받아 두 방향 사이의 간격을 잰다
+add_executable(gap_check src/gap_check.cpp)
+target_link_libraries(gap_check PRIVATE
+  rclcpp::rclcpp ${sensor_msgs_TARGETS})
+
+# 만든 실행 파일을 ros2 run 이 찾는 자리에 설치한다
+install(TARGETS gap_check
+  DESTINATION lib/${PROJECT_NAME})
+
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  # the following line skips the linter which checks for copyrights
+  # comment the line when a copyright and license is added to all source files
+  set(ament_cmake_copyright_FOUND TRUE)
+  # the following line skips cpplint (only works in a git repo)
+  # comment the line when this package is in a git repo and when
+  # a copyright and license is added to all source files
+  set(ament_cmake_cpplint_FOUND TRUE)
+  ament_lint_auto_find_test_dependencies()
+endif()
+
+ament_package()</code></pre></div>
+  <div class="codefile"><div class="fname">gap_check/package.xml</div><button onclick="copyCode(this)">복사</button><pre class=""><code>&lt;?xml version=&quot;1.0&quot;?&gt;
+&lt;?xml-model href=&quot;http://download.ros.org/schema/package_format3.xsd&quot; schematypens=&quot;http://www.w3.org/2001/XMLSchema&quot;?&gt;
+&lt;package format=&quot;3&quot;&gt;
+  &lt;name&gt;gap_check&lt;/name&gt;
+  &lt;version&gt;0.0.0&lt;/version&gt;
+  &lt;description&gt;로봇공학 4부 실습 — 25회 연습문제 — 두 방향에 있는 물체 사이의 간격을 재는 노드&lt;/description&gt;
+  &lt;maintainer email=&quot;student@example.com&quot;&gt;Student Name&lt;/maintainer&gt;
+  &lt;license&gt;MIT&lt;/license&gt;
+
+  &lt;buildtool_depend&gt;ament_cmake&lt;/buildtool_depend&gt;
+
+  &lt;depend&gt;rclcpp&lt;/depend&gt;
+  &lt;depend&gt;sensor_msgs&lt;/depend&gt;
+
+  &lt;test_depend&gt;ament_lint_auto&lt;/test_depend&gt;
+  &lt;test_depend&gt;ament_lint_common&lt;/test_depend&gt;
+
+  &lt;export&gt;
+    &lt;build_type&gt;ament_cmake&lt;/build_type&gt;
+  &lt;/export&gt;
+&lt;/package&gt;</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>고칠 것</th><th>오늘 어디서 했나</th><th>확인하는 법</th></tr>
+    <tr><td>방법 1 — 두 거리를 뺀 것을 간격이라고 한다</td><td>①절</td><td>이 방법을 남겨 둘 까닭이 있나</td></tr>
+    <tr><td><code>std::cos(90)</code> · <code>std::sin(90)</code> — 도를 그대로 넣었다</td><td>3-3의 🆕</td><td>왼쪽 점의 x가 0 근처, y가 + 로 나오나</td></tr>
+    <tr><td>각도를 인덱스 번호(0, 90)로 대신했다</td><td>24회 ④절 · 3-1</td><td>「왼쪽」이 1.2m가 아니라 3.2m쯤으로 나오나</td></tr>
+    <tr><td>못 잰 값을 거르지 않았다</td><td>3-3</td><td>NaN일 때 숫자 대신 「못 봤다」가 찍히나</td></tr>
+    <tr><td><code>std::sqrt(…)</code>로 풀어 쓴 거리</td><td>3-3의 🆕</td><td><code>std::hypot</code> 한 줄로 줄었나</td></tr>
+  </table>
+  </div>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    이 gap_check.cpp는 라이다의 0도 방향 점과 90도 방향 점 사이의 간격을 재려는 노드인데 값이 틀려. (1) ranges[0], ranges[90]처럼 인덱스를 각도로 쓰지 말고 angle_min + i * angle_increment로 각도를 구해서 0도와 90도에 가장 가까운 값을 찾아 줘. (2) 그 각도(라디안)로 x = r*cos, y = r*sin을 계산해 줘. std::cos에 도를 넣지 마. (3) NaN, inf, 0.16~8.0 m 밖의 값이면 계산하지 말고 「못 봤다」고 찍어 줘. (4) 간격은 std::hypot로 구하고, 두 거리를 그냥 뺀 「방법 1」은 지워 줘. 고친 곳마다 원래 무엇이 틀렸는지 한 줄씩 적어 줘.
+  </div>
+  <p>받은 코드가 맞는지는 🧪 실습의 3번으로 확인합니다 — 상자 둘을 놓고 자로 잰 값과 맞아야 합니다.</p>
+
+
+  <!-- ── 한 장 요약표 ── -->
+  <h2 id="summary">한 장 요약</h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>오른쪽 「이것만 알면 된다」 열</strong>이다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>용어</th><th>코드에서 이렇게 보인다</th><th>이것만 알면 된다</th></tr>
+    <tr><td><strong>극좌표 · 직교좌표</strong></td><td>(r, θ) · (x, y)</td><td>방향과 거리로 적은 것끼리는 <strong>빼서 간격을 구할 수 없다.</strong> 받자마자 x, y로 폈다</td></tr>
+    <tr><td><strong>ROS 좌표 규약</strong> (REP 103)</td><td>x 앞 · y 왼쪽 · 반시계 +</td><td><strong>y가 +이면 왼쪽.</strong> 화면 좌표(y가 아래)와 다르다</td></tr>
+    <tr><td><strong>극좌표 → 직교좌표</strong></td><td><code>r * std::cos(theta)</code> · <code>r * std::sin(theta)</code></td><td><code>cos</code>·<code>sin</code>은 <strong>라디안</strong>을 받는다. 거르기가 변환보다 먼저다</td></tr>
+    <tr><td><strong>두 점 사이의 거리</strong></td><td><code>std::hypot(a.x - b.x, a.y - b.y)</code></td><td>같은 축의 값끼리 뺀다. 원점까지는 <code>std::hypot(x, y)</code></td></tr>
+    <tr><td><strong>좌표계</strong> (프레임)</td><td>라이다 기준 · 몸체 기준</td><td>같은 점도 기준에 따라 좌표가 다르다. 터틀봇3 버거의 라이다는 3.2cm 뒤</td></tr>
+    <tr><td><strong>좌표 변환</strong></td><td><code>x*c - y*s + tx</code> · <code>x*s + y*c + ty</code></td><td><strong>회전 뒤에 평행이동.</strong> 변환해도 두 점 사이의 거리는 그대로다</td></tr>
+    <tr><td><strong>동차좌표</strong></td><td>(x, y, 1)과 3×3 행렬</td><td>회전과 평행이동을 행렬 하나로. 잇는 것은 곱하기 — ROS가 대신 한다</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 위 넷이 「점 하나를 좌표로 만들고 견주는 법」, 아래 셋이 「그 좌표를 다른 기준으로 옮기는 법」이다.
+    앞의 것은 27회에서 콘을 찾는 데, 뒤의 것은 26회에서 TF2를 이해하는 데 쓰인다.
+  </div>
+
+
+  <!-- ══════════ 🤖 프롬프트 모음 ══════════ -->
+  <h2 id="prompts">🤖 오늘 나온 프롬프트 모음 <span class="badge b-green">🟢 맡긴다</span></h2>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    sensor_msgs/msg/LaserScan을 받아서 쓸 수 있는 값을 전부 (x, y) 점의 std::vector로 바꾸는 C++ 함수를 만들어 줘. ROS 좌표 규약(x 앞, y 왼쪽)을 따르고, 각도는 angle_min + i * angle_increment(라디안)로 구해 줘. NaN, inf, 그리고 내가 파라미터로 주는 range_min~range_max 밖의 값은 건너뛰어 줘. 점 타입은 double x, y를 가진 struct로 해 줘.
+  </div>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    2차원 점 (x, y)를 라이다 좌표계에서 로봇 몸체 좌표계로 옮기는 함수를 만들어 줘. 몸체에서 본 라이다의 위치 (tx, ty)와 방향 yaw(라디안)를 받아서 회전을 먼저 하고 평행이동을 해 줘. 그리고 점 두 개를 변환하기 전과 후에 두 점 사이 거리가 같은지 확인하는 코드도 같이 줘.
+  </div>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    이 코드에서 std::cos, std::sin, std::atan2에 들어가는 각도가 전부 라디안인지 확인해 줘. 도를 그대로 넣은 곳이나 인덱스 번호를 각도처럼 쓴 곳이 있으면 줄 번호와 함께 알려 줘. 코드는 고치지 마.
+  </div>
+  <div class="tablewrap">
+  <table>
+    <tr><th>프롬프트</th><th>받은 뒤 사람이 확인하는 것</th></tr>
+    <tr><td>점으로 펴기</td><td>정면에 놓은 상자의 x가 +이고 y가 0 근처인가, 왼쪽에 놓은 상자의 y가 +인가 (🧪 1 · 2번)</td></tr>
+    <tr><td>좌표 변환</td><td>5-3의 두 계산(0.111, 0.100)과 (−0.794, −0.006)이 그대로 나오나. 거리가 변환 앞뒤로 같은가</td></tr>
+    <tr><td>단위 검사</td><td>짚어 준 줄을 직접 열어 본다. 「문제없다」는 답도 한두 줄은 직접 확인한다</td></tr>
+  </table>
+  </div>
+
+
+  <!-- ══════════ ✅ 점검 ══════════ -->
+  <h2 id="check">✅ 오늘의 점검</h2>
+  <ul class="check">
+    <li><input type="checkbox" id="c1"><label for="c1">방향이 다른 두 물체의 거리를 빼도 간격이 안 되는 까닭을 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c2"><label for="c2">로봇에서 x · y · 회전의 + 방향을 말할 수 있고, 점의 y 부호로 좌우를 가릴 수 있다</label></li>
+    <li><input type="checkbox" id="c3"><label for="c3">거리와 각도에서 x, y를 구하는 식을 쓰고, 숫자를 넣어 계산할 수 있다</label></li>
+    <li><input type="checkbox" id="c4"><label for="c4"><code>std::cos</code>에 도를 넣으면 무슨 일이 생기는지 안다 — 오류가 나는가?</label></li>
+    <li><input type="checkbox" id="c5"><label for="c5">두 점 사이의 거리를 <code>std::hypot</code>로 구할 수 있다</label></li>
+    <li><input type="checkbox" id="c6"><label for="c6">같은 점의 좌표가 라이다 기준과 몸체 기준에서 왜 다른지, 어떻게 옮기는지 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c7"><label for="c7">내 로봇에서 상자의 좌표를 자로 잰 값과 대 봤다</label></li>
+  </ul>
+
+
+  <!-- ══════════ 조금 더 ══════════ -->
+  <h2 id="more">조금 더 알아두면 <span class="badge b-lv">시험 범위 아님</span></h2>
+
+  <details>
+    <summary>거꾸로 가기 — x, y에서 거리와 각도로</summary>
+    <p>직교좌표에서 극좌표로 돌아가는 식도 있다.</p>
+<pre><code>r = √(x² + y²)            C++ 에서는  std::hypot(x, y)
+θ = atan2(y, x)           C++ 에서는  std::atan2(y, x)   — 결과는 −π ~ π rad</code></pre>
+    <p>
+      <code>atan2</code>는 23회에서 본 <code>atan</code>의 인자 둘짜리 판이다. y와 x의 부호를 따로 받으므로 <strong>네 방향을 모두 구별한다</strong> —
+      <code>atan(y / x)</code>는 (1, 1)과 (−1, −1)을 같은 각으로 답하지만 <code>atan2</code>는 45도와 −135도로 가린다. 인자의 순서가 <strong>y 먼저</strong>인 것을 틀리기 쉽다.
+      27회에서 「목표점이 내 앞에서 몇 도 틀어져 있나」를 구할 때 쓴다.
+    </p>
+  </details>
+
+  <details>
+    <summary>동차좌표로 변환 두 개 잇기 — 숫자로 한 번</summary>
+    <p>
+      라이다 → 몸체가 「돌리지 않고 x로 −0.032」, 몸체 → 출발한 자리가 「90도 돌리고 (1.0, 2.0)만큼」이라고 하자. 두 행렬을 곱한다(뒤에 할 것을 왼쪽에 쓴다).
+    </p>
+<pre><code>⎡ 0  −1  1.0 ⎤ ⎡ 1  0  −0.032 ⎤   ⎡ 0  −1  1.0   ⎤
+⎢ 1   0  2.0 ⎥ ⎢ 0  1    0    ⎥ = ⎢ 1   0  1.968 ⎥
+⎣ 0   0   1  ⎦ ⎣ 0  0    1    ⎦   ⎣ 0   0    1   ⎦</code></pre>
+    <p>
+      오른쪽 행렬 하나가 「라이다 → 출발한 자리」다. 라이다 기준 (0.143, 0.100, 1)에 곱하면 (0·0.143 − 1·0.100 + 1.0, 1·0.143 + 0·0.100 + 1.968) = <strong>(0.900, 2.111)</strong>.
+      두 번에 나눠 해도 같다 — 먼저 (0.111, 0.100), 그것을 90도 돌려 (−0.100, 0.111), 거기에 (1.0, 2.0)을 더해 (0.900, 2.111).
+    </p>
+  </details>
+
+  <details>
+    <summary>3차원에서는 — 이 과목에서 다루지 않는 것</summary>
+    <p>
+      공중을 나는 드론이나 팔이 달린 로봇은 회전축이 셋이라 각도 하나(yaw)로는 방향을 다 적을 수 없다. 그래서 각도 셋(roll · pitch · yaw)이나 <strong>쿼터니언</strong>(quaternion, 숫자 넷으로 회전을 적는 방법)을 쓴다.
+      ROS 메시지의 <code>orientation</code>에 x, y, z, w 네 칸이 있는 것이 쿼터니언이다. 바닥을 달리는 터틀봇3는 yaw 하나만 바뀌므로 이 과목에서는 평면의 회전까지만 다룬다.
+      26회에서 쿼터니언이 출력에 보이면 「방향을 적은 것」이라고만 읽고 넘어간다.
+    </p>
+  </details>
+
+  <details>
+    <summary>출처</summary>
+    <ul>
+      <li>REP 103 「Standard Units of Measure and Coordinate Conventions」 — <code>ros.org/reps/rep-0103.html</code></li>
+      <li><code>ros2 interface show sensor_msgs/msg/LaserScan</code>의 주석 — 각도 0은 x축 앞, z축 둘레 반시계</li>
+      <li>터틀봇3 버거의 라이다 위치(−0.032, 0, 0.172)는 로봇에서 <code>ros2 run tf2_ros tf2_echo base_link base_scan</code>으로 받은 값이다 (26회에서 직접 쳐 본다)</li>
+    </ul>
+  </details>
+
+  <footer>
+    로봇공학 · 순천향대학교 전자정보공학과 ·
+    4부 로봇과 프로젝트 · <a href="index.html">회차 목록으로</a>
+  </footer>
+</main>
+</div>
+
+<script src="../assets/site.js" defer></script>
+</body>
+</html>

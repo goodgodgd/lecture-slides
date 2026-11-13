@@ -33,7 +33,7 @@
   <a href="#source">③ <code>source</code>와 환경변수</a>
   <a href="#bashrc">④ <code>.bashrc</code>에 한 줄</a>
   <a href="#workspace">⑤ 작업공간 — underlay와 overlay</a>
-  <a href="#wsname">⑥ 작업공간 이름 <code>~/ros2_ws</code></a>
+  <a href="#wsname">⑥ 작업공간 이름 <code>~/ros_ws</code></a>
   <a href="#talker">⑦ talker / listener 통신 확인</a>
   <a href="#verify">🔧 설치 확인 다섯 줄</a>
   <a href="#lab">🧪 실습</a>
@@ -53,8 +53,8 @@
     <ol>
       <li>ROS 2 설치 명령은 일곱 줄인데, 실제로 무엇을 깔고 무엇을 바꾸는 것인가?</li>
       <li>설치가 끝났는데 새 터미널에서 <code>ros2: command not found</code>가 나오는 것은 왜인가?</li>
-      <li><code>/opt/ros/jazzy</code>와 <code>~/ros2_ws</code>는 왜 따로 있나? 각각 무엇이 들어 있나?</li>
-      <li>작업공간 이름을 왜 2부에서 쓰던 <code>~/robot_ws</code>가 아니라 <code>~/ros2_ws</code>로 하나?</li>
+      <li><code>/opt/ros/jazzy</code>와 <code>~/ros_ws</code>는 왜 따로 있나? 각각 무엇이 들어 있나?</li>
+      <li>작업공간 이름을 왜 2부에서 쓰던 <code>~/robot_ws</code>가 아니라 <code>~/ros_ws</code>로 하나?</li>
       <li>설치가 「됐다」는 것은 무엇을 보고 판정하나?</li>
     </ol>
   </div>
@@ -283,7 +283,7 @@ bash: /etc/apt/sources.list.d/test.list: Permission denied</code></pre>
     <tr><td>저장소 등록 (1~6번 줄)</td><td>위 1~6번 줄</td><td>"ROS 2 Jazzy apt 저장소를 등록해 줘. <code>sudo</code>가 붙는 명령은 실행 전에 보여 줘."</td><td><code>ros2.list</code>에 <code>noble main</code>, <code>apt update</code>에 <code>packages.ros.org</code> 줄</td></tr>
     <tr><td>본체 설치 (7번 줄)</td><td><code>sudo apt install -y ros-jazzy-desktop ros-dev-tools</code></td><td>"<code>ros-jazzy-desktop</code>과 <code>ros-dev-tools</code>를 설치해 줘. 먼저 받을 크기를 알려 줘."</td><td><code>ls /opt/ros/jazzy</code>에 <code>setup.bash</code>가 있나</td></tr>
     <tr><td><code>.bashrc</code>에 한 줄 (④절)</td><td><code>echo "source /opt/ros/jazzy/setup.bash" &gt;&gt; ~/.bashrc</code></td><td>"<code>~/.bashrc</code> 끝에 <code>source /opt/ros/jazzy/setup.bash</code> 한 줄만 더해 줘. 다른 줄은 넣지 마."</td><td><strong>새 터미널</strong>에서 <code>ros2 --help</code>가 뜨나</td></tr>
-    <tr><td>빈 작업공간 빌드 (⑤절)</td><td><code>mkdir -p ~/ros2_ws/src</code> → <code>cd ~/ros2_ws</code> → <code>colcon build</code></td><td>"<code>~/ros2_ws</code>에 빈 작업공간을 만들고 한 번 빌드해 줘."</td><td><code>ls ~/ros2_ws</code>에 <code>build install log src</code></td></tr>
+    <tr><td>빈 작업공간 빌드 (⑤절)</td><td><code>mkdir -p ~/ros_ws/src</code> → <code>cd ~/ros_ws</code> → <code>colcon build</code></td><td>"<code>~/ros_ws</code>에 빈 작업공간을 만들고 한 번 빌드해 줘."</td><td><code>ls ~/ros_ws</code>에 <code>build install log src</code></td></tr>
     <tr><td>통신 확인 (⑦절)</td><td>터미널 두 개에서 talker / listener</td><td>(시키지 않는다 — <strong>이건 내가 본다</strong>)</td><td>listener 창에 <code>I heard</code>가 올라가나</td></tr>
   </table>
   </div>
@@ -481,7 +481,7 @@ $ ros2 pkg prefix demo_nodes_cpp
   </p>
   <p>
     그래서 이 강의에서는 <strong>배포판을 올리는 한 줄만</strong> 넣는다.
-    ⑤절의 작업공간(<code>~/ros2_ws/install/setup.bash</code>)은 <code>.bashrc</code>에 넣지 않고 <strong>필요한 터미널에서 손으로</strong> <code>source</code>한다.
+    ⑤절의 작업공간(<code>~/ros_ws/install/setup.bash</code>)은 <code>.bashrc</code>에 넣지 않고 <strong>필요한 터미널에서 손으로</strong> <code>source</code>한다.
     작업공간에 내 패키지가 생기는 19회에서, 이 손 한 번이 「왜 내 노드를 못 찾지?」의 답이 되는 장면을 보게 된다.
   </p>
 
@@ -502,7 +502,7 @@ $ ros2 pkg prefix demo_nodes_cpp
   <ul>
     <li><strong>밑바탕(underlay)</strong> — <code>/opt/ros/jazzy</code>. apt가 깐 ROS 2 전체다. 이 컴퓨터에서는 패키지 287개가 들어 있다.
         여러분은 <strong>읽기만 하고 손대지 않는다.</strong> 터미널에 올리는 방법은 <code>source /opt/ros/jazzy/setup.bash</code>다.</li>
-    <li><strong>작업공간(workspace)</strong> — 내가 만든 패키지를 두고 빌드하는 폴더다. 홈 폴더 아래 아무 데나 만들 수 있고, 이 강의에서는 <code>~/ros2_ws</code>로 한다.
+    <li><strong>작업공간(workspace)</strong> — 내가 만든 패키지를 두고 빌드하는 폴더다. 홈 폴더 아래 아무 데나 만들 수 있고, 이 강의에서는 <code>~/ros_ws</code>로 한다.
         빌드하면 그 안에 <code>install/setup.bash</code>가 생기고, 그것을 <code>source</code>하면 내 패키지가 터미널에 올라온다.</li>
   </ul>
   <p>
@@ -530,7 +530,7 @@ $ ros2 pkg prefix demo_nodes_cpp
 
   <figure>
     <img src="assets/img/16_underlay_overlay.png" width="760"
-         alt="작업공간 구조도. 아래층은 /opt/ros/jazzy 로 밑바탕(underlay)이며 bin, lib, share, setup.bash 가 들어 있고 apt 가 깔았다고 적혀 있다. 위층은 ~/ros2_ws 로 내 작업공간(overlay)이며 src, build, install, log 네 폴더가 있고 src 에서 build 를 거쳐 install 로 colcon build 화살표가 이어진다. 왼쪽 터미널 상자에서 1번 source /opt/ros/jazzy/setup.bash 는 아래층으로, 2번 source ~/ros2_ws/install/setup.bash 는 위층으로 화살표가 간다">
+         alt="작업공간 구조도. 아래층은 /opt/ros/jazzy 로 밑바탕(underlay)이며 bin, lib, share, setup.bash 가 들어 있고 apt 가 깔았다고 적혀 있다. 위층은 ~/ros_ws 로 내 작업공간(overlay)이며 src, build, install, log 네 폴더가 있고 src 에서 build 를 거쳐 install 로 colcon build 화살표가 이어진다. 왼쪽 터미널 상자에서 1번 source /opt/ros/jazzy/setup.bash 는 아래층으로, 2번 source ~/ros_ws/install/setup.bash 는 위층으로 화살표가 간다">
     <figcaption><strong>왼쪽 터미널의 화살표 두 개</strong>를 본다. ①(초록, <code>.bashrc</code>가 해 준다)이 아래층을, ②(파랑, 터미널마다 손으로)가 위층을 올린다.
       위층 안에서는 <code>src/</code> → <code>build/</code> → <code>install/</code>로 가는 화살표가 <code>colcon build</code>다.
       두 층 사이의 글 한 줄 — <code>install/</code>과 <code>/opt/ros/jazzy</code>는 모양이 같다.</figcaption>
@@ -541,8 +541,8 @@ $ ros2 pkg prefix demo_nodes_cpp
     오늘은 <code>src/</code>에 아무것도 넣지 않는다. 빈 작업공간을 한 번 빌드해서 <strong>폴더 셋이 생기는 것</strong>과 <strong>overlay를 얹는 것</strong>만 본다.
     패키지는 19회에서 이 <code>src/</code> 안에 만든다.
   </p>
-<pre class="lang-sh"><code>$ mkdir -p ~/ros2_ws/src
-$ cd ~/ros2_ws
+<pre class="lang-sh"><code>$ mkdir -p ~/ros_ws/src
+$ cd ~/ros_ws
 $ ls
 src
 $ colcon build
@@ -564,7 +564,7 @@ build  install  log  src</code></pre>
           2부에서 프로젝트 하나에 <code>cmake</code>를 치던 것을 <strong>패키지 여럿에 한 번에</strong> 해 주는 도구라고 보면 된다.
           ②절의 <code>ros-dev-tools</code>가 깔아 준다. 「전부 뒤진다」는 성질은 ⑥절에서 다시 중요해진다.</dd>
       <dt><code>mkdir -p 경로</code></dt>
-      <dd><code>-p</code>는 중간 폴더가 없으면 같이 만든다. <code>~/ros2_ws</code>가 없어도 <code>~/ros2_ws/src</code>까지 한 번에 생긴다.</dd>
+      <dd><code>-p</code>는 중간 폴더가 없으면 같이 만든다. <code>~/ros_ws</code>가 없어도 <code>~/ros_ws/src</code>까지 한 번에 생긴다.</dd>
     </dl>
   </div>
 
@@ -578,7 +578,7 @@ $ echo "[$COLCON_PREFIX_PATH]"                   # overlay를 얹기 전
 []
 $ source install/setup.bash
 $ echo "[$COLCON_PREFIX_PATH]"                   # 얹은 뒤
-[/home/ubuntu/ros2_ws/install]</code></pre>
+[/home/ubuntu/ros_ws/install]</code></pre>
   <div class="interp">
     <strong>해석:</strong> 대괄호로 감싼 것은 「값이 없음」을 눈에 보이게 하려는 것이다.
     빈칸이던 <code>COLCON_PREFIX_PATH</code>에 <strong>내 작업공간의 <code>install</code> 폴더</strong>가 들어왔다 — 위층이 얹혔다는 표시다.
@@ -600,13 +600,13 @@ $ echo "[$COLCON_PREFIX_PATH]"                   # 얹은 뒤
   <div class="box trap">
     <div class="boxtitle">⚠️ 작업공간에서 자주 나는 실수 둘</div>
     <p><strong>(1) 빌드하기 전에 source 부터 하면</strong> — <code>install/</code>은 빌드가 만드는 폴더라 아직 없다.</p>
-<pre class="lang-sh"><code>$ cd ~/ros2_ws
+<pre class="lang-sh"><code>$ cd ~/ros_ws
 $ source install/setup.bash
 bash: install/setup.bash: No such file or directory</code></pre>
     <p>
       <strong>(2) <code>src/</code> 안에서 <code>colcon build</code>를 치면</strong> — 오류 없이 끝난다. 그래서 더 알아채기 어렵다.
     </p>
-<pre class="lang-sh"><code>$ cd ~/ros2_ws/src
+<pre class="lang-sh"><code>$ cd ~/ros_ws/src
 $ colcon build
 
 Summary: 0 packages finished [0.07s]
@@ -614,15 +614,15 @@ $ ls
 build  install  log</code></pre>
     <p>
       <code>colcon build</code>는 <strong>명령을 친 그 폴더</strong>를 작업공간으로 본다. 그래서 <code>build install log</code>가 <code>src/</code> <strong>안에</strong> 생겼다.
-      이 상태에서 <code>~/ros2_ws/install/setup.bash</code>를 source 해도 새로 빌드한 것은 거기 없다.
-      <strong><code>colcon build</code>는 언제나 작업공간의 맨 위(<code>~/ros2_ws</code>)에서 친다.</strong>
+      이 상태에서 <code>~/ros_ws/install/setup.bash</code>를 source 해도 새로 빌드한 것은 거기 없다.
+      <strong><code>colcon build</code>는 언제나 작업공간의 맨 위(<code>~/ros_ws</code>)에서 친다.</strong>
       잘못 생긴 세 폴더는 <code>src/</code> 안에서 <code>rm -rf build install log</code>로 지운다 — 지우기 전에 <code>pwd</code>로 지금 자리를 한 번 본다.
     </p>
   </div>
 
 
   <!-- ══════════ ⑥ 작업공간 이름 ══════════ -->
-  <h2 id="wsname">⑥ 작업공간 이름 <code>~/ros2_ws</code> — colcon은 폴더 아래를 전부 뒤진다 <span class="badge b-red">🔴 사람이 판단</span></h2>
+  <h2 id="wsname">⑥ 작업공간 이름 <code>~/ros_ws</code> — colcon은 폴더 아래를 전부 뒤진다 <span class="badge b-red">🔴 사람이 판단</span></h2>
 
   <p>
     2부 C++ 실습은 전부 <code>~/robot_ws</code> 아래에서 했다. <code>~/robot_ws/l06</code>, <code>~/robot_ws/l09/range_filter</code> 같은 식이다.
@@ -668,21 +668,21 @@ build  install  l06  l08  l09  log</code></pre>
   </div>
 
   <p>
-    그래서 ROS 작업공간은 <strong>새 폴더 <code>~/ros2_ws</code></strong>로 따로 만든다. 같은 명령을 거기서 치면 잡히는 것이 없다.
+    그래서 ROS 작업공간은 <strong>새 폴더 <code>~/ros_ws</code></strong>로 따로 만든다. 같은 명령을 거기서 치면 잡히는 것이 없다.
   </p>
-<pre class="lang-sh"><code>$ cd ~/ros2_ws
+<pre class="lang-sh"><code>$ cd ~/ros_ws
 $ colcon list
 $</code></pre>
   <div class="tablewrap">
   <table>
     <tr><th>폴더</th><th>무엇이 들어 있나</th><th>빌드 명령</th></tr>
     <tr><td><code>~/robot_ws/lNN/…</code></td><td>2부 C++ 실습 — 그냥 CMake 프로젝트</td><td><code>cmake -S . -B build</code> → <code>cmake --build build</code> (지금까지처럼)</td></tr>
-    <tr><td><code>~/ros2_ws/src/…</code></td><td>3부부터의 ROS 2 패키지</td><td><code>~/ros2_ws</code>에서 <code>colcon build</code></td></tr>
+    <tr><td><code>~/ros_ws/src/…</code></td><td>3부부터의 ROS 2 패키지</td><td><code>~/ros_ws</code>에서 <code>colcon build</code></td></tr>
   </table>
   </div>
   <div class="interp">
     <strong>해석:</strong> 2부 폴더는 지우지 않아도 된다. <strong>colcon을 그 폴더에서 치지만 않으면</strong> 서로 섞이지 않는다.
-    <code>ros2_ws</code>는 ROS 2 공식 안내서의 예제가 쓰는 이름이기도 하다. 그래서 검색해서 나온 글의 경로를 거의 그대로 따라 칠 수 있다.
+    ROS 2 공식 안내서의 예제는 같은 자리에 <code>ros2_ws</code>라는 이름을 쓴다. 검색해서 나온 글에 <code>~/ros2_ws</code>가 보이면 <code>~/ros_ws</code>로 바꿔 읽으면 된다 — 이름만 다르고 하는 일은 같다.
     5-4의 실수 (2)(<code>src/</code> 안에서 빌드)와 같은 뿌리다 — <strong>colcon에게는 「어디서 쳤나」가 곧 「어느 작업공간인가」</strong>다.
   </div>
 
@@ -791,7 +791,7 @@ Package 'demo_node_cpp' not found</code></pre>
   <ol>
     <li><code>ros2 --help</code>가 <code>usage: ros2 …</code>로 시작하는 도움말을 찍는다 (②③절)</li>
     <li><code>printenv | grep ROS</code>에 <strong><code>ROS_DISTRO=jazzy</code></strong>가 보인다 (③절)</li>
-    <li><code>~/ros2_ws</code>에서 <code>colcon build</code>가 <code>Summary: 0 packages finished</code>로 끝나고, <code>ls</code>에 <code>build install log src</code>가 보인다 (⑤절)</li>
+    <li><code>~/ros_ws</code>에서 <code>colcon build</code>가 <code>Summary: 0 packages finished</code>로 끝나고, <code>ls</code>에 <code>build install log src</code>가 보인다 (⑤절)</li>
     <li>터미널 두 개에서 talker / listener를 띄우면 listener 창의 <code>Hello World:</code> 숫자가 올라간다 (⑦절)</li>
     <li><strong>터미널을 전부 닫고 새로 연 뒤</strong> 1~4가 그대로 된다 ← <code>.bashrc</code>가 제대로 됐는지 보는 줄 (④절)</li>
   </ol>
@@ -849,8 +849,8 @@ printenv | grep ROS</code></pre>
       <li><strong>(3분)</strong> ④절의 프롬프트로 <code>.bashrc</code>에 한 줄을 넣게 한다. <code>tail -1 ~/.bashrc</code>로 그 줄을 직접 보고,
         <strong>또 새 탭</strong>을 열어 <code>printenv | grep ROS_DISTRO</code>를 친다.</li>
       <li><strong>(5분)</strong> 작업공간을 만들고 빌드한다. 이번에는 손으로 친다.
-<pre><code>mkdir -p ~/ros2_ws/src
-cd ~/ros2_ws
+<pre><code>mkdir -p ~/ros_ws/src
+cd ~/ros_ws
 colcon build
 ls</code></pre>
         <code>ls ~/robot_ws</code>로 2부 폴더가 있는지 보고, 있다면 <code>cd ~/robot_ws &amp;&amp; colcon list</code>를 쳐서 무엇이 패키지로 잡히는지 본다. <strong><code>colcon build</code>는 거기서 치지 않는다.</strong></li>
@@ -865,7 +865,7 @@ ls</code></pre>
 [INFO] [1792271497.914577572] [listener]: I heard: [Hello World: 3]
 [INFO] [1792271498.914669168] [listener]: I heard: [Hello World: 4]
 [INFO] [1792271499.914905319] [listener]: I heard: [Hello World: 5]</code></pre>
-    <p>그리고 <code>ls ~/ros2_ws</code>가 <code>build  install  log  src</code>를 찍는다.</p>
+    <p>그리고 <code>ls ~/ros_ws</code>가 <code>build  install  log  src</code>를 찍는다.</p>
   </div>
 
 
@@ -879,7 +879,7 @@ ls</code></pre>
     <tr><td><code>ros-jazzy-desktop</code> 설치</td><td><code>/opt/ros/jazzy</code> 아래에 ROS 2 전체가 깔린다</td><td><code>ls /opt/ros/jazzy</code>에 <code>setup.bash</code>가 있나</td><td><span class="badge b-green">🟢</span></td></tr>
     <tr><td><strong><code>source</code></strong> 🔴</td><td>지금 이 터미널의 <strong>환경변수</strong>(<code>PATH</code>·<code>ROS_DISTRO</code> 등)가 채워진다</td><td><code>printenv | grep ROS</code>에 <code>ROS_DISTRO=jazzy</code>가 보이나</td><td><span class="badge b-red">🔴</span></td></tr>
     <tr><td><code>.bashrc</code>에 한 줄</td><td>새 터미널이 열릴 때마다 위 <code>source</code>가 저절로 된다</td><td><strong>새 터미널</strong>에서 <code>ros2 --help</code>가 뜨나</td><td><span class="badge b-green">🟢</span></td></tr>
-    <tr><td><strong>작업공간</strong> <code>~/ros2_ws</code> 🔴</td><td>내 패키지를 두고 빌드하는 폴더. <code>src/</code>에 소스, <code>install/</code>에 결과</td><td><code>colcon build</code> 뒤 <code>ls</code>에 <code>build install log src</code>가 보이나</td><td><span class="badge b-red">🔴</span></td></tr>
+    <tr><td><strong>작업공간</strong> <code>~/ros_ws</code> 🔴</td><td>내 패키지를 두고 빌드하는 폴더. <code>src/</code>에 소스, <code>install/</code>에 결과</td><td><code>colcon build</code> 뒤 <code>ls</code>에 <code>build install log src</code>가 보이나</td><td><span class="badge b-red">🔴</span></td></tr>
     <tr><td>talker / listener</td><td>ROS 2 프로그램 둘이 실제로 글을 주고받는다</td><td>listener 창에 <code>I heard: [Hello World: N]</code>이 올라가나</td><td><span class="badge b-red">🔴</span></td></tr>
   </table>
   </div>
@@ -896,7 +896,7 @@ ls</code></pre>
     <tr><th>이럴 때</th><th>이렇게 말한다</th></tr>
     <tr><td>ROS 2를 처음 깔 때</td><td>"ROS 2 Jazzy를 설치해 줘. <code>sudo</code>가 붙는 명령은 실행하기 전에 한 줄씩 보여 주고 기다려."</td></tr>
     <tr><td><code>.bashrc</code>를 고칠 때</td><td>"<code>~/.bashrc</code> 끝에 <code>source /opt/ros/jazzy/setup.bash</code> 한 줄만 더해 줘. 다른 줄은 넣지 마."</td></tr>
-    <tr><td>작업공간을 만들 때</td><td>"<code>~/ros2_ws</code>에 빈 작업공간을 만들고 한 번 빌드해 줘. <code>colcon build</code>는 <code>~/ros2_ws</code>에서 쳐."</td></tr>
+    <tr><td>작업공간을 만들 때</td><td>"<code>~/ros_ws</code>에 빈 작업공간을 만들고 한 번 빌드해 줘. <code>colcon build</code>는 <code>~/ros_ws</code>에서 쳐."</td></tr>
     <tr><td>낯선 설치 명령을 받았을 때</td><td>"이 명령을 실행하지 말고, 토막마다 무엇을 하는지와 시스템에 무엇이 남는지 알려 줘."</td></tr>
     <tr><td><code>command not found</code>가 날 때</td><td>"내 터미널에서 <code>ros2: command not found</code>가 나와. 네 셸이 아니라 <strong>내 터미널</strong>에서 확인할 명령을 알려 줘."</td></tr>
   </table>
@@ -908,7 +908,7 @@ ls</code></pre>
   </div>
 
   <p>작업공간을 맡길 때와, 막혔을 때 쓰는 문장 둘은 복사해 두면 편하다.</p>
-  <div class="prompt"><button onclick="copyPrompt(this)">복사</button> <code>~/ros2_ws/src</code> 폴더를 만들고 <code>~/ros2_ws</code>에서 <code>colcon build</code>를 한 번 돌려 줘. <code>~/robot_ws</code>에서는 colcon을 실행하지 마. 끝나면 <code>ls ~/ros2_ws</code> 결과를 그대로 보여 줘.</div>
+  <div class="prompt"><button onclick="copyPrompt(this)">복사</button> <code>~/ros_ws/src</code> 폴더를 만들고 <code>~/ros_ws</code>에서 <code>colcon build</code>를 한 번 돌려 줘. <code>~/robot_ws</code>에서는 colcon을 실행하지 마. 끝나면 <code>ls ~/ros_ws</code> 결과를 그대로 보여 줘.</div>
   <div class="prompt"><button onclick="copyPrompt(this)">복사</button> 내 터미널에서 <code>ros2: command not found</code>가 나와. 네가 띄운 셸이 아니라 <strong>내가 새로 연 터미널</strong>에서 원인을 확인할 수 있는 명령을 두세 개 알려 줘. 아직 아무것도 고치지는 마.</div>
 
 
@@ -919,8 +919,8 @@ ls</code></pre>
     <li><input type="checkbox" id="c2"><label for="c2">에이전트가 보여 준 <code>sudo</code> 줄을 「줄마다 무엇을 하나」 표와 맞춰 보고 승인했나?</label></li>
     <li><input type="checkbox" id="c3"><label for="c3"><code>source</code> 전과 뒤에 <code>printenv | grep ROS</code>가 어떻게 다른지 직접 봤나?</label></li>
     <li><input type="checkbox" id="c4"><label for="c4"><code>~/.bashrc</code>에 <code>source /opt/ros/jazzy/setup.bash</code> <strong>한 줄만</strong> 들어 있나?</label></li>
-    <li><input type="checkbox" id="c5"><label for="c5"><code>/opt/ros/jazzy</code>(밑바탕)와 <code>~/ros2_ws</code>(내 작업공간)가 각각 무엇인지 말할 수 있나?</label></li>
-    <li><input type="checkbox" id="c6"><label for="c6"><code>colcon build</code>를 <code>~/ros2_ws</code> 맨 위에서 쳤나? (<code>src/</code> 안도, <code>~/robot_ws</code>도 아니다)</label></li>
+    <li><input type="checkbox" id="c5"><label for="c5"><code>/opt/ros/jazzy</code>(밑바탕)와 <code>~/ros_ws</code>(내 작업공간)가 각각 무엇인지 말할 수 있나?</label></li>
+    <li><input type="checkbox" id="c6"><label for="c6"><code>colcon build</code>를 <code>~/ros_ws</code> 맨 위에서 쳤나? (<code>src/</code> 안도, <code>~/robot_ws</code>도 아니다)</label></li>
     <li><input type="checkbox" id="c7"><label for="c7">두 터미널에서 listener의 숫자가 올라가는 것을 <strong>내 눈으로</strong> 봤나?</label></li>
     <li><input type="checkbox" id="c8"><label for="c8">터미널을 전부 닫고 새로 연 뒤에도 설치 확인 다섯 줄이 그대로 되나?</label></li>
   </ul>

@@ -340,7 +340,7 @@ install(TARGETS hello_node turtle_drive
   </div>
 
   <h3>3-4 실제로 나온 출력</h3>
-  <pre class="lang-sh"><code>$ cd ~/ros2_ws
+  <pre class="lang-sh"><code>$ cd ~/ros_ws
 $ colcon build --packages-select turtle_drive
 Starting &gt;&gt;&gt; turtle_drive
 Finished &lt;&lt;&lt; turtle_drive [3.16s]
@@ -371,14 +371,14 @@ turtle_drive turtle_drive</code></pre>
     벽에 붙는 x는 약 <strong>11.09</strong>다. 창의 한 변이 그만큼이라는 뜻이고, v2에서 범위를 정할 때 이 숫자를 쓴다.
   </p>
 
-  <!-- fullcode "전체 코드 — turtle_drive/ (1단계 · v1. hello_node.cpp 는 19회 그대로)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive turtle_drive"
+  <!-- fullcode "전체 코드 — turtle_drive/ (1단계 · v1. hello_node.cpp 는 19회 그대로)" build="cd ~/ros_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive turtle_drive"
        l20_topic/steps/step1/turtle_drive/src/turtle_drive.cpp as turtle_drive/src/turtle_drive.cpp
        l20_topic/steps/step1/turtle_drive/CMakeLists.txt as turtle_drive/CMakeLists.txt
        l20_topic/steps/step1/turtle_drive/package.xml as turtle_drive/package.xml
   -->
 <details class="fullcode">
   <summary>전체 코드 — turtle_drive/ (1단계 · v1. hello_node.cpp 는 19회 그대로)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive turtle_drive</code></p>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive turtle_drive</code></p>
   <div class="codefile"><div class="fname">turtle_drive/src/turtle_drive.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 20회 turtle_drive — v1 (1단계: create_publisher · create_wall_timer — 무작위로 돌아다닌다)
 #include &lt;chrono&gt;
 #include &lt;memory&gt;
@@ -817,14 +817,14 @@ $ ros2 run turtle_drive turtle_drive
       <code>/turtlesim</code> → <code>/turtle1/pose</code> → <code>/turtle_drive</code> → <code>/turtle1/cmd_vel</code> → <code>/turtlesim</code>.
       19회의 <code>/hello_node</code>는 어느 화살표에도 이어져 있지 않았다. 구독자 하나, 발행자 하나가 화살표 두 개가 됐다.</figcaption>
   </figure>
-  <!-- fullcode "전체 코드 — turtle_drive/ (2단계 · v2 완성본. 21회가 이 패키지에 이어 붙인다)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive turtle_drive"
+  <!-- fullcode "전체 코드 — turtle_drive/ (2단계 · v2 완성본. 21회가 이 패키지에 이어 붙인다)" build="cd ~/ros_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive turtle_drive"
        l20_topic/steps/step2/turtle_drive/src/turtle_drive.cpp as turtle_drive/src/turtle_drive.cpp
        l20_topic/steps/step2/turtle_drive/CMakeLists.txt as turtle_drive/CMakeLists.txt
        l20_topic/steps/step2/turtle_drive/package.xml as turtle_drive/package.xml
   -->
 <details class="fullcode">
   <summary>전체 코드 — turtle_drive/ (2단계 · v2 완성본. 21회가 이 패키지에 이어 붙인다)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive turtle_drive</code></p>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive turtle_drive</code></p>
   <div class="codefile"><div class="fname">turtle_drive/src/turtle_drive.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 20회 turtle_drive — v2 (2단계: create_subscription — 범위를 벗어나면 중앙 쪽으로 돌아선다)
 #include &lt;algorithm&gt;
 #include &lt;chrono&gt;
@@ -1072,14 +1072,14 @@ path: src/turtle_drive
     <p class="boxtitle">준비물</p>
     <ul>
       <li>WSL 터미널 넷 (16회에 <code>.bashrc</code>에 넣은 <code>source /opt/ros/jazzy/setup.bash</code>가 걸린 상태)</li>
-      <li>19회 실습까지 끝낸 <code>~/ros2_ws/src/turtle_drive</code></li>
+      <li>19회 실습까지 끝낸 <code>~/ros_ws/src/turtle_drive</code></li>
       <li>⑤절 끝의 📄 「2단계 · v2 완성본」</li>
     </ul>
 
     <p class="boxtitle">절차</p>
     <ol>
       <li><strong>(4분)</strong> v2 완성본의 파일 셋(<code>src/turtle_drive.cpp</code>·<code>CMakeLists.txt</code>·<code>package.xml</code>)을 패키지에 넣고 작업공간 최상위에서 빌드한다 (터미널 1).
-        <pre class="lang-sh"><code>$ cd ~/ros2_ws
+        <pre class="lang-sh"><code>$ cd ~/ros_ws
 $ colcon build --packages-select turtle_drive
 $ source install/setup.bash
 $ ros2 pkg executables turtle_drive</code></pre>
@@ -1112,7 +1112,7 @@ $ ros2 pkg executables turtle_drive</code></pre>
     오늘 배운 것이 하나도 반영되지 않았다 — 전역 변수, 값으로 받는 콜백, <code>while</code> + <code>sleep_for</code>, 숫자의 뜻을 모르는 큐 깊이, <code>std::cout</code>, 한쪽에만 있는 의존성.
     그래도 <strong>빌드되고 돌아간다.</strong> 반복문 안에서 <code>rclcpp::spin_some(node)</code>를 불러 콜백을 직접 처리하기 때문이다.
   </p>
-  <pre class="lang-sh"><code>$ cd ~/ros2_ws
+  <pre class="lang-sh"><code>$ cd ~/ros_ws
 $ colcon build --packages-select turtle_watch
 Starting &gt;&gt;&gt; turtle_watch
 Finished &lt;&lt;&lt; turtle_watch [4.81s]
@@ -1123,14 +1123,14 @@ $ ros2 run turtle_watch wall_watch
 가장 가까운 벽까지 5.54444 m
 가장 가까운 벽까지 5.54444 m
 가장 가까운 벽까지 5.54444 m</code></pre>
-  <!-- fullcode open "연습문제 — 오늘 배운 것이 없는 원본 (turtle_watch/)" build="cd ~/ros2_ws && colcon build --packages-select turtle_watch && source install/setup.bash && ros2 run turtle_watch wall_watch"
+  <!-- fullcode open "연습문제 — 오늘 배운 것이 없는 원본 (turtle_watch/)" build="cd ~/ros_ws && colcon build --packages-select turtle_watch && source install/setup.bash && ros2 run turtle_watch wall_watch"
        l20_topic/steps/exercise_old/turtle_watch/src/wall_watch.cpp as turtle_watch/src/wall_watch.cpp
        l20_topic/steps/exercise_old/turtle_watch/CMakeLists.txt as turtle_watch/CMakeLists.txt
        l20_topic/steps/exercise_old/turtle_watch/package.xml as turtle_watch/package.xml
   -->
 <details class="fullcode" open>
   <summary>연습문제 — 오늘 배운 것이 없는 원본 (turtle_watch/)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_watch &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_watch wall_watch</code></p>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select turtle_watch &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_watch wall_watch</code></p>
   <div class="codefile"><div class="fname">turtle_watch/src/wall_watch.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 20회 연습문제 — wall_watch 원본. 오늘 배운 것을 하나도 안 쓴 노드 (돌아가기는 한다)
 #include &lt;algorithm&gt;
 #include &lt;chrono&gt;
@@ -1207,7 +1207,7 @@ ament_package()</code></pre></div>
 </details>
 <!-- /fullcode -->
 <!-- /fullcode -->
-  <p>세 파일을 <code>~/ros2_ws/src/turtle_watch/</code> 아래에 같은 경로로 만든다(<code>turtle_drive</code> 옆에 둔다).</p>
+  <p>세 파일을 <code>~/ros_ws/src/turtle_watch/</code> 아래에 같은 경로로 만든다(<code>turtle_drive</code> 옆에 둔다).</p>
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
     <dl>
@@ -1232,7 +1232,7 @@ ament_package()</code></pre></div>
   </div>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
-    ~/ros2_ws/src/turtle_watch 패키지를 고쳐 줘. 고치기 전에 아래 기준마다 지금 코드의 어느 줄이 어긋나는지 표로 먼저 보여 줘. 기준: rclcpp::Node 를 상속한 클래스, 구독자·마지막 자세는 멤버(전역 변수 금지), while·spin_some·sleep_for 대신 create_wall_timer(500ms, …) 와 rclcpp::spin, 구독 콜백 인자는 turtlesim::msg::Pose::ConstSharedPtr 로 받아 멤버에 저장만, 자세를 아직 못 받았으면 아무것도 찍지 않음, 큐 깊이 10, 창 크기 11.0889 는 이름 붙은 멤버로, std::cout 대신 RCLCPP_INFO, turtlesim 의존성은 package.xml 과 CMakeLists.txt 양쪽에. 빌드는 ~/ros2_ws 에서 colcon build --packages-select turtle_watch 로 해 줘.
+    ~/ros_ws/src/turtle_watch 패키지를 고쳐 줘. 고치기 전에 아래 기준마다 지금 코드의 어느 줄이 어긋나는지 표로 먼저 보여 줘. 기준: rclcpp::Node 를 상속한 클래스, 구독자·마지막 자세는 멤버(전역 변수 금지), while·spin_some·sleep_for 대신 create_wall_timer(500ms, …) 와 rclcpp::spin, 구독 콜백 인자는 turtlesim::msg::Pose::ConstSharedPtr 로 받아 멤버에 저장만, 자세를 아직 못 받았으면 아무것도 찍지 않음, 큐 깊이 10, 창 크기 11.0889 는 이름 붙은 멤버로, std::cout 대신 RCLCPP_INFO, turtlesim 의존성은 package.xml 과 CMakeLists.txt 양쪽에. 빌드는 ~/ros_ws 에서 colcon build --packages-select turtle_watch 로 해 줘.
   </div>
   <p>
     정답은 하나가 아니다. <strong>위 표의 「확인하는 법」이 전부 통과하면</strong> 된 것이다.

@@ -1,0 +1,1345 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>26회 · TF2 | 로봇공학</title>
+<script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}})();</script>
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="assets/lecture.css">
+</head>
+<body>
+<header class="bar">
+  <div class="barin wide">
+    <a class="up" href="index.html" aria-label="로봇공학 회차 목록"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a>
+    <nav class="crumb" aria-label="경로">
+      <a href="../index.html">강의자료</a><span class="sep">/</span><a href="index.html">로봇공학</a><span class="sep">/</span><span class="here">26회 · TF2</span>
+    </nav>
+    <span class="spacer"></span>
+    <div class="navlinks"><a class="navlink" href="robotics_25.html" aria-label="이전 회차"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a><a class="navlink" href="robotics_27.html" aria-label="다음 회차"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></a></div>
+    <div class="seg" data-theme-switch role="group" aria-label="밝기">
+      <button type="button" data-mode="auto" aria-pressed="true">자동</button>
+      <button type="button" data-mode="light" aria-pressed="false">밝게</button>
+      <button type="button" data-mode="dark" aria-pressed="false">어둡게</button>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="toc-title">이 회차 목차</div>
+  <a href="#frames">① 프레임과 TF</a>
+  <a href="#view">② view_frames와 tf2_echo</a>
+  <a href="#stamped">③ PointStamped와 header.frame_id</a>
+  <a href="#buffer">④ tf2 버퍼와 리스너 (v4)</a>
+  <a href="#exception">⑤ TransformException (v5)</a>
+  <a href="#odom">⑥ odom 프레임과 /odom (v6)</a>
+  <a href="#when">⑦ TF가 필요한 자리</a>
+  <a href="#lab">🧪 실습</a>
+  <a href="#exercise">📝 연습문제</a>
+  <a href="#summary">한 장 요약</a>
+  <a href="#prompts">🤖 프롬프트 모음</a>
+  <a href="#check">✅ 점검</a>
+  <a href="#more">조금 더 알아두면</a>
+</nav>
+
+<main>
+
+  <div class="lec-no">로봇공학 · 26회 · 4부 로봇과 프로젝트</div>
+  <h1>TF2 — 프레임 사이의 좌표 변환</h1>
+
+  <div class="questions">
+    <span class="lab">오늘 답할 질문</span>
+    <ol>
+      <li>25회에서 코드에 적어 넣은 <strong>3.2cm</strong>를 로봇에게 직접 물어볼 수는 없나?</li>
+      <li>로봇에는 좌표계가 몇 개 있고, <strong>서로 어떻게 이어져</strong> 있나? 그것을 어떻게 보나?</li>
+      <li>「이 점을 저 좌표계 기준으로 바꿔 줘」를 코드에서 <strong>한 줄로</strong> 부탁하려면 무엇이 준비돼 있어야 하나?</li>
+      <li>그 한 줄이 <strong>실패하는 경우</strong>는 언제이고, 그때 노드는 어떻게 되나?</li>
+      <li><code>odom</code>은 무엇을 기준으로 한 좌표계인가? 바퀴를 띄운 채 돌리면 무엇이 바뀌나?</li>
+    </ol>
+  </div>
+
+  <p>
+    25회에서 라이다 기준의 점을 로봇 몸체 기준으로 옮기는 함수 <code>to_body</code>를 손으로 짰다. 식은 맞았지만 찜찜한 데가 있었다 —
+    <code>lidar_x = −0.032</code>라는 숫자를 <strong>사람이 코드에 적어 넣었다.</strong> 로봇이 바뀌면 틀리고, 틀려도 아무도 알려 주지 않는다.
+  </p>
+  <p>
+    그런데 로봇은 이 숫자를 이미 알고 있다. bringup을 켜면 <strong>「라이다는 몸체에서 어디에 달려 있다」, 「몸체는 출발한 자리에서 지금 어디에 있다」</strong> 같은 관계가 토픽으로 계속 흘러나온다.
+    그 관계를 모아 두었다가 좌표 변환을 대신 해 주는 장치가 <strong>TF2</strong>다. 오늘은 그것을 명령으로 들여다보고, 25회의 <code>scan_points</code>에서 손으로 짠 변환을 TF2에게 맡긴다(v4 ~ v6).
+  </p>
+  <p>
+    TF2의 코드는 정해진 모양이 있어서 에이전트가 잘 써 주는 편이다. 사람이 챙길 것은 다른 데 있다 — <strong>좌표계의 이름을 정확히 아는 것</strong>,
+    <strong>변환이 실패했을 때 노드가 죽지 않게 하는 것</strong>, 그리고 <strong><code>odom</code>이 말하는 위치가 추정이라는 것</strong>을 아는 것이다. 셋 다 로봇 앞에서 확인한다.
+  </p>
+
+
+  <!-- ══════════ ① 프레임과 TF ══════════ -->
+  <h2 id="frames">① 프레임과 TF <span class="badge b-red">🔴 사람이 이해한다</span></h2>
+
+  <p>
+    25회에서 좌표계를 「원점 하나와 축의 방향을 정해 놓은 기준」이라고 했다. 로봇에는 그런 기준이 여럿 있다. 라이다는 라이다를 기준으로 재고, 바퀴는 바퀴 축을 기준으로 돌고,
+    「얼마나 왔나」는 출발한 자리를 기준으로 센다. 이것들을 서로 옮겨 다니려면 <strong>누가 누구에게서 얼마나 떨어져 있는지</strong>를 어딘가에서 관리해야 한다.
+  </p>
+
+  <h3>1-1 정의</h3>
+  <div class="tablewrap">
+  <table>
+    <tr><th>용어</th><th>뜻</th></tr>
+    <tr><td><strong>프레임</strong> (frame)</td><td>좌표계 하나. ROS에서는 <strong>이름(글자)</strong>으로 부른다 — <code>base_link</code>, <code>base_scan</code>, <code>odom</code></td></tr>
+    <tr><td><strong>변환</strong> (transform)</td><td>두 프레임 사이의 관계 — 한쪽에서 본 다른 쪽의 <strong>자리(평행이동)와 방향(회전)</strong>. 25회 ⑤절의 (tx, ty)와 φ를 3차원으로 넓힌 것</td></tr>
+    <tr><td><strong>TF 트리</strong> (TF tree)</td><td>프레임들이 <strong>부모 – 자식</strong>으로 이어진 모양. 자식 하나에 부모는 하나뿐이다</td></tr>
+    <tr><td><strong>TF2</strong></td><td>변환을 주고받고, 모아 두고, 대신 계산해 주는 ROS 2의 라이브러리와 도구 묶음. TF는 transform의 줄임이고 2는 둘째 판이라는 뜻이다</td></tr>
+  </table>
+  </div>
+  <p>
+    변환은 두 토픽으로 흐른다. <code>/tf</code>에는 <strong>계속 바뀌는 관계</strong>(로봇이 움직이면 달라지는 것)가, <code>/tf_static</code>에는 <strong>바뀌지 않는 관계</strong>(나사로 고정된 부품 사이)가 실린다.
+    24회의 <code>ros2 topic list</code>에 이 둘이 이미 보였다.
+  </p>
+
+  <h3>1-2 터틀봇3의 프레임</h3>
+  <div class="tablewrap">
+  <table>
+    <tr><th>프레임 이름</th><th>원점이 어디인가</th><th>부모</th><th>관계가 바뀌나</th></tr>
+    <tr><td><code>odom</code></td><td><strong>bringup을 켠 순간 로봇이 있던 자리</strong></td><td>(맨 위)</td><td>—</td></tr>
+    <tr><td><code>base_footprint</code></td><td>두 바퀴 축의 가운데를 <strong>바닥</strong>에 내린 점</td><td><code>odom</code></td><td><strong>바뀐다</strong> — 로봇이 움직이면</td></tr>
+    <tr><td><code>base_link</code></td><td>로봇 몸체의 기준점. <code>base_footprint</code>의 1cm 위</td><td><code>base_footprint</code></td><td>안 바뀐다</td></tr>
+    <tr><td><code>base_scan</code></td><td><strong>라이다</strong>의 가운데</td><td><code>base_link</code></td><td>안 바뀐다</td></tr>
+    <tr><td><code>imu_link</code> · <code>caster_back_link</code></td><td>IMU 센서 · 뒤쪽 받침 바퀴</td><td><code>base_link</code></td><td>안 바뀐다</td></tr>
+    <tr><td><code>wheel_left_link</code> · <code>wheel_right_link</code></td><td>왼쪽 · 오른쪽 바퀴</td><td><code>base_link</code></td><td>바뀐다 — 바퀴가 돌면</td></tr>
+  </table>
+  </div>
+  <figure class="narrow">
+    <img src="assets/img/26_frames_3d.png" width="480"
+         alt="3차원 그림. 바닥 위에 바퀴 두 개의 윤곽이 있고, 바퀴 축 가운데 바닥에 base_footprint, 바로 위에 base_link, 그보다 훨씬 위 조금 뒤쪽에 base_scan 좌표계가 있다. 좌표계마다 붉은 x축, 초록 y축, 파란 z축 화살표가 같은 방향으로 그려져 있다">
+    <figcaption>이 로봇에서 받은 값으로 그린 세 프레임. 빨강이 x(앞), 초록이 y(왼쪽), 파랑이 z(위)다. 회색 원은 바퀴의 자리다.
+      <code>base_scan</code>이 <code>base_link</code>보다 <strong>뒤로 3.2cm, 위로 17.2cm</strong>에 있다. 축의 방향은 셋이 같다 — 로봇의 설명 파일에 라이다가 <strong>앞을 보고 달려 있다고 적혀 있다</strong>는 뜻이다.
+      실제로 그렇게 달렸는지는 TF가 알려 주지 않는다. 라이다가 반 바퀴 돌아 달린 로봇에서도 TF는 이 그림과 같으므로, 24회 1-5처럼 물건을 놓아 봐야 안다.</figcaption>
+  </figure>
+  <p>
+    24회 1-4에서 rviz2의 Fixed Frame 목록에 뜨던 이름들이 바로 이 표의 프레임이다. 그때는 「어디에 서서 볼 것인가」로만 골랐는데, 이제 그 이름들이 부모 – 자식으로 이어져 있다는 것이 보인다.
+    rviz2는 고른 프레임을 화면에 고정하고, 나머지 프레임의 자리를 <strong>TF 트리를 따라 계산해</strong> 그린다. 트리에 없는 이름(처음 값 <code>map</code>)을 고르면 계산할 길이 없어 화면이 빈다.
+  </p>
+  <p>
+    rviz2에서 프레임을 직접 볼 수도 있다. Fixed Frame을 <code>base_footprint</code>로 두고 <strong>Add</strong>에서 <strong>RobotModel</strong>(Description Topic을 <code>/robot_description</code>으로)과 <strong>TF</strong>를 더하면 로봇의 모형 위에 프레임의 축이 그려진다.
+  </p>
+  <figure>
+    <img src="assets/img/26_rviz_tf.png" width="620"
+         alt="rviz2 화면을 잘라 낸 그림. 반투명한 터틀봇3 버거 모형의 맨 위에 base_scan 좌표축이, 아래 바퀴 축 가운데에 base_link와 base_footprint 좌표축이 겹쳐 그려져 있다. 두 축 사이를 노란 선이 잇는다. 붉은 표시로 base_scan 라이다, 파랑이 z, 노란 선은 부모 프레임 쪽으로 이어진다, base_link와 base_footprint는 바퀴 축의 가운데라고 적혀 있다">
+    <figcaption>rviz2에서 본 이 로봇의 프레임(세 개만 켰다). <strong>맨 위가 라이다(<code>base_scan</code>)</strong>, 아래 바퀴 사이가 <code>base_link</code>와 <code>base_footprint</code>다.
+      노란 선은 프레임이 부모에게 이어진다는 표시이고, 오른쪽으로 길게 뻗은 노란 선은 화면 밖의 <code>odom</code>으로 가는 것이다.</figcaption>
+  </figure>
+  <div class="interp">
+    <strong>해석:</strong> 이름 끝의 <code>_link</code>는 「로봇의 부품 하나」라는 뜻으로 붙이는 관습이다. <strong>이름은 로봇마다 다를 수 있다.</strong> 라이다 프레임을 <code>laser</code>나 <code>lidar_link</code>라고 부르는 로봇도 많다.
+    그래서 프레임 이름을 외워서 코드에 적기보다, <strong>메시지가 들고 온 이름을 그대로 쓰는 것</strong>이 안전하다(③절).
+  </div>
+
+
+  <!-- ══════════ ② view_frames · tf2_echo ══════════ -->
+  <h2 id="view">② <code>view_frames</code>와 <code>tf2_echo</code> <span class="badge b-red">🔴 사람이 읽는다</span></h2>
+
+  <p>
+    위 표를 믿지 않아도 된다. 지금 내 로봇에 어떤 프레임이 있고 어떻게 이어져 있는지는 <strong>명령 두 개</strong>로 직접 볼 수 있다. bringup이 떠 있는 채로 터미널 2에서 친다.
+  </p>
+
+  <h3>2-1 TF 트리 보기 — <code>view_frames</code></h3>
+<pre class="lang-sh"><code>$ cd ~
+$ ros2 run tf2_tools view_frames
+[INFO] [1794551373.540292446] [view_frames]: Listening to tf data for 5.0 seconds...
+[INFO] [1794551378.578749000] [view_frames]: Generating graph...
+[INFO] [1794551378.602565619] [view_frames]: Exporting graph in frames_2026-11-13_15.29.38.pdf file...</code></pre>
+  <p>
+    5초 동안 <code>/tf</code>와 <code>/tf_static</code>을 듣고, <strong>지금 서 있는 폴더</strong>에 PDF 하나를 만든다(그래서 먼저 <code>cd ~</code>로 홈에 갔다). 파일 이름에 날짜와 시각이 붙는다.
+    로봇 컴퓨터에서 파일 관리자로 열면 이런 그림이 들어 있다.
+  </p>
+  <figure>
+    <img src="assets/img/26_view_frames.png" width="760"
+         alt="view_frames가 만든 그림. 맨 위 타원 odom에서 화살표가 base_footprint로, 거기서 base_link로 내려간다. base_link에서 wheel_left_link, wheel_right_link, caster_back_link, imu_link, base_scan 다섯 타원으로 화살표가 갈라진다. 화살표마다 Average rate 같은 글이 붙어 있다">
+    <figcaption>이 로봇의 TF 트리. <strong>화살표는 부모에서 자식으로</strong> 간다. 화살표 옆의 <code>Average rate</code>가 그 관계가 1초에 몇 번 새로 오는지다 —
+      <code>odom → base_footprint</code>는 20번쯤, 바퀴는 10번쯤이고, <code>10000.0</code>이라고 적힌 것은 <strong>바뀌지 않는 관계</strong>(<code>/tf_static</code>)라는 표시다.</figcaption>
+  </figure>
+  <div class="interp">
+    <strong>해석:</strong> 이 그림에서 확인할 것은 <strong>내가 옮기려는 두 프레임이 한 나무 안에서 이어져 있는가</strong>다. <code>base_scan</code>에서 <code>odom</code>까지는 <code>base_link</code>와 <code>base_footprint</code>를 거쳐 올라가면 닿는다.
+    TF2는 이 길을 따라가며 변환을 차례로 곱해 준다 — 25회 ⑥절의 「변환을 잇는 것은 행렬을 곱하는 것」이 여기서 일어난다. 그림에 없는 이름(<code>map</code> 같은 것)으로는 갈 수 없다.
+  </div>
+
+  <h3>2-2 두 프레임 사이의 변환 보기 — <code>tf2_echo</code></h3>
+<pre class="lang-sh"><code>$ ros2 run tf2_ros tf2_echo base_link base_scan
+At time 0.0
+- Translation: [-0.032, 0.000, 0.172]
+- Rotation: in Quaternion (xyzw) [0.000, 0.000, 0.000, 1.000]
+- Rotation: in RPY (radian) [0.000, -0.000, 0.000]
+- Rotation: in RPY (degree) [0.000, -0.000, 0.000]
+- Matrix:
+  1.000  0.000  0.000 -0.032
+  0.000  1.000  0.000  0.000
+  0.000  0.000  1.000  0.172
+  0.000  0.000  0.000  1.000</code></pre>
+  <p class="readme-first">무엇을 먼저 볼지: <strong><code>Translation</code> 한 줄</strong>이다. 1초마다 같은 것이 되풀이해 찍히므로 <kbd>Ctrl</kbd>+<kbd>C</kbd>로 끈다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>줄</th><th>뜻</th><th>여기서 읽히는 것</th></tr>
+    <tr><td><code>tf2_echo base_link base_scan</code></td><td><strong>앞 프레임에서 본 뒤 프레임</strong>의 자리와 방향</td><td>「몸체에서 본 라이다」</td></tr>
+    <tr><td><code>Translation</code></td><td>x, y, z (m)</td><td>뒤로 3.2cm, 좌우로 0, 위로 17.2cm — <strong>25회에 손으로 적은 −0.032가 이것이다</strong></td></tr>
+    <tr><td><code>Rotation … RPY (degree)</code></td><td>x · y · z축 둘레로 돈 각 (roll · pitch · yaw)</td><td>전부 0 — 돌려 달리지 않았다. 셋째 칸이 25회의 <code>lidar_yaw_deg</code>다</td></tr>
+    <tr><td><code>Rotation … Quaternion</code></td><td>같은 회전을 숫자 넷으로 적은 것</td><td>(0, 0, 0, 1)이 「회전 없음」이다</td></tr>
+    <tr><td><code>Matrix</code></td><td>회전과 평행이동을 한데 담은 4×4 행렬</td><td>25회 ⑥절의 동차좌표 행렬의 3차원 판. 맨 오른쪽 세로줄이 평행이동이다</td></tr>
+    <tr><td><code>At time 0.0</code></td><td>이 관계를 받은 시각</td><td>0.0은 「바뀌지 않는 관계」라는 표시다</td></tr>
+  </table>
+  </div>
+  <p>두 이름의 순서를 바꾸면 거꾸로 본 관계가 나온다 — 「라이다에서 본 몸체」는 앞으로 3.2cm, 아래로 17.2cm다.</p>
+<pre class="lang-sh"><code>$ ros2 run tf2_ros tf2_echo base_scan base_link
+At time 0.0
+- Translation: [0.032, 0.000, -0.172]
+- Rotation: in Quaternion (xyzw) [0.000, 0.000, 0.000, 1.000]</code></pre>
+
+  <div class="box trap">
+    <div class="boxtitle">⚠️ <code>tf2_echo</code>가 켜지자마자 「frame does not exist」라고 한다</div>
+<pre><code>[INFO] [1794551015.399781850] [tf2_echo]: Waiting for transform base_link ->  base_scan: Invalid frame ID "base_link" passed to canTransform argument target_frame - frame does not exist</code></pre>
+    <p>
+      첫 한두 줄에 이것이 찍혀도 놀라지 않아도 된다. 막 켜진 프로그램은 아직 <code>/tf</code>를 한 번도 못 받아서 <strong>아는 프레임이 하나도 없다.</strong> 잠시 뒤 받기 시작하면 값이 나온다.
+      몇 초가 지나도 계속 이 줄만 나오면 그때는 이름이 틀렸거나(오타, 그 로봇에 없는 프레임) bringup이 꺼진 것이다. 없는 이름을 주면 이렇게 끝없이 기다린다.
+    </p>
+<pre class="lang-sh"><code>$ ros2 run tf2_ros tf2_echo base_link map
+[INFO] [1794551400.127996994] [tf2_echo]: Waiting for transform base_link ->  map: Invalid frame ID "map" passed to canTransform argument source_frame - frame does not exist</code></pre>
+    <p><strong>같은 일이 우리 코드에서도 일어난다.</strong> ⑤절에서 다시 만난다.</p>
+  </div>
+
+
+  <!-- ══════════ ③ PointStamped ══════════ -->
+  <h2 id="stamped">③ <code>PointStamped</code>와 <code>header.frame_id</code> <span class="badge b-red">🔴 사람이 이해한다</span></h2>
+
+  <p>
+    TF2에게 「이 점을 옮겨 줘」라고 하려면 숫자 (0.765, −0.022)만 줘서는 안 된다. <strong>그 숫자가 어느 프레임에서 읽은 것인지</strong>를 같이 알려 줘야 어디서 어디로 옮길지가 정해진다.
+  </p>
+  <h3>3-1 정의</h3>
+  <p>
+    17회에서 본 <strong><code>geometry_msgs/msg/PointStamped</code></strong>가 그 일을 한다. 점 하나(<code>point</code>)에 <code>header</code>를 붙인 메시지이고,
+    <code>header.frame_id</code>에 프레임 이름이, <code>header.stamp</code>에 그 점을 잰 시각이 들어간다. 24회의 <code>TwistStamped</code>와 같은 짜임이다.
+  </p>
+<pre class="lang-sh"><code>$ ros2 interface show geometry_msgs/msg/PointStamped
+# This represents a Point with reference coordinate frame and timestamp
+
+std_msgs/Header header
+	builtin_interfaces/Time stamp
+		int32 sec
+		uint32 nanosec
+	string frame_id
+Point point
+	float64 x
+	float64 y
+	float64 z</code></pre>
+  <div class="interp">
+    <strong>해석:</strong> 17회에서 「<code>LaserScan</code>에는 왜 <code>header.frame_id</code>가 있나」 하고 지나간 것이 여기서 쓰인다. 스캔 메시지는 <strong>자기가 어느 프레임에서 잰 값인지를 들고 온다</strong>(<code>base_scan</code>).
+    그 <code>header</code>를 점에 그대로 옮겨 붙이면 프레임 이름을 코드에 적을 필요가 없다. 라이다 프레임의 이름이 다른 로봇에서도 같은 코드가 돈다.
+    시각(<code>stamp</code>)도 같이 넘어간다 — 「<strong>그 점을 잰 순간</strong>의 관계로 옮겨 달라」는 뜻이 되고, ⑥절에서 이것이 문제가 된다.
+  </div>
+
+
+  <!-- ══════════ ④ 버퍼와 리스너 v4 ══════════ -->
+  <h2 id="buffer">④ tf2 버퍼와 리스너 (v4) <span class="badge b-yellow">🟡 맡기되 확인</span></h2>
+
+  <h3>4-1 개념 — 버퍼와 리스너</h3>
+  <p>코드에서 TF2를 쓰려면 물건 둘이 필요하다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>이름</th><th>클래스</th><th>하는 일</th></tr>
+    <tr><td><strong>버퍼</strong> (buffer)</td><td><code>tf2_ros::Buffer</code></td><td>프레임 사이의 변환을 <strong>모아 두는 곳.</strong> 최근 10초치를 시각과 함께 들고 있다가, 물으면 길을 따라가며 계산해 준다</td></tr>
+    <tr><td><strong>리스너</strong> (listener)</td><td><code>tf2_ros::TransformListener</code></td><td><code>/tf</code>와 <code>/tf_static</code>을 구독해서 받은 것을 <strong>버퍼에 채워 넣는다</strong></td></tr>
+  </table>
+  </div>
+  <p>
+    둘을 만들어 두기만 하면 리스너가 뒤에서 알아서 버퍼를 채운다. 우리는 버퍼에게 묻는다 — <strong>「이 <code>PointStamped</code>를 저 프레임 기준으로」</strong>.
+  </p>
+<pre class="lang-cpp"><code>const geometry_msgs::msg::PointStamped out = tf_buffer_-&gt;transform(in, "base_link");</code></pre>
+
+  <h3>4-2 예제에 적용 — <code>to_body</code>와 나란히 놓는다</h3>
+  <p>
+    25회 v3는 점 A를 손으로 적은 <code>lidar_x</code>로 옮겼다. 그 줄을 아직 지우지 않고, <strong>같은 점을 TF2에게도 옮겨 달라고 해서 두 결과를 나란히 찍는다.</strong> 같은 숫자가 나오면 TF2가 무엇을 하는지 납득이 된다.
+  </p>
+
+  <h3>4-3 4단계 (v4) — TF2에게 부탁한다</h3>
+  <p><code>package.xml</code>과 <code>CMakeLists.txt</code>에 패키지 둘을 더한다.</p>
+  <div class="codelabel bad">고치기 전 (25회 v3) — CMakeLists.txt</div>
+<pre class="lang-cmake before"><code>find_package(geometry_msgs REQUIRED)
+
+# (가운데 cone_drive 부분은 그대로다)
+
+# 25회 — 실행 파일 scan_points. LaserScan 을 받아 점의 좌표(x, y)로 편다
+add_executable(scan_points src/scan_points.cpp)
+target_link_libraries(scan_points PRIVATE
+  rclcpp::rclcpp ${sensor_msgs_TARGETS})</code></pre>
+  <div class="codelabel good">고친 뒤 (v4) — find_package 두 줄, 링크에 이름 셋. package.xml 에도 &lt;depend&gt; 두 줄(tf2_ros · tf2_geometry_msgs)</div>
+<pre class="lang-cmake after"><code>find_package(geometry_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+
+# (가운데 cone_drive 부분은 그대로다)
+
+# 25회 — 실행 파일 scan_points. LaserScan 을 받아 점의 좌표(x, y)로 편다
+# 26회 — TF2 로 좌표계를 옮긴다 (tf2_ros · tf2_geometry_msgs · PointStamped 가 든 geometry_msgs)
+add_executable(scan_points src/scan_points.cpp)
+target_link_libraries(scan_points PRIVATE
+  rclcpp::rclcpp ${sensor_msgs_TARGETS} ${geometry_msgs_TARGETS}
+  tf2_ros::tf2_ros tf2_geometry_msgs::tf2_geometry_msgs)</code></pre>
+  <p>소스에는 헤더 넷, 멤버 둘, 생성자 두 줄이 는다.</p>
+<pre class="lang-cpp"><code>#include "geometry_msgs/msg/point_stamped.hpp"
+#include "tf2_ros/buffer.h"
+#include "tf2_ros/transform_listener.h"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"</code></pre>
+<pre class="lang-cpp"><code>    // TF2 — 버퍼는 좌표계 사이의 관계를 모아 두는 곳, 리스너는 /tf · /tf_static 을 받아 버퍼에 채우는 것
+    tf_buffer_ = std::make_unique&lt;tf2_ros::Buffer&gt;(this-&gt;get_clock());
+    tf_listener_ = std::make_shared&lt;tf2_ros::TransformListener&gt;(*tf_buffer_);</code></pre>
+<pre class="lang-cpp"><code>  std::unique_ptr&lt;tf2_ros::Buffer&gt; tf_buffer_;                   // 좌표계 사이의 관계를 모아 둔다
+  std::shared_ptr&lt;tf2_ros::TransformListener&gt; tf_listener_;      // /tf · /tf_static 을 받아 버퍼에 넣는다</code></pre>
+  <div class="codelabel bad">고치기 전 (25회 v3) — on_scan 의 끝: 손으로 옮긴다</div>
+<pre class="lang-cpp before"><code>    const Point a_body = to_body(*a);            // 같은 점을 로봇 몸체 기준으로
+    const Point b_body = to_body(*b);
+    RCLCPP_INFO_THROTTLE(this-&gt;get_logger(), *this-&gt;get_clock(), 1000,
+                         "라이다 기준 A (%.3f, %.3f) B (%.3f, %.3f) 사이 %.3f m · 몸체 기준 A (%.3f, %.3f) B (%.3f, %.3f) 사이 %.3f m",
+                         a-&gt;x, a-&gt;y, b-&gt;x, b-&gt;y, distance(*a, *b),
+                         a_body.x, a_body.y, b_body.x, b_body.y, distance(a_body, b_body));</code></pre>
+  <div class="codelabel good">고친 뒤 (v4) — 같은 점 A 를 TF2 에게도 맡겨 나란히 찍는다</div>
+<pre class="lang-cpp after"><code>    const Point a_body = to_body(*a);            // 25회 — 손으로 적은 3.2 cm 로 옮긴 것
+
+    // 26회 — 점에 「어느 좌표계의 값인가」를 붙여 TF2 에게 넘긴다
+    geometry_msgs::msg::PointStamped in;
+    in.header = msg-&gt;header;                     // frame_id 가 "base_scan" 이다. 스캔 메시지가 들고 온 것을 그대로 쓴다
+    in.point.x = a-&gt;x;
+    in.point.y = a-&gt;y;
+    const geometry_msgs::msg::PointStamped out = tf_buffer_-&gt;transform(in, "base_link");
+
+    RCLCPP_INFO_THROTTLE(this-&gt;get_logger(), *this-&gt;get_clock(), 1000,
+                         "%s 기준 A (%.3f, %.3f) · 손으로 옮긴 것 (%.3f, %.3f) · TF2 가 옮긴 것 %s 기준 (%.3f, %.3f, %.3f)",
+                         in.header.frame_id.c_str(), a-&gt;x, a-&gt;y, a_body.x, a_body.y,
+                         out.header.frame_id.c_str(), out.point.x, out.point.y, out.point.z);</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt><code>tf_buffer_-&gt;transform(in, "base_link")</code></dt>
+      <dd><code>in</code>의 <code>header.frame_id</code>(어디서)와 둘째 인자(어디로)를 보고, <code>header.stamp</code> 시각의 관계로 점을 옮겨 <strong>새 <code>PointStamped</code>를 돌려준다.</strong> 돌려받은 것의 <code>frame_id</code>는 <code>"base_link"</code>로 바뀌어 있다.</dd>
+      <dt><code>tf2_geometry_msgs/tf2_geometry_msgs.hpp</code></dt>
+      <dd>TF2에게 「<code>PointStamped</code>는 이렇게 옮긴다」를 알려 주는 헤더다. 이것을 빠뜨리면 <code>transform(…)</code> 줄에서 길고 알아보기 힘든 컴파일 오류가 난다. <code>.hpp</code>인 것, 나머지 둘은 <code>.h</code>인 것도 그대로 적는다.</dd>
+      <dt><code>std::make_unique&lt;tf2_ros::Buffer&gt;(this-&gt;get_clock())</code></dt>
+      <dd>11회의 <code>unique_ptr</code>다. 버퍼는 「지금 몇 시인가」를 알아야 해서 노드의 시계를 넘겨받는다.</dd>
+      <dt><code>.c_str()</code></dt>
+      <dd><code>std::string</code>을 <code>%s</code>로 찍을 수 있는 모양으로 바꿔 준다(21회에서 서비스 응답의 글자를 찍을 때 썼다).</dd>
+    </dl>
+  </div>
+
+  <!-- fullcode "전체 코드 — cone_drive/ (scan_points 4단계 · v4. cone_drive.cpp 는 24회 v5 그대로)" build="cd ~/ros_ws && colcon build --packages-select cone_drive && ros2 run cone_drive scan_points"
+       l26_tf2/steps/step4/cone_drive/src/scan_points.cpp as cone_drive/src/scan_points.cpp
+       l26_tf2/steps/step4/cone_drive/CMakeLists.txt as cone_drive/CMakeLists.txt
+       l26_tf2/steps/step4/cone_drive/package.xml as cone_drive/package.xml
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — cone_drive/ (scan_points 4단계 · v4. cone_drive.cpp 는 24회 v5 그대로)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select cone_drive &amp;&amp; ros2 run cone_drive scan_points</code></p>
+  <div class="codefile"><div class="fname">cone_drive/src/scan_points.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 26회 scan_points — v4 (4단계: TF2 에게 「이 점을 base_link 기준으로」 부탁한다 — 손으로 옮긴 것과 견준다)
+#include &lt;cmath&gt;
+#include &lt;memory&gt;
+#include &lt;optional&gt;
+#include &lt;vector&gt;
+
+#include &quot;rclcpp/rclcpp.hpp&quot;
+#include &quot;sensor_msgs/msg/laser_scan.hpp&quot;
+#include &quot;geometry_msgs/msg/point_stamped.hpp&quot;
+#include &quot;tf2_ros/buffer.h&quot;
+#include &quot;tf2_ros/transform_listener.h&quot;
+#include &quot;tf2_geometry_msgs/tf2_geometry_msgs.hpp&quot;
+
+// 평면 위의 점 하나 (m). x 는 앞, y 는 왼쪽
+struct Point
+{
+  double x;
+  double y;
+};
+
+class ScanPoints : public rclcpp::Node
+{
+public:
+  ScanPoints()
+  : Node(&quot;scan_points&quot;)
+  {
+    // 믿을 수 있는 거리 범위 — 라이다 사양표에서 가져온다 (24회. LDS-02 기준)
+    this-&gt;declare_parameter(&quot;range_min&quot;, 0.16);
+    this-&gt;declare_parameter(&quot;range_max&quot;, 8.0);
+    range_min_ = this-&gt;get_parameter(&quot;range_min&quot;).as_double();
+    range_max_ = this-&gt;get_parameter(&quot;range_max&quot;).as_double();
+    // 좌표를 볼 두 방향 (도) — 물건을 놓은 방향으로 바꿔 가며 쓴다
+    this-&gt;declare_parameter(&quot;angle_a_deg&quot;, 0.0);
+    this-&gt;declare_parameter(&quot;angle_b_deg&quot;, 90.0);
+    angle_a_deg_ = this-&gt;get_parameter(&quot;angle_a_deg&quot;).as_double();
+    angle_b_deg_ = this-&gt;get_parameter(&quot;angle_b_deg&quot;).as_double();
+    // 로봇 몸체에서 본 라이다의 자리와 방향 — 터틀봇3 버거는 3.2 cm 뒤에, 돌아가지 않고 달려 있다
+    this-&gt;declare_parameter(&quot;lidar_x&quot;, -0.032);
+    this-&gt;declare_parameter(&quot;lidar_y&quot;, 0.0);
+    this-&gt;declare_parameter(&quot;lidar_yaw_deg&quot;, 0.0);
+    lidar_x_ = this-&gt;get_parameter(&quot;lidar_x&quot;).as_double();
+    lidar_y_ = this-&gt;get_parameter(&quot;lidar_y&quot;).as_double();
+    lidar_yaw_ = this-&gt;get_parameter(&quot;lidar_yaw_deg&quot;).as_double() * M_PI / 180.0;
+
+    // TF2 — 버퍼는 좌표계 사이의 관계를 모아 두는 곳, 리스너는 /tf · /tf_static 을 받아 버퍼에 채우는 것
+    tf_buffer_ = std::make_unique&lt;tf2_ros::Buffer&gt;(this-&gt;get_clock());
+    tf_listener_ = std::make_shared&lt;tf2_ros::TransformListener&gt;(*tf_buffer_);
+
+    scan_sub_ = this-&gt;create_subscription&lt;sensor_msgs::msg::LaserScan&gt;(
+      &quot;/scan&quot;, rclcpp::SensorDataQoS(),
+      [this](sensor_msgs::msg::LaserScan::ConstSharedPtr msg) { on_scan(msg); });
+  }
+
+private:
+  // /scan 이 올 때마다 불린다 — 두 방향의 점과 그 사이 거리를 1초에 한 번 찍는다
+  void on_scan(sensor_msgs::msg::LaserScan::ConstSharedPtr msg)
+  {
+    const std::optional&lt;Point&gt; a = point_at(*msg, angle_a_deg_);
+    const std::optional&lt;Point&gt; b = point_at(*msg, angle_b_deg_);
+    if (!a || !b) {
+      RCLCPP_WARN_THROTTLE(this-&gt;get_logger(), *this-&gt;get_clock(), 1000,
+                           &quot;%.0f도 또는 %.0f도 방향을 못 봤습니다&quot;, angle_a_deg_, angle_b_deg_);
+      return;
+    }
+    const Point a_body = to_body(*a);            // 25회 — 손으로 적은 3.2 cm 로 옮긴 것
+
+    // 26회 — 점에 「어느 좌표계의 값인가」를 붙여 TF2 에게 넘긴다
+    geometry_msgs::msg::PointStamped in;
+    in.header = msg-&gt;header;                     // frame_id 가 &quot;base_scan&quot; 이다. 스캔 메시지가 들고 온 것을 그대로 쓴다
+    in.point.x = a-&gt;x;
+    in.point.y = a-&gt;y;
+    const geometry_msgs::msg::PointStamped out = tf_buffer_-&gt;transform(in, &quot;base_link&quot;);
+
+    RCLCPP_INFO_THROTTLE(this-&gt;get_logger(), *this-&gt;get_clock(), 1000,
+                         &quot;%s 기준 A (%.3f, %.3f) · 손으로 옮긴 것 (%.3f, %.3f) · TF2 가 옮긴 것 %s 기준 (%.3f, %.3f, %.3f)&quot;,
+                         in.header.frame_id.c_str(), a-&gt;x, a-&gt;y, a_body.x, a_body.y,
+                         out.header.frame_id.c_str(), out.point.x, out.point.y, out.point.z);
+  }
+
+  // 라이다 기준의 점을 로봇 몸체 기준으로 옮긴다 — 라이다가 돌아간 만큼 돌리고, 라이다가 있는 자리만큼 민다
+  Point to_body(const Point &amp; p) const
+  {
+    const double c = std::cos(lidar_yaw_);
+    const double s = std::sin(lidar_yaw_);
+    const double x_rotated = p.x * c - p.y * s;  // 회전
+    const double y_rotated = p.x * s + p.y * c;
+    return Point{x_rotated + lidar_x_, y_rotated + lidar_y_};   // 평행이동
+  }
+
+  // 두 점 사이의 거리 — √((x₁ − x₂)² + (y₁ − y₂)²)
+  double distance(const Point &amp; a, const Point &amp; b) const
+  {
+    return std::hypot(a.x - b.x, a.y - b.y);
+  }
+
+  // 각도 deg(도)에 가장 가까운 값을 점으로 — 그 값을 못 쟀으면 「없다」
+  std::optional&lt;Point&gt; point_at(const sensor_msgs::msg::LaserScan &amp; scan, double deg) const
+  {
+    const double rad = deg * M_PI / 180.0;
+    const long n = static_cast&lt;long&gt;(scan.ranges.size());
+    long i = std::lround((rad - scan.angle_min) / scan.angle_increment) % n;   // 24회의 index_near
+    if (i &lt; 0) {
+      i += n;
+    }
+    const double r = scan.ranges[i];
+    if (!is_valid(scan.ranges[i])) {
+      return std::nullopt;
+    }
+    const double theta = scan.angle_min + i * scan.angle_increment;
+    return Point{r * std::cos(theta), r * std::sin(theta)};
+  }
+
+  // 쓸 수 있는 거리인가 — NaN · inf 가 아니고 사양 범위 안에 있다 (24회)
+  bool is_valid(float r) const
+  {
+    return std::isfinite(r) &amp;&amp; r &gt;= range_min_ &amp;&amp; r &lt;= range_max_;
+  }
+
+  double range_min_ = 0.0;        // 파라미터 range_min 에서 읽는다 (m)
+  double range_max_ = 0.0;        // 파라미터 range_max 에서 읽는다 (m)
+  double angle_a_deg_ = 0.0;      // 파라미터 angle_a_deg 에서 읽는다 (도)
+  double angle_b_deg_ = 0.0;      // 파라미터 angle_b_deg 에서 읽는다 (도)
+  double lidar_x_ = 0.0;          // 파라미터 lidar_x 에서 읽는다 (m) — 몸체에서 본 라이다의 x
+  double lidar_y_ = 0.0;          // 파라미터 lidar_y 에서 읽는다 (m)
+  double lidar_yaw_ = 0.0;        // 파라미터 lidar_yaw_deg 에서 읽어 rad 로 바꿔 둔다
+
+  std::unique_ptr&lt;tf2_ros::Buffer&gt; tf_buffer_;                   // 좌표계 사이의 관계를 모아 둔다
+  std::shared_ptr&lt;tf2_ros::TransformListener&gt; tf_listener_;      // /tf · /tf_static 을 받아 버퍼에 넣는다
+  rclcpp::Subscription&lt;sensor_msgs::msg::LaserScan&gt;::SharedPtr scan_sub_;
+};
+
+int main(int argc, char ** argv)
+{
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared&lt;ScanPoints&gt;();
+  rclcpp::spin(node);            // 구독 콜백은 이 안에서 불린다
+  rclcpp::shutdown();
+  return 0;
+}</code></pre></div>
+  <div class="codefile"><div class="fname">cone_drive/CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre class="lang-cmake"><code>cmake_minimum_required(VERSION 3.8)
+project(cone_drive)
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES &quot;Clang&quot;)
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+# find dependencies
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+
+# 24회 — 실행 파일 cone_drive. LaserScan(sensor_msgs)을 받는다
+# 24회 5단계 — TwistStamped(geometry_msgs)를 보낸다
+add_executable(cone_drive src/cone_drive.cpp)
+target_link_libraries(cone_drive PRIVATE
+  rclcpp::rclcpp ${sensor_msgs_TARGETS} ${geometry_msgs_TARGETS})
+
+# 25회 — 실행 파일 scan_points. LaserScan 을 받아 점의 좌표(x, y)로 편다
+# 26회 — TF2 로 좌표계를 옮긴다 (tf2_ros · tf2_geometry_msgs · PointStamped 가 든 geometry_msgs)
+add_executable(scan_points src/scan_points.cpp)
+target_link_libraries(scan_points PRIVATE
+  rclcpp::rclcpp ${sensor_msgs_TARGETS} ${geometry_msgs_TARGETS}
+  tf2_ros::tf2_ros tf2_geometry_msgs::tf2_geometry_msgs)
+
+# 만든 실행 파일을 ros2 run 이 찾는 자리에 설치한다
+install(TARGETS cone_drive scan_points
+  DESTINATION lib/${PROJECT_NAME})
+
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  # the following line skips the linter which checks for copyrights
+  # comment the line when a copyright and license is added to all source files
+  set(ament_cmake_copyright_FOUND TRUE)
+  # the following line skips cpplint (only works in a git repo)
+  # comment the line when this package is in a git repo and when
+  # a copyright and license is added to all source files
+  set(ament_cmake_cpplint_FOUND TRUE)
+  ament_lint_auto_find_test_dependencies()
+endif()
+
+ament_package()</code></pre></div>
+  <div class="codefile"><div class="fname">cone_drive/package.xml</div><button onclick="copyCode(this)">복사</button><pre class=""><code>&lt;?xml version=&quot;1.0&quot;?&gt;
+&lt;?xml-model href=&quot;http://download.ros.org/schema/package_format3.xsd&quot; schematypens=&quot;http://www.w3.org/2001/XMLSchema&quot;?&gt;
+&lt;package format=&quot;3&quot;&gt;
+  &lt;name&gt;cone_drive&lt;/name&gt;
+  &lt;version&gt;0.0.0&lt;/version&gt;
+  &lt;description&gt;로봇공학 4부 실습 — 터틀봇3의 라이다로 콘을 찾아 따라가는 노드&lt;/description&gt;
+  &lt;maintainer email=&quot;student@example.com&quot;&gt;Student Name&lt;/maintainer&gt;
+  &lt;license&gt;MIT&lt;/license&gt;
+
+  &lt;buildtool_depend&gt;ament_cmake&lt;/buildtool_depend&gt;
+
+  &lt;depend&gt;rclcpp&lt;/depend&gt;
+  &lt;depend&gt;sensor_msgs&lt;/depend&gt;
+  &lt;depend&gt;geometry_msgs&lt;/depend&gt;
+  &lt;depend&gt;tf2_ros&lt;/depend&gt;
+  &lt;depend&gt;tf2_geometry_msgs&lt;/depend&gt;
+
+  &lt;test_depend&gt;ament_lint_auto&lt;/test_depend&gt;
+  &lt;test_depend&gt;ament_lint_common&lt;/test_depend&gt;
+
+  &lt;export&gt;
+    &lt;build_type&gt;ament_cmake&lt;/build_type&gt;
+  &lt;/export&gt;
+&lt;/package&gt;</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <h3>4-4 실제로 나온 출력</h3>
+<pre class="lang-sh"><code>$ ros2 run cone_drive scan_points
+[INFO] [1794551116.611625799] [scan_points]: base_scan 기준 A (0.765, -0.022) · 손으로 옮긴 것 (0.733, -0.022) · TF2 가 옮긴 것 base_link 기준 (0.733, -0.022, 0.172)
+[INFO] [1794551117.661021106] [scan_points]: base_scan 기준 A (0.765, -0.011) · 손으로 옮긴 것 (0.733, -0.011) · TF2 가 옮긴 것 base_link 기준 (0.733, -0.011, 0.172)
+[INFO] [1794551118.701728481] [scan_points]: base_scan 기준 A (0.766, -0.009) · 손으로 옮긴 것 (0.734, -0.009) · TF2 가 옮긴 것 base_link 기준 (0.734, -0.009, 0.172)</code></pre>
+  <div class="interp">
+    <strong>해석:</strong> x와 y가 <strong>소수 셋째 자리까지 같다.</strong> 우리는 3.2cm를 알려 준 적이 없는데 TF2가 같은 답을 냈다 — <code>/tf_static</code>에서 받아 알고 있었던 것이다.
+    하나 더 얻은 것도 있다. <strong>z가 0.172</strong>다. 라이다가 잰 점은 라이다 높이에 있으므로, 몸체 기준으로 보면 17.2cm 위에 있다. 25회에는 평면만 봤기 때문에 이 숫자가 없었다.
+  </div>
+  <p>그런데 이 프로그램을 여러 번 껐다 켜 보면 가끔, 켜자마자 이렇게 끝난다. 여섯 번 켰더니 네 번이 이랬다.</p>
+<pre class="lang-sh"><code>$ ros2 run cone_drive scan_points
+terminate called after throwing an instance of 'tf2::LookupException'
+  what():  "base_link" passed to lookupTransform argument target_frame does not exist.
+[ros2run]: Aborted</code></pre>
+  <p><strong>노드가 죽었다.</strong> 다음 절이 이것을 다룬다.</p>
+
+
+  <!-- ══════════ ⑤ 예외 v5 ══════════ -->
+  <h2 id="exception">⑤ <code>TransformException</code> (v5) <span class="badge b-red">🔴 사람이 판단한다</span></h2>
+
+  <h3>5-1 개념 — 변환은 실패할 수 있다</h3>
+  <p>
+    <code>transform()</code>은 변환을 못 하면 값을 돌려주는 대신 <strong>예외를 던진다.</strong> 받아 주는 곳이 없으면 프로그램이 그 자리에서 끝난다 — 위에서 본 <code>terminate called</code>가 그것이다.
+    못 하는 경우는 크게 셋이고, 이름이 따로 있다.
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>예외</th><th>언제 나나</th><th>메시지에 보이는 말</th></tr>
+    <tr><td><code>tf2::LookupException</code></td><td>그 이름의 프레임을 <strong>모른다</strong> — 이름이 틀렸거나, 아직 <code>/tf</code>를 못 받았다</td><td><code>… does not exist</code></td></tr>
+    <tr><td><code>tf2::ConnectivityException</code></td><td>두 프레임이 <strong>한 나무로 이어져 있지 않다</strong></td><td><code>… not part of the same tree</code></td></tr>
+    <tr><td><code>tf2::ExtrapolationException</code></td><td>요청한 <strong>시각의</strong> 관계가 버퍼에 없다 — 아직 안 왔거나 너무 오래됐다</td><td><code>… extrapolation into the future / past</code></td></tr>
+  </table>
+  </div>
+  <p>
+    셋 다 <strong><code>tf2::TransformException</code></strong>의 파생 클래스다(10회). 그래서 기반 클래스 하나로 한꺼번에 받을 수 있다.
+    v4가 죽은 것은 첫 줄의 경우다. 노드가 막 켜져 리스너가 <code>/tf_static</code>을 받기도 전에 첫 스캔이 먼저 도착했다. ②절의 <code>tf2_echo</code>가 처음에 「frame does not exist」라고 한 것과 같은 까닭이고,
+    어느 쪽이 먼저 오느냐에 달려 있어서 <strong>될 때도 있고 안 될 때도 있다.</strong>
+  </p>
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 처음 나오는 문법 — <code>try</code> / <code>catch</code></p>
+    <dl>
+      <dt><code>try { … } catch (const 타입 &amp; e) { … }</code></dt>
+      <dd><code>try</code> 블록 안에서 예외가 던져지면 그 자리에서 블록을 빠져나와, 타입이 맞는 <code>catch</code> 블록으로 간다. 예외가 없으면 <code>catch</code>는 건너뛴다.
+        잡은 예외의 설명은 <code>e.what()</code>으로 얻는다. 2부에서 다루지 않은 문법이고, 이 과목에서는 이 자리에서만 쓴다.</dd>
+    </dl>
+  </div>
+
+  <h3>5-2 5단계 (v5) — 예외를 받고, 손으로 적은 숫자를 지운다</h3>
+  <p>
+    TF2가 같은 답을 내는 것을 확인했으니 <code>to_body</code>와 파라미터 <code>lidar_x</code> · <code>lidar_y</code> · <code>lidar_yaw_deg</code>를 <strong>지운다.</strong> 점도 A 하나만 남긴다.
+    대신 「어느 프레임으로 옮길지」를 파라미터 <code>target_frame</code>으로 받는다.
+  </p>
+  <div class="codelabel bad">고치기 전 (v4) — 실패하면 노드가 죽는다</div>
+<pre class="lang-cpp before"><code>    const geometry_msgs::msg::PointStamped out = tf_buffer_-&gt;transform(in, "base_link");</code></pre>
+  <div class="codelabel good">고친 뒤 (v5) — 실패하면 알리고 이번 스캔만 건너뛴다</div>
+<pre class="lang-cpp after"><code>    geometry_msgs::msg::PointStamped out;
+    try {
+      out = tf_buffer_-&gt;transform(in, target_frame_);
+    } catch (const tf2::TransformException &amp; e) {
+      // 좌표계 이름이 틀렸거나, 두 좌표계의 관계를 아직 못 받았다 — 이번 스캔은 건너뛴다
+      RCLCPP_WARN_THROTTLE(this-&gt;get_logger(), *this-&gt;get_clock(), 1000,
+                           "%s → %s 로 옮기지 못했습니다: %s",
+                           in.header.frame_id.c_str(), target_frame_.c_str(), e.what());
+      return;
+    }</code></pre>
+  <p>
+    <code>catch</code>에서 <strong>무엇을 할지</strong>가 사람이 정할 일이다. 여기서는 「경고를 찍고 이번 스캔을 버린다」로 했다. 옮기지 못한 점으로 계산을 이어 가는 것보다 한 프레임을 쉬는 편이 낫다.
+    24회의 「모를 때는 선다」와 같은 생각이다.
+  </p>
+
+  <!-- fullcode "전체 코드 — cone_drive/src/scan_points.cpp (5단계 · v5. CMakeLists.txt · package.xml 은 v4 그대로)" build="cd ~/ros_ws && colcon build --packages-select cone_drive && ros2 run cone_drive scan_points"
+       l26_tf2/steps/step5/cone_drive/src/scan_points.cpp as cone_drive/src/scan_points.cpp
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — cone_drive/src/scan_points.cpp (5단계 · v5. CMakeLists.txt · package.xml 은 v4 그대로)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select cone_drive &amp;&amp; ros2 run cone_drive scan_points</code></p>
+  <div class="codefile"><div class="fname">cone_drive/src/scan_points.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 26회 scan_points — v5 (5단계: 변환을 못 할 때의 예외를 받는다 — 손으로 적은 3.2 cm 는 지운다)
+#include &lt;cmath&gt;
+#include &lt;memory&gt;
+#include &lt;optional&gt;
+#include &lt;string&gt;
+#include &lt;vector&gt;
+
+#include &quot;rclcpp/rclcpp.hpp&quot;
+#include &quot;sensor_msgs/msg/laser_scan.hpp&quot;
+#include &quot;geometry_msgs/msg/point_stamped.hpp&quot;
+#include &quot;tf2_ros/buffer.h&quot;
+#include &quot;tf2_ros/transform_listener.h&quot;
+#include &quot;tf2_geometry_msgs/tf2_geometry_msgs.hpp&quot;
+
+// 평면 위의 점 하나 (m). x 는 앞, y 는 왼쪽
+struct Point
+{
+  double x;
+  double y;
+};
+
+class ScanPoints : public rclcpp::Node
+{
+public:
+  ScanPoints()
+  : Node(&quot;scan_points&quot;)
+  {
+    // 믿을 수 있는 거리 범위 — 라이다 사양표에서 가져온다 (24회. LDS-02 기준)
+    this-&gt;declare_parameter(&quot;range_min&quot;, 0.16);
+    this-&gt;declare_parameter(&quot;range_max&quot;, 8.0);
+    range_min_ = this-&gt;get_parameter(&quot;range_min&quot;).as_double();
+    range_max_ = this-&gt;get_parameter(&quot;range_max&quot;).as_double();
+    // 좌표를 볼 방향 (도) — 물건을 놓은 방향으로 바꿔 가며 쓴다
+    this-&gt;declare_parameter(&quot;angle_a_deg&quot;, 0.0);
+    angle_a_deg_ = this-&gt;get_parameter(&quot;angle_a_deg&quot;).as_double();
+    // 어느 좌표계로 옮길 것인가 — 좌표계의 이름을 글자로 준다
+    this-&gt;declare_parameter(&quot;target_frame&quot;, &quot;base_link&quot;);
+    target_frame_ = this-&gt;get_parameter(&quot;target_frame&quot;).as_string();
+
+    // TF2 — 버퍼는 좌표계 사이의 관계를 모아 두는 곳, 리스너는 /tf · /tf_static 을 받아 버퍼에 채우는 것
+    tf_buffer_ = std::make_unique&lt;tf2_ros::Buffer&gt;(this-&gt;get_clock());
+    tf_listener_ = std::make_shared&lt;tf2_ros::TransformListener&gt;(*tf_buffer_);
+
+    scan_sub_ = this-&gt;create_subscription&lt;sensor_msgs::msg::LaserScan&gt;(
+      &quot;/scan&quot;, rclcpp::SensorDataQoS(),
+      [this](sensor_msgs::msg::LaserScan::ConstSharedPtr msg) { on_scan(msg); });
+  }
+
+private:
+  // /scan 이 올 때마다 불린다 — 두 방향의 점과 그 사이 거리를 1초에 한 번 찍는다
+  void on_scan(sensor_msgs::msg::LaserScan::ConstSharedPtr msg)
+  {
+    const std::optional&lt;Point&gt; a = point_at(*msg, angle_a_deg_);
+    if (!a) {
+      RCLCPP_WARN_THROTTLE(this-&gt;get_logger(), *this-&gt;get_clock(), 1000,
+                           &quot;%.0f도 방향을 못 봤습니다&quot;, angle_a_deg_);
+      return;
+    }
+    // 점에 「어느 좌표계의 값인가」를 붙여 TF2 에게 넘긴다
+    geometry_msgs::msg::PointStamped in;
+    in.header = msg-&gt;header;                     // frame_id 가 &quot;base_scan&quot; 이다. 스캔 메시지가 들고 온 것을 그대로 쓴다
+    in.point.x = a-&gt;x;
+    in.point.y = a-&gt;y;
+
+    geometry_msgs::msg::PointStamped out;
+    try {
+      out = tf_buffer_-&gt;transform(in, target_frame_);
+    } catch (const tf2::TransformException &amp; e) {
+      // 좌표계 이름이 틀렸거나, 두 좌표계의 관계를 아직 못 받았다 — 이번 스캔은 건너뛴다
+      RCLCPP_WARN_THROTTLE(this-&gt;get_logger(), *this-&gt;get_clock(), 1000,
+                           &quot;%s → %s 로 옮기지 못했습니다: %s&quot;,
+                           in.header.frame_id.c_str(), target_frame_.c_str(), e.what());
+      return;
+    }
+    RCLCPP_INFO_THROTTLE(this-&gt;get_logger(), *this-&gt;get_clock(), 1000,
+                         &quot;%s 기준 A (%.3f, %.3f) · %s 기준 A (%.3f, %.3f, %.3f)&quot;,
+                         in.header.frame_id.c_str(), a-&gt;x, a-&gt;y,
+                         out.header.frame_id.c_str(), out.point.x, out.point.y, out.point.z);
+  }
+
+  // 각도 deg(도)에 가장 가까운 값을 점으로 — 그 값을 못 쟀으면 「없다」
+  std::optional&lt;Point&gt; point_at(const sensor_msgs::msg::LaserScan &amp; scan, double deg) const
+  {
+    const double rad = deg * M_PI / 180.0;
+    const long n = static_cast&lt;long&gt;(scan.ranges.size());
+    long i = std::lround((rad - scan.angle_min) / scan.angle_increment) % n;   // 24회의 index_near
+    if (i &lt; 0) {
+      i += n;
+    }
+    const double r = scan.ranges[i];
+    if (!is_valid(scan.ranges[i])) {
+      return std::nullopt;
+    }
+    const double theta = scan.angle_min + i * scan.angle_increment;
+    return Point{r * std::cos(theta), r * std::sin(theta)};
+  }
+
+  // 쓸 수 있는 거리인가 — NaN · inf 가 아니고 사양 범위 안에 있다 (24회)
+  bool is_valid(float r) const
+  {
+    return std::isfinite(r) &amp;&amp; r &gt;= range_min_ &amp;&amp; r &lt;= range_max_;
+  }
+
+  double range_min_ = 0.0;        // 파라미터 range_min 에서 읽는다 (m)
+  double range_max_ = 0.0;        // 파라미터 range_max 에서 읽는다 (m)
+  double angle_a_deg_ = 0.0;      // 파라미터 angle_a_deg 에서 읽는다 (도)
+  std::string target_frame_;      // 파라미터 target_frame 에서 읽는다 — 옮겨 갈 좌표계의 이름
+
+  std::unique_ptr&lt;tf2_ros::Buffer&gt; tf_buffer_;                   // 좌표계 사이의 관계를 모아 둔다
+  std::shared_ptr&lt;tf2_ros::TransformListener&gt; tf_listener_;      // /tf · /tf_static 을 받아 버퍼에 넣는다
+  rclcpp::Subscription&lt;sensor_msgs::msg::LaserScan&gt;::SharedPtr scan_sub_;
+};
+
+int main(int argc, char ** argv)
+{
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared&lt;ScanPoints&gt;();
+  rclcpp::spin(node);            // 구독 콜백은 이 안에서 불린다
+  rclcpp::shutdown();
+  return 0;
+}</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <p>실제로 나온 출력이다. 이번에는 켜자마자 실패해도 죽지 않고 다음 스캔에서 이어 간다.</p>
+<pre class="lang-sh"><code>$ ros2 run cone_drive scan_points
+[WARN] [1794551245.601174081] [scan_points]: base_scan → base_link 로 옮기지 못했습니다: "base_link" passed to lookupTransform argument target_frame does not exist.
+[INFO] [1794551245.691289844] [scan_points]: base_scan 기준 A (0.765, 0.000) · base_link 기준 A (0.733, 0.000, 0.172)
+[INFO] [1794551246.731435478] [scan_points]: base_scan 기준 A (0.765, 0.001) · base_link 기준 A (0.733, 0.001, 0.172)</code></pre>
+  <p>없는 프레임(<code>map</code>)과, 다른 프레임(<code>base_footprint</code>)을 줘 본다.</p>
+<pre class="lang-sh"><code>$ ros2 run cone_drive scan_points --ros-args -p target_frame:=map
+[WARN] [1794551251.551222102] [scan_points]: base_scan → map 로 옮기지 못했습니다: "map" passed to lookupTransform argument target_frame does not exist.
+[WARN] [1794551252.581525099] [scan_points]: base_scan → map 로 옮기지 못했습니다: "map" passed to lookupTransform argument target_frame does not exist.
+$ ros2 run cone_drive scan_points --ros-args -p target_frame:=base_footprint
+[WARN] [1794551254.572071950] [scan_points]: base_scan → base_footprint 로 옮기지 못했습니다: "base_footprint" passed to lookupTransform argument target_frame does not exist.
+[INFO] [1794551254.661811567] [scan_points]: base_scan 기준 A (0.765, 0.004) · base_footprint 기준 A (0.733, 0.004, 0.182)
+[INFO] [1794551255.701950158] [scan_points]: base_scan 기준 A (0.765, -0.023) · base_footprint 기준 A (0.733, -0.023, 0.182)</code></pre>
+  <div class="interp">
+    <strong>해석:</strong> <code>map</code>은 이 로봇에 없는 프레임이라 경고가 끝없이 되풀이된다 — 처음 한 번만 나오고 마는 경고와 <strong>계속 나오는 경고</strong>를 구별해서 읽는다. 앞의 것은 켜지는 순간의 일이고 뒤의 것은 고쳐야 하는 일이다.
+    <code>base_footprint</code>로 바꾸면 z가 0.172에서 <strong>0.182</strong>가 됐다. 한 단계 더 올라가 1cm가 더해진 것이다. 코드는 한 글자도 안 바뀌었고 <strong>이름만 바꿨는데</strong> 두 단계짜리 변환이 됐다.
+  </div>
+
+
+  <!-- ══════════ ⑥ odom v6 ══════════ -->
+  <h2 id="odom">⑥ <code>odom</code> 프레임과 <code>/odom</code> (v6) <span class="badge b-red">🔴 사람이 이해한다</span></h2>
+
+  <p>
+    지금까지의 프레임은 전부 로봇에 붙어 있어서 로봇이 가면 같이 간다. 그러면 「로봇이 얼마나 갔나」는 무엇을 기준으로 말할까? <strong>로봇에 붙어 있지 않은 기준</strong>이 하나 필요하다.
+  </p>
+
+  <h3>6-1 개념 — 오도메트리(odometry)와 <code>odom</code> 프레임</h3>
+  <p>
+    <strong>오도메트리(odometry)</strong>는 <strong>바퀴가 돈 양을 세어서 「출발한 자리에서 얼마나, 어느 쪽으로 왔나」를 추정하는 것</strong>이다. 자동차의 주행 거리계(odometer)와 같은 말에서 왔다.
+    터틀봇3는 이 추정을 두 가지 모양으로 내보낸다.
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>무엇</th><th>어디로</th><th>무엇이 들어 있나</th></tr>
+    <tr><td>TF 변환 <code>odom → base_footprint</code></td><td><code>/tf</code> (1초에 20번쯤)</td><td>출발한 자리에서 본 로봇의 자리와 방향</td></tr>
+    <tr><td>토픽 <code>/odom</code></td><td><code>nav_msgs/msg/Odometry</code> (1초에 22번쯤)</td><td>같은 자리와 방향(<code>pose</code>)에, 지금의 속도(<code>twist</code>)까지</td></tr>
+  </table>
+  </div>
+  <p><code>odom</code> 프레임의 원점은 <strong>bringup을 켠 순간 로봇이 있던 자리</strong>다. 그때의 앞이 x, 왼쪽이 y다. 지금 값을 본다.</p>
+<pre class="lang-sh"><code>$ ros2 run tf2_ros tf2_echo odom base_footprint
+At time 1794551392.871073629
+- Translation: [1.219, 0.027, 0.000]
+- Rotation: in Quaternion (xyzw) [0.000, 0.000, 0.032, 0.999]
+- Rotation: in RPY (radian) [0.000, -0.000, 0.065]
+- Rotation: in RPY (degree) [0.000, -0.000, 3.720]</code></pre>
+<pre class="lang-sh"><code>$ ros2 topic echo /odom --once
+header:
+  stamp:
+    sec: 1794551404
+    nanosec: 470916352
+  frame_id: odom
+child_frame_id: base_footprint
+pose:
+  pose:
+    position:
+      x: 1.2190789773723378
+      y: 0.027359793329750446
+      z: 0.0
+    orientation:
+      x: 0.0
+      y: 0.0
+      z: 0.03257532694580658
+      w: 0.9994692832070298
+   (… 아래 줄임 …)</code></pre>
+  <div class="interp">
+    <strong>해석:</strong> 두 출력이 같은 말을 한다 — 로봇은 출발한 자리에서 <strong>앞으로 1.219m, 왼쪽으로 2.7cm</strong> 와 있고, 왼쪽으로 3.7도 틀어져 있다.
+    <code>At time</code>이 0.0이 아니라 실제 시각인 것도 본다. <strong>계속 바뀌는 관계</strong>라는 뜻이다.
+    그런데 이 로봇은 받침 위에서 <strong>한 발짝도 움직인 적이 없다.</strong> 1.219m는 앞 회차들을 만들며 띄운 바퀴를 돌린 만큼 쌓인 숫자다. 오도메트리는 바퀴를 셀 뿐, 로봇이 정말 갔는지는 모른다.
+  </div>
+
+  <p>
+    rviz2에서 Fixed Frame을 <code>odom</code>으로 바꾸면 이 관계가 눈에 보인다. 아래는 bringup을 새로 켠 뒤 띄운 바퀴에 직진 0.05 m/s를 20초 보낸 다음의 화면이다.
+  </p>
+  <figure>
+    <img src="assets/img/26_rviz_odom.png" width="580"
+         alt="rviz2 화면을 잘라 낸 그림. 왼쪽에 odom 프레임, 오른쪽으로 1.05미터 떨어진 곳에 로봇의 프레임들이 모여 있고 둘 사이를 가는 선이 잇는다. 둘레에 노란 스캔 점들이 방의 윤곽을 이룬다. 붉은 표시로 odom은 bringup을 켠 자리, 로봇 base_footprint는 odom에서 1.05미터 앞, 노란 점은 지금의 스캔이라고 적혀 있다">
+    <figcaption>Fixed Frame을 <code>odom</code>으로 둔 rviz2. 로봇은 받침 위에서 움직이지 않았는데, 화면에서는 <strong>출발한 자리에서 1.05m 앞</strong>으로 가 있다.
+      스캔(노란 점)도 로봇과 함께 옮겨 그려진다 — 방 전체가 1m 밀려 간 셈이다. 바퀴를 돌리는 동안 이 화면을 보고 있으면 방의 윤곽이 통째로 미끄러져 가는 것이 보인다.</figcaption>
+  </figure>
+
+  <h3>6-2 6단계 (v6) — <code>/odom</code>을 구독하고, 점을 <code>odom</code> 기준으로 옮긴다</h3>
+  <p>
+    v5를 그대로 <code>target_frame:=odom</code>으로 켜 보면 이번에는 다른 예외가 되풀이된다.
+  </p>
+<pre class="lang-sh"><code>$ ros2 run cone_drive scan_points --ros-args -p target_frame:=odom
+[WARN] [1794551443.891503793] [scan_points]: base_scan → odom 로 옮기지 못했습니다: Lookup would require extrapolation into the future.  Requested time 1794551443.890793 but the latest data is at time 1794551443.871092, when look
+[WARN] [1794551444.931536900] [scan_points]: base_scan → odom 로 옮기지 못했습니다: Lookup would require extrapolation into the future.  Requested time 1794551444.930817 but the latest data is at time 1794551444.870916, when look</code></pre>
+  <p>
+    5-1 표의 셋째 줄이다. 메시지를 읽어 보면 까닭이 적혀 있다 — 스캔을 잰 시각은 <code>…443.890</code>인데 버퍼에 있는 가장 새 <code>odom</code> 관계는 <code>…443.871</code>, <strong>0.02초 전 것</strong>이다.
+    「그 순간의 관계는 아직 안 왔다」는 말이다. <code>base_link</code> ↔ <code>base_scan</code>처럼 바뀌지 않는 관계는 시각을 따지지 않지만, <code>odom</code>처럼 <strong>계속 바뀌는 관계는 그 시각의 것이 있어야</strong> 한다.
+    조금만 기다리면 오므로 <strong>기다릴 시간</strong>을 셋째 인자로 준다.
+  </p>
+  <div class="codelabel bad">고치기 전 (v5) — 지금 버퍼에 없으면 바로 실패한다</div>
+<pre class="lang-cpp before"><code>      out = tf_buffer_-&gt;transform(in, target_frame_);</code></pre>
+  <div class="codelabel good">고친 뒤 (v6) — 0.1초까지 기다린다</div>
+<pre class="lang-cpp after"><code>      // 스캔을 잰 시각의 관계가 아직 안 왔으면 0.1초까지 기다린다 — odom 처럼 계속 바뀌는 좌표계에 필요하다
+      out = tf_buffer_-&gt;transform(in, target_frame_, tf2::durationFromSec(0.1));</code></pre>
+  <p>그리고 <code>/odom</code>을 구독해 로봇의 자리와 방향을 같이 찍는다. 구독자는 20회와 같은 모양이고, 방향을 도로 바꾸는 함수가 하나 든다.</p>
+<pre class="lang-cpp"><code>    odom_sub_ = this-&gt;create_subscription&lt;nav_msgs::msg::Odometry&gt;(
+      "/odom", 10,
+      [this](nav_msgs::msg::Odometry::ConstSharedPtr msg) { on_odom(msg); });</code></pre>
+<pre class="lang-cpp"><code>  // 방향(쿼터니언)에서 yaw(도)를 꺼낸다 — 바닥을 달리는 로봇은 z 와 w 두 칸만 쓴다
+  double yaw_deg(const geometry_msgs::msg::Quaternion &amp; q) const
+  {
+    return 2.0 * std::atan2(q.z, q.w) * 180.0 / M_PI;
+  }</code></pre>
+
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
+    <dl>
+      <dt><code>nav_msgs/msg/Odometry</code></dt>
+      <dd><code>pose.pose.position</code>(x, y, z)과 <code>pose.pose.orientation</code>(방향, 쿼터니언), 그리고 <code>twist.twist</code>(지금 속도)가 들어 있다. <code>pose</code>가 두 번 겹친 것은 바깥 <code>pose</code>에 「얼마나 믿을 수 있나」(<code>covariance</code>)가 같이 들어 있어서다. <code>CMakeLists.txt</code>와 <code>package.xml</code>에 <code>nav_msgs</code>를 더한다.</dd>
+      <dt><code>2.0 * std::atan2(q.z, q.w)</code></dt>
+      <dd>쿼터니언에서 yaw를 꺼내는 식이다. <strong>바닥 위에서 좌우로만 도는 로봇에서만</strong> 이렇게 줄여 쓸 수 있다(그때 x와 y 칸은 0이다). 위 출력의 z 0.0326, w 0.9995를 넣으면 2 × atan2(0.0326, 0.9995) = 0.0652 rad = 3.7도 — <code>tf2_echo</code>의 숫자와 맞는다.
+        <code>atan2</code>는 25회 「조금 더」에 나왔다.</dd>
+      <dt><code>tf2::durationFromSec(0.1)</code></dt>
+      <dd>「0.1초」라는 길이를 TF2가 쓰는 타입으로 만든다. 이 시간 안에 관계가 도착하면 계산해 주고, 끝내 안 오면 그때 예외를 던진다.</dd>
+    </dl>
+  </div>
+
+  <!-- fullcode "전체 코드 — cone_drive/ (scan_points 6단계 · v6 완성본)" build="cd ~/ros_ws && colcon build --packages-select cone_drive && ros2 run cone_drive scan_points --ros-args -p target_frame:=odom"
+       l26_tf2/steps/step6/cone_drive/src/scan_points.cpp as cone_drive/src/scan_points.cpp
+       l26_tf2/steps/step6/cone_drive/CMakeLists.txt as cone_drive/CMakeLists.txt
+       l26_tf2/steps/step6/cone_drive/package.xml as cone_drive/package.xml
+  -->
+<details class="fullcode">
+  <summary>전체 코드 — cone_drive/ (scan_points 6단계 · v6 완성본)</summary>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select cone_drive &amp;&amp; ros2 run cone_drive scan_points --ros-args -p target_frame:=odom</code></p>
+  <div class="codefile"><div class="fname">cone_drive/src/scan_points.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 26회 scan_points — v6 (6단계: /odom 을 구독한다 · 변환을 0.1초까지 기다린다 — odom 기준 좌표를 찍는다)
+#include &lt;cmath&gt;
+#include &lt;memory&gt;
+#include &lt;optional&gt;
+#include &lt;string&gt;
+#include &lt;vector&gt;
+
+#include &quot;rclcpp/rclcpp.hpp&quot;
+#include &quot;sensor_msgs/msg/laser_scan.hpp&quot;
+#include &quot;geometry_msgs/msg/point_stamped.hpp&quot;
+#include &quot;nav_msgs/msg/odometry.hpp&quot;
+#include &quot;tf2_ros/buffer.h&quot;
+#include &quot;tf2_ros/transform_listener.h&quot;
+#include &quot;tf2_geometry_msgs/tf2_geometry_msgs.hpp&quot;
+
+// 평면 위의 점 하나 (m). x 는 앞, y 는 왼쪽
+struct Point
+{
+  double x;
+  double y;
+};
+
+class ScanPoints : public rclcpp::Node
+{
+public:
+  ScanPoints()
+  : Node(&quot;scan_points&quot;)
+  {
+    // 믿을 수 있는 거리 범위 — 라이다 사양표에서 가져온다 (24회. LDS-02 기준)
+    this-&gt;declare_parameter(&quot;range_min&quot;, 0.16);
+    this-&gt;declare_parameter(&quot;range_max&quot;, 8.0);
+    range_min_ = this-&gt;get_parameter(&quot;range_min&quot;).as_double();
+    range_max_ = this-&gt;get_parameter(&quot;range_max&quot;).as_double();
+    // 좌표를 볼 방향 (도) — 물건을 놓은 방향으로 바꿔 가며 쓴다
+    this-&gt;declare_parameter(&quot;angle_a_deg&quot;, 0.0);
+    angle_a_deg_ = this-&gt;get_parameter(&quot;angle_a_deg&quot;).as_double();
+    // 어느 좌표계로 옮길 것인가 — 좌표계의 이름을 글자로 준다
+    this-&gt;declare_parameter(&quot;target_frame&quot;, &quot;base_link&quot;);
+    target_frame_ = this-&gt;get_parameter(&quot;target_frame&quot;).as_string();
+
+    // TF2 — 버퍼는 좌표계 사이의 관계를 모아 두는 곳, 리스너는 /tf · /tf_static 을 받아 버퍼에 채우는 것
+    tf_buffer_ = std::make_unique&lt;tf2_ros::Buffer&gt;(this-&gt;get_clock());
+    tf_listener_ = std::make_shared&lt;tf2_ros::TransformListener&gt;(*tf_buffer_);
+
+    odom_sub_ = this-&gt;create_subscription&lt;nav_msgs::msg::Odometry&gt;(
+      &quot;/odom&quot;, 10,
+      [this](nav_msgs::msg::Odometry::ConstSharedPtr msg) { on_odom(msg); });
+    scan_sub_ = this-&gt;create_subscription&lt;sensor_msgs::msg::LaserScan&gt;(
+      &quot;/scan&quot;, rclcpp::SensorDataQoS(),
+      [this](sensor_msgs::msg::LaserScan::ConstSharedPtr msg) { on_scan(msg); });
+  }
+
+private:
+  // /odom 이 올 때마다 불린다 (1초에 스무 번쯤) — 받은 것을 들고 있기만 한다
+  void on_odom(nav_msgs::msg::Odometry::ConstSharedPtr msg)
+  {
+    odom_ = msg;
+  }
+
+  // /scan 이 올 때마다 불린다 — 두 방향의 점과 그 사이 거리를 1초에 한 번 찍는다
+  void on_scan(sensor_msgs::msg::LaserScan::ConstSharedPtr msg)
+  {
+    const std::optional&lt;Point&gt; a = point_at(*msg, angle_a_deg_);
+    if (!a) {
+      RCLCPP_WARN_THROTTLE(this-&gt;get_logger(), *this-&gt;get_clock(), 1000,
+                           &quot;%.0f도 방향을 못 봤습니다&quot;, angle_a_deg_);
+      return;
+    }
+    // 점에 「어느 좌표계의 값인가」를 붙여 TF2 에게 넘긴다
+    geometry_msgs::msg::PointStamped in;
+    in.header = msg-&gt;header;                     // frame_id 가 &quot;base_scan&quot; 이다. 스캔 메시지가 들고 온 것을 그대로 쓴다
+    in.point.x = a-&gt;x;
+    in.point.y = a-&gt;y;
+
+    geometry_msgs::msg::PointStamped out;
+    try {
+      // 스캔을 잰 시각의 관계가 아직 안 왔으면 0.1초까지 기다린다 — odom 처럼 계속 바뀌는 좌표계에 필요하다
+      out = tf_buffer_-&gt;transform(in, target_frame_, tf2::durationFromSec(0.1));
+    } catch (const tf2::TransformException &amp; e) {
+      // 좌표계 이름이 틀렸거나, 기다려도 두 좌표계의 관계가 오지 않았다 — 이번 스캔은 건너뛴다
+      RCLCPP_WARN_THROTTLE(this-&gt;get_logger(), *this-&gt;get_clock(), 1000,
+                           &quot;%s → %s 로 옮기지 못했습니다: %s&quot;,
+                           in.header.frame_id.c_str(), target_frame_.c_str(), e.what());
+      return;
+    }
+    if (!odom_) {                                // 아직 /odom 을 한 번도 못 받았다
+      return;
+    }
+    const auto &amp; pose = odom_-&gt;pose.pose;        // 출발한 자리(odom)에서 본 로봇의 자리와 방향
+    RCLCPP_INFO_THROTTLE(this-&gt;get_logger(), *this-&gt;get_clock(), 1000,
+                         &quot;로봇 x = %.3f, y = %.3f, yaw = %.1f도 · %s 기준 A (%.3f, %.3f) · %s 기준 A (%.3f, %.3f)&quot;,
+                         pose.position.x, pose.position.y, yaw_deg(pose.orientation),
+                         in.header.frame_id.c_str(), a-&gt;x, a-&gt;y,
+                         out.header.frame_id.c_str(), out.point.x, out.point.y);
+  }
+
+  // 방향(쿼터니언)에서 yaw(도)를 꺼낸다 — 바닥을 달리는 로봇은 z 와 w 두 칸만 쓴다
+  double yaw_deg(const geometry_msgs::msg::Quaternion &amp; q) const
+  {
+    return 2.0 * std::atan2(q.z, q.w) * 180.0 / M_PI;
+  }
+
+  // 각도 deg(도)에 가장 가까운 값을 점으로 — 그 값을 못 쟀으면 「없다」
+  std::optional&lt;Point&gt; point_at(const sensor_msgs::msg::LaserScan &amp; scan, double deg) const
+  {
+    const double rad = deg * M_PI / 180.0;
+    const long n = static_cast&lt;long&gt;(scan.ranges.size());
+    long i = std::lround((rad - scan.angle_min) / scan.angle_increment) % n;   // 24회의 index_near
+    if (i &lt; 0) {
+      i += n;
+    }
+    const double r = scan.ranges[i];
+    if (!is_valid(scan.ranges[i])) {
+      return std::nullopt;
+    }
+    const double theta = scan.angle_min + i * scan.angle_increment;
+    return Point{r * std::cos(theta), r * std::sin(theta)};
+  }
+
+  // 쓸 수 있는 거리인가 — NaN · inf 가 아니고 사양 범위 안에 있다 (24회)
+  bool is_valid(float r) const
+  {
+    return std::isfinite(r) &amp;&amp; r &gt;= range_min_ &amp;&amp; r &lt;= range_max_;
+  }
+
+  double range_min_ = 0.0;        // 파라미터 range_min 에서 읽는다 (m)
+  double range_max_ = 0.0;        // 파라미터 range_max 에서 읽는다 (m)
+  double angle_a_deg_ = 0.0;      // 파라미터 angle_a_deg 에서 읽는다 (도)
+  std::string target_frame_;      // 파라미터 target_frame 에서 읽는다 — 옮겨 갈 좌표계의 이름
+
+  std::unique_ptr&lt;tf2_ros::Buffer&gt; tf_buffer_;                   // 좌표계 사이의 관계를 모아 둔다
+  std::shared_ptr&lt;tf2_ros::TransformListener&gt; tf_listener_;      // /tf · /tf_static 을 받아 버퍼에 넣는다
+  rclcpp::Subscription&lt;sensor_msgs::msg::LaserScan&gt;::SharedPtr scan_sub_;
+  rclcpp::Subscription&lt;nav_msgs::msg::Odometry&gt;::SharedPtr odom_sub_;
+  nav_msgs::msg::Odometry::ConstSharedPtr odom_;                 // 마지막으로 받은 /odom (처음에는 비어 있다)
+};
+
+int main(int argc, char ** argv)
+{
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared&lt;ScanPoints&gt;();
+  rclcpp::spin(node);            // 구독 콜백은 이 안에서 불린다
+  rclcpp::shutdown();
+  return 0;
+}</code></pre></div>
+  <div class="codefile"><div class="fname">cone_drive/CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre class="lang-cmake"><code>cmake_minimum_required(VERSION 3.8)
+project(cone_drive)
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES &quot;Clang&quot;)
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+# find dependencies
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+
+# 24회 — 실행 파일 cone_drive. LaserScan(sensor_msgs)을 받는다
+# 24회 5단계 — TwistStamped(geometry_msgs)를 보낸다
+add_executable(cone_drive src/cone_drive.cpp)
+target_link_libraries(cone_drive PRIVATE
+  rclcpp::rclcpp ${sensor_msgs_TARGETS} ${geometry_msgs_TARGETS})
+
+# 25회 — 실행 파일 scan_points. LaserScan 을 받아 점의 좌표(x, y)로 편다
+# 26회 — TF2 로 좌표계를 옮긴다 (tf2_ros · tf2_geometry_msgs · PointStamped 가 든 geometry_msgs)
+# 26회 6단계 — Odometry(nav_msgs)를 받는다
+add_executable(scan_points src/scan_points.cpp)
+target_link_libraries(scan_points PRIVATE
+  rclcpp::rclcpp ${sensor_msgs_TARGETS} ${geometry_msgs_TARGETS}
+  tf2_ros::tf2_ros tf2_geometry_msgs::tf2_geometry_msgs ${nav_msgs_TARGETS})
+
+# 만든 실행 파일을 ros2 run 이 찾는 자리에 설치한다
+install(TARGETS cone_drive scan_points
+  DESTINATION lib/${PROJECT_NAME})
+
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  # the following line skips the linter which checks for copyrights
+  # comment the line when a copyright and license is added to all source files
+  set(ament_cmake_copyright_FOUND TRUE)
+  # the following line skips cpplint (only works in a git repo)
+  # comment the line when this package is in a git repo and when
+  # a copyright and license is added to all source files
+  set(ament_cmake_cpplint_FOUND TRUE)
+  ament_lint_auto_find_test_dependencies()
+endif()
+
+ament_package()</code></pre></div>
+  <div class="codefile"><div class="fname">cone_drive/package.xml</div><button onclick="copyCode(this)">복사</button><pre class=""><code>&lt;?xml version=&quot;1.0&quot;?&gt;
+&lt;?xml-model href=&quot;http://download.ros.org/schema/package_format3.xsd&quot; schematypens=&quot;http://www.w3.org/2001/XMLSchema&quot;?&gt;
+&lt;package format=&quot;3&quot;&gt;
+  &lt;name&gt;cone_drive&lt;/name&gt;
+  &lt;version&gt;0.0.0&lt;/version&gt;
+  &lt;description&gt;로봇공학 4부 실습 — 터틀봇3의 라이다로 콘을 찾아 따라가는 노드&lt;/description&gt;
+  &lt;maintainer email=&quot;student@example.com&quot;&gt;Student Name&lt;/maintainer&gt;
+  &lt;license&gt;MIT&lt;/license&gt;
+
+  &lt;buildtool_depend&gt;ament_cmake&lt;/buildtool_depend&gt;
+
+  &lt;depend&gt;rclcpp&lt;/depend&gt;
+  &lt;depend&gt;sensor_msgs&lt;/depend&gt;
+  &lt;depend&gt;geometry_msgs&lt;/depend&gt;
+  &lt;depend&gt;tf2_ros&lt;/depend&gt;
+  &lt;depend&gt;tf2_geometry_msgs&lt;/depend&gt;
+  &lt;depend&gt;nav_msgs&lt;/depend&gt;
+
+  &lt;test_depend&gt;ament_lint_auto&lt;/test_depend&gt;
+  &lt;test_depend&gt;ament_lint_common&lt;/test_depend&gt;
+
+  &lt;export&gt;
+    &lt;build_type&gt;ament_cmake&lt;/build_type&gt;
+  &lt;/export&gt;
+&lt;/package&gt;</code></pre></div>
+</details>
+<!-- /fullcode -->
+
+  <h3>6-3 실제로 나온 출력 — 바퀴를 돌리면 무엇이 바뀌나</h3>
+  <p>
+    v6를 <code>target_frame:=odom</code>으로 켜 두고, 다른 터미널에서 <strong>띄운 바퀴에 직진 0.05 m/s를 4초 동안</strong> 보냈다. 로봇은 받침 위에 그대로 있고, 앞의 벽(점 A)도 그대로다.
+  </p>
+<pre class="lang-sh"><code>$ ros2 run cone_drive scan_points --ros-args -p target_frame:=odom
+[INFO] [1794551470.774610320] [scan_points]: 로봇 x = 1.219, y = 0.027, yaw = 3.8도 · base_scan 기준 A (0.761, 0.005) · odom 기준 A (1.946, 0.081)
+[INFO] [1794551471.782807612] [scan_points]: 로봇 x = 1.219, y = 0.027, yaw = 3.8도 · base_scan 기준 A (0.766, -0.019) · odom 기준 A (1.952, 0.058)
+[INFO] [1794551472.832368969] [scan_points]: 로봇 x = 1.219, y = 0.027, yaw = 3.8도 · base_scan 기준 A (0.765, -0.006) · odom 기준 A (1.951, 0.070)
+[INFO] [1794551473.933234989] [scan_points]: 로봇 x = 1.220, y = 0.027, yaw = 3.8도 · base_scan 기준 A (0.765, -0.017) · odom 기준 A (1.953, 0.059)
+[INFO] [1794551474.979523530] [scan_points]: 로봇 x = 1.270, y = 0.031, yaw = 3.9도 · base_scan 기준 A (0.765, -0.009) · odom 기준 A (2.003, 0.071)
+[INFO] [1794551476.039638377] [scan_points]: 로봇 x = 1.322, y = 0.034, yaw = 3.8도 · base_scan 기준 A (0.765, -0.015) · odom 기준 A (2.056, 0.068)</code></pre>
+  <figure>
+    <img src="assets/img/26_odom_topview.png" width="760"
+         alt="위에서 본 그림. 왼쪽에 odom 좌표계의 원점과 x, y축. 오른쪽으로 1.219미터 떨어진 곳에 3.8도 틀어진 base_footprint 좌표계. 그 앞으로 점선이 이어져 주황 점 A가 있다. A 옆에 base_link 기준 0.733, 0.000과 odom 기준 1.950, 0.076이라고 적혀 있다">
+    <figcaption>첫 줄의 상황을 위에서 본 모습(odom의 x를 오른쪽으로 그렸다). <code>odom</code>에서 본 로봇이 (1.219, 0.027)에 3.8도 틀어져 있고,
+      그 로봇의 0.733m 앞에 A가 있다. 그래서 <code>odom</code> 기준 A는 1.219 + 0.733 = <strong>1.95m쯤</strong>이다. y가 0이 아닌 것(0.076)은 로봇이 3.8도 틀어져 있기 때문이다.</figcaption>
+  </figure>
+  <div class="interp">
+    <strong>해석:</strong> 넷째 줄까지는 가만히 있다가, 바퀴가 돌기 시작한 다섯째 줄부터 <strong>「로봇 x」가 1.220 → 1.270 → 1.322로</strong> 는다. 1초에 5cm, 보낸 속도 그대로다.
+    그동안 <strong><code>base_scan</code> 기준 A는 0.765에서 꼼짝도 안 한다</strong> — 라이다와 벽 사이는 실제로 그대로이기 때문이다. 그런데 <strong><code>odom</code> 기준 A는 1.953 → 2.003 → 2.056으로 같이 밀려 간다.</strong>
+    벽이 걸어간 것이 아니다. 「로봇이 앞으로 갔다」고 믿는 <code>odom</code>이, 여전히 0.765m 앞에 보이는 벽을 「그만큼 더 먼 자리에 있다」고 계산한 것이다.
+    바닥에 내려놓고 달렸다면 로봇 x가 느는 만큼 <code>base_scan</code> 기준 A가 줄어서 <strong><code>odom</code> 기준 A는 제자리</strong>였을 것이다. 그것이 <code>odom</code> 프레임의 쓸모다 — 움직이는 로봇이 본 것을 <strong>움직이지 않는 기준</strong>에 적어 둔다.
+  </div>
+  <p>이번에는 <strong>제자리 회전 0.5 rad/s를 4초</strong> 보냈다. 보내는 동안의 바퀴와, 앞뒤의 <code>odom → base_footprint</code>다.</p>
+<pre class="lang-sh"><code>$ ros2 topic echo /joint_states --once --field velocity
+array('d', [-0.039568359471963445, 0.03798562509308491])</code></pre>
+<pre><code>회전을 보내기 전   - Translation: [1.363, 0.037, 0.000]   - Rotation: in RPY (degree) [0.000, -0.000, 3.840]
+회전을 마친 뒤     - Translation: [1.364, 0.037, 0.000]   - Rotation: in RPY (degree) [0.000, -0.000, 3.851]</code></pre>
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 바퀴는 도는데 <code>odom</code>의 방향이 안 바뀐다</div>
+    <p>
+      왼쪽 바퀴는 뒤로(−0.04), 오른쪽 바퀴는 앞으로(+0.04) 돌았다. 왼쪽으로 도는 움직임이 맞다. 0.5 rad/s로 4초면 115도쯤 돌았어야 하는데 <strong>yaw는 3.84도에서 3.85도</strong>로 그대로다.
+      고장이 아니다. 터틀봇3는 <strong>방향을 바퀴가 아니라 IMU(몸체의 회전을 재는 센서)에서 가져온다.</strong> 받침 위의 몸체는 실제로 돌지 않았으니 IMU는 「안 돌았다」고 말한다.
+      직진 거리는 바퀴로 세고 방향은 IMU로 재는 것이다 — 그래서 띄운 채로는 x는 늘고 yaw는 안 바뀐다. 바퀴는 미끄러지면 방향이 크게 틀어지기 때문에 이렇게 나눠 쓴다.
+      가만히 둔 로봇의 yaw가 3.7 → 3.8 → 3.85도로 <strong>조금씩 흘러가는 것</strong>도 IMU의 성질이다.
+    </p>
+  </div>
+
+
+  <!-- ══════════ ⑦ TF가 필요한 자리 ══════════ -->
+  <h2 id="when">⑦ TF가 필요한 자리 <span class="badge b-red">🔴 사람이 판단한다</span></h2>
+
+  <p>
+    솔직하게 말해 두면, <strong>콘 트랙 프로젝트는 TF2 없이도 완주할 수 있다.</strong> 라이다와 몸체가 3.2cm밖에 안 떨어져 있고 돌려 달려 있지도 않아서,
+    <code>base_scan</code> 기준의 좌표를 그대로 써도 주행이 크게 달라지지 않는다. 27회의 코드도 그렇게 간다.
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>상황</th><th>TF2가 필요한가</th><th>왜</th></tr>
+    <tr><td>센서 하나, 몸체 가까이에 똑바로 달려 있다 (우리 프로젝트)</td><td>없어도 된다</td><td>옮겨도 몇 cm 차이다. 다만 그 「몇 cm」를 <strong>알고 무시하는 것</strong>과 모르는 것은 다르다</td></tr>
+    <tr><td>센서가 <strong>둘 이상</strong>이다 — 라이다와 카메라</td><td>필요하다</td><td>카메라가 본 것과 라이다가 본 것을 합치려면 둘을 <strong>같은 프레임</strong>으로 옮겨야 한다</td></tr>
+    <tr><td>센서가 멀리, 또는 기울여 달려 있다</td><td>필요하다</td><td>손으로 적으면 회전에서 틀리기 쉽다. 25회의 <code>lidar_yaw_deg:=180</code>을 떠올린다</td></tr>
+    <tr><td>본 것을 <strong>기억해 두고</strong> 로봇이 움직인 뒤에 쓴다</td><td>필요하다</td><td>로봇에 붙은 프레임의 좌표는 로봇이 움직이면 쓸모가 없어진다. <code>odom</code> 같은 고정된 기준에 적어 둔다 (6-3)</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> TF2를 배우는 까닭은 이 프로젝트 때문이 아니라 <strong>다음 로봇</strong> 때문이다. 그리고 오늘 얻은 것 가운데 프로젝트에 바로 쓰이는 것도 있다 —
+    <code>header.frame_id</code>를 읽는 버릇, 실패할 수 있는 호출을 <code>try</code>로 감싸는 것, 그리고 <strong>오도메트리는 추정이라는 것</strong>이다.
+  </div>
+
+
+  <!-- ══════════ 🧪 실습 ══════════ -->
+  <h2 id="lab">🧪 실습 — 내 로봇의 TF 읽기 <span class="badge b-red">🔴 사람이 본다</span></h2>
+
+  <div class="lab-block">
+    <p class="boxtitle">🧪 이걸 해 보면 무엇을 알게 되나</p>
+    <p>
+      내 로봇의 프레임이 어떻게 이어져 있는지, 그리고 <strong><code>odom</code>이 무엇을 세고 무엇을 못 세는지.</strong> 뒤의 것은 손으로 로봇을 들고 돌려 봐야 알 수 있다.
+    </p>
+
+    <p class="boxtitle">준비물</p>
+    <ul>
+      <li>받침 위에 올려 <strong>바퀴를 띄운</strong> 로봇, bringup이 떠 있는 터미널 1</li>
+      <li>터미널 2(명령) · 터미널 3(정지 명령 전용 — 24회 7-5)</li>
+    </ul>
+
+    <p class="boxtitle">절차</p>
+    <ol>
+      <li><strong>(5분)</strong> <code>cd ~</code> 뒤 <code>ros2 run tf2_tools view_frames</code>. 홈 폴더에 생긴 PDF를 열어 ②절의 그림과 견준다. 프레임 이름과 모양이 같은가?</li>
+      <li><strong>(3분)</strong> <code>ros2 run tf2_ros tf2_echo base_link base_scan</code>. <code>Translation</code>이 (−0.032, 0, 0.172)인가? 다르면 그 값을 적어 둔다.</li>
+      <li><strong>(5분)</strong> 터미널 2에 <code>ros2 run tf2_ros tf2_echo odom base_footprint</code>를 띄워 둔다. 터미널 3에서 아래 명령으로 직진 0.05 m/s를 보내고 x가 느는 것을 본다. <kbd>Ctrl</kbd>+<kbd>C</kbd>로 끊고 <strong>정지 명령</strong>을 보낸다.
+<pre class="lang-sh"><code>$ ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/TwistStamped "{twist: {linear: {x: 0.05}}}"</code></pre></li>
+      <li><strong>(5분)</strong> 바퀴를 멈춘 채, <strong>로봇을 받침째 손으로 들어 왼쪽으로 90도쯤</strong> 천천히 돌려 놓는다. <code>tf2_echo</code>의 <code>RPY (degree)</code> 셋째 칸이 어떻게 바뀌는가? x와 y는?</li>
+      <li><strong>(5분)</strong> v6를 <code>--ros-args -p target_frame:=odom</code>으로 켜고 3번의 직진을 다시 보낸다. 「<code>base_scan</code> 기준 A」와 「<code>odom</code> 기준 A」 가운데 어느 쪽이 바뀌는가?</li>
+    </ol>
+
+    <p class="boxtitle">이렇게 되면 성공이다</p>
+    <div class="tablewrap">
+    <table>
+      <tr><th>단계</th><th>보여야 하는 것</th></tr>
+      <tr><td>1</td><td><code>odom → base_footprint → base_link</code>에서 다섯 갈래. 라이다가 다르면 프레임 이름은 같아도 <code>Average rate</code>가 다를 수 있다</td></tr>
+      <tr><td>2</td><td>버거이면 (−0.032, 0.000, 0.172)</td></tr>
+      <tr><td>3</td><td>x가 1초에 0.05쯤 는다. 로봇은 제자리다</td></tr>
+      <tr><td>4</td><td>yaw가 90도쯤 는다. x와 y는 그대로다 — <strong>바퀴는 안 돌았으니 「간 거리」는 없다</strong></td></tr>
+      <tr><td>5</td><td><code>base_scan</code> 기준은 그대로, <code>odom</code> 기준만 바뀐다 (6-3)</td></tr>
+    </table>
+    </div>
+    <!-- TODO: 미검증 — 4번(로봇을 손으로 들어 돌리면 yaw 가 바뀐다)을 받지 못했다. 로봇을 들어 줄 사람이 없었다. 「yaw 가 는다」는 odometry.use_imu: true 설정에서 나온 예상이다 -->
+  </div>
+
+  <p>
+    이 자료의 출력은 터틀봇3 버거(LDS-02) 한 대에서 받은 것이다. <code>odom</code>의 숫자(1.219 같은 것)는 bringup을 켠 뒤 바퀴를 돌린 만큼 쌓인 값이라 로봇마다, 켤 때마다 다르다.
+    bringup을 껐다 켜면 0에서 다시 시작한다.
+  </p>
+
+
+  <!-- ══════════ 📝 연습문제 ══════════ -->
+  <h2 id="exercise">📝 연습문제 — 25회 v3를 TF2로 바꾸기 <span class="badge b-yellow">🟡 맡기되 검사</span></h2>
+  <p>
+    오늘 배운 것이 하나도 들어 있지 않으면서 돌아가는 코드가 이미 있다. <strong>25회의 완성본 <code>scan_points</code> v3</strong>다(25회 ⑤절의 📄 상자).
+    점 A · B 두 개를 손으로 적은 <code>lidar_x</code>로 옮기고, 옮기기 전과 뒤의 「두 점 사이 거리」를 찍었다. 이것을 오늘 배운 것으로 고친다. 본문의 v5 · v6는 점을 A 하나로 줄였지만 여기서는 <strong>둘 다</strong> 옮긴다.
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>고칠 것</th><th>오늘 어디서 했나</th><th>확인하는 법</th></tr>
+    <tr><td><code>to_body</code>와 파라미터 <code>lidar_x</code> · <code>lidar_y</code> · <code>lidar_yaw_deg</code>를 지우고 TF2로 옮긴다</td><td>④절</td><td>옮긴 좌표가 25회 v3의 「몸체 기준」과 같은가</td></tr>
+    <tr><td>프레임 이름을 코드에 적지 않고 스캔의 <code>header</code>를 쓴다</td><td>③절</td><td>코드에 <code>"base_scan"</code>이라는 글자가 없는가</td></tr>
+    <tr><td>옮겨 갈 프레임을 파라미터 <code>target_frame</code>으로 받는다 (기본 <code>base_footprint</code>)</td><td>5-2</td><td><code>-p target_frame:=odom</code>이 먹나</td></tr>
+    <tr><td>변환이 실패해도 죽지 않는다. 0.1초까지 기다린다</td><td>⑤절 · 6-2</td><td>여러 번 껐다 켜도 <code>terminate called</code>가 안 나오나. <code>odom</code>으로 켰을 때 값이 찍히나</td></tr>
+    <tr><td>두 점을 옮기는 일이 두 번 되풀이된다 — 함수 하나로 묶는다</td><td>—</td><td><code>PointStamped</code>를 채우는 줄이 한 군데에만 있나</td></tr>
+    <tr><td><strong>옮기기 전과 뒤의 「두 점 사이 거리」가 같은지</strong> 찍는다</td><td>25회 5-4</td><td><code>base_footprint</code>로도 <code>odom</code>으로도 두 거리가 같은가</td></tr>
+  </table>
+  </div>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    이 scan_points.cpp(25회 v3)는 라이다 기준 점 A, B를 손으로 적은 lidar_x, lidar_y, lidar_yaw로 옮기고 있어. 이것을 tf2로 바꿔 줘. (1) to_body와 lidar_ 파라미터 셋을 지우고 tf2_ros::Buffer와 TransformListener를 써 줘. (2) 프레임 이름 "base_scan"을 코드에 적지 말고 스캔 메시지의 header를 PointStamped에 그대로 넣어 줘. (3) 옮겨 갈 프레임은 파라미터 target_frame(기본 base_footprint)으로 받아 줘. (4) transform에는 0.1초 타임아웃을 주고, tf2::TransformException을 잡아서 경고를 찍고 그 스캔은 건너뛰어 줘. (5) 점 하나를 옮기는 일을 함수 하나로 묶어서 A와 B에 두 번 불러 줘. (6) 옮기기 전과 뒤의 두 점 사이 거리를 둘 다 찍어 줘. CMakeLists.txt와 package.xml에서 바꿀 것도 알려 줘.
+  </div>
+  <p>
+    받은 코드는 표의 「확인하는 법」으로 대 봅니다. 맨 아래 줄이 가장 쓸모 있는 검사입니다 — 프레임을 무엇으로 바꾸든 <strong>두 거리가 같게 나오면</strong> 변환이 모양을 망가뜨리지 않았다는 뜻이고,
+    다르게 나오면 A와 B가 <strong>서로 다른 시각이나 다른 프레임으로</strong> 옮겨졌다는 뜻입니다.
+  </p>
+
+
+  <!-- ── 한 장 요약표 ── -->
+  <h2 id="summary">한 장 요약</h2>
+  <p class="readme-first">무엇을 먼저 볼지: <strong>오른쪽 「이것만 알면 된다」 열</strong>이다.</p>
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>용어</th><th>명령·코드에서 이렇게 보인다</th><th>이것만 알면 된다</th></tr>
+    <tr><td><strong>프레임</strong> · <strong>TF 트리</strong></td><td><code>odom → base_footprint → base_link → base_scan</code></td><td>좌표계는 <strong>이름</strong>으로 부르고 부모 – 자식으로 이어져 있다</td></tr>
+    <tr><td><strong><code>view_frames</code></strong></td><td><code>ros2 run tf2_tools view_frames</code></td><td>지금 서 있는 폴더에 PDF가 생겼다. 두 프레임이 이어져 있는지 봤다</td></tr>
+    <tr><td><strong><code>tf2_echo</code></strong></td><td><code>ros2 run tf2_ros tf2_echo base_link base_scan</code></td><td>앞 프레임에서 본 뒤 프레임. <code>Translation</code>이 (−0.032, 0, 0.172)였다</td></tr>
+    <tr><td><strong><code>/tf</code> · <code>/tf_static</code></strong></td><td><code>At time 1794…</code> · <code>At time 0.0</code></td><td>계속 바뀌는 관계와 바뀌지 않는 관계</td></tr>
+    <tr><td><strong><code>PointStamped</code></strong></td><td><code>in.header = msg-&gt;header;</code></td><td>점에 「어느 프레임, 어느 시각」을 붙였다. 이름은 <strong>메시지가 들고 온 것</strong>을 썼다</td></tr>
+    <tr><td><strong>버퍼 · 리스너</strong></td><td><code>tf2_ros::Buffer</code> · <code>tf2_ros::TransformListener</code></td><td>리스너가 채우고 버퍼가 답한다. 둘 다 멤버로 들고 있어야 한다</td></tr>
+    <tr><td><strong><code>transform()</code></strong></td><td><code>tf_buffer_-&gt;transform(in, "base_link", tf2::durationFromSec(0.1))</code></td><td>손으로 적은 3.2cm를 지웠다. 이름만 바꾸면 여러 단계도 한 줄이다</td></tr>
+    <tr><td><strong><code>TransformException</code></strong></td><td><code>try { … } catch (const tf2::TransformException &amp; e)</code></td><td>안 잡으면 <strong>노드가 죽는다.</strong> 켜진 직후에는 한 번쯤 실패하는 것이 정상이다</td></tr>
+    <tr><td><strong>오도메트리</strong> · <strong><code>odom</code></strong></td><td><code>/odom</code> · <code>odom → base_footprint</code></td><td>바퀴를 세어 만든 <strong>추정</strong>이다. 띄운 채 돌려도 x가 늘었다. 방향은 IMU에서 온다</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>해석:</strong> 위 넷은 「보는 법」, 가운데 넷은 「코드에서 쓰는 법」, 마지막 줄은 「믿을 수 있는 정도」다.
+    마지막 줄이 프로젝트에 가장 오래 남는다 — 로봇이 말하는 자기 위치는 사실이 아니라 계산이다.
+  </div>
+
+
+  <!-- ══════════ 🤖 프롬프트 모음 ══════════ -->
+  <h2 id="prompts">🤖 오늘 나온 프롬프트 모음 <span class="badge b-green">🟢 맡긴다</span></h2>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    ROS 2 Jazzy, C++ 노드야. sensor_msgs/msg/LaserScan에서 구한 점 (x, y)를 tf2로 다른 프레임 기준으로 옮기고 싶어. tf2_ros::Buffer와 TransformListener를 멤버로 만들고, geometry_msgs::msg::PointStamped에 스캔의 header를 그대로 넣어서 tf_buffer_->transform()으로 옮기는 코드를 줘. 필요한 #include와 CMakeLists.txt의 find_package, target_link_libraries, package.xml의 depend도 같이 알려 줘.
+  </div>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    내 노드가 켜자마자 "terminate called after throwing an instance of 'tf2::LookupException'"으로 죽어. tf_buffer_->transform()을 부르는 곳을 찾아서 tf2::TransformException을 잡게 고쳐 줘. 잡았을 때는 1초에 한 번만 경고를 찍고 그 콜백은 그냥 돌아가게 해 줘. 잡은 뒤에 변환 안 된 값을 쓰는 코드가 남아 있지 않은지도 확인해 줘.
+  </div>
+  <div class="prompt">
+    <button onclick="copyPrompt(this)">복사</button>
+    "Lookup would require extrapolation into the future. Requested time … but the latest data is at time …"이라는 tf2 예외가 계속 나와. 이 메시지의 두 시각이 각각 무엇인지 설명하고, transform()에 타임아웃을 줘서 고쳐 줘. 타임아웃을 주려면 TransformListener가 어떻게 만들어져 있어야 하는지도 알려 줘.
+  </div>
+  <div class="tablewrap">
+  <table>
+    <tr><th>프롬프트</th><th>받은 뒤 사람이 확인하는 것</th></tr>
+    <tr><td>TF2로 옮기기</td><td>프레임 이름이 <code>view_frames</code> 그림에 있는 이름인가. <code>tf2_geometry_msgs</code> 헤더가 들어 있나. 빌드되나</td></tr>
+    <tr><td>예외 잡기</td><td><strong>열 번쯤 껐다 켜 본다.</strong> 한두 번 잘 켜졌다고 고쳐진 것이 아니다 — 원래도 될 때가 있었다</td></tr>
+    <tr><td>미래 시각 예외</td><td><code>target_frame:=odom</code>으로 켜서 경고가 처음에만 나오고 멎는가</td></tr>
+  </table>
+  </div>
+
+
+  <!-- ══════════ ✅ 점검 ══════════ -->
+  <h2 id="check">✅ 오늘의 점검</h2>
+  <ul class="check">
+    <li><input type="checkbox" id="c1"><label for="c1">내 로봇의 TF 트리를 <code>view_frames</code>로 뽑아 <code>odom</code>에서 <code>base_scan</code>까지의 길을 짚을 수 있다</label></li>
+    <li><input type="checkbox" id="c2"><label for="c2"><code>tf2_echo A B</code>의 <code>Translation</code>이 「누구에게서 본 누구」인지 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c3"><label for="c3"><code>/tf</code>와 <code>/tf_static</code>에 각각 어떤 관계가 실리는지 예를 하나씩 들 수 있다</label></li>
+    <li><input type="checkbox" id="c4"><label for="c4">점을 TF2에게 넘길 때 왜 <code>PointStamped</code>여야 하는지, <code>header</code>를 어디서 가져오는지 안다</label></li>
+    <li><input type="checkbox" id="c5"><label for="c5"><code>transform()</code>이 실패하는 경우 둘을 들 수 있고, 잡지 않으면 어떻게 되는지 봤다</label></li>
+    <li><input type="checkbox" id="c6"><label for="c6"><code>odom</code> 프레임의 원점이 어디인지, 띄운 바퀴를 돌리면 무엇이 바뀌고 무엇이 안 바뀌는지 말할 수 있다</label></li>
+    <li><input type="checkbox" id="c7"><label for="c7">바퀴를 돌린 뒤 정지 명령을 보냈다</label></li>
+  </ul>
+
+
+  <!-- ══════════ 조금 더 ══════════ -->
+  <h2 id="more">조금 더 알아두면 <span class="badge b-lv">시험 범위 아님</span></h2>
+
+  <details>
+    <summary>바뀌지 않는 관계는 누가 보내나 — <code>robot_state_publisher</code>와 URDF</summary>
+    <p>
+      24회의 bringup 로그 첫 줄에 <code>robot_state_publisher</code>라는 노드가 있었다. 이 노드가 <strong>로봇의 생김새를 적은 파일</strong>(URDF, Unified Robot Description Format)을 읽어
+      부품 사이의 고정된 관계를 <code>/tf_static</code>으로 내보낸다. 「라이다는 몸체에서 (−0.032, 0, 0.172)」라는 숫자는 로보티즈가 그 파일에 적어 둔 것이다.
+      바퀴처럼 도는 부품은 <code>/joint_states</code>(바퀴가 돈 각도)를 받아 <code>/tf</code>로 내보낸다. <code>odom → base_footprint</code>는 <code>turtlebot3_node</code> 안의 주행 제어 부분이 내보낸다.
+    </p>
+  </details>
+
+  <details>
+    <summary><code>map</code> 프레임은 언제 생기나</summary>
+    <p>
+      <code>odom</code>은 바퀴를 세어 만든 추정이라 달릴수록 조금씩 틀어진다. 지도를 만들거나 지도 위에서 자기 위치를 찾는 프로그램(SLAM, 위치 추정)을 띄우면
+      라이다에 보이는 벽을 지도와 맞춰 보며 그 틀어짐을 바로잡고, 그 결과를 <code>map → odom</code>이라는 변환으로 내보낸다. 그때 TF 트리 맨 위에 <code>map</code>이 하나 더 생긴다.
+      우리 프로젝트는 지도를 쓰지 않으므로 <code>map</code>은 없다 — 5-2에서 <code>target_frame:=map</code>이 끝없이 실패한 까닭이다.
+    </p>
+  </details>
+
+  <details>
+    <summary>점이 아니라 변환 자체를 받고 싶을 때 — <code>lookupTransform</code></summary>
+    <p>
+      <code>transform()</code>은 「이 점을 옮겨 줘」이고, <code>lookupTransform()</code>은 「두 프레임 사이의 관계를 그냥 줘」다. <code>tf2_echo</code>가 찍는 것과 같은 내용을 코드에서 받는다.
+    </p>
+<pre class="lang-cpp"><code>// base_link 에서 본 base_scan — 가장 새 관계 (tf2::TimePointZero)
+const geometry_msgs::msg::TransformStamped t =
+  tf_buffer_-&gt;lookupTransform("base_link", "base_scan", tf2::TimePointZero);
+// t.transform.translation.x 가 -0.032</code></pre>
+    <p>
+      점을 수백 개 옮겨야 할 때는 관계를 한 번 받아 두고 직접 곱하는 쪽이 빠르다. 이것도 실패하면 같은 예외를 던지므로 <code>try</code>로 감싼다.
+      이 조각은 설명용이고 이 회차의 단계 코드에는 넣지 않았다.
+    </p>
+    <!-- TODO: 미검증 — 위 lookupTransform 조각은 로봇에서 빌드해 돌려 보지 않았다 -->
+  </details>
+
+  <details>
+    <summary>출처</summary>
+    <ul>
+      <li>ROS 2 Jazzy 문서 「Tf2」 개념과 튜토리얼 — <code>docs.ros.org/en/jazzy/Concepts/Intermediate/About-Tf2.html</code> · <code>docs.ros.org/en/jazzy/Tutorials/Intermediate/Tf2/Tf2-Main.html</code></li>
+      <li>REP 105 「Coordinate Frames for Mobile Platforms」 — <code>base_link</code> · <code>odom</code> · <code>map</code>의 약속 (<code>ros.org/reps/rep-0105.html</code>)</li>
+      <li>터틀봇3 패키지 <code>turtlebot3_bringup/param/burger.yaml</code>의 <code>odometry.use_imu: true</code> — 방향을 IMU에서 가져오는 설정</li>
+    </ul>
+  </details>
+
+  <footer>
+    로봇공학 · 순천향대학교 전자정보공학과 ·
+    4부 로봇과 프로젝트 · <a href="index.html">회차 목록으로</a>
+  </footer>
+</main>
+</div>
+
+<script src="../assets/site.js" defer></script>
+</body>
+</html>

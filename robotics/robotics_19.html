@@ -67,7 +67,7 @@
     달라지는 것은 그 앞뒤에 붙는 몇 줄과, <code>cmake</code>를 직접 치는 대신 <code>colcon build</code>를 친다는 것 정도다.
   </p>
   <p>
-    오늘은 <code>~/ros2_ws/src</code> 안에 <strong><code>turtle_drive</code></strong>라는 패키지를 하나 만든다.
+    오늘은 <code>~/ros_ws/src</code> 안에 <strong><code>turtle_drive</code></strong>라는 패키지를 하나 만든다.
     이 패키지는 22회까지 네 회차 동안 자란다. 오늘 거기에 넣는 것은 실행 파일 하나, <strong><code>hello_node</code></strong>다.
     로그 한 줄을 찍고 끝나는 프로그램에서 시작해, <code>rclcpp::Node</code>를 상속한 클래스가 되어 <code>ros2 node list</code>에 이름이 뜨는 데까지 간다.
     거북이를 움직이는 일(발행·구독·타이머)은 20회 몫이라 오늘은 하지 않는다.
@@ -110,13 +110,13 @@
   <h3>1-2 패키지 만들기 — <code>ros2 pkg create</code></h3>
   <p>
     <code>package.xml</code>과 <code>CMakeLists.txt</code>를 빈 파일부터 손으로 쓸 일은 없다. 뼈대를 만들어 주는 명령이 있다.
-    16회에서 만든 작업공간 <code>~/ros2_ws</code>의 <code>src/</code>로 가서 친다.
+    16회에서 만든 작업공간 <code>~/ros_ws</code>의 <code>src/</code>로 가서 친다.
   </p>
-  <pre class="lang-sh"><code>$ cd ~/ros2_ws/src
+  <pre class="lang-sh"><code>$ cd ~/ros_ws/src
 $ ros2 pkg create turtle_drive --build-type ament_cmake --dependencies rclcpp
 going to create a new package
 package name: turtle_drive
-destination directory: /home/ubuntu/ros2_ws/src
+destination directory: /home/ubuntu/ros_ws/src
 package format: 3
 version: 0.0.0
 description: TODO: Package description
@@ -148,7 +148,7 @@ MIT-0</code></pre>
     <p class="boxtitle">🆕 이 명령에서 처음 나오는 것</p>
     <dl>
       <dt>ros2 pkg create 이름</dt>
-      <dd>지금 폴더 안에 <code>이름/</code> 폴더를 만들고 패키지 뼈대를 채운다. 여기서는 <code>~/ros2_ws/src/turtle_drive/</code>가 생겼다.</dd>
+      <dd>지금 폴더 안에 <code>이름/</code> 폴더를 만들고 패키지 뼈대를 채운다. 여기서는 <code>~/ros_ws/src/turtle_drive/</code>가 생겼다.</dd>
       <dt>--build-type ament_cmake</dt>
       <dd>이 패키지를 무엇으로 빌드할지 정한다. <strong>ament_cmake</strong>는 「CMake에 ROS 2용 명령 몇 개를 더한 것」이고 C++ 패키지는 이것을 쓴다. 파이썬 패키지는 <code>ament_python</code>을 쓴다. ament는 ROS 2의 빌드 도구 묶음에 붙은 이름이다(단어 뜻으로 지은 이름이 아니라 고유 이름이다).</dd>
       <dt>--dependencies rclcpp</dt>
@@ -176,7 +176,7 @@ ros2 pkg create: error: the following arguments are required: package_name</code
   </div>
 
   <h3>1-3 만들어진 파일</h3>
-  <pre class="lang-sh"><code>$ cd ~/ros2_ws/src/turtle_drive &amp;&amp; find . | sort
+  <pre class="lang-sh"><code>$ cd ~/ros_ws/src/turtle_drive &amp;&amp; find . | sort
 .
 ./CMakeLists.txt
 ./include
@@ -306,7 +306,7 @@ ament_package()</code></pre>
     <strong>해석:</strong> 빠진 것이 보인다 — <strong><code>add_executable</code>이 없다.</strong> 아직 소스가 없으니 만들 실행 파일도 없다.
     이 상태로도 빌드는 되지만, 실행할 것이 없다.
   </div>
-  <pre class="lang-sh"><code>$ cd ~/ros2_ws
+  <pre class="lang-sh"><code>$ cd ~/ros_ws
 $ colcon build --packages-select turtle_drive
 Starting &gt;&gt;&gt; turtle_drive
 Finished &lt;&lt;&lt; turtle_drive [1.01s]
@@ -424,7 +424,7 @@ if(BUILD_TESTING)</code></pre>
   </div>
 
   <h3>4-4 실제로 나온 출력</h3>
-  <pre class="lang-sh"><code>$ cd ~/ros2_ws
+  <pre class="lang-sh"><code>$ cd ~/ros_ws
 $ colcon build --packages-select turtle_drive
 Starting &gt;&gt;&gt; turtle_drive
 Finished &lt;&lt;&lt; turtle_drive [3.18s]
@@ -447,14 +447,14 @@ $</code></pre>
     ROS 2 라이브러리를 불렀을 뿐, 그래프에 이름을 올리는 객체는 없었다. ⑥절이 그것을 만든다.
   </p>
 
-  <!-- fullcode "전체 코드 — turtle_drive/ (1단계 · v1. 이대로 빌드된다)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive hello_node"
+  <!-- fullcode "전체 코드 — turtle_drive/ (1단계 · v1. 이대로 빌드된다)" build="cd ~/ros_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive hello_node"
        l19_pkg/steps/step1/turtle_drive/src/hello_node.cpp as turtle_drive/src/hello_node.cpp
        l19_pkg/steps/step1/turtle_drive/CMakeLists.txt as turtle_drive/CMakeLists.txt
        l19_pkg/steps/step1/turtle_drive/package.xml as turtle_drive/package.xml
   -->
 <details class="fullcode">
   <summary>전체 코드 — turtle_drive/ (1단계 · v1. 이대로 빌드된다)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive hello_node</code></p>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive hello_node</code></p>
   <div class="codefile"><div class="fname">turtle_drive/src/hello_node.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 19회 turtle_drive 첫 노드 — v1 (1단계: rclcpp::init · RCLCPP_INFO · rclcpp::shutdown)
 #include &quot;rclcpp/rclcpp.hpp&quot;
 
@@ -661,7 +661,7 @@ int main(int argc, char ** argv)
 
   <h3>6-4 실제로 나온 출력</h3>
   <p>터미널 둘을 쓴다. 첫 번째에서 빌드하고 실행한다. 프로그램이 끝나지 않고 멈춰 있으면 맞다.</p>
-  <pre class="lang-sh"><code>$ cd ~/ros2_ws
+  <pre class="lang-sh"><code>$ cd ~/ros_ws
 $ colcon build --packages-select turtle_drive
 $ source install/setup.bash
 $ ros2 run turtle_drive hello_node
@@ -703,12 +703,12 @@ $ ros2 node info /hello_node
     (여러분 화면에는 이 줄 앞에 Ctrl+C를 누른 표시 <code>^C</code>가 붙어 보일 수 있다. 검증할 때는 <code>timeout</code>으로 같은 신호를 보내서 받았다.)
   </p>
 
-  <!-- fullcode "전체 코드 — turtle_drive/src/hello_node.cpp (2단계 · v2. CMakeLists.txt·package.xml 은 v1 그대로)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive hello_node"
+  <!-- fullcode "전체 코드 — turtle_drive/src/hello_node.cpp (2단계 · v2. CMakeLists.txt·package.xml 은 v1 그대로)" build="cd ~/ros_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive hello_node"
        l19_pkg/steps/step2/turtle_drive/src/hello_node.cpp as turtle_drive/src/hello_node.cpp
   -->
 <details class="fullcode">
   <summary>전체 코드 — turtle_drive/src/hello_node.cpp (2단계 · v2. CMakeLists.txt·package.xml 은 v1 그대로)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive hello_node</code></p>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive hello_node</code></p>
   <div class="codefile"><div class="fname">turtle_drive/src/hello_node.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 19회 turtle_drive 첫 노드 — v2 (2단계: HelloNode 클래스 · make_shared · rclcpp::spin)
 #include &lt;memory&gt;
 
@@ -846,14 +846,14 @@ int main(int argc, char ** argv)
     20회에서 거북이에게 명령을 보내는 일은 전부 이 빈 구간에서 일어난다.
   </p>
 
-  <!-- fullcode "전체 코드 — turtle_drive/ (3단계 · v3 완성본. 20회가 이 패키지에 이어 붙인다)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive hello_node"
+  <!-- fullcode "전체 코드 — turtle_drive/ (3단계 · v3 완성본. 20회가 이 패키지에 이어 붙인다)" build="cd ~/ros_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive hello_node"
        l19_pkg/steps/step3/turtle_drive/src/hello_node.cpp as turtle_drive/src/hello_node.cpp
        l19_pkg/steps/step3/turtle_drive/CMakeLists.txt as turtle_drive/CMakeLists.txt
        l19_pkg/steps/step3/turtle_drive/package.xml as turtle_drive/package.xml
   -->
 <details class="fullcode">
   <summary>전체 코드 — turtle_drive/ (3단계 · v3 완성본. 20회가 이 패키지에 이어 붙인다)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive hello_node</code></p>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive hello_node</code></p>
   <div class="codefile"><div class="fname">turtle_drive/src/hello_node.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 19회 turtle_drive 첫 노드 — v3 (3단계: 멤버 변수 · 소멸자 · 로그 정리)
 #include &lt;memory&gt;
 #include &lt;string&gt;
@@ -963,7 +963,7 @@ ament_package()</code></pre></div>
       붉은 번호 셋이 ⑨절의 「못 찾는 세 가지」가 생기는 자리다.</figcaption>
   </figure>
   <p>실제로 빌드한 뒤의 모습이다.</p>
-  <pre class="lang-sh"><code>$ cd ~/ros2_ws
+  <pre class="lang-sh"><code>$ cd ~/ros_ws
 $ ls
 build
 install
@@ -996,7 +996,7 @@ install/turtle_drive/lib/turtle_drive/hello_node</code></pre>
 /opt/ros/jazzy
 $ source install/setup.bash
 $ printenv AMENT_PREFIX_PATH
-/home/ubuntu/ros2_ws/install/turtle_drive:/opt/ros/jazzy</code></pre>
+/home/ubuntu/ros_ws/install/turtle_drive:/opt/ros/jazzy</code></pre>
   <p>
     <code>source</code> 전에는 <code>/opt/ros/jazzy</code> 하나였는데, 뒤에는 <strong>앞에 <code>install/turtle_drive</code>가 붙었다.</strong>
     <code>ros2 run</code>은 이 목록을 앞에서부터 뒤져 패키지를 찾는다. 이 줄이 없으면 우리 패키지는 없는 것이나 같다.
@@ -1015,7 +1015,7 @@ $ printenv AMENT_PREFIX_PATH
   </p>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
-    ~/ros2_ws 에서 turtle_drive 패키지만 빌드하고, 빌드가 끝나면 install/turtle_drive/lib/turtle_drive 안에 어떤 실행 파일이 생겼는지 ls 로 보여 줘. 빌드는 반드시 ~/ros2_ws 에서 해 줘. source 는 내가 직접 할게.
+    ~/ros_ws 에서 turtle_drive 패키지만 빌드하고, 빌드가 끝나면 install/turtle_drive/lib/turtle_drive 안에 어떤 실행 파일이 생겼는지 ls 로 보여 줘. 빌드는 반드시 ~/ros_ws 에서 해 줘. source 는 내가 직접 할게.
   </div>
 
   <!-- ── ⑨ notfound ── -->
@@ -1030,7 +1030,7 @@ $ printenv AMENT_PREFIX_PATH
     <tr><th></th><th>무엇을 빠뜨렸나</th><th>나오는 글자</th><th>먼저 볼 것</th></tr>
     <tr><td>9-1</td><td>새 터미널에서 <code>source install/setup.bash</code></td><td><code>Package 'turtle_drive' not found</code></td><td><code>printenv AMENT_PREFIX_PATH</code></td></tr>
     <tr><td>9-2</td><td><code>CMakeLists.txt</code>의 <code>install(TARGETS …)</code></td><td><code>No executable found</code></td><td><code>ros2 pkg executables turtle_drive</code></td></tr>
-    <tr><td>9-3</td><td>작업공간 최상위(<code>~/ros2_ws</code>)에서 빌드하기</td><td><code>install/setup.bash: No such file or directory</code> → 9-1과 같은 글자</td><td>빌드한 폴더에 <code>ls</code></td></tr>
+    <tr><td>9-3</td><td>작업공간 최상위(<code>~/ros_ws</code>)에서 빌드하기</td><td><code>install/setup.bash: No such file or directory</code> → 9-1과 같은 글자</td><td>빌드한 폴더에 <code>ls</code></td></tr>
   </table>
   </div>
   <div class="interp">
@@ -1040,7 +1040,7 @@ $ printenv AMENT_PREFIX_PATH
 
   <h3>9-1 <code>source install/setup.bash</code>를 하지 않았다</h3>
   <p>빌드한 터미널을 닫고 새 터미널을 열어, <code>source</code> 없이 바로 실행했다.</p>
-  <pre class="lang-sh"><code>$ cd ~/ros2_ws
+  <pre class="lang-sh"><code>$ cd ~/ros_ws
 $ ros2 run turtle_drive hello_node
 Package 'turtle_drive' not found
 $ ros2 pkg list | grep turtle
@@ -1075,12 +1075,12 @@ build/turtle_drive/hello_node</code></pre>
     이번에는 <code>Package … not found</code>가 아니다. 패키지는 찾았는데(<code>ament_package()</code>는 있으니까) 그 안에 실행 파일이 없다는 뜻이다.
     ③절에서 실행 파일을 넣기 전에 봤던 글자와 같다.
   </p>
-  <!-- fullcode "전체 코드 — turtle_drive/CMakeLists.txt (변형 · install 을 지운 판. 빌드는 되고 ros2 run 이 못 찾는다)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive hello_node   # No executable found"
+  <!-- fullcode "전체 코드 — turtle_drive/CMakeLists.txt (변형 · install 을 지운 판. 빌드는 되고 ros2 run 이 못 찾는다)" build="cd ~/ros_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive hello_node   # No executable found"
        l19_pkg/steps/variants/no_install/turtle_drive/CMakeLists.txt as turtle_drive/CMakeLists.txt
   -->
 <details class="fullcode">
   <summary>전체 코드 — turtle_drive/CMakeLists.txt (변형 · install 을 지운 판. 빌드는 되고 ros2 run 이 못 찾는다)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive hello_node   # No executable found</code></p>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive hello_node   # No executable found</code></p>
   <div class="codefile"><div class="fname">turtle_drive/CMakeLists.txt</div><button onclick="copyCode(this)">복사</button><pre class="lang-cmake"><code>cmake_minimum_required(VERSION 3.8)
 project(turtle_drive)
 
@@ -1117,7 +1117,7 @@ ament_package()</code></pre></div>
     <code>src/</code> 안에서 패키지를 만들고 나서, 그 자리에서 그대로 <code>colcon build</code>를 친 경우다.
     colcon은 <strong>친 자리</strong>에 결과를 쌓으므로 빌드는 성공한다.
   </p>
-  <pre class="lang-sh"><code>$ cd ~/ros2_ws/src
+  <pre class="lang-sh"><code>$ cd ~/ros_ws/src
 $ colcon build --packages-select turtle_drive
 Starting &gt;&gt;&gt; turtle_drive
 Finished &lt;&lt;&lt; turtle_drive [3.25s]
@@ -1131,28 +1131,28 @@ turtle_drive</code></pre>
   <p>
     <code>src/</code> 안에 <code>build</code>·<code>install</code>·<code>log</code>가 생겼다. 이것이 증거다. 이제 평소대로 작업공간으로 가서 <code>source</code>를 하면,
   </p>
-  <pre class="lang-sh"><code>$ cd ~/ros2_ws
+  <pre class="lang-sh"><code>$ cd ~/ros_ws
 $ source install/setup.bash
 bash: install/setup.bash: No such file or directory
 $ ros2 run turtle_drive hello_node
 Package 'turtle_drive' not found</code></pre>
   <p>
-    <code>~/ros2_ws/install</code>이 없으니 <code>source</code>가 실패하고, 그러면 9-1과 같은 글자가 나온다.
+    <code>~/ros_ws/install</code>이 없으니 <code>source</code>가 실패하고, 그러면 9-1과 같은 글자가 나온다.
     <strong><code>source</code> 줄의 오류를 못 보고 지나치면 9-1과 구별이 안 된다.</strong> 그래서 「먼저 볼 것」이 <code>ls</code>다.
-    고치는 법은 <code>src/</code> 안의 <code>build</code>·<code>install</code>·<code>log</code>를 지우고 <code>~/ros2_ws</code>에서 다시 빌드하는 것이다.
+    고치는 법은 <code>src/</code> 안의 <code>build</code>·<code>install</code>·<code>log</code>를 지우고 <code>~/ros_ws</code>에서 다시 빌드하는 것이다.
   </p>
 
   <div class="box trap">
     <div class="boxtitle">⚠️ 9-3에는 더 고약한 모양이 있다 — 고쳤는데 그대로다</div>
     <p>
-      이미 <code>~/ros2_ws</code>에서 한 번 제대로 빌드해 둔 상태라면 <code>~/ros2_ws/install</code>이 <strong>있다.</strong>
+      이미 <code>~/ros_ws</code>에서 한 번 제대로 빌드해 둔 상태라면 <code>~/ros_ws/install</code>이 <strong>있다.</strong>
       그 뒤에 코드를 고치고 <code>src/</code>에서 빌드하면 오류가 하나도 안 나고, <strong>옛 실행 파일이 그대로 돈다.</strong>
       v2로 최상위에서 빌드한 뒤 소스를 v3로 바꾸고 <code>src/</code>에서 빌드해, 새 터미널에서 실행한 결과다.
     </p>
     <pre class="lang-sh"><code>$ ros2 run turtle_drive hello_node
 [INFO] [1792271556.854882495] [hello_node]: 노드가 만들어졌습니다</code></pre>
     <p>
-      v3의 첫 줄(「turtle_drive 준비 완료」)이 아니라 <strong>v2의 줄</strong>이 찍혔다. 새로 빌드된 것은 <code>src/install</code>에 들어갔고, <code>source</code>한 것은 옛 <code>~/ros2_ws/install</code>이기 때문이다.
+      v3의 첫 줄(「turtle_drive 준비 완료」)이 아니라 <strong>v2의 줄</strong>이 찍혔다. 새로 빌드된 것은 <code>src/install</code>에 들어갔고, <code>source</code>한 것은 옛 <code>~/ros_ws/install</code>이기 때문이다.
       「분명히 고쳤는데 안 바뀐다」 싶으면 <strong>코드를 의심하기 전에 어디서 빌드했는지</strong>부터 보면 덜 헤맨다.
     </p>
   </div>
@@ -1180,11 +1180,11 @@ Package 'turtle_drive' not found</code></pre>
     <p class="boxtitle">절차</p>
     <ol>
       <li><strong>(3분)</strong> 패키지를 만든다. 이미 ①절을 따라 했으면 건너뛴다.
-        <pre class="lang-sh"><code>$ cd ~/ros2_ws/src
+        <pre class="lang-sh"><code>$ cd ~/ros_ws/src
 $ ros2 pkg create turtle_drive --build-type ament_cmake --dependencies rclcpp</code></pre>
         v3의 <code>src/hello_node.cpp</code>를 새로 만들고, <code>CMakeLists.txt</code>·<code>package.xml</code>을 📄 상자의 것으로 바꾼다.</li>
       <li><strong>(2분)</strong> 작업공간 최상위에서 빌드하고 실행한다 (터미널 1).
-        <pre class="lang-sh"><code>$ cd ~/ros2_ws
+        <pre class="lang-sh"><code>$ cd ~/ros_ws
 $ colcon build --packages-select turtle_drive
 $ source install/setup.bash
 $ ros2 run turtle_drive hello_node</code></pre></li>
@@ -1222,7 +1222,7 @@ $ ros2 run turtlesim turtle_teleop_key     # 터미널 3</code></pre></li>
     옛 방식 <code>CMakeLists.txt</code>, <code>TODO</code>가 남은 <code>package.xml</code>, 쓰지 않는 의존성, 노드가 없는 <code>main</code>.
     <strong>빌드는 된다.</strong> 그런데 실행하면 이렇게 나온다.
   </p>
-  <pre class="lang-sh"><code>$ cd ~/ros2_ws
+  <pre class="lang-sh"><code>$ cd ~/ros_ws
 $ colcon build --packages-select turtle_greeter
 Starting &gt;&gt;&gt; turtle_greeter
 Finished &lt;&lt;&lt; turtle_greeter [3.14s]
@@ -1231,14 +1231,14 @@ Summary: 1 package finished [3.21s]
 $ source install/setup.bash
 $ ros2 run turtle_greeter greeter
 No executable found</code></pre>
-  <!-- fullcode open "연습문제 — 오늘 배운 것이 없는 원본 (turtle_greeter/)" build="cd ~/ros2_ws && colcon build --packages-select turtle_greeter && source install/setup.bash && ros2 run turtle_greeter greeter"
+  <!-- fullcode open "연습문제 — 오늘 배운 것이 없는 원본 (turtle_greeter/)" build="cd ~/ros_ws && colcon build --packages-select turtle_greeter && source install/setup.bash && ros2 run turtle_greeter greeter"
        l19_pkg/steps/exercise_old/turtle_greeter/src/greeter.cpp as turtle_greeter/src/greeter.cpp
        l19_pkg/steps/exercise_old/turtle_greeter/CMakeLists.txt as turtle_greeter/CMakeLists.txt
        l19_pkg/steps/exercise_old/turtle_greeter/package.xml as turtle_greeter/package.xml
   -->
 <details class="fullcode" open>
   <summary>연습문제 — 오늘 배운 것이 없는 원본 (turtle_greeter/)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_greeter &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_greeter greeter</code></p>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select turtle_greeter &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_greeter greeter</code></p>
   <div class="codefile"><div class="fname">turtle_greeter/src/greeter.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 19회 연습문제 — turtle_greeter 원본. 오늘 배운 것을 하나도 안 쓴 패키지
 #include &lt;iostream&gt;
 
@@ -1289,7 +1289,7 @@ ament_target_dependencies(greeter rclcpp std_msgs)</code></pre></div>
 &lt;/package&gt;</code></pre></div>
 </details>
 <!-- /fullcode -->
-  <p>세 파일을 <code>~/ros2_ws/src/turtle_greeter/</code> 아래에 같은 경로로 만든다(<code>turtle_drive</code> 옆에 둔다).</p>
+  <p>세 파일을 <code>~/ros_ws/src/turtle_greeter/</code> 아래에 같은 경로로 만든다(<code>turtle_drive</code> 옆에 둔다).</p>
 
   <h3>할 일</h3>
   <div class="tablewrap">
@@ -1305,7 +1305,7 @@ ament_target_dependencies(greeter rclcpp std_msgs)</code></pre></div>
   </div>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
-    ~/ros2_ws/src/turtle_greeter 패키지를 고쳐 줘. 고치기 전에 package.xml 과 CMakeLists.txt 에서 문제가 되는 줄을 전부 찾아 이유를 한 줄씩 적어 줘. 기준은 이거야: 의존성은 두 파일에 똑같이, 실행 파일은 install(TARGETS … DESTINATION lib/${PROJECT_NAME}), ament_package() 는 맨 끝, include_directories 와 C++14 는 쓰지 않음, 안 쓰는 의존성은 지움, TODO 는 채움. 코드는 rclcpp::Node 를 상속한 클래스로 바꾸고 RCLCPP_INFO 로 찍어 줘. 빌드는 ~/ros2_ws 에서 colcon build --packages-select turtle_greeter 로 해 줘.
+    ~/ros_ws/src/turtle_greeter 패키지를 고쳐 줘. 고치기 전에 package.xml 과 CMakeLists.txt 에서 문제가 되는 줄을 전부 찾아 이유를 한 줄씩 적어 줘. 기준은 이거야: 의존성은 두 파일에 똑같이, 실행 파일은 install(TARGETS … DESTINATION lib/${PROJECT_NAME}), ament_package() 는 맨 끝, include_directories 와 C++14 는 쓰지 않음, 안 쓰는 의존성은 지움, TODO 는 채움. 코드는 rclcpp::Node 를 상속한 클래스로 바꾸고 RCLCPP_INFO 로 찍어 줘. 빌드는 ~/ros_ws 에서 colcon build --packages-select turtle_greeter 로 해 줘.
   </div>
   <p>
     정답은 하나가 아니다. <strong>위 표의 「확인하는 법」이 전부 통과하면</strong> 된 것이다.
@@ -1325,7 +1325,7 @@ ament_target_dependencies(greeter rclcpp std_msgs)</code></pre></div>
     <tr><td><code>ament_package()</code></td><td>파일 맨 끝 한 줄</td><td>패키지를 ROS 2에 등록한다. <strong>맨 마지막</strong>에 둔다</td></tr>
     <tr><td>노드 · <code>rclcpp::Node</code></td><td><code>class HelloNode : public rclcpp::Node</code></td><td>노드는 <code>rclcpp::Node</code>를 상속한 클래스로 만든다. 이름은 기반 클래스 생성자에 넘긴다</td></tr>
     <tr><td><code>rclcpp::init</code> · <code>spin</code> · <code>shutdown</code></td><td><code>rclcpp::spin(node);</code></td><td><code>spin</code>이 도는 동안 노드가 살아 있다. Ctrl+C를 누르면 빠져나온다</td></tr>
-    <tr><td><code>colcon build --packages-select</code> · <code>source install/setup.bash</code></td><td><code>cd ~/ros2_ws</code> 뒤에 친다</td><td>빌드는 <strong>작업공간 최상위</strong>에서. 새 터미널마다 <code>source</code></td></tr>
+    <tr><td><code>colcon build --packages-select</code> · <code>source install/setup.bash</code></td><td><code>cd ~/ros_ws</code> 뒤에 친다</td><td>빌드는 <strong>작업공간 최상위</strong>에서. 새 터미널마다 <code>source</code></td></tr>
   </table>
   </div>
   <div class="interp">
@@ -1338,7 +1338,7 @@ ament_target_dependencies(greeter rclcpp std_msgs)</code></pre></div>
   <div class="tablewrap">
   <table>
     <tr><th>이럴 때</th><th>이렇게 말한다</th></tr>
-    <tr><td>패키지를 새로 만들 때</td><td>"~/ros2_ws/src 에서 ros2 pkg create 로 ament_cmake 패키지를 만들어 줘. 패키지 이름을 명령 맨 앞에 쓰고, 의존성은 rclcpp 하나만. 만든 뒤 package.xml 의 TODO 세 칸이 무엇인지 알려 줘."</td></tr>
+    <tr><td>패키지를 새로 만들 때</td><td>"~/ros_ws/src 에서 ros2 pkg create 로 ament_cmake 패키지를 만들어 줘. 패키지 이름을 명령 맨 앞에 쓰고, 의존성은 rclcpp 하나만. 만든 뒤 package.xml 의 TODO 세 칸이 무엇인지 알려 줘."</td></tr>
     <tr><td>실행 파일을 더할 때</td><td>"src/이름.cpp 를 실행 파일로 더해 줘. add_executable, target_link_libraries(… PRIVATE rclcpp::rclcpp), install(TARGETS … DESTINATION lib/${PROJECT_NAME}) 세 줄을 ament_package() 위에 넣어 줘."</td></tr>
     <tr><td>옛 방식 CMake를 받았을 때</td><td>"이 CMakeLists.txt 에서 ament_target_dependencies 를 target_link_libraries 로 바꾸고, include_directories 와 C++14 설정이 있으면 지워 줘. 바꾼 이유를 한 줄씩."</td></tr>
     <tr><td>의존성을 더할 때</td><td>"새 의존성을 package.xml 의 &lt;depend&gt; 와 CMakeLists.txt 의 find_package·target_link_libraries 양쪽에 넣어 줘. 넣은 뒤 두 파일에서 그 이름이 들어간 줄을 나란히 보여 줘."</td></tr>
@@ -1357,7 +1357,7 @@ ament_target_dependencies(greeter rclcpp std_msgs)</code></pre></div>
     <li><input type="checkbox" id="c1"><label for="c1"><code>package.xml</code>과 <code>CMakeLists.txt</code>를 <strong>각각 누가 읽는지</strong> 한 문장으로 말할 수 있나?</label></li>
     <li><input type="checkbox" id="c2"><label for="c2">8회 <code>CMakeLists.txt</code>와 같은 줄 둘(<code>add_executable</code>·<code>target_link_libraries</code>)과 더해진 줄 둘(<code>install</code>·<code>ament_package</code>)을 짚을 수 있나?</label></li>
     <li><input type="checkbox" id="c3"><label for="c3"><code>Package … not found</code>와 <code>No executable found</code>를 보고 어느 쪽을 볼지 가를 수 있나?</label></li>
-    <li><input type="checkbox" id="c4"><label for="c4"><code>colcon build</code>를 <code>~/ros2_ws</code>에서 쳤나? <code>src/</code> 안에 <code>build</code>·<code>install</code>·<code>log</code>가 생기지 않았나?</label></li>
+    <li><input type="checkbox" id="c4"><label for="c4"><code>colcon build</code>를 <code>~/ros_ws</code>에서 쳤나? <code>src/</code> 안에 <code>build</code>·<code>install</code>·<code>log</code>가 생기지 않았나?</label></li>
     <li><input type="checkbox" id="c5"><label for="c5">새 터미널에서 <code>source install/setup.bash</code>를 했나? <code>printenv AMENT_PREFIX_PATH</code>로 확인할 수 있나?</label></li>
     <li><input type="checkbox" id="c6"><label for="c6"><code>rclcpp::spin</code>이 언제 돌아오는지, 그 뒤에 무엇이 불리는지 v3 로그 순서로 말할 수 있나?</label></li>
     <li><input type="checkbox" id="c7"><label for="c7"><code>rqt_graph</code>에 <code>/hello_node</code>가 떴나? 왜 아무 화살표에도 안 이어졌는지 말할 수 있나?</label></li>
@@ -1379,9 +1379,9 @@ ament_target_dependencies(greeter rclcpp std_msgs)</code></pre></div>
   <details>
     <summary>작업공간을 지우고 다시 만들 때 나오는 <code>WARNING … doesn't exist</code></summary>
     <p>
-      <code>source install/setup.bash</code>를 한 터미널에서 <code>~/ros2_ws</code>를 통째로 지우고 다시 빌드하면 이런 줄이 나온다. 검증하다가 실제로 받은 것이다.
+      <code>source install/setup.bash</code>를 한 터미널에서 <code>~/ros_ws</code>를 통째로 지우고 다시 빌드하면 이런 줄이 나온다. 검증하다가 실제로 받은 것이다.
     </p>
-    <pre><code>[0.147s] WARNING:colcon.colcon_ros.prefix_path.ament:The path '/home/ubuntu/ros2_ws/install/turtle_drive' in the environment variable AMENT_PREFIX_PATH doesn't exist</code></pre>
+    <pre><code>[0.147s] WARNING:colcon.colcon_ros.prefix_path.ament:The path '/home/ubuntu/ros_ws/install/turtle_drive' in the environment variable AMENT_PREFIX_PATH doesn't exist</code></pre>
     <p>
       터미널의 <code>AMENT_PREFIX_PATH</code>에는 지워진 폴더가 아직 적혀 있는데 실제 폴더가 없어서 colcon이 알려 주는 것이다. 빌드에는 영향이 없다.
       <strong>새 터미널을 열면 사라진다.</strong>

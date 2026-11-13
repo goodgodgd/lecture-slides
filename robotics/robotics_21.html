@@ -263,12 +263,12 @@ terminate called after throwing an instance of 'rclcpp::exceptions::ParameterNot
     </p>
   </div>
 
-  <!-- fullcode "전체 코드 — turtle_drive/src/turtle_drive.cpp (3단계 · v3. CMakeLists.txt·package.xml 은 20회 v2 그대로)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive turtle_drive"
+  <!-- fullcode "전체 코드 — turtle_drive/src/turtle_drive.cpp (3단계 · v3. CMakeLists.txt·package.xml 은 20회 v2 그대로)" build="cd ~/ros_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive turtle_drive"
        l21_srv_param/steps/step3/turtle_drive/src/turtle_drive.cpp as turtle_drive/src/turtle_drive.cpp
   -->
 <details class="fullcode">
   <summary>전체 코드 — turtle_drive/src/turtle_drive.cpp (3단계 · v3. CMakeLists.txt·package.xml 은 20회 v2 그대로)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive turtle_drive</code></p>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive turtle_drive</code></p>
   <div class="codefile"><div class="fname">turtle_drive/src/turtle_drive.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 21회 turtle_drive — v3 (3단계: declare_parameter · get_parameter — 속도 상한과 여유를 파라미터로)
 #include &lt;algorithm&gt;
 #include &lt;chrono&gt;
@@ -516,12 +516,12 @@ Set parameter successful</code></pre>
     turtle_drive 노드에서 get_parameter 를 부르는 줄을 전부 찾아서, 각각이 어느 함수 안에 있고 그 함수가 언제 불리는지(생성자에서 한 번 / 타이머마다 / 파라미터가 바뀔 때) 표로 보여 줘. ros2 param set 으로 바꾼 값이 실행 중에 반영되는지 그 표로 판단해 줘. 코드는 고치지 마.
   </div>
 
-  <!-- fullcode "전체 코드 — turtle_drive/src/turtle_drive.cpp (4단계 · v4)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive turtle_drive"
+  <!-- fullcode "전체 코드 — turtle_drive/src/turtle_drive.cpp (4단계 · v4)" build="cd ~/ros_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive turtle_drive"
        l21_srv_param/steps/step4/turtle_drive/src/turtle_drive.cpp as turtle_drive/src/turtle_drive.cpp
   -->
 <details class="fullcode">
   <summary>전체 코드 — turtle_drive/src/turtle_drive.cpp (4단계 · v4)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive turtle_drive</code></p>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive turtle_drive</code></p>
   <div class="codefile"><div class="fname">turtle_drive/src/turtle_drive.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 21회 turtle_drive — v4 (4단계: 파라미터를 타이머 콜백에서 매번 다시 읽는다 — ros2 param set 이 바로 먹는다)
 #include &lt;algorithm&gt;
 #include &lt;chrono&gt;
@@ -708,15 +708,15 @@ int main(int argc, char ** argv)
   <div class="keycmd">
     <p class="boxtitle">⌨ 파라미터를 파일로 받기 — <code>ros2 param dump</code></p>
     <p><code>turtle_drive</code>가 떠 있는 동안 <strong>다른 터미널</strong>에서 친다.</p>
-    <pre class="lang-sh"><code>$ mkdir -p ~/ros2_ws/src/turtle_drive/config
-$ ros2 param dump /turtle_drive &gt; ~/ros2_ws/src/turtle_drive/config/turtle_drive.yaml</code></pre>
+    <pre class="lang-sh"><code>$ mkdir -p ~/ros_ws/src/turtle_drive/config
+$ ros2 param dump /turtle_drive &gt; ~/ros_ws/src/turtle_drive/config/turtle_drive.yaml</code></pre>
     <p>
       <code>&gt;</code>는 파일은 만들어도 <strong>폴더는 만들지 않는다.</strong> 첫 줄의 <code>mkdir -p</code>를 건너뛰면 이렇게 나온다.
     </p>
-    <pre><code>bash: /home/ubuntu/ros2_ws/src/turtle_drive/config/turtle_drive.yaml: No such file or directory</code></pre>
+    <pre><code>bash: /home/ubuntu/ros_ws/src/turtle_drive/config/turtle_drive.yaml: No such file or directory</code></pre>
     <p>받은 파일을 편집기로 열어 <code>max_speed</code>·<code>margin</code> 두 줄만 남기고 값을 고치면 아래 파일이 된다.</p>
   </div>
-  <div class="codelabel good">~/ros2_ws/src/turtle_drive/config/turtle_drive.yaml (새 파일)</div>
+  <div class="codelabel good">~/ros_ws/src/turtle_drive/config/turtle_drive.yaml (새 파일)</div>
   <pre class="after"><code># 21회 — turtle_drive 노드의 파라미터 (ros2 param dump /turtle_drive 의 출력에서 우리 파라미터 두 줄만 남겼다)
 /turtle_drive:
   ros__parameters:
@@ -728,11 +728,11 @@ $ ros2 param dump /turtle_drive &gt; ~/ros2_ws/src/turtle_drive/config/turtle_dr
     <p class="boxtitle">⌨ 파일의 값으로 노드 켜기 — <code>--params-file</code></p>
     <p>turtlesim을 띄운 뒤, <code>turtle_drive</code>를 켜던 터미널에서 친다. 경로는 4-2에서 받은 그 파일이다.</p>
     <pre class="lang-sh"><code>$ ros2 run turtle_drive turtle_drive --ros-args \
-    --params-file ~/ros2_ws/src/turtle_drive/config/turtle_drive.yaml</code></pre>
+    --params-file ~/ros_ws/src/turtle_drive/config/turtle_drive.yaml</code></pre>
     <p>줄 끝의 <code>\</code>는 「명령이 다음 줄로 이어진다」는 표시다. 한 줄로 이어 쳐도 같다.</p>
   </div>
   <p>실제로 나온 출력이다.</p>
-  <pre class="lang-sh"><code>$ ros2 run turtle_drive turtle_drive --ros-args --params-file ~/ros2_ws/src/turtle_drive/config/turtle_drive.yaml
+  <pre class="lang-sh"><code>$ ros2 run turtle_drive turtle_drive --ros-args --params-file ~/ros_ws/src/turtle_drive/config/turtle_drive.yaml
 [INFO] [1793760712.197488944] [turtle_drive]: max_speed = 0.80 m/s, margin = 2.00 m (2.0 ~ 9.0 안에서 돌아다닙니다)
 [INFO] [1793760719.697533158] [turtle_drive]: 범위 밖 (x = 9.05, y = 6.04) — 중앙 쪽으로 돕니다
 [INFO] [1793760723.197734659] [turtle_drive]: 중앙을 봅니다 — 다시 출발합니다
@@ -757,14 +757,14 @@ terminate called after throwing an instance of 'rclcpp::exceptions::RCLInvalidRO
   what():  failed to initialize rcl: Couldn't parse params file: '--params-file src/turtle_drive/config/turtle_drive.yaml'. Error: Error opening YAML file, at ./src/parser.c:271, at ./src/rcl/arguments.c:415
 [ros2run]: Aborted</code></pre>
     <p>
-      <code>Error opening YAML file</code> — 파일을 못 열었다는 말이다. 파일은 <code>~/ros2_ws/src/…</code>에 있는데 노드는 <code>~/src/…</code>에서 찾았다.
-      상대 경로는 <code>~/ros2_ws</code>에 서 있을 때만 맞는다. 위 상자처럼 <code>~</code>부터 적으면 이 일이 생기지 않는다.
+      <code>Error opening YAML file</code> — 파일을 못 열었다는 말이다. 파일은 <code>~/ros_ws/src/…</code>에 있는데 노드는 <code>~/src/…</code>에서 찾았다.
+      상대 경로는 <code>~/ros_ws</code>에 서 있을 때만 맞는다. 위 상자처럼 <code>~</code>부터 적으면 이 일이 생기지 않는다.
     </p>
   </div>
   <div class="box trap">
     <div class="boxtitle">⚠️ 노드 이름을 틀리게 적으면 아무 말 없이 기본값으로 돈다</div>
     <p>파일 맨 윗줄을 <code>/turtledrive:</code>(밑줄 하나 빠짐)으로 적고 똑같이 띄웠다.</p>
-    <pre class="lang-sh"><code>$ ros2 run turtle_drive turtle_drive --ros-args --params-file ~/ros2_ws/src/turtle_drive/config/turtle_drive.yaml
+    <pre class="lang-sh"><code>$ ros2 run turtle_drive turtle_drive --ros-args --params-file ~/ros_ws/src/turtle_drive/config/turtle_drive.yaml
 [INFO] [1793760756.608323622] [turtle_drive]: max_speed = 1.20 m/s, margin = 1.00 m (1.0 ~ 10.0 안에서 돌아다닙니다)
 $ ros2 param get /turtle_drive margin
 Double value is: 1.0</code></pre>
@@ -780,7 +780,7 @@ Double value is: 1.0</code></pre>
   ros__parameters:
     max_speed: 0.8
     margin: 2</code></pre>
-    <pre class="lang-sh"><code>$ ros2 run turtle_drive turtle_drive --ros-args --params-file ~/ros2_ws/src/turtle_drive/config/turtle_drive.yaml
+    <pre class="lang-sh"><code>$ ros2 run turtle_drive turtle_drive --ros-args --params-file ~/ros_ws/src/turtle_drive/config/turtle_drive.yaml
 terminate called after throwing an instance of 'rclcpp::exceptions::InvalidParameterTypeException'
   what():  parameter 'margin' has invalid type: Wrong parameter type, parameter {margin} is of type {double}, setting it to {integer} is not allowed.
 [ros2run]: Aborted</code></pre>
@@ -801,15 +801,15 @@ terminate called after throwing an instance of 'rclcpp::exceptions::InvalidParam
   </div>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
-    지금 떠 있는 /turtle_drive 노드의 파라미터를 ros2 param dump 로 받아서, max_speed 와 margin 두 개만 남긴 ~/ros2_ws/src/turtle_drive/config/turtle_drive.yaml 을 만들어 줘. 맨 윗줄 노드 이름은 /turtle_drive 그대로 두고, 실수 값에는 소수점을 붙여 줘. 다 만들면 파일 내용을 그대로 보여 줘.
+    지금 떠 있는 /turtle_drive 노드의 파라미터를 ros2 param dump 로 받아서, max_speed 와 margin 두 개만 남긴 ~/ros_ws/src/turtle_drive/config/turtle_drive.yaml 을 만들어 줘. 맨 윗줄 노드 이름은 /turtle_drive 그대로 두고, 실수 값에는 소수점을 붙여 줘. 다 만들면 파일 내용을 그대로 보여 줘.
   </div>
 
-  <!-- fullcode "전체 코드 — turtle_drive/config/turtle_drive.yaml (v4 와 함께 쓰는 새 파일)" build="ros2 run turtle_drive turtle_drive --ros-args --params-file ~/ros2_ws/src/turtle_drive/config/turtle_drive.yaml"
+  <!-- fullcode "전체 코드 — turtle_drive/config/turtle_drive.yaml (v4 와 함께 쓰는 새 파일)" build="ros2 run turtle_drive turtle_drive --ros-args --params-file ~/ros_ws/src/turtle_drive/config/turtle_drive.yaml"
        l21_srv_param/steps/step4/turtle_drive/config/turtle_drive.yaml as turtle_drive/config/turtle_drive.yaml
   -->
 <details class="fullcode">
   <summary>전체 코드 — turtle_drive/config/turtle_drive.yaml (v4 와 함께 쓰는 새 파일)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>ros2 run turtle_drive turtle_drive --ros-args --params-file ~/ros2_ws/src/turtle_drive/config/turtle_drive.yaml</code></p>
+  <p class="how">빌드해서 돌리는 법: <code>ros2 run turtle_drive turtle_drive --ros-args --params-file ~/ros_ws/src/turtle_drive/config/turtle_drive.yaml</code></p>
   <div class="codefile"><div class="fname">turtle_drive/config/turtle_drive.yaml</div><button onclick="copyCode(this)">복사</button><pre class=""><code># 21회 — turtle_drive 노드의 파라미터 (ros2 param dump /turtle_drive 의 출력에서 우리 파라미터 두 줄만 남겼다)
 /turtle_drive:
   ros__parameters:
@@ -974,14 +974,14 @@ std_srvs.srv.SetBool_Response(success=True, message='주행을 켭니다')</code
     18회에서 <code>/spawn</code>이 실패를 「빈 이름」으로 알렸던 것처럼, 응답의 칸을 무엇으로 채울지는 서버를 만든 사람이 정한다. 우리 서버는 언제나 <code>success=True</code>라고 답한다.
   </p>
 
-  <!-- fullcode "전체 코드 — turtle_drive/ (5단계 · v5. config/turtle_drive.yaml 은 v4 그대로)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive turtle_drive"
+  <!-- fullcode "전체 코드 — turtle_drive/ (5단계 · v5. config/turtle_drive.yaml 은 v4 그대로)" build="cd ~/ros_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive turtle_drive"
        l21_srv_param/steps/step5/turtle_drive/src/turtle_drive.cpp as turtle_drive/src/turtle_drive.cpp
        l21_srv_param/steps/step5/turtle_drive/CMakeLists.txt as turtle_drive/CMakeLists.txt
        l21_srv_param/steps/step5/turtle_drive/package.xml as turtle_drive/package.xml
   -->
 <details class="fullcode">
   <summary>전체 코드 — turtle_drive/ (5단계 · v5. config/turtle_drive.yaml 은 v4 그대로)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive turtle_drive</code></p>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive turtle_drive</code></p>
   <div class="codefile"><div class="fname">turtle_drive/src/turtle_drive.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 21회 turtle_drive — v5 (5단계: create_service — ~/enable 서비스(std_srvs/srv/SetBool)로 주행을 켜고 끈다)
 #include &lt;algorithm&gt;
 #include &lt;chrono&gt;
@@ -1377,12 +1377,12 @@ terminate called after throwing an instance of 'std::runtime_error'
     </p>
   </div>
 
-  <!-- fullcode "전체 코드 — turtle_drive/src/turtle_drive.cpp (6단계 · v6. CMakeLists.txt·package.xml 은 v5 그대로)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive turtle_drive"
+  <!-- fullcode "전체 코드 — turtle_drive/src/turtle_drive.cpp (6단계 · v6. CMakeLists.txt·package.xml 은 v5 그대로)" build="cd ~/ros_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive turtle_drive"
        l21_srv_param/steps/step6/turtle_drive/src/turtle_drive.cpp as turtle_drive/src/turtle_drive.cpp
   -->
 <details class="fullcode">
   <summary>전체 코드 — turtle_drive/src/turtle_drive.cpp (6단계 · v6. CMakeLists.txt·package.xml 은 v5 그대로)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive turtle_drive</code></p>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive turtle_drive</code></p>
   <div class="codefile"><div class="fname">turtle_drive/src/turtle_drive.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 21회 turtle_drive — v6 (6단계: create_client · async_send_request — 돌아설 때마다 /turtle1/set_pen 으로 펜 색을 바꾼다)
 #include &lt;algorithm&gt;
 #include &lt;chrono&gt;
@@ -1555,12 +1555,12 @@ int main(int argc, char ** argv)
 }</code></pre></div>
 </details>
 <!-- /fullcode -->
-  <!-- fullcode "전체 코드 — turtle_drive/src/turtle_drive.cpp (v6 변형 · 콜백 안에서 future.wait() — 빌드는 되고 처음 돌아설 때 멈춘다)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive turtle_drive"
+  <!-- fullcode "전체 코드 — turtle_drive/src/turtle_drive.cpp (v6 변형 · 콜백 안에서 future.wait() — 빌드는 되고 처음 돌아설 때 멈춘다)" build="cd ~/ros_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive turtle_drive"
        l21_srv_param/steps/variants/sync_wait/turtle_drive/src/turtle_drive.cpp as turtle_drive/src/turtle_drive.cpp
   -->
 <details class="fullcode">
   <summary>전체 코드 — turtle_drive/src/turtle_drive.cpp (v6 변형 · 콜백 안에서 future.wait() — 빌드는 되고 처음 돌아설 때 멈춘다)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive turtle_drive</code></p>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive turtle_drive</code></p>
   <div class="codefile"><div class="fname">turtle_drive/src/turtle_drive.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 21회 turtle_drive — v6 변형 (응답을 타이머 콜백 안에서 기다리는 판 · 빌드는 되고 처음 돌아설 때 멈춘다)
 #include &lt;algorithm&gt;
 #include &lt;chrono&gt;
@@ -1859,7 +1859,7 @@ install(DIRECTORY launch config
   </div>
 
   <h3>7-4 실제로 나온 출력</h3>
-  <pre class="lang-sh"><code>$ cd ~/ros2_ws
+  <pre class="lang-sh"><code>$ cd ~/ros_ws
 $ colcon build --packages-select turtle_drive
 Starting &gt;&gt;&gt; turtle_drive
 Finished &lt;&lt;&lt; turtle_drive [5.87s]
@@ -1904,7 +1904,7 @@ Double value is: 2.0</code></pre>
 [INFO] [turtlesim_node-1]: sending signal 'SIGINT' to process[turtlesim_node-1]
 [turtle_drive-2] [INFO] [1794001888.381873719] [rclcpp]: signal_handler(SIGINT/SIGTERM)
 [turtlesim_node-1] [INFO] [1794001888.383768018] [rclcpp]: signal_handler(SIGINT/SIGTERM)
-[ERROR] [turtle_drive-2]: process has died [pid 971, exit code -2, cmd '/home/ubuntu/ros2_ws/install/turtle_drive/lib/turtle_drive/turtle_drive --ros-args -r __node:=turtle_drive --params-file /home/ubuntu/ros2_ws/install/turtle_drive/share/turtle_drive/config/turtle_drive.yaml'].
+[ERROR] [turtle_drive-2]: process has died [pid 971, exit code -2, cmd '/home/ubuntu/ros_ws/install/turtle_drive/lib/turtle_drive/turtle_drive --ros-args -r __node:=turtle_drive --params-file /home/ubuntu/ros_ws/install/turtle_drive/share/turtle_drive/config/turtle_drive.yaml'].
 [INFO] [turtlesim_node-1]: process has finished cleanly [pid 970]</code></pre>
   <p>
     마지막에서 둘째 줄의 <code>cmd '…'</code>가 볼 만하다. launch가 실제로 친 명령이 <strong><code>turtle_drive --ros-args -r __node:=turtle_drive --params-file …/share/turtle_drive/config/turtle_drive.yaml</code></strong>이다.
@@ -1926,7 +1926,7 @@ Double value is: 2.0</code></pre>
       <code>~/enable</code>·<code>set_pen</code> 같은 <strong>서비스는 rqt_graph에 그려지지 않는다</strong>(17회). 서비스 연결은 <code>ros2 node info /turtle_drive</code>의 <code>Service Servers</code>·<code>Service Clients</code>로 본다.</figcaption>
   </figure>
 
-  <!-- fullcode "전체 코드 — turtle_drive/ (7단계 · v7 완성본. turtle_drive.cpp 는 v6 과 같고 첫 줄 주석만 다르다. 22회가 이 패키지에 이어 붙인다)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 launch turtle_drive turtle_drive.launch.py"
+  <!-- fullcode "전체 코드 — turtle_drive/ (7단계 · v7 완성본. turtle_drive.cpp 는 v6 과 같고 첫 줄 주석만 다르다. 22회가 이 패키지에 이어 붙인다)" build="cd ~/ros_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 launch turtle_drive turtle_drive.launch.py"
        l21_srv_param/steps/step7/turtle_drive/launch/turtle_drive.launch.py as turtle_drive/launch/turtle_drive.launch.py
        l21_srv_param/steps/step7/turtle_drive/config/turtle_drive.yaml as turtle_drive/config/turtle_drive.yaml
        l21_srv_param/steps/step7/turtle_drive/CMakeLists.txt as turtle_drive/CMakeLists.txt
@@ -1935,7 +1935,7 @@ Double value is: 2.0</code></pre>
   -->
 <details class="fullcode">
   <summary>전체 코드 — turtle_drive/ (7단계 · v7 완성본. turtle_drive.cpp 는 v6 과 같고 첫 줄 주석만 다르다. 22회가 이 패키지에 이어 붙인다)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 launch turtle_drive turtle_drive.launch.py</code></p>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 launch turtle_drive turtle_drive.launch.py</code></p>
   <div class="codefile"><div class="fname">turtle_drive/launch/turtle_drive.launch.py</div><button onclick="copyCode(this)">복사</button><pre class="lang-py"><code># 21회 — turtlesim 과 turtle_drive 를 한 번에 띄운다. turtle_drive 는 config/turtle_drive.yaml 의 파라미터로 시작한다
 import os
 
@@ -2222,7 +2222,7 @@ Finished &lt;&lt;&lt; turtle_drive [5.95s]
 
 Summary: 1 package finished [6.00s]
 $ ros2 launch turtle_drive turtle_drive.launch.py
-file 'turtle_drive.launch.py' was not found in the share directory of package 'turtle_drive' which is at '/home/ubuntu/ros2_ws/install/turtle_drive/share/turtle_drive'</code></pre>
+file 'turtle_drive.launch.py' was not found in the share directory of package 'turtle_drive' which is at '/home/ubuntu/ros_ws/install/turtle_drive/share/turtle_drive'</code></pre>
   <p>
     빌드는 성공한다. 빌드는 C++만 보기 때문이다. 오류 문장이 친절하게 <strong>어디서 찾았는지</strong>까지 알려 준다 — <code>…/install/turtle_drive/share/turtle_drive</code>.
     그 폴더를 <code>ls</code>해 보면 <code>launch/</code>도 <code>config/</code>도 없다. 파일은 <code>src/</code>에 멀쩡히 있는데 <strong>설치가 안 됐다.</strong>
@@ -2234,7 +2234,7 @@ file 'turtle_drive.launch.py' was not found in the share directory of package 't
   <pre class="lang-sh"><code>$ ros2 launch src/turtle_drive/launch/turtle_drive.launch.py
 [INFO] [launch]: All log files can be found below /home/ubuntu/.ros/log/2026-11-04-02-36-34-626536-gorilla-2355
 [INFO] [launch]: Default logging verbosity is set to INFO
-[WARNING] [launch_ros.actions.node]: Parameter file path is not a file: /home/ubuntu/ros2_ws/install/turtle_drive/share/turtle_drive/config/turtle_drive.yaml
+[WARNING] [launch_ros.actions.node]: Parameter file path is not a file: /home/ubuntu/ros_ws/install/turtle_drive/share/turtle_drive/config/turtle_drive.yaml
 [INFO] [turtlesim_node-1]: process started with pid [2358]
 [INFO] [turtle_drive-2]: process started with pid [2359]
 (…)
@@ -2264,8 +2264,8 @@ $ ros2 launch turtle_drive turtle_drive.launch.py
     <pre class="lang-sh"><code>$ rm -rf build/turtle_drive install/turtle_drive
 $ colcon build --packages-select turtle_drive
 $ ros2 launch turtle_drive turtle_drive.launch.py
-file 'turtle_drive.launch.py' was not found in the share directory of package 'turtle_drive' which is at '/home/ubuntu/ros2_ws/install/turtle_drive/share/turtle_drive'</code></pre>
-    <p><code>rm -rf</code>는 3회에서 본 대로 되돌릴 수 없으니 경로를 두 번 확인하고 친다. <code>~/ros2_ws</code>에서 <code>build/turtle_drive</code>·<code>install/turtle_drive</code> 두 폴더만 지운다.</p>
+file 'turtle_drive.launch.py' was not found in the share directory of package 'turtle_drive' which is at '/home/ubuntu/ros_ws/install/turtle_drive/share/turtle_drive'</code></pre>
+    <p><code>rm -rf</code>는 3회에서 본 대로 되돌릴 수 없으니 경로를 두 번 확인하고 친다. <code>~/ros_ws</code>에서 <code>build/turtle_drive</code>·<code>install/turtle_drive</code> 두 폴더만 지운다.</p>
   </div>
   <div class="box trap">
     <div class="boxtitle">⚠️ <code>src/</code>의 YAML을 고치면 다시 빌드해야 먹는다</div>
@@ -2335,7 +2335,7 @@ $ colcon info turtle_drive          # 그 줄을 뺐을 때
   </div>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
-    ~/ros2_ws/src/turtle_drive 패키지를 아래 여덟 기준으로 검사해 줘. 고치지는 말고, 기준마다 「통과/어긋남」과 근거가 되는 파일·줄을 표로 보여 줘.
+    ~/ros_ws/src/turtle_drive 패키지를 아래 여덟 기준으로 검사해 줘. 고치지는 말고, 기준마다 「통과/어긋남」과 근거가 되는 파일·줄을 표로 보여 줘.
     (1) 속도·거리 같은 튜닝 값이 declare_parameter 로 선언돼 있다 (2) 실수 파라미터의 기본값에 소수점이 있다 (3) get_parameter 가 생성자뿐 아니라 실행 중(타이머 콜백 등)에도 불리거나 파라미터 콜백으로 멤버가 갱신된다 (4) config/*.yaml 맨 윗줄 노드 이름이 노드 생성자의 이름·launch 의 name 과 같다 (5) 어떤 콜백 안에도 future.wait, future.get, spin_until_future_complete, wait_for_service 반복이 없다 (6) CMakeLists.txt 에 install(DIRECTORY launch config DESTINATION share/${PROJECT_NAME}) 가 있다 (7) #include 하는 ROS 패키지가 package.xml 과 CMakeLists.txt 양쪽에 있고 launch 파일이 있으면 exec_depend ros2launch 가 있다 (8) launch 파일의 package·executable 이 실제 패키지·실행 파일 이름과 같다.
   </div>
 
@@ -2351,14 +2351,14 @@ $ colcon info turtle_drive          # 그 줄을 뺐을 때
     <p class="boxtitle">준비물</p>
     <ul>
       <li>WSL 터미널 셋 (16회에 <code>.bashrc</code>에 넣은 <code>source /opt/ros/jazzy/setup.bash</code>가 걸린 상태)</li>
-      <li>20회 실습까지 끝낸 <code>~/ros2_ws/src/turtle_drive</code></li>
+      <li>20회 실습까지 끝낸 <code>~/ros_ws/src/turtle_drive</code></li>
       <li>⑦절 끝의 📄 「7단계 · v7 완성본」(파일 다섯), ⑥절의 📄 「v6 변형 · future.wait()」</li>
     </ul>
 
     <p class="boxtitle">절차</p>
     <ol>
       <li><strong>(4분)</strong> v7 완성본의 다섯 파일을 패키지에 같은 경로로 넣는다 — <code>launch/</code>와 <code>config/</code>는 새 폴더다(<code>mkdir</code>). 작업공간 최상위에서 빌드하고 설치된 파일을 본다 (터미널 1).
-        <pre class="lang-sh"><code>$ cd ~/ros2_ws
+        <pre class="lang-sh"><code>$ cd ~/ros_ws
 $ colcon build --packages-select turtle_drive
 $ source install/setup.bash
 $ ls install/turtle_drive/share/turtle_drive/launch install/turtle_drive/share/turtle_drive/config</code></pre>
@@ -2399,7 +2399,7 @@ $ ros2 service call /turtle_drive/enable std_srvs/srv/SetBool '{data: true}'</co
     아래는 20회 연습문제와 같은 일을 하는 노드 <code>wall_watch</code>(패키지 <code>turtle_watch</code>)를 20회 검사 목록대로 짜고 <strong>경고 한 줄</strong>을 더한 것이다. 0.5초마다 가장 가까운 벽까지의 거리를 알리고, 1.5 m보다 가까우면 <code>WARN</code>으로 찍는다.
     20회 검사 목록은 다 통과한다. 대신 오늘 배운 것이 하나도 없다 — 경고 거리를 바꾸려면 다시 빌드해야 하고, 띄우려면 터미널 둘이 필요하다.
   </p>
-  <pre class="lang-sh"><code>$ cd ~/ros2_ws
+  <pre class="lang-sh"><code>$ cd ~/ros_ws
 $ colcon build --packages-select turtle_watch
 Starting &gt;&gt;&gt; turtle_watch
 Finished &lt;&lt;&lt; turtle_watch [4.95s]
@@ -2410,14 +2410,14 @@ $ ros2 run turtle_watch wall_watch
 [INFO] [1793759832.258624629] [wall_watch]: 가장 가까운 벽까지 5.54 m
 [INFO] [1793759832.758607086] [wall_watch]: 가장 가까운 벽까지 5.54 m
 [INFO] [1793759833.258658360] [wall_watch]: 가장 가까운 벽까지 5.54 m</code></pre>
-  <!-- fullcode open "연습문제 — 오늘 배운 것이 없는 원본 (turtle_watch/)" build="cd ~/ros2_ws && colcon build --packages-select turtle_watch && source install/setup.bash && ros2 run turtle_watch wall_watch"
+  <!-- fullcode open "연습문제 — 오늘 배운 것이 없는 원본 (turtle_watch/)" build="cd ~/ros_ws && colcon build --packages-select turtle_watch && source install/setup.bash && ros2 run turtle_watch wall_watch"
        l21_srv_param/steps/exercise_old/turtle_watch/src/wall_watch.cpp as turtle_watch/src/wall_watch.cpp
        l21_srv_param/steps/exercise_old/turtle_watch/CMakeLists.txt as turtle_watch/CMakeLists.txt
        l21_srv_param/steps/exercise_old/turtle_watch/package.xml as turtle_watch/package.xml
   -->
 <details class="fullcode" open>
   <summary>연습문제 — 오늘 배운 것이 없는 원본 (turtle_watch/)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_watch &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_watch wall_watch</code></p>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select turtle_watch &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_watch wall_watch</code></p>
   <div class="codefile"><div class="fname">turtle_watch/src/wall_watch.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 21회 연습문제 — wall_watch 원본 (파라미터·서비스·launch 가 없다. 숫자를 바꾸려면 다시 빌드해야 한다)
 #include &lt;algorithm&gt;
 #include &lt;chrono&gt;
@@ -2509,7 +2509,7 @@ ament_package()</code></pre></div>
 &lt;/package&gt;</code></pre></div>
 </details>
 <!-- /fullcode -->
-  <p>20회 연습문제를 이미 했으면 <code>~/ros2_ws/src/turtle_watch/</code>의 파일을 이 세 파일로 바꾼다. 거북이는 다른 터미널의 <code>ros2 run turtlesim turtle_teleop_key</code>(17회)로 벽 쪽으로 몰아 본다.</p>
+  <p>20회 연습문제를 이미 했으면 <code>~/ros_ws/src/turtle_watch/</code>의 파일을 이 세 파일로 바꾼다. 거북이는 다른 터미널의 <code>ros2 run turtlesim turtle_teleop_key</code>(17회)로 벽 쪽으로 몰아 본다.</p>
 
   <h3>할 일</h3>
   <div class="tablewrap">
@@ -2525,7 +2525,7 @@ ament_package()</code></pre></div>
   </div>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
-    ~/ros2_ws/src/turtle_watch 패키지를 고쳐 줘. 고치기 전에 아래 기준마다 지금 어느 파일·줄을 바꿀지 표로 먼저 보여 줘. 기준: warn_distance_ 상수를 double 파라미터 warn_distance(기본값 1.5)로 바꾸고 타이머 콜백에서 매번 읽을 것, config/wall_watch.yaml 에 /wall_watch 노드의 warn_distance: 2.0, std_srvs/srv/SetBool 서비스 ~/mute(true 면 로그를 멈추고 false 면 다시), launch/wall_watch.launch.py 로 turtlesim 과 wall_watch 를 함께 띄우고 wall_watch 에는 설치된 config/wall_watch.yaml 을 parameters 로 줄 것, CMakeLists.txt 에 install(DIRECTORY launch config DESTINATION share/${PROJECT_NAME}), std_srvs 는 package.xml 과 CMakeLists.txt 양쪽에, package.xml 에 exec_depend ros2launch. 어떤 콜백 안에서도 응답을 기다리지 말 것. 빌드는 ~/ros2_ws 에서 colcon build --packages-select turtle_watch 로 해 줘. 확인은 내가 할게.
+    ~/ros_ws/src/turtle_watch 패키지를 고쳐 줘. 고치기 전에 아래 기준마다 지금 어느 파일·줄을 바꿀지 표로 먼저 보여 줘. 기준: warn_distance_ 상수를 double 파라미터 warn_distance(기본값 1.5)로 바꾸고 타이머 콜백에서 매번 읽을 것, config/wall_watch.yaml 에 /wall_watch 노드의 warn_distance: 2.0, std_srvs/srv/SetBool 서비스 ~/mute(true 면 로그를 멈추고 false 면 다시), launch/wall_watch.launch.py 로 turtlesim 과 wall_watch 를 함께 띄우고 wall_watch 에는 설치된 config/wall_watch.yaml 을 parameters 로 줄 것, CMakeLists.txt 에 install(DIRECTORY launch config DESTINATION share/${PROJECT_NAME}), std_srvs 는 package.xml 과 CMakeLists.txt 양쪽에, package.xml 에 exec_depend ros2launch. 어떤 콜백 안에서도 응답을 기다리지 말 것. 빌드는 ~/ros_ws 에서 colcon build --packages-select turtle_watch 로 해 줘. 확인은 내가 할게.
   </div>
   <p>
     정답은 하나가 아니다. <strong>위 표의 「확인하는 법」이 전부 통과하면</strong> 된 것이다.
@@ -2541,7 +2541,7 @@ ament_package()</code></pre></div>
     <tr><td>파라미터 선언 · 읽기</td><td><code>declare_parameter("max_speed", 1.2)</code> · <code>get_parameter("max_speed").as_double()</code></td><td>선언해야 밖에서 보이고 바꿀 수 있다. <strong>타입은 기본값이 정한다</strong> — <code>1.0</code>이면 double, <code>1</code>이면 정수</td></tr>
     <tr><td>읽는 시점</td><td><code>on_timer()</code> 안의 <code>read_parameters()</code></td><td><code>param set</code>은 노드 안의 값만 바꾼다. <strong>생성자에서 한 번만 읽으면</strong> 멤버는 옛 값 그대로다</td></tr>
     <tr><td>파라미터 파일 (YAML)</td><td><code>/turtle_drive:</code> → <code>ros__parameters:</code> → <code>max_speed: 0.8</code></td><td>맨 윗줄 <strong>노드 이름이 틀리면 조용히 무시된다.</strong> 실수 파라미터는 <code>2</code>가 아니라 <code>2.0</code></td></tr>
-    <tr><td>파일로 받기 · 파일로 켜기</td><td><code>ros2 param dump /turtle_drive &gt; ~/ros2_ws/src/turtle_drive/config/turtle_drive.yaml</code> · <code>--ros-args --params-file ~/ros2_ws/src/turtle_drive/config/turtle_drive.yaml</code></td><td>경로를 <code>~</code>부터 다 적으면 어느 폴더에서 쳐도 같은 파일이다. <code>&gt;</code>는 폴더를 만들지 않으니 <code>mkdir -p</code>가 먼저</td></tr>
+    <tr><td>파일로 받기 · 파일로 켜기</td><td><code>ros2 param dump /turtle_drive &gt; ~/ros_ws/src/turtle_drive/config/turtle_drive.yaml</code> · <code>--ros-args --params-file ~/ros_ws/src/turtle_drive/config/turtle_drive.yaml</code></td><td>경로를 <code>~</code>부터 다 적으면 어느 폴더에서 쳐도 같은 파일이다. <code>&gt;</code>는 폴더를 만들지 않으니 <code>mkdir -p</code>가 먼저</td></tr>
     <tr><td>서비스 서버</td><td><code>create_service&lt;std_srvs::srv::SetBool&gt;("~/enable", 콜백)</code></td><td>콜백이 요청을 읽고 응답을 채운다. <code>~/</code>는 「내 노드 이름 아래」 — <code>/turtle_drive/enable</code></td></tr>
     <tr><td>서비스 클라이언트</td><td><code>create_client&lt;turtlesim::srv::SetPen&gt;("/turtle1/set_pen")</code> · <code>async_send_request(req, 콜백)</code></td><td>보내고 <strong>바로 돌아온다.</strong> 응답은 <code>spin</code>이 콜백으로 넘겨준다. <strong>콜백 안에서 응답을 기다리면 노드가 멈춘다</strong></td></tr>
     <tr><td>launch 파일</td><td><code>launch/turtle_drive.launch.py</code> · <code>ros2 launch turtle_drive turtle_drive.launch.py</code></td><td>노드 여러 개를 파라미터와 함께 한 번에 띄운다. AI가 주는 것은 대개 파이썬(<code>.launch.py</code>)이고, 우리는 <strong>읽고 검사</strong>한다</td></tr>
@@ -2640,12 +2640,12 @@ $ ros2 topic echo /turtle1/cmd_vel --field linear.x      # 4초 동안
       받은 코드에 <code>add_on_set_parameters_callback</code> <strong>하나만</strong> 있고 그 안에서 멤버를 고치는 모양도 흔하다. 돌아가기는 한다. 다만 그 콜백은 「아직 바뀌기 전」에 불리는 자리라서,
       rclcpp 헤더(<code>rclcpp/node.hpp</code>)의 설명은 그것을 <strong>검사(validate)</strong>에, <code>add_post_set_parameters_callback</code>을 <strong>멤버 갱신</strong>에 쓰는 예를 따로 든다. 위 코드가 그 나눔을 따른 것이다.
     </p>
-    <!-- fullcode "전체 코드 — turtle_drive/src/turtle_drive.cpp (v4 다른 판 · 파라미터 콜백)" build="cd ~/ros2_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive turtle_drive"
+    <!-- fullcode "전체 코드 — turtle_drive/src/turtle_drive.cpp (v4 다른 판 · 파라미터 콜백)" build="cd ~/ros_ws && colcon build --packages-select turtle_drive && source install/setup.bash && ros2 run turtle_drive turtle_drive"
          l21_srv_param/steps/variants/param_callback/turtle_drive/src/turtle_drive.cpp as turtle_drive/src/turtle_drive.cpp
     -->
 <details class="fullcode">
   <summary>전체 코드 — turtle_drive/src/turtle_drive.cpp (v4 다른 판 · 파라미터 콜백)</summary>
-  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros2_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive turtle_drive</code></p>
+  <p class="how">빌드해서 돌리는 법: <code>cd ~/ros_ws &amp;&amp; colcon build --packages-select turtle_drive &amp;&amp; source install/setup.bash &amp;&amp; ros2 run turtle_drive turtle_drive</code></p>
   <div class="codefile"><div class="fname">turtle_drive/src/turtle_drive.cpp</div><button onclick="copyCode(this)">복사</button><pre class="lang-cpp"><code>// 21회 turtle_drive — v4 다른 판 (파라미터 콜백 — 바뀔 때만 검사하고 멤버에 넣는다)
 #include &lt;algorithm&gt;
 #include &lt;chrono&gt;

@@ -518,25 +518,45 @@ PID   최대값 1.173 (t = 0.30 s)   t = 3 s 의 출력 0.993   오차 0.007</co
     세 결과를 한 그래프에 겹쳐 보려면? Scope는 지금 돌린 결과만 보여 준다. 여러 번 돌린 결과를 겹치려면 신호를 <strong>기록</strong>해 두고
     <strong>Simulation Data Inspector</strong>(줄여서 Data Inspector)에서 본다.
   </p>
+  <p>
+    기록은 이미 되어 있다. ⑥에서 출력선 <code>y</code>에 안테나를 붙였기 때문이다. 안테나가 붙은 신호는 시뮬레이션을 <strong>한 번 돌릴 때마다
+    한 묶음(실행, run)</strong>으로 Data Inspector에 저장되고, 다음에 돌려도 지워지지 않고 쌓인다. Run 버튼으로 돌리든 <code>sim</code>으로 돌리든 같다.
+  </p>
+  <p>
+    그럼 세 곡선은 어디서 왔나? 바로 위 코드의 <code>for</code> 문이 이득을 바꿔 가며 <code>sim('pid_control')</code>을 <strong>세 번</strong> 불렀다.
+    그 세 번이 실행 세 개로 이미 쌓여 있다. 그러니 할 일은 Data Inspector를 여는 것 하나다.
+    손으로 하고 싶다면 명령 창에서 <code>Kp = 242; Ki = 0; Kd = 0;</code>을 치고 Run, PD 이득을 넣고 Run, PID 이득을 넣고 Run — 이렇게 세 번 돌려도 같은 실행 세 개가 생긴다.
+  </p>
   <figure>
     <a href="assets/img/09_log_signals.png"><img src="assets/img/09_log_signals.png" alt="PID 루프 모델에서 PID와 Transfer Fcn 사이의 선이 파랗게 선택돼 있고, 툴스트립의 Log Signals 버튼이 켜져 있다. 출력선 y에는 이미 안테나 표시가 있다"></a>
-    <figcaption>기록할 신호를 고르는 법.</figcaption>
+    <figcaption>기록 버튼과 Data Inspector 버튼. 그림은 PID 출력선(제어 입력 \(u\))을 골라 둔 모습이다.</figcaption>
   </figure>
   <ol class="marks">
-    <li><span class="mk">1</span>기록할 <strong>선을 클릭</strong>해 고른다. 툴스트립에 SIGNAL 탭이 새로 생긴다.</li>
-    <li><span class="mk">2</span><strong>Log Signals</strong>를 누른다. 선을 오른쪽 클릭해 <strong>Log Selected Signals</strong>를 골라도 된다.</li>
-    <li><span class="mk">3</span>안테나 표시가 붙은 선이 기록된다. 출력 <code>y</code>는 이미 기록 중이다.</li>
-    <li><span class="mk">4</span>Run을 누른 뒤 <strong>Data Inspector</strong>를 누르면 기록된 결과가 열린다.</li>
+    <li><span class="mk">4</span><strong>Data Inspector</strong>를 누르면 쌓인 실행이 열린다. <strong>세 곡선을 비교하는 데는 이것 하나면 된다.</strong></li>
+    <li><span class="mk">3</span>출력 <code>y</code>의 안테나 — ⑥에서 붙였다. 이게 보이면 <code>y</code>는 기록 중이다.</li>
+    <li><span class="mk">1</span>다른 선도 기록하고 싶을 때는 그 <strong>선을 클릭</strong>해 고른다. 툴스트립에 SIGNAL 탭이 새로 생긴다.</li>
+    <li><span class="mk">2</span><strong>Log Signals</strong>를 누르면 그 선에도 안테나가 붙는다. 붙인 <strong>다음 실행부터</strong> 기록된다.</li>
   </ol>
   <figure>
-    <a href="assets/img/09_sdi.png"><img src="assets/img/09_sdi.png" alt="Simulation Data Inspector. 왼쪽에 실행 P, PD, PID가 있고 각각 y 신호에 체크돼 있다. 오른쪽 그래프에 P(주황)는 0.62, PD(보라)는 0.85, PID(초록)는 1로 가는 세 곡선이 겹쳐 있다"></a>
-    <figcaption>P · PD · PID를 한 번씩 돌린 뒤의 Data Inspector. 실행할 때마다 왼쪽 목록에 한 줄씩 쌓인다.</figcaption>
+    <a href="assets/img/09_sdi.png"><img src="assets/img/09_sdi.png" alt="Simulation Data Inspector. 왼쪽에 실행 P, PD, PID가 있고 각각 y 신호에 체크돼 있다. 오른쪽 그래프에 P(보라)는 0.62, PD(초록)는 0.85, PID(하늘색)는 1로 가는 세 곡선이 겹쳐 있다"></a>
+    <figcaption>위 코드로 P · PD · PID를 한 번씩 돌린 뒤의 Data Inspector. 실행 이름과 신호 이름은 알아보기 쉽게 바꿔 두었다.</figcaption>
   </figure>
   <ol class="marks">
-    <li><span class="mk">1</span><strong>실행 목록</strong> — Run을 누를 때마다 「Run 1: pid_control」처럼 한 묶음이 생긴다. 이름을 더블클릭해 P · PD · PID처럼 바꿔 두면 나중에 알아보기 쉽다.</li>
-    <li><span class="mk">2</span><strong>체크 상자</strong> — 체크한 신호가 오른쪽 그래프에 겹쳐 그려진다.</li>
+    <li><span class="mk">1</span><strong>실행 목록</strong> — 시뮬레이션을 한 번 돌릴 때마다 「Run 1: pid_control」처럼 한 묶음이 생긴다. 앞에서 여러 번 돌렸다면 번호가 「Run 10」처럼 커져 있고, 맨 아래 세 개가 방금 돈 P · PD · PID다. 이름을 더블클릭해 P · PD · PID처럼 바꿔 두면 나중에 알아보기 쉽다.</li>
+    <li><span class="mk">2</span><strong>체크 상자</strong> — 체크한 신호가 오른쪽 그래프에 겹쳐 그려진다. 처음 열면 마지막 실행만 체크돼 있는 경우가 많으니 세 실행의 <code>y</code>를 모두 체크한다.</li>
     <li><span class="mk">3</span><strong>범례</strong> — 신호 이름도 바꿀 수 있다. 이 그림은 <code>y (P)</code>처럼 바꿔 두었다.</li>
   </ol>
+  <div class="box trap">
+    <p class="boxtitle">⚠️ 체크했는데 <code>y</code>가 0에 붙은 평평한 선으로 보인다</p>
+    <p>PID 출력선(제어 입력 \(u\))에도 안테나를 붙이고 돌리면 그 실행에는 「PID Controller:1」과 <code>y</code> 두 신호가 생긴다.
+      둘을 같이 체크하면 \(u\)가 축을 다 차지한다. 계단이 들어오는 순간 미분 항이 크게 튀기 때문이다.</p>
+    <p>\(t = 0\)에서 오차가 0에서 1로 뛰면 미분 항(필터 계수 \(N\))이 곧바로 \(K_d N\)을 내보낸다.<br>
+      \(u(0) = K_p + K_d N\)<br>
+      \(\phantom{u(0)} = 960 + 120 \times 100 = 12960\)</p>
+    <p>세로축이 13,000까지 잡히니 0에서 1.2 사이를 오가는 <code>y</code>는 바닥에 깔린 선으로 보인다. 응답이 잘못된 것이 아니다.
+      <code>y</code>끼리 비교할 때는 「PID Controller:1」의 체크를 끈다. 둘 다 보고 싶으면 툴바의 <strong>레이아웃</strong>(네모 네 개) 버튼으로 그래프를 둘로 나눠 따로 그린다.
+      \(u\)가 이렇게 커도 되는지는 11회 Saturation에서 다시 본다.</p>
+  </div>
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 절에서 처음 나오는 것</p>
     <dl>
