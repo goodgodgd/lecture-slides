@@ -358,7 +358,8 @@ intensities:
 
   <p>
     터틀봇3는 2017년부터 팔린 로봇이라 그사이에 달려 나오는 라이다가 바뀌었다. 우리 수업의 로봇에도 <strong>종류가 섞여 있다.</strong>
-    옆자리 로봇과 내 로봇의 라이다가 다를 수 있다는 뜻이고, 그러면 받는 값의 개수도 범위도 달라진다. 내 것이 어느 쪽인지부터 알아 두면 뒤에서 덜 헤맨다.
+    그렇다고 코드를 따로 짜야 하는 것은 아니다. 셋 다 한 바퀴 돌며 방향마다 거리를 재는 2차원 라이다이고, 내놓는 <code>/scan</code> 메시지의 모양도 같다.
+    로봇 쪽에서 맞춰 줄 것은 <strong>어느 드라이버를 띄울지 알려 주는 환경변수 하나</strong>다. 내 것이 어느 쪽인지 알아 두면 그 값이 맞는지 볼 수 있다.
   </p>
 
   <h3>4-1 세 가지 라이다</h3>
@@ -377,24 +378,32 @@ intensities:
     <figcaption><strong>LDS-02.</strong> 벨트가 <strong>주황색</strong>이고 원통 옆면에 렌즈 구멍이 뚜렷하다. (사진: ROBOTIS)</figcaption>
   </figure>
 
+  <p>세 라이다가 다른 것은 이름과 드라이버다. 드라이버는 <code>LDS_MODEL</code>에 적힌 값을 보고 고른다(4-2).</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th></th><th>LDS-01</th><th>LDS-02</th><th>LDS-03</th></tr>
+    <tr><td>다른 이름 · 만든 곳</td><td>HLS-LFCD2 · HLDS(Hitachi-LG Data Storage)</td><td>LD08 · LDROBOT</td><td>COIN-D4</td></tr>
+    <tr><td>ROS 2 드라이버 패키지</td><td><code>hls_lfcd_lds_driver</code></td><td><code>ld08_driver</code></td><td><code>coin_d4_driver</code></td></tr>
+    <tr><td><code>LDS_MODEL</code>에 적는 값</td><td><code>LDS-01</code></td><td><code>LDS-02</code></td><td><code>LDS-03</code></td></tr>
+  </table>
+  </div>
+  <p>
+    잴 수 있는 거리나 1초에 재는 횟수 같은 사양은 셋이 조금씩 다르지만 크게 다르지 않다. 이 자료는 <strong>LDS-02의 사양표</strong>로 이야기한다.
+  </p>
   <p class="readme-first">무엇을 먼저 볼지: <strong>측정 거리</strong>와 <strong>샘플링</strong> 두 줄이다. 나머지 줄은 ⑤~⑦절에서 하나씩 쓴다.</p>
   <div class="tablewrap">
   <table>
-    <tr><th>항목</th><th>LDS-01</th><th>LDS-02</th><th>LDS-03</th></tr>
-    <tr><td>다른 이름 · 만든 곳</td><td>HLS-LFCD2 · HLDS(Hitachi-LG Data Storage)</td><td>LD08 · LDROBOT</td><td>COIN-D4</td></tr>
-    <tr><td><strong>측정 거리</strong></td><td>0.12 ~ 3.5 m</td><td>0.16 ~ 8 m</td><td>0.05 ~ 12 m</td></tr>
-    <tr><td>거리 정확도</td><td>0.5 m 안쪽 ±15 mm<br>0.5 ~ 3.5 m <strong>±5%</strong></td><td>0.3 m 안쪽 ±10 mm<br>0.3 ~ 6 m <strong>±3%</strong></td><td>1 m 안쪽 ±10 mm<br>1 m 너머 ±20 mm</td></tr>
-    <tr><td><strong>샘플링</strong> (1초에 재는 횟수)</td><td>1,800번</td><td>2,300번 (고정)</td><td>4,000번 (고정)</td></tr>
-    <tr><td>스캔 주파수 (1초에 도는 횟수)</td><td>5바퀴 (300 rpm)</td><td>5바퀴 이상 — 제품마다 다를 수 있다</td><td>10바퀴 — 제품마다 다를 수 있다</td></tr>
-    <tr><td>각도 해상도</td><td>1도</td><td>1도 — 스캔 주파수에 따라 달라진다</td><td>0.9도 — 스캔 주파수에 따라 달라진다</td></tr>
-    <tr><td>ROS 2 드라이버 패키지</td><td><code>hls_lfcd_lds_driver</code></td><td><code>ld08_driver</code></td><td><code>coin_d4_driver</code></td></tr>
-    <tr><td><code>LDS_MODEL</code>에 적는 값</td><td><code>LDS-01</code></td><td><code>LDS-02</code></td><td><code>LDS-03</code></td></tr>
+    <tr><th>항목</th><th>LDS-02</th></tr>
+    <tr><td><strong>측정 거리</strong></td><td>0.16 ~ 8 m</td></tr>
+    <tr><td>거리 정확도</td><td>0.3 m 안쪽 ±10 mm · 0.3 ~ 6 m <strong>±3%</strong></td></tr>
+    <tr><td><strong>샘플링</strong> (1초에 재는 횟수)</td><td>2,300번 (고정)</td></tr>
+    <tr><td>스캔 주파수 (1초에 도는 횟수)</td><td>5바퀴 이상 — 제품마다 다를 수 있다</td></tr>
+    <tr><td>각도 해상도</td><td>1도 — 스캔 주파수에 따라 달라진다</td></tr>
   </table>
   </div>
   <div class="interp">
     <strong>해석:</strong> 측정 거리의 <strong>아래쪽 끝</strong>도 눈여겨본다. LDS-02는 16cm보다 가까운 것을 재지 못한다. 로봇이 콘에 바짝 붙으면 그 콘이 스캔에서 사라질 수 있다는 뜻이다.
     정확도가 「몇 mm」가 아니라 <strong>「몇 %」</strong>로 적힌 구간은 멀수록 오차가 커진다는 말이고, ③절의 삼각 측량과 맞아떨어진다.
-    (LDS-01과 LDS-03의 측정 방식은 로보티즈 문서에 적혀 있지 않아 여기서는 말하지 않는다.)
   </div>
 
   <div class="box firstseen">
@@ -403,8 +412,6 @@ intensities:
       <dt>샘플링(sampling)과 스캔 주파수(scan frequency)</dt>
       <dd>둘 다 「1초에 몇 번」이지만 세는 것이 다르다. <strong>샘플링</strong>은 거리 값 하나를 재는 횟수이고, <strong>스캔 주파수</strong>는 라이다가 도는 바퀴 수다.
         단위는 둘 다 Hz(헤르츠, 1초에 몇 번)로 적는다. 1,000Hz를 1kHz라고도 쓴다.</dd>
-      <dt>rpm</dt>
-      <dd>1분에 도는 바퀴 수(revolutions per minute)다. 300rpm ÷ 60 = 1초에 5바퀴.</dd>
       <dt>각도 해상도(angular resolution)</dt>
       <dd>이웃한 두 측정 사이의 각도다. 메시지의 <code>angle_increment</code>가 이 값을 담는다.</dd>
     </dl>
@@ -435,8 +442,8 @@ LDS-02</code></pre>
 /turtlebot3_node</code></pre>
   <p>
     <code>/ld08_driver</code>가 LDS-02의 드라이버 노드다. 이 노드가 라이다와 직렬 통신으로 값을 받아 <code>/scan</code> 토픽으로 발행한다.
+    라이다가 다르면 이 이름과 위의 로그 줄이 4-1 표의 다른 드라이버로 바뀔 뿐, <code>/scan</code>이 나오는 것은 같다.
   </p>
-  <!-- TODO: 미검증 — LDS-01·LDS-03이 달린 로봇에서 드라이버 로그와 노드 이름을 받지 못했다. 여기서 확인한 것은 LDS-02뿐이다 -->
 
   <div class="box trap">
     <div class="boxtitle">⚠️ <code>LDS_MODEL</code>이 실물과 다르면</div>
@@ -591,11 +598,10 @@ NaN 개수: 20 ~ 31 (평균 24.8), inf 0개, 0.0 0개
     <div class="boxtitle">⚠️ 못 잰 값을 어떻게 적는지는 드라이버마다 다를 수 있다</div>
     <p>
       이 로봇(LDS-02, <code>ld08_driver</code>)에서는 못 잰 방향이 전부 NaN이었고, <code>inf</code>(무한대)나 <code>0.0</code>은 100프레임 동안 한 번도 없었다.
-      그런데 다른 라이다의 드라이버는 「너무 멀어서 못 쟀다」를 <code>inf</code>로, 또는 <code>0.0</code>으로 적어 보내기도 한다.
+      그런데 ROS 드라이버 가운데는 「너무 멀어서 못 쟀다」를 <code>inf</code>로, 또는 <code>0.0</code>으로 적어 보내는 것도 있다.
       그래서 값을 쓰기 전에는 <strong>NaN · <code>inf</code> · 0 · 사양 범위 밖</strong>을 전부 걸러 두는 편이 안전하다. 거르는 코드는 24회에서 쓴다.
     </p>
   </div>
-  <!-- TODO: 미검증 — LDS-01(hls_lfcd_lds_driver)·LDS-03(coin_d4_driver)이 못 잰 방향을 무엇으로 적는지 그 로봇에서 받아 보지 못했다 -->
 
 
   <!-- ══════════ ⑦ 정확도와 점 개수 ══════════ -->
@@ -700,11 +706,11 @@ NaN 개수: 20 ~ 31 (평균 24.8), inf 0개, 0.0 0개
 
     <p class="boxtitle">절차</p>
     <ol>
-      <li><strong>(3분)</strong> LDS-01은 샘플링이 1초에 1,800번이고 1초에 5바퀴를 돈다. 한 바퀴에 값이 몇 개이고, 이웃한 값 사이는 몇 도인가?</li>
-      <li><strong>(3분)</strong> LDS-03은 샘플링이 4,000번이고 10바퀴를 돈다. 같은 것을 구한다.</li>
+      <li><strong>(3분)</strong> 어떤 라이다가 샘플링이 1초에 1,800번이고 1초에 5바퀴를 돈다. 한 바퀴에 값이 몇 개이고, 이웃한 값 사이는 몇 도인가?</li>
+      <li><strong>(3분)</strong> 같은 라이다가 샘플링은 4,000번으로 늘고 1초에 10바퀴를 돈다면? 같은 것을 구한다.</li>
       <li><strong>(4분)</strong> 2번에서 구한 간격으로, 지름 20cm 콘이 2m 앞에 있을 때 점이 몇 개쯤 찍히는지 구한다. ⑦절 표의 LDS-02(약 3개)와 견주어 본다.</li>
-      <li><strong>(3분)</strong> LDS-01의 정확도는 0.5~3.5m에서 ±5%다. 2m 앞 콘의 거리는 어디에서 어디 사이로 읽힐 수 있나? LDS-02(1.94~2.06m)와 견주어 본다.</li>
-      <li><strong>(2분)</strong> 로봇이 콘에서 10cm 떨어져 있다. LDS-01 · LDS-02 · LDS-03 가운데 이 콘의 거리를 잴 수 있는 것은 어느 것인가?</li>
+      <li><strong>(3분)</strong> 정확도가 ±5%라면 2m 앞 콘의 거리는 어디에서 어디 사이로 읽힐 수 있나? LDS-02(±3%, 1.94~2.06m)와 견주어 본다.</li>
+      <li><strong>(2분)</strong> 로봇이 콘에서 10cm 떨어져 있다. LDS-02로 이 콘의 거리를 잴 수 있나? 못 잰다면 그 방향의 값은 무엇으로 들어오나?</li>
     </ol>
 
     <p class="boxtitle">이렇게 되면 성공이다</p>
@@ -715,18 +721,17 @@ NaN 개수: 20 ~ 31 (평균 24.8), inf 0개, 0.0 0개
       <tr><td>2</td><td>400개, 0.9도</td><td>4,000 ÷ 10 = 400 · 360도 ÷ 400</td></tr>
       <tr><td>3</td><td>약 6개</td><td>5.7도 ÷ 0.9도 ≒ 6.3</td></tr>
       <tr><td>4</td><td>1.90 ~ 2.10 m</td><td>2m × 5% = 10cm</td></tr>
-      <tr><td>5</td><td>LDS-03뿐</td><td>측정 거리의 아래쪽 끝이 0.12m · 0.16m · 0.05m</td></tr>
+      <tr><td>5</td><td>못 잰다 · <code>NaN</code></td><td>측정 거리의 아래쪽 끝이 0.16m다 · ⑥절의 「너무 가깝다」</td></tr>
     </table>
     </div>
     <p>
-      1번의 답이 사양표의 「1도」와, 2번의 답이 「0.9도」와 똑같이 나온다. 사양표의 각도 해상도는 따로 정한 숫자가 아니라 <strong>샘플링과 스캔 주파수에서 나온 숫자</strong>라는 것이 확인된다.
-      그리고 3번에서 보듯 같은 콘이라도 <strong>라이다에 따라 점의 개수가 두 배쯤 다르다.</strong> 옆자리의 코드가 내 로봇에서 그대로 통하지 않을 수 있는 까닭이다.
+      사양표의 각도 해상도는 따로 정한 숫자가 아니라 <strong>샘플링과 스캔 주파수에서 나온 숫자</strong>다. 1번처럼 나눗셈 한 번이면 나온다.
+      그리고 3번에서 보듯 같은 콘이라도 <strong>샘플링과 스캔 주파수에 따라 점의 개수가 두 배쯤 달라질 수 있다.</strong> 점의 개수를 코드에 숫자로 박아 두지 않는 까닭이다.
     </p>
   </div>
 
   <p>
     이 자료의 출력과 측정값은 터틀봇3 버거(LDS-02, 우분투 24.04 + ROS 2 Jazzy) 한 대에서 받은 것이다. 거리 값과 NaN의 개수는 방과 로봇에 따라, 그리고 받을 때마다 조금씩 다르다.
-    LDS-01과 LDS-03의 숫자는 로보티즈의 사양표에서 옮긴 것이고 그 라이다로 직접 받아 본 값은 아니다.
   </p>
 
 
@@ -760,7 +765,7 @@ NaN 개수: 20 ~ 31 (평균 24.8), inf 0개, 0.0 0개
   </p>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
-    터틀봇3에 쓰이는 라이다 LDS-01, LDS-02, LDS-03의 측정 거리, 거리 정확도, 샘플링 레이트, 스캔 주파수, 각도 해상도를 ROBOTIS e-Manual에서 찾아 표로 정리해 줘. 항목마다 어느 페이지에서 봤는지 주소를 붙이고, 페이지에서 확인하지 못한 칸은 추측하지 말고 「확인 못 함」이라고 적어 줘.
+    터틀봇3에 쓰이는 라이다 LDS-02의 측정 거리, 거리 정확도, 샘플링 레이트, 스캔 주파수, 각도 해상도를 ROBOTIS e-Manual에서 찾아 표로 정리해 줘. 항목마다 어느 페이지에서 봤는지 주소를 붙이고, 페이지에서 확인하지 못한 칸은 추측하지 말고 「확인 못 함」이라고 적어 줘.
   </div>
   <div class="prompt">
     <button onclick="copyPrompt(this)">복사</button>
@@ -843,7 +848,6 @@ NaN 개수: 20 ~ 31 (평균 24.8), inf 0개, 0.0 0개
     <summary>출처</summary>
     <ul>
       <li>ROBOTIS e-Manual, TurtleBot3 Appendix 「LDS-01」 · 「LDS-02」 · 「LDS-03」 — <code>emanual.robotis.com/docs/en/platform/turtlebot3/appendix_lds_01/</code> (끝의 <code>01</code>을 <code>02</code>·<code>03</code>으로 바꾸면 나머지 둘)</li>
-      <li>HLDS, 「LDS1.5 Specifications — Model HLS-LFCD2」 (LDS-01 사양서)</li>
       <li>LDROBOT, LD08 규격 문서 (2019) — 측정 원리가 삼각 측량이라는 서술</li>
       <li><code>github.com/ROBOTIS-GIT/ld08_driver</code> · <code>github.com/ROBOTIS-GIT/coin_d4_driver</code> — 라이다가 바뀐 해(2022년, 2025년)</li>
       <li>Wikipedia 「Lidar」 · 「Laser rangefinder」 — 비행 시간 방식의 식</li>

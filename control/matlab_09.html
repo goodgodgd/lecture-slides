@@ -40,7 +40,6 @@
   <a class="sub" href="#s6-2">6-1 최대 스텝 크기 — Model Settings</a>
   <a class="sub" href="#s6-3">6-2 코드로 K 바꿔 가며 돌리기</a>
   <a href="#s7">⑦ PID Controller 블록</a>
-  <a class="sub" href="#s7-2">7-1 신호 기록과 Data Inspector</a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
   <a href="#summary">한 장 요약</a>
@@ -95,7 +94,7 @@
     <tr><td>시스템을 적는 법</td><td><code>G = tf(1, den)</code>, <code>T = feedback(K*G, 1)</code></td><td>Transfer Fcn · Gain · Sum 블록을 선으로 잇는다</td></tr>
     <tr><td>응답을 구하는 법</td><td><code>step(T)</code> — 폐루프 전달함수를 한 번에 푼다</td><td>Run — 시간을 앞으로 밀며 블록마다 계산한다</td></tr>
     <tr><td>넣기 쉬운 것</td><td>선형 시스템 · 극점과 영점 · 근궤적 · 보드 선도</td><td>포화 · 외란 · 스위치 · 물리 부품(10회)</td></tr>
-    <tr><td>결과를 보는 곳</td><td>그림 창(<code>figure</code>)</td><td>Scope · Data Inspector</td></tr>
+    <tr><td>결과를 보는 곳</td><td>그림 창(<code>figure</code>)</td><td>Scope</td></tr>
   </table>
   </div>
   <p>
@@ -316,7 +315,7 @@ fprintf('dcgain(G) = %.5f,  1/150 = %.5f\n', dcgain(G), 1/150)</code></pre>
     <li><span class="mk">1</span><strong>Sum</strong> — 설정 창의 List of signs를 <code>|+-</code>로 바꾼다(아래 그림). 왼쪽 입력이 +, 아래 입력이 −가 된다.</li>
     <li><span class="mk">2</span><strong>Gain</strong> — 값 칸에 숫자 대신 변수 이름 <code>K</code>를 적었다. 값은 MATLAB 작업공간에서 읽는다.</li>
     <li><span class="mk">3</span><strong>분기점</strong> — 되먹임 선은 블록에서가 아니라 <strong>이미 있는 선 위에서</strong> 시작한다. 선 위에서 마우스 오른쪽 버튼을 누른 채 끌거나, Ctrl을 누른 채 왼쪽 버튼으로 끈다. 갈라지는 자리에 검은 점이 찍힌다.</li>
-    <li><span class="mk">4</span><strong>기록 표시</strong>(안테나 모양) — 이 신호를 기록한다는 뜻이다. 출력선을 클릭해 고르면 툴스트립에 SIGNAL 탭이 새로 생기는데, 거기서 <strong>Log Signals</strong>를 누르면 붙는다(선을 오른쪽 클릭 → <strong>Log Selected Signals</strong>도 된다). 신호 이름 <code>y</code>는 선을 더블클릭해 적는다. 7-1에서 다시 본다.</li>
+    <li><span class="mk">4</span><strong>기록 표시</strong>(안테나 모양) — 이 신호를 기록한다는 뜻이다. 출력선을 클릭해 고르면 툴스트립에 SIGNAL 탭이 새로 생기는데, 거기서 <strong>Log Signals</strong>를 누르면 붙는다(선을 오른쪽 클릭 → <strong>Log Selected Signals</strong>도 된다). 신호 이름 <code>y</code>는 선을 더블클릭해 적는다.</li>
   </ol>
   <figure class="dlg">
     <img src="assets/img/09_dlg_sum.png" alt="Block Parameters: Sum 창. Icon shape round, List of signs 칸에 |+-">
@@ -480,12 +479,14 @@ title('P 제어 — 이득 K 에 따른 응답')</code></pre>
   <p>
     세 제어기를 차례로 넣어 본다. P는 ⑥의 K = 242, PD는 7회에서 설계한 \(123(s+7) = 861 + 123s\), PID는 그 PD에 영점 −1의 PI를 곱한
     \(120(s+7)(s+1)/s = 960 + 840/s + 120s\)다.
+    Scope는 마지막으로 돌린 결과만 보여 주니, 세 결과를 겹쳐 보려면 ⑥의 K 스윕처럼 <code>for</code> 문 안에서 <code>plot</code>으로 하나씩 그린다.
   </p>
 <!-- mcode 09/b05_compare -->
 <div class="mcode">
 <pre class="lang-matlab"><code>% 같은 모델에 P · PD · PID 이득을 차례로 넣고 응답을 잰다
 gains = [242 0 0; 861 0 123; 960 840 120];     % 한 줄 = [Kp Ki Kd]
 names = {'P', 'PD', 'PID'};
+figure; hold on
 for k = 1:3
     Kp = gains(k,1); Ki = gains(k,2); Kd = gains(k,3);
     out = sim('pid_control');
@@ -493,7 +494,11 @@ for k = 1:3
     [ymax, i] = max(y.Data);
     fprintf('%-4s  최대값 %.3f (t = %.2f s)   t = 3 s 의 출력 %.3f   오차 %.3f\n', ...
         names{k}, ymax, y.Time(i), y.Data(end), 1 - y.Data(end))
-end</code></pre>
+    plot(y.Time, y.Data, 'DisplayName', names{k})
+end
+hold off; grid on; legend('Location', 'southeast')
+xlabel('시간 (s)'); ylabel('출력 y')
+title('P · PD · PID 제어의 계단응답')</code></pre>
 <button onclick="copyCode(this)">복사</button>
 <p class="outlabel">명령 창 출력</p>
 <pre class="out"><code>P     최대값 0.729 (t = 0.73 s)   t = 3 s 의 출력 0.617   오차 0.383
@@ -509,63 +514,13 @@ PID   최대값 1.173 (t = 0.30 s)   t = 3 s 의 출력 0.993   오차 0.007</co
     <li><strong>PD → PID</strong>: 3초에서 출력이 0.993 — 적분 항이 남은 오차를 계속 쌓아 밀어 올려 결국 1에 닿는다. 대신 봉우리는 1.17로 조금 높아졌다.</li>
   </ul>
   <figure>
+    <img src="assets/img/09_compare.png" width="560" alt="P · PD · PID 제어의 계단응답. P는 0.73초에 0.73까지 올랐다가 0.62에 머물고, PD는 0.29초에 1.07까지 솟았다가 0.85에 머물고, PID는 0.3초에 1.17까지 솟은 뒤 천천히 1로 다가간다">
+    <figcaption>위 코드가 그린 세 응답. 셋 다 같은 모델을 이득만 바꿔 돌린 것이다.</figcaption>
+  </figure>
+  <figure>
     <a href="assets/img/09_scope_pid.png"><img src="assets/img/09_scope_pid.png" width="620" alt="PID 제어 Scope. 0.3초에 1.17까지 솟았다가 0.88로 내려간 뒤 천천히 1로 다가간다"></a>
     <figcaption>PID 제어의 Scope. 빠르게 솟은 뒤 적분 항이 남은 오차를 천천히 지운다.</figcaption>
   </figure>
-
-  <h3 id="s7-2">7-1 신호 기록과 Data Inspector</h3>
-  <p>
-    세 결과를 한 그래프에 겹쳐 보려면? Scope는 지금 돌린 결과만 보여 준다. 여러 번 돌린 결과를 겹치려면 신호를 <strong>기록</strong>해 두고
-    <strong>Simulation Data Inspector</strong>(줄여서 Data Inspector)에서 본다.
-  </p>
-  <p>
-    기록은 이미 되어 있다. ⑥에서 출력선 <code>y</code>에 안테나를 붙였기 때문이다. 안테나가 붙은 신호는 시뮬레이션을 <strong>한 번 돌릴 때마다
-    한 묶음(실행, run)</strong>으로 Data Inspector에 저장되고, 다음에 돌려도 지워지지 않고 쌓인다. Run 버튼으로 돌리든 <code>sim</code>으로 돌리든 같다.
-  </p>
-  <p>
-    그럼 세 곡선은 어디서 왔나? 바로 위 코드의 <code>for</code> 문이 이득을 바꿔 가며 <code>sim('pid_control')</code>을 <strong>세 번</strong> 불렀다.
-    그 세 번이 실행 세 개로 이미 쌓여 있다. 그러니 할 일은 Data Inspector를 여는 것 하나다.
-    손으로 하고 싶다면 명령 창에서 <code>Kp = 242; Ki = 0; Kd = 0;</code>을 치고 Run, PD 이득을 넣고 Run, PID 이득을 넣고 Run — 이렇게 세 번 돌려도 같은 실행 세 개가 생긴다.
-  </p>
-  <figure>
-    <a href="assets/img/09_log_signals.png"><img src="assets/img/09_log_signals.png" alt="PID 루프 모델에서 PID와 Transfer Fcn 사이의 선이 파랗게 선택돼 있고, 툴스트립의 Log Signals 버튼이 켜져 있다. 출력선 y에는 이미 안테나 표시가 있다"></a>
-    <figcaption>기록 버튼과 Data Inspector 버튼. 그림은 PID 출력선(제어 입력 \(u\))을 골라 둔 모습이다.</figcaption>
-  </figure>
-  <ol class="marks">
-    <li><span class="mk">4</span><strong>Data Inspector</strong>를 누르면 쌓인 실행이 열린다. <strong>세 곡선을 비교하는 데는 이것 하나면 된다.</strong></li>
-    <li><span class="mk">3</span>출력 <code>y</code>의 안테나 — ⑥에서 붙였다. 이게 보이면 <code>y</code>는 기록 중이다.</li>
-    <li><span class="mk">1</span>다른 선도 기록하고 싶을 때는 그 <strong>선을 클릭</strong>해 고른다. 툴스트립에 SIGNAL 탭이 새로 생긴다.</li>
-    <li><span class="mk">2</span><strong>Log Signals</strong>를 누르면 그 선에도 안테나가 붙는다. 붙인 <strong>다음 실행부터</strong> 기록된다.</li>
-  </ol>
-  <figure>
-    <a href="assets/img/09_sdi.png"><img src="assets/img/09_sdi.png" alt="Simulation Data Inspector. 왼쪽에 실행 P, PD, PID가 있고 각각 y 신호에 체크돼 있다. 오른쪽 그래프에 P(보라)는 0.62, PD(초록)는 0.85, PID(하늘색)는 1로 가는 세 곡선이 겹쳐 있다"></a>
-    <figcaption>위 코드로 P · PD · PID를 한 번씩 돌린 뒤의 Data Inspector. 실행 이름과 신호 이름은 알아보기 쉽게 바꿔 두었다.</figcaption>
-  </figure>
-  <ol class="marks">
-    <li><span class="mk">1</span><strong>실행 목록</strong> — 시뮬레이션을 한 번 돌릴 때마다 「Run 1: pid_control」처럼 한 묶음이 생긴다. 앞에서 여러 번 돌렸다면 번호가 「Run 10」처럼 커져 있고, 맨 아래 세 개가 방금 돈 P · PD · PID다. 이름을 더블클릭해 P · PD · PID처럼 바꿔 두면 나중에 알아보기 쉽다.</li>
-    <li><span class="mk">2</span><strong>체크 상자</strong> — 체크한 신호가 오른쪽 그래프에 겹쳐 그려진다. 처음 열면 마지막 실행만 체크돼 있는 경우가 많으니 세 실행의 <code>y</code>를 모두 체크한다.</li>
-    <li><span class="mk">3</span><strong>범례</strong> — 신호 이름도 바꿀 수 있다. 이 그림은 <code>y (P)</code>처럼 바꿔 두었다.</li>
-  </ol>
-  <div class="box trap">
-    <p class="boxtitle">⚠️ 체크했는데 <code>y</code>가 0에 붙은 평평한 선으로 보인다</p>
-    <p>PID 출력선(제어 입력 \(u\))에도 안테나를 붙이고 돌리면 그 실행에는 「PID Controller:1」과 <code>y</code> 두 신호가 생긴다.
-      둘을 같이 체크하면 \(u\)가 축을 다 차지한다. 계단이 들어오는 순간 미분 항이 크게 튀기 때문이다.</p>
-    <p>\(t = 0\)에서 오차가 0에서 1로 뛰면 미분 항(필터 계수 \(N\))이 곧바로 \(K_d N\)을 내보낸다.<br>
-      \(u(0) = K_p + K_d N\)<br>
-      \(\phantom{u(0)} = 960 + 120 \times 100 = 12960\)</p>
-    <p>세로축이 13,000까지 잡히니 0에서 1.2 사이를 오가는 <code>y</code>는 바닥에 깔린 선으로 보인다. 응답이 잘못된 것이 아니다.
-      <code>y</code>끼리 비교할 때는 「PID Controller:1」의 체크를 끈다. 둘 다 보고 싶으면 툴바의 <strong>레이아웃</strong>(네모 네 개) 버튼으로 그래프를 둘로 나눠 따로 그린다.
-      \(u\)가 이렇게 커도 되는지는 11회 Saturation에서 다시 본다.</p>
-  </div>
-  <div class="box firstseen">
-    <p class="boxtitle">🆕 이 절에서 처음 나오는 것</p>
-    <dl>
-      <dt>Log Signals · 안테나 표시</dt>
-      <dd>그 선의 값을 시뮬레이션 내내 저장한다. 코드에서는 <code>out.logsout.getElement('y')</code>로 꺼낸다(⑥). 여기서는 세 제어기의 출력을 모아 비교하는 데 썼다.</dd>
-      <dt>Simulation Data Inspector</dt>
-      <dd>기록된 신호를 실행별로 모아 보여 주는 창. 실행을 여러 번 하면 결과가 지워지지 않고 쌓인다. Compare 탭에서 두 실행의 차이를 그래프로 볼 수도 있다.</dd>
-    </dl>
-  </div>
 
   <details class="fold">
     <summary>⑦절까지의 전체 코드</summary>
@@ -600,6 +555,7 @@ title('P 제어 — 이득 K 에 따른 응답')
 % 같은 모델에 P · PD · PID 이득을 차례로 넣고 응답을 잰다
 gains = [242 0 0; 861 0 123; 960 840 120];     % 한 줄 = [Kp Ki Kd]
 names = {'P', 'PD', 'PID'};
+figure; hold on
 for k = 1:3
     Kp = gains(k,1); Ki = gains(k,2); Kd = gains(k,3);
     out = sim('pid_control');
@@ -607,7 +563,11 @@ for k = 1:3
     [ymax, i] = max(y.Data);
     fprintf('%-4s  최대값 %.3f (t = %.2f s)   t = 3 s 의 출력 %.3f   오차 %.3f\n', ...
         names{k}, ymax, y.Time(i), y.Data(end), 1 - y.Data(end))
-end</code></pre>
+    plot(y.Time, y.Data, 'DisplayName', names{k})
+end
+hold off; grid on; legend('Location', 'southeast')
+xlabel('시간 (s)'); ylabel('출력 y')
+title('P · PD · PID 제어의 계단응답')</code></pre>
 <button onclick="copyCode(this)">복사</button>
 </div>
 <!-- /mcode -->
@@ -624,7 +584,7 @@ end</code></pre>
       <li>빠른 삽입으로 Step · Sum · PID Controller · Transfer Fcn · Scope를 놓고 ⑦의 모양대로 잇는다. 되먹임 선은 출력선 위에서 시작한다. (10분)</li>
       <li>Step time을 0으로, Sum을 <code>|+-</code>로, Transfer Fcn 분모를 <code>[1 18 95 150]</code>으로, PID의 P · I · D 칸을 <code>Kp</code> <code>Ki</code> <code>Kd</code>로 적는다. Model Settings에서 Stop Time 3, Max step size 0.01. (5분)</li>
       <li>명령 창에서 <code>Kp = 960; Ki = 840; Kd = 120;</code>을 실행하고 Run. Scope가 ⑦의 그림과 같은지 본다. (3분)</li>
-      <li>출력선에 Log Signals를 걸고 <code>Ki</code>를 0, 400, 840, 2000으로 바꿔 가며 네 번 돌린다. Data Inspector에서 네 곡선을 겹친다. (10분)</li>
+      <li><code>Kp = 960; Kd = 120;</code>은 그대로 두고 <code>Ki</code>만 0, 400, 840, 2000으로 바꿔 가며 <code>sim('my_pid')</code>을 네 번 돌린다. ⑦의 코드처럼 <code>for</code> 문 안에서 <code>plot</code>해 네 곡선을 한 그림에 겹친다. (10분)</li>
     </ol>
     <p><strong>이렇게 되면 성공이다:</strong> 4번의 Scope가 0.3초에 1.17 근처까지 솟았다가 1로 다가가고,
        5번에서 <code>Ki = 0</code>인 곡선만 0.85 근처에 머물며 <code>Ki</code>가 클수록 1에 빨리 닿되 봉우리가 높아진다.</p>
@@ -648,8 +608,8 @@ end</code></pre>
     <tr><td><strong>PID Controller</strong> (Continuous)</td><td>\(K_p + K_i/s + K_d s\)를 한 블록에</td><td>제어기 \(C(s)\)</td></tr>
     <tr><td>Library Browser · 빠른 삽입</td><td>블록을 찾아 캔버스에 놓는다</td><td>블록 선도 그리기</td></tr>
     <tr><td>Stop Time · Run · Model Settings</td><td>시뮬레이션 시간과 계산 방법을 정하고 돌린다</td><td>미분방정식 풀기</td></tr>
-    <tr><td>Log Signals · Data Inspector</td><td>신호를 기록하고, 여러 번 돌린 결과를 겹쳐 본다</td><td>제어기 비교</td></tr>
-    <tr><td><code>out = sim(model)</code> · <code>out.logsout</code></td><td>코드로 돌리고 기록된 신호를 꺼낸다</td><td>파라미터를 바꿔 가며 반복</td></tr>
+    <tr><td>Log Signals (기록 표시)</td><td>선의 값을 시뮬레이션 내내 저장한다</td><td>응답을 코드로 꺼내기</td></tr>
+    <tr><td><code>out = sim(model)</code> · <code>out.logsout</code></td><td>코드로 돌리고 기록된 신호를 꺼낸다</td><td>이득을 바꿔 가며 반복하고 겹쳐 그리기 — 제어기 비교</td></tr>
   </table>
   </div>
   <div class="interp">
@@ -665,7 +625,7 @@ end</code></pre>
     <li><input type="checkbox" id="c4"><label for="c4">블록 칸에 변수 이름을 적고 작업공간에서 값을 바꿔 다시 돌릴 수 있다.</label></li>
     <li><input type="checkbox" id="c5"><label for="c5">Scope의 최종값을 \(G(0)\) 또는 \(K/(150+K)\)로 설명할 수 있다.</label></li>
     <li><input type="checkbox" id="c6"><label for="c6">P · PD · PID가 응답의 속도 · 최종 오차 · 봉우리를 각각 어느 쪽으로 바꾸는지 말할 수 있다.</label></li>
-    <li><input type="checkbox" id="c7"><label for="c7">신호를 기록하고 Data Inspector에서 여러 실행을 겹쳐 볼 수 있다.</label></li>
+    <li><input type="checkbox" id="c7"><label for="c7">이득을 바꿔 가며 <code>sim</code>을 여러 번 돌리고 결과를 한 그림에 겹쳐 그릴 수 있다.</label></li>
   </ul>
 
   <h2 id="more">조금 더 알아두면</h2>
@@ -674,6 +634,8 @@ end</code></pre>
       슬라이더를 움직이면 이득이 바로 바뀌고, <strong>Update Block</strong>을 누르면 블록에 들어간다. Simulink Control Design이 필요하다. 7회의 <code>pidtune</code>과 같은 계산이다.</li>
     <li><strong>Fast Restart.</strong> SIMULATION 탭의 Fast Restart를 켜면 모델을 한 번만 준비하고, 이득 같은 값만 바꿔 다시 돌릴 때 훨씬 빨라진다. ⑥처럼 같은 모델을 반복해 돌릴 때 쓸모 있다.</li>
     <li><strong>코드로 모델 만들기.</strong> <code>new_system</code> · <code>add_block</code> · <code>add_line</code>으로 블록을 놓고 잇는 것도 코드로 할 수 있다. 같은 모양의 모델을 여러 개 만들 때 쓴다. 이 자료의 모델도 그렇게 만들었다.</li>
+    <li><strong>Simulation Data Inspector.</strong> 툴스트립의 <strong>Data Inspector</strong> 버튼을 누르면 기록 표시(안테나)를 붙인 신호를 실행별로 모아 보여 주는 창이 열린다.
+      Run 버튼으로만 돌려서 코드에 결과가 없을 때 그래프를 보는 곳이다. 설정에 따라 새 실행이 생기면 앞 실행을 왼쪽 아래 Archive로 옮기니, 여러 실행을 겹쳐 보려면 거기서 꺼내 와야 한다.</li>
     <li><strong>Mux와 여러 신호.</strong> Scope 하나에 신호 여러 개를 그리려면 Scope 설정에서 입력 포트 수를 늘리거나, Signal Routing의 <strong>Mux</strong> 블록으로 신호를 묶어 넣는다.</li>
   </ul>
 
