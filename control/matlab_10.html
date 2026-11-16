@@ -179,6 +179,22 @@ x_final =
     <p>최대초과 \(e^{-\zeta\pi/\sqrt{1-\zeta^2}} = e^{-0.316\pi/0.949} = e^{-1.047} = 0.351\) — 최대 위치는 \(0.1 \times 1.351 = 0.135\) m가 되어야 한다. ⑥에서 확인한다.</p>
   </div>
 
+  <details class="fold">
+    <summary>②절까지의 전체 코드</summary>
+<!-- mcode 10/b01_msd_tf upto -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 질량-스프링-댐퍼의 전달함수 X(s)/F(s) = 1/(M s^2 + b s + k)
+M = 1;  b = 2;  k = 10;      % 질량 [kg], 댐핑 [N*s/m], 스프링 [N/m]
+F0 = 1;                      % 가하는 힘 [N]
+s = tf('s');
+G = 1/(M*s^2 + b*s + k)
+damp(G)
+x_final = F0*dcgain(G)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+</div>
+<!-- /mcode -->
+  </details>
+
   <!-- ─────────────────────────── ③ ─────────────────────────── -->
   <h2 id="s3">③ Simscape 모델 시작 — <code>ssc_new</code></h2>
   <p>
@@ -411,6 +427,40 @@ k * x_final = 1.000 N</code></pre>
     6초에서 스프링 0.999 N, 댐퍼는 거의 0이다. 댐퍼 힘은 속도에 비례하니 질량이 멈추면 사라진다. 힘의 균형 \(F = kx + b\dot x\)에서 \(\dot x = 0\)이면 \(F = kx\)다.
   </p>
 
+  <details class="fold">
+    <summary>⑥절까지의 전체 코드</summary>
+<!-- mcode 10/b03_simlog upto -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 질량-스프링-댐퍼의 전달함수 X(s)/F(s) = 1/(M s^2 + b s + k)
+M = 1;  b = 2;  k = 10;      % 질량 [kg], 댐핑 [N*s/m], 스프링 [N/m]
+F0 = 1;                      % 가하는 힘 [N]
+s = tf('s');
+G = 1/(M*s^2 + b*s + k)
+damp(G)
+x_final = F0*dcgain(G)
+
+% Simscape 모델을 돌리고, 같은 그림에 식(전달함수)으로 구한 응답을 겹친다
+out = sim('msd_simscape');
+x = out.simlog.Motion_Sensor.P.series;    % 센서가 잰 위치 — 블록 이름의 빈칸은 _ 로
+t_ssc = x.time;  x_ssc = x.values('m');
+[x_tf, t_tf] = step(F0*G, 6);
+plot(t_ssc, x_ssc, 'LineWidth', 2.5); hold on
+plot(t_tf, x_tf, 'k--', 'LineWidth', 1.2); hold off
+grid on; legend('Simscape (부품을 이은 모델)', '전달함수 1/(Ms^2+bs+k)', 'Location', 'southeast')
+xlabel('시간 (s)'); ylabel('x (m)'); title('같은 질량-스프링-댐퍼, 두 가지 방법')
+fprintf('최대 위치  Simscape %.4f m,  전달함수 %.4f m\n', max(x_ssc), max(x_tf))
+fprintf('최종 위치  Simscape %.4f m,  전달함수 %.4f m\n', x_ssc(end), x_tf(end))
+
+% Results Explorer 에서 본 값을 코드로 — 스프링이 받는 힘 f 와 댐퍼가 받는 힘
+f_spring = out.simlog.Spring_k.f.series.values('N');
+f_damper = out.simlog.Damper_b.f.series.values('N');
+fprintf('t = 6 s  스프링 %.3f N,  댐퍼 %.3f N\n', f_spring(end), f_damper(end))
+fprintf('k * x_final = %.3f N\n', k*x_final)</code></pre>
+<button onclick="copyCode(this)">복사</button>
+</div>
+<!-- /mcode -->
+  </details>
+
   <!-- ─────────────────────────── ⑦ ─────────────────────────── -->
   <h2 id="s7">⑦ 회전 운동 — 관성과 회전 댐퍼</h2>
   <p>
@@ -533,6 +583,52 @@ tau =
     $$\omega(\infty) = \frac{T_0}{D} = \frac{0.1}{0.02} = 5 \text{ rad/s} = 5 \times \frac{60}{2\pi} = 47.7 \text{ rpm}$$
     <p>관성 \(J\)는 <strong>얼마나 빨리</strong> 도달하는지(시정수)를, 마찰 \(D\)는 <strong>어디까지</strong> 가는지(최종값)를 정한다. 11회에서 원판의 질량을 바꿀 때 이 둘을 다시 본다.</p>
   </div>
+
+  <details class="fold">
+    <summary>⑦절까지의 전체 코드</summary>
+<!-- mcode 10/b04_rot upto -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% 질량-스프링-댐퍼의 전달함수 X(s)/F(s) = 1/(M s^2 + b s + k)
+M = 1;  b = 2;  k = 10;      % 질량 [kg], 댐핑 [N*s/m], 스프링 [N/m]
+F0 = 1;                      % 가하는 힘 [N]
+s = tf('s');
+G = 1/(M*s^2 + b*s + k)
+damp(G)
+x_final = F0*dcgain(G)
+
+% Simscape 모델을 돌리고, 같은 그림에 식(전달함수)으로 구한 응답을 겹친다
+out = sim('msd_simscape');
+x = out.simlog.Motion_Sensor.P.series;    % 센서가 잰 위치 — 블록 이름의 빈칸은 _ 로
+t_ssc = x.time;  x_ssc = x.values('m');
+[x_tf, t_tf] = step(F0*G, 6);
+plot(t_ssc, x_ssc, 'LineWidth', 2.5); hold on
+plot(t_tf, x_tf, 'k--', 'LineWidth', 1.2); hold off
+grid on; legend('Simscape (부품을 이은 모델)', '전달함수 1/(Ms^2+bs+k)', 'Location', 'southeast')
+xlabel('시간 (s)'); ylabel('x (m)'); title('같은 질량-스프링-댐퍼, 두 가지 방법')
+fprintf('최대 위치  Simscape %.4f m,  전달함수 %.4f m\n', max(x_ssc), max(x_tf))
+fprintf('최종 위치  Simscape %.4f m,  전달함수 %.4f m\n', x_ssc(end), x_tf(end))
+
+% Results Explorer 에서 본 값을 코드로 — 스프링이 받는 힘 f 와 댐퍼가 받는 힘
+f_spring = out.simlog.Spring_k.f.series.values('N');
+f_damper = out.simlog.Damper_b.f.series.values('N');
+fprintf('t = 6 s  스프링 %.3f N,  댐퍼 %.3f N\n', f_spring(end), f_damper(end))
+fprintf('k * x_final = %.3f N\n', k*x_final)
+
+% 회전 관성 J 와 댐퍼 D 에 토크 T0 를 준다 — 식으로 구한 값과 Simscape 를 비교한다
+J = 0.01;  D = 0.02;  T0 = 0.1;       % [kg*m^2], [N*m/(rad/s)], [N*m]
+w_final = T0/D                        % 최종 각속도 [rad/s]
+rpm_final = w_final*60/(2*pi)         % 같은 값을 rpm 으로
+tau = J/D                             % 시정수 [s]
+out = sim('rot_simscape');
+w = out.simlog.Motion_Sensor.W.series;
+plot(w.time, w.values('rpm'), 'LineWidth', 2); grid on
+yline(rpm_final, 'k--', sprintf('%.1f rpm', rpm_final))
+xline(tau, 'k:', '\tau = J/D')
+xlabel('시간 (s)'); ylabel('회전속도 (rpm)'); title('토크 0.1 N·m 를 준 관성-댐퍼')</code></pre>
+<button onclick="copyCode(this)">복사</button>
+</div>
+<!-- /mcode -->
+  </details>
 
   <!-- ─────────────────────────── 실습 ─────────────────────────── -->
   <h2 id="lab">🧪 실습</h2>
