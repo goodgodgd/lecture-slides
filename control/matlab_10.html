@@ -328,6 +328,11 @@ x_final = F0*dcgain(G)</code></pre>
     <li><span class="mk">9</span><strong>PS-Simulink Converter</strong> — 센서의 위치를 숫자로 바꿔 Scope로 보낸다.</li>
   </ol>
   <p>
+    블록을 놓으면 Library Browser의 긴 이름이 그대로 붙는다 — 센서는 <code>Ideal Translational Motion Sensor</code>, 스프링은 <code>Translational Spring</code>이다.
+    블록 아래의 이름을 <strong>더블클릭</strong>하면 고칠 수 있다. 그림처럼 <strong>Mass M</strong> · <strong>Spring k</strong> · <strong>Damper b</strong> · <strong>Force Source</strong> · <strong>Motion Sensor</strong> · <strong>Ground</strong>로 바꿔 둔다.
+    이름은 보기 좋으라고만 바꾸는 것이 아니다. ⑥과 6-1의 코드가 <code>out.simlog.Motion_Sensor</code>, <code>out.simlog.Spring_k</code>처럼 <strong>블록 이름으로 값을 꺼내기</strong> 때문이다.
+  </p>
+  <p>
     선 긋는 법은 9회와 같다. 단자에서 단자로 끈다. 다만 화살표가 없으니 <strong>어느 쪽에서 시작해도</strong> 된다.
     위쪽 초록 선에 네 블록의 C와 질량이 모두 붙어 있다는 것은 「네 부품의 그 끝이 질량과 함께 움직인다」는 뜻이다.
     Simscape는 이 접점에서 \(M\ddot x = F - kx - b\dot x\)를 스스로 세운다 — ②에서 손으로 세운 바로 그 식이다.
@@ -374,6 +379,10 @@ x_final = F0*dcgain(G)</code></pre>
       Simscape는 단위가 맞는지 실행 전에 검사한다. 반대로 <code>N</code>과 <code>kN</code>처럼 같은 종류끼리는 알아서 환산하므로,
       변환기의 단위를 잘못 고르면 오류 없이 <strong>1000배 다른 답</strong>이 나올 수 있다. 결과의 크기가 이상하면 변환기의 단위부터 본다.</p>
   </div>
+  <p>
+    여기까지 만들었으면 <strong>Ctrl+S</strong>로 저장한다. 이름은 <code>msd_simscape</code>로 적는다 — 확장자 <code>.slx</code>는 저절로 붙는다.
+    9회처럼 MATLAB의 <strong>현재 폴더</strong>에 저장해야 ⑥에서 <code>sim('msd_simscape')</code>로 이 모델을 부를 수 있다.
+  </p>
 
   <!-- ─────────────────────────── ⑥ ─────────────────────────── -->
   <h2 id="s6">⑥ 실행하고 전달함수와 비교하기</h2>
@@ -415,6 +424,28 @@ fprintf('최종 위치  Simscape %.4f m,  전달함수 %.4f m\n', x_ssc(end), x_
       <dt>x.time · x.values('m')</dt>
       <dd>기록된 값의 시간과 값. <code>values</code>에 단위를 주면 그 단위로 바꿔서 돌려준다. 여기서는 m로 꺼냈다. <code>'mm'</code>를 주면 같은 값이 mm로 나온다.</dd>
     </dl>
+  </div>
+  <div class="box trap">
+    <p class="boxtitle">⚠️ 「인식할 수 없는 메서드, 속성 또는 필드 'Motion_Sensor'」</p>
+    <p>모델의 블록 이름이 코드와 다를 때 나는 오류다. ④에서 이름을 바꾸지 않았으면 센서는 아직 <code>Ideal Translational Motion Sensor</code>라서
+      <code>simlog</code>에는 <code>Ideal_Translational_Motion_Sensor</code>로 들어 있다.
+      명령 창에 <code>out.simlog</code>만 치면 그 안에 든 블록 이름이 모두 나온다.</p>
+<pre class="out"><code>&gt;&gt; out.simlog
+
+ans = 
+
+  Node with properties:
+
+               id: 'msd_simscape'
+          savable: 1
+       exportable: 0
+         Spring_k: [1×1 simscape.logging.Node]
+    Motion_Sensor: [1×1 simscape.logging.Node]
+           Mass_M: [1×1 simscape.logging.Node]
+           Ground: [1×1 simscape.logging.Node]
+     Force_Source: [1×1 simscape.logging.Node]
+         Damper_b: [1×1 simscape.logging.Node]</code></pre>
+    <p>여기 나온 이름을 코드에 그대로 쓰거나, 모델에서 블록 이름을 코드에 맞게 고치고 저장한 뒤 다시 돌린다.</p>
   </div>
 
   <h3 id="s6-2">6-1 Simscape Results Explorer · <code>simlog</code></h3>
@@ -549,6 +580,10 @@ fprintf('k * x_final = %.3f N\n', k*x_final)</code></pre>
     </svg>
     <figcaption>축에 원판이 달린 회전 시스템에 아래 Simscape 모델의 블록 번호를 붙였다. 고정된 틀이 Ground다. 회전 댐퍼 <span class="mk">2</span>는 <strong>틀(R)과 축(C) 사이</strong>의 점성 마찰이고, 센서 <span class="mk">4</span>는 틀에 대한 축의 각속도 \(\omega\)를 잰다. 토크 <span class="mk">3</span>도 축(C)과 틀(R) 사이에 걸린다 — 모터라면 몸체가 틀에 고정돼 있고 축만 돌리는 것과 같다.</figcaption>
   </figure>
+  <p>
+    모델은 처음부터 다시 만들지 않아도 된다. <code>msd_simscape</code>를 열어 SIMULATION 탭 › Save › <strong>Save As</strong>로 <code>rot_simscape</code>라는 이름으로 저장해 두고,
+    그 위에서 블록을 회전용으로 바꿔 끼운다. 아래 코드는 이 이름으로 모델을 부른다.
+  </p>
   <figure>
     <a href="assets/img/10_rot_canvas.png"><img src="assets/img/10_rot_canvas.png" alt="회전 모델. 위에 Inertia J, 가운데 줄에 Torque Source, Damper D, Motion Sensor가 있고 C 단자가 관성으로, R 단자가 Ground로 이어져 있다. 센서의 W 단자가 변환기를 거쳐 Scope로 간다"></a>
     <figcaption><code>rot_simscape.slx</code> — ④의 모델에서 블록을 회전용으로 바꿔 끼운 것이다. 스프링은 뺐다.</figcaption>
@@ -560,6 +595,7 @@ fprintf('k * x_final = %.3f N\n', k*x_final)</code></pre>
     <li><span class="mk">4</span><strong>Motion Sensor</strong>(Ideal Rotational Motion Sensor) — W가 각속도, A가 각도다.</li>
     <li><span class="mk">5</span><strong>PS-Simulink Converter</strong> — 출력 단위를 <strong>rpm</strong>으로 골랐다(아래 그림).</li>
   </ol>
+  <p>새로 놓은 블록에도 긴 이름이 붙으니 ④처럼 <strong>Inertia J</strong> · <strong>Damper D</strong> · <strong>Torque Source</strong> · <strong>Motion Sensor</strong>로 바꿔 둔다. 아래 코드는 <code>out.simlog.Motion_Sensor</code>로 센서 값을 꺼낸다.</p>
   <figure class="dlg">
     <img src="assets/img/10_dlg_pss_rpm.png" alt="Block Parameters: PS-Simulink Converter 창. Output signal unit 칸에 rpm">
     <figcaption><span class="mk">1</span> 센서는 rad/s로 재지만 변환기에서 <strong>rpm</strong>을 고르면 분당 회전수로 바로 나온다. 60/(2π)를 곱하는 블록을 따로 둘 필요가 없다.</figcaption>
@@ -622,14 +658,17 @@ tau =
   <p>
     \(R = 1\) kΩ, \(C = 1\) mF를 넣으면 \(RC = 1000 \times 0.001 = 1\) s다. ⑦의 \(\dfrac{1}{Js+D}\)와 같은 1차 지연 요소다.
   </p>
+  <p>
+    이번에는 기계 블록을 쓰지 않으니 <code>ssc_new</code>로 새 모델을 열고, 먼저 <strong>Ctrl+S</strong>로 <code>rc_simscape</code>라는 이름으로 현재 폴더에 저장한다. 그다음 아래 그림대로 블록을 놓고 잇는다.
+  </p>
   <figure>
     <a href="assets/img/10_rc_canvas.png"><img src="assets/img/10_rc_canvas.png" alt="Simscape RC 회로. 왼쪽에 Step과 변환기를 거쳐 Voltage Source의 아래 삼각형 단자로 들어간다. 전압원 위쪽 단자에서 파란 선이 위로 올라가 Resistor R을 지나 Capacitor C의 위쪽으로 내려온다. 커패시터 오른쪽에 Voltage Sensor가 나란히 붙어 있고, 센서의 출력이 변환기를 거쳐 Scope로 간다. 아래쪽 파란 선은 전압원 · 커패시터 · 센서의 아래 단자를 Electrical Reference(접지)와 f(x)=0 Solver Configuration에 잇는다"></a>
     <figcaption><code>rc_simscape.slx</code> — 파란 선이 전기 연결이다. 회로도를 그리듯 부품을 이으면 된다.</figcaption>
   </figure>
   <ol class="marks">
     <li><span class="mk">1</span><strong>Voltage Source</strong>(Controlled Voltage Source, Electrical › Electrical Sources) — 아래 삼각형 단자로 들어온 물리 신호만큼 전압을 낸다. ④의 Force Source가 힘을 내던 자리다. Step(5) → Simulink-PS Converter(단위 <code>V</code>)로 5 V를 넣었다.</li>
-    <li><span class="mk">2</span><strong>Resistor R</strong>(Electrical › Electrical Elements) — 저항 <code>R</code> Ω.</li>
-    <li><span class="mk">3</span><strong>Capacitor C</strong>(Electrical › Electrical Elements) — 커패시턴스 <code>C</code> F. 처음 전압은 기본값 0 V다.</li>
+    <li><span class="mk">2</span><strong>Resistor R</strong>(Electrical › Electrical Elements) — 저항 <code>R</code> Ω. 놓으면 이름이 <code>Resistor</code>이니 <strong>Resistor R</strong>로 고친다 — 아래 코드가 <code>out.simlog.Resistor_R</code>로 전류를 꺼낸다.</li>
+    <li><span class="mk">3</span><strong>Capacitor C</strong>(Electrical › Electrical Elements) — 커패시턴스 <code>C</code> F. 처음 전압은 기본값 0 V다. 이름은 그림에 맞춰 <strong>Capacitor C</strong>로 고쳤다.</li>
     <li><span class="mk">4</span><strong>Voltage Sensor</strong>(Electrical › Electrical Sensors) — +·− 단자를 커패시터 양 끝에 <strong>나란히</strong> 단다. 멀티미터로 전압을 잴 때 두 탐침을 대는 것과 같다. 아래 V 단자로 \(v_C\)가 나온다.</li>
     <li><span class="mk">5</span><strong>Electrical Reference</strong>(Electrical › Electrical Elements) — 0 V 기준, 곧 접지다. 기계 모델의 Ground와 같은 자리다. 전압은 언제나 이곳을 기준으로 잰다.</li>
     <li><span class="mk">6</span><strong>Solver Configuration</strong> — 회로 전체가 선 하나로 이어진 네트워크 하나이므로 하나만 붙인다.</li>
