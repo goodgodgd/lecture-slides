@@ -391,7 +391,7 @@ x_final = F0*dcgain(G)</code></pre>
   <!-- ─────────────────────────── ⑥ ─────────────────────────── -->
   <h2 id="s6">⑥ 실행하고 전달함수와 비교하기</h2>
   <p>
-    부품으로 만든 모델은 정말 ②의 식과 같은 답을 낼까? 작업공간에 <code>M</code> <code>k</code> <code>b</code> <code>F0</code>가 있는 상태에서 Stop Time 6초로 Run을 누르고 Scope를 열면 출렁이며 0.1로 가는 곡선이 나온다.
+    부품으로 만든 모델은 정말 ②의 식과 같은 답을 낼까? 작업공간에 <code>M</code> <code>k</code> <code>b</code> <code>F0</code>가 있는 상태에서, 9회 6-1처럼 Model Settings(Ctrl+E)의 <strong>Max step size를 0.01</strong>로 두고 Stop Time 6초로 Run을 누르고 Scope를 열면 출렁이며 0.1로 가는 곡선이 나온다.
     그 결과를 코드로 꺼내 전달함수의 계단응답과 한 그래프에 겹친다.
   </p>
 <!-- mcode 10/b02_compare -->
@@ -597,13 +597,20 @@ fprintf('k * x_final = %.3f N\n', k*x_final)</code></pre>
     <figcaption><code>rot_simscape.slx</code> — ④의 모델에서 블록을 회전용으로 바꿔 끼운 것이다. 스프링은 뺐다.</figcaption>
   </figure>
   <ol class="marks">
-    <li><span class="mk">1</span><strong>Inertia J</strong> (Mechanical › Rotational Elements) — \(J = 0.01\) kg·m².</li>
-    <li><span class="mk">2</span><strong>Damper D</strong>(Rotational Damper) — \(D = 0.02\) N·m/(rad/s).</li>
-    <li><span class="mk">3</span><strong>Torque Source</strong>(Ideal Torque Source, Mechanical Sources) — 0.1 N·m. Step의 Final value는 <code>T0</code>, 변환기의 단위는 <code>N*m</code>.</li>
+    <li><span class="mk">1</span><strong>Inertia J</strong> (Mechanical › Rotational Elements) — 값 칸에 <code>J</code>(0.01), 단위 kg*m^2.</li>
+    <li><span class="mk">2</span><strong>Damper D</strong>(Rotational Damper) — 값 칸에 <code>D</code>(0.02), 단위 N*m/(rad/s).</li>
+    <li><span class="mk">3</span><strong>Torque Source</strong>(Ideal Torque Source, Mechanical Sources) — S 단자로 들어온 값만큼 토크를 낸다. ④의 Force Source처럼 <strong>블록에는 값을 적지 않는다.</strong>
+      0.1 N·m는 왼쪽 <strong>Step</strong> 블록에서 온다 — Step time 0, Final value <code>T0</code>(작업공간의 0.1)로 두고, 6번 변환기가 거기에 N*m를 붙인다.</li>
     <li><span class="mk">4</span><strong>Motion Sensor</strong>(Ideal Rotational Motion Sensor) — W가 각속도, A가 각도다.</li>
-    <li><span class="mk">5</span><strong>PS-Simulink Converter</strong> — 출력 단위를 <strong>rpm</strong>으로 골랐다(아래 그림).</li>
+    <li><span class="mk">5</span><strong>PS-Simulink Converter</strong> — 출력 단위를 <strong>rpm</strong>으로 골랐다(아래 둘째 그림).</li>
+    <li><span class="mk">6</span><strong>Simulink-PS Converter</strong> — 들어오는 숫자에 <strong>N*m</strong>(토크 단위)을 붙인다(아래 첫째 그림). ⑤에서 <code>N</code>을 적은 자리다.</li>
   </ol>
-  <p>새로 놓은 블록에도 긴 이름이 붙으니 ④처럼 <strong>Inertia J</strong> · <strong>Damper D</strong> · <strong>Torque Source</strong> · <strong>Motion Sensor</strong>로 바꿔 둔다. 아래 코드는 <code>out.simlog.Motion_Sensor</code>로 센서 값을 꺼낸다.</p>
+  <p>새로 놓은 블록에도 긴 이름이 붙으니 ④처럼 <strong>Inertia J</strong> · <strong>Damper D</strong> · <strong>Torque Source</strong> · <strong>Motion Sensor</strong>로 바꿔 둔다. 아래 코드는 <code>out.simlog.Motion_Sensor</code>로 센서 값을 꺼낸다.
+    블록이 <code>J</code> · <code>D</code> · <code>T0</code>를 작업공간에서 읽으니, Run 버튼으로 돌려 보려면 아래 코드의 둘째 줄을 먼저 실행해 둔다. Stop Time은 3초로 한다. Max step size 0.01은 <code>msd_simscape</code>에서 정해 둔 것이 Save As로 따라온다.</p>
+  <figure class="dlg">
+    <img src="assets/img/10_dlg_sps_nm.png" alt="Block Parameters: Simulink-PS Converter 창. Input signal unit 칸에 N*m">
+    <figcaption><span class="mk">1</span> Step의 0.1을 <strong>토크</strong> 0.1 N·m로 만든다. Torque Source는 토크를 받으므로 ⑤처럼 <code>N</code>을 두면 「단위가 맞지 않는다」는 오류가 난다. 목록에 없으면 칸에 <code>N*m</code>을 직접 친다.</figcaption>
+  </figure>
   <figure class="dlg">
     <img src="assets/img/10_dlg_pss_rpm.png" alt="Block Parameters: PS-Simulink Converter 창. Output signal unit 칸에 rpm">
     <figcaption><span class="mk">1</span> 센서는 rad/s로 재지만 변환기에서 <strong>rpm</strong>을 고르면 분당 회전수로 바로 나온다. 60/(2π)를 곱하는 블록을 따로 둘 필요가 없다.</figcaption>
@@ -620,7 +627,13 @@ w = out.simlog.Motion_Sensor.W.series;
 plot(w.time, w.values('rpm'), 'LineWidth', 2); grid on
 yline(rpm_final, 'k--', sprintf('%.1f rpm', rpm_final))
 xline(tau, 'k:', '\tau = J/D')
-xlabel('시간 (s)'); ylabel('회전속도 (rpm)'); title('토크 0.1 N·m 를 준 관성-댐퍼')</code></pre>
+xlabel('시간 (s)'); ylabel('회전속도 (rpm)'); title('토크 0.1 N·m 를 준 관성-댐퍼')
+
+% 시정수 tau 에서 최종값의 몇 % 에 왔나
+t = w.time;  rpm = w.values('rpm');
+[gap, i] = min(abs(t - tau));         % tau 에 가장 가까운 기록 시각의 번호
+fprintf('t = %.2f s 에서 %.1f rpm — 최종값의 %.1f %%\n', t(i), rpm(i), 100*rpm(i)/rpm_final)
+fprintf('이론값 1 - e^-1 = %.1f %%\n', 100*(1 - exp(-1)))</code></pre>
 <button onclick="copyCode(this)">복사</button>
 <p class="outlabel">명령 창 출력</p>
 <pre class="out"><code>w_final =
@@ -635,13 +648,21 @@ rpm_final =
 
 tau =
 
-    0.5000</code></pre>
+    0.5000
+
+t = 0.50 s 에서 30.3 rpm — 최종값의 63.4 %
+이론값 1 - e^-1 = 63.2 %</code></pre>
 </div>
 <!-- /mcode -->
   <figure>
     <img src="assets/img/10_rot.png" width="560" alt="회전속도가 0에서 출발해 0.5초에 약 30 rpm, 3초에 47.7 rpm에 가까워지는 1차 지연 곡선. 47.7 rpm에 점선, 0.5초에 세로 점선">
     <figcaption>1차 지연 곡선. 시정수 \(\tau = J/D = 0.5\)초에서 최종값의 63%(30 rpm)에 이른다.</figcaption>
   </figure>
+  <p>
+    코드의 마지막 부분이 그 63%를 숫자로 확인한다. <code>[gap, i] = min(abs(t - tau))</code>는 기록된 시각 가운데 \(\tau\)와 차이가 가장 작은 것의 <strong>번호</strong> <code>i</code>를 찾는다(3회의 <code>[m, idx] = max(v)</code>와 같은 꼴이다).
+    그 번호로 <code>rpm(i)</code>를 꺼내 최종값으로 나누면 0.5초에서 30.3 rpm, <strong>63.4%</strong>가 나온다. 이론값 \(1 - e^{-1} = 63.2\%\)와 소수점 아래만 조금 다르다.
+    기록된 시각이 \(\tau\)와 꼭 맞아떨어지지는 않고 계산에도 작은 오차가 있어서다. <code>fprintf</code> 안의 <code>%%</code>는 글자 %를 찍으라는 뜻이다(<code>%</code> 하나는 <code>%.1f</code> 같은 자리 표시로 읽힌다).
+  </p>
   <div class="box theory">
     <p class="boxtitle">📐 이론과 잇기 — 1차 지연 요소</p>
     <p>\(\dfrac{\Omega(s)}{T(s)} = \dfrac{1}{Js + D} = \dfrac{1/D}{(J/D)s + 1}\) — 4장의 1차 지연 요소 \(\dfrac{K}{\tau s + 1}\)이다. \(K = 1/D = 50\), \(\tau = J/D = 0.5\) s.</p>
@@ -674,14 +695,32 @@ tau =
     <figcaption><code>rc_simscape.slx</code> — 파란 선이 전기 연결이다. 회로도를 그리듯 부품을 이으면 된다.</figcaption>
   </figure>
   <ol class="marks">
-    <li><span class="mk">1</span><strong>Voltage Source</strong>(Controlled Voltage Source, Electrical › Electrical Sources) — 아래 삼각형 단자로 들어온 물리 신호만큼 전압을 낸다. ④의 Force Source가 힘을 내던 자리다. Step(Step time 0, Final value <code>V0</code>) → Simulink-PS Converter(단위 <code>V</code>)로 5 V를 넣었다.</li>
-    <li><span class="mk">2</span><strong>Resistor R</strong>(Electrical › Electrical Elements) — 저항 <code>R</code> Ω. 놓으면 이름이 <code>Resistor</code>이니 <strong>Resistor R</strong>로 고친다 — 아래 코드가 <code>out.simlog.Resistor_R</code>로 전류를 꺼낸다.</li>
-    <li><span class="mk">3</span><strong>Capacitor C</strong>(Electrical › Electrical Elements) — 커패시턴스 <code>C</code> F. 처음 전압은 기본값 0 V다. 이름은 그림에 맞춰 <strong>Capacitor C</strong>로 고쳤다.</li>
-    <li><span class="mk">4</span><strong>Voltage Sensor</strong>(Electrical › Electrical Sensors) — +·− 단자를 커패시터 양 끝에 <strong>나란히</strong> 단다. 멀티미터로 전압을 잴 때 두 탐침을 대는 것과 같다. 아래 V 단자로 \(v_C\)가 나온다.</li>
+    <li><span class="mk">1</span><strong>Voltage Source</strong>(Controlled Voltage Source, Electrical › Electrical Sources) — 아래 삼각형 단자로 들어온 물리 신호만큼 + · − 단자 사이에 전압을 낸다. ④의 Force Source처럼 <strong>블록에는 값을 적지 않는다.</strong>
+      5 V는 왼쪽 <strong>Step</strong> 블록에서 온다 — Step time 0, Final value <code>V0</code>(작업공간의 5)로 두고, 8번 변환기가 거기에 V를 붙인다.</li>
+    <li><span class="mk">2</span><strong>Resistor R</strong>(Electrical › Electrical Elements) — 값 칸에 <code>R</code>(1000), 단위 Ohm(아래 셋째 그림). 놓으면 이름이 <code>Resistor</code>이니 <strong>Resistor R</strong>로 고친다 — 아래 코드가 <code>out.simlog.Resistor_R</code>로 전류를 꺼낸다.</li>
+    <li><span class="mk">3</span><strong>Capacitor C</strong>(Electrical › Electrical Elements) — 값 칸에 <code>C</code>(0.001), 단위 F. 처음 전압은 기본값 0 V 그대로 둔다. 이름은 그림에 맞춰 <strong>Capacitor C</strong>로 고친다.</li>
+    <li><span class="mk">4</span><strong>Voltage Sensor</strong>(Electrical › Electrical Sensors) — +·− 단자를 커패시터 양 끝에 <strong>나란히</strong> 단다. 멀티미터로 전압을 잴 때 두 탐침을 대는 것과 같다. 아래 V 단자로 \(v_C\)가 나온다.
+      이름은 놓을 때부터 <code>Voltage Sensor</code>라 바꾸지 않아도 된다 — 코드는 <code>out.simlog.Voltage_Sensor</code>로 꺼낸다.</li>
     <li><span class="mk">5</span><strong>Electrical Reference</strong>(Electrical › Electrical Elements) — 0 V 기준, 곧 접지다. 기계 모델의 Ground와 같은 자리다. 전압은 언제나 이곳을 기준으로 잰다.</li>
     <li><span class="mk">6</span><strong>Solver Configuration</strong> — 회로 전체가 선 하나로 이어진 네트워크 하나이므로 하나만 붙인다.</li>
-    <li><span class="mk">7</span><strong>PS-Simulink Converter</strong> — 단위 <code>V</code>.</li>
+    <li><span class="mk">7</span><strong>PS-Simulink Converter</strong> — 센서가 잰 전압을 <strong>V</strong> 단위의 숫자로 Scope에 보낸다(아래 둘째 그림).</li>
+    <li><span class="mk">8</span><strong>Simulink-PS Converter</strong> — Step의 숫자에 <strong>V</strong>를 붙여 전압으로 만든다(아래 첫째 그림). ④에서는 <code>N</code>, ⑦에서는 <code>N*m</code>을 적은 자리다.</li>
   </ol>
+  <figure class="dlg">
+    <img src="assets/img/10_dlg_sps_v.png" alt="Block Parameters: Simulink-PS Converter 창. Input signal unit 칸에 V">
+    <figcaption><span class="mk">1</span> Step의 5를 <strong>전압</strong> 5 V로 만든다. Voltage Source는 전압을 받으므로 여기를 <code>N</code>이나 <code>N*m</code>으로 두면 단위가 맞지 않는다는 오류가 난다.</figcaption>
+  </figure>
+  <figure class="dlg">
+    <img src="assets/img/10_dlg_pss_v.png" alt="Block Parameters: PS-Simulink Converter 창. Output signal unit 칸에 V">
+    <figcaption><span class="mk">1</span> 센서의 전압을 <strong>V</strong> 단위의 숫자로 내보낸다. <code>mV</code>를 고르면 같은 전압이 1000배 큰 숫자로 Scope에 나온다.</figcaption>
+  </figure>
+  <figure class="dlg">
+    <img src="assets/img/10_dlg_resistor.png" alt="Block Parameters: Resistor R 창. Resistance 줄의 값 칸에 R, 흐린 글씨 1000, 단위 칸에 Ohm">
+    <figcaption>Resistor 설정. <span class="mk">1</span> 값 — 변수 <code>R</code>(작업공간의 1000이 흐리게 보인다). <span class="mk">2</span> 단위 — Ohm. Capacitor도 같은 꼴로 <code>C</code>와 F를 적는다.</figcaption>
+  </figure>
+  <p>
+    블록이 <code>R</code> · <code>C</code> · <code>V0</code>를 작업공간에서 읽으니, Run 버튼으로 돌려 보려면 아래 코드의 둘째 줄을 먼저 실행해 둔다. Stop Time은 5초로 하고, 새로 연 모델이니 Model Settings의 Max step size도 다시 0.01로 둔다.
+  </p>
   <p>
     기계 모델과 나란히 놓으면 블록이 하나씩 짝을 이룬다. ①에서 본 「접점에서 힘의 합은 0」이 전기에서는 「접점에서 전류의 합은 0」(키르히호프 전류 법칙)이 된다.
   </p>
@@ -711,7 +750,12 @@ grid on; legend('Simscape (부품을 이은 회로)', '전달함수 1/(RCs+1)', 
 xline(tau, 'k:', '\tau = RC', 'HandleVisibility', 'off')
 xlabel('시간 (s)'); ylabel('v_C (V)'); title('5 V 를 준 RC 회로의 커패시터 전압')
 i_R = out.simlog.Resistor_R.i.series.values('mA');   % 센서 없이 저항 전류를 꺼낸다
-fprintf('저항 전류  t = 0 s: %.2f mA,  t = 5 s: %.3f mA\n', i_R(1), i_R(end))</code></pre>
+fprintf('저항 전류  t = 0 s: %.2f mA,  t = 5 s: %.3f mA\n', i_R(1), i_R(end))
+
+% 시정수 tau 에서 최종값의 몇 % 에 왔나
+t = vc.time;  v = vc.values('V');
+[gap, i] = min(abs(t - tau));
+fprintf('t = %.2f s 에서 %.2f V — 최종값의 %.1f %%\n', t(i), v(i), 100*v(i)/V0)</code></pre>
 <button onclick="copyCode(this)">복사</button>
 <p class="outlabel">명령 창 출력</p>
 <pre class="out"><code>tau =
@@ -727,12 +771,14 @@ Grc =
 
 Continuous-time transfer function.
 Model Properties
-저항 전류  t = 0 s: 5.00 mA,  t = 5 s: 0.034 mA</code></pre>
+저항 전류  t = 0 s: 5.00 mA,  t = 5 s: 0.034 mA
+t = 1.00 s 에서 3.15 V — 최종값의 63.1 %</code></pre>
 </div>
 <!-- /mcode -->
   <p>
     <code>tau</code>가 1 s, <code>Grc</code>가 \(\dfrac{1}{s+1}\)로 위에서 손으로 구한 값 그대로다.
-    마지막 줄은 저항 전류가 처음 5 mA에서 5초 뒤 0.034 mA로 거의 0까지 줄었다는 뜻이다.
+    「저항 전류」 줄은 전류가 처음 5 mA에서 5초 뒤 0.034 mA로 거의 0까지 줄었다는 뜻이다.
+    마지막 줄은 ⑦과 같은 방법으로 \(t = \tau = 1\) s의 전압을 찾은 것이다 — 3.15 V, 최종값 5 V의 <strong>63.1%</strong>다.
   </p>
   <figure>
     <img src="assets/img/10_rc.png" width="560" alt="커패시터 전압이 0에서 출발해 1초에 약 3.16 V, 5초에 거의 5 V에 이르는 1차 지연 곡선. Simscape(파란 실선)와 전달함수(검은 점선)가 처음부터 끝까지 겹친다. 1초에 세로 점선">
@@ -807,6 +853,12 @@ yline(rpm_final, 'k--', sprintf('%.1f rpm', rpm_final))
 xline(tau, 'k:', '\tau = J/D')
 xlabel('시간 (s)'); ylabel('회전속도 (rpm)'); title('토크 0.1 N·m 를 준 관성-댐퍼')
 
+% 시정수 tau 에서 최종값의 몇 % 에 왔나
+t = w.time;  rpm = w.values('rpm');
+[gap, i] = min(abs(t - tau));         % tau 에 가장 가까운 기록 시각의 번호
+fprintf('t = %.2f s 에서 %.1f rpm — 최종값의 %.1f %%\n', t(i), rpm(i), 100*rpm(i)/rpm_final)
+fprintf('이론값 1 - e^-1 = %.1f %%\n', 100*(1 - exp(-1)))
+
 % RC 회로에 전압 V0 를 준다 — 전달함수로 구한 응답과 Simscape 를 비교한다
 R = 1e3;  C = 1e-3;  V0 = 5;          % [Ohm], [F], [V]
 tau = R*C                             % 시정수 [s]
@@ -820,7 +872,12 @@ grid on; legend('Simscape (부품을 이은 회로)', '전달함수 1/(RCs+1)', 
 xline(tau, 'k:', '\tau = RC', 'HandleVisibility', 'off')
 xlabel('시간 (s)'); ylabel('v_C (V)'); title('5 V 를 준 RC 회로의 커패시터 전압')
 i_R = out.simlog.Resistor_R.i.series.values('mA');   % 센서 없이 저항 전류를 꺼낸다
-fprintf('저항 전류  t = 0 s: %.2f mA,  t = 5 s: %.3f mA\n', i_R(1), i_R(end))</code></pre>
+fprintf('저항 전류  t = 0 s: %.2f mA,  t = 5 s: %.3f mA\n', i_R(1), i_R(end))
+
+% 시정수 tau 에서 최종값의 몇 % 에 왔나
+t = vc.time;  v = vc.values('V');
+[gap, i] = min(abs(t - tau));
+fprintf('t = %.2f s 에서 %.2f V — 최종값의 %.1f %%\n', t(i), v(i), 100*v(i)/V0)</code></pre>
 <button onclick="copyCode(this)">복사</button>
 </div>
 <!-- /mcode -->
@@ -838,7 +895,7 @@ fprintf('저항 전류  t = 0 s: %.2f mA,  t = 5 s: %.3f mA\n', i_R(1), i_R(end)
       <li>⑧처럼 Step(5) → Simulink-PS Converter(단위 V) → <strong>Controlled Voltage Source</strong>를 놓는다. (3분)</li>
       <li><strong>Resistor</strong>(2 Ω) · <strong>Inductor</strong>(1 H, Electrical Elements) · <strong>Capacitor</strong>(0.1 F)를 전원과 직렬로 잇고, 전원의 −와 커패시터의 아래쪽 끝을 <strong>Electrical Reference</strong>에 붙인다. (10분)</li>
       <li><strong>Voltage Sensor</strong>를 커패시터 양 끝에 나란히 달고, V 단자를 PS-Simulink Converter(단위 V) → Scope로 보낸다. (5분)</li>
-      <li>Solver Configuration을 회로 아무 곳에나 붙이고 Stop Time 6초로 돌린다. (3분)</li>
+      <li>Solver Configuration을 회로 아무 곳에나 붙이고, Model Settings에서 Max step size 0.01, Stop Time 6초로 돌린다. (3분)</li>
       <li>명령 창에서 <code>G = tf(1, [0.1 0.2 1])</code>로 \(\dfrac{V_C(s)}{V(s)} = \dfrac{1}{LCs^2 + RCs + 1}\)을 만들고 <code>step(5*G, 6)</code>을 Scope와 비교한다. <code>damp(G)</code>도 본다. (5분)</li>
     </ol>
     <p><strong>이렇게 되면 성공이다:</strong> 커패시터 전압이 5 V를 넘어 약 1.06초에 6.75 V까지 올랐다가 출렁이며 5 V로 가라앉고, Scope와 <code>step</code>의 곡선이 겹친다.
