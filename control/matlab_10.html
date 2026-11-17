@@ -365,6 +365,10 @@ x_final = F0*dcgain(G)</code></pre>
     <img src="assets/img/10_dlg_sps.png" alt="Block Parameters: Simulink-PS Converter 창. Units 아래 Input signal unit 칸에 N">
     <figcaption>Simulink-PS Converter. <span class="mk">1</span> 들어오는 숫자에 붙일 단위 — <strong>N</strong>. Step의 1은 1 N이 된다.</figcaption>
   </figure>
+  <p>
+    입력을 주는 <strong>Step</strong> 블록은 9회 ④처럼 <strong>Step time을 0</strong>으로 바꾸고, <strong>Final value</strong>에 <code>F0</code>를 적는다.
+    Step time을 기본값 1로 두면 응답이 1초 늦게 시작해서, ⑥에서 전달함수의 응답과 겹쳐 볼 때 1초만큼 어긋난다.
+  </p>
   <figure class="dlg">
     <img src="assets/img/10_dlg_pss.png" alt="Block Parameters: PS-Simulink Converter 창. Output signal unit 칸에 m">
     <figcaption>PS-Simulink Converter. <span class="mk">1</span> 내보낼 숫자의 단위 — <strong>m</strong>. mm로 바꾸면 같은 위치가 1000배 큰 숫자로 나온다.</figcaption>
@@ -457,10 +461,14 @@ ans =
     <figcaption>스프링이 받는 힘. 센서가 없어도 부품마다 힘(f) · 속도(v) · 늘어난 길이(x)가 기록돼 있다.</figcaption>
   </figure>
   <ol class="marks">
-    <li><span class="mk">1</span>모델 트리에서 부품(<strong>Spring k</strong>)을 펼친다.</li>
+    <li><span class="mk">1</span>모델 트리에서 부품(<strong>Spring k</strong>) 앞의 ▸를 눌러 펼친다. 화살표 대신 <strong>부품 이름을 누르면</strong> 그 부품의 변수(f · v · x)가 한꺼번에 칸을 나눠 그려진다.</li>
     <li><span class="mk">2</span>변수(<strong>f</strong> — 힘)를 누르면 오른쪽에 그래프가 뜬다. Ctrl을 누른 채 여러 개를 고르면 칸을 나눠 함께 그린다.</li>
     <li><span class="mk">3</span>세로축 단위 — 위쪽 Units 메뉴에서 바꿀 수 있다.</li>
   </ol>
+  <p>
+    MATLAB을 한국어로 쓰고 있으면 메뉴가 우리말로 나온다 — Simscape Results Explorer는 「Simscape 결과 탐색기」, Model Tree Structure는 「모델 트리 구조」, Units는 「단위」다.
+    트리에 <code>Ideal Translational Motion Sensor</code>처럼 긴 이름이 보이면 ④에서 블록 이름을 바꾸지 않은 것이다. 코드로 꺼낼 때 이름이 달라지니 ④대로 바꿔 두는 편이 낫다.
+  </p>
   <p>스프링의 힘은 1 N으로 간다. 멈춘 뒤에는 스프링이 외력 1 N을 혼자 다 받아 낸다는 뜻이다. 코드로도 같은 값을 꺼낼 수 있다.</p>
 <!-- mcode 10/b03_simlog -->
 <div class="mcode">
@@ -591,7 +599,7 @@ fprintf('k * x_final = %.3f N\n', k*x_final)</code></pre>
   <ol class="marks">
     <li><span class="mk">1</span><strong>Inertia J</strong> (Mechanical › Rotational Elements) — \(J = 0.01\) kg·m².</li>
     <li><span class="mk">2</span><strong>Damper D</strong>(Rotational Damper) — \(D = 0.02\) N·m/(rad/s).</li>
-    <li><span class="mk">3</span><strong>Torque Source</strong>(Ideal Torque Source, Mechanical Sources) — 0.1 N·m. 변환기의 단위는 <code>N*m</code>.</li>
+    <li><span class="mk">3</span><strong>Torque Source</strong>(Ideal Torque Source, Mechanical Sources) — 0.1 N·m. Step의 Final value는 <code>T0</code>, 변환기의 단위는 <code>N*m</code>.</li>
     <li><span class="mk">4</span><strong>Motion Sensor</strong>(Ideal Rotational Motion Sensor) — W가 각속도, A가 각도다.</li>
     <li><span class="mk">5</span><strong>PS-Simulink Converter</strong> — 출력 단위를 <strong>rpm</strong>으로 골랐다(아래 그림).</li>
   </ol>
@@ -666,7 +674,7 @@ tau =
     <figcaption><code>rc_simscape.slx</code> — 파란 선이 전기 연결이다. 회로도를 그리듯 부품을 이으면 된다.</figcaption>
   </figure>
   <ol class="marks">
-    <li><span class="mk">1</span><strong>Voltage Source</strong>(Controlled Voltage Source, Electrical › Electrical Sources) — 아래 삼각형 단자로 들어온 물리 신호만큼 전압을 낸다. ④의 Force Source가 힘을 내던 자리다. Step(5) → Simulink-PS Converter(단위 <code>V</code>)로 5 V를 넣었다.</li>
+    <li><span class="mk">1</span><strong>Voltage Source</strong>(Controlled Voltage Source, Electrical › Electrical Sources) — 아래 삼각형 단자로 들어온 물리 신호만큼 전압을 낸다. ④의 Force Source가 힘을 내던 자리다. Step(Step time 0, Final value <code>V0</code>) → Simulink-PS Converter(단위 <code>V</code>)로 5 V를 넣었다.</li>
     <li><span class="mk">2</span><strong>Resistor R</strong>(Electrical › Electrical Elements) — 저항 <code>R</code> Ω. 놓으면 이름이 <code>Resistor</code>이니 <strong>Resistor R</strong>로 고친다 — 아래 코드가 <code>out.simlog.Resistor_R</code>로 전류를 꺼낸다.</li>
     <li><span class="mk">3</span><strong>Capacitor C</strong>(Electrical › Electrical Elements) — 커패시턴스 <code>C</code> F. 처음 전압은 기본값 0 V다. 이름은 그림에 맞춰 <strong>Capacitor C</strong>로 고쳤다.</li>
     <li><span class="mk">4</span><strong>Voltage Sensor</strong>(Electrical › Electrical Sensors) — +·− 단자를 커패시터 양 끝에 <strong>나란히</strong> 단다. 멀티미터로 전압을 잴 때 두 탐침을 대는 것과 같다. 아래 V 단자로 \(v_C\)가 나온다.</li>
