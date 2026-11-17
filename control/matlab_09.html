@@ -124,9 +124,31 @@
     <li><span class="mk">2</span><strong>Library Browser</strong> — 블록 목록을 연다. ③에서 쓴다.</li>
     <li><span class="mk">3</span><strong>Stop Time</strong> — 시뮬레이션을 몇 초까지 할지. 기본값은 10초다.</li>
     <li><span class="mk">4</span><strong>Run</strong> — 시뮬레이션을 돌린다. 블록이 하나도 없으면 흐리게 꺼져 있다.</li>
-    <li><span class="mk">5</span><strong>캔버스</strong> — 블록을 놓고 선을 긋는 곳. 마우스 휠로 확대·축소하고, 빈 곳을 끌어 화면을 옮긴다.</li>
+    <li><span class="mk">5</span><strong>캔버스</strong> — 블록을 놓고 선을 긋는 곳. 마우스 휠로 확대·축소한다. 화면을 옮기는 법은 아래 표에 있다.</li>
     <li><span class="mk">6</span><strong>Solver 표시</strong> — 미분방정식을 푸는 방법. <code>VariableStepAuto</code>는 「계산 간격을 알아서 바꿔 가며 푼다」는 뜻이다. 6-1에서 다시 본다.</li>
   </ol>
+
+  <p>
+    캔버스가 넓어지면 화면을 어떻게 옮기나? 마우스만으로도 되지만 아래 몇 가지를 알아 두면 훨씬 덜 번거롭다. 단축키는 Windows 기준이고, Mac에서는 Ctrl 대신 Cmd를 누른다.
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>하려는 것</th><th>키 · 마우스</th></tr>
+    <tr><td>확대 · 축소</td><td>마우스 휠 (또는 Ctrl+<code>+</code> · Ctrl+<code>-</code>)</td></tr>
+    <tr><td>모델 전체를 화면에 맞추기</td><td>Space</td></tr>
+    <tr><td>100% 크기로</td><td>Ctrl+0</td></tr>
+    <tr><td>화면 옮기기</td><td>휠 버튼을 누른 채 끌기, 또는 Space를 누른 채 끌기</td></tr>
+    <tr><td>위아래 · 좌우로 옮기기</td><td>Ctrl+휠 · Shift+휠</td></tr>
+    <tr><td>블록 돌리기 (시계 · 반시계 방향 90°)</td><td>Ctrl+R · Ctrl+Shift+R</td></tr>
+    <tr><td>블록 뒤집기 (입력과 출력 자리를 맞바꾼다)</td><td>Ctrl+I</td></tr>
+    <tr><td>되돌리기</td><td>Ctrl+Z</td></tr>
+  </table>
+  </div>
+  <ul>
+    <li>휠을 굴려 확대 대신 <strong>위아래로 옮기고</strong> 싶으면 <strong>MODELING</strong> 탭 › Environment › <strong>Simulink Preferences</strong> › Editor에서 <strong>Scroll wheel controls zooming</strong>의 체크를 끈다. 그러면 휠이 위아래 이동, Ctrl+휠이 확대 · 축소가 된다.</li>
+    <li>블록을 돌리거나 뒤집으면 <strong>포트도 함께 돈다</strong>. 포트 하나만 따로 옮길 수는 없다. 이미 그은 선은 블록을 따라온다.
+      블록을 오른쪽 클릭 → Format › Rotate &amp; Flip, 또는 FORMAT 탭의 Rotate 버튼으로도 할 수 있다.</li>
+  </ul>
 
   <!-- ─────────────────────────── ③ ─────────────────────────── -->
   <h2 id="s3">③ 블록 놓기 — Library Browser · 빠른 삽입</h2>

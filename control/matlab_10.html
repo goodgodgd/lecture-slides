@@ -40,6 +40,7 @@
   <a href="#s6">⑥ 실행하고 전달함수와 비교하기</a>
   <a class="sub" href="#s6-2">6-1 Simscape Results Explorer · <code>simlog</code></a>
   <a href="#s7">⑦ 회전 운동 — 관성과 회전 댐퍼</a>
+  <a href="#s8">⑧ 전기 회로 — RC 회로</a>
   <a href="#lab">🧪 실습</a>
   <a href="#exercise">📝 연습문제</a>
   <a href="#summary">한 장 요약</a>
@@ -58,7 +59,7 @@
       <li>Simulink 블록 선도를 그리려면 먼저 미분방정식을 세워야 한다. 식을 세우지 않고 부품을 그대로 이을 수는 없을까?</li>
       <li>Simscape의 선은 Simulink의 선과 무엇이 다른가? 왜 화살표가 없나?</li>
       <li>Simscape 모델에 꼭 있어야 하는 블록 세 가지는 무엇이고, 각각 왜 필요한가?</li>
-      <li>부품을 이어 만든 모델의 응답은 손으로 구한 전달함수의 응답과 같은가?</li>
+      <li>부품을 이어 만든 모델의 응답은 손으로 구한 전달함수의 응답과 같은가? 기계가 아니라 전기 회로라도 그런가?</li>
       <li>센서가 내놓는 값의 단위는 어디서 정하나? rpm으로 바로 받을 수 있나?</li>
     </ol>
   </div>
@@ -70,7 +71,7 @@
   <p>
     오늘은 그 단계를 건너뛰는 도구를 본다. <strong>Simscape</strong>는 질량 · 스프링 · 저항 · 모터 같은 <strong>부품 블록</strong>을 실제 연결 그대로 이으면
     운동방정식을 스스로 세우고 푼다. 첫 예제로 4장의 기계 소자 셋(질량 · 댐퍼 · 스프링)을 이어 보고, 손으로 구한 전달함수와 같은 답이 나오는지 확인한다.
-    다음 11회에서는 같은 방법으로 DC 모터를 만든다.
+    이어서 회전 운동과 간단한 RC 회로를 같은 방법으로 만들어 본다. 다음 11회에서는 이 둘을 합쳐 DC 모터를 만든다.
   </p>
 
   <!-- ─────────────────────────── ① ─────────────────────────── -->
@@ -217,6 +218,19 @@ x_final = F0*dcgain(G)</code></pre>
       <dd>Simscape용 새 모델을 연다. 변환기 두 개 · Scope · Solver Configuration이 놓여 있다. 여기서는 질량-스프링-댐퍼 모델의 출발점으로 썼다.</dd>
       <dt>물리 신호 (Physical Signal)</dt>
       <dd>단위를 함께 가진 신호. 변환기와 센서 · 소스의 신호 포트를 잇는 갈색 선이 물리 신호다. Simulink 신호(검은 선)와 바로 이을 수 없고 반드시 변환기를 거친다.</dd>
+      <dt>Solver Configuration</dt>
+      <dd>
+        물리 네트워크를 <strong>계산에 넣어 주는</strong> 블록이다. Simulink 블록 선도는 입력에서 출력으로 값을 차례로 넘기며 계산한다.
+        그런데 ①에서 본 것처럼 부품을 이으면 순서가 없는 식들이 한꺼번에 생긴다 — 질량의 운동방정식 \(M\ddot x = \sum F\)와 함께,
+        접점마다 「힘의 합은 0」, 「붙어 있는 단자는 위치가 같다」 같은 식이 따라 나온다.
+        Solver Configuration은 이 식들을 한 벌의 연립방정식으로 묶어 Simulink 솔버가 시간마다 풀 수 있게 넘긴다.
+        아이콘의 \(f(x)=0\)은 「모든 식을 우변이 0인 꼴로 모아 한꺼번에 푼다」는 뜻이다.
+        이 블록이 없으면 식을 넘길 곳이 없으므로 실행할 때 오류가 난다.
+      </dd>
+      <dd>
+        <strong>네트워크 하나에 하나</strong>인 것도 같은 이유다. 선으로 이어진 덩어리 하나가 연립방정식 한 벌이라, 덩어리가 둘로 떨어져 있으면 블록도 둘이 필요하다.
+        덩어리 안이라면 어디에 붙여도 결과는 같다. 블록을 열면 초기값을 맞추는 허용 오차 같은 설정이 나오는데, 이 과목에서는 기본값 그대로 두면 된다.
+      </dd>
     </dl>
   </div>
 
@@ -318,10 +332,17 @@ x_final = F0*dcgain(G)</code></pre>
     위쪽 초록 선에 네 블록의 C와 질량이 모두 붙어 있다는 것은 「네 부품의 그 끝이 질량과 함께 움직인다」는 뜻이다.
     Simscape는 이 접점에서 \(M\ddot x = F - kx - b\dot x\)를 스스로 세운다 — ②에서 손으로 세운 바로 그 식이다.
   </p>
+  <p>
+    그림에서 스프링 · 댐퍼가 세로로 서 있는 것은 9회 ②의 단축키 Ctrl+R로 블록을 돌려 놓았기 때문이다. 블록을 어느 쪽으로 돌려 놓든 <strong>보기에만 달라질 뿐</strong>이고,
+    계산은 R과 C가 어디에 붙어 있는지만 본다. 블록을 세로로 세운다고 중력이 생기지는 않는다 — 중력 같은 힘이 필요하면 Ideal Force Source로 따로 넣는다.
+    소스를 돌리거나 뒤집어도 R과 C가 원래 자리에 붙어 있으면 힘의 방향은 그대로다.
+  </p>
   <div class="box trap">
     <p class="boxtitle">⚠️ R과 C를 바꿔 달면 부호가 뒤집힌다</p>
     <p>Force Source의 C를 벽에, R을 질량에 달면 같은 1 N이 반대 방향으로 작용해 질량이 왼쪽으로 간다. 센서를 거꾸로 달면 위치가 음수로 나온다.
       결과의 부호가 이상하면 먼저 R · C를 확인한다. 「R은 기준(벽) 쪽, C는 움직이는 쪽」으로 늘 맞춰 두면 헷갈릴 일이 줄어든다.</p>
+    <p>스프링과 댐퍼는 사정이 조금 다르다. 두 단자의 위치 · 속도 차이로 힘을 내는 <strong>양쪽이 같은 소자</strong>라, R · C를 바꿔 달아도 질량의 움직임은 똑같다.
+      다만 6-1에서 꺼내 보는 스프링 힘 \(f\)의 기록은 부호가 반대로 나온다(이 모델에서 +0.999 N이 −0.999 N으로). 기록된 값을 읽을 때 헷갈리지 않으려면 여기서도 같은 규칙을 지키는 편이 낫다.</p>
   </div>
 
   <!-- ─────────────────────────── ⑤ ─────────────────────────── -->
@@ -584,9 +605,122 @@ tau =
     <p>관성 \(J\)는 <strong>얼마나 빨리</strong> 도달하는지(시정수)를, 마찰 \(D\)는 <strong>어디까지</strong> 가는지(최종값)를 정한다. 11회에서 원판의 질량을 바꿀 때 이 둘을 다시 본다.</p>
   </div>
 
+
+  <!-- ─────────────────────────── ⑧ ─────────────────────────── -->
+  <h2 id="s8">⑧ 전기 회로 — RC 회로</h2>
+  <p>
+    지금까지는 모두 기계였다. 같은 방법이 전기 회로에도 통할까? 블록만 전기용으로 바꾸면 된다.
+    11회의 모터는 전기 회로와 회전 기계가 한 모델에 들어가니, 여기서 전기 쪽을 한 번 만들어 둔다.
+    가장 간단한 회로로 저항 \(R\)과 커패시터 \(C\)를 직렬로 이은 <strong>RC 회로</strong>를 본다.
+  </p>
+  <p>
+    회로의 식부터 세운다. 전원 전압 \(v\)가 저항과 커패시터에 나뉘어 걸리고(KVL), 커패시터에 흐르는 전류는 전압이 변하는 빠르기에 비례한다.
+  </p>
+  $$v = R\,i + v_C, \qquad i = C\,\frac{dv_C}{dt}$$
+  <p>둘째 식을 첫째 식에 넣고 라플라스 변환하면(초기값 0)</p>
+  $$RC\,\dot v_C + v_C = v \quad\Rightarrow\quad \frac{V_C(s)}{V(s)} = \frac{1}{RCs + 1}$$
+  <p>
+    \(R = 1\) kΩ, \(C = 1\) mF를 넣으면 \(RC = 1000 \times 0.001 = 1\) s다. ⑦의 \(\dfrac{1}{Js+D}\)와 같은 1차 지연 요소다.
+  </p>
+  <figure>
+    <a href="assets/img/10_rc_canvas.png"><img src="assets/img/10_rc_canvas.png" alt="Simscape RC 회로. 왼쪽에 Step과 변환기를 거쳐 Voltage Source의 아래 삼각형 단자로 들어간다. 전압원 위쪽 단자에서 파란 선이 위로 올라가 Resistor R을 지나 Capacitor C의 위쪽으로 내려온다. 커패시터 오른쪽에 Voltage Sensor가 나란히 붙어 있고, 센서의 출력이 변환기를 거쳐 Scope로 간다. 아래쪽 파란 선은 전압원 · 커패시터 · 센서의 아래 단자를 Electrical Reference(접지)와 f(x)=0 Solver Configuration에 잇는다"></a>
+    <figcaption><code>rc_simscape.slx</code> — 파란 선이 전기 연결이다. 회로도를 그리듯 부품을 이으면 된다.</figcaption>
+  </figure>
+  <ol class="marks">
+    <li><span class="mk">1</span><strong>Voltage Source</strong>(Controlled Voltage Source, Electrical › Electrical Sources) — 아래 삼각형 단자로 들어온 물리 신호만큼 전압을 낸다. ④의 Force Source가 힘을 내던 자리다. Step(5) → Simulink-PS Converter(단위 <code>V</code>)로 5 V를 넣었다.</li>
+    <li><span class="mk">2</span><strong>Resistor R</strong>(Electrical › Electrical Elements) — 저항 <code>R</code> Ω.</li>
+    <li><span class="mk">3</span><strong>Capacitor C</strong>(Electrical › Electrical Elements) — 커패시턴스 <code>C</code> F. 처음 전압은 기본값 0 V다.</li>
+    <li><span class="mk">4</span><strong>Voltage Sensor</strong>(Electrical › Electrical Sensors) — +·− 단자를 커패시터 양 끝에 <strong>나란히</strong> 단다. 멀티미터로 전압을 잴 때 두 탐침을 대는 것과 같다. 아래 V 단자로 \(v_C\)가 나온다.</li>
+    <li><span class="mk">5</span><strong>Electrical Reference</strong>(Electrical › Electrical Elements) — 0 V 기준, 곧 접지다. 기계 모델의 Ground와 같은 자리다. 전압은 언제나 이곳을 기준으로 잰다.</li>
+    <li><span class="mk">6</span><strong>Solver Configuration</strong> — 회로 전체가 선 하나로 이어진 네트워크 하나이므로 하나만 붙인다.</li>
+    <li><span class="mk">7</span><strong>PS-Simulink Converter</strong> — 단위 <code>V</code>.</li>
+  </ol>
+  <p>
+    기계 모델과 나란히 놓으면 블록이 하나씩 짝을 이룬다. ①에서 본 「접점에서 힘의 합은 0」이 전기에서는 「접점에서 전류의 합은 0」(키르히호프 전류 법칙)이 된다.
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th></th><th>기계 (④ · ⑦)</th><th>전기 (⑧)</th></tr>
+    <tr><td>접점을 지나가는 양</td><td>힘 · 토크</td><td>전류</td></tr>
+    <tr><td>두 단자의 차이로 재는 양</td><td>속도 · 각속도</td><td>전압</td></tr>
+    <tr><td>기준</td><td>Mechanical Reference (바닥)</td><td>Electrical Reference (접지)</td></tr>
+    <tr><td>입력</td><td>Ideal Force · Torque Source</td><td>Controlled Voltage Source</td></tr>
+    <tr><td>센서</td><td>Motion Sensor</td><td>Voltage Sensor</td></tr>
+  </table>
+  </div>
+  <p>모델을 돌리고 ⑥처럼 전달함수의 응답과 겹쳐 본다. 저항에는 센서를 달지 않았으니 전류는 6-1처럼 <code>simlog</code>에서 꺼낸다.</p>
+<!-- mcode 10/b05_rc -->
+<div class="mcode">
+<pre class="lang-matlab"><code>% RC 회로에 전압 V0 를 준다 — 전달함수로 구한 응답과 Simscape 를 비교한다
+R = 1e3;  C = 1e-3;  V0 = 5;          % [Ohm], [F], [V]
+tau = R*C                             % 시정수 [s]
+Grc = tf(1, [R*C 1])                  % Vc(s)/V(s) = 1/(RCs + 1)
+out = sim('rc_simscape');
+vc = out.simlog.Voltage_Sensor.V.series;
+[v_tf, t_tf] = step(V0*Grc, 5);
+plot(vc.time, vc.values('V'), 'LineWidth', 2.5); hold on
+plot(t_tf, v_tf, 'k--', 'LineWidth', 1.2); hold off
+grid on; legend('Simscape (부품을 이은 회로)', '전달함수 1/(RCs+1)', 'Location', 'southeast')
+xline(tau, 'k:', '\tau = RC', 'HandleVisibility', 'off')
+xlabel('시간 (s)'); ylabel('v_C (V)'); title('5 V 를 준 RC 회로의 커패시터 전압')
+i_R = out.simlog.Resistor_R.i.series.values('mA');   % 센서 없이 저항 전류를 꺼낸다
+fprintf('저항 전류  t = 0 s: %.2f mA,  t = 5 s: %.3f mA\n', i_R(1), i_R(end))</code></pre>
+<button onclick="copyCode(this)">복사</button>
+<p class="outlabel">명령 창 출력</p>
+<pre class="out"><code>tau =
+
+     1
+
+
+Grc =
+
+    1
+  -----
+  s + 1
+
+Continuous-time transfer function.
+Model Properties
+저항 전류  t = 0 s: 5.00 mA,  t = 5 s: 0.034 mA</code></pre>
+</div>
+<!-- /mcode -->
+  <p>
+    <code>tau</code>가 1 s, <code>Grc</code>가 \(\dfrac{1}{s+1}\)로 위에서 손으로 구한 값 그대로다.
+    마지막 줄은 저항 전류가 처음 5 mA에서 5초 뒤 0.034 mA로 거의 0까지 줄었다는 뜻이다.
+  </p>
+  <figure>
+    <img src="assets/img/10_rc.png" width="560" alt="커패시터 전압이 0에서 출발해 1초에 약 3.16 V, 5초에 거의 5 V에 이르는 1차 지연 곡선. Simscape(파란 실선)와 전달함수(검은 점선)가 처음부터 끝까지 겹친다. 1초에 세로 점선">
+    <figcaption>부품을 이은 회로(파랑)와 전달함수(점선)가 겹친다. \(\tau = RC = 1\)초에 최종값 5 V의 63%인 3.16 V에 이른다.</figcaption>
+  </figure>
+  <div class="box theory">
+    <p class="boxtitle">📐 이론과 잇기 — RC 회로의 계단응답</p>
+    <p>\(\dfrac{1}{RCs+1}\)에 크기 \(V_0\)인 계단을 넣으면</p>
+    $$v_C(t) = V_0\left(1 - e^{-t/RC}\right), \qquad i(t) = C\,\frac{dv_C}{dt} = \frac{V_0}{R}\,e^{-t/RC}$$
+    <p>숫자를 넣으면</p>
+    $$v_C(1) = 5\,(1 - e^{-1}) = 5 \times 0.632 = 3.16 \text{ V}$$
+    $$i(0) = \frac{5}{1000} = 5 \text{ mA}, \qquad i(5) = 5\,e^{-5} = 0.034 \text{ mA}$$
+    <p>
+      출력의 두 전류 값과 같다. 처음 순간 커패시터는 비어 있어(\(v_C = 0\)) 전원 전압이 모두 저항에 걸리고,
+      커패시터가 차오를수록 저항에 걸리는 전압이 줄어 전류도 줄어든다.
+      ⑦의 \(\tau = J/D\)가 여기서는 \(\tau = RC\)다 — 분야가 달라도 1차 지연 요소는 같은 모양이다.
+    </p>
+  </div>
+  <div class="box firstseen">
+    <p class="boxtitle">🆕 이 절에서 처음 나오는 것</p>
+    <dl>
+      <dt>Controlled Voltage Source</dt>
+      <dd>물리 신호로 받은 값만큼 +·− 단자 사이에 전압을 거는 전원. 여기서는 Step이 주는 5 V를 회로에 건다. 11회에서 모터에 거는 전압도 이 블록이다.</dd>
+      <dt>Resistor · Capacitor</dt>
+      <dd>저항 \(R\)과 커패시터 \(C\). 단자 두 개를 회로에 잇는다. 여기서는 1 kΩ과 1 mF로 시정수 1 s를 만든다.</dd>
+      <dt>Voltage Sensor</dt>
+      <dd>+·− 단자 사이의 전압을 재서 V 단자(물리 신호)로 내보낸다. 재려는 부품과 나란히 단다. 여기서는 커패시터 전압 \(v_C\)를 잰다.</dd>
+      <dt>Electrical Reference</dt>
+      <dd>전기 회로의 0 V 기준(접지). 전기 네트워크마다 적어도 하나 있어야 전압을 정할 수 있다.</dd>
+    </dl>
+  </div>
+
   <details class="fold">
-    <summary>⑦절까지의 전체 코드</summary>
-<!-- mcode 10/b04_rot upto -->
+    <summary>⑧절까지의 전체 코드</summary>
+<!-- mcode 10/b05_rc upto -->
 <div class="mcode">
 <pre class="lang-matlab"><code>% 질량-스프링-댐퍼의 전달함수 X(s)/F(s) = 1/(M s^2 + b s + k)
 M = 1;  b = 2;  k = 10;      % 질량 [kg], 댐핑 [N*s/m], 스프링 [N/m]
@@ -624,7 +758,22 @@ w = out.simlog.Motion_Sensor.W.series;
 plot(w.time, w.values('rpm'), 'LineWidth', 2); grid on
 yline(rpm_final, 'k--', sprintf('%.1f rpm', rpm_final))
 xline(tau, 'k:', '\tau = J/D')
-xlabel('시간 (s)'); ylabel('회전속도 (rpm)'); title('토크 0.1 N·m 를 준 관성-댐퍼')</code></pre>
+xlabel('시간 (s)'); ylabel('회전속도 (rpm)'); title('토크 0.1 N·m 를 준 관성-댐퍼')
+
+% RC 회로에 전압 V0 를 준다 — 전달함수로 구한 응답과 Simscape 를 비교한다
+R = 1e3;  C = 1e-3;  V0 = 5;          % [Ohm], [F], [V]
+tau = R*C                             % 시정수 [s]
+Grc = tf(1, [R*C 1])                  % Vc(s)/V(s) = 1/(RCs + 1)
+out = sim('rc_simscape');
+vc = out.simlog.Voltage_Sensor.V.series;
+[v_tf, t_tf] = step(V0*Grc, 5);
+plot(vc.time, vc.values('V'), 'LineWidth', 2.5); hold on
+plot(t_tf, v_tf, 'k--', 'LineWidth', 1.2); hold off
+grid on; legend('Simscape (부품을 이은 회로)', '전달함수 1/(RCs+1)', 'Location', 'southeast')
+xline(tau, 'k:', '\tau = RC', 'HandleVisibility', 'off')
+xlabel('시간 (s)'); ylabel('v_C (V)'); title('5 V 를 준 RC 회로의 커패시터 전압')
+i_R = out.simlog.Resistor_R.i.series.values('mA');   % 센서 없이 저항 전류를 꺼낸다
+fprintf('저항 전류  t = 0 s: %.2f mA,  t = 5 s: %.3f mA\n', i_R(1), i_R(end))</code></pre>
 <button onclick="copyCode(this)">복사</button>
 </div>
 <!-- /mcode -->
@@ -633,18 +782,20 @@ xlabel('시간 (s)'); ylabel('회전속도 (rpm)'); title('토크 0.1 N·m 를 �
   <!-- ─────────────────────────── 실습 ─────────────────────────── -->
   <h2 id="lab">🧪 실습</h2>
   <div class="lab-block">
-    <p class="boxtitle">RC 회로를 Simscape로 만들고 시정수를 확인한다</p>
-    <p><strong>이걸 해 보면 무엇을 알게 되나:</strong> 기계에서 한 일이 전기에서도 똑같이 된다는 것 — 부품 · 기준 · 센서 · 변환기의 구조가 분야와 상관없이 같다는 것을 손으로 확인한다.</p>
-    <p><strong>준비물:</strong> MATLAB(Simulink · Simscape). 블록은 모두 Foundation Library › Electrical 아래에 있다.</p>
+    <p class="boxtitle">RLC 직렬 회로를 Simscape로 만들고 질량-스프링-댐퍼와 비교한다</p>
+    <p><strong>이걸 해 보면 무엇을 알게 되나:</strong> ⑧의 RC 회로에 인덕터 하나를 더하면 ②의 질량-스프링-댐퍼와 <strong>같은 꼴의 2차 시스템</strong>이 된다는 것 —
+       \(L\)이 질량, \(R\)이 댐퍼, \(1/C\)가 스프링 자리에 들어간다는 것을 손으로 확인한다.</p>
+    <p><strong>준비물:</strong> MATLAB(Simulink · Simscape). 전기 블록은 모두 Foundation Library › Electrical 아래에 있다.</p>
     <ol>
       <li><code>ssc_new</code>로 새 모델을 연다. (1분)</li>
-      <li><strong>DC Voltage Source</strong>(5 V) · <strong>Resistor</strong>(1 kΩ) · <strong>Capacitor</strong>(1 mF) · <strong>Electrical Reference</strong>를 놓고 직렬로 잇는다. 전압원의 −와 커패시터의 아래쪽 끝을 Reference에 붙인다. (10분)</li>
-      <li><strong>Voltage Sensor</strong>(Electrical › Electrical Sensors)를 커패시터 양 끝에 나란히 달고, V 단자를 PS-Simulink Converter(단위 V) → Scope로 보낸다. 쓰지 않는 Simulink-PS Converter는 지운다. (5분)</li>
-      <li>Solver Configuration을 회로 아무 곳에나 붙이고 Stop Time 5초로 돌린다. (3분)</li>
-      <li>Simscape Results Explorer에서 Resistor의 전류 <code>i</code>를 찾아 그래프를 본다. (3분)</li>
+      <li>⑧처럼 Step(5) → Simulink-PS Converter(단위 V) → <strong>Controlled Voltage Source</strong>를 놓는다. (3분)</li>
+      <li><strong>Resistor</strong>(2 Ω) · <strong>Inductor</strong>(1 H, Electrical Elements) · <strong>Capacitor</strong>(0.1 F)를 전원과 직렬로 잇고, 전원의 −와 커패시터의 아래쪽 끝을 <strong>Electrical Reference</strong>에 붙인다. (10분)</li>
+      <li><strong>Voltage Sensor</strong>를 커패시터 양 끝에 나란히 달고, V 단자를 PS-Simulink Converter(단위 V) → Scope로 보낸다. (5분)</li>
+      <li>Solver Configuration을 회로 아무 곳에나 붙이고 Stop Time 6초로 돌린다. (3분)</li>
+      <li>명령 창에서 <code>G = tf(1, [0.1 0.2 1])</code>로 \(\dfrac{V_C(s)}{V(s)} = \dfrac{1}{LCs^2 + RCs + 1}\)을 만들고 <code>step(5*G, 6)</code>을 Scope와 비교한다. <code>damp(G)</code>도 본다. (5분)</li>
     </ol>
-    <p><strong>이렇게 되면 성공이다:</strong> 커패시터 전압이 0에서 출발해 \(\tau = RC = 1\)초에 약 3.16 V(5 V의 63%), 5초에 거의 5 V가 되고,
-       저항 전류는 5 mA에서 출발해 0으로 줄어든다.</p>
+    <p><strong>이렇게 되면 성공이다:</strong> 커패시터 전압이 5 V를 넘어 약 1.06초에 6.75 V까지 올랐다가 출렁이며 5 V로 가라앉고, Scope와 <code>step</code>의 곡선이 겹친다.
+       <code>damp(G)</code>의 극점 \(-1 \pm 3j\), 제동비 0.316, 고유주파수 3.16 rad/s가 ②의 질량-스프링-댐퍼와 같다.</p>
   </div>
 
   <h2 id="exercise">📝 연습문제</h2>
@@ -652,6 +803,7 @@ xlabel('시간 (s)'); ylabel('회전속도 (rpm)'); title('토크 0.1 N·m 를 �
     <li>④의 모델에서 댐퍼 \(b\)를 0.5, 2, 6.32 N·s/m로 바꿔 돌려라. 6.32에서는 출렁임이 거의 사라진다. 그 이유를 제동비 \(\zeta = b/(2\sqrt{kM})\)로 설명하라.</li>
     <li>④의 모델에서 PS-Simulink Converter의 단위를 <code>mm</code>로 바꾸면 Scope의 숫자는 어떻게 되나? 코드의 <code>x.values('m')</code>는 바뀌나? 각각 예상하고 확인하라.</li>
     <li>⑦의 모델에서 \(J\)를 두 배로 하면 최종 속도와 시정수가 각각 어떻게 바뀌어야 하나? \(D\)를 두 배로 하면? 식으로 예상하고 돌려서 확인하라.</li>
+    <li>⑧의 회로에서 \(R\)을 2 kΩ으로 바꾸면 시정수와 처음 순간의 저항 전류는 각각 얼마가 되어야 하나? 식으로 예상하고 <code>simlog</code>로 확인하라.</li>
   </ol>
 
   <h2 id="summary">한 장 요약</h2>
@@ -668,6 +820,7 @@ xlabel('시간 (s)'); ylabel('회전속도 (rpm)'); title('토크 0.1 N·m 를 �
     <tr><td><strong>Solver Configuration</strong></td><td>물리 네트워크의 계산 설정</td><td>모든 Simscape 모델에 하나</td></tr>
     <tr><td><code>out.simlog</code> · Simscape Results Explorer</td><td>모든 부품의 힘 · 속도 · 위치 기록</td><td>모델 속 들여다보기</td></tr>
     <tr><td><strong>Inertia</strong> · <strong>Rotational Damper</strong> · <strong>Ideal Torque Source</strong> · <strong>Ideal Rotational Motion Sensor</strong></td><td>회전 관성 \(J\) · 회전 댐퍼 \(D\) · 토크 입력 · 각속도 측정</td><td>회전 기계 (11회 모터)</td></tr>
+    <tr><td><strong>Controlled Voltage Source</strong> · <strong>Resistor</strong> · <strong>Capacitor</strong> · <strong>Voltage Sensor</strong> · <strong>Electrical Reference</strong></td><td>전압 입력 · 저항 \(R\) · 커패시터 \(C\) · 전압 측정 · 접지</td><td>전기 회로 (11회 모터)</td></tr>
   </table>
   </div>
   <div class="interp">
@@ -684,6 +837,7 @@ xlabel('시간 (s)'); ylabel('회전속도 (rpm)'); title('토크 0.1 N·m 를 �
     <li><input type="checkbox" id="c5"><label for="c5">Simscape 결과를 <code>simlog</code>로 꺼내 전달함수의 응답과 겹쳐 볼 수 있다.</label></li>
     <li><input type="checkbox" id="c6"><label for="c6">Results Explorer에서 센서가 없는 부품의 힘을 찾아볼 수 있다.</label></li>
     <li><input type="checkbox" id="c7"><label for="c7">관성은 시정수를, 마찰은 최종 속도를 정한다는 것을 식으로 설명할 수 있다.</label></li>
+    <li><input type="checkbox" id="c8"><label for="c8">전원 · 저항 · 커패시터 · 접지로 RC 회로를 만들고, 시정수 \(RC\)를 결과 그래프에서 찾을 수 있다.</label></li>
   </ul>
 
   <h2 id="more">조금 더 알아두면</h2>
