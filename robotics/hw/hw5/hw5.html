@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HW5 · AI가 만든 노드를 검사 목록으로 고치기 | 로봇공학</title>
+<script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}})();</script>
+<link rel="stylesheet" href="../../../assets/site.css">
+<link rel="stylesheet" href="../../assets/lecture.css">
+</head>
+<body>
+<header class="bar">
+  <div class="barin wide">
+    <a class="up" href="../../index.html" aria-label="로봇공학 회차 목록"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a>
+    <nav class="crumb" aria-label="경로">
+      <a href="../../../index.html">강의자료</a><span class="sep">/</span><a href="../../index.html">로봇공학</a><span class="sep">/</span><span class="here">HW5 · 받은 노드 코드 검사</span>
+    </nav>
+    <span class="spacer"></span>
+    <div class="seg" data-theme-switch role="group" aria-label="밝기">
+      <button type="button" data-mode="auto" aria-pressed="true">자동</button>
+      <button type="button" data-mode="light" aria-pressed="false">밝게</button>
+      <button type="button" data-mode="dark" aria-pressed="false">어둡게</button>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="toc-title">이 과제</div>
+  <a href="#taskA">작업 A — 만들기</a>
+  <a href="#taskB">작업 B — 검사 목록 일곱 줄</a>
+  <a href="#taskC">작업 C — 정사각형과 실행 중 변경</a>
+  <a href="#ai-log">AI와의 대화 요약</a>
+  <a href="#form">제출 양식</a>
+  <a href="#submit">제출 방법과 점수</a>
+</nav>
+
+<main>
+
+  <div class="lec-no">로봇공학 · HW5</div>
+  <h1>AI가 만든 ROS 2 노드를 검사 목록으로 고치기</h1>
+
+  <!-- ▼ 마감일은 이 한 줄만 고치면 된다 ▼ -->
+  <!-- TODO: 마감일 확인 — 23회 퀴즈 전날로 잠정 -->
+  <p class="deadline">📅 제출 마감 — <strong>2026년 11월 29일 (일) 23:59</strong></p>
+
+  <div class="questions">
+    <span class="lab">이 과제가 묻는 것</span>
+    <ol>
+      <li>에이전트가 준 패키지가 <strong>빌드되고 거북이가 움직이면</strong> 다 된 것일까요?</li>
+      <li><code>colcon build</code>는 성공했는데 <code>ros2 run</code>·<code>ros2 launch</code>가 못 찾는다면 <strong>어느 파일의 어느 줄</strong>을 볼까요?</li>
+      <li><code>ros2 param set</code>이 <code>Set parameter successful</code>이라고 답하면 <strong>노드가 정말 그 값으로 움직일까요?</strong></li>
+    </ol>
+  </div>
+
+  <p>
+    turtlesim 거북이가 <strong>한 변 2m인 정사각형</strong>을 계속 그리는 ROS 2 패키지를 에이전트와 함께 만들고,
+    20·21회에서 노드를 만들 때마다 봤던 <strong>받은 코드 검사 목록</strong>(<a href="../../robotics_20.html">20회 6-3</a>, <a href="../../robotics_21.html">21회 ⑨절</a>)
+    일곱 줄로 검사해 고치는 과제입니다.
+    에이전트가 만든 코드에는 <strong>빌드를 막지 않는 실수</strong>가 자주 섞여 있어서, 빌드되고 거북이가 움직여도 일곱 줄 중 몇 줄은 어긋나 있는 경우가 많습니다.
+  </p>
+  <div class="interp">
+    <strong>새로 배우는 것은 없습니다.</strong> 19회(패키지) · 20회(발행자·구독자·타이머) · 21회(파라미터·launch)에 나온 것만 씁니다.
+  </div>
+
+  <h2 id="taskA">작업 A — 만들기</h2>
+  <p>
+    <strong>새 세션</strong>을 열고, 아래 표의 것을 갖춘 패키지를 에이전트에게 만들게 합니다. 무엇을 어떻게 부탁할지는 여러분이 씁니다.
+    이름 몇 개를 정해 둔 것은 채점할 때 같은 이름으로 찾기 위해서입니다. 나머지(속도 파라미터 이름, 코드 모양)는 자유입니다.
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>무엇</th><th>정해 둔 것</th></tr>
+    <tr><td>패키지</td><td><code>~/ros_ws/src/turtle_square</code> — ROS 2 Jazzy · C++(<code>rclcpp</code>) · <code>ament_cmake</code></td></tr>
+    <tr><td>실행 파일·노드 이름</td><td><code>turtle_square</code></td></tr>
+    <tr><td>동작</td><td>turtlesim의 거북이(<code>/turtle1</code>)가 한 변 2m인 정사각형을 그리며 계속 돈다</td></tr>
+    <tr><td>파라미터</td><td>변의 길이는 <code>side_length</code></td></tr>
+    <tr><td>launch 파일</td><td><code>launch/turtle_square.launch.py</code> — turtlesim과 이 노드를 한 번에 띄운다</td></tr>
+    <tr><td>파라미터 파일</td><td><code>config/turtle_square.yaml</code></td></tr>
+  </table>
+  </div>
+
+  <div class="tablewrap">
+  <table>
+    <tr><th>#</th><th>무엇을 합니다</th></tr>
+    <tr><td>①</td><td>에이전트가 파일을 만들어 줍니다. <strong>아직 고치지 않습니다</strong></td></tr>
+    <tr><td>②</td><td><code>cd ~/ros_ws</code> → <code>colcon build --packages-select turtle_square</code> → <code>source install/setup.bash</code></td></tr>
+    <tr><td>③</td><td><code>ros2 launch turtle_square turtle_square.launch.py</code> — turtlesim 창이 뜨고 거북이가 움직이는지 봅니다.
+      <strong>실패해도 괜찮습니다.</strong> 나온 것을 보고서 A-2에 붙입니다</td></tr>
+  </table>
+  </div>
+
+  <div class="box trap">
+    <div class="boxtitle">⚠️ launch를 두 번 띄우면 거북이가 이상하게 돕니다</div>
+    <p>
+      앞에 띄운 launch를 끄지 않고 새 터미널에서 또 띄우면 <code>turtle_square</code> 노드가 <strong>둘</strong>이 되어
+      한 거북이에게 따로따로 명령을 보냅니다. 모서리 로그가 쉴 새 없이 쏟아지면 이것부터 의심해 보세요.
+      <code>ros2 node list</code>에 같은 이름이 두 번 나오면 그 경우입니다. 다시 띄울 때는 앞의 터미널에서 <code>Ctrl+C</code>로 먼저 끕니다.
+    </p>
+  </div>
+
+  <h2 id="taskB">작업 B — 검사 목록 일곱 줄</h2>
+  <p>
+    고치기 전에 일곱 줄을 한 번 훑고, 줄마다 <strong>O인지 X인지</strong>와 그렇게 본 <strong>근거</strong>를 적습니다.
+    근거는 「어느 파일의 어느 줄」이거나 「어떤 명령을 쳤더니 무엇이 나왔다」입니다.
+    그다음 X인 줄을 고칩니다. 직접 고쳐도 되고 에이전트에게 시켜도 됩니다. <strong>고친 내용은 한 줄로</strong> 적습니다.
+    아래 코드는 일곱 줄을 다 지킨 판에서 그 줄에 해당하는 부분만 옮긴 것입니다.
+  </p>
+
+  <h3>B-1. 구독 콜백 인자는 <code>ConstSharedPtr</code> (20회 ⑤)</h3>
+<pre class="lang-cpp"><code>pose_sub_ = this-&gt;create_subscription&lt;turtlesim::msg::Pose&gt;(
+  "/turtle1/pose", 10,
+  [this](turtlesim::msg::Pose::ConstSharedPtr msg) { on_pose(msg); });</code></pre>
+  <p>콜백의 인자를 봅니다. <code>const turtlesim::msg::Pose msg</code>처럼 값으로 받으면 메시지가 올 때마다 복사합니다.</p>
+
+  <h3>B-2. 변의 길이·속도는 파라미터 (21회 ②)</h3>
+<pre class="lang-cpp"><code>this-&gt;declare_parameter("side_length", 2.0);     // 한 변의 길이 (m)
+this-&gt;declare_parameter("linear_speed", 1.0);    // 변을 따라갈 때의 속도 (m/s)
+this-&gt;declare_parameter("angular_speed", 1.0);   // 모서리에서 돌 때의 속도 (rad/s)</code></pre>
+  <p>숫자가 코드 한가운데 박혀 있으면 X입니다. <code>ros2 param list /turtle_square</code>에 이 이름들이 나오는지로 확인합니다.</p>
+
+  <h3>B-3. 의존성은 <code>package.xml</code>과 <code>CMakeLists.txt</code> 양쪽에 (20회 6-1 · 21회 ⑧)</h3>
+<pre class="lang-xml"><code>&lt;depend&gt;turtlesim&lt;/depend&gt;
+&lt;exec_depend&gt;ros2launch&lt;/exec_depend&gt;</code></pre>
+<pre class="lang-cmake"><code>find_package(turtlesim REQUIRED)
+target_link_libraries(turtle_square PRIVATE
+  rclcpp::rclcpp ${geometry_msgs_TARGETS} ${turtlesim_TARGETS})</code></pre>
+  <p><code>#include</code>하는 ROS 패키지(<code>turtlesim</code> · <code>geometry_msgs</code>)가 두 파일에 다 있어야 합니다. launch 파일이 있으면 <code>package.xml</code>에 <code>ros2launch</code>도 둡니다.</p>
+
+  <h3>B-4. 실행 파일 설치 — <code>install(TARGETS …)</code> (19회)</h3>
+<pre class="lang-cmake"><code>install(TARGETS turtle_square
+  DESTINATION lib/${PROJECT_NAME})</code></pre>
+  <p>이 줄이 없어도 빌드는 성공합니다. 대신 <code>ros2 run turtle_square turtle_square</code>가 <code>No executable found</code>로 끝납니다.</p>
+
+  <h3>B-5. 폴더 설치 — <code>install(DIRECTORY …)</code> (21회 ⑧)</h3>
+<pre class="lang-cmake"><code>install(DIRECTORY launch config
+  DESTINATION share/${PROJECT_NAME})</code></pre>
+  <p>한 번이라도 이 줄이 있는 판으로 빌드했으면 <code>install/</code>에 옛 파일이 남아 줄이 없어도 돌아갑니다. 그래서 <strong>지우고 다시 빌드한 뒤</strong> launch로 확인합니다.</p>
+<pre class="lang-sh"><code>cd ~/ros_ws
+rm -rf build/turtle_square install/turtle_square
+colcon build --packages-select turtle_square
+source install/setup.bash
+ros2 launch turtle_square turtle_square.launch.py</code></pre>
+
+  <h3>B-6. 함수 하나는 20줄 이하 (20회 6-3)</h3>
+<pre class="lang-cpp"><code>void on_timer()
+{
+  read_parameters();
+  geometry_msgs::msg::Twist cmd;
+  if (phase_ == Phase::Forward) { cmd.linear.x = drive_forward(); }
+  else { cmd.angular.z = turn_left(); }
+  cmd_pub_-&gt;publish(cmd);
+}</code></pre>
+  <p>여는 중괄호 <code>{</code>부터 닫는 중괄호 <code>}</code>까지 셉니다. 넘으면 위처럼 일을 나눠 함수 여럿으로 만듭니다.</p>
+
+  <h3>B-7. 실행 중에 <code>ros2 param set</code>으로 변의 길이가 바뀌는가 (21회 ③)</h3>
+<pre class="lang-cpp"><code>// 타이머가 부를 때마다 파라미터를 다시 읽는다
+void read_parameters()
+{
+  side_length_ = this-&gt;get_parameter("side_length").as_double();
+  linear_speed_ = this-&gt;get_parameter("linear_speed").as_double();
+  angular_speed_ = this-&gt;get_parameter("angular_speed").as_double();
+}</code></pre>
+  <p>
+    생성자에서 한 번만 읽어 멤버에 넣어 두면, <code>param set</code>이 성공해도 멤버의 값은 그대로입니다(21회 ③절의 「저장소의 값과 멤버의 값」).
+    launch를 켜 둔 채 다른 터미널에서 아래를 치고, <strong>명령의 답이 아니라 거북이가 그리는 정사각형</strong>으로 판단합니다.
+    다음 모서리부터 1m짜리를 그리면 O, 계속 2m를 그리면 X입니다.
+  </p>
+<pre class="lang-sh"><code>ros2 param set /turtle_square side_length 1.0</code></pre>
+
+  <div class="interp">
+    검사를 에이전트에게 맡겨도 됩니다. 다만 <strong>B-5와 B-7은 여러분이 직접 돌려서</strong> 확인합니다.
+    에이전트가 「통과」라고 한 줄이 실제로는 X인 경우가 이 두 줄에서 자주 나옵니다.
+  </div>
+
+  <h2 id="taskC">작업 C — 정사각형과 실행 중 변경</h2>
+  <p>
+    일곱 줄을 다 고쳤으면 B-5의 명령대로 지우고 다시 빌드해 launch로 띄웁니다.
+    거북이가 정사각형을 한 바퀴 그리면 <strong>turtlesim 창을 그림으로 남기고</strong>,
+    B-7의 <code>param set</code>을 친 뒤 작은 정사각형을 한 바퀴 그리면 <strong>한 장 더</strong> 남깁니다.
+  </p>
+
+  <figure>
+    <img src="../../assets/img/hw5_square.png" width="536"
+         alt="turtlesim 창 두 장. 왼쪽 (1)은 거북이가 그린 한 변 2m 정사각형 하나, 오른쪽 (2)는 같은 정사각형의 오른쪽 위 모서리 안쪽에 한 변 1m인 작은 정사각형이 겹쳐 그려져 있다">
+    <figcaption>교수가 만든 노드로 찍은 그림. <strong>(1)</strong> 한 변 2m — 거북이는 창 가운데 (5.54, 5.54)에서 출발합니다.
+      <strong>(2)</strong> <code>param set … 1.0</code>을 친 다음 모서리부터 1m짜리를 그립니다. 큰 정사각형 안에 작은 정사각형이 겹치면 됩니다.</figcaption>
+  </figure>
+
+  <h2 id="ai-log">AI와의 대화 요약</h2>
+  <p>
+    이번 과제는 코드를 에이전트가 만들므로 대화가 깁니다. 다른 과제처럼 <strong>요약해서 보고서 맨 뒤(D절)에 붙입니다.</strong>
+    세션을 닫기 전에 아래 글을 그대로 보내고, 출력을 <strong>고치지 않고 그대로</strong> 붙여 넣습니다.
+    세션을 여러 번 열었으면 세션마다 받아 이어 붙입니다.
+  </p>
+  <div class="copyform">
+    <button onclick="copyPrompt(this)">복사</button>
+<pre><code>이 세션을 끝내기 전에 지금까지의 대화를 아래 규칙대로 정리해 줘.
+- 내가 보낸 메시지는 요약하지 말고 순서대로 원문 그대로 적어. 한 글자도 바꾸지 마.
+- 네 대답은 중간 과정(탐색·시도·되묻기)을 빼고, 그 질문에 실제로 만들거나 고친 것만 두세 줄로 요약해.
+  파일을 만들거나 고쳤으면 파일 이름과 무엇을 바꿨는지 적어.
+- 대화 순서대로 번호를 붙여 아래 형식으로 써. 이 형식 밖의 말은 붙이지 마.
+
+### 1
+**나:** (원문 그대로)
+**AI:** (만들거나 고친 것 요약)
+
+### 2
+**나:** …
+**AI:** …</code></pre>
+  </div>
+
+  <h2 id="form">제출 양식</h2>
+  <p class="readme-first">
+    아래 <strong>「복사」 버튼</strong>을 누르면 양식이 통째로 복사됩니다.
+    보고서에 붙여 넣고 <strong>빈 칸을 채우면</strong> 됩니다.
+  </p>
+  <p>
+    명령과 출력은 <strong>친 명령과 화면에 나온 것을 통째로</strong> 붙여 넣습니다. 그림은 turtlesim 창 두 장뿐입니다. 괄호 안 안내 글은 지웁니다.
+  </p>
+
+  <div class="copyform">
+    <button onclick="copyPrompt(this)">복사</button>
+<pre><code># HW5 제출 — 이름 ______  학번 ______
+
+## A. 만들기
+
+### A-1. 에이전트에게 보낸 첫 프롬프트
+```
+(원문 그대로)
+```
+
+### A-2. 빌드하고 launch
+```
+여기에 colcon build 와 ros2 launch 를 친 명령과 나온 것을 그대로 붙여 넣습니다 (실패해도 그대로)
+```
+
+
+## B. 검사 목록 일곱 줄
+(줄마다 세 칸을 채웁니다. O 였으면 「고친 것」은 「없음」)
+
+### B-1. 콜백 인자 ConstSharedPtr
+- O / X:
+- 근거:
+- 고친 것:
+
+### B-2. 변의 길이·속도가 파라미터
+- O / X:
+- 근거 (ros2 param list /turtle_square 출력):
+```
+
+```
+- 고친 것:
+
+### B-3. 의존성 양쪽
+- O / X:
+- 근거:
+- 고친 것:
+
+### B-4. install(TARGETS)
+- O / X:
+- 근거:
+- 고친 것:
+
+### B-5. install(DIRECTORY launch config)
+- O / X:
+- 근거 (지우고 다시 빌드한 뒤 ros2 launch 의 출력):
+```
+
+```
+- 고친 것:
+
+### B-6. 함수 20줄 이하
+- O / X:
+- 근거 (가장 긴 함수의 이름과 줄 수):
+- 고친 것:
+
+### B-7. 실행 중 변경 (param set)
+- O / X:
+- 근거 (param set 명령과 출력, 그 뒤 거북이가 그린 것 한 줄):
+```
+
+```
+- 고친 것:
+
+
+## C. 결과
+
+### C-1. turtlesim 창 두 장
+(1) 한 변 2m 정사각형 — 그림을 붙입니다
+
+(2) param set … 1.0 뒤 — 그림을 붙입니다
+
+### C-2. 고친 뒤의 전체 소스
+#### src/turtle_square.cpp
+```cpp
+
+```
+#### CMakeLists.txt
+```cmake
+
+```
+#### package.xml
+```xml
+
+```
+#### launch/turtle_square.launch.py
+```python
+
+```
+#### config/turtle_square.yaml
+```yaml
+
+```
+
+
+## D. AI와의 대화 요약
+
+(세션을 끝내기 전에 「AI와의 대화 요약」의 프롬프트를 보내고, 받은 출력을 고치지 않고 그대로 붙입니다. 세션이 여럿이면 이어 붙입니다)
+
+### 1
+**나:**
+**AI:**
+</code></pre>
+  </div>
+
+  <div class="interp">
+    <strong>명령·출력·소스는 그림이 아니라 글자로 붙여 넣으세요.</strong>
+    그림으로 찍으면 흐려서 안 읽히고, 무엇보다 <strong>여러분이 다시 찾아보기 어렵습니다.</strong> (turtlesim 창 두 장만 그림입니다)
+  </div>
+
+  <h2 id="submit">제출 방법과 점수</h2>
+  <p>
+    채운 보고서를 <strong>PDF 한 개</strong>로 만들어 LMS에 올립니다.
+    파일 이름은 <strong><code>HW5_이름_학번.pdf</code></strong>로,
+    <code>HW5_홍길동_20251234.pdf</code>처럼 자기 이름과 학번을 넣으면 됩니다.
+  </p>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>무엇</th><th>점수</th><th>어떻게 봅니다</th></tr>
+    <tr><td>제출</td><td><strong>10점</strong></td><td>기한 안에 냈으면 받습니다</td></tr>
+    <tr><td>보고서</td><td><strong>25점</strong></td><td>일곱 줄마다 O/X·근거·고친 것이 채워져 있는지, 그림 두 장, 고친 소스가 일곱 줄을 지키는지와 AI와의 대화 요약이 있는지를 봅니다</td></tr>
+    <tr><td>확인 퀴즈</td><td><strong>15점</strong></td><td>제출 후 다음 수업 시간에 짧게 봅니다. 객관식이고 <strong>정답은 그 자리에서 공개합니다</strong></td></tr>
+    <tr><td><strong>합계</strong></td><td><strong>50점</strong></td><td></td></tr>
+  </table>
+  </div>
+
+  <div class="interp">
+    퀴즈는 <strong>여러분이 이 과제에서 직접 친 명령과 본 화면</strong>에서 나옵니다.
+    X였던 줄이 하나도 없었다면, 퀴즈 전에 그 줄을 일부러 한 번 지워 보고 무엇이 나오는지 보아 두면 좋습니다.
+  </div>
+
+  <footer>
+    로봇공학 · 순천향대학교 전자정보공학과 ·
+    같이 볼 것: <a href="../../robotics_19.html">ROS 2 패키지와 노드</a> ·
+    <a href="../../robotics_20.html">토픽 프로그래밍</a> ·
+    <a href="../../robotics_21.html">서비스·파라미터·launch</a>
+  </footer>
+</main>
+</div>
+
+<script src="../../../assets/site.js" defer></script>
+</body>
+</html>
