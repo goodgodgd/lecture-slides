@@ -101,81 +101,48 @@
 
   <h2 id="taskB">작업 B — 검사 목록 일곱 줄</h2>
   <p>
-    고치기 전에 일곱 줄을 한 번 훑고, 줄마다 <strong>O인지 X인지</strong>와 그렇게 본 <strong>근거</strong>를 적습니다.
-    근거는 「어느 파일의 어느 줄」이거나 「어떤 명령을 쳤더니 무엇이 나왔다」입니다.
-    그다음 X인 줄을 고칩니다. 직접 고쳐도 되고 에이전트에게 시켜도 됩니다. <strong>고친 내용은 한 줄로</strong> 적습니다.
-    아래 코드는 일곱 줄을 다 지킨 판에서 그 줄에 해당하는 부분만 옮긴 것입니다.
+    만든 패키지를 아래 일곱 줄로 검사하고, 어긋난 줄은 고칩니다. 직접 고쳐도 되고 에이전트에게 시켜도 됩니다.
+    보고서에는 줄마다 <strong>그 줄과 관련된 코드를 10줄 이하로</strong> 붙이고, 그 코드가 무엇을 하는지·검사에서 무엇을 봤는지·무엇을 고쳤는지를 <strong>간단히 설명</strong>합니다.
   </p>
 
-  <h3>B-1. 구독 콜백 인자는 <code>ConstSharedPtr</code> (20회 ⑤)</h3>
-<pre class="lang-cpp"><code>pose_sub_ = this-&gt;create_subscription&lt;turtlesim::msg::Pose&gt;(
-  "/turtle1/pose", 10,
-  [this](turtlesim::msg::Pose::ConstSharedPtr msg) { on_pose(msg); });</code></pre>
-  <p>콜백의 인자를 봅니다. <code>const turtlesim::msg::Pose msg</code>처럼 값으로 받으면 메시지가 올 때마다 복사합니다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>#</th><th>검사할 것</th><th>확인하는 법</th><th>수업</th></tr>
+    <tr><td>B-1</td><td>구독 콜백이 메시지를 <code>ConstSharedPtr</code>로 받는가</td><td>콜백 함수의 인자를 봅니다. 값으로 받으면 메시지가 올 때마다 복사합니다</td><td>20회 ⑤</td></tr>
+    <tr><td>B-2</td><td>변의 길이·속도가 <strong>파라미터로</strong> 나와 있는가</td><td><code>ros2 param list /turtle_square</code>에 그 이름들이 있는지</td><td>21회 ②</td></tr>
+    <tr><td>B-3</td><td>새 의존성이 <code>package.xml</code>과 <code>CMakeLists.txt</code> <strong>양쪽에</strong> 있는가</td><td><code>#include</code>하는 ROS 패키지가 두 파일에 다 있는지. launch 파일이 있으면 <code>ros2launch</code>도</td><td>20회 6-1 · 21회 ⑧</td></tr>
+    <tr><td>B-4</td><td>실행 파일이 <code>lib/${PROJECT_NAME}</code>에 설치되는가</td><td><code>ros2 run turtle_square turtle_square</code>가 뜨는지</td><td>19회</td></tr>
+    <tr><td>B-5</td><td><code>launch</code>·<code>config</code> 폴더가 설치되는가</td><td>아래 ⌨ 상자처럼 <strong>지우고 다시 빌드한 뒤</strong> <code>ros2 launch</code></td><td>21회 ⑧</td></tr>
+    <tr><td>B-6</td><td>함수 하나가 <strong>20줄 이하</strong>인가</td><td>여는 중괄호 <code>{</code>부터 닫는 중괄호 <code>}</code>까지 셉니다</td><td>20회 6-3</td></tr>
+    <tr><td>B-7</td><td><code>ros2 param set</code>으로 <strong>실행 중에</strong> 변의 길이가 바뀌는가</td><td>아래 ⌨ 상자 — <strong>명령의 답이 아니라 거북이가 그리는 정사각형</strong>으로 판단합니다</td><td>21회 ③</td></tr>
+  </table>
+  </div>
 
-  <h3>B-2. 변의 길이·속도는 파라미터 (21회 ②)</h3>
-<pre class="lang-cpp"><code>this-&gt;declare_parameter("side_length", 2.0);     // 한 변의 길이 (m)
-this-&gt;declare_parameter("linear_speed", 1.0);    // 변을 따라갈 때의 속도 (m/s)
-this-&gt;declare_parameter("angular_speed", 1.0);   // 모서리에서 돌 때의 속도 (rad/s)</code></pre>
-  <p>숫자가 코드 한가운데 박혀 있으면 X입니다. <code>ros2 param list /turtle_square</code>에 이 이름들이 나오는지로 확인합니다.</p>
-
-  <h3>B-3. 의존성은 <code>package.xml</code>과 <code>CMakeLists.txt</code> 양쪽에 (20회 6-1 · 21회 ⑧)</h3>
-<pre class="lang-xml"><code>&lt;depend&gt;turtlesim&lt;/depend&gt;
-&lt;exec_depend&gt;ros2launch&lt;/exec_depend&gt;</code></pre>
-<pre class="lang-cmake"><code>find_package(turtlesim REQUIRED)
-target_link_libraries(turtle_square PRIVATE
-  rclcpp::rclcpp ${geometry_msgs_TARGETS} ${turtlesim_TARGETS})</code></pre>
-  <p><code>#include</code>하는 ROS 패키지(<code>turtlesim</code> · <code>geometry_msgs</code>)가 두 파일에 다 있어야 합니다. launch 파일이 있으면 <code>package.xml</code>에 <code>ros2launch</code>도 둡니다.</p>
-
-  <h3>B-4. 실행 파일 설치 — <code>install(TARGETS …)</code> (19회)</h3>
-<pre class="lang-cmake"><code>install(TARGETS turtle_square
-  DESTINATION lib/${PROJECT_NAME})</code></pre>
-  <p>이 줄이 없어도 빌드는 성공합니다. 대신 <code>ros2 run turtle_square turtle_square</code>가 <code>No executable found</code>로 끝납니다.</p>
-
-  <h3>B-5. 폴더 설치 — <code>install(DIRECTORY …)</code> (21회 ⑧)</h3>
-<pre class="lang-cmake"><code>install(DIRECTORY launch config
-  DESTINATION share/${PROJECT_NAME})</code></pre>
-  <p>한 번이라도 이 줄이 있는 판으로 빌드했으면 <code>install/</code>에 옛 파일이 남아 줄이 없어도 돌아갑니다. 그래서 <strong>지우고 다시 빌드한 뒤</strong> launch로 확인합니다.</p>
+  <div class="keycmd">
+    <p class="boxtitle">⌨ B-5 — 지우고 다시 빌드한 뒤 launch</p>
+    <p>한 번이라도 폴더를 설치하는 판으로 빌드했으면 <code>install/</code> 안에 옛 파일이 남아 있어 고친 것이 없어도 돌아갑니다. 그래서 지우고 확인합니다.</p>
 <pre class="lang-sh"><code>cd ~/ros_ws
 rm -rf build/turtle_square install/turtle_square
 colcon build --packages-select turtle_square
 source install/setup.bash
 ros2 launch turtle_square turtle_square.launch.py</code></pre>
+  </div>
 
-  <h3>B-6. 함수 하나는 20줄 이하 (20회 6-3)</h3>
-<pre class="lang-cpp"><code>void on_timer()
-{
-  read_parameters();
-  geometry_msgs::msg::Twist cmd;
-  if (phase_ == Phase::Forward) { cmd.linear.x = drive_forward(); }
-  else { cmd.angular.z = turn_left(); }
-  cmd_pub_-&gt;publish(cmd);
-}</code></pre>
-  <p>여는 중괄호 <code>{</code>부터 닫는 중괄호 <code>}</code>까지 셉니다. 넘으면 위처럼 일을 나눠 함수 여럿으로 만듭니다.</p>
-
-  <h3>B-7. 실행 중에 <code>ros2 param set</code>으로 변의 길이가 바뀌는가 (21회 ③)</h3>
-<pre class="lang-cpp"><code>// 타이머가 부를 때마다 파라미터를 다시 읽는다
-void read_parameters()
-{
-  side_length_ = this-&gt;get_parameter("side_length").as_double();
-  linear_speed_ = this-&gt;get_parameter("linear_speed").as_double();
-  angular_speed_ = this-&gt;get_parameter("angular_speed").as_double();
-}</code></pre>
-  <p>
-    생성자에서 한 번만 읽어 멤버에 넣어 두면, <code>param set</code>이 성공해도 멤버의 값은 그대로입니다(21회 ③절의 「저장소의 값과 멤버의 값」).
-    launch를 켜 둔 채 다른 터미널에서 아래를 치고, <strong>명령의 답이 아니라 거북이가 그리는 정사각형</strong>으로 판단합니다.
-    다음 모서리부터 1m짜리를 그리면 O, 계속 2m를 그리면 X입니다.
-  </p>
+  <div class="keycmd">
+    <p class="boxtitle">⌨ B-7 — launch를 켜 둔 채 다른 터미널에서</p>
 <pre class="lang-sh"><code>ros2 param set /turtle_square side_length 1.0</code></pre>
+    <p><code>Set parameter successful</code>이 나와도 그것만으로는 바뀌었다고 할 수 없습니다.
+      거북이가 다음 모서리부터 <strong>1m짜리</strong> 정사각형을 그리는지 봅니다(21회 ③절의 「저장소의 값과 멤버의 값」).</p>
+  </div>
 
   <div class="interp">
     검사를 에이전트에게 맡겨도 됩니다. 다만 <strong>B-5와 B-7은 여러분이 직접 돌려서</strong> 확인합니다.
-    에이전트가 「통과」라고 한 줄이 실제로는 X인 경우가 이 두 줄에서 자주 나옵니다.
+    에이전트가 「통과」라고 한 줄이 실제로는 어긋나 있는 경우가 이 두 줄에서 자주 나옵니다.
   </div>
 
   <h2 id="taskC">작업 C — 정사각형과 실행 중 변경</h2>
   <p>
-    일곱 줄을 다 고쳤으면 B-5의 명령대로 지우고 다시 빌드해 launch로 띄웁니다.
+    일곱 줄을 다 고쳤으면 B-5의 ⌨ 상자대로 지우고 다시 빌드해 launch로 띄웁니다.
     거북이가 정사각형을 한 바퀴 그리면 <strong>turtlesim 창을 그림으로 남기고</strong>,
     B-7의 <code>param set</code>을 친 뒤 작은 정사각형을 한 바퀴 그리면 <strong>한 장 더</strong> 남깁니다.
   </p>
@@ -237,51 +204,56 @@ void read_parameters()
 
 
 ## B. 검사 목록 일곱 줄
-(줄마다 세 칸을 채웁니다. O 였으면 「고친 것」은 「없음」)
+(줄마다 관련 코드를 10줄 이하로 붙이고, 무엇을 봤고 무엇을 고쳤는지 간단히 설명합니다)
 
 ### B-1. 콜백 인자 ConstSharedPtr
-- O / X:
-- 근거:
-- 고친 것:
+관련 코드:
+```
+
+```
+설명:
 
 ### B-2. 변의 길이·속도가 파라미터
-- O / X:
-- 근거 (ros2 param list /turtle_square 출력):
+관련 코드:
 ```
 
 ```
-- 고친 것:
+설명:
 
 ### B-3. 의존성 양쪽
-- O / X:
-- 근거:
-- 고친 것:
+관련 코드:
+```
+
+```
+설명:
 
 ### B-4. install(TARGETS)
-- O / X:
-- 근거:
-- 고친 것:
-
-### B-5. install(DIRECTORY launch config)
-- O / X:
-- 근거 (지우고 다시 빌드한 뒤 ros2 launch 의 출력):
+관련 코드:
 ```
 
 ```
-- 고친 것:
+설명:
+
+### B-5. launch·config 폴더 설치
+관련 코드:
+```
+
+```
+설명:
 
 ### B-6. 함수 20줄 이하
-- O / X:
-- 근거 (가장 긴 함수의 이름과 줄 수):
-- 고친 것:
+관련 코드:
+```
+
+```
+설명:
 
 ### B-7. 실행 중 변경 (param set)
-- O / X:
-- 근거 (param set 명령과 출력, 그 뒤 거북이가 그린 것 한 줄):
+관련 코드:
 ```
 
 ```
-- 고친 것:
+설명:
 
 
 ## C. 결과
@@ -340,7 +312,7 @@ void read_parameters()
   <table class="summary-table">
     <tr><th>무엇</th><th>점수</th><th>어떻게 봅니다</th></tr>
     <tr><td>제출</td><td><strong>10점</strong></td><td>기한 안에 냈으면 받습니다</td></tr>
-    <tr><td>보고서</td><td><strong>25점</strong></td><td>일곱 줄마다 O/X·근거·고친 것이 채워져 있는지, 그림 두 장, 고친 소스가 일곱 줄을 지키는지와 AI와의 대화 요약이 있는지를 봅니다</td></tr>
+    <tr><td>보고서</td><td><strong>25점</strong></td><td>일곱 줄마다 관련 코드와 설명이 채워져 있는지, 그림 두 장, 고친 소스가 일곱 줄을 지키는지와 AI와의 대화 요약이 있는지를 봅니다</td></tr>
     <tr><td>확인 퀴즈</td><td><strong>15점</strong></td><td>제출 후 다음 수업 시간에 짧게 봅니다. 객관식이고 <strong>정답은 그 자리에서 공개합니다</strong></td></tr>
     <tr><td><strong>합계</strong></td><td><strong>50점</strong></td><td></td></tr>
   </table>
@@ -348,7 +320,7 @@ void read_parameters()
 
   <div class="interp">
     퀴즈는 <strong>여러분이 이 과제에서 직접 친 명령과 본 화면</strong>에서 나옵니다.
-    X였던 줄이 하나도 없었다면, 퀴즈 전에 그 줄을 일부러 한 번 지워 보고 무엇이 나오는지 보아 두면 좋습니다.
+    어긋난 줄이 하나도 없었다면, 퀴즈 전에 그 줄을 일부러 한 번 지워 보고 무엇이 나오는지 보아 두면 좋습니다.
   </div>
 
   <footer>
