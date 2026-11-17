@@ -1858,7 +1858,7 @@ const auto [x, y] = to_xy(*near, 0.5236f);</code></pre>
       <dd>각도를 받아 코사인·사인을 돌려준다. <strong>각도는 도(°)가 아니라 라디안이다</strong> —
           30°는 0.5236이다. <code>&lt;cmath&gt;</code>에 들어 있다.</dd>
     </dl>
-    <p class="later">제대로 다루는 곳: 25회(좌표계와 변환 — 극좌표를 펴다)</p>
+    <p class="later">제대로 다루는 곳: 25회(좌표 변환과 TF2)</p>
   </div>
 
   <pre><code>⑦ 구조적 바인딩 — 묶여 온 값을 한 줄로 푼다
@@ -2323,7 +2323,7 @@ const int   n     = clamp_value(15, 0, 10);           // 10</code></pre>
     </p>
     <p>
       실제로는 위 함수를 만들 필요도 없다. <strong><code>std::clamp</code>가 이미 있다</strong>(<code>&lt;algorithm&gt;</code>).
-      27회에서 속도 명령을 한계 안으로 눌러 줄 때 그걸 쓴다.
+      26회에서 속도 명령을 한계 안으로 눌러 줄 때 그걸 쓴다.
     </p>
   </details>
 
@@ -2381,10 +2381,10 @@ const int   n     = clamp_value(15, 0, 10);           // 10</code></pre>
       <tr><td>CMake 타겟과 링크</td><td>19회 — ROS 2 패키지의 <code>CMakeLists.txt</code></td></tr>
       <tr><td><code>const</code> 참조로 받기</td><td>20회 — 라이다 콜백 인자. <strong>여기가 이 강의에서 가장 많이 지적하는 자리다</strong></td></tr>
       <tr><td>스마트 포인터</td><td>20회 — <code>ConstSharedPtr</code>로 받는 메시지</td></tr>
-      <tr><td>STL 알고리즘과 <code>isfinite</code></td><td>24회 — 라이다 값 거르기. 27회 — 콘 무리 짓기</td></tr>
+      <tr><td>STL 알고리즘과 <code>isfinite</code></td><td>24회 — 라이다 값 거르기. 26회 — 콘 무리 짓기</td></tr>
       <tr><td>람다와 <code>[this]</code> 캡처</td><td>20·21회 — 구독·타이머·서비스 콜백 전부</td></tr>
       <tr><td><code>500ms</code> 표기</td><td>20회 — <code>create_wall_timer(500ms, ...)</code></td></tr>
-      <tr><td><code>std::optional</code></td><td>27회 — "콘을 못 찾았다"를 나타낼 때</td></tr>
+      <tr><td><code>std::optional</code></td><td>26회 — "콘을 못 찾았다"를 나타낼 때</td></tr>
     </table>
     </div>
     <p>

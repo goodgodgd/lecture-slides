@@ -67,7 +67,7 @@
     <strong>이 회차에는 따라 칠 ROS 명령어가 없다.</strong> ROS는 16회에 설치한다.
     오늘은 설치하기 전에 <strong>ROS가 왜 이런 모양으로 생겼는지</strong>를 먼저 본다.
     이 판단 하나가 3부와 4부 전체를 지배하기 때문이다 — 패키지를 왜 나누는지(19회), 메시지를 왜 정해진 형식으로 보내는지(17회),
-    QoS가 왜 있는지(22회), 실물 로봇에서 왜 도메인 ID를 맞추는지(28회)가 전부 오늘 볼 설계 결정에서 나온다.
+    QoS가 왜 있는지(22회), 실물 로봇에서 왜 도메인 ID를 맞추는지(23회)가 전부 오늘 볼 설계 결정에서 나온다.
   </p>
   <p>
     손으로 해 볼 것은 하나 있다. 2부에서 하던 대로 <strong>CMake로 빌드하는 콘솔 C++ 프로그램 하나</strong>를 돌려 본다.
@@ -154,8 +154,8 @@
     <tr><td>인터페이스</td><td><code>std_msgs</code> · <code>sensor_msgs</code> · <code>geometry_msgs</code> 등 <code>_msgs</code> 22개</td><td>노드끼리 주고받는 <strong>메시지 형식</strong>의 정의</td><td>들어 있다 · 17회</td></tr>
     <tr><td>빌드 도구</td><td><code>ament_cmake</code> · <code>colcon</code></td><td>8회의 CMake 위에 ROS 규칙을 더한 빌드</td><td><code>colcon</code>은 함께 까는 개발 도구에 · 16·19회</td></tr>
     <tr><td>도구</td><td><code>rviz2</code> · <code>rqt</code> 계열 20개 · <code>turtlesim</code></td><td>데이터를 그림으로 보기, 연습용 거북이</td><td>들어 있다 · 17·18·22회</td></tr>
-    <tr><td>큰 기능</td><td>Navigation 2 · MoveIt · Gazebo</td><td>자율주행, 로봇 팔 제어, 시뮬레이션</td><td><strong>안 들어 있다</strong> — 필요할 때 따로 받는다 · 28회 시뮬레이션</td></tr>
-    <tr><td>사용자 패키지</td><td>라이다·터틀봇 드라이버</td><td>제조사가 만들어 공개한 노드</td><td>안 들어 있다 · 28회 실물 로봇</td></tr>
+    <tr><td>큰 기능</td><td>Navigation 2 · MoveIt · Gazebo</td><td>자율주행, 로봇 팔 제어, 시뮬레이션</td><td><strong>안 들어 있다</strong> — 필요할 때 따로 받는다 · 27회 시뮬레이션</td></tr>
+    <tr><td>사용자 패키지</td><td>라이다·터틀봇 드라이버</td><td>제조사가 만들어 공개한 노드</td><td>안 들어 있다 · 23회 실물 로봇</td></tr>
   </table>
   </div>
   <div class="interp">
@@ -352,7 +352,7 @@ Aborted (core dumped)</code></pre>
          alt="왼쪽은 프로세스 하나 안에 read_scan, nearest, drive 세 함수가 있고 nearest에 X 표시가 있다. 오른쪽은 라이다 노드(C++), 콘 인식 노드(파이썬), 바퀴 노드(C++) 세 프로세스가 메시지 화살표로 이어져 있고, 콘 인식 노드에 X가 있지만 바퀴 노드는 살아 있다">
     <figcaption><strong>두 그림의 X 자리</strong>를 비교한다. 왼쪽은 ③절에서 실제로 멈춘 프로그램이고, 실수 하나가 테두리 전체(프로세스)를 끝냈다.
       오른쪽은 같은 기능을 노드 셋으로 나눈 모양이다. 콘 인식 노드가 멈춰도 바퀴 노드는 따로 살아 있으므로
-      「한동안 명령이 안 온다」를 알아채고 스스로 설 수 있다(27회의 타임아웃 정지가 그 코드다).</figcaption>
+      「한동안 명령이 안 온다」를 알아채고 스스로 설 수 있다(26회의 타임아웃 정지가 그 코드다).</figcaption>
   </figure>
 
   <h3>4-2 예제에 적용 — C++ 노드와 파이썬 노드</h3>
@@ -450,21 +450,21 @@ Aborted (core dumped)</code></pre>
 
   <h3>5-1 이 과목의 콘 트랙 로봇을 노드로 나누면</h3>
   <p>
-    4부에서 만들 콘 트랙 주행 로봇을 이 기준으로 나눠 보면 이렇다. 노드 이름은 이 자료에서 붙인 것이고, 실제 이름은 28회 이후 정해진다.
+    4부에서 만들 콘 트랙 주행 로봇을 이 기준으로 나눠 보면 이렇다. 노드 이름은 이 자료에서 붙인 것이고, 실제 이름은 27회 이후 정해진다.
   </p>
   <div class="tablewrap">
   <table>
     <tr><th>노드</th><th>누가 만드나</th><th>받는 것 → 내보내는 것</th><th>이 노드가 멈추면</th></tr>
-    <tr><td>라이다 드라이버</td><td>제조사 (28회에 설치)</td><td>센서 장치 → 거리 값 360개</td><td>콘 인식이 새 값을 못 받는다</td></tr>
-    <tr><td>콘 인식</td><td><strong>우리</strong> (24·27회)</td><td>거리 값 → 콘 위치</td><td>주행 판단이 새 목표를 못 받는다</td></tr>
-    <tr><td>주행 판단</td><td><strong>우리</strong> (27회)</td><td>콘 위치 → 속도 명령</td><td>바퀴 노드에 명령이 끊긴다</td></tr>
-    <tr><td>바퀴 제어</td><td>제조사 (28회에 설치)</td><td>속도 명령 → 모터</td><td>로봇이 움직이지 않는다</td></tr>
+    <tr><td>라이다 드라이버</td><td>제조사 (23회에 설치)</td><td>센서 장치 → 거리 값 360개</td><td>콘 인식이 새 값을 못 받는다</td></tr>
+    <tr><td>콘 인식</td><td><strong>우리</strong> (24·26회)</td><td>거리 값 → 콘 위치</td><td>주행 판단이 새 목표를 못 받는다</td></tr>
+    <tr><td>주행 판단</td><td><strong>우리</strong> (26회)</td><td>콘 위치 → 속도 명령</td><td>바퀴 노드에 명령이 끊긴다</td></tr>
+    <tr><td>바퀴 제어</td><td>제조사 (23회에 설치)</td><td>속도 명령 → 모터</td><td>로봇이 움직이지 않는다</td></tr>
   </table>
   </div>
   <div class="interp">
     <strong>해석:</strong> 우리가 만드는 것은 가운데 두 줄뿐이다. ②절의 「여섯 줄 중 한두 줄만 새로 만든다」가 이 표에서 그대로 보인다.
     오른쪽 열을 세로로 읽으면 <strong>멈춤이 위에서 아래로 전해진다</strong>는 것도 보인다. 다만 전해지는 것은 「새 메시지가 안 온다」는 사실이지 프로세스의 죽음이 아니다.
-    그래서 아래쪽 노드가 그 사실을 알아채고 대처할 수 있다. 그것을 코드로 쓰는 것이 27회의 일이다.
+    그래서 아래쪽 노드가 그 사실을 알아채고 대처할 수 있다. 그것을 코드로 쓰는 것이 26회의 일이다.
   </div>
 
   <div class="prompt">
@@ -644,9 +644,9 @@ Aborted (core dumped)</code></pre>
       <dd>ROS와 DDS 구현 사이의 연결층이다. 이 층 덕분에 DDS를 다른 회사 것으로 바꿔도 노드 코드는 그대로 둘 수 있다.
           <code>rmw_fastrtps_cpp</code>는 「Fast DDS에 붙는 RMW」라는 이름이다.</dd>
       <dt>발견(discovery)</dt>
-      <dd>노드가 네트워크에 자기를 알리고 서로를 찾는 과정이다. 같은 와이파이의 다른 학생 로봇까지 발견되지 않게 칸을 나누는 번호가 <strong>도메인 ID</strong>이고, 28회에서 실물 로봇에 맞춘다.</dd>
+      <dd>노드가 네트워크에 자기를 알리고 서로를 찾는 과정이다. 같은 와이파이의 다른 학생 로봇까지 발견되지 않게 칸을 나누는 번호가 <strong>도메인 ID</strong>이고, 23회에서 실물 로봇에 맞춘다.</dd>
     </dl>
-    <p class="later">제대로 다루는 곳: 16회(설치 후 환경변수 확인) · 22회(QoS) · 28회(도메인 ID)</p>
+    <p class="later">제대로 다루는 곳: 16회(설치 후 환경변수 확인) · 22회(QoS) · 23회(도메인 ID)</p>
   </div>
 
   <h3>6-4 ROS 1에서 ROS 2로 달라진 것</h3>
@@ -658,7 +658,7 @@ Aborted (core dumped)</code></pre>
     <tr><td>통신</td><td>ROS가 직접 만든 통신(TCPROS)</td><td><strong>DDS 표준</strong>에 맡긴다</td><td>설치하면 Fast DDS가 따라온다 (16회)</td></tr>
     <tr><td>서로 찾기</td><td><strong>마스터</strong>에 등록</td><td>노드끼리 <strong>발견</strong>, 마스터 없음</td><td>노드를 아무 순서로 띄워도 된다 (16회~)</td></tr>
     <tr><td>전송 품질</td><td>사실상 한 가지</td><td><strong>QoS</strong>(Quality of Service) — 「잃어도 빨리」와 「느려도 확실히」를 고른다</td><td>라이다 구독이 안 될 때의 원인 (22회)</td></tr>
-    <tr><td>로봇 여러 대</td><td>한 마스터에 한 무리</td><td><strong>도메인 ID</strong>로 네트워크를 칸으로 나눈다</td><td>같은 강의실 터틀봇끼리 섞이지 않게 (28회)</td></tr>
+    <tr><td>로봇 여러 대</td><td>한 마스터에 한 무리</td><td><strong>도메인 ID</strong>로 네트워크를 칸으로 나눈다</td><td>같은 강의실 터틀봇끼리 섞이지 않게 (23회)</td></tr>
     <tr><td>실시간</td><td>빠르게는 돌지만 보장은 없다</td><td>운영체제와 코드가 받쳐 주면 <strong>정해진 시간 안의 응답을 보장할 수 있게</strong> 설계됐다</td><td>이 과목에서 직접 다루지는 않는다</td></tr>
     <tr><td>보안</td><td>같은 네트워크면 누구나 엿볼 수 있었다</td><td>DDS 보안 기능으로 암호화·인증을 켤 수 있다</td><td>개념만 (상용 로봇의 조건)</td></tr>
     <tr><td>운영체제</td><td>사실상 우분투</td><td>우분투 · 윈도우 · macOS 등</td><td>우리는 WSL 우분투 24.04 (2회)</td></tr>
@@ -908,10 +908,10 @@ Aborted (core dumped)</code></pre>
   </details>
 
   <details>
-    <summary>터틀봇은 어디서 왔나 — 28회에서 이어진다</summary>
+    <summary>터틀봇은 어디서 왔나 — 23회에서 이어진다</summary>
     <p>
       이 과목의 실물 로봇인 터틀봇도 윌로 개러지에서 시작됐다. PR2는 너무 크고 비싸서, 사내 직원 두 사람이 값싼 주행 로봇을 ROS용으로 만든 것이 처음이다.
-      그 뒤 한국 회사가 만든 판이 둘이나 나온다. 그 이야기는 <strong>28회</strong>, 실물 터틀봇을 처음 켜는 자리에서 한다.
+      그 뒤 한국 회사가 만든 판이 둘이나 나온다. 그 이야기는 <strong>23회</strong>, 실물 터틀봇을 처음 켜는 자리에서 한다.
     </p>
   </details>
 

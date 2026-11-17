@@ -1772,10 +1772,10 @@ int main()
     <div class="tablewrap">
     <table>
       <tr><th>이름</th><th>무엇을 하나</th><th>어디에 쓰나</th></tr>
-      <tr><td><code>std::clamp(v, lo, hi)</code></td><td>값을 <code>lo</code>~<code>hi</code> 사이로 눌러 준다</td><td>속도 명령이 한계를 넘지 않게 할 때. 27회에서 쓴다</td></tr>
+      <tr><td><code>std::clamp(v, lo, hi)</code></td><td>값을 <code>lo</code>~<code>hi</code> 사이로 눌러 준다</td><td>속도 명령이 한계를 넘지 않게 할 때. 26회에서 쓴다</td></tr>
       <tr><td><code>std::minmax_element</code></td><td>최소와 최대를 <strong>한 번에</strong> 찾는다</td><td>두 번 돌 일을 한 번에</td></tr>
       <tr><td><code>std::remove_if</code> + <code>erase</code></td><td>조건에 맞는 것을 <strong>제자리에서</strong> 지운다</td><td>새 컨테이너를 안 만들고 걸러 낼 때</td></tr>
-      <tr><td><code>std::adjacent_find</code></td><td>이웃한 두 값이 조건을 만족하는 자리를 찾는다</td><td>라이다 점이 <strong>끊어지는 자리</strong>를 찾을 때 — 27회 콘 인식이 이 모양이다</td></tr>
+      <tr><td><code>std::adjacent_find</code></td><td>이웃한 두 값이 조건을 만족하는 자리를 찾는다</td><td>라이다 점이 <strong>끊어지는 자리</strong>를 찾을 때 — 26회 콘 인식이 이 모양이다</td></tr>
       <tr><td><code>std::partial_sort</code></td><td>앞쪽 몇 개만 정렬한다</td><td>가장 가까운 콘 세 개만 알면 될 때</td></tr>
     </table>
     </div>

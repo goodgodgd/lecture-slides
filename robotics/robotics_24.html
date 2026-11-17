@@ -65,7 +65,7 @@
   </p>
   <p>
     만드는 것은 <code>cone_drive</code>라는 노드 하나다. 20~22회의 <code>turtle_drive</code>와 같은 모양(클래스 하나, 콜백, 타이머, 파라미터)으로 시작해서
-    27회까지 조금씩 자라 콘 사이를 달리는 노드가 된다. 거북이의 토픽(<code>/turtle1/pose</code> 같은 것)은 로봇에 없으므로 새 패키지로 시작한다.
+    26회까지 조금씩 자라 콘 사이를 달리는 노드가 된다. 거북이의 토픽(<code>/turtle1/pose</code> 같은 것)은 로봇에 없으므로 새 패키지로 시작한다.
     오늘은 다섯 단계다 — 스캔을 받고(v1), 원하는 방향의 값을 찾고(v2), 쓸 수 없는 값을 거르고(v3), 숫자 하나로 줄이고(v4), 그 숫자로 바퀴를 세운다(v5).
   </p>
   <p>
@@ -77,7 +77,7 @@
     <div class="boxtitle">⛔ 오늘은 바퀴를 띄워 놓고 한다</div>
     <p>
       ⑦절부터 로봇의 바퀴가 실제로 돈다. 로봇을 <strong>받침(책 몇 권이나 상자) 위에 올려 두 바퀴가 바닥에서 떠 있게</strong> 해 두고 시작합니다.
-      책상 위에서 바퀴가 바닥에 닿은 채로 돌리면 로봇이 책상 끝으로 갑니다. 바닥에 내려놓고 달리는 것은 27회 뒤의 일입니다.
+      책상 위에서 바퀴가 바닥에 닿은 채로 돌리면 로봇이 책상 끝으로 갑니다. 바닥에 내려놓고 달리는 것은 26회 뒤의 일입니다.
     </p>
   </div>
 
@@ -166,7 +166,7 @@ $ echo $ROS_DOMAIN_ID
   </div>
   <p>
     <code>/cmd_vel</code>의 타입이 거북이 때의 <code>Twist</code>가 아니라 <strong><code>TwistStamped</code></strong>인 것을 눈여겨 둔다. ⑦절에서 다시 본다.
-    <code>/odom</code>·<code>/tf</code>는 26회에서 쓴다. <code>/scan</code>이 어떤 QoS로 나오는지도 봐 둔다.
+    <code>/odom</code>·<code>/tf</code>는 25회에서 쓴다. <code>/scan</code>이 어떤 QoS로 나오는지도 봐 둔다.
   </p>
 <pre class="lang-sh"><code>$ ros2 topic info -v /scan
 Type: sensor_msgs/msg/LaserScan
@@ -236,7 +236,7 @@ QoS profile:
     </div>
     <p>
       스캔만 볼 때는 <code>base_scan</code>이나 <code>base_link</code> 가운데 아무것이나 괜찮다. <strong>목록에 이름이 안 뜨면</strong> bringup이 안 떠 있거나 도메인이 다른 것이다(1-1).
-      프레임 사이가 어떻게 이어져 있는지, 왜 <code>odom</code>만 움직이는지는 26회 TF2에서 다룬다.
+      프레임 사이가 어떻게 이어져 있는지, 왜 <code>odom</code>만 움직이는지는 25회 TF2에서 다룬다.
     </p>
   </div>
 
@@ -266,7 +266,7 @@ QoS profile:
     <p>
       로봇의 부품마다 붙은 좌표계(1-4의 🆕 상자에 나온 프레임들)를 <strong>축 세 개</strong>로 그린다. 색은 언제나 같다 — <strong>붉은 x는 앞, 초록 y는 왼쪽, 파란 z는 위</strong>.
       그림의 원점에 축이 여러 겹 겹쳐 보이는 것은 <code>base_scan</code>·<code>base_link</code>·<code>base_footprint</code>가 몇 cm 안에 모여 있어서다.
-      이름이 왜 TF인지, 프레임 사이가 어떻게 이어지는지는 26회에서 다룬다.
+      이름이 왜 TF인지, 프레임 사이가 어떻게 이어지는지는 25회에서 다룬다.
     </p>
   </div>
   <div class="box trap">
@@ -277,7 +277,7 @@ QoS profile:
       혼자 돌려 달기 어려우면 조교나 교수에게 알려 주세요.
     </p>
     <p>
-      코드에서 각도를 180도 바꿔 읽는 방법도 있기는 하다. 그런데 이 과목의 코드는 25회의 좌표 변환, 26회의 TF2, 27회의 콘 주행까지 모두 <strong>「각도 0 = 로봇의 앞」</strong>을 전제로 짠다.
+      코드에서 각도를 180도 바꿔 읽는 방법도 있기는 하다. 그런데 이 과목의 코드는 25회의 좌표 변환과 TF2, 26회의 콘 주행까지 모두 <strong>「각도 0 = 로봇의 앞」</strong>을 전제로 짠다.
       라이다를 바로 달아 두면 뒤 회차의 출력을 자료와 그대로 견줘 볼 수 있다.
     </p>
   </div>
@@ -300,7 +300,7 @@ $ ros2 topic echo /scan --once --field angle_increment
   <div class="tablewrap">
   <table>
     <tr><th>필드</th><th>뜻</th><th>이 로봇(LDS-02)에서 받은 값</th><th>오늘 어디에 쓰나</th></tr>
-    <tr><td><code>header.frame_id</code></td><td>어느 좌표계에서 잰 값인가</td><td><code>base_scan</code></td><td>26회</td></tr>
+    <tr><td><code>header.frame_id</code></td><td>어느 좌표계에서 잰 값인가</td><td><code>base_scan</code></td><td>25회</td></tr>
     <tr><td><code>header.stamp</code></td><td>언제 잰 값인가</td><td>(받을 때마다 다르다)</td><td>—</td></tr>
     <tr><td><code>angle_min</code></td><td><strong>첫 값</strong>(인덱스 0)이 향한 각도. 단위 rad</td><td>0.001 ~ 0.031 — 프레임마다 다르다</td><td>④절</td></tr>
     <tr><td><code>angle_increment</code></td><td><strong>이웃한 두 값 사이</strong>의 각도. 단위 rad</td><td>약 0.029 (1.67도)</td><td>④절</td></tr>
@@ -1806,7 +1806,7 @@ ament_package()</code></pre></div>
   </div>
   <div class="interp">
     <strong>해석:</strong> 가운데 다섯 줄(인덱스 → 각도부터 「없다」 돌려주기까지)이 <strong>스캔에서 믿을 수 있는 숫자 하나를 뽑는 길</strong>이고, 아래 세 줄이 <strong>그 숫자를 바퀴로 보낼 때 지킬 것</strong>이다.
-    27회의 콘 주행도 같은 길 위에 있다 — 구간이 「정면」에서 「콘 하나」로, 숫자가 「거리」에서 「좌표」로 바뀔 뿐이다.
+    26회의 콘 주행도 같은 길 위에 있다 — 구간이 「정면」에서 「콘 하나」로, 숫자가 「거리」에서 「좌표」로 바뀔 뿐이다.
   </div>
 
 

@@ -253,7 +253,7 @@ jazzy</code></pre>
     <tr><td><code>ros-jazzy-dynamixel-sdk</code></td><td>다이나믹셀 모터와 이야기하는 라이브러리. 터틀봇3 노드가 이것으로 OpenCR에 명령을 보낸다</td></tr>
     <tr><td><code>ros-jazzy-turtlebot3-msgs</code></td><td>터틀봇3만 쓰는 메시지 타입 (<code>SensorState</code> 등)</td></tr>
     <tr><td><code>ros-jazzy-hls-lfcd-lds-driver</code></td><td>LDS-01 라이다의 드라이버 (⑥절)</td></tr>
-    <tr><td><code>ros-jazzy-xacro</code></td><td>로봇의 생김새를 적은 설명 파일(URDF)을 만드는 도구. 26회의 좌표계가 여기서 나온다</td></tr>
+    <tr><td><code>ros-jazzy-xacro</code></td><td>로봇의 생김새를 적은 설명 파일(URDF)을 만드는 도구. 25회의 좌표계가 여기서 나온다</td></tr>
     <tr><td><code>libudev-dev</code> · <code>libboost-system-dev</code></td><td>LDS-02/03 드라이버를 빌드할 때 쓰는 C++ 라이브러리</td></tr>
     <tr><td><code>python3-colcon-common-extensions</code> · <code>build-essential</code> · <code>python3-argcomplete</code></td><td>빌드 도구들. 19회에 이미 깔았다면 「이미 최신 버전」이라고 나오고 넘어간다</td></tr>
   </table>
@@ -517,7 +517,7 @@ $ ros2 topic list
   </table>
   </div>
   <p>
-    <code>/odom</code>(바퀴로 어림한 로봇의 위치)과 <code>/tf</code>(좌표계)는 26회에서 쓴다. 다만 <code>/odom</code>은 지금 한 번 봐 둔다 —
+    <code>/odom</code>(바퀴로 어림한 로봇의 위치)과 <code>/tf</code>(좌표계)는 25회에서 쓴다. 다만 <code>/odom</code>은 지금 한 번 봐 둔다 —
     OpenCR이 바퀴 값을 읽어 보내야 나오는 토픽이라, <strong>펌웨어(3-4)가 제대로 올라갔는지</strong>를 이것으로 알 수 있다.
   </p>
 <pre class="lang-sh"><code>$ ros2 topic hz /odom
@@ -724,7 +724,7 @@ float32[] intensities        # intensity data [device-specific units].  If your
   <div class="tablewrap">
   <table>
     <tr><th>필드</th><th>단위</th><th>뜻</th></tr>
-    <tr><td><code>header.frame_id</code></td><td>—</td><td>이 값들을 어느 좌표계에서 쟀나. 라이다 자신이다(26회)</td></tr>
+    <tr><td><code>header.frame_id</code></td><td>—</td><td>이 값들을 어느 좌표계에서 쟀나. 라이다 자신이다(25회)</td></tr>
     <tr><td><strong><code>ranges[]</code></strong></td><td>m</td><td><strong>방향마다 잰 거리</strong>를 한 줄로 늘어놓은 배열. 이 메시지의 본체다</td></tr>
     <tr><td><strong><code>angle_min</code></strong></td><td>rad</td><td><code>ranges[0]</code>의 방향</td></tr>
     <tr><td><strong><code>angle_increment</code></strong></td><td>rad</td><td>이웃한 두 값 사이의 각도. 인덱스가 하나 늘 때마다 방향이 이만큼 돈다</td></tr>

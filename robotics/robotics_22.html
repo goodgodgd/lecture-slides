@@ -1192,7 +1192,7 @@ const double took_ms = std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).
   </div>
   <p>
     여기서 2부가 이어진다. 12회에서 「<code>LaserScan</code>을 값으로 받으면 콜백마다 복사가 일어난다」고 했고, 13회에서 직접 짠 for문보다 STL 알고리즘이 빨랐다. 그때는 마이크로초의 차이였지만,
-    콜백 안에서는 그 차이가 쌓여 <strong>처리 시간</strong>이 되고, 처리 시간이 주기를 넘는 순간 로봇이 늦게 돌아선다. 노트북에서 넉넉하던 처리가 라즈베리파이(28회)에서 몇 배로 늘어나는 일도 흔하다.
+    콜백 안에서는 그 차이가 쌓여 <strong>처리 시간</strong>이 되고, 처리 시간이 주기를 넘는 순간 로봇이 늦게 돌아선다. 노트북에서 넉넉하던 처리가 로봇 컴퓨터(23회)에서 몇 배로 늘어나는 일도 흔하다.
     <span style="color:var(--muted)">측정 환경: 컨테이너(우분투 24.04, ROS 2 Jazzy), Intel Core i7-12700K. 50 ms는 일부러 쉰 시간이라 컴퓨터가 달라도 거의 같게 나온다.</span>
   </p>
   <div class="box trap">
@@ -1415,7 +1415,7 @@ int main(int argc, char ** argv)
 
   <h3>7-1 개념 — 로그 수준과 주기 제한</h3>
   <p>
-    v10의 터미널은 읽을 수 있었나? 처리 0 ms일 때 1초에 <strong>63줄</strong>이 올라갔다. 1분이면 3,800줄이고, 그 사이에 「범위 밖 — 돕니다」 몇 줄이 묻힌다. 실물 로봇에서는 SSH로 붙은 터미널(28회)이 이 속도를 못 따라가기도 한다.
+    v10의 터미널은 읽을 수 있었나? 처리 0 ms일 때 1초에 <strong>63줄</strong>이 올라갔다. 1분이면 3,800줄이고, 그 사이에 「범위 밖 — 돕니다」 몇 줄이 묻힌다. 실물 로봇에서는 SSH로 붙은 터미널(27회)이 이 속도를 못 따라가기도 한다.
     한 줄 찍는 데 드는 시간도 0은 아니다. 검증용으로 <code>RCLCPP_INFO</code> 한 줄의 앞뒤를 재 보니 <strong>평균 약 20~26 µs</strong>였고, 찍지 않은 판은 0.04 µs였다(같은 컨테이너, 출력을 파일로 보낸 경우 — 화면에 그리는 터미널은 더 느릴 수 있다).
     초당 62번이면 작지만, 1 kHz로 오는 IMU 토픽이라면 1초에 20 ms 넘게 로그에 쓰는 셈이다.
   </p>
@@ -2015,7 +2015,7 @@ $ ros2 bag play drive1 --topics /turtle1/wall_range /turtle1/pose       # 터미
   <h2 id="rviz">⑩ <code>rviz2</code> — Fixed Frame과 Range 표시 <span class="badge b-red">🔴 그림은 사람이 읽는다</span></h2>
   <p>
     rqt_plot은 값이 <strong>언제</strong> 어땠는지를 보여 준다. 그런데 센서 값은 <strong>어디</strong>의 값이기도 하다. 라이다 점 360개가 로봇 주변 어디에 찍히는지는 시간축으로는 안 보인다.
-    공간에 그려 보는 도구가 <strong>rviz2</strong>다(ROS visualization). 메시지의 <code>header.frame_id</code>(17회)를 보고 「그 좌표계에서 이만큼」으로 그린다. 오늘은 시연으로 짧게 보고, 24·27회에서 라이다 점을 띄울 때 제대로 쓴다.
+    공간에 그려 보는 도구가 <strong>rviz2</strong>다(ROS visualization). 메시지의 <code>header.frame_id</code>(17회)를 보고 「그 좌표계에서 이만큼」으로 그린다. 오늘은 시연으로 짧게 보고, 24·26회에서 라이다 점을 띄울 때 제대로 쓴다.
   </p>
   <div class="tablewrap">
   <table>
@@ -2035,7 +2035,7 @@ $ ros2 bag play drive1 --topics /turtle1/wall_range /turtle1/pose       # 터미
     <img src="assets/img/22_rviz_range.png" width="700"
          alt="rviz2 창. 왼쪽 Displays 패널에 Global Options, Global Status: Warn, Grid, Axes, Range 가 있고 Range 의 Topic 은 /turtle1/wall_range, Reliability Policy 는 Best Effort 다. 오른쪽 어두운 격자 화면에 빨강·초록 좌표축이 있고, 빨간 축 방향으로 주황색 가는 부채꼴이 격자 네 칸 남짓 뻗어 있다">
     <figcaption>Fixed Frame <code>turtle1</code>, 위에서 내려다본 화면(격자 한 칸 1 m). 빨강이 거북이의 앞(x), 초록이 왼쪽(y)이다 — 이 색 약속(x 빨강·y 초록·z 파랑)은 ROS 도구 어디서나 같다. 주황 부채꼴의 길이가 <code>range</code>이고 벌어진 각이 <code>field_of_view</code>(0.2 rad)다. 거북이가 벽에 다가가면 부채꼴이 짧아진다. <code>wall_range</code>는 「가장 가까운 벽까지」를 재므로 실제 초음파 센서처럼 앞쪽만 재는 것은 아니다 — rviz2는 메시지에 적힌 대로 x축(앞) 방향에 그릴 뿐이다.
-      왼쪽 위 <code>Global Status: Warn</code>은 좌표계 사이의 관계(TF)를 아직 하나도 알려 주지 않아서 뜬다 — 기준 좌표계를 메시지와 같게 골라서 그림은 그려진다. TF는 26회에서 다룬다.</figcaption>
+      왼쪽 위 <code>Global Status: Warn</code>은 좌표계 사이의 관계(TF)를 아직 하나도 알려 주지 않아서 뜬다 — 기준 좌표계를 메시지와 같게 골라서 그림은 그려진다. TF는 25회에서 다룬다.</figcaption>
   </figure>
   <div class="interp">
     <strong>해석:</strong> 오늘 QoS를 맞춘 자리가 세 군데였다 — 발행(④), 우리 구독(⑤), rviz2의 표시(⑩). <code>echo</code>와 rqt_plot은 알아서 맞췄고, 우리 코드와 rviz2는 <strong>사람이 맞춰야</strong> 했다.
