@@ -86,13 +86,13 @@
   <h2 id="bringup">① 로봇 켜기와 <code>ROS_DOMAIN_ID</code> <span class="badge b-red">🔴 사람이 확인한다</span></h2>
 
   <p>
-    23회 ③절에서 터틀봇3 패키지를 설치하고 환경변수 넷을 <code>~/.bashrc</code>에 넣었다. 오늘은 그 로봇을 켜는 데서 시작한다.
+    23회 ③절에서 터틀봇3 패키지를 설치하고 환경변수 셋을 <code>~/.bashrc</code>에 넣었다. 오늘은 그 로봇을 켜는 데서 시작한다.
     한 강의실에서 로봇 여러 대가 같은 와이파이에 붙어 있으므로, 켜기 전에 <strong>도메인 번호</strong>부터 다시 한 번 본다.
   </p>
 
   <h3>1-1 환경변수 확인 — <code>ROS_DOMAIN_ID</code></h3>
   <p>
-    <strong>도메인 ID</strong>는 ROS 2 노드들을 서로 안 보이는 무리로 나누는 번호이고, 번호가 같은 노드끼리만 서로를 찾는다(23회 3-5).
+    <strong>도메인 ID</strong>는 ROS 2 노드들을 서로 안 보이는 무리로 나누는 번호이고, 번호가 같은 노드끼리만 서로를 찾는다(23회 3-7).
     번호가 옆 로봇과 겹치면 내 노드가 보낸 <code>/cmd_vel</code>을 <strong>옆자리 로봇도 받는다.</strong> 새 터미널에서 자기 번호가 나오는지 본다.
   </p>
 <pre><code>내 ROS_DOMAIN_ID = ____</code></pre>
@@ -116,7 +116,7 @@ $ echo $ROS_DOMAIN_ID
   <h3>1-2 로봇 켜기 — <code>robot.launch.py</code></h3>
   <p>
     로봇의 모터 보드와 라이다를 ROS 2 토픽으로 이어 주는 노드들을 한꺼번에 띄운다. 21회에서 배운 launch 파일이고, 터틀봇3 패키지(<code>turtlebot3_bringup</code>)에 들어 있다.
-    23회 3-6에서 처음 켜 본 그 <strong>bringup</strong>(브링업)이다.
+    23회 3-8에서 처음 켜 본 그 <strong>bringup</strong>(브링업)이다.
   </p>
   <div class="keycmd">
     <p class="boxtitle">⌨ 로봇 켜기 — 터미널 1에서. 이 터미널은 수업 내내 그대로 둔다</p>
