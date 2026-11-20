@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>프로젝트 · 콘 S자 트랙 주행 | 로봇공학</title>
+<script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t}catch(e){}})();</script>
+<link rel="stylesheet" href="../../../assets/site.css">
+<link rel="stylesheet" href="../../assets/lecture.css">
+</head>
+<body>
+<header class="bar">
+  <div class="barin wide">
+    <a class="up" href="../../index.html" aria-label="로봇공학 회차 목록"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></a>
+    <nav class="crumb" aria-label="경로">
+      <a href="../../../index.html">강의자료</a><span class="sep">/</span><a href="../../index.html">로봇공학</a><span class="sep">/</span><span class="here">프로젝트 · 콘 S자 트랙 주행</span>
+    </nav>
+    <span class="spacer"></span>
+    <div class="seg" data-theme-switch role="group" aria-label="밝기">
+      <button type="button" data-mode="auto" aria-pressed="true">자동</button>
+      <button type="button" data-mode="light" aria-pressed="false">밝게</button>
+      <button type="button" data-mode="dark" aria-pressed="false">어둡게</button>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+
+<nav class="toc">
+  <div class="toc-title">이 프로젝트</div>
+  <a href="#track">트랙</a>
+  <a href="#rules">주행 평가는 이렇게 합니다</a>
+  <a href="#todo">할 일</a>
+  <a href="#taskA">A — 트랙을 달리는 노드</a>
+  <a href="#taskB">B — GitHub로 개발하기</a>
+  <a href="#taskC">C — 코드 정리</a>
+  <a href="#taskD">D — 보고서</a>
+  <a href="#safety">안전</a>
+  <a href="#ai-log">AI와의 대화 요약</a>
+  <a href="#form">보고서 양식</a>
+  <a href="#submit">제출 방법과 점수</a>
+</nav>
+
+<main>
+
+  <div class="lec-no">로봇공학 · 기말 프로젝트</div>
+  <h1>콘으로 만든 S자 트랙 주행</h1>
+
+  <!-- ▼ 일정은 이 줄만 고치면 된다 ▼ -->
+  <!-- TODO: 날짜 확정 — 주행 평가 29회 수업, 보고서는 그다음 날 자정으로 잠정 -->
+  <p class="deadline">📅 주행 평가 — <strong>29회 수업 시간</strong> · 보고서 제출 마감 — <strong>주행 평가 다음 날 23:59</strong></p>
+
+  <div class="questions">
+    <span class="lab">이 프로젝트가 묻는 것</span>
+    <ol>
+      <li>내 로봇이 <strong>사람 손을 타지 않고</strong> 콘 사이의 굽은 길을 끝까지 지나갈 수 있나요?</li>
+      <li>콘에 닿지 않으면서 <strong>얼마나 빨리</strong> 지나갈 수 있나요?</li>
+      <li>그 코드를 <strong>남이 읽을 수 있게</strong> 정리하고, 어떻게 만들었는지 <strong>기록으로 보여 줄 수</strong> 있나요?</li>
+    </ol>
+  </div>
+
+  <p>
+    26회에서 앞쪽의 가까운 점들 사이에서 <strong>가장 크게 벌어진 틈</strong>을 찾아 그 가운데로 가는 노드를 만들었다.
+    이번 프로젝트는 그 노드를 출발점으로 삼아 <strong>실제 S자 트랙</strong>을 끝까지 지나가게 만드는 일이다.
+    26회의 숫자(거리 50cm · 틈 10cm · <code>kp</code> · 속도)가 이 트랙에 맞는지는 아직 아무도 모른다.
+    트랙 앞에서 돌려 보고, 로그와 rviz2로 확인하고, 고치는 것이 이 프로젝트에서 할 일의 대부분이다.
+  </p>
+  <div class="interp">
+    <strong>혼자 하는 프로젝트입니다.</strong> 한 사람에 로봇 한 대로, 수업에서 쓰던 그 로봇으로 합니다.
+  </div>
+
+  <h2 id="track">트랙</h2>
+  <p>트랙은 어떻게 생겼을까? 바닥에 콘을 두 줄로 세워 만든 <strong>S자 길</strong>이다. 입구와 출구가 하나씩 있다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>무엇</th><th>값</th></tr>
+    <tr><td>모양</td><td>S자 — 한쪽으로 한 번 굽었다가 반대쪽으로 한 번 굽는다</td></tr>
+    <tr><td>같은 줄의 콘 간격</td><td>약 <strong>20cm</strong></td></tr>
+    <tr><td>길의 폭 (두 줄 사이)</td><td>약 <strong>40cm</strong></td></tr>
+    <tr><td>출발과 도착</td><td>입구 앞의 <strong>출발선</strong>에서 출발해 출구 뒤의 <strong>도착선</strong>을 지나면 끝</td></tr>
+  </table>
+  </div>
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 숫자는 「약」입니다</div>
+    <p>
+      콘을 손으로 세우므로 간격과 폭에는 <strong>몇 cm씩 오차가 있을 수 있습니다.</strong>
+      콘 하나하나의 자리를 외워 두는 코드보다 <strong>그때그때 라이다로 본 것에 따라 움직이는 코드</strong>가 이 트랙에 맞습니다.
+      연습할 때도 간격과 폭을 조금씩 바꿔 가며 해 보면 평가 날 덜 당황합니다.
+    </p>
+  </div>
+
+  <h2 id="rules">주행 평가는 이렇게 합니다</h2>
+  <p>평가 날에는 무엇을 보게 될까? 한 사람씩 돌아가며 같은 트랙을 달린다. 아래가 그날의 규칙이다.</p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>#</th><th>규칙</th></tr>
+    <tr><td>(1)</td><td>순서는 그 자리에서 <strong>추첨</strong>합니다. 차례가 오면 로봇을 출발선 뒤에 놓고, 출발 신호에 맞춰 노드를 실행합니다</td></tr>
+    <tr><td>(2)</td><td>한 사람에게 <strong>5분</strong>이 주어집니다. 시계는 출발 신호부터 갑니다</td></tr>
+    <tr><td>(3)</td><td><strong>도착선에 빨리 들어올수록</strong> 좋은 점수를 받습니다. 기록은 출발 신호부터 로봇이 도착선을 다 지날 때까지의 시간입니다</td></tr>
+    <tr><td>(4)</td><td><strong>콘에 부딪치면 감점</strong>입니다. 밀린 콘은 제자리에 다시 세우고 계속 달립니다</td></tr>
+    <tr><td>(5)</td><td><strong>길을 벗어나면 출발선에서 다시 시작</strong>하고, 이것도 감점입니다. 바퀴 하나라도 콘 줄 바깥으로 나가면 벗어난 것으로 봅니다. 다시 시작해도 <strong>시계는 멈추지 않습니다</strong></td></tr>
+    <tr><td>(6)</td><td>달리는 동안 <strong>로봇에 손을 대면</strong> 길을 벗어난 것과 같이 처리합니다. 키보드는 노드를 실행하고 끌 때만 씁니다</td></tr>
+    <tr><td>(7)</td><td>5분 안에 도착하지 못해도 <strong>어디까지 갔는지</strong>를 봅니다. 트랙을 몇 구간으로 나눠 바닥에 표시해 둡니다</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    빨리 달리는 것과 콘에 닿지 않는 것은 서로 당기는 관계다. 속도를 올리면 기록은 줄지만 굽은 자리에서 콘에 닿거나 길을 벗어나기 쉽다.
+    <strong>어느 쪽에 얼마나 걸지가 여러분이 고를 몫</strong>이다.
+  </div>
+
+  <h2 id="todo">할 일</h2>
+  <p>
+    해야 할 일은 네 묶음이다. 아래 표의 번호(A-1 · B-2 …)는 <a href="#form">보고서 양식</a>의 칸 제목에도 그대로 붙어 있다.
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>번호</th><th>할 일</th><th>수업의 어디</th></tr>
+    <tr><td colspan="3"><strong>A. 트랙을 달리는 노드</strong></td></tr>
+    <tr><td>A-1</td><td>출발선에서 스스로 출발해 S자 트랙을 도착선까지 지나간다</td><td>26회</td></tr>
+    <tr><td>A-2</td><td>콘에 닿지 않고, 길을 벗어나지 않는다</td><td>24 · 26회</td></tr>
+    <tr><td>A-3</td><td>도착선을 지나면 스스로 멈춘다</td><td>24회 ⑦절 · 26회</td></tr>
+    <tr><td colspan="3"><strong>B. GitHub로 개발하기</strong></td></tr>
+    <tr><td>B-1</td><td><strong>공개 저장소</strong>에 ROS 2 패키지를 올린다. <code>.gitignore</code>로 <code>build/</code> · <code>install/</code> · <code>log/</code>를 뺀다</td><td>4 · 5회</td></tr>
+    <tr><td>B-2</td><td>일을 적당한 단위로 나눠 <strong>브랜치를 만들고 PR(Pull Request)을 2개 이상</strong> 올린다. PR 하나에는 커밋이 2개 이상 들어간다</td><td>5회</td></tr>
+    <tr><td>B-3</td><td>PR마다 <strong>무엇을 하려고 했고 · 어떻게 구현했고 · 돌려 보니 어땠는지</strong>를 5줄 이상 적는다</td><td>5회</td></tr>
+    <tr><td>B-4</td><td>PR은 <strong>주행 평가 전에</strong> main에 머지한다. 평가 날 돌리는 코드가 main에 있어야 한다</td><td>5회</td></tr>
+    <tr><td colspan="3"><strong>C. 코드 정리</strong></td></tr>
+    <tr><td>C-1</td><td><code>package.xml</code>과 <code>CMakeLists.txt</code>에서 템플릿이 남긴 주석을 지우고, 설명 · 저자(이름과 이메일) · 라이선스를 채운다</td><td>19회</td></tr>
+    <tr><td>C-2</td><td>함수 하나는 되도록 <strong>20줄 안팎</strong>, 길어도 <strong>30줄을 넘지 않게</strong> 나눈다</td><td>9 · 19회</td></tr>
+    <tr><td>C-3</td><td>클래스는 선언(<code>.hpp</code>)과 정의(<code>.cpp</code>)를 나눠 쓴다</td><td>8 · 9회</td></tr>
+    <tr><td>C-4</td><td>변수와 함수의 이름을 그것이 하는 일로 짓는다 (<code>a</code> · <code>tmp2</code> 대신 <code>widest_gap</code> · <code>front_points</code>)</td><td>9회</td></tr>
+    <tr><td colspan="3"><strong>D. 보고서</strong></td></tr>
+    <tr><td>D-1</td><td>개요 — 무엇이 문제였고 어떻게 풀었는지</td><td></td></tr>
+    <tr><td>D-2</td><td>GitHub — 저장소 주소와 PR 화면</td><td></td></tr>
+    <tr><td>D-3</td><td>구현 방법 — 알고리즘 설명과 그 자리의 코드 조각</td><td></td></tr>
+    <tr><td>D-4</td><td>튜닝 기록 — 어떤 숫자를 얼마에서 얼마로 바꿨고 트랙에서 무엇이 달라졌는지</td><td></td></tr>
+    <tr><td>D-5</td><td>결과 — 주행 평가 결과, 잘 된 점과 보완할 점</td><td></td></tr>
+    <tr><td>D-6</td><td>AI와의 대화 요약</td><td></td></tr>
+  </table>
+  </div>
+
+  <h2 id="taskA">A — 트랙을 달리는 노드</h2>
+  <p>
+    어디서 시작하면 될까? 26회의 <code>cone_drive</code> 패키지가 출발점이다.
+    처음부터 다시 짜도 되고, 26회 알고리즘과 다른 방법을 써도 된다. 트랙을 지나가기만 하면 방법은 자유다.
+  </p>
+  <p>26회에서 일부러 남겨 둔 자리가 몇 군데 있다. 실제 트랙에서 보통 아래 자리에서 막히는 경우가 많다.</p>
+  <ul>
+    <li><strong>맞출 숫자</strong> — 앞을 볼 거리, 틈으로 칠 간격, <code>kp</code>, 전진 속도. 26회 값은 출발점일 뿐이다</li>
+    <li><strong>굽은 자리</strong> — S자가 꺾이는 곳에서는 앞쪽 콘 줄이 비스듬히 보여, 「가장 큰 틈」이 길이 아닌 쪽에 생길 수 있다</li>
+    <li><strong>트랙이 끝난 뒤</strong> — 콘이 다 사라지면 26회 코드는 곧장 계속 간다. 도착선을 지나 멈추는 규칙은 여러분이 정한다 (A-3)</li>
+    <li><strong>바닥에 내려놓기 전에</strong> — <code>/scan</code>이 끊기면 멈추는 장치(24회 ⑦절의 타임아웃 정지)를 다시 붙여 둔다. 26회 코드에서는 일부러 뺐다</li>
+  </ul>
+  <div class="interp">
+    연습용 트랙은 콘을 직접 세워 만들면 된다. 처음에는 직선, 다음에는 한 번 굽은 길, 마지막에 S자로 늘려 가면 어디서 막히는지 찾기 쉽다.
+    <strong>바꿔 볼 때마다 무엇을 바꿨고 어떻게 됐는지 적어 두세요</strong> — 그것이 그대로 보고서의 튜닝 기록(D-4)이 된다.
+  </div>
+
+  <h2 id="taskB">B — GitHub로 개발하기</h2>
+  <p>
+    PR은 왜 두 개 이상일까? 한 번에 다 만들어 한 번에 올리면 무엇을 왜 바꿨는지가 남지 않는다.
+    「틈 찾기를 고친다」 · 「도착하면 멈춘다」 · 「함수를 나눈다」처럼 <strong>한 가지 목적에 브랜치 하나</strong>를 두고,
+    다 되면 PR로 main에 합치는 흐름을 5회에서 연습했다. 이번에는 그것을 내 프로젝트에서 실제로 쓴다.
+  </p>
+  <ul>
+    <li>저장소는 <strong>공개</strong>로 만듭니다. 주소는 보고서(D-2)에 적습니다</li>
+    <li>PR 설명은 5줄 이상 — <strong>목적 · 구현 방법 · 실행 결과</strong>가 들어가면 됩니다</li>
+    <li>PR은 <strong>주행 평가 전에</strong> 머지해 둡니다. 평가 뒤에 올린 PR은 보지 않습니다</li>
+    <li>커밋과 PR은 <strong>여러분이 직접</strong> 하는 것을 권합니다. 에이전트에게 맡겨도 되지만, 무엇이 올라갔는지는 직접 확인하세요</li>
+  </ul>
+
+  <h2 id="taskC">C — 코드 정리</h2>
+  <p>
+    돌아가면 됐지 왜 정리까지 할까? 프로젝트 기간 내내 그 코드를 고치는 사람은 여러분 자신이고, 한 함수가 100줄이면 고칠 자리를 찾는 데만 시간이 다 간다.
+    28회에서 다룰 <strong>인식 → 판단 → 명령</strong>처럼 하는 일마다 함수와 클래스를 나눠 두면 튜닝도 쉬워진다.
+  </p>
+  <p>
+    C-1 ~ C-4는 에이전트에게 시켜도 잘 하는 일이다. 다만 시킨 뒤에 <strong>빌드해서 트랙에서 다시 한 번 돌려 보세요</strong> — 정리하다 동작이 바뀌는 경우도 있다.
+  </p>
+
+  <h2 id="taskD">D — 보고서</h2>
+  <p>
+    보고서는 <a href="#form">아래 양식</a>을 그대로 복사해 채웁니다. 불필요한 서론(「4차 산업혁명 시대에…」)은 빼고 <strong>이 프로젝트에서 한 일만</strong> 자세히 적으면 됩니다.
+    주행 영상은 연습 때든 평가 날이든 <strong>트랙을 지나가는 장면</strong>이면 됩니다.
+  </p>
+
+  <h2 id="safety">안전</h2>
+  <div class="box trap">
+    <div class="boxtitle">⚠️ 바닥에 내려놓기 전에 받침 위에서 먼저 봅니다</div>
+    <p>
+      새 코드는 <strong>바퀴를 띄운 채</strong> 한 번 돌려 보고 바닥에 내립니다.
+      터틀봇3 버거의 최고 속도는 직진 약 <strong>0.22 m/s</strong>, 회전 약 <strong>2.84 rad/s</strong>다. 그보다 큰 값을 보내도 더 빨라지지 않는다.
+    </p>
+    <p>
+      <strong>터틀봇3는 마지막으로 받은 속도를 계속 유지합니다.</strong> 노드를 끈 뒤에는 아래 한 줄로 0을 보냅니다.
+    </p>
+<pre class="lang-sh"><code>ros2 topic pub --once /cmd_vel geometry_msgs/msg/TwistStamped '{}'</code></pre>
+  </div>
+
+  <h2 id="ai-log">AI와의 대화 요약</h2>
+  <p>
+    에이전트와 같이 만들었으면 과제 때처럼 <strong>요약해서 보고서 맨 뒤(D-6)에 붙입니다.</strong>
+    세션이 여러 번이면 세션마다 받아 이어 붙입니다. 세션을 닫기 전에 아래 글을 그대로 보내고, 출력을 <strong>고치지 않고 그대로</strong> 붙여 넣습니다.
+  </p>
+  <div class="copyform">
+    <button onclick="copyPrompt(this)">복사</button>
+<pre><code>이 세션을 끝내기 전에 지금까지의 대화를 아래 규칙대로 정리해 줘.
+- 내가 보낸 메시지는 요약하지 말고 순서대로 원문 그대로 적어. 한 글자도 바꾸지 마.
+- 네 대답은 중간 과정(탐색·시도·되묻기)을 빼고, 그 질문에 실제로 만들거나 고친 것만 두세 줄로 요약해.
+  파일을 만들거나 고쳤으면 파일 이름과 무엇을 바꿨는지 적어.
+- 대화 순서대로 번호를 붙여 아래 형식으로 써. 이 형식 밖의 말은 붙이지 마.
+
+### 1
+**나:** (원문 그대로)
+**AI:** (만들거나 고친 것 요약)
+
+### 2
+**나:** …
+**AI:** …</code></pre>
+  </div>
+  <div class="interp">
+    AI를 쓰지 않았으면 D-6에 「쓰지 않았다」와, 막혔을 때 무엇을 보고 풀었는지 두 줄을 적으면 됩니다.
+  </div>
+
+  <h2 id="form">보고서 양식</h2>
+  <p class="readme-first">
+    아래 <strong>「복사」 버튼</strong>을 누르면 양식이 통째로 복사됩니다.
+    보고서에 붙여 넣고 <strong>빈 칸을 채우면</strong> 됩니다. 괄호 안 안내 글은 지웁니다.
+  </p>
+
+  <div class="copyform">
+    <button onclick="copyPrompt(this)">복사</button>
+<pre><code># 로봇공학 프로젝트 보고서 — 이름 ______  학번 ______
+
+## 1. 개요 (D-1)
+(무엇이 문제였고 어떻게 풀었는지 다섯 줄 안팎. 서론 없이)
+
+
+## 2. GitHub (D-2 · B-1 ~ B-4)
+- 저장소 주소: https://github.com/______/______
+
+(PR마다 화면 캡쳐 한 장 — PR 설명 · 커밋 목록 · Merged 표시가 함께 보이게)
+
+### PR 1 — (제목)
+(캡쳐)
+
+### PR 2 — (제목)
+(캡쳐)
+
+
+## 3. 구현 방법 (D-3)
+(트랙을 지나가는 알고리즘을 단계별로 설명. 설명하는 자리마다 그 부분의 코드만 몇 줄씩)
+
+### 3-1. (단계 이름)
+(설명)
+```cpp
+
+```
+
+### 3-2. (단계 이름)
+(설명)
+```cpp
+
+```
+
+
+## 4. 튜닝 기록 (D-4)
+(바꿔 본 숫자를 바꾼 순서대로. 세 줄 이상)
+
+| # | 바꾼 것 | 전 → 후 | 트랙에서 본 것 |
+|---|---|---|---|
+| 1 | | | |
+| 2 | | | |
+| 3 | | | |
+
+
+## 5. 결과 (D-5)
+- 주행 평가: 완주 O / X · 기록 ____ 초 · 콘에 닿은 횟수 __ · 다시 시작한 횟수 __
+- 잘 된 점:
+- 보완할 점:
+- 수업에 대한 후기 · 제안 (자유)
+
+
+## 6. AI와의 대화 요약 (D-6)
+(세션을 끝내기 전에 「AI와의 대화 요약」의 프롬프트를 보내고, 받은 출력을 고치지 않고 그대로 붙입니다.
+AI를 쓰지 않았으면 그렇게 적고, 막혔을 때 무엇을 보고 풀었는지 두 줄)
+
+### 1
+**나:**
+**AI:**
+</code></pre>
+  </div>
+
+  <h2 id="submit">제출 방법과 점수</h2>
+  <p>
+    아래 세 가지를 <strong>압축 파일 하나</strong>로 묶어 LMS에 올립니다.
+    파일 이름은 <strong><code>PROJECT_이름_학번.zip</code></strong>로, <code>PROJECT_홍길동_20251234.zip</code>처럼 자기 이름과 학번을 넣으면 됩니다.
+  </p>
+  <div class="tablewrap">
+  <table>
+    <tr><th>무엇</th><th>어떻게</th></tr>
+    <tr><td>보고서</td><td>위 양식을 채운 <strong>PDF 한 개</strong></td></tr>
+    <tr><td>소스 코드</td><td>ROS 2 패키지 폴더 하나. <code>build/</code> · <code>install/</code> · <code>log/</code>는 넣지 않습니다</td></tr>
+    <tr><td>주행 영상</td><td>트랙을 지나가는 장면. 압축 파일 전체가 <strong>100MB를 넘지 않게</strong> 찍기 전에 화질을 낮추거나 찍은 뒤 줄입니다</td></tr>
+  </table>
+  </div>
+
+  <div class="tablewrap">
+  <table class="summary-table">
+    <tr><th>무엇</th><th>점수</th><th>어떻게 봅니다</th></tr>
+    <tr><td>주행 평가</td><td><strong>25점</strong></td><td>평가 날 트랙에서 — 어디까지 갔는지, 얼마나 빨리 들어왔는지, 콘에 닿거나 길을 벗어나지 않았는지</td></tr>
+    <tr><td>GitHub 활용 · 코드 정리 · 보고서</td><td><strong>25점</strong></td><td>위 「할 일」의 B · C · D를 저장소와 보고서에서 봅니다</td></tr>
+    <tr><td><strong>합계</strong></td><td><strong>50점</strong></td><td>성적에는 프로젝트 30%로 들어갑니다</td></tr>
+  </table>
+  </div>
+  <div class="interp">
+    <strong>「할 일」 표를 빠짐없이 하고 양식을 채우면</strong> 주행을 뺀 25점은 다 받을 수 있게 짜여 있다.
+    주행 점수는 완주하지 못해도 간 만큼 받는다. 끝까지 포기하지 않고 트랙에 올려 보세요.
+  </div>
+
+  <footer>
+    로봇공학 · 순천향대학교 전자정보공학과 ·
+    같이 볼 것: <a href="../../robotics_24.html">LaserScan 데이터 다루기</a> ·
+    <a href="../../robotics_26.html">콘 인식과 주행</a> ·
+    <a href="../../robotics_05.html">여럿이 쓰는 git</a>
+  </footer>
+</main>
+</div>
+
+<script src="../../../assets/site.js" defer></script>
+</body>
+</html>
