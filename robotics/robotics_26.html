@@ -354,7 +354,7 @@ private:
 
     // 스캔 시각은 스캔에 찍힌 시각이다 — bag 을 다시 돌려도 같은 스캔이면 같은 시각이 찍힌다 (⑥절)
     RCLCPP_INFO_THROTTLE(this-&gt;get_logger(), *this-&gt;get_clock(), 1000,
-                         &quot;스캔 시각 %.1f · 점 %zu개 · %s · 틀어진 각 %.1f도 · 보낸 속도 %.2f m/s, %.2f rad/s&quot;,
+                         &quot;스캔 시각 %.2f · 점 %zu개 · %s · 틀어진 각 %.1f도 · 보낸 속도 %.2f m/s, %.2f rad/s&quot;,
                          rclcpp::Time(scan.header.stamp).seconds(), points.size(),
                          target ? &quot;틈을 찾았다&quot; : &quot;틈이 없다&quot;, heading * 180.0 / M_PI,
                          cmd.twist.linear.x, cmd.twist.angular.z);
@@ -508,13 +508,13 @@ $ ros2 bag record -o ~/bags/run1 --topics /scan /cmd_vel</code></pre>
   </p>
   <div class="codelabel bad">고치기 전 — on_scan 의 끝 (1초에 한 줄)</div>
 <pre class="lang-cpp before"><code>    RCLCPP_INFO_THROTTLE(this-&gt;get_logger(), *this-&gt;get_clock(), 1000,
-                         &quot;스캔 시각 %.1f · 점 %zu개 · %s · 틀어진 각 %.1f도 · 보낸 속도 %.2f m/s, %.2f rad/s&quot;,</code></pre>
+                         &quot;스캔 시각 %.2f · 점 %zu개 · %s · 틀어진 각 %.1f도 · 보낸 속도 %.2f m/s, %.2f rad/s&quot;,</code></pre>
   <div class="codelabel good">고친 뒤 — 스캔마다 한 줄</div>
 <pre class="lang-cpp after"><code>    RCLCPP_INFO(this-&gt;get_logger(),
-                &quot;스캔 시각 %.1f · 점 %zu개 · %s · 틀어진 각 %.1f도 · 보낸 속도 %.2f m/s, %.2f rad/s&quot;,</code></pre>
+                &quot;스캔 시각 %.2f · 점 %zu개 · %s · 틀어진 각 %.1f도 · 보낸 속도 %.2f m/s, %.2f rad/s&quot;,</code></pre>
   <p>
     줄 맨 앞의 <strong>스캔 시각</strong>은 노드가 받은 시각이 아니라 <strong>라이다가 그 스캔을 잰 시각</strong>(<code>scan.header.stamp</code>)이다. bag은 메시지를 그대로 담으므로 다시 돌려도 이 값이 바뀌지 않는다.
-    그래서 「스캔 시각 1795150231.4의 판단」을 고치기 전과 고친 뒤에 나란히 놓고 비교할 수 있다.
+    그래서 「스캔 시각 1795150231.42의 판단」을 고치기 전과 고친 뒤에 나란히 놓고 비교할 수 있다.
   </p>
   <div class="box firstseen">
     <p class="boxtitle">🆕 이 코드에서 처음 나오는 것</p>
